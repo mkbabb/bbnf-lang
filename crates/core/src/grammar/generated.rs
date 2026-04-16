@@ -86,89 +86,104 @@ mod __bbnfbootstrap_emit_impl {
     ];
     static __DTA_LITERAL_23: &str = "(";
     static __DTA_LITERAL_25: &str = ",";
-    static __DTA_SEQ_27_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(25),
+    static __DTA_SEQ_28_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(26),
+        ::bbnf::runtime::tape::DtaStateId(25),
+        ::bbnf::runtime::tape::DtaStateId(27),
     ];
-    static __DTA_SEQ_29_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(24),
+    static __DTA_SEQ_30_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(28),
+        ::bbnf::runtime::tape::DtaStateId(29),
     ];
-    static __DTA_LITERAL_31: &str = ")";
-    static __DTA_SEQ_32_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
-        ::bbnf::runtime::tape::DtaStateId(22),
-        ::bbnf::runtime::tape::DtaStateId(23),
-        ::bbnf::runtime::tape::DtaStateId(30),
+    static __DTA_SEQ_32_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(24),
         ::bbnf::runtime::tape::DtaStateId(31),
     ];
-    static __DTA_LITERAL_40: &str = "(";
-    static __DTA_LITERAL_42: &str = ")";
-    static __DTA_SEQ_43_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(40),
-        ::bbnf::runtime::tape::DtaStateId(41),
-        ::bbnf::runtime::tape::DtaStateId(42),
-    ];
-    static __DTA_ALT_LIN_44: [::bbnf::runtime::tape::DtaStateId; 8usize] = [
+    static __DTA_LITERAL_34: &str = ")";
+    static __DTA_SEQ_35_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(22),
+        ::bbnf::runtime::tape::DtaStateId(23),
         ::bbnf::runtime::tape::DtaStateId(33),
         ::bbnf::runtime::tape::DtaStateId(34),
-        ::bbnf::runtime::tape::DtaStateId(35),
+    ];
+    static __DTA_LITERAL_43: &str = "(";
+    static __DTA_SEQ_47_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(45),
+        ::bbnf::runtime::tape::DtaStateId(44),
+        ::bbnf::runtime::tape::DtaStateId(46),
+    ];
+    static __DTA_LITERAL_48: &str = ")";
+    static __DTA_SEQ_49_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(43),
+        ::bbnf::runtime::tape::DtaStateId(47),
+        ::bbnf::runtime::tape::DtaStateId(48),
+    ];
+    static __DTA_ALT_LIN_50: [::bbnf::runtime::tape::DtaStateId; 8usize] = [
         ::bbnf::runtime::tape::DtaStateId(36),
         ::bbnf::runtime::tape::DtaStateId(37),
         ::bbnf::runtime::tape::DtaStateId(38),
         ::bbnf::runtime::tape::DtaStateId(39),
-        ::bbnf::runtime::tape::DtaStateId(43),
-    ];
-    static __DTA_LITERAL_45: &str = "*";
-    static __DTA_LITERAL_46: &str = "/";
-    static __DTA_LITERAL_47: &str = "%";
-    static __DTA_ALT_LIN_48: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(45),
-        ::bbnf::runtime::tape::DtaStateId(46),
-        ::bbnf::runtime::tape::DtaStateId(47),
-    ];
-    static __DTA_LITERAL_49: &str = "+";
-    static __DTA_LITERAL_50: &str = "-";
-    static __DTA_ALT_LIN_51: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(40),
+        ::bbnf::runtime::tape::DtaStateId(41),
+        ::bbnf::runtime::tape::DtaStateId(42),
         ::bbnf::runtime::tape::DtaStateId(49),
-        ::bbnf::runtime::tape::DtaStateId(50),
     ];
-    static __DTA_LITERAL_52: &str = "==";
-    static __DTA_LITERAL_53: &str = "!=";
-    static __DTA_LITERAL_54: &str = "<=";
-    static __DTA_LITERAL_55: &str = ">=";
-    static __DTA_LITERAL_56: &str = "<";
-    static __DTA_LITERAL_57: &str = ">";
-    static __DTA_ALT_LIN_58: [::bbnf::runtime::tape::DtaStateId; 6usize] = [
+    static __DTA_LITERAL_51: &str = "*";
+    static __DTA_LITERAL_52: &str = "/";
+    static __DTA_LITERAL_53: &str = "%";
+    static __DTA_ALT_LIN_54: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(51),
         ::bbnf::runtime::tape::DtaStateId(52),
         ::bbnf::runtime::tape::DtaStateId(53),
-        ::bbnf::runtime::tape::DtaStateId(54),
+    ];
+    static __DTA_LITERAL_55: &str = "+";
+    static __DTA_LITERAL_56: &str = "-";
+    static __DTA_ALT_LIN_57: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(55),
         ::bbnf::runtime::tape::DtaStateId(56),
-        ::bbnf::runtime::tape::DtaStateId(57),
     ];
-    static __DTA_LITERAL_59: &str = "!";
-    static __DTA_LITERAL_60: &str = "-";
-    static __DTA_ALT_LIN_61: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+    static __DTA_LITERAL_58: &str = "==";
+    static __DTA_LITERAL_59: &str = "!=";
+    static __DTA_LITERAL_60: &str = "<=";
+    static __DTA_LITERAL_61: &str = ">=";
+    static __DTA_LITERAL_62: &str = "<";
+    static __DTA_LITERAL_63: &str = ">";
+    static __DTA_ALT_LIN_64: [::bbnf::runtime::tape::DtaStateId; 6usize] = [
+        ::bbnf::runtime::tape::DtaStateId(58),
         ::bbnf::runtime::tape::DtaStateId(59),
         ::bbnf::runtime::tape::DtaStateId(60),
-    ];
-    static __DTA_SEQ_63_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(61),
         ::bbnf::runtime::tape::DtaStateId(62),
-    ];
-    static __DTA_ALT_LIN_65: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(63),
-        ::bbnf::runtime::tape::DtaStateId(64),
+    ];
+    static __DTA_LITERAL_65: &str = "!";
+    static __DTA_LITERAL_66: &str = "-";
+    static __DTA_ALT_LIN_67: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(65),
+        ::bbnf::runtime::tape::DtaStateId(66),
     ];
     static __DTA_SEQ_69_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(67),
         ::bbnf::runtime::tape::DtaStateId(68),
     ];
-    static __DTA_SEQ_71_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(66),
+    static __DTA_ALT_LIN_71: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(69),
         ::bbnf::runtime::tape::DtaStateId(70),
     ];
-    static __DTA_SY_73_PREC: [::bbnf::runtime::tape::DtaPrecedenceEntry; 5usize] = [
+    static __DTA_SEQ_76_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(74),
+        ::bbnf::runtime::tape::DtaStateId(73),
+        ::bbnf::runtime::tape::DtaStateId(75),
+    ];
+    static __DTA_SEQ_78_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(76),
+        ::bbnf::runtime::tape::DtaStateId(77),
+    ];
+    static __DTA_SEQ_80_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(72),
+        ::bbnf::runtime::tape::DtaStateId(79),
+    ];
+    static __DTA_SY_82_PREC: [::bbnf::runtime::tape::DtaPrecedenceEntry; 5usize] = [
         ::bbnf::runtime::tape::DtaPrecedenceEntry {
             byte: 43,
             second_byte: None,
@@ -210,444 +225,684 @@ mod __bbnfbootstrap_emit_impl {
             op_discriminant: 2,
         },
     ];
-    static __DTA_SEQ_77_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(75),
-        ::bbnf::runtime::tape::DtaStateId(76),
-    ];
-    static __DTA_SEQ_79_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(74),
-        ::bbnf::runtime::tape::DtaStateId(78),
-    ];
-    static __DTA_LITERAL_81: &str = "&&";
-    static __DTA_SEQ_83_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(81),
-        ::bbnf::runtime::tape::DtaStateId(82),
-    ];
-    static __DTA_SEQ_85_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(80),
+    static __DTA_SEQ_87_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(85),
         ::bbnf::runtime::tape::DtaStateId(84),
+        ::bbnf::runtime::tape::DtaStateId(86),
     ];
-    static __DTA_LITERAL_87: &str = "||";
     static __DTA_SEQ_89_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(87),
         ::bbnf::runtime::tape::DtaStateId(88),
     ];
     static __DTA_SEQ_91_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(86),
+        ::bbnf::runtime::tape::DtaStateId(83),
         ::bbnf::runtime::tape::DtaStateId(90),
     ];
-    static __DTA_LITERAL_92: &str = "|";
-    static __DTA_LITERAL_94: &str = ",";
-    static __DTA_SEQ_96_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+    static __DTA_LITERAL_93: &str = "&&";
+    static __DTA_SEQ_96_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(94),
+        ::bbnf::runtime::tape::DtaStateId(93),
         ::bbnf::runtime::tape::DtaStateId(95),
     ];
-    static __DTA_LITERAL_98: &str = "|";
-    static __DTA_SEQ_100_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 5usize] = [
-        ::bbnf::runtime::tape::DtaStateId(92),
-        ::bbnf::runtime::tape::DtaStateId(93),
+    static __DTA_SEQ_98_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(96),
         ::bbnf::runtime::tape::DtaStateId(97),
-        ::bbnf::runtime::tape::DtaStateId(98),
+    ];
+    static __DTA_SEQ_100_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(92),
         ::bbnf::runtime::tape::DtaStateId(99),
     ];
-    static __DTA_ALT_LIN_103: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(101),
+    static __DTA_LITERAL_102: &str = "||";
+    static __DTA_SEQ_105_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(103),
         ::bbnf::runtime::tape::DtaStateId(102),
-    ];
-    static __DTA_LITERAL_104: &str = ":";
-    static __DTA_SEQ_106_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(104),
-        ::bbnf::runtime::tape::DtaStateId(105),
     ];
-    static __DTA_LITERAL_107: &str = "u8";
-    static __DTA_LITERAL_108: &str = "u16";
-    static __DTA_LITERAL_109: &str = "u32";
-    static __DTA_LITERAL_110: &str = "u64";
-    static __DTA_LITERAL_111: &str = "i32";
-    static __DTA_LITERAL_112: &str = "i64";
-    static __DTA_LITERAL_113: &str = "f32";
-    static __DTA_LITERAL_114: &str = "f64";
-    static __DTA_LITERAL_115: &str = "bool";
-    static __DTA_LITERAL_116: &str = "usize";
-    static __DTA_REGEX_117: &str = "[_a-zA-Z][_a-zA-Z0-9]*";
-    static __DTA_ALT_LIN_118: [::bbnf::runtime::tape::DtaStateId; 11usize] = [
-        ::bbnf::runtime::tape::DtaStateId(107),
+    static __DTA_SEQ_107_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(105),
+        ::bbnf::runtime::tape::DtaStateId(106),
+    ];
+    static __DTA_SEQ_109_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(101),
         ::bbnf::runtime::tape::DtaStateId(108),
-        ::bbnf::runtime::tape::DtaStateId(109),
-        ::bbnf::runtime::tape::DtaStateId(110),
-        ::bbnf::runtime::tape::DtaStateId(111),
-        ::bbnf::runtime::tape::DtaStateId(112),
+    ];
+    static __DTA_LITERAL_110: &str = "|";
+    static __DTA_LITERAL_112: &str = ",";
+    static __DTA_SEQ_115_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(113),
+        ::bbnf::runtime::tape::DtaStateId(112),
         ::bbnf::runtime::tape::DtaStateId(114),
+    ];
+    static __DTA_SEQ_117_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(115),
         ::bbnf::runtime::tape::DtaStateId(116),
-        ::bbnf::runtime::tape::DtaStateId(117),
     ];
-    static __DTA_REGEX_119: &str = "[_a-zA-Z][_a-zA-Z0-9-]*";
-    static __DTA_LITERAL_120: &str = "\"";
-    static __DTA_REGEX_121: &str = "(\\\\.|[^\"\\\\])*";
-    static __DTA_LITERAL_122: &str = "\"";
-    static __DTA_SEQ_123_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+    static __DTA_LITERAL_119: &str = "|";
+    static __DTA_SEQ_121_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 5usize] = [
+        ::bbnf::runtime::tape::DtaStateId(110),
+        ::bbnf::runtime::tape::DtaStateId(111),
+        ::bbnf::runtime::tape::DtaStateId(118),
+        ::bbnf::runtime::tape::DtaStateId(119),
         ::bbnf::runtime::tape::DtaStateId(120),
-        ::bbnf::runtime::tape::DtaStateId(121),
+    ];
+    static __DTA_ALT_LIN_124: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(122),
+        ::bbnf::runtime::tape::DtaStateId(123),
     ];
-    static __DTA_LITERAL_124: &str = "'";
-    static __DTA_REGEX_125: &str = "(\\\\.|[^'\\\\])*";
-    static __DTA_LITERAL_126: &str = "'";
-    static __DTA_SEQ_127_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(124),
-        ::bbnf::runtime::tape::DtaStateId(125),
+    static __DTA_LITERAL_125: &str = ":";
+    static __DTA_SEQ_128_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(126),
+        ::bbnf::runtime::tape::DtaStateId(125),
+        ::bbnf::runtime::tape::DtaStateId(127),
     ];
-    static __DTA_LITERAL_128: &str = "`";
-    static __DTA_REGEX_129: &str = "(\\\\.|[^`\\\\])*";
-    static __DTA_LITERAL_130: &str = "`";
-    static __DTA_SEQ_131_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+    static __DTA_SEQ_130_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(128),
         ::bbnf::runtime::tape::DtaStateId(129),
-        ::bbnf::runtime::tape::DtaStateId(130),
     ];
-    static __DTA_ALT_LIN_132: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(123),
-        ::bbnf::runtime::tape::DtaStateId(127),
+    static __DTA_LITERAL_131: &str = "u8";
+    static __DTA_LITERAL_132: &str = "u16";
+    static __DTA_LITERAL_133: &str = "u32";
+    static __DTA_LITERAL_134: &str = "u64";
+    static __DTA_LITERAL_135: &str = "i32";
+    static __DTA_LITERAL_136: &str = "i64";
+    static __DTA_LITERAL_137: &str = "f32";
+    static __DTA_LITERAL_138: &str = "f64";
+    static __DTA_LITERAL_139: &str = "bool";
+    static __DTA_LITERAL_140: &str = "usize";
+    static __DTA_REGEX_141: &str = "[_a-zA-Z][_a-zA-Z0-9]*";
+    static __DTA_ALT_LIN_142: [::bbnf::runtime::tape::DtaStateId; 11usize] = [
         ::bbnf::runtime::tape::DtaStateId(131),
-    ];
-    static __DTA_LITERAL_133: &str = "/";
-    static __DTA_REGEX_134: &str = "(\\\\.|[^\\/])+";
-    static __DTA_LITERAL_135: &str = "/";
-    static __DTA_SEQ_136_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(132),
         ::bbnf::runtime::tape::DtaStateId(133),
         ::bbnf::runtime::tape::DtaStateId(134),
         ::bbnf::runtime::tape::DtaStateId(135),
-    ];
-    static __DTA_LITERAL_137: &str = "/*";
-    static __DTA_REGEX_138: &str = "[^\\*]*";
-    static __DTA_LITERAL_139: &str = "*/";
-    static __DTA_SEQ_140_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(136),
         ::bbnf::runtime::tape::DtaStateId(137),
         ::bbnf::runtime::tape::DtaStateId(138),
         ::bbnf::runtime::tape::DtaStateId(139),
-    ];
-    static __DTA_LITERAL_141: &str = "//";
-    static __DTA_REGEX_142: &str = ".*";
-    static __DTA_SEQ_143_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(140),
         ::bbnf::runtime::tape::DtaStateId(141),
-        ::bbnf::runtime::tape::DtaStateId(142),
     ];
-    static __DTA_LITERAL_146: &str = "|";
-    static __DTA_SEQ_148_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+    static __DTA_REGEX_143: &str = "[_a-zA-Z][_a-zA-Z0-9-]*";
+    static __DTA_LITERAL_144: &str = "\"";
+    static __DTA_REGEX_145: &str = "(\\\\.|[^\"\\\\])*";
+    static __DTA_LITERAL_146: &str = "\"";
+    static __DTA_SEQ_147_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(144),
         ::bbnf::runtime::tape::DtaStateId(145),
-        ::bbnf::runtime::tape::DtaStateId(147),
+        ::bbnf::runtime::tape::DtaStateId(146),
     ];
-    static __DTA_LITERAL_150: &str = "ε";
-    static __DTA_LITERAL_151: &str = "epsilon";
-    static __DTA_LITERAL_153: &str = "(";
-    static __DTA_LITERAL_155: &str = ",";
-    static __DTA_SEQ_157_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(155),
-        ::bbnf::runtime::tape::DtaStateId(156),
+    static __DTA_LITERAL_148: &str = "'";
+    static __DTA_REGEX_149: &str = "(\\\\.|[^'\\\\])*";
+    static __DTA_LITERAL_150: &str = "'";
+    static __DTA_SEQ_151_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(148),
+        ::bbnf::runtime::tape::DtaStateId(149),
+        ::bbnf::runtime::tape::DtaStateId(150),
     ];
-    static __DTA_LITERAL_159: &str = ")";
-    static __DTA_SEQ_160_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+    static __DTA_LITERAL_152: &str = "`";
+    static __DTA_REGEX_153: &str = "(\\\\.|[^`\\\\])*";
+    static __DTA_LITERAL_154: &str = "`";
+    static __DTA_SEQ_155_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(152),
         ::bbnf::runtime::tape::DtaStateId(153),
         ::bbnf::runtime::tape::DtaStateId(154),
+    ];
+    static __DTA_ALT_LIN_156: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(147),
+        ::bbnf::runtime::tape::DtaStateId(151),
+        ::bbnf::runtime::tape::DtaStateId(155),
+    ];
+    static __DTA_LITERAL_157: &str = "/";
+    static __DTA_REGEX_158: &str = "(\\\\.|[^\\/])+";
+    static __DTA_LITERAL_159: &str = "/";
+    static __DTA_SEQ_160_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(157),
         ::bbnf::runtime::tape::DtaStateId(158),
         ::bbnf::runtime::tape::DtaStateId(159),
     ];
-    static __DTA_SEQ_162_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(152),
+    static __DTA_LITERAL_161: &str = "/*";
+    static __DTA_REGEX_162: &str = "[^\\*]*";
+    static __DTA_LITERAL_163: &str = "*/";
+    static __DTA_SEQ_164_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(161),
-    ];
-    static __DTA_LITERAL_165: &str = "@{";
-    static __DTA_LITERAL_167: &str = "}";
-    static __DTA_SEQ_168_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(165),
-        ::bbnf::runtime::tape::DtaStateId(166),
-        ::bbnf::runtime::tape::DtaStateId(167),
-    ];
-    static __DTA_LITERAL_169: &str = "(";
-    static __DTA_LITERAL_171: &str = ")";
-    static __DTA_SEQ_172_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(169),
-        ::bbnf::runtime::tape::DtaStateId(170),
-        ::bbnf::runtime::tape::DtaStateId(171),
-    ];
-    static __DTA_LITERAL_173: &str = "[";
-    static __DTA_LITERAL_175: &str = "]";
-    static __DTA_SEQ_176_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(173),
-        ::bbnf::runtime::tape::DtaStateId(174),
-        ::bbnf::runtime::tape::DtaStateId(175),
-    ];
-    static __DTA_LITERAL_177: &str = "{";
-    static __DTA_LITERAL_179: &str = "}";
-    static __DTA_SEQ_180_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(177),
-        ::bbnf::runtime::tape::DtaStateId(178),
-        ::bbnf::runtime::tape::DtaStateId(179),
-    ];
-    static __DTA_ALT_LIN_181: [::bbnf::runtime::tape::DtaStateId; 9usize] = [
-        ::bbnf::runtime::tape::DtaStateId(150),
-        ::bbnf::runtime::tape::DtaStateId(151),
         ::bbnf::runtime::tape::DtaStateId(162),
         ::bbnf::runtime::tape::DtaStateId(163),
+    ];
+    static __DTA_SEQ_167_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(165),
         ::bbnf::runtime::tape::DtaStateId(164),
+        ::bbnf::runtime::tape::DtaStateId(166),
+    ];
+    static __DTA_LITERAL_168: &str = "//";
+    static __DTA_REGEX_169: &str = ".*";
+    static __DTA_SEQ_170_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(168),
+        ::bbnf::runtime::tape::DtaStateId(169),
+    ];
+    static __DTA_SEQ_173_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(171),
+        ::bbnf::runtime::tape::DtaStateId(170),
         ::bbnf::runtime::tape::DtaStateId(172),
+    ];
+    static __DTA_SEQ_178_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(176),
+        ::bbnf::runtime::tape::DtaStateId(175),
+        ::bbnf::runtime::tape::DtaStateId(177),
+    ];
+    static __DTA_LITERAL_179: &str = "|";
+    static __DTA_SEQ_181_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(178),
         ::bbnf::runtime::tape::DtaStateId(180),
     ];
-    static __DTA_LITERAL_182: &str = "?w";
-    static __DTA_LITERAL_183: &str = "?";
-    static __DTA_LITERAL_184: &str = "*";
-    static __DTA_LITERAL_185: &str = "+";
-    static __DTA_ALT_LIN_186: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
-        ::bbnf::runtime::tape::DtaStateId(182),
-        ::bbnf::runtime::tape::DtaStateId(183),
-        ::bbnf::runtime::tape::DtaStateId(184),
-        ::bbnf::runtime::tape::DtaStateId(185),
-    ];
-    static __DTA_SEQ_194_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+    static __DTA_LITERAL_183: &str = "ε";
+    static __DTA_LITERAL_184: &str = "epsilon";
+    static __DTA_LITERAL_186: &str = "(";
+    static __DTA_SEQ_190_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(188),
+        ::bbnf::runtime::tape::DtaStateId(187),
         ::bbnf::runtime::tape::DtaStateId(189),
+    ];
+    static __DTA_LITERAL_191: &str = ",";
+    static __DTA_SEQ_194_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(192),
         ::bbnf::runtime::tape::DtaStateId(191),
         ::bbnf::runtime::tape::DtaStateId(193),
     ];
-    static __DTA_LITERAL_196: &str = "->";
-    static __DTA_SEQ_200_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(197),
-        ::bbnf::runtime::tape::DtaStateId(199),
-    ];
-    static __DTA_SEQ_201_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+    static __DTA_SEQ_198_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(196),
-        ::bbnf::runtime::tape::DtaStateId(200),
-    ];
-    static __DTA_SEQ_203_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(195),
-        ::bbnf::runtime::tape::DtaStateId(202),
+        ::bbnf::runtime::tape::DtaStateId(197),
     ];
-    static __DTA_LITERAL_204: &str = "<<";
-    static __DTA_LITERAL_205: &str = ">>";
-    static __DTA_LITERAL_206: &str = "-";
-    static __DTA_ALT_LIN_207: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+    static __DTA_SEQ_199_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(194),
+        ::bbnf::runtime::tape::DtaStateId(198),
+    ];
+    static __DTA_LITERAL_201: &str = ")";
+    static __DTA_SEQ_202_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(186),
+        ::bbnf::runtime::tape::DtaStateId(190),
+        ::bbnf::runtime::tape::DtaStateId(200),
+        ::bbnf::runtime::tape::DtaStateId(201),
+    ];
+    static __DTA_SEQ_204_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(185),
+        ::bbnf::runtime::tape::DtaStateId(203),
+    ];
+    static __DTA_LITERAL_207: &str = "@{";
+    static __DTA_SEQ_211_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(209),
+        ::bbnf::runtime::tape::DtaStateId(208),
+        ::bbnf::runtime::tape::DtaStateId(210),
+    ];
+    static __DTA_LITERAL_212: &str = "}";
+    static __DTA_SEQ_213_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(207),
+        ::bbnf::runtime::tape::DtaStateId(211),
+        ::bbnf::runtime::tape::DtaStateId(212),
+    ];
+    static __DTA_LITERAL_214: &str = "(";
+    static __DTA_SEQ_218_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(216),
+        ::bbnf::runtime::tape::DtaStateId(215),
+        ::bbnf::runtime::tape::DtaStateId(217),
+    ];
+    static __DTA_LITERAL_219: &str = ")";
+    static __DTA_SEQ_220_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(214),
+        ::bbnf::runtime::tape::DtaStateId(218),
+        ::bbnf::runtime::tape::DtaStateId(219),
+    ];
+    static __DTA_LITERAL_221: &str = "[";
+    static __DTA_SEQ_225_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(223),
+        ::bbnf::runtime::tape::DtaStateId(222),
+        ::bbnf::runtime::tape::DtaStateId(224),
+    ];
+    static __DTA_LITERAL_226: &str = "]";
+    static __DTA_SEQ_227_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(221),
+        ::bbnf::runtime::tape::DtaStateId(225),
+        ::bbnf::runtime::tape::DtaStateId(226),
+    ];
+    static __DTA_LITERAL_228: &str = "{";
+    static __DTA_SEQ_232_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(230),
+        ::bbnf::runtime::tape::DtaStateId(229),
+        ::bbnf::runtime::tape::DtaStateId(231),
+    ];
+    static __DTA_LITERAL_233: &str = "}";
+    static __DTA_SEQ_234_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(228),
+        ::bbnf::runtime::tape::DtaStateId(232),
+        ::bbnf::runtime::tape::DtaStateId(233),
+    ];
+    static __DTA_ALT_LIN_235: [::bbnf::runtime::tape::DtaStateId; 9usize] = [
+        ::bbnf::runtime::tape::DtaStateId(183),
+        ::bbnf::runtime::tape::DtaStateId(184),
         ::bbnf::runtime::tape::DtaStateId(204),
         ::bbnf::runtime::tape::DtaStateId(205),
         ::bbnf::runtime::tape::DtaStateId(206),
-    ];
-    static __DTA_SEQ_211_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(209),
-        ::bbnf::runtime::tape::DtaStateId(210),
-    ];
-    static __DTA_SEQ_213_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(208),
-        ::bbnf::runtime::tape::DtaStateId(212),
-    ];
-    static __DTA_LITERAL_215: &str = ",";
-    static __DTA_SEQ_217_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(214),
-        ::bbnf::runtime::tape::DtaStateId(216),
-    ];
-    static __DTA_LITERAL_220: &str = "|";
-    static __DTA_SEQ_222_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(219),
-        ::bbnf::runtime::tape::DtaStateId(221),
-    ];
-    static __DTA_LITERAL_224: &str = "|";
-    static __DTA_LITERAL_226: &str = ",";
-    static __DTA_SEQ_228_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(226),
+        ::bbnf::runtime::tape::DtaStateId(213),
+        ::bbnf::runtime::tape::DtaStateId(220),
         ::bbnf::runtime::tape::DtaStateId(227),
-    ];
-    static __DTA_LITERAL_230: &str = "|";
-    static __DTA_SEQ_232_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 5usize] = [
-        ::bbnf::runtime::tape::DtaStateId(224),
-        ::bbnf::runtime::tape::DtaStateId(225),
-        ::bbnf::runtime::tape::DtaStateId(229),
-        ::bbnf::runtime::tape::DtaStateId(230),
-        ::bbnf::runtime::tape::DtaStateId(231),
-    ];
-    static __DTA_ALT_LIN_235: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(233),
         ::bbnf::runtime::tape::DtaStateId(234),
     ];
-    static __DTA_LITERAL_237: &str = "=";
-    static __DTA_LITERAL_239: &str = ";";
-    static __DTA_LITERAL_240: &str = ".";
-    static __DTA_ALT_LIN_241: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(239),
-        ::bbnf::runtime::tape::DtaStateId(240),
-    ];
-    static __DTA_SEQ_242_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+    static __DTA_LITERAL_236: &str = "?w";
+    static __DTA_LITERAL_237: &str = "?";
+    static __DTA_LITERAL_238: &str = "*";
+    static __DTA_LITERAL_239: &str = "+";
+    static __DTA_ALT_LIN_240: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
         ::bbnf::runtime::tape::DtaStateId(236),
         ::bbnf::runtime::tape::DtaStateId(237),
         ::bbnf::runtime::tape::DtaStateId(238),
-        ::bbnf::runtime::tape::DtaStateId(241),
+        ::bbnf::runtime::tape::DtaStateId(239),
     ];
-    static __DTA_LITERAL_243: &str = "\"";
-    static __DTA_REGEX_244: &str = "(\\\\.|[^\"\\\\])*";
-    static __DTA_LITERAL_245: &str = "\"";
     static __DTA_SEQ_246_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(243),
         ::bbnf::runtime::tape::DtaStateId(244),
+        ::bbnf::runtime::tape::DtaStateId(243),
         ::bbnf::runtime::tape::DtaStateId(245),
     ];
-    static __DTA_LITERAL_247: &str = "{";
-    static __DTA_LITERAL_249: &str = ",";
-    static __DTA_SEQ_251_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(249),
+    static __DTA_SEQ_251_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(242),
+        ::bbnf::runtime::tape::DtaStateId(246),
+        ::bbnf::runtime::tape::DtaStateId(248),
         ::bbnf::runtime::tape::DtaStateId(250),
     ];
-    static __DTA_SEQ_253_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(248),
-        ::bbnf::runtime::tape::DtaStateId(252),
-    ];
-    static __DTA_LITERAL_254: &str = "}";
-    static __DTA_SEQ_255_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(247),
-        ::bbnf::runtime::tape::DtaStateId(253),
+    static __DTA_LITERAL_253: &str = "->";
+    static __DTA_SEQ_256_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(254),
+        ::bbnf::runtime::tape::DtaStateId(253),
+        ::bbnf::runtime::tape::DtaStateId(255),
     ];
-    static __DTA_LITERAL_256: &str = "@import";
-    static __DTA_LITERAL_258: &str = "from";
-    static __DTA_SEQ_260_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+    static __DTA_SEQ_260_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(257),
-        ::bbnf::runtime::tape::DtaStateId(258),
         ::bbnf::runtime::tape::DtaStateId(259),
     ];
-    static __DTA_ALT_LIN_262: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(260),
-        ::bbnf::runtime::tape::DtaStateId(261),
-    ];
-    static __DTA_LITERAL_263: &str = ";";
-    static __DTA_LITERAL_264: &str = ".";
-    static __DTA_ALT_LIN_265: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(263),
-        ::bbnf::runtime::tape::DtaStateId(264),
-    ];
-    static __DTA_SEQ_267_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+    static __DTA_SEQ_261_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(256),
+        ::bbnf::runtime::tape::DtaStateId(260),
+    ];
+    static __DTA_SEQ_263_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(252),
         ::bbnf::runtime::tape::DtaStateId(262),
+    ];
+    static __DTA_LITERAL_264: &str = "<<";
+    static __DTA_LITERAL_265: &str = ">>";
+    static __DTA_LITERAL_266: &str = "-";
+    static __DTA_ALT_LIN_267: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(264),
+        ::bbnf::runtime::tape::DtaStateId(265),
         ::bbnf::runtime::tape::DtaStateId(266),
     ];
-    static __DTA_LITERAL_268: &str = "@recover";
-    static __DTA_LITERAL_271: &str = ";";
-    static __DTA_LITERAL_272: &str = ".";
-    static __DTA_ALT_LIN_273: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(271),
-        ::bbnf::runtime::tape::DtaStateId(272),
-    ];
-    static __DTA_SEQ_275_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
-        ::bbnf::runtime::tape::DtaStateId(268),
-        ::bbnf::runtime::tape::DtaStateId(269),
+    static __DTA_SEQ_272_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(270),
-        ::bbnf::runtime::tape::DtaStateId(274),
+        ::bbnf::runtime::tape::DtaStateId(269),
+        ::bbnf::runtime::tape::DtaStateId(271),
     ];
-    static __DTA_LITERAL_277: &str = "(";
-    static __DTA_REGEX_278: &str = "[^)]*";
-    static __DTA_LITERAL_279: &str = ")";
+    static __DTA_SEQ_274_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(272),
+        ::bbnf::runtime::tape::DtaStateId(273),
+    ];
+    static __DTA_SEQ_276_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(268),
+        ::bbnf::runtime::tape::DtaStateId(275),
+    ];
     static __DTA_SEQ_280_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(277),
         ::bbnf::runtime::tape::DtaStateId(278),
+        ::bbnf::runtime::tape::DtaStateId(277),
         ::bbnf::runtime::tape::DtaStateId(279),
     ];
-    static __DTA_SEQ_282_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(276),
-        ::bbnf::runtime::tape::DtaStateId(281),
+    static __DTA_LITERAL_281: &str = ",";
+    static __DTA_SEQ_283_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(280),
+        ::bbnf::runtime::tape::DtaStateId(282),
     ];
-    static __DTA_LITERAL_283: &str = "@pretty";
-    static __DTA_LITERAL_284: &str = "*";
-    static __DTA_ALT_LIN_286: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(284),
+    static __DTA_SEQ_288_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(286),
         ::bbnf::runtime::tape::DtaStateId(285),
+        ::bbnf::runtime::tape::DtaStateId(287),
     ];
-    static __DTA_LITERAL_289: &str = ";";
-    static __DTA_LITERAL_290: &str = ".";
-    static __DTA_ALT_LIN_291: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(289),
+    static __DTA_LITERAL_289: &str = "|";
+    static __DTA_SEQ_291_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(288),
         ::bbnf::runtime::tape::DtaStateId(290),
     ];
-    static __DTA_SEQ_293_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
-        ::bbnf::runtime::tape::DtaStateId(283),
-        ::bbnf::runtime::tape::DtaStateId(286),
-        ::bbnf::runtime::tape::DtaStateId(288),
-        ::bbnf::runtime::tape::DtaStateId(292),
-    ];
-    static __DTA_LITERAL_294: &str = "@ws";
-    static __DTA_LITERAL_296: &str = ";";
-    static __DTA_LITERAL_297: &str = ".";
-    static __DTA_ALT_LIN_298: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+    static __DTA_LITERAL_293: &str = "|";
+    static __DTA_LITERAL_295: &str = ",";
+    static __DTA_SEQ_298_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(296),
+        ::bbnf::runtime::tape::DtaStateId(295),
         ::bbnf::runtime::tape::DtaStateId(297),
     ];
-    static __DTA_SEQ_300_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(294),
-        ::bbnf::runtime::tape::DtaStateId(295),
+    static __DTA_SEQ_300_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(298),
         ::bbnf::runtime::tape::DtaStateId(299),
     ];
-    static __DTA_LITERAL_301: &str = "@token";
-    static __DTA_LITERAL_303: &str = ";";
-    static __DTA_LITERAL_304: &str = ".";
-    static __DTA_ALT_LIN_305: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+    static __DTA_LITERAL_302: &str = "|";
+    static __DTA_SEQ_305_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(303),
+        ::bbnf::runtime::tape::DtaStateId(302),
         ::bbnf::runtime::tape::DtaStateId(304),
     ];
-    static __DTA_SEQ_307_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+    static __DTA_SEQ_307_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 5usize] = [
+        ::bbnf::runtime::tape::DtaStateId(293),
+        ::bbnf::runtime::tape::DtaStateId(294),
         ::bbnf::runtime::tape::DtaStateId(301),
-        ::bbnf::runtime::tape::DtaStateId(302),
+        ::bbnf::runtime::tape::DtaStateId(305),
         ::bbnf::runtime::tape::DtaStateId(306),
     ];
-    static __DTA_LITERAL_308: &str = "@debug";
-    static __DTA_LITERAL_309: &str = "*";
-    static __DTA_ALT_LIN_311: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(309),
-        ::bbnf::runtime::tape::DtaStateId(310),
-    ];
-    static __DTA_LITERAL_312: &str = ";";
-    static __DTA_LITERAL_313: &str = ".";
-    static __DTA_ALT_LIN_314: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(312),
-        ::bbnf::runtime::tape::DtaStateId(313),
-    ];
-    static __DTA_SEQ_316_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+    static __DTA_ALT_LIN_310: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(308),
+        ::bbnf::runtime::tape::DtaStateId(309),
+    ];
+    static __DTA_LITERAL_312: &str = "=";
+    static __DTA_SEQ_315_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(313),
+        ::bbnf::runtime::tape::DtaStateId(312),
+        ::bbnf::runtime::tape::DtaStateId(314),
+    ];
+    static __DTA_SEQ_319_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(317),
+        ::bbnf::runtime::tape::DtaStateId(316),
+        ::bbnf::runtime::tape::DtaStateId(318),
+    ];
+    static __DTA_LITERAL_320: &str = ";";
+    static __DTA_LITERAL_321: &str = ".";
+    static __DTA_ALT_LIN_322: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(320),
+        ::bbnf::runtime::tape::DtaStateId(321),
+    ];
+    static __DTA_SEQ_323_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
         ::bbnf::runtime::tape::DtaStateId(311),
         ::bbnf::runtime::tape::DtaStateId(315),
-    ];
-    static __DTA_LITERAL_317: &str = "@host";
-    static __DTA_LITERAL_319: &str = ":";
-    static __DTA_SEQ_321_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(319),
-        ::bbnf::runtime::tape::DtaStateId(320),
-    ];
-    static __DTA_LITERAL_323: &str = ";";
-    static __DTA_LITERAL_324: &str = ".";
-    static __DTA_ALT_LIN_325: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(323),
-        ::bbnf::runtime::tape::DtaStateId(324),
-    ];
-    static __DTA_SEQ_327_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
-        ::bbnf::runtime::tape::DtaStateId(317),
-        ::bbnf::runtime::tape::DtaStateId(318),
         ::bbnf::runtime::tape::DtaStateId(322),
+    ];
+    static __DTA_LITERAL_324: &str = "\"";
+    static __DTA_REGEX_325: &str = "(\\\\.|[^\"\\\\])*";
+    static __DTA_LITERAL_326: &str = "\"";
+    static __DTA_SEQ_327_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(324),
+        ::bbnf::runtime::tape::DtaStateId(325),
         ::bbnf::runtime::tape::DtaStateId(326),
     ];
-    static __DTA_ALT_LIN_335: [::bbnf::runtime::tape::DtaStateId; 7usize] = [
-        ::bbnf::runtime::tape::DtaStateId(328),
+    static __DTA_LITERAL_328: &str = "{";
+    static __DTA_SEQ_331_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(329),
+        ::bbnf::runtime::tape::DtaStateId(328),
         ::bbnf::runtime::tape::DtaStateId(330),
-        ::bbnf::runtime::tape::DtaStateId(331),
-        ::bbnf::runtime::tape::DtaStateId(332),
-        ::bbnf::runtime::tape::DtaStateId(333),
-        ::bbnf::runtime::tape::DtaStateId(334),
     ];
-    static __DTA_ALT_LIN_340: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+    static __DTA_LITERAL_333: &str = ",";
+    static __DTA_SEQ_336_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(334),
+        ::bbnf::runtime::tape::DtaStateId(333),
+        ::bbnf::runtime::tape::DtaStateId(335),
+    ];
+    static __DTA_SEQ_338_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(336),
         ::bbnf::runtime::tape::DtaStateId(337),
-        ::bbnf::runtime::tape::DtaStateId(338),
+    ];
+    static __DTA_SEQ_340_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(332),
         ::bbnf::runtime::tape::DtaStateId(339),
     ];
-    static __DTA_STATES: [::bbnf::runtime::tape::DtaState; 343usize] = [
+    static __DTA_SEQ_343_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(341),
+        ::bbnf::runtime::tape::DtaStateId(340),
+        ::bbnf::runtime::tape::DtaStateId(342),
+    ];
+    static __DTA_LITERAL_344: &str = "}";
+    static __DTA_SEQ_345_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(331),
+        ::bbnf::runtime::tape::DtaStateId(343),
+        ::bbnf::runtime::tape::DtaStateId(344),
+    ];
+    static __DTA_LITERAL_346: &str = "@import";
+    static __DTA_SEQ_349_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(347),
+        ::bbnf::runtime::tape::DtaStateId(346),
+        ::bbnf::runtime::tape::DtaStateId(348),
+    ];
+    static __DTA_SEQ_353_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(351),
+        ::bbnf::runtime::tape::DtaStateId(350),
+        ::bbnf::runtime::tape::DtaStateId(352),
+    ];
+    static __DTA_LITERAL_354: &str = "from";
+    static __DTA_SEQ_357_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(355),
+        ::bbnf::runtime::tape::DtaStateId(354),
+        ::bbnf::runtime::tape::DtaStateId(356),
+    ];
+    static __DTA_SEQ_359_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(353),
+        ::bbnf::runtime::tape::DtaStateId(357),
+        ::bbnf::runtime::tape::DtaStateId(358),
+    ];
+    static __DTA_ALT_LIN_361: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(359),
+        ::bbnf::runtime::tape::DtaStateId(360),
+    ];
+    static __DTA_SEQ_364_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(362),
+        ::bbnf::runtime::tape::DtaStateId(361),
+        ::bbnf::runtime::tape::DtaStateId(363),
+    ];
+    static __DTA_LITERAL_365: &str = ";";
+    static __DTA_LITERAL_366: &str = ".";
+    static __DTA_ALT_LIN_367: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(365),
+        ::bbnf::runtime::tape::DtaStateId(366),
+    ];
+    static __DTA_SEQ_369_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(349),
+        ::bbnf::runtime::tape::DtaStateId(364),
+        ::bbnf::runtime::tape::DtaStateId(368),
+    ];
+    static __DTA_LITERAL_370: &str = "@recover";
+    static __DTA_SEQ_373_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(371),
+        ::bbnf::runtime::tape::DtaStateId(370),
+        ::bbnf::runtime::tape::DtaStateId(372),
+    ];
+    static __DTA_SEQ_377_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(375),
+        ::bbnf::runtime::tape::DtaStateId(374),
+        ::bbnf::runtime::tape::DtaStateId(376),
+    ];
+    static __DTA_SEQ_381_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(379),
+        ::bbnf::runtime::tape::DtaStateId(378),
+        ::bbnf::runtime::tape::DtaStateId(380),
+    ];
+    static __DTA_LITERAL_382: &str = ";";
+    static __DTA_LITERAL_383: &str = ".";
+    static __DTA_ALT_LIN_384: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(382),
+        ::bbnf::runtime::tape::DtaStateId(383),
+    ];
+    static __DTA_SEQ_386_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(373),
+        ::bbnf::runtime::tape::DtaStateId(377),
+        ::bbnf::runtime::tape::DtaStateId(381),
+        ::bbnf::runtime::tape::DtaStateId(385),
+    ];
+    static __DTA_LITERAL_388: &str = "(";
+    static __DTA_REGEX_389: &str = "[^)]*";
+    static __DTA_LITERAL_390: &str = ")";
+    static __DTA_SEQ_391_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(388),
+        ::bbnf::runtime::tape::DtaStateId(389),
+        ::bbnf::runtime::tape::DtaStateId(390),
+    ];
+    static __DTA_SEQ_393_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(387),
+        ::bbnf::runtime::tape::DtaStateId(392),
+    ];
+    static __DTA_LITERAL_394: &str = "@pretty";
+    static __DTA_SEQ_397_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(395),
+        ::bbnf::runtime::tape::DtaStateId(394),
+        ::bbnf::runtime::tape::DtaStateId(396),
+    ];
+    static __DTA_LITERAL_398: &str = "*";
+    static __DTA_ALT_LIN_400: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(398),
+        ::bbnf::runtime::tape::DtaStateId(399),
+    ];
+    static __DTA_SEQ_403_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(401),
+        ::bbnf::runtime::tape::DtaStateId(400),
+        ::bbnf::runtime::tape::DtaStateId(402),
+    ];
+    static __DTA_SEQ_407_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(405),
+        ::bbnf::runtime::tape::DtaStateId(404),
+        ::bbnf::runtime::tape::DtaStateId(406),
+    ];
+    static __DTA_LITERAL_409: &str = ";";
+    static __DTA_LITERAL_410: &str = ".";
+    static __DTA_ALT_LIN_411: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(409),
+        ::bbnf::runtime::tape::DtaStateId(410),
+    ];
+    static __DTA_SEQ_413_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(397),
+        ::bbnf::runtime::tape::DtaStateId(403),
+        ::bbnf::runtime::tape::DtaStateId(408),
+        ::bbnf::runtime::tape::DtaStateId(412),
+    ];
+    static __DTA_LITERAL_414: &str = "@ws";
+    static __DTA_SEQ_417_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(415),
+        ::bbnf::runtime::tape::DtaStateId(414),
+        ::bbnf::runtime::tape::DtaStateId(416),
+    ];
+    static __DTA_SEQ_421_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(419),
+        ::bbnf::runtime::tape::DtaStateId(418),
+        ::bbnf::runtime::tape::DtaStateId(420),
+    ];
+    static __DTA_LITERAL_422: &str = ";";
+    static __DTA_LITERAL_423: &str = ".";
+    static __DTA_ALT_LIN_424: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(422),
+        ::bbnf::runtime::tape::DtaStateId(423),
+    ];
+    static __DTA_SEQ_426_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(417),
+        ::bbnf::runtime::tape::DtaStateId(421),
+        ::bbnf::runtime::tape::DtaStateId(425),
+    ];
+    static __DTA_LITERAL_427: &str = "@token";
+    static __DTA_SEQ_430_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(428),
+        ::bbnf::runtime::tape::DtaStateId(427),
+        ::bbnf::runtime::tape::DtaStateId(429),
+    ];
+    static __DTA_SEQ_434_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(432),
+        ::bbnf::runtime::tape::DtaStateId(431),
+        ::bbnf::runtime::tape::DtaStateId(433),
+    ];
+    static __DTA_LITERAL_435: &str = ";";
+    static __DTA_LITERAL_436: &str = ".";
+    static __DTA_ALT_LIN_437: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(435),
+        ::bbnf::runtime::tape::DtaStateId(436),
+    ];
+    static __DTA_SEQ_439_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(430),
+        ::bbnf::runtime::tape::DtaStateId(434),
+        ::bbnf::runtime::tape::DtaStateId(438),
+    ];
+    static __DTA_LITERAL_440: &str = "@debug";
+    static __DTA_SEQ_443_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(441),
+        ::bbnf::runtime::tape::DtaStateId(440),
+        ::bbnf::runtime::tape::DtaStateId(442),
+    ];
+    static __DTA_LITERAL_444: &str = "*";
+    static __DTA_ALT_LIN_446: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(444),
+        ::bbnf::runtime::tape::DtaStateId(445),
+    ];
+    static __DTA_SEQ_449_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(447),
+        ::bbnf::runtime::tape::DtaStateId(446),
+        ::bbnf::runtime::tape::DtaStateId(448),
+    ];
+    static __DTA_LITERAL_450: &str = ";";
+    static __DTA_LITERAL_451: &str = ".";
+    static __DTA_ALT_LIN_452: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(450),
+        ::bbnf::runtime::tape::DtaStateId(451),
+    ];
+    static __DTA_SEQ_454_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(443),
+        ::bbnf::runtime::tape::DtaStateId(449),
+        ::bbnf::runtime::tape::DtaStateId(453),
+    ];
+    static __DTA_LITERAL_455: &str = "@host";
+    static __DTA_SEQ_458_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(456),
+        ::bbnf::runtime::tape::DtaStateId(455),
+        ::bbnf::runtime::tape::DtaStateId(457),
+    ];
+    static __DTA_SEQ_462_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(460),
+        ::bbnf::runtime::tape::DtaStateId(459),
+        ::bbnf::runtime::tape::DtaStateId(461),
+    ];
+    static __DTA_LITERAL_463: &str = ":";
+    static __DTA_SEQ_466_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(464),
+        ::bbnf::runtime::tape::DtaStateId(463),
+        ::bbnf::runtime::tape::DtaStateId(465),
+    ];
+    static __DTA_SEQ_470_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(468),
+        ::bbnf::runtime::tape::DtaStateId(467),
+        ::bbnf::runtime::tape::DtaStateId(469),
+    ];
+    static __DTA_SEQ_471_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(466),
+        ::bbnf::runtime::tape::DtaStateId(470),
+    ];
+    static __DTA_LITERAL_473: &str = ";";
+    static __DTA_LITERAL_474: &str = ".";
+    static __DTA_ALT_LIN_475: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+        ::bbnf::runtime::tape::DtaStateId(473),
+        ::bbnf::runtime::tape::DtaStateId(474),
+    ];
+    static __DTA_SEQ_477_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(458),
+        ::bbnf::runtime::tape::DtaStateId(462),
+        ::bbnf::runtime::tape::DtaStateId(472),
+        ::bbnf::runtime::tape::DtaStateId(476),
+    ];
+    static __DTA_ALT_LIN_485: [::bbnf::runtime::tape::DtaStateId; 7usize] = [
+        ::bbnf::runtime::tape::DtaStateId(478),
+        ::bbnf::runtime::tape::DtaStateId(479),
+        ::bbnf::runtime::tape::DtaStateId(480),
+        ::bbnf::runtime::tape::DtaStateId(481),
+        ::bbnf::runtime::tape::DtaStateId(482),
+        ::bbnf::runtime::tape::DtaStateId(483),
+        ::bbnf::runtime::tape::DtaStateId(484),
+    ];
+    static __DTA_ALT_LIN_490: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
+        ::bbnf::runtime::tape::DtaStateId(486),
+        ::bbnf::runtime::tape::DtaStateId(487),
+        ::bbnf::runtime::tape::DtaStateId(488),
+        ::bbnf::runtime::tape::DtaStateId(489),
+    ];
+    static __DTA_SEQ_494_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+        ::bbnf::runtime::tape::DtaStateId(492),
+        ::bbnf::runtime::tape::DtaStateId(491),
+        ::bbnf::runtime::tape::DtaStateId(493),
+    ];
+    static __DTA_STATES: [::bbnf::runtime::tape::DtaState; 496usize] = [
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_0,
         },
@@ -742,35 +997,45 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_25,
         },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_28_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(19),
             target: ::bbnf::runtime::tape::DtaStateId(65535),
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_27_CHILDREN,
+            children: &__DTA_SEQ_30_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(27),
+            inner: ::bbnf::runtime::tape::DtaStateId(30),
             lo: 0,
             hi: 4294967295,
             counter_optional: None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_29_CHILDREN,
+            children: &__DTA_SEQ_32_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(29),
+            inner: ::bbnf::runtime::tape::DtaStateId(32),
             lo: 0,
             hi: 1,
             counter_optional: None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_31,
+            text: __DTA_LITERAL_34,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_32_CHILDREN,
+            children: &__DTA_SEQ_35_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
@@ -791,7 +1056,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(7),
-            target: ::bbnf::runtime::tape::DtaStateId(32),
+            target: ::bbnf::runtime::tape::DtaStateId(35),
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(6),
@@ -802,42 +1067,34 @@ mod __bbnfbootstrap_emit_impl {
             target: ::bbnf::runtime::tape::DtaStateId(15),
         },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_40,
+            text: __DTA_LITERAL_43,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(19),
             target: ::bbnf::runtime::tape::DtaStateId(65535),
         },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_42,
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_43_CHILDREN,
+            children: &__DTA_SEQ_47_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_48,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_49_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_44,
+            branches: &__DTA_ALT_LIN_50,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_45,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_46,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_47,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_48,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_49,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_50,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_51,
+            text: __DTA_LITERAL_51,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_52,
@@ -845,8 +1102,8 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_53,
         },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_54,
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_54,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_55,
@@ -854,11 +1111,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_56,
         },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_57,
-        },
         ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_58,
+            branches: &__DTA_ALT_LIN_57,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_58,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_59,
@@ -866,119 +1123,107 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_60,
         },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_61,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_62,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_63,
+        },
         ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_61,
+            branches: &__DTA_ALT_LIN_64,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_65,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_66,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_67,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(8),
-            target: ::bbnf::runtime::tape::DtaStateId(44),
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_63_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(8),
-            target: ::bbnf::runtime::tape::DtaStateId(44),
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_65,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(12),
-            target: ::bbnf::runtime::tape::DtaStateId(65),
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(9),
-            target: ::bbnf::runtime::tape::DtaStateId(48),
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(12),
-            target: ::bbnf::runtime::tape::DtaStateId(65),
+            target: ::bbnf::runtime::tape::DtaStateId(50),
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_69_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(69),
-            lo: 0,
-            hi: 4294967295,
-            counter_optional: None,
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(8),
+            target: ::bbnf::runtime::tape::DtaStateId(50),
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_71,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(12),
+            target: ::bbnf::runtime::tape::DtaStateId(71),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(9),
+            target: ::bbnf::runtime::tape::DtaStateId(54),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_71_CHILDREN,
+            children: &__DTA_SEQ_76_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(12),
-            target: ::bbnf::runtime::tape::DtaStateId(65),
+            target: ::bbnf::runtime::tape::DtaStateId(71),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_78_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(78),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_80_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(12),
+            target: ::bbnf::runtime::tape::DtaStateId(71),
         },
         ::bbnf::runtime::tape::DtaState::ShuntingYard {
-            head: ::bbnf::runtime::tape::DtaStateId(72),
-            precedence: &__DTA_SY_73_PREC,
+            head: ::bbnf::runtime::tape::DtaStateId(81),
+            precedence: &__DTA_SY_82_PREC,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(14),
-            target: ::bbnf::runtime::tape::DtaStateId(73),
+            target: ::bbnf::runtime::tape::DtaStateId(82),
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(11),
-            target: ::bbnf::runtime::tape::DtaStateId(58),
+            target: ::bbnf::runtime::tape::DtaStateId(64),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_87_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(14),
-            target: ::bbnf::runtime::tape::DtaStateId(73),
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_77_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(77),
-            lo: 0,
-            hi: 4294967295,
-            counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_79_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(15),
-            target: ::bbnf::runtime::tape::DtaStateId(79),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_81,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(15),
-            target: ::bbnf::runtime::tape::DtaStateId(79),
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_83_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(83),
-            lo: 0,
-            hi: 4294967295,
-            counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_85_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(16),
-            target: ::bbnf::runtime::tape::DtaStateId(85),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_87,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(16),
-            target: ::bbnf::runtime::tape::DtaStateId(85),
+            target: ::bbnf::runtime::tape::DtaStateId(82),
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_89_CHILDREN,
@@ -994,240 +1239,239 @@ mod __bbnfbootstrap_emit_impl {
             children: &__DTA_SEQ_91_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_92,
-        },
         ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(4),
-            target: ::bbnf::runtime::tape::DtaStateId(9),
+            rule: ::bbnf::runtime::tape::DtaRuleId(15),
+            target: ::bbnf::runtime::tape::DtaStateId(91),
         },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_94,
+            text: __DTA_LITERAL_93,
         },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(4),
-            target: ::bbnf::runtime::tape::DtaStateId(9),
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_96_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(15),
+            target: ::bbnf::runtime::tape::DtaStateId(91),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_98_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
         ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(96),
+            inner: ::bbnf::runtime::tape::DtaStateId(98),
             lo: 0,
             hi: 4294967295,
             counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_98,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(19),
-            target: ::bbnf::runtime::tape::DtaStateId(65535),
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_100_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(18),
+            rule: ::bbnf::runtime::tape::DtaRuleId(16),
             target: ::bbnf::runtime::tape::DtaStateId(100),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_102,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_105_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(16),
+            target: ::bbnf::runtime::tape::DtaStateId(100),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_107_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(107),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_109_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_110,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(4),
+            target: ::bbnf::runtime::tape::DtaStateId(9),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_112,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_115_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(4),
+            target: ::bbnf::runtime::tape::DtaStateId(9),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_117_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(117),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_119,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(19),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_121_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(18),
+            target: ::bbnf::runtime::tape::DtaStateId(121),
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(17),
-            target: ::bbnf::runtime::tape::DtaStateId(91),
+            target: ::bbnf::runtime::tape::DtaStateId(109),
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_103,
+            branches: &__DTA_ALT_LIN_124,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_104,
+            text: __DTA_LITERAL_125,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_128_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(21),
             target: ::bbnf::runtime::tape::DtaStateId(65535),
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_106_CHILDREN,
+            children: &__DTA_SEQ_130_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_107,
+            text: __DTA_LITERAL_131,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_108,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_109,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_110,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_111,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_112,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_113,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_114,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_115,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_116,
-        },
-        ::bbnf::runtime::tape::DtaState::Regex {
-            pattern: __DTA_REGEX_117,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_118,
-        },
-        ::bbnf::runtime::tape::DtaState::Regex {
-            pattern: __DTA_REGEX_119,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_120,
-        },
-        ::bbnf::runtime::tape::DtaState::Regex {
-            pattern: __DTA_REGEX_121,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_122,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_123_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_124,
-        },
-        ::bbnf::runtime::tape::DtaState::Regex {
-            pattern: __DTA_REGEX_125,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_126,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_127_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_128,
-        },
-        ::bbnf::runtime::tape::DtaState::Regex {
-            pattern: __DTA_REGEX_129,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_130,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_131_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_132,
+            text: __DTA_LITERAL_132,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_133,
         },
-        ::bbnf::runtime::tape::DtaState::Regex {
-            pattern: __DTA_REGEX_134,
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_134,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_135,
         },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_136_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_136,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_137,
         },
-        ::bbnf::runtime::tape::DtaState::Regex {
-            pattern: __DTA_REGEX_138,
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_138,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_139,
         },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_140_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_141,
+            text: __DTA_LITERAL_140,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
-            pattern: __DTA_REGEX_142,
+            pattern: __DTA_REGEX_141,
         },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_143_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_142,
         },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            target: ::bbnf::runtime::tape::DtaStateId(119),
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_143,
         },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(34),
-            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_144,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_145,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_146,
         },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(146),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
-        },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_148_CHILDREN,
+            children: &__DTA_SEQ_147_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(148),
-            lo: 1,
-            hi: 4294967295,
-            counter_optional: None,
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_148,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_149,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_150,
         },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_151,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            target: ::bbnf::runtime::tape::DtaStateId(119),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_153,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(28),
-            target: ::bbnf::runtime::tape::DtaStateId(149),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_155,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(28),
-            target: ::bbnf::runtime::tape::DtaStateId(149),
-        },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_157_CHILDREN,
+            children: &__DTA_SEQ_151_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(157),
-            lo: 0,
-            hi: 4294967295,
-            counter_optional: None,
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_152,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_153,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_154,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_155_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_156,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_157,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_158,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_159,
@@ -1236,85 +1480,85 @@ mod __bbnfbootstrap_emit_impl {
             children: &__DTA_SEQ_160_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_161,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_162,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_163,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_164_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_167_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_168,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_169,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_170_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_173_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(34),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_178_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_179,
+        },
         ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(160),
+            inner: ::bbnf::runtime::tape::DtaStateId(179),
             lo: 0,
             hi: 1,
             counter_optional: None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_162_CHILDREN,
+            children: &__DTA_SEQ_181_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(23),
-            target: ::bbnf::runtime::tape::DtaStateId(132),
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(24),
-            target: ::bbnf::runtime::tape::DtaStateId(136),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_165,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(38),
-            target: ::bbnf::runtime::tape::DtaStateId(65535),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_167,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_168_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_169,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(38),
-            target: ::bbnf::runtime::tape::DtaStateId(65535),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_171,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_172_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_173,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(38),
-            target: ::bbnf::runtime::tape::DtaStateId(65535),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_175,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_176_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_177,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(38),
-            target: ::bbnf::runtime::tape::DtaStateId(65535),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_179,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_180_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_181,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_182,
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(181),
+            lo: 1,
+            hi: 4294967295,
+            counter_optional: None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_183,
@@ -1322,617 +1566,1138 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_184,
         },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
+        },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_185,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_186,
+            text: __DTA_LITERAL_186,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(25),
-            target: ::bbnf::runtime::tape::DtaStateId(140),
+            rule: ::bbnf::runtime::tape::DtaRuleId(28),
+            target: ::bbnf::runtime::tape::DtaStateId(182),
         },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(187),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
         },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(29),
-            target: ::bbnf::runtime::tape::DtaStateId(181),
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
         },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(30),
-            target: ::bbnf::runtime::tape::DtaStateId(186),
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_190_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(190),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_191,
         },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(25),
-            target: ::bbnf::runtime::tape::DtaStateId(140),
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
         },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(192),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_194_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(31),
-            target: ::bbnf::runtime::tape::DtaStateId(194),
+            rule: ::bbnf::runtime::tape::DtaRuleId(28),
+            target: ::bbnf::runtime::tape::DtaStateId(182),
         },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_196,
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
         },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(19),
-            target: ::bbnf::runtime::tape::DtaStateId(103),
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
         },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(20),
-            target: ::bbnf::runtime::tape::DtaStateId(106),
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_198_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_199_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(198),
+            inner: ::bbnf::runtime::tape::DtaStateId(199),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_201,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_202_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(202),
             lo: 0,
             hi: 1,
             counter_optional: None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_200_CHILDREN,
+            children: &__DTA_SEQ_204_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_201_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(201),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_203_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_204,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_205,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_206,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_207,
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(23),
+            target: ::bbnf::runtime::tape::DtaStateId(156),
         },
         ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(32),
-            target: ::bbnf::runtime::tape::DtaStateId(203),
+            rule: ::bbnf::runtime::tape::DtaRuleId(24),
+            target: ::bbnf::runtime::tape::DtaStateId(160),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_207,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(33),
-            target: ::bbnf::runtime::tape::DtaStateId(207),
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
         },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(32),
-            target: ::bbnf::runtime::tape::DtaStateId(203),
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_211_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(211),
-            lo: 0,
-            hi: 4294967295,
-            counter_optional: None,
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_212,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_213_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_214,
+        },
         ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(34),
-            target: ::bbnf::runtime::tape::DtaStateId(213),
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_218_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_215,
+            text: __DTA_LITERAL_219,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_220_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_221,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_225_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_226,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_227_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_228,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(65535),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_232_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_233,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_234_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_235,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_236,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_237,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_238,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_239,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_240,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(25),
+            target: ::bbnf::runtime::tape::DtaStateId(167),
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(215),
+            inner: ::bbnf::runtime::tape::DtaStateId(241),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(29),
+            target: ::bbnf::runtime::tape::DtaStateId(235),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_246_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(30),
+            target: ::bbnf::runtime::tape::DtaStateId(240),
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(247),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(25),
+            target: ::bbnf::runtime::tape::DtaStateId(167),
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(249),
             lo: 0,
             hi: 1,
             counter_optional: None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_217_CHILDREN,
+            children: &__DTA_SEQ_251_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(31),
+            target: ::bbnf::runtime::tape::DtaStateId(251),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_253,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_256_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(19),
+            target: ::bbnf::runtime::tape::DtaStateId(124),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(20),
+            target: ::bbnf::runtime::tape::DtaStateId(130),
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(258),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_260_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_261_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(217),
+            inner: ::bbnf::runtime::tape::DtaStateId(261),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_263_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_264,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_265,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_266,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_267,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(32),
+            target: ::bbnf::runtime::tape::DtaStateId(263),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(33),
+            target: ::bbnf::runtime::tape::DtaStateId(267),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_272_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(32),
+            target: ::bbnf::runtime::tape::DtaStateId(263),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_274_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(274),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_276_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(34),
+            target: ::bbnf::runtime::tape::DtaStateId(276),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_280_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_281,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(281),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_283_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(283),
             lo: 1,
             hi: 4294967295,
             counter_optional: None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(35),
-            target: ::bbnf::runtime::tape::DtaStateId(218),
+            target: ::bbnf::runtime::tape::DtaStateId(284),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_288_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_220,
+            text: __DTA_LITERAL_289,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(220),
+            inner: ::bbnf::runtime::tape::DtaStateId(289),
             lo: 0,
             hi: 1,
             counter_optional: None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_222_CHILDREN,
+            children: &__DTA_SEQ_291_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(222),
+            inner: ::bbnf::runtime::tape::DtaStateId(291),
             lo: 1,
             hi: 4294967295,
             counter_optional: None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_224,
+            text: __DTA_LITERAL_293,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            target: ::bbnf::runtime::tape::DtaStateId(119),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
         },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_226,
+            text: __DTA_LITERAL_295,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_298_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            target: ::bbnf::runtime::tape::DtaStateId(119),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_228_CHILDREN,
+            children: &__DTA_SEQ_300_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(228),
+            inner: ::bbnf::runtime::tape::DtaStateId(300),
             lo: 0,
             hi: 4294967295,
             counter_optional: None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_230,
+            text: __DTA_LITERAL_302,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_305_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(38),
             target: ::bbnf::runtime::tape::DtaStateId(65535),
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_232_CHILDREN,
+            children: &__DTA_SEQ_307_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(37),
-            target: ::bbnf::runtime::tape::DtaStateId(232),
+            target: ::bbnf::runtime::tape::DtaStateId(307),
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(36),
-            target: ::bbnf::runtime::tape::DtaStateId(223),
+            target: ::bbnf::runtime::tape::DtaStateId(292),
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_235,
+            branches: &__DTA_ALT_LIN_310,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(27),
-            target: ::bbnf::runtime::tape::DtaStateId(144),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_237,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(38),
-            target: ::bbnf::runtime::tape::DtaStateId(235),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_239,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_240,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_241,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_242_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_243,
-        },
-        ::bbnf::runtime::tape::DtaState::Regex {
-            pattern: __DTA_REGEX_244,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_245,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_246_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_247,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            target: ::bbnf::runtime::tape::DtaStateId(119),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_249,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            target: ::bbnf::runtime::tape::DtaStateId(119),
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_251_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(251),
-            lo: 0,
-            hi: 4294967295,
-            counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_253_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_254,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_255_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_256,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(41),
-            target: ::bbnf::runtime::tape::DtaStateId(255),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_258,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(40),
-            target: ::bbnf::runtime::tape::DtaStateId(246),
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_260_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(40),
-            target: ::bbnf::runtime::tape::DtaStateId(246),
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_262,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_263,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_264,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_265,
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(265),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_267_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_268,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            target: ::bbnf::runtime::tape::DtaStateId(119),
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(38),
-            target: ::bbnf::runtime::tape::DtaStateId(235),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_271,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_272,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_273,
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(273),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_275_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            target: ::bbnf::runtime::tape::DtaStateId(119),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_277,
-        },
-        ::bbnf::runtime::tape::DtaState::Regex {
-            pattern: __DTA_REGEX_278,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_279,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_280_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(280),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_282_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_283,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_284,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            target: ::bbnf::runtime::tape::DtaStateId(119),
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_286,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(44),
-            target: ::bbnf::runtime::tape::DtaStateId(282),
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(287),
-            lo: 1,
-            hi: 4294967295,
-            counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_289,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_290,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_291,
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(291),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_293_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_294,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(24),
-            target: ::bbnf::runtime::tape::DtaStateId(136),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_296,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_297,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_298,
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(298),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_300_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_301,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            target: ::bbnf::runtime::tape::DtaStateId(119),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_303,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_304,
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_305,
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(305),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_307_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_308,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_309,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            target: ::bbnf::runtime::tape::DtaStateId(119),
-        },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_311,
+            target: ::bbnf::runtime::tape::DtaStateId(174),
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_312,
         },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_315_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(310),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_319_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
         ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_313,
+            text: __DTA_LITERAL_320,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_321,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_314,
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(314),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
+            branches: &__DTA_ALT_LIN_322,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_316_CHILDREN,
+            children: &__DTA_SEQ_323_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_317,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            target: ::bbnf::runtime::tape::DtaStateId(119),
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_319,
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(21),
-            target: ::bbnf::runtime::tape::DtaStateId(118),
-        },
-        ::bbnf::runtime::tape::DtaState::Seq {
-            children: &__DTA_SEQ_321_CHILDREN,
-            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
-        },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(321),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
-        },
-        ::bbnf::runtime::tape::DtaState::Literal {
-            text: __DTA_LITERAL_323,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_324,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_325,
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_325,
         },
-        ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(325),
-            lo: 0,
-            hi: 1,
-            counter_optional: None,
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_326,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_327_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(42),
-            target: ::bbnf::runtime::tape::DtaStateId(267),
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_328,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_331_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(43),
-            target: ::bbnf::runtime::tape::DtaStateId(275),
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_333,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_336_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(45),
-            target: ::bbnf::runtime::tape::DtaStateId(293),
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_338_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(338),
+            lo: 0,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_340_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_343_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_344,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_345_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_346,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_349_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(46),
-            target: ::bbnf::runtime::tape::DtaStateId(300),
+            rule: ::bbnf::runtime::tape::DtaRuleId(41),
+            target: ::bbnf::runtime::tape::DtaStateId(345),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_353_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_354,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_357_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(47),
-            target: ::bbnf::runtime::tape::DtaStateId(307),
+            rule: ::bbnf::runtime::tape::DtaRuleId(40),
+            target: ::bbnf::runtime::tape::DtaStateId(327),
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_359_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(48),
-            target: ::bbnf::runtime::tape::DtaStateId(316),
-        },
-        ::bbnf::runtime::tape::DtaState::Ref {
-            rule: ::bbnf::runtime::tape::DtaRuleId(49),
+            rule: ::bbnf::runtime::tape::DtaRuleId(40),
             target: ::bbnf::runtime::tape::DtaStateId(327),
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_335,
+            branches: &__DTA_ALT_LIN_361,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_364_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_365,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_366,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_367,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(367),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_369_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_370,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_373_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_377_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            target: ::bbnf::runtime::tape::DtaStateId(310),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_381_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_382,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_383,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_384,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(384),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_386_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_388,
+        },
+        ::bbnf::runtime::tape::DtaState::Regex {
+            pattern: __DTA_REGEX_389,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_390,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_391_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(391),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_393_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_394,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_397_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_398,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_400,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_403_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(44),
+            target: ::bbnf::runtime::tape::DtaStateId(393),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_407_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(407),
+            lo: 1,
+            hi: 4294967295,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_409,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_410,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_411,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(411),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_413_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_414,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_417_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(24),
+            target: ::bbnf::runtime::tape::DtaStateId(160),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_421_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_422,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_423,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_424,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(424),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_426_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_427,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_430_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_434_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_435,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_436,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_437,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(437),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_439_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_440,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_443_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_444,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_446,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_449_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_450,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_451,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_452,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(452),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_454_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_455,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_458_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(22),
+            target: ::bbnf::runtime::tape::DtaStateId(143),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_462_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_463,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_466_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(21),
+            target: ::bbnf::runtime::tape::DtaStateId(142),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_470_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_471_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(471),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_473,
+        },
+        ::bbnf::runtime::tape::DtaState::Literal {
+            text: __DTA_LITERAL_474,
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_475,
+        },
+        ::bbnf::runtime::tape::DtaState::Repeat {
+            inner: ::bbnf::runtime::tape::DtaStateId(475),
+            lo: 0,
+            hi: 1,
+            counter_optional: None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_477_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(42),
+            target: ::bbnf::runtime::tape::DtaStateId(369),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(43),
+            target: ::bbnf::runtime::tape::DtaStateId(386),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(45),
+            target: ::bbnf::runtime::tape::DtaStateId(413),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(46),
+            target: ::bbnf::runtime::tape::DtaStateId(426),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(47),
+            target: ::bbnf::runtime::tape::DtaStateId(439),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(48),
+            target: ::bbnf::runtime::tape::DtaStateId(454),
+        },
+        ::bbnf::runtime::tape::DtaState::Ref {
+            rule: ::bbnf::runtime::tape::DtaRuleId(49),
+            target: ::bbnf::runtime::tape::DtaStateId(477),
+        },
+        ::bbnf::runtime::tape::DtaState::AltLinear {
+            branches: &__DTA_ALT_LIN_485,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(26),
-            target: ::bbnf::runtime::tape::DtaStateId(143),
+            target: ::bbnf::runtime::tape::DtaStateId(173),
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(25),
-            target: ::bbnf::runtime::tape::DtaStateId(140),
+            target: ::bbnf::runtime::tape::DtaStateId(167),
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(50),
-            target: ::bbnf::runtime::tape::DtaStateId(335),
+            target: ::bbnf::runtime::tape::DtaStateId(485),
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(39),
-            target: ::bbnf::runtime::tape::DtaStateId(242),
+            target: ::bbnf::runtime::tape::DtaStateId(323),
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_340,
+            branches: &__DTA_ALT_LIN_490,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(51),
-            target: ::bbnf::runtime::tape::DtaStateId(340),
+            target: ::bbnf::runtime::tape::DtaStateId(490),
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::WsTrim {
+            pattern: ::core::option::Option::None,
+        },
+        ::bbnf::runtime::tape::DtaState::Seq {
+            children: &__DTA_SEQ_494_CHILDREN,
+            frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
-            inner: ::bbnf::runtime::tape::DtaStateId(341),
+            inner: ::bbnf::runtime::tape::DtaStateId(494),
             lo: 0,
             hi: 4294967295,
             counter_optional: None,
@@ -1969,187 +2734,187 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(7),
-            state: ::bbnf::runtime::tape::DtaStateId(32),
+            state: ::bbnf::runtime::tape::DtaStateId(35),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(8),
-            state: ::bbnf::runtime::tape::DtaStateId(44),
+            state: ::bbnf::runtime::tape::DtaStateId(50),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(9),
-            state: ::bbnf::runtime::tape::DtaStateId(48),
+            state: ::bbnf::runtime::tape::DtaStateId(54),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(10),
-            state: ::bbnf::runtime::tape::DtaStateId(51),
+            state: ::bbnf::runtime::tape::DtaStateId(57),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(11),
-            state: ::bbnf::runtime::tape::DtaStateId(58),
+            state: ::bbnf::runtime::tape::DtaStateId(64),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(12),
-            state: ::bbnf::runtime::tape::DtaStateId(65),
+            state: ::bbnf::runtime::tape::DtaStateId(71),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(13),
-            state: ::bbnf::runtime::tape::DtaStateId(73),
+            state: ::bbnf::runtime::tape::DtaStateId(82),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(14),
-            state: ::bbnf::runtime::tape::DtaStateId(73),
+            state: ::bbnf::runtime::tape::DtaStateId(82),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(15),
-            state: ::bbnf::runtime::tape::DtaStateId(79),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(16),
-            state: ::bbnf::runtime::tape::DtaStateId(85),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(17),
             state: ::bbnf::runtime::tape::DtaStateId(91),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(18),
+            rule: ::bbnf::runtime::tape::DtaRuleId(16),
             state: ::bbnf::runtime::tape::DtaStateId(100),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(17),
+            state: ::bbnf::runtime::tape::DtaStateId(109),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(18),
+            state: ::bbnf::runtime::tape::DtaStateId(121),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(19),
-            state: ::bbnf::runtime::tape::DtaStateId(103),
+            state: ::bbnf::runtime::tape::DtaStateId(124),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(20),
-            state: ::bbnf::runtime::tape::DtaStateId(106),
+            state: ::bbnf::runtime::tape::DtaStateId(130),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(21),
-            state: ::bbnf::runtime::tape::DtaStateId(118),
+            state: ::bbnf::runtime::tape::DtaStateId(142),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
-            state: ::bbnf::runtime::tape::DtaStateId(119),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(23),
-            state: ::bbnf::runtime::tape::DtaStateId(132),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(24),
-            state: ::bbnf::runtime::tape::DtaStateId(136),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(25),
-            state: ::bbnf::runtime::tape::DtaStateId(140),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(26),
             state: ::bbnf::runtime::tape::DtaStateId(143),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(23),
+            state: ::bbnf::runtime::tape::DtaStateId(156),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(24),
+            state: ::bbnf::runtime::tape::DtaStateId(160),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(25),
+            state: ::bbnf::runtime::tape::DtaStateId(167),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(26),
+            state: ::bbnf::runtime::tape::DtaStateId(173),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(27),
-            state: ::bbnf::runtime::tape::DtaStateId(144),
+            state: ::bbnf::runtime::tape::DtaStateId(174),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(28),
-            state: ::bbnf::runtime::tape::DtaStateId(149),
+            state: ::bbnf::runtime::tape::DtaStateId(182),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(29),
-            state: ::bbnf::runtime::tape::DtaStateId(181),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(30),
-            state: ::bbnf::runtime::tape::DtaStateId(186),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(31),
-            state: ::bbnf::runtime::tape::DtaStateId(194),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(32),
-            state: ::bbnf::runtime::tape::DtaStateId(203),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(33),
-            state: ::bbnf::runtime::tape::DtaStateId(207),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(34),
-            state: ::bbnf::runtime::tape::DtaStateId(213),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(35),
-            state: ::bbnf::runtime::tape::DtaStateId(218),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(36),
-            state: ::bbnf::runtime::tape::DtaStateId(223),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(37),
-            state: ::bbnf::runtime::tape::DtaStateId(232),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(38),
             state: ::bbnf::runtime::tape::DtaStateId(235),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(39),
-            state: ::bbnf::runtime::tape::DtaStateId(242),
+            rule: ::bbnf::runtime::tape::DtaRuleId(30),
+            state: ::bbnf::runtime::tape::DtaStateId(240),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(40),
-            state: ::bbnf::runtime::tape::DtaStateId(246),
+            rule: ::bbnf::runtime::tape::DtaRuleId(31),
+            state: ::bbnf::runtime::tape::DtaStateId(251),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(41),
-            state: ::bbnf::runtime::tape::DtaStateId(255),
+            rule: ::bbnf::runtime::tape::DtaRuleId(32),
+            state: ::bbnf::runtime::tape::DtaStateId(263),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(42),
+            rule: ::bbnf::runtime::tape::DtaRuleId(33),
             state: ::bbnf::runtime::tape::DtaStateId(267),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(43),
-            state: ::bbnf::runtime::tape::DtaStateId(275),
+            rule: ::bbnf::runtime::tape::DtaRuleId(34),
+            state: ::bbnf::runtime::tape::DtaStateId(276),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(44),
-            state: ::bbnf::runtime::tape::DtaStateId(282),
+            rule: ::bbnf::runtime::tape::DtaRuleId(35),
+            state: ::bbnf::runtime::tape::DtaStateId(284),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(45),
-            state: ::bbnf::runtime::tape::DtaStateId(293),
+            rule: ::bbnf::runtime::tape::DtaRuleId(36),
+            state: ::bbnf::runtime::tape::DtaStateId(292),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(46),
-            state: ::bbnf::runtime::tape::DtaStateId(300),
-        },
-        ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(47),
+            rule: ::bbnf::runtime::tape::DtaRuleId(37),
             state: ::bbnf::runtime::tape::DtaStateId(307),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(48),
-            state: ::bbnf::runtime::tape::DtaStateId(316),
+            rule: ::bbnf::runtime::tape::DtaRuleId(38),
+            state: ::bbnf::runtime::tape::DtaStateId(310),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
-            rule: ::bbnf::runtime::tape::DtaRuleId(49),
+            rule: ::bbnf::runtime::tape::DtaRuleId(39),
+            state: ::bbnf::runtime::tape::DtaStateId(323),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(40),
             state: ::bbnf::runtime::tape::DtaStateId(327),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(41),
+            state: ::bbnf::runtime::tape::DtaStateId(345),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(42),
+            state: ::bbnf::runtime::tape::DtaStateId(369),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(43),
+            state: ::bbnf::runtime::tape::DtaStateId(386),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(44),
+            state: ::bbnf::runtime::tape::DtaStateId(393),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(45),
+            state: ::bbnf::runtime::tape::DtaStateId(413),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(46),
+            state: ::bbnf::runtime::tape::DtaStateId(426),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(47),
+            state: ::bbnf::runtime::tape::DtaStateId(439),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(48),
+            state: ::bbnf::runtime::tape::DtaStateId(454),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
+            rule: ::bbnf::runtime::tape::DtaRuleId(49),
+            state: ::bbnf::runtime::tape::DtaStateId(477),
+        },
+        ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(50),
-            state: ::bbnf::runtime::tape::DtaStateId(335),
+            state: ::bbnf::runtime::tape::DtaStateId(485),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(51),
-            state: ::bbnf::runtime::tape::DtaStateId(340),
+            state: ::bbnf::runtime::tape::DtaStateId(490),
         },
         ::bbnf::runtime::tape::DtaRuleEntry {
             rule: ::bbnf::runtime::tape::DtaRuleId(52),
-            state: ::bbnf::runtime::tape::DtaStateId(342),
+            state: ::bbnf::runtime::tape::DtaStateId(495),
         },
     ];
     static __DTA_SHUNTING_YARD_RULES: [::bbnf::runtime::tape::DtaRuleId; 2usize] = [
@@ -2157,17 +2922,17 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaRuleId(14),
     ];
     /// Dispatch Tape Automaton — emitted by Tranche AV Phase 3.
-    /// The runtime driver (V4 PSI stage-B) walks this table from
-    /// each rule's entry state; until V4 lands, this data is
-    /// inert and `parse()` drives through the legacy fn-per-rule
-    /// path.
+    /// The runtime driver walks this table from the grammar's
+    /// entry rule state. AW-I.W4γ — `entry` carries the
+    /// authoritative `RuleId` so the walker dispatches the
+    /// correct grammar entry irrespective of lift order.
     pub const DTA_TABLE: ::bbnf::runtime::tape::DtaTable = ::bbnf::runtime::tape::DtaTable {
-        entry: ::bbnf::runtime::tape::DtaRuleId(0),
         states: &__DTA_STATES,
         rule_entries: &__DTA_RULE_ENTRIES,
         shunting_yard_rules: &__DTA_SHUNTING_YARD_RULES,
         counter_optional_rules: &[],
         max_nesting_depth: 8u16,
+        entry: ::bbnf::runtime::tape::DtaRuleId(52),
     };
     /// Shape dictionary — empty for this grammar (selection
     /// admitted no templates). Reserved symbol so downstream
@@ -13312,7054 +14077,30 @@ mod __bbnfbootstrap_emit_impl {
             "grammar"
         }
     }
+    /// DTA regex-scanner adapter — consults parse-that's
+    /// cached DFA registry to match a regex pattern at
+    /// `input[offset..]`.
+    ///
+    /// Zero-size: one shared `const` instance per grammar; the
+    /// DTA driver's [`dta_run_into`] takes it by `&dyn`.
+    struct DtaDfaScanner;
+    impl ::bbnf::runtime::tape::RegexScanner for DtaDfaScanner {
+        fn scan(
+            &self,
+            pattern: &str,
+            input: &[u8],
+            offset: usize,
+        ) -> ::core::option::Option<u32> {
+            let dfa = ::parse_that::cached_dfa(pattern);
+            dfa.find_at(input, offset).map(|end| (end - offset) as u32)
+        }
+    }
+    /// Module-level scanner singleton. `DtaDfaScanner` is a ZST;
+    /// `const` binds the one-and-only value at compile time so
+    /// every `parse()` call borrows the same instance rather
+    /// than materialising a new stack local.
+    const DTA_SCANNER: DtaDfaScanner = DtaDfaScanner;
     impl BbnfBootstrap {
-        fn __int_lit<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                let mut __payload_i64: i64 = 0;
-                let mut __payload_f64: f64 = 0.0;
-                let mut __payload_tag: u8 = 0;
-                let mut __has_payload: bool = false;
-                match ({
-                    match ({
-                        {
-                            {
-                                let __start = state.offset;
-                                let __result: Option<()> = (|| {
-                                    {
-                                        let __save_alt = state.offset;
-                                        let __alt_ok = (|| -> Option<()> {
-                                            if state.src_bytes.get(state.offset).copied() != Some(b'0')
-                                            {
-                                                return None;
-                                            }
-                                            state.offset += 1;
-                                            {
-                                                let __b = *state.src_bytes.get(state.offset)?;
-                                                if !((__b == b'X' || __b == b'x')) {
-                                                    return None;
-                                                }
-                                                state.offset += 1;
-                                            }
-                                            {
-                                                if ::parse_that::scan_hex_mut(state).is_none() {
-                                                    return None;
-                                                }
-                                            }
-                                            {
-                                                let __end = state.src_bytes.len();
-                                                let mut __pos = state.offset;
-                                                while __pos < __end {
-                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                    if (__b.is_ascii_alphanumeric() || __b == b'_') {
-                                                        __pos += 1;
-                                                    } else {
-                                                        break;
-                                                    }
-                                                }
-                                                state.offset = __pos;
-                                            }
-                                            Some(())
-                                        })();
-                                        let __alt_ok = if __alt_ok.is_none() {
-                                            state.offset = __save_alt;
-                                            (|| -> Option<()> {
-                                                {
-                                                    if ::parse_that::scan_digits_mut(state).is_none() {
-                                                        return None;
-                                                    }
-                                                }
-                                                {
-                                                    let __end = state.src_bytes.len();
-                                                    let mut __pos = state.offset;
-                                                    while __pos < __end {
-                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                        if (__b.is_ascii_alphanumeric() || __b == b'_') {
-                                                            __pos += 1;
-                                                        } else {
-                                                            break;
-                                                        }
-                                                    }
-                                                    state.offset = __pos;
-                                                }
-                                                Some(())
-                                            })()
-                                        } else {
-                                            __alt_ok
-                                        };
-                                        if __alt_ok.is_none() {
-                                            return None;
-                                        }
-                                    }
-                                    Some(())
-                                })();
-                                if __result.is_some() && state.offset > __start {
-                                    Some(
-                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                    )
-                                } else {
-                                    state.offset = __start;
-                                    None
-                                }
-                            }
-                        }
-                    }) {
-                        Some(_) => {
-                            if let Some(__v) = ::parse_that::parse_i64_from_bytes(
-                                &state.src_bytes[__span_lo as usize..state.offset],
-                            ) {
-                                __payload_i64 = __v;
-                                __payload_tag = 1u8;
-                                __has_payload = true;
-                            }
-                            Some(())
-                        }
-                        None => None,
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 0u8;
-                    let __mi: u8 = 0u8;
-                    if __has_payload {
-                        let __bits: u64 = match __payload_tag {
-                            1u8 => __payload_i64 as u64,
-                            2u8 => __payload_f64.to_bits(),
-                            _ => 0u64,
-                        };
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __vi,
-                                __mi,
-                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __vi,
-                                __mi,
-                            ),
-                        )
-                    }
-                }
-            }
-        }
-        fn __float_lit<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                let mut __payload_i64: i64 = 0;
-                let mut __payload_f64: f64 = 0.0;
-                let mut __payload_tag: u8 = 0;
-                let mut __has_payload: bool = false;
-                match ({
-                    match ({
-                        {
-                            {
-                                let __start = state.offset;
-                                let __result: Option<()> = (|| {
-                                    {
-                                        let _ = ::parse_that::scan_digits_star_mut(state);
-                                    }
-                                    if state.src_bytes.get(state.offset).copied() != Some(b'.')
-                                    {
-                                        return None;
-                                    }
-                                    state.offset += 1;
-                                    {
-                                        if ::parse_that::scan_digits_mut(state).is_none() {
-                                            return None;
-                                        }
-                                    }
-                                    {
-                                        let __save = state.offset;
-                                        let __ok = (|| -> Option<()> {
-                                            {
-                                                let __b = *state.src_bytes.get(state.offset)?;
-                                                if !((__b == b'E' || __b == b'e')) {
-                                                    return None;
-                                                }
-                                                state.offset += 1;
-                                            }
-                                            {
-                                                let __save = state.offset;
-                                                let __ok = (|| -> Option<()> {
-                                                    {
-                                                        let __b = *state.src_bytes.get(state.offset)?;
-                                                        if !((__b == b'+' || __b == b'-')) {
-                                                            return None;
-                                                        }
-                                                        state.offset += 1;
-                                                    }
-                                                    Some(())
-                                                })();
-                                                if __ok.is_none() {
-                                                    state.offset = __save;
-                                                }
-                                            }
-                                            {
-                                                if ::parse_that::scan_digits_mut(state).is_none() {
-                                                    return None;
-                                                }
-                                            }
-                                            Some(())
-                                        })();
-                                        if __ok.is_none() {
-                                            state.offset = __save;
-                                        }
-                                    }
-                                    {
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = state.offset;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if (__b.is_ascii_alphanumeric() || __b == b'_') {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        state.offset = __pos;
-                                    }
-                                    Some(())
-                                })();
-                                if __result.is_some() && state.offset > __start {
-                                    Some(
-                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                    )
-                                } else {
-                                    state.offset = __start;
-                                    None
-                                }
-                            }
-                        }
-                    }) {
-                        Some(_) => {
-                            if let Some(__v) = ::parse_that::parse_f64_from_bytes(
-                                &state.src_bytes[__span_lo as usize..state.offset],
-                            ) {
-                                __payload_f64 = __v;
-                                __payload_tag = 2u8;
-                                __has_payload = true;
-                            }
-                            Some(())
-                        }
-                        None => None,
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 1u8;
-                    let __mi: u8 = 0u8;
-                    if __has_payload {
-                        let __bits: u64 = match __payload_tag {
-                            1u8 => __payload_i64 as u64,
-                            2u8 => __payload_f64.to_bits(),
-                            _ => 0u64,
-                        };
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                __span_lo,
-                                state.offset as u32,
-                                __vi,
-                                __mi,
-                                ::bbnf::runtime::tape::PayloadData::WideScalar(__bits),
-                            ),
-                        )
-                    } else {
-                        Some(
-                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                tape,
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                __children,
-                                __span_lo,
-                                state.offset as u32,
-                                __vi,
-                                __mi,
-                            ),
-                        )
-                    }
-                }
-            }
-        }
-        fn __bool_lit<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 2u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                let mut __has_payload = false;
-                match ({
-                    '__alt_lit_blk0: {
-                        {
-                            if {
-                                if state.offset + 4usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 4usize])
-                                    } == *b"true"
-                                {
-                                    state.offset += 4usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk0 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset + 5usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 5usize])
-                                    } == *b"false"
-                                {
-                                    state.offset += 5usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk0 Some(());
-                            }
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else if __has_payload {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __string_lit<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                match ({
-                    {
-                        '__span_blk1: {
-                            match ({
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 34u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }) {
-                                Some(_) => {}
-                                None => break '__span_blk1 None,
-                            }
-                            match ({
-                                {
-                                    let __start = state.offset;
-                                    let __result: Option<()> = (|| {
-                                        {
-                                            let mut __rep_count: u32 = 0;
-                                            loop {
-                                                let __save = state.offset;
-                                                let __ok = (|| -> Option<()> {
-                                                    {
-                                                        let __save_alt = state.offset;
-                                                        let __alt_ok = (|| -> Option<()> {
-                                                            if state.src_bytes.get(state.offset).copied() != Some(b'\\')
-                                                            {
-                                                                return None;
-                                                            }
-                                                            state.offset += 1;
-                                                            {
-                                                                let __b = *state.src_bytes.get(state.offset)?;
-                                                                if !(!(__b == b'\n')) {
-                                                                    return None;
-                                                                }
-                                                                state.offset += 1;
-                                                            }
-                                                            Some(())
-                                                        })();
-                                                        let __alt_ok = if __alt_ok.is_none() {
-                                                            state.offset = __save_alt;
-                                                            (|| -> Option<()> {
-                                                                {
-                                                                    let __b = *state.src_bytes.get(state.offset)?;
-                                                                    if !(!((__b == b'"' || __b == b'\\'))) {
-                                                                        return None;
-                                                                    }
-                                                                    state.offset += 1;
-                                                                }
-                                                                Some(())
-                                                            })()
-                                                        } else {
-                                                            __alt_ok
-                                                        };
-                                                        if __alt_ok.is_none() {
-                                                            return None;
-                                                        }
-                                                    }
-                                                    Some(())
-                                                })();
-                                                if __ok.is_none() {
-                                                    state.offset = __save;
-                                                    break;
-                                                }
-                                                if state.offset == __save {
-                                                    break;
-                                                }
-                                                __rep_count += 1;
-                                            }
-                                        }
-                                        Some(())
-                                    })();
-                                    if __result.is_some() {
-                                        Some(
-                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                        )
-                                    } else {
-                                        state.offset = __start;
-                                        None
-                                    }
-                                }
-                            }) {
-                                Some(_) => {}
-                                None => break '__span_blk1 None,
-                            }
-                            match ({
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 34u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }) {
-                                Some(_) => {}
-                                None => break '__span_blk1 None,
-                            }
-                            Some(())
-                        }
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 3u8;
-                    let __mi: u8 = 0u8;
-                    __aggregate_buf[0..4]
-                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
-                    __aggregate_buf[4..8]
-                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_ident<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                match ({
-                    {
-                        ::parse_that::scan_ident(
-                            state,
-                            &::parse_that::DEFAULT_IDENT_CONFIG,
-                        )
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 4u8;
-                    let __mi: u8 = 0u8;
-                    __aggregate_buf[0..4]
-                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
-                    __aggregate_buf[4..8]
-                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_path<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__span_blk4: {
-                        match (Self::__value_ident(state, tape)) {
-                            Some(_) => {}
-                            None => break '__span_blk4 None,
-                        }
-                        match ('__rpt_blk3: {
-                            let __rpt_lo = state.offset as u32;
-                            let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let mut __count: usize = 0;
-                            loop {
-                                let __prev = state.offset;
-                                match ('__span_blk2: {
-                                    match ({
-                                        if state.offset + 2usize <= state.src_bytes.len()
-                                            && unsafe {
-                                                *(state.src_bytes.as_ptr().add(state.offset)
-                                                    as *const [u8; 2usize])
-                                            } == *b"::"
-                                        {
-                                            state.offset += 2usize;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk2 None,
-                                    }
-                                    match (Self::__value_ident(state, tape)) {
-                                        Some(_) => {}
-                                        None => break '__span_blk2 None,
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {
-                                        __count += 1;
-                                        if state.offset == __prev {
-                                            break;
-                                        }
-                                    }
-                                    None => {
-                                        state.offset = __prev;
-                                        break;
-                                    }
-                                }
-                            }
-                            match Some(()) {
-                                Some(()) => {
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __rpt_children,
-                                            __rpt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }
-                                None => None,
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk4 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 5u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_input<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__span_blk7: {
-                        match ({
-                            if state.offset + 5usize <= state.src_bytes.len()
-                                && unsafe {
-                                    *(state.src_bytes.as_ptr().add(state.offset)
-                                        as *const [u8; 5usize])
-                                } == *b"input"
-                            {
-                                state.offset += 5usize;
-                                Some(())
-                            } else {
-                                None
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk7 None,
-                        }
-                        match ('__rpt_blk6: {
-                            let __rpt_lo = state.offset as u32;
-                            let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let mut __count: usize = 0;
-                            loop {
-                                let __prev = state.offset;
-                                match ('__span_blk5: {
-                                    match ({
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 46u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk5 None,
-                                    }
-                                    match (Self::__value_ident(state, tape)) {
-                                        Some(_) => {}
-                                        None => break '__span_blk5 None,
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {
-                                        __count += 1;
-                                        if state.offset == __prev {
-                                            break;
-                                        }
-                                    }
-                                    None => {
-                                        state.offset = __prev;
-                                        break;
-                                    }
-                                }
-                            }
-                            match Some(()) {
-                                Some(()) => {
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __rpt_children,
-                                            __rpt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }
-                                None => None,
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk7 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 6u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_fn_call<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk11: {
-                        match (Self::__value_path(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk11 None,
-                        }
-                        match ({
-                            if state.offset < state.src_bytes.len()
-                                && state.src_bytes[state.offset] == 40u8
-                            {
-                                state.offset += 1;
-                                Some(())
-                            } else {
-                                None
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk11 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match ('__seq_blk10: {
-                                match (Self::__value_expr(state, tape)) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk10 None,
-                                }
-                                match ('__rpt_blk9: {
-                                    let __rpt_lo = state.offset as u32;
-                                    let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                        tape,
-                                    );
-                                    let mut __count: usize = 0;
-                                    loop {
-                                        let __prev = state.offset;
-                                        match ('__seq_blk8: {
-                                            match ({
-                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                let __ws_inner = {
-                                                    if state.offset < state.src_bytes.len()
-                                                        && state.src_bytes[state.offset] == 44u8
-                                                    {
-                                                        state.offset += 1;
-                                                        Some(())
-                                                    } else {
-                                                        None
-                                                    }
-                                                };
-                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                __ws_inner
-                                            }) {
-                                                Some(_) => {}
-                                                None => break '__seq_blk8 None,
-                                            }
-                                            match (Self::__value_expr(state, tape)) {
-                                                Some(_) => {}
-                                                None => break '__seq_blk8 None,
-                                            }
-                                            Some(())
-                                        }) {
-                                            Some(_) => {
-                                                __count += 1;
-                                                if state.offset == __prev {
-                                                    break;
-                                                }
-                                            }
-                                            None => {
-                                                state.offset = __prev;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    match Some(()) {
-                                        Some(()) => {
-                                            {
-                                                let __vi: u8 = 0u8;
-                                                let __mi: u8 = 0u8;
-                                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                                    tape,
-                                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                                    __rpt_children,
-                                                    __rpt_lo,
-                                                    state.offset as u32,
-                                                    __vi,
-                                                    __mi,
-                                                );
-                                            }
-                                            Some(())
-                                        }
-                                        None => None,
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk10 None,
-                                }
-                                Some(())
-                            }) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk11 None,
-                        }
-                        match ({
-                            if state.offset < state.src_bytes.len()
-                                && state.src_bytes[state.offset] == 41u8
-                            {
-                                state.offset += 1;
-                                Some(())
-                            } else {
-                                None
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk11 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 7u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_atom<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 8u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                let mut __payload_i64: i64 = 0;
-                let mut __payload_f64: f64 = 0.0;
-                let mut __has_payload = false;
-                let mut __payload_tag: u8 = 0;
-                match ({
-                    '__alt_blk13: {
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 0u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__int_lit(state, tape).is_some() {
-                                break '__alt_blk13 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 1u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__float_lit(state, tape).is_some() {
-                                break '__alt_blk13 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 2u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__bool_lit(state, tape).is_some() {
-                                break '__alt_blk13 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 3u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__string_lit(state, tape).is_some() {
-                                break '__alt_blk13 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 4u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__value_fn_call(state, tape).is_some() {
-                                break '__alt_blk13 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 5u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__value_input(state, tape).is_some() {
-                                break '__alt_blk13 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 6u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__value_path(state, tape).is_some() {
-                                break '__alt_blk13 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 7u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if '__seq_blk12: {
-                                match ({
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 40u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk12 None,
-                                }
-                                match ({
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__value_expr(state, tape);
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __ws_inner
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk12 None,
-                                }
-                                match ({
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 41u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk12 None,
-                                }
-                                Some(())
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk13 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else {
-                    match __payload_tag {
-                        1u8 => {
-                            Some(
-                                ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Span,
-                                    __span_lo,
-                                    state.offset as u32,
-                                    __variant_idx,
-                                    __branch_idx,
-                                    ::bbnf::runtime::tape::PayloadData::WideScalar(
-                                        __payload_i64 as u64,
-                                    ),
-                                ),
-                            )
-                        }
-                        2u8 => {
-                            Some(
-                                ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Span,
-                                    __span_lo,
-                                    state.offset as u32,
-                                    __variant_idx,
-                                    __branch_idx,
-                                    ::bbnf::runtime::tape::PayloadData::WideScalar(
-                                        __payload_f64.to_bits(),
-                                    ),
-                                ),
-                            )
-                        }
-                        _ => {
-                            Some(
-                                ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Span,
-                                    __span_lo,
-                                    state.offset as u32,
-                                    __variant_idx,
-                                    __branch_idx,
-                                ),
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        fn __mul_op<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 9u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                let mut __has_payload = false;
-                match ({
-                    '__alt_lit_blk14: {
-                        {
-                            if {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 42u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk14 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 47u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk14 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 37u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk14 Some(());
-                            }
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else if __has_payload {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __add_op<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 10u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                let mut __has_payload = false;
-                match ({
-                    '__alt_lit_blk15: {
-                        {
-                            if {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 43u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk15 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 45u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk15 Some(());
-                            }
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else if __has_payload {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __cmp_op<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 11u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                let mut __has_payload = false;
-                match ({
-                    '__alt_lit_blk16: {
-                        {
-                            if {
-                                if state.offset + 2usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 2usize])
-                                    } == *b"=="
-                                {
-                                    state.offset += 2usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk16 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset + 2usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 2usize])
-                                    } == *b"!="
-                                {
-                                    state.offset += 2usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk16 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset + 2usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 2usize])
-                                    } == *b"<="
-                                {
-                                    state.offset += 2usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk16 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset + 2usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 2usize])
-                                    } == *b">="
-                                {
-                                    state.offset += 2usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk16 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 60u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk16 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 62u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk16 Some(());
-                            }
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else if __has_payload {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_unary<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 12u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                match ({
-                    '__alt_blk19: {
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 0u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if '__seq_blk18: {
-                                match ('__alt_lit_blk17: {
-                                    {
-                                        if {
-                                            if state.offset < state.src_bytes.len()
-                                                && state.src_bytes[state.offset] == 33u8
-                                            {
-                                                state.offset += 1;
-                                                Some(())
-                                            } else {
-                                                None
-                                            }
-                                        }
-                                            .is_some()
-                                        {
-                                            break '__alt_lit_blk17 Some(());
-                                        }
-                                    }
-                                    {
-                                        if {
-                                            if state.offset < state.src_bytes.len()
-                                                && state.src_bytes[state.offset] == 45u8
-                                            {
-                                                state.offset += 1;
-                                                Some(())
-                                            } else {
-                                                None
-                                            }
-                                        }
-                                            .is_some()
-                                        {
-                                            break '__alt_lit_blk17 Some(());
-                                        }
-                                    }
-                                    None
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk18 None,
-                                }
-                                match (Self::__value_atom(state, tape)) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk18 None,
-                                }
-                                Some(())
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk19 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 1u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__value_atom(state, tape).is_some() {
-                                break '__alt_blk19 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_mul<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk22: {
-                        match (Self::__value_unary(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk22 None,
-                        }
-                        match ('__rpt_blk21: {
-                            let __rpt_lo = state.offset as u32;
-                            let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let mut __count: usize = 0;
-                            loop {
-                                let __prev = state.offset;
-                                match ('__seq_blk20: {
-                                    match ({
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ws_inner = Self::__mul_op(state, tape);
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __ws_inner
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk20 None,
-                                    }
-                                    match (Self::__value_unary(state, tape)) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk20 None,
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {
-                                        __count += 1;
-                                        if state.offset == __prev {
-                                            break;
-                                        }
-                                    }
-                                    None => {
-                                        state.offset = __prev;
-                                        break;
-                                    }
-                                }
-                            }
-                            match Some(()) {
-                                Some(()) => {
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __rpt_children,
-                                            __rpt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }
-                                None => None,
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk22 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 13u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_add<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk25: {
-                        match (Self::__value_mul(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk25 None,
-                        }
-                        match ('__rpt_blk24: {
-                            let __rpt_lo = state.offset as u32;
-                            let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let mut __count: usize = 0;
-                            loop {
-                                let __prev = state.offset;
-                                match ('__seq_blk23: {
-                                    match ({
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ws_inner = Self::__add_op(state, tape);
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __ws_inner
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk23 None,
-                                    }
-                                    match (Self::__value_mul(state, tape)) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk23 None,
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {
-                                        __count += 1;
-                                        if state.offset == __prev {
-                                            break;
-                                        }
-                                    }
-                                    None => {
-                                        state.offset = __prev;
-                                        break;
-                                    }
-                                }
-                            }
-                            match Some(()) {
-                                Some(()) => {
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __rpt_children,
-                                            __rpt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }
-                                None => None,
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk25 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 14u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_cmp<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk28: {
-                        match (Self::__value_add(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk28 None,
-                        }
-                        match ('__rpt_blk27: {
-                            let __rpt_lo = state.offset as u32;
-                            let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let mut __count: usize = 0;
-                            loop {
-                                let __prev = state.offset;
-                                match ('__seq_blk26: {
-                                    match ({
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ws_inner = Self::__cmp_op(state, tape);
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __ws_inner
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk26 None,
-                                    }
-                                    match (Self::__value_add(state, tape)) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk26 None,
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {
-                                        __count += 1;
-                                        if state.offset == __prev {
-                                            break;
-                                        }
-                                    }
-                                    None => {
-                                        state.offset = __prev;
-                                        break;
-                                    }
-                                }
-                            }
-                            match Some(()) {
-                                Some(()) => {
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __rpt_children,
-                                            __rpt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }
-                                None => None,
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk28 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 15u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_and<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk31: {
-                        match (Self::__value_cmp(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk31 None,
-                        }
-                        match ('__rpt_blk30: {
-                            let __rpt_lo = state.offset as u32;
-                            let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let mut __count: usize = 0;
-                            loop {
-                                let __prev = state.offset;
-                                match ('__seq_blk29: {
-                                    match ({
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ws_inner = {
-                                            if state.offset + 2usize <= state.src_bytes.len()
-                                                && unsafe {
-                                                    *(state.src_bytes.as_ptr().add(state.offset)
-                                                        as *const [u8; 2usize])
-                                                } == *b"&&"
-                                            {
-                                                state.offset += 2usize;
-                                                Some(())
-                                            } else {
-                                                None
-                                            }
-                                        };
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __ws_inner
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk29 None,
-                                    }
-                                    match (Self::__value_cmp(state, tape)) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk29 None,
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {
-                                        __count += 1;
-                                        if state.offset == __prev {
-                                            break;
-                                        }
-                                    }
-                                    None => {
-                                        state.offset = __prev;
-                                        break;
-                                    }
-                                }
-                            }
-                            match Some(()) {
-                                Some(()) => {
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __rpt_children,
-                                            __rpt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }
-                                None => None,
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk31 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 16u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_or<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk34: {
-                        match (Self::__value_and(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk34 None,
-                        }
-                        match ('__rpt_blk33: {
-                            let __rpt_lo = state.offset as u32;
-                            let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let mut __count: usize = 0;
-                            loop {
-                                let __prev = state.offset;
-                                match ('__seq_blk32: {
-                                    match ({
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ws_inner = {
-                                            if state.offset + 2usize <= state.src_bytes.len()
-                                                && unsafe {
-                                                    *(state.src_bytes.as_ptr().add(state.offset)
-                                                        as *const [u8; 2usize])
-                                                } == *b"||"
-                                            {
-                                                state.offset += 2usize;
-                                                Some(())
-                                            } else {
-                                                None
-                                            }
-                                        };
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __ws_inner
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk32 None,
-                                    }
-                                    match (Self::__value_and(state, tape)) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk32 None,
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {
-                                        __count += 1;
-                                        if state.offset == __prev {
-                                            break;
-                                        }
-                                    }
-                                    None => {
-                                        state.offset = __prev;
-                                        break;
-                                    }
-                                }
-                            }
-                            match Some(()) {
-                                Some(()) => {
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __rpt_children,
-                                            __rpt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }
-                                None => None,
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk34 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 17u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_closure<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk37: {
-                        match ({
-                            if state.offset < state.src_bytes.len()
-                                && state.src_bytes[state.offset] == 124u8
-                            {
-                                state.offset += 1;
-                                Some(())
-                            } else {
-                                None
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk37 None,
-                        }
-                        match (Self::__value_ident(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk37 None,
-                        }
-                        match ('__rpt_blk36: {
-                            let __rpt_lo = state.offset as u32;
-                            let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let mut __count: usize = 0;
-                            loop {
-                                let __prev = state.offset;
-                                match ('__span_blk35: {
-                                    match ({
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ws_inner = {
-                                            if state.offset < state.src_bytes.len()
-                                                && state.src_bytes[state.offset] == 44u8
-                                            {
-                                                state.offset += 1;
-                                                Some(())
-                                            } else {
-                                                None
-                                            }
-                                        };
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __ws_inner
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk35 None,
-                                    }
-                                    match (Self::__value_ident(state, tape)) {
-                                        Some(_) => {}
-                                        None => break '__span_blk35 None,
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {
-                                        __count += 1;
-                                        if state.offset == __prev {
-                                            break;
-                                        }
-                                    }
-                                    None => {
-                                        state.offset = __prev;
-                                        break;
-                                    }
-                                }
-                            }
-                            match Some(()) {
-                                Some(()) => {
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __rpt_children,
-                                            __rpt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }
-                                None => None,
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk37 None,
-                        }
-                        match ({
-                            if state.offset < state.src_bytes.len()
-                                && state.src_bytes[state.offset] == 124u8
-                            {
-                                state.offset += 1;
-                                Some(())
-                            } else {
-                                None
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk37 None,
-                        }
-                        match (Self::__value_expr(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk37 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 18u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __value_expr<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 19u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                match ({
-                    '__alt_blk38: {
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 0u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__value_closure(state, tape).is_some() {
-                                break '__alt_blk38 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 1u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__value_or(state, tape).is_some() {
-                                break '__alt_blk38 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __type_annotation<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__span_blk39: {
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 58u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk39 None,
-                        }
-                        match (Self::__type_name(state, tape)) {
-                            Some(_) => {}
-                            None => break '__span_blk39 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 20u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __type_name<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 21u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                let mut __has_payload = false;
-                match ({
-                    '__alt_blk40: {
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 0u8;
-                            if {
-                                if state.offset + 2usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 2usize])
-                                    } == *b"u8"
-                                {
-                                    state.offset += 2usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk40 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 1u8;
-                            if {
-                                if state.offset + 3usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 3usize])
-                                    } == *b"u16"
-                                {
-                                    state.offset += 3usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk40 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 2u8;
-                            if {
-                                if state.offset + 3usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 3usize])
-                                    } == *b"u32"
-                                {
-                                    state.offset += 3usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk40 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 3u8;
-                            if {
-                                if state.offset + 3usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 3usize])
-                                    } == *b"u64"
-                                {
-                                    state.offset += 3usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk40 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 4u8;
-                            if {
-                                if state.offset + 3usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 3usize])
-                                    } == *b"i32"
-                                {
-                                    state.offset += 3usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk40 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 5u8;
-                            if {
-                                if state.offset + 3usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 3usize])
-                                    } == *b"i64"
-                                {
-                                    state.offset += 3usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk40 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 6u8;
-                            if {
-                                if state.offset + 3usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 3usize])
-                                    } == *b"f32"
-                                {
-                                    state.offset += 3usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk40 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 7u8;
-                            if {
-                                if state.offset + 3usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 3usize])
-                                    } == *b"f64"
-                                {
-                                    state.offset += 3usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk40 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 8u8;
-                            if {
-                                if state.offset + 4usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 4usize])
-                                    } == *b"bool"
-                                {
-                                    state.offset += 4usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk40 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 9u8;
-                            if {
-                                if state.offset + 5usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 5usize])
-                                    } == *b"usize"
-                                {
-                                    state.offset += 5usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk40 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 10u8;
-                            if {
-                                ::parse_that::scan_ident(
-                                    state,
-                                    &::parse_that::DEFAULT_IDENT_CONFIG,
-                                )
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk40 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else if __has_payload {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __identifier<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                match ({
-                    {
-                        {
-                            ::parse_that::scan_ident(
-                                state,
-                                &::parse_that::DEFAULT_IDENT_CONFIG,
-                            )
-                        }
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 22u8;
-                    let __mi: u8 = 0u8;
-                    __aggregate_buf[0..4]
-                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
-                    __aggregate_buf[4..8]
-                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                }
-            }
-        }
-        fn __literal<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                match ({
-                    {
-                        '__alt_blk44: {
-                            {
-                                let __cp = state.offset;
-                                if '__span_blk41: {
-                                    match ({
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 34u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk41 None,
-                                    }
-                                    match ({
-                                        {
-                                            let __start = state.offset;
-                                            let __result: Option<()> = (|| {
-                                                {
-                                                    let mut __rep_count: u32 = 0;
-                                                    loop {
-                                                        let __save = state.offset;
-                                                        let __ok = (|| -> Option<()> {
-                                                            {
-                                                                let __save_alt = state.offset;
-                                                                let __alt_ok = (|| -> Option<()> {
-                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'\\')
-                                                                    {
-                                                                        return None;
-                                                                    }
-                                                                    state.offset += 1;
-                                                                    {
-                                                                        let __b = *state.src_bytes.get(state.offset)?;
-                                                                        if !(!(__b == b'\n')) {
-                                                                            return None;
-                                                                        }
-                                                                        state.offset += 1;
-                                                                    }
-                                                                    Some(())
-                                                                })();
-                                                                let __alt_ok = if __alt_ok.is_none() {
-                                                                    state.offset = __save_alt;
-                                                                    (|| -> Option<()> {
-                                                                        {
-                                                                            let __b = *state.src_bytes.get(state.offset)?;
-                                                                            if !(!((__b == b'"' || __b == b'\\'))) {
-                                                                                return None;
-                                                                            }
-                                                                            state.offset += 1;
-                                                                        }
-                                                                        Some(())
-                                                                    })()
-                                                                } else {
-                                                                    __alt_ok
-                                                                };
-                                                                if __alt_ok.is_none() {
-                                                                    return None;
-                                                                }
-                                                            }
-                                                            Some(())
-                                                        })();
-                                                        if __ok.is_none() {
-                                                            state.offset = __save;
-                                                            break;
-                                                        }
-                                                        if state.offset == __save {
-                                                            break;
-                                                        }
-                                                        __rep_count += 1;
-                                                    }
-                                                }
-                                                Some(())
-                                            })();
-                                            if __result.is_some() {
-                                                Some(
-                                                    ::parse_that::Span::new(__start, state.offset, state.src),
-                                                )
-                                            } else {
-                                                state.offset = __start;
-                                                None
-                                            }
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk41 None,
-                                    }
-                                    match ({
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 34u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk41 None,
-                                    }
-                                    Some(())
-                                }
-                                    .is_some()
-                                {
-                                    break '__alt_blk44 Some(());
-                                }
-                                state.offset = __cp;
-                            }
-                            {
-                                let __cp = state.offset;
-                                if '__span_blk42: {
-                                    match ({
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 39u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk42 None,
-                                    }
-                                    match ({
-                                        {
-                                            let __start = state.offset;
-                                            let __result: Option<()> = (|| {
-                                                {
-                                                    let mut __rep_count: u32 = 0;
-                                                    loop {
-                                                        let __save = state.offset;
-                                                        let __ok = (|| -> Option<()> {
-                                                            {
-                                                                let __save_alt = state.offset;
-                                                                let __alt_ok = (|| -> Option<()> {
-                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'\\')
-                                                                    {
-                                                                        return None;
-                                                                    }
-                                                                    state.offset += 1;
-                                                                    {
-                                                                        let __b = *state.src_bytes.get(state.offset)?;
-                                                                        if !(!(__b == b'\n')) {
-                                                                            return None;
-                                                                        }
-                                                                        state.offset += 1;
-                                                                    }
-                                                                    Some(())
-                                                                })();
-                                                                let __alt_ok = if __alt_ok.is_none() {
-                                                                    state.offset = __save_alt;
-                                                                    (|| -> Option<()> {
-                                                                        {
-                                                                            let __b = *state.src_bytes.get(state.offset)?;
-                                                                            if !(!((__b == b'\'' || __b == b'\\'))) {
-                                                                                return None;
-                                                                            }
-                                                                            state.offset += 1;
-                                                                        }
-                                                                        Some(())
-                                                                    })()
-                                                                } else {
-                                                                    __alt_ok
-                                                                };
-                                                                if __alt_ok.is_none() {
-                                                                    return None;
-                                                                }
-                                                            }
-                                                            Some(())
-                                                        })();
-                                                        if __ok.is_none() {
-                                                            state.offset = __save;
-                                                            break;
-                                                        }
-                                                        if state.offset == __save {
-                                                            break;
-                                                        }
-                                                        __rep_count += 1;
-                                                    }
-                                                }
-                                                Some(())
-                                            })();
-                                            if __result.is_some() {
-                                                Some(
-                                                    ::parse_that::Span::new(__start, state.offset, state.src),
-                                                )
-                                            } else {
-                                                state.offset = __start;
-                                                None
-                                            }
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk42 None,
-                                    }
-                                    match ({
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 39u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk42 None,
-                                    }
-                                    Some(())
-                                }
-                                    .is_some()
-                                {
-                                    break '__alt_blk44 Some(());
-                                }
-                                state.offset = __cp;
-                            }
-                            {
-                                let __cp = state.offset;
-                                if '__span_blk43: {
-                                    match ({
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 96u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk43 None,
-                                    }
-                                    match ({
-                                        {
-                                            let __start = state.offset;
-                                            let __result: Option<()> = (|| {
-                                                {
-                                                    let mut __rep_count: u32 = 0;
-                                                    loop {
-                                                        let __save = state.offset;
-                                                        let __ok = (|| -> Option<()> {
-                                                            {
-                                                                let __save_alt = state.offset;
-                                                                let __alt_ok = (|| -> Option<()> {
-                                                                    if state.src_bytes.get(state.offset).copied() != Some(b'\\')
-                                                                    {
-                                                                        return None;
-                                                                    }
-                                                                    state.offset += 1;
-                                                                    {
-                                                                        let __b = *state.src_bytes.get(state.offset)?;
-                                                                        if !(!(__b == b'\n')) {
-                                                                            return None;
-                                                                        }
-                                                                        state.offset += 1;
-                                                                    }
-                                                                    Some(())
-                                                                })();
-                                                                let __alt_ok = if __alt_ok.is_none() {
-                                                                    state.offset = __save_alt;
-                                                                    (|| -> Option<()> {
-                                                                        {
-                                                                            let __b = *state.src_bytes.get(state.offset)?;
-                                                                            if !(!((__b == b'\\' || __b == b'`'))) {
-                                                                                return None;
-                                                                            }
-                                                                            state.offset += 1;
-                                                                        }
-                                                                        Some(())
-                                                                    })()
-                                                                } else {
-                                                                    __alt_ok
-                                                                };
-                                                                if __alt_ok.is_none() {
-                                                                    return None;
-                                                                }
-                                                            }
-                                                            Some(())
-                                                        })();
-                                                        if __ok.is_none() {
-                                                            state.offset = __save;
-                                                            break;
-                                                        }
-                                                        if state.offset == __save {
-                                                            break;
-                                                        }
-                                                        __rep_count += 1;
-                                                    }
-                                                }
-                                                Some(())
-                                            })();
-                                            if __result.is_some() {
-                                                Some(
-                                                    ::parse_that::Span::new(__start, state.offset, state.src),
-                                                )
-                                            } else {
-                                                state.offset = __start;
-                                                None
-                                            }
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk43 None,
-                                    }
-                                    match ({
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 96u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk43 None,
-                                    }
-                                    Some(())
-                                }
-                                    .is_some()
-                                {
-                                    break '__alt_blk44 Some(());
-                                }
-                                state.offset = __cp;
-                            }
-                            None
-                        }
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 23u8;
-                    let __mi: u8 = 0u8;
-                    __aggregate_buf[0..4]
-                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
-                    __aggregate_buf[4..8]
-                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                }
-            }
-        }
-        fn __regex<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                match ({
-                    {
-                        '__span_blk45: {
-                            match ({
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 47u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }) {
-                                Some(_) => {}
-                                None => break '__span_blk45 None,
-                            }
-                            match ({
-                                {
-                                    let __start = state.offset;
-                                    let __result: Option<()> = (|| {
-                                        {
-                                            let mut __rep_count: u32 = 0;
-                                            loop {
-                                                let __save = state.offset;
-                                                let __ok = (|| -> Option<()> {
-                                                    {
-                                                        let __save_alt = state.offset;
-                                                        let __alt_ok = (|| -> Option<()> {
-                                                            if state.src_bytes.get(state.offset).copied() != Some(b'\\')
-                                                            {
-                                                                return None;
-                                                            }
-                                                            state.offset += 1;
-                                                            {
-                                                                let __b = *state.src_bytes.get(state.offset)?;
-                                                                if !(!(__b == b'\n')) {
-                                                                    return None;
-                                                                }
-                                                                state.offset += 1;
-                                                            }
-                                                            Some(())
-                                                        })();
-                                                        let __alt_ok = if __alt_ok.is_none() {
-                                                            state.offset = __save_alt;
-                                                            (|| -> Option<()> {
-                                                                {
-                                                                    let __b = *state.src_bytes.get(state.offset)?;
-                                                                    if !(!(__b == b'/')) {
-                                                                        return None;
-                                                                    }
-                                                                    state.offset += 1;
-                                                                }
-                                                                Some(())
-                                                            })()
-                                                        } else {
-                                                            __alt_ok
-                                                        };
-                                                        if __alt_ok.is_none() {
-                                                            return None;
-                                                        }
-                                                    }
-                                                    Some(())
-                                                })();
-                                                if __ok.is_none() {
-                                                    state.offset = __save;
-                                                    break;
-                                                }
-                                                if state.offset == __save {
-                                                    break;
-                                                }
-                                                __rep_count += 1;
-                                            }
-                                            if __rep_count < 1 {
-                                                return None;
-                                            }
-                                        }
-                                        Some(())
-                                    })();
-                                    if __result.is_some() && state.offset > __start {
-                                        Some(
-                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                        )
-                                    } else {
-                                        state.offset = __start;
-                                        None
-                                    }
-                                }
-                            }) {
-                                Some(_) => {}
-                                None => break '__span_blk45 None,
-                            }
-                            match ({
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 47u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }) {
-                                Some(_) => {}
-                                None => break '__span_blk45 None,
-                            }
-                            Some(())
-                        }
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 24u8;
-                    let __mi: u8 = 0u8;
-                    __aggregate_buf[0..4]
-                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
-                    __aggregate_buf[4..8]
-                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                }
-            }
-        }
-        fn __big_comment<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                match ({
-                    {
-                        {
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = '__span_blk46: {
-                                match ({
-                                    if state.offset + 2usize <= state.src_bytes.len()
-                                        && unsafe {
-                                            *(state.src_bytes.as_ptr().add(state.offset)
-                                                as *const [u8; 2usize])
-                                        } == *b"/*"
-                                    {
-                                        state.offset += 2usize;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__span_blk46 None,
-                                }
-                                match ({
-                                    {
-                                        let __start = state.offset;
-                                        let __scan = if __start >= state.src_bytes.len() {
-                                            0
-                                        } else {
-                                            ({
-                                                static __LO_LUT: [u8; 16] = [
-                                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-                                                ];
-                                                static __HI_LUT: [u8; 16] = [
-                                                    0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                ];
-                                                ::parse_that::find_next_structural_from(
-                                                        &state.src_bytes,
-                                                        __start,
-                                                        &__LO_LUT,
-                                                        &__HI_LUT,
-                                                    )
-                                                    .map(|(pos, _)| pos - __start)
-                                            })
-                                                .unwrap_or(state.src_bytes.len() - __start)
-                                        };
-                                        state.offset = __start + __scan;
-                                        Some(
-                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                        )
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__span_blk46 None,
-                                }
-                                match ({
-                                    if state.offset + 2usize <= state.src_bytes.len()
-                                        && unsafe {
-                                            *(state.src_bytes.as_ptr().add(state.offset)
-                                                as *const [u8; 2usize])
-                                        } == *b"*/"
-                                    {
-                                        state.offset += 2usize;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__span_blk46 None,
-                                }
-                                Some(())
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 25u8;
-                    let __mi: u8 = 0u8;
-                    __aggregate_buf[0..4]
-                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
-                    __aggregate_buf[4..8]
-                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                }
-            }
-        }
-        fn __comment<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                match ({
-                    {
-                        {
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = '__span_blk47: {
-                                match ({
-                                    if state.offset + 2usize <= state.src_bytes.len()
-                                        && unsafe {
-                                            *(state.src_bytes.as_ptr().add(state.offset)
-                                                as *const [u8; 2usize])
-                                        } == *b"//"
-                                    {
-                                        state.offset += 2usize;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__span_blk47 None,
-                                }
-                                match ({
-                                    {
-                                        let __start = state.offset;
-                                        let __scan = if __start >= state.src_bytes.len() {
-                                            0
-                                        } else {
-                                            ({
-                                                static __LO_LUT: [u8; 16] = [
-                                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-                                                ];
-                                                static __HI_LUT: [u8; 16] = [
-                                                    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                ];
-                                                ::parse_that::find_next_structural_from(
-                                                        &state.src_bytes,
-                                                        __start,
-                                                        &__LO_LUT,
-                                                        &__HI_LUT,
-                                                    )
-                                                    .map(|(pos, _)| pos - __start)
-                                            })
-                                                .unwrap_or(state.src_bytes.len() - __start)
-                                        };
-                                        state.offset = __start + __scan;
-                                        Some(
-                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                        )
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__span_blk47 None,
-                                }
-                                Some(())
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 26u8;
-                    let __mi: u8 = 0u8;
-                    __aggregate_buf[0..4]
-                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
-                    __aggregate_buf[4..8]
-                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                }
-            }
-        }
-        fn __lhs<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({ Self::__identifier(state, tape) }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 27u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __call_arg<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__rpt_blk49: {
-                        let __rpt_lo = state.offset as u32;
-                        let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                            tape,
-                        );
-                        let mut __count: usize = 0;
-                        loop {
-                            let __prev = state.offset;
-                            match ('__seq_blk48: {
-                                match ({
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__binary_factor(state, tape);
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __ws_inner
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk48 None,
-                                }
-                                match ({
-                                    let __opt_lo = state.offset as u32;
-                                    let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                        tape,
-                                    );
-                                    let __opt_cp = state.offset;
-                                    match ({
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 124u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => {
-                                            state.offset = __opt_cp;
-                                        }
-                                    }
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __opt_children,
-                                            __opt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk48 None,
-                                }
-                                Some(())
-                            }) {
-                                Some(_) => {
-                                    __count += 1;
-                                    if state.offset == __prev {
-                                        break;
-                                    }
-                                }
-                                None => {
-                                    state.offset = __prev;
-                                    break;
-                                }
-                            }
-                        }
-                        match if __count >= 1usize {
-                            Some(())
-                        } else {
-                            break '__rpt_blk49 None;
-                        } {
-                            Some(()) => {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
-                                }
-                                Some(())
-                            }
-                            None => None,
-                        }
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 28u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __term<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 29u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                match ({
-                    '__alt_blk58: {
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 0u8;
-                            if {
-                                if state.offset + 2usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 2usize])
-                                    } == *b"\xce\xb5"
-                                {
-                                    state.offset += 2usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk58 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 1u8;
-                            if {
-                                if state.offset + 7usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 7usize])
-                                    } == *b"epsilon"
-                                {
-                                    state.offset += 7usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk58 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 2u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if '__seq_blk53: {
-                                match (Self::__identifier(state, tape)) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk53 None,
-                                }
-                                match ({
-                                    let __opt_lo = state.offset as u32;
-                                    let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                        tape,
-                                    );
-                                    let __opt_cp = state.offset;
-                                    match ('__seq_blk52: {
-                                        match ({
-                                            if state.offset < state.src_bytes.len()
-                                                && state.src_bytes[state.offset] == 40u8
-                                            {
-                                                state.offset += 1;
-                                                Some(())
-                                            } else {
-                                                None
-                                            }
-                                        }) {
-                                            Some(_) => {}
-                                            None => break '__seq_blk52 None,
-                                        }
-                                        match ({
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ws_inner = Self::__call_arg(state, tape);
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            __ws_inner
-                                        }) {
-                                            Some(_) => {}
-                                            None => break '__seq_blk52 None,
-                                        }
-                                        match ('__rpt_blk51: {
-                                            let __rpt_lo = state.offset as u32;
-                                            let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                                tape,
-                                            );
-                                            let mut __count: usize = 0;
-                                            loop {
-                                                let __prev = state.offset;
-                                                match ('__seq_blk50: {
-                                                    match ({
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        let __ws_inner = {
-                                                            if state.offset < state.src_bytes.len()
-                                                                && state.src_bytes[state.offset] == 44u8
-                                                            {
-                                                                state.offset += 1;
-                                                                Some(())
-                                                            } else {
-                                                                None
-                                                            }
-                                                        };
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __ws_inner
-                                                    }) {
-                                                        Some(_) => {}
-                                                        None => break '__seq_blk50 None,
-                                                    }
-                                                    match ({
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        let __ws_inner = Self::__call_arg(state, tape);
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __ws_inner
-                                                    }) {
-                                                        Some(_) => {}
-                                                        None => break '__seq_blk50 None,
-                                                    }
-                                                    Some(())
-                                                }) {
-                                                    Some(_) => {
-                                                        __count += 1;
-                                                        if state.offset == __prev {
-                                                            break;
-                                                        }
-                                                    }
-                                                    None => {
-                                                        state.offset = __prev;
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                            match Some(()) {
-                                                Some(()) => {
-                                                    {
-                                                        let __vi: u8 = 0u8;
-                                                        let __mi: u8 = 0u8;
-                                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                                            tape,
-                                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                                            __rpt_children,
-                                                            __rpt_lo,
-                                                            state.offset as u32,
-                                                            __vi,
-                                                            __mi,
-                                                        );
-                                                    }
-                                                    Some(())
-                                                }
-                                                None => None,
-                                            }
-                                        }) {
-                                            Some(_) => {}
-                                            None => break '__seq_blk52 None,
-                                        }
-                                        match ({
-                                            if state.offset < state.src_bytes.len()
-                                                && state.src_bytes[state.offset] == 41u8
-                                            {
-                                                state.offset += 1;
-                                                Some(())
-                                            } else {
-                                                None
-                                            }
-                                        }) {
-                                            Some(_) => {}
-                                            None => break '__seq_blk52 None,
-                                        }
-                                        Some(())
-                                    }) {
-                                        Some(_) => {}
-                                        None => {
-                                            state.offset = __opt_cp;
-                                        }
-                                    }
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __opt_children,
-                                            __opt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk53 None,
-                                }
-                                Some(())
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk58 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 3u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__literal(state, tape).is_some() {
-                                break '__alt_blk58 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 4u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__regex(state, tape).is_some() {
-                                break '__alt_blk58 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 5u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if '__seq_blk54: {
-                                match ({
-                                    if state.offset + 2usize <= state.src_bytes.len()
-                                        && unsafe {
-                                            *(state.src_bytes.as_ptr().add(state.offset)
-                                                as *const [u8; 2usize])
-                                        } == *b"@{"
-                                    {
-                                        state.offset += 2usize;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk54 None,
-                                }
-                                match ({
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__rhs(state, tape);
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __ws_inner
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk54 None,
-                                }
-                                match ({
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 125u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk54 None,
-                                }
-                                Some(())
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk58 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 6u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if '__seq_blk55: {
-                                match ({
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 40u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk55 None,
-                                }
-                                match ({
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__rhs(state, tape);
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __ws_inner
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk55 None,
-                                }
-                                match ({
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 41u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk55 None,
-                                }
-                                Some(())
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk58 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 7u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if '__seq_blk56: {
-                                match ({
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 91u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk56 None,
-                                }
-                                match ({
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__rhs(state, tape);
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __ws_inner
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk56 None,
-                                }
-                                match ({
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 93u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk56 None,
-                                }
-                                Some(())
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk58 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 8u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if '__seq_blk57: {
-                                match ({
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 123u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk57 None,
-                                }
-                                match ({
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__rhs(state, tape);
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __ws_inner
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk57 None,
-                                }
-                                match ({
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 125u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk57 None,
-                                }
-                                Some(())
-                            }
-                                .is_some()
-                            {
-                                break '__alt_blk58 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __modifier<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 30u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                let mut __has_payload = false;
-                match ({
-                    '__alt_lit_blk59: {
-                        {
-                            if {
-                                if state.offset + 2usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 2usize])
-                                    } == *b"?w"
-                                {
-                                    state.offset += 2usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk59 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 63u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk59 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 42u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk59 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 43u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk59 Some(());
-                            }
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else if __has_payload {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __factor<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk60: {
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match (Self::__big_comment(state, tape)) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk60 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__term(state, tape);
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk60 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match (Self::__modifier(state, tape)) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk60 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match (Self::__big_comment(state, tape)) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk60 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 31u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __mapped_factor<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk63: {
-                        match (Self::__factor(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk63 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match ('__seq_blk62: {
-                                match ({
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = {
-                                        if state.offset + 2usize <= state.src_bytes.len()
-                                            && unsafe {
-                                                *(state.src_bytes.as_ptr().add(state.offset)
-                                                    as *const [u8; 2usize])
-                                            } == *b"->"
-                                        {
-                                            state.offset += 2usize;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    };
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __ws_inner
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk62 None,
-                                }
-                                match ('__seq_blk61: {
-                                    match (Self::__value_expr(state, tape)) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk61 None,
-                                    }
-                                    match ({
-                                        let __opt_lo = state.offset as u32;
-                                        let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                            tape,
-                                        );
-                                        let __opt_cp = state.offset;
-                                        match (Self::__type_annotation(state, tape)) {
-                                            Some(_) => {}
-                                            None => {
-                                                state.offset = __opt_cp;
-                                            }
-                                        }
-                                        {
-                                            let __vi: u8 = 0u8;
-                                            let __mi: u8 = 0u8;
-                                            ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                                tape,
-                                                ::bbnf::runtime::tape::TapeKind::Repeat,
-                                                __opt_children,
-                                                __opt_lo,
-                                                state.offset as u32,
-                                                __vi,
-                                                __mi,
-                                            );
-                                        }
-                                        Some(())
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk61 None,
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk62 None,
-                                }
-                                Some(())
-                            }) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk63 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 32u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __binary_operators<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 33u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                let mut __has_payload = false;
-                match ({
-                    '__alt_lit_blk64: {
-                        {
-                            if {
-                                if state.offset + 2usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 2usize])
-                                    } == *b"<<"
-                                {
-                                    state.offset += 2usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk64 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset + 2usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 2usize])
-                                    } == *b">>"
-                                {
-                                    state.offset += 2usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk64 Some(());
-                            }
-                        }
-                        {
-                            if {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 45u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            }
-                                .is_some()
-                            {
-                                break '__alt_lit_blk64 Some(());
-                            }
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else if __has_payload {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __binary_factor<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk67: {
-                        match (Self::__mapped_factor(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk67 None,
-                        }
-                        match ('__rpt_blk66: {
-                            let __rpt_lo = state.offset as u32;
-                            let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let mut __count: usize = 0;
-                            loop {
-                                let __prev = state.offset;
-                                match ('__seq_blk65: {
-                                    match ({
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ws_inner = Self::__binary_operators(state, tape);
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __ws_inner
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk65 None,
-                                    }
-                                    match (Self::__mapped_factor(state, tape)) {
-                                        Some(_) => {}
-                                        None => break '__seq_blk65 None,
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {
-                                        __count += 1;
-                                        if state.offset == __prev {
-                                            break;
-                                        }
-                                    }
-                                    None => {
-                                        state.offset = __prev;
-                                        break;
-                                    }
-                                }
-                            }
-                            match Some(()) {
-                                Some(()) => {
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __rpt_children,
-                                            __rpt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }
-                                None => None,
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk67 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 34u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __concatenation<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__rpt_blk69: {
-                        let __rpt_lo = state.offset as u32;
-                        let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                            tape,
-                        );
-                        let mut __count: usize = 0;
-                        loop {
-                            let __prev = state.offset;
-                            match ('__seq_blk68: {
-                                match ({
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__binary_factor(state, tape);
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __ws_inner
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk68 None,
-                                }
-                                match ({
-                                    let __opt_lo = state.offset as u32;
-                                    let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                        tape,
-                                    );
-                                    let __opt_cp = state.offset;
-                                    match ({
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 44u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => {
-                                            state.offset = __opt_cp;
-                                        }
-                                    }
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __opt_children,
-                                            __opt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk68 None,
-                                }
-                                Some(())
-                            }) {
-                                Some(_) => {
-                                    __count += 1;
-                                    if state.offset == __prev {
-                                        break;
-                                    }
-                                }
-                                None => {
-                                    state.offset = __prev;
-                                    break;
-                                }
-                            }
-                        }
-                        match if __count >= 1usize {
-                            Some(())
-                        } else {
-                            break '__rpt_blk69 None;
-                        } {
-                            Some(()) => {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
-                                }
-                                Some(())
-                            }
-                            None => None,
-                        }
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 35u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __alternation<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__rpt_blk71: {
-                        let __rpt_lo = state.offset as u32;
-                        let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                            tape,
-                        );
-                        let mut __count: usize = 0;
-                        loop {
-                            let __prev = state.offset;
-                            match ('__seq_blk70: {
-                                match ({
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__concatenation(state, tape);
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __ws_inner
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk70 None,
-                                }
-                                match ({
-                                    let __opt_lo = state.offset as u32;
-                                    let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                        tape,
-                                    );
-                                    let __opt_cp = state.offset;
-                                    match ({
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 124u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }) {
-                                        Some(_) => {}
-                                        None => {
-                                            state.offset = __opt_cp;
-                                        }
-                                    }
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __opt_children,
-                                            __opt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__seq_blk70 None,
-                                }
-                                Some(())
-                            }) {
-                                Some(_) => {
-                                    __count += 1;
-                                    if state.offset == __prev {
-                                        break;
-                                    }
-                                }
-                                None => {
-                                    state.offset = __prev;
-                                    break;
-                                }
-                            }
-                        }
-                        match if __count >= 1usize {
-                            Some(())
-                        } else {
-                            break '__rpt_blk71 None;
-                        } {
-                            Some(()) => {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
-                                }
-                                Some(())
-                            }
-                            None => None,
-                        }
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 36u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __closure<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk74: {
-                        match ({
-                            if state.offset < state.src_bytes.len()
-                                && state.src_bytes[state.offset] == 124u8
-                            {
-                                state.offset += 1;
-                                Some(())
-                            } else {
-                                None
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk74 None,
-                        }
-                        match (Self::__identifier(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk74 None,
-                        }
-                        match ('__rpt_blk73: {
-                            let __rpt_lo = state.offset as u32;
-                            let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let mut __count: usize = 0;
-                            loop {
-                                let __prev = state.offset;
-                                match ('__span_blk72: {
-                                    match ({
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ws_inner = {
-                                            if state.offset < state.src_bytes.len()
-                                                && state.src_bytes[state.offset] == 44u8
-                                            {
-                                                state.offset += 1;
-                                                Some(())
-                                            } else {
-                                                None
-                                            }
-                                        };
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __ws_inner
-                                    }) {
-                                        Some(_) => {}
-                                        None => break '__span_blk72 None,
-                                    }
-                                    match (Self::__identifier(state, tape)) {
-                                        Some(_) => {}
-                                        None => break '__span_blk72 None,
-                                    }
-                                    Some(())
-                                }) {
-                                    Some(_) => {
-                                        __count += 1;
-                                        if state.offset == __prev {
-                                            break;
-                                        }
-                                    }
-                                    None => {
-                                        state.offset = __prev;
-                                        break;
-                                    }
-                                }
-                            }
-                            match Some(()) {
-                                Some(()) => {
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __rpt_children,
-                                            __rpt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }
-                                None => None,
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk74 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 124u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk74 None,
-                        }
-                        match (Self::__rhs(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk74 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 37u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __rhs<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 38u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                match ({
-                    '__alt_blk75: {
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 0u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__closure(state, tape).is_some() {
-                                break '__alt_blk75 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 1u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__alternation(state, tape).is_some() {
-                                break '__alt_blk75 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __rule<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk77: {
-                        match (Self::__lhs(state, tape)) {
-                            Some(_) => {}
-                            None => break '__seq_blk77 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 61u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk77 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__rhs(state, tape);
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk77 None,
-                        }
-                        match ('__alt_lit_blk76: {
-                            {
-                                if {
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 59u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }
-                                    .is_some()
-                                {
-                                    break '__alt_lit_blk76 Some(());
-                                }
-                            }
-                            {
-                                if {
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 46u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }
-                                    .is_some()
-                                {
-                                    break '__alt_lit_blk76 Some(());
-                                }
-                            }
-                            None
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk77 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 39u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __import_path<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let mut __aggregate_buf: [u8; 8usize] = [0u8; 8usize];
-                match ({
-                    '__span_blk78: {
-                        match ({
-                            if state.offset < state.src_bytes.len()
-                                && state.src_bytes[state.offset] == 34u8
-                            {
-                                state.offset += 1;
-                                Some(())
-                            } else {
-                                None
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk78 None,
-                        }
-                        match ({
-                            {
-                                let __start = state.offset;
-                                let __result: Option<()> = (|| {
-                                    {
-                                        let mut __rep_count: u32 = 0;
-                                        loop {
-                                            let __save = state.offset;
-                                            let __ok = (|| -> Option<()> {
-                                                {
-                                                    let __save_alt = state.offset;
-                                                    let __alt_ok = (|| -> Option<()> {
-                                                        if state.src_bytes.get(state.offset).copied() != Some(b'\\')
-                                                        {
-                                                            return None;
-                                                        }
-                                                        state.offset += 1;
-                                                        {
-                                                            let __b = *state.src_bytes.get(state.offset)?;
-                                                            if !(!(__b == b'\n')) {
-                                                                return None;
-                                                            }
-                                                            state.offset += 1;
-                                                        }
-                                                        Some(())
-                                                    })();
-                                                    let __alt_ok = if __alt_ok.is_none() {
-                                                        state.offset = __save_alt;
-                                                        (|| -> Option<()> {
-                                                            {
-                                                                let __b = *state.src_bytes.get(state.offset)?;
-                                                                if !(!((__b == b'"' || __b == b'\\'))) {
-                                                                    return None;
-                                                                }
-                                                                state.offset += 1;
-                                                            }
-                                                            Some(())
-                                                        })()
-                                                    } else {
-                                                        __alt_ok
-                                                    };
-                                                    if __alt_ok.is_none() {
-                                                        return None;
-                                                    }
-                                                }
-                                                Some(())
-                                            })();
-                                            if __ok.is_none() {
-                                                state.offset = __save;
-                                                break;
-                                            }
-                                            if state.offset == __save {
-                                                break;
-                                            }
-                                            __rep_count += 1;
-                                        }
-                                    }
-                                    Some(())
-                                })();
-                                if __result.is_some() {
-                                    Some(
-                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                    )
-                                } else {
-                                    state.offset = __start;
-                                    None
-                                }
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk78 None,
-                        }
-                        match ({
-                            if state.offset < state.src_bytes.len()
-                                && state.src_bytes[state.offset] == 34u8
-                            {
-                                state.offset += 1;
-                                Some(())
-                            } else {
-                                None
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk78 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 40u8;
-                    let __mi: u8 = 0u8;
-                    __aggregate_buf[0..4]
-                        .copy_from_slice(&(__span_lo as u32).to_le_bytes());
-                    __aggregate_buf[4..8]
-                        .copy_from_slice(&(state.offset as u32).to_le_bytes());
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf_with(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                            ::bbnf::runtime::tape::PayloadData::Aggregate(
-                                &__aggregate_buf[..8usize],
-                            ),
-                        ),
-                    )
-                }
-            }
-        }
-        fn __import_items<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__span_blk82: {
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = {
-                                if state.offset < state.src_bytes.len()
-                                    && state.src_bytes[state.offset] == 123u8
-                                {
-                                    state.offset += 1;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk82 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = '__span_blk81: {
-                                match (Self::__identifier(state, tape)) {
-                                    Some(_) => {}
-                                    None => break '__span_blk81 None,
-                                }
-                                match ('__rpt_blk80: {
-                                    let __rpt_lo = state.offset as u32;
-                                    let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                        tape,
-                                    );
-                                    let mut __count: usize = 0;
-                                    loop {
-                                        let __prev = state.offset;
-                                        match ('__span_blk79: {
-                                            match ({
-                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                let __ws_inner = {
-                                                    if state.offset < state.src_bytes.len()
-                                                        && state.src_bytes[state.offset] == 44u8
-                                                    {
-                                                        state.offset += 1;
-                                                        Some(())
-                                                    } else {
-                                                        None
-                                                    }
-                                                };
-                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                __ws_inner
-                                            }) {
-                                                Some(_) => {}
-                                                None => break '__span_blk79 None,
-                                            }
-                                            match (Self::__identifier(state, tape)) {
-                                                Some(_) => {}
-                                                None => break '__span_blk79 None,
-                                            }
-                                            Some(())
-                                        }) {
-                                            Some(_) => {
-                                                __count += 1;
-                                                if state.offset == __prev {
-                                                    break;
-                                                }
-                                            }
-                                            None => {
-                                                state.offset = __prev;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    match Some(()) {
-                                        Some(()) => {
-                                            {
-                                                let __vi: u8 = 0u8;
-                                                let __mi: u8 = 0u8;
-                                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                                    tape,
-                                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                                    __rpt_children,
-                                                    __rpt_lo,
-                                                    state.offset as u32,
-                                                    __vi,
-                                                    __mi,
-                                                );
-                                            }
-                                            Some(())
-                                        }
-                                        None => None,
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__span_blk81 None,
-                                }
-                                Some(())
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk82 None,
-                        }
-                        match ({
-                            if state.offset < state.src_bytes.len()
-                                && state.src_bytes[state.offset] == 125u8
-                            {
-                                state.offset += 1;
-                                Some(())
-                            } else {
-                                None
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk82 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 41u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __import_directive<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__span_blk86: {
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = {
-                                if state.offset + 7usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 7usize])
-                                    } == *b"@import"
-                                {
-                                    state.offset += 7usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk86 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = '__alt_blk84: {
-                                {
-                                    let __cp = state.offset;
-                                    if '__span_blk83: {
-                                        match ({
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ws_inner = Self::__import_items(state, tape);
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            __ws_inner
-                                        }) {
-                                            Some(_) => {}
-                                            None => break '__span_blk83 None,
-                                        }
-                                        match ({
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ws_inner = {
-                                                if state.offset + 4usize <= state.src_bytes.len()
-                                                    && unsafe {
-                                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                                            as *const [u8; 4usize])
-                                                    } == *b"from"
-                                                {
-                                                    state.offset += 4usize;
-                                                    Some(())
-                                                } else {
-                                                    None
-                                                }
-                                            };
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            __ws_inner
-                                        }) {
-                                            Some(_) => {}
-                                            None => break '__span_blk83 None,
-                                        }
-                                        match (Self::__import_path(state, tape)) {
-                                            Some(_) => {}
-                                            None => break '__span_blk83 None,
-                                        }
-                                        Some(())
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_blk84 Some(());
-                                    }
-                                    state.offset = __cp;
-                                }
-                                {
-                                    let __cp = state.offset;
-                                    if Self::__import_path(state, tape).is_some() {
-                                        break '__alt_blk84 Some(());
-                                    }
-                                    state.offset = __cp;
-                                }
-                                None
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk86 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match ('__alt_lit_blk85: {
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 59u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk85 Some(());
-                                    }
-                                }
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 46u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk85 Some(());
-                                    }
-                                }
-                                None
-                            }) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk86 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 42u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __recover_directive<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk88: {
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = {
-                                if state.offset + 8usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 8usize])
-                                    } == *b"@recover"
-                                {
-                                    state.offset += 8usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk88 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__identifier(state, tape);
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk88 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__rhs(state, tape);
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk88 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match ('__alt_lit_blk87: {
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 59u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk87 Some(());
-                                    }
-                                }
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 46u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk87 Some(());
-                                    }
-                                }
-                                None
-                            }) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk88 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 43u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __pretty_hint<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__span_blk90: {
-                        match (Self::__identifier(state, tape)) {
-                            Some(_) => {}
-                            None => break '__span_blk90 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match ('__span_blk89: {
-                                match ({
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 40u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__span_blk89 None,
-                                }
-                                match ({
-                                    {
-                                        let __start = state.offset;
-                                        let __scan = if __start >= state.src_bytes.len() {
-                                            0
-                                        } else {
-                                            ({
-                                                static __LO_LUT: [u8; 16] = [
-                                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
-                                                ];
-                                                static __HI_LUT: [u8; 16] = [
-                                                    0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                ];
-                                                ::parse_that::find_next_structural_from(
-                                                        &state.src_bytes,
-                                                        __start,
-                                                        &__LO_LUT,
-                                                        &__HI_LUT,
-                                                    )
-                                                    .map(|(pos, _)| pos - __start)
-                                            })
-                                                .unwrap_or(state.src_bytes.len() - __start)
-                                        };
-                                        state.offset = __start + __scan;
-                                        Some(
-                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                        )
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__span_blk89 None,
-                                }
-                                match ({
-                                    if state.offset < state.src_bytes.len()
-                                        && state.src_bytes[state.offset] == 41u8
-                                    {
-                                        state.offset += 1;
-                                        Some(())
-                                    } else {
-                                        None
-                                    }
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__span_blk89 None,
-                                }
-                                Some(())
-                            }) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk90 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 44u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __pretty_directive<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__seq_blk94: {
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = {
-                                if state.offset + 7usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 7usize])
-                                    } == *b"@pretty"
-                                {
-                                    state.offset += 7usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk94 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = '__alt_blk91: {
-                                {
-                                    let __cp = state.offset;
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 42u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_blk91 Some(());
-                                    }
-                                    state.offset = __cp;
-                                }
-                                {
-                                    let __cp = state.offset;
-                                    if Self::__identifier(state, tape).is_some() {
-                                        break '__alt_blk91 Some(());
-                                    }
-                                    state.offset = __cp;
-                                }
-                                None
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk94 None,
-                        }
-                        match ('__rpt_blk92: {
-                            let __rpt_lo = state.offset as u32;
-                            let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let mut __count: usize = 0;
-                            loop {
-                                let __prev = state.offset;
-                                match ({
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__pretty_hint(state, tape);
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __ws_inner
-                                }) {
-                                    Some(_) => {
-                                        __count += 1;
-                                        if state.offset == __prev {
-                                            break;
-                                        }
-                                    }
-                                    None => {
-                                        state.offset = __prev;
-                                        break;
-                                    }
-                                }
-                            }
-                            match if __count >= 1usize {
-                                Some(())
-                            } else {
-                                break '__rpt_blk92 None;
-                            } {
-                                Some(()) => {
-                                    {
-                                        let __vi: u8 = 0u8;
-                                        let __mi: u8 = 0u8;
-                                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                            tape,
-                                            ::bbnf::runtime::tape::TapeKind::Repeat,
-                                            __rpt_children,
-                                            __rpt_lo,
-                                            state.offset as u32,
-                                            __vi,
-                                            __mi,
-                                        );
-                                    }
-                                    Some(())
-                                }
-                                None => None,
-                            }
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk94 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match ('__alt_lit_blk93: {
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 59u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk93 Some(());
-                                    }
-                                }
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 46u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk93 Some(());
-                                    }
-                                }
-                                None
-                            }) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__seq_blk94 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 45u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __ws_directive<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__span_blk96: {
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = {
-                                if state.offset + 3usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 3usize])
-                                    } == *b"@ws"
-                                {
-                                    state.offset += 3usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk96 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__regex(state, tape);
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk96 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match ('__alt_lit_blk95: {
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 59u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk95 Some(());
-                                    }
-                                }
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 46u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk95 Some(());
-                                    }
-                                }
-                                None
-                            }) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk96 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 46u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __token_directive<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__span_blk98: {
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = {
-                                if state.offset + 6usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 6usize])
-                                    } == *b"@token"
-                                {
-                                    state.offset += 6usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk98 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__identifier(state, tape);
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk98 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match ('__alt_lit_blk97: {
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 59u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk97 Some(());
-                                    }
-                                }
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 46u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk97 Some(());
-                                    }
-                                }
-                                None
-                            }) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk98 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 47u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __debug_directive<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__span_blk101: {
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = {
-                                if state.offset + 6usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 6usize])
-                                    } == *b"@debug"
-                                {
-                                    state.offset += 6usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk101 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = '__alt_blk99: {
-                                {
-                                    let __cp = state.offset;
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 42u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_blk99 Some(());
-                                    }
-                                    state.offset = __cp;
-                                }
-                                {
-                                    let __cp = state.offset;
-                                    if Self::__identifier(state, tape).is_some() {
-                                        break '__alt_blk99 Some(());
-                                    }
-                                    state.offset = __cp;
-                                }
-                                None
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk101 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match ('__alt_lit_blk100: {
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 59u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk100 Some(());
-                                    }
-                                }
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 46u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk100 Some(());
-                                    }
-                                }
-                                None
-                            }) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk101 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 48u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __host_directive<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__span_blk104: {
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = {
-                                if state.offset + 5usize <= state.src_bytes.len()
-                                    && unsafe {
-                                        *(state.src_bytes.as_ptr().add(state.offset)
-                                            as *const [u8; 5usize])
-                                    } == *b"@host"
-                                {
-                                    state.offset += 5usize;
-                                    Some(())
-                                } else {
-                                    None
-                                }
-                            };
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk104 None,
-                        }
-                        match ({
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ws_inner = Self::__identifier(state, tape);
-                            ::parse_that::trim_leading_whitespace_mut(state);
-                            __ws_inner
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk104 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match ('__span_blk102: {
-                                match ({
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 58u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    };
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __ws_inner
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__span_blk102 None,
-                                }
-                                match ({
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    let __ws_inner = Self::__type_name(state, tape);
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __ws_inner
-                                }) {
-                                    Some(_) => {}
-                                    None => break '__span_blk102 None,
-                                }
-                                Some(())
-                            }) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk104 None,
-                        }
-                        match ({
-                            let __opt_lo = state.offset as u32;
-                            let __opt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            let __opt_cp = state.offset;
-                            match ('__alt_lit_blk103: {
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 59u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk103 Some(());
-                                    }
-                                }
-                                {
-                                    if {
-                                        if state.offset < state.src_bytes.len()
-                                            && state.src_bytes[state.offset] == 46u8
-                                        {
-                                            state.offset += 1;
-                                            Some(())
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                        .is_some()
-                                    {
-                                        break '__alt_lit_blk103 Some(());
-                                    }
-                                }
-                                None
-                            }) {
-                                Some(_) => {}
-                                None => {
-                                    state.offset = __opt_cp;
-                                }
-                            }
-                            {
-                                let __vi: u8 = 0u8;
-                                let __mi: u8 = 0u8;
-                                ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                    tape,
-                                    ::bbnf::runtime::tape::TapeKind::Repeat,
-                                    __opt_children,
-                                    __opt_lo,
-                                    state.offset as u32,
-                                    __vi,
-                                    __mi,
-                                );
-                            }
-                            Some(())
-                        }) {
-                            Some(_) => {}
-                            None => break '__span_blk104 None,
-                        }
-                        Some(())
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 49u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __directive<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 50u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                match ({
-                    '__alt_blk105: {
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 0u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__import_directive(state, tape).is_some() {
-                                break '__alt_blk105 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 1u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__recover_directive(state, tape).is_some() {
-                                break '__alt_blk105 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 2u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__pretty_directive(state, tape).is_some() {
-                                break '__alt_blk105 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 3u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__ws_directive(state, tape).is_some() {
-                                break '__alt_blk105 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 4u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__token_directive(state, tape).is_some() {
-                                break '__alt_blk105 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 5u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__debug_directive(state, tape).is_some() {
-                                break '__alt_blk105 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 6u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__host_directive(state, tape).is_some() {
-                                break '__alt_blk105 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __grammar_item<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __variant_idx: u8 = 51u8;
-                let mut __branch_idx: u8 = 0;
-                let mut __has_children = false;
-                let mut __children = ::bbnf::runtime::tape::TapeOffset::NONE;
-                match ({
-                    '__alt_blk106: {
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 0u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__comment(state, tape).is_some() {
-                                break '__alt_blk106 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 1u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__big_comment(state, tape).is_some() {
-                                break '__alt_blk106 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 2u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__directive(state, tape).is_some() {
-                                break '__alt_blk106 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        {
-                            let __cp = state.offset;
-                            __branch_idx = 3u8;
-                            __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                                tape,
-                            );
-                            __has_children = true;
-                            if Self::__rule(state, tape).is_some() {
-                                break '__alt_blk106 Some(());
-                            }
-                            state.offset = __cp;
-                        }
-                        None
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                if __has_children {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                } else {
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_leaf(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            __span_lo,
-                            state.offset as u32,
-                            __variant_idx,
-                            __branch_idx,
-                        ),
-                    )
-                }
-            }
-        }
-        fn __grammar<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            tape: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeOffset> {
-            'rule_blk: {
-                let __span_lo = state.offset as u32;
-                let __children = ::bbnf::runtime::tape::TapeBuilder::mark_children(tape);
-                match ({
-                    '__rpt_blk107: {
-                        let __rpt_lo = state.offset as u32;
-                        let __rpt_children = ::bbnf::runtime::tape::TapeBuilder::mark_children(
-                            tape,
-                        );
-                        let mut __count: usize = 0;
-                        loop {
-                            let __prev = state.offset;
-                            match ({
-                                ::parse_that::trim_leading_whitespace_mut(state);
-                                let __ws_inner = Self::__grammar_item(state, tape);
-                                ::parse_that::trim_leading_whitespace_mut(state);
-                                __ws_inner
-                            }) {
-                                Some(_) => {
-                                    __count += 1;
-                                    if state.offset == __prev {
-                                        break;
-                                    }
-                                }
-                                None => {
-                                    state.offset = __prev;
-                                    break;
-                                }
-                            }
-                        }
-                        match Some(()) {
-                            Some(()) => {
-                                {
-                                    let __vi: u8 = 0u8;
-                                    let __mi: u8 = 0u8;
-                                    ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                                        tape,
-                                        ::bbnf::runtime::tape::TapeKind::Repeat,
-                                        __rpt_children,
-                                        __rpt_lo,
-                                        state.offset as u32,
-                                        __vi,
-                                        __mi,
-                                    );
-                                }
-                                Some(())
-                            }
-                            None => None,
-                        }
-                    }
-                }) {
-                    Some(_) => {}
-                    None => break 'rule_blk None,
-                }
-                {
-                    let __vi: u8 = 52u8;
-                    let __mi: u8 = 0u8;
-                    Some(
-                        ::bbnf::runtime::tape::TapeBuilder::push_compound(
-                            tape,
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            __children,
-                            __span_lo,
-                            state.offset as u32,
-                            __vi,
-                            __mi,
-                        ),
-                    )
-                }
-            }
-        }
         fn __int_lit_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -27094,32 +20835,50 @@ mod __bbnfbootstrap_emit_impl {
         }
         /// Parse an input string and return a zero-copy
         /// `Parsed<'_, Self>` that borrows the input directly.
+        ///
+        /// AW-I.W3: `parse()` dispatches through the DTA driver
+        /// wholesale. The per-rule fn-per-rule path retired at
+        /// W3.1; the DTA walker (AW-I.W2.1) owns Seq / Literal /
+        /// Regex / Ref / AltLinear-with-savepoint / Repeat with
+        /// `lo..=hi` bounds / ShuntingYard. `dta_run_into`
+        /// drives `DTA_TABLE` over the input bytes, writing
+        /// records into the builder's columns and stamping
+        /// `frame_depth` inline so `finish()` skips the
+        /// `derive_frame_depth` reconstruction pass.
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<
             ::bbnf::runtime::Parsed<'_, Self>,
             ::bbnf::runtime::ParseErr,
         > {
-            let mut state = ::parse_that::ParserState::new(input);
             let mut builder = ::bbnf::runtime::tape::TapeBuilder::with_capacity(
                 GRAMMAR_PROFILE.capacity_for(input.len()),
             );
-            let root_off = Self::__grammar(&mut state, &mut builder)
-                .ok_or(::bbnf::runtime::ParseErr::Syntax {
-                    offset: state.offset as u32,
-                    rule: None,
+            builder.enable_inline_frame_depth();
+            let mut psi = psi_with_capacity(input.len());
+            let root_off = builder
+                .dta_run_into(&DTA_TABLE, input.as_bytes(), &DTA_SCANNER, &mut psi)
+                .map_err(|e| match e {
+                    ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
+                        ::bbnf::runtime::ParseErr::Syntax {
+                            offset,
+                            rule: None,
+                        }
+                    }
+                    ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                        ::bbnf::runtime::ParseErr::Syntax {
+                            offset,
+                            rule: None,
+                        }
+                    }
+                    ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
+                        ::bbnf::runtime::ParseErr::Syntax {
+                            offset: 0,
+                            rule: None,
+                        }
+                    }
                 })?;
-            while state.offset < input.len()
-                && input.as_bytes()[state.offset].is_ascii_whitespace()
-            {
-                state.offset += 1;
-            }
-            if state.offset < input.len() {
-                return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
-                    offset: state.offset as u32,
-                    rule: None,
-                });
-            }
+            psi.fill_columns(input.as_bytes(), builder.columns_mut(), &GRAMMAR_PROFILE);
             let tape = builder.finish().map_err(::bbnf::runtime::ParseErr::Tape)?;
             ::core::result::Result::Ok(
                 ::bbnf::runtime::Parsed::new(tape, input, root_off),

@@ -2167,6 +2167,7 @@ mod __bbnfbootstrap_emit_impl {
         shunting_yard_rules: &__DTA_SHUNTING_YARD_RULES,
         counter_optional_rules: &[],
         max_nesting_depth: 8u16,
+        entry: ::bbnf::runtime::tape::DtaRuleId(52),
     };
     /// Shape dictionary — empty for this grammar (selection
     /// admitted no templates). Reserved symbol so downstream

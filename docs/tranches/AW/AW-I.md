@@ -76,9 +76,9 @@ here.
 |------|--------|--------|--------------------|
 | W0 cleanup | 5 parallel | landed | green (1101/0/67) |
 | W1 DTA substrate | 1 serial | landed | green |
-| W2 walker + memo + SCC + audit | 4 parallel | pending | green |
+| W2 walker + memo + SCC + audit + snapshot migration | 5 parallel (W2.1–W2.4 concurrent; W2.5 sequenced after audit) | pending | green (passes count ≥ 1041) |
 | W3 parse() swap + regen | 1 serial | pending | intentionally unworkable |
-| W4 legacy deletion + fuse + snapshots | 5 parallel | pending | returns green |
+| W4 legacy deletion + guard drop | 5 parallel | pending | returns green |
 | W5 FINAL-I + bench + close | 1 serial | pending | green |
 
 ## Phases
@@ -182,13 +182,33 @@ Owner: `crates/core/src/pipeline/compile.rs`.
 Inside `structural_normalizer_loop` (lines 510-533), insert
 `bbnf_ir::passes::compute_scc(&mut ir)` after
 `canonicalize_aliases` AND between `inline_acyclic` and
-`fuse_single_use`. No guard drop yet (lands in W4.4); this
-sub-phase lands the infrastructure so the W4.4 activation
-only flips the guards without cascading SCC-staleness.
+`fuse_single_use`.
 
-Hard gate: `compute_scc` appears in the normalizer loop at
-least twice (top + inter-pass); workspace tests remain
-1101/0/67 (no behaviour change yet).
+**Scope-reveal from execution** (2026-04-16): the plan's
+premise that the SCC recompute is "semantics-neutral" was
+wrong. `lower::metadata::build_rule_meta` stamps
+`scc_id = Some(id)` for every rule — including acyclic
+ones. `compute_scc` realigns to the canonical convention
+(`None` for acyclic, `Some` for cyclic). The guards at
+`inline.rs:42` and `fuse.rs:55` — phrased
+`r.meta.scc_id.is_none()` — were therefore always-FALSE
+pre-W2.3, dormant since lowering began stamping. Post-
+W2.3 they fire for acyclic rules. `inline_acyclic` and
+`fuse_single_use` activate as a necessary side-effect.
+60 workspace tests regress against their un-fused
+snapshot shape (sheets parity, payload layouts,
+grammar roundtrips, tape parity, TS backend snapshots).
+
+**W2.5 absorbs the snapshot migration** (formerly W4.5).
+`W4.5` retains only the guard-drop — which extends the
+passes to cyclic rules (AW.0.10's original motivation) —
+and any residual snapshot updates that surface there.
+
+Hard gate: `compute_scc` appears in the normalizer loop
+at least twice (top + inter-pass). Workspace test count
+after W2.5 consumes W2.4's audit: ≥ 1041 passed / 0
+failed / 67 + Category A ignored (migration deletes ≤ 22
+tests from the passing set; updates the rest in place).
 
 #### W2.4 — Fuse-dependent snapshot audit
 
@@ -207,8 +227,37 @@ fix).
 Output: audit markdown with three lists plus per-test
 one-line rationale. No code changes.
 
-Hard gate: audit covers every test that `W4.4`'s agent
-would need to touch; zero "unknown status" entries.
+Hard gate: audit covers every test that `W2.5`'s migration
+agent would need to touch; zero "unknown status" entries.
+
+#### W2.5 — Snapshot migration under reactivated passes
+
+Owner: the subset of `crates/**/tests/**/*.rs` and
+`crates/**/tests/fixtures/**/*.json` enumerated in
+`docs/tranches/AW/audit/fuse-snapshot-migration.md`.
+
+Consume the audit's three lists:
+- **DELETE** (22 tests): remove outright — fossilised
+  assertions over un-fused IR shape with no
+  behaviour-preservation signal.
+- **UPDATE** (44 tests + 18 golden files): regenerate
+  snapshot text / recompute hardcoded constants against
+  the post-fuse shape. The assertion semantics are correct;
+  the shape is obsolete.
+- **INVESTIGATE** (8 tests): each requires per-test
+  architectural judgement. For `bool_true_branch_drops_
+  payload`, `pipeline_debug_single_rule_meta`, and
+  `sheets_shunting_yard_state_materialises` (the top-3
+  INVESTIGATE entries), the agent determines on contact
+  whether the post-fuse behaviour is correct (test updates)
+  or surfaces a real regression (escalate within the
+  audit document — the escalation is NOT a deferral, since
+  W2.5 is the declared consumer).
+
+Hard gate: `cargo test --workspace --no-fail-fast` returns
+0 failures at W2.5 close; workspace passes count within
+tolerance of `post-W2.4_baseline - 22 DELETE` + any
+INVESTIGATE conclusions landing as deletions or updates.
 
 ### W3 — `parse()` swap + regen [1 serial]
 
@@ -310,24 +359,30 @@ Delete:
 Remove module declarations. Post-deletion: re-run bootstrap
 regen. `generated.rs` shrinks further (no helper outputs).
 
-#### W4.5 — Fuse/inline activation + snapshot migration
+#### W4.5 — Cyclic-rule activation (guard drop)
 
-Drop the always-true `r.meta.scc_id.is_none()` guards at
+Drop the `r.meta.scc_id.is_none()` guards at
 `crates/ir/src/passes/transform/inline.rs:42` and
-`crates/ir/src/passes/transform/fuse.rs:55`. With W2.3's
-SCC recompute already in place, the passes fire with fresh
-metadata.
+`crates/ir/src/passes/transform/fuse.rs:55`. W2.3's SCC
+recompute already activated `inline_acyclic` + `fuse_
+single_use` for acyclic rules — the guards' remaining
+effect is to keep the passes off cyclic rules. Dropping
+them extends the optimisation to cyclic rules too
+(AW.0.10's original motivation).
 
-Regen `generated.rs`. CSS L4 DTA state count drops from the
-AV.3.6 baseline of 2473 to < 2000.
+Regen `generated.rs`. CSS L4 DTA state count drops from
+the AV.3.6 baseline of 2473 to < 2000.
 
-Consume W2.4's audit. Per-test: regenerate snapshots,
-update assertion thresholds, or delete fossilised tests
-per the audit's rationale. Expected ~45 tests touched.
+Bulk snapshot migration landed in W2.5. Residual
+regressions that surface from cyclic-rule activation —
+expected narrow set — migrate in-wave via the same
+DELETE / UPDATE / INVESTIGATE classification as W2.5.
 
 Hard gate: `cargo test --workspace --no-fail-fast` returns
-workspace-green; ignored count stays ≤ 67 + any
-post-DTA-exposed category-A items.
+workspace-green; CSS L4 DTA state count < 2000 verified
+via direct `bbnf_ir::passes::recognizers::dta::summarise`
+call; ignored count stays ≤ 67 + any post-DTA-exposed
+category-A items.
 
 ### W5 — FINAL-I + bench + close [1 serial]
 
@@ -354,6 +409,8 @@ covers the 19-entry matrix. Workspace tests 0 failures.
 | `parse-that/rust/parse_that/src/parse.rs` (memo plumbing) | W2.2 |
 | `crates/core/src/pipeline/compile.rs` (SCC recompute) | W2.3, W4.5 |
 | `docs/tranches/AW/audit/fuse-snapshot-migration.md` (new audit) | W2.4 |
+| `crates/**/tests/**/*.rs` (snapshot migration per audit) | W2.5 |
+| `crates/**/tests/fixtures/tape_golden/*.json` (golden regeneration) | W2.5 |
 | `crates/core/src/backend/rust/emitter/grammar.rs` (parse swap) | W3.1 |
 | `crates/core/src/grammar/generated.rs` (regen) | W3.2, W4.4, W4.5 |
 | `crates/core/src/backend/rust/emitter/*.rs` (deletion set) | W4.1-W4.4 |
@@ -381,9 +438,15 @@ covers the 19-entry matrix. Workspace tests 0 failures.
 5. `MemoStore` deleted; `grep -rn 'memo' parse-that/` in
    production paths returns 0.
 6. `compute_scc` appears in normaliser loop twice (top +
-   inter-pass); workspace unchanged at 1101/0/67.
+   inter-pass). `inline_acyclic` + `fuse_single_use`
+   fire for acyclic rules (activation side-effect per
+   scope-reveal 2026-04-16).
 7. `fuse-snapshot-migration.md` audit covers every test at
    risk; zero "unknown" entries.
+7a. W2.5 snapshot migration: `cargo test --workspace --no-
+   fail-fast` returns 0 failures after consuming the audit.
+   Passes count within tolerance of
+   `1101 − audit.DELETE` + INVESTIGATE resolutions.
 
 ### W3
 
@@ -399,11 +462,12 @@ covers the 19-entry matrix. Workspace tests 0 failures.
 11. Emitter directory contains only `grammar.rs`, `dta.rs`,
     `mod.rs`, `profile.rs`, `visitor.rs`, `prettify/`
     (sub-dir).
-12. `inline_acyclic` + `fuse_single_use` fire; CSS L4 DTA
-    state count < 2000 (AV.3.6 baseline 2473). Verification:
-    direct call to `bbnf_ir::passes::recognizers::dta::summarise`
-    in a dedicated test asserting `state_count < 2000`; `grep`
-    on `generated.rs` is supplementary only.
+12. `inline_acyclic` + `fuse_single_use` extend to cyclic
+    rules after W4.5 guard drop; CSS L4 DTA state count
+    < 2000 (AV.3.6 baseline 2473). Verification: direct
+    call to `bbnf_ir::passes::recognizers::dta::summarise`
+    in a dedicated test asserting `state_count < 2000`;
+    `grep` on `generated.rs` is supplementary only.
 13. Workspace `cargo test --workspace --no-fail-fast`
     returns 0 failures.
 
@@ -433,7 +497,9 @@ covers the 19-entry matrix. Workspace tests 0 failures.
 | DTA walker `AltLinear`/`Repeat`/`ShuntingYard` stubs | V3 substrate | W2.1 |
 | `MemoStore` (AW.1.8) | AU era | W2.2 |
 | SCC staleness between inline + fuse | AU PROGRESS | W2.3 |
-| Fuse/inline activation (AW.0.10) | AU PROGRESS | W4.5 |
+| Fuse/inline activation on acyclic rules (AW.0.10) | AU PROGRESS | W2.3 (side-effect of SCC plumbing) |
+| Fuse/inline activation on cyclic rules (guard drop) | AU PROGRESS | W4.5 |
+| Un-fused-shape snapshot fossilisation | AU PROGRESS | W2.5 (consumes W2.4 audit) |
 | CSS L4 DTA state count < 2000 | AV.3.6 | W4.5 |
 | Legacy `fn __<rule>` emission | AU era | W3.1 + W4.1-4.4 |
 | `parse_dta` additive surface | W1 substrate landing | W3.1 |

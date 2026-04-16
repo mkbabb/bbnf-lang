@@ -11,9 +11,9 @@ what committed, what blocked, what shifted.
 |------|-------|--------|--------|
 | W0 | cleanup + hygiene + Color view + CI gate | 5 parallel | ✓ landed |
 | W1 | DTA substrate skeleton (walker + cursor O(1) + inline finalise + replay feature) | 1 serial | ✓ landed (stubs open) |
-| W2 | walker completion + MemoStore retire + SCC plumbing + snapshot audit | 4 parallel | pending |
+| W2 | walker + memo + SCC + audit + snapshot migration | 5 parallel (W2.1–W2.4 concurrent; W2.5 sequenced) | in flight (W2.2/W2.3/W2.4 landed; W2.1 running; W2.5 pending) |
 | W3 | `parse()` swap + regen | 1 serial | pending (workspace intentionally breaks) |
-| W4 | legacy `fn __<rule>` deletion + fuse/inline activation + snapshot migration | 5 parallel | pending |
+| W4 | legacy `fn __<rule>` deletion + cyclic-rule guard drop | 5 parallel | pending |
 | W5 | FINAL-I + bench + close | 1 serial | pending |
 
 Workspace at AW-I HEAD `ff0b7fe7`: **1101/0/67**.
@@ -547,6 +547,92 @@ Route forward options (orchestrator decision pending):
    closing now) and AY (full activation + W2–W6 levers).
    Mechanical redocumentation but keeps momentum on what's
    achieved.
+
+## 2026-04-16 — AW-I.W2 execution + scope-reveal
+
+### Wave dispatch
+
+Four parallel sub-agents in isolated worktrees per AW-I.md
+§"Wave schedule":
+
+- **W2.1** (walker arm completion) — `../bbnf-wt-aw-w2-1-walker`.
+  Owner: `crates/bbnf-tape/src/driver.rs`. AltLinear savepoint
+  backtracking, Repeat lo..=hi iteration, ShuntingYard
+  operator-precedence reducer. In flight.
+- **W2.2** (MemoStore retirement) — `../parse-that-wt-aw-w2-2-memo`
+  (sibling-repo worktree). Four commits, 230 deletions, zero
+  bbnf-lang consumers of the removed APIs. Cherry-picked onto
+  `parse-that` master (`907db32`).
+- **W2.3** (SCC recompute plumbing) — `../bbnf-wt-aw-w2-3-scc`.
+  One commit `b0e69f2d` cherry-picked as `c25e63a0`.
+- **W2.4** (fuse-snapshot audit, read-only) —
+  `../bbnf-wt-aw-w2-4-audit`. Audit landed at
+  `docs/tranches/AW/audit/fuse-snapshot-migration.md`: 22
+  DELETE / 44 UPDATE / 8 INVESTIGATE / 74 at-risk tests.
+  Cherry-picked as `d102e007`.
+
+### Scope-reveal — SCC recompute is semantics-changing
+
+Plan's §W2.3 premise — "no behaviour change yet; workspace
+unchanged 1101/0/67" — is contradicted by execution. Agent's
+investigation + direct confirmation on master:
+
+- `crates/core/src/lower/metadata.rs:27` stamps
+  `scc_id = Some(id)` for every rule (including acyclic) at
+  lowering time.
+- `crates/ir/src/passes/sets/scc.rs:21` realigns to the
+  canonical convention: `None` for acyclic, `Some(scc_idx)` for
+  cyclic.
+- Guards at `inline.rs:42` + `fuse.rs:55` read
+  `r.meta.scc_id.is_none()`. Pre-W2.3 → always FALSE
+  (lowering's unconditional Some stamp); passes dormant. Post-
+  W2.3 → TRUE for acyclic rules inside the normaliser loop
+  after `compute_scc` runs; `inline_acyclic` and
+  `fuse_single_use` activate as a necessary side-effect of
+  the SCC plumbing.
+
+Cannot be worked around — any semantics-preserving variant of
+W2.3 would either shadow-field the SCC (orthogonal-subsystem,
+forbidden per edicts) or leave the lowering/pass-loop
+convention mismatch intact (punts the activation to never).
+
+Post-W2.3 workspace: **1041/60/67** (failing categories match
+W2.4 audit: sheets parity, payload layouts, grammar roundtrips,
+tape parity, TS backend snapshots).
+
+### Re-plan — W2.5 absorbs snapshot migration from W4.5
+
+Per TRANCHE_SPEC §"Scope-reveal protocol" default
+(re-plan-with-more-agents, no deferral), W4.5's snapshot-
+migration piece moves up into W2 as new sub-phase **W2.5**.
+W2.5 consumes W2.4's audit, migrates the 74 at-risk tests
+(22 DELETE / 44 UPDATE / 8 INVESTIGATE), and returns the
+workspace to green before W3 opens its intentional-
+unworkability window.
+
+W4.5 retains its guard-drop — the guards' remaining pre-drop
+effect is to keep passes off cyclic rules — plus any residual
+snapshot updates the cyclic-rule extension surfaces. The plan
+document and cross-tranche-debt table are revised accordingly
+(AW-I.md §W2.3, §W2.4–W2.5, §W4.5, hard-gates summary,
+cross-tranche table).
+
+Invariants preserved: W2 exits green (1101 − DELETE +
+INVESTIGATE-deltas); intentional unworkability stays within
+W3-W4 as the plan declared; no deferral beyond the plan's
+next wave.
+
+### Orchestrator-landed artefacts (sequence from AW-I HEAD
+`fb8dd225`):
+
+- `817882a6` docs(AW-II): scope refinements — chronic
+  deferrals folded into W2/W3.
+- `d102e007` W2.4 audit.
+- `c25e63a0` W2.3 SCC recompute.
+- parse-that master advanced to `907db32` (W2.2, out-of-tree).
+
+W2.1 still in flight. W2.5 pending dispatch once post-W2.3
+test categorisation completes.
 
 ## GrammarProfile population matrix (AW.0.9 ledger)
 

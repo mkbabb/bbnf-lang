@@ -66,9 +66,15 @@ pub type ShapeDictSelection = Vec<usize>;
 
 /// Run the shape-dict admission selection.
 ///
-/// Walks `ir.shape_dict_templates`, scores each candidate, and
-/// returns the indices of the top-N candidates (bounded by
-/// [`MAX_SHAPE_DICT_ENTRIES`]) under the per-template cost gate.
+/// Walks `ir.shape_dict_templates`, scores each candidate, dedupes
+/// by `shape_hash` (keeping the highest-scoring representative per
+/// hash), and returns the indices of the top-N survivors (bounded
+/// by [`MAX_SHAPE_DICT_ENTRIES`]) under the per-template cost gate.
+///
+/// The dedup pass is mandatory — the runtime DTA dispatch routes by
+/// `shape_hash`, so two admitted entries sharing a hash would
+/// silently misroute one to the other's child kinds + payload
+/// offsets at parse time.
 ///
 /// The result is sorted ascending so downstream emission sees a
 /// deterministic dictionary order across compile sessions.
@@ -97,12 +103,18 @@ pub fn solve_shape_dict_selection(ir: &GrammarIR) -> ShapeDictSelection {
         })
         .collect();
 
-    // Greedy: sort by descending net benefit, keep up to
-    // MAX_SHAPE_DICT_ENTRIES. Greedy is provably optimal under the
-    // budget cardinality constraint when per-template scores are
-    // independent; the AV.md design notes the CSP scaffolding is
-    // forward-compatible with future cross-template constraints.
+    // Dedup by shape_hash — keep the highest-scoring representative
+    // per hash. The runtime dispatch is keyed by shape_hash; a
+    // duplicate entry would silently misroute at parse time.
     scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+    let mut seen_hashes = std::collections::HashSet::new();
+    scored.retain(|(idx, _)| {
+        let hash = ir.shape_dict_templates[*idx].1.shape_hash;
+        seen_hashes.insert(hash)
+    });
+
+    // Truncate to budget after dedup so the budget is over UNIQUE
+    // dictionary entries.
     scored.truncate(MAX_SHAPE_DICT_ENTRIES);
 
     // Stabilise the output by sorting indices ascending so the

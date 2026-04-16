@@ -153,29 +153,46 @@ impl RecognizerMiner for ShapeDictMiner {
 
 // ── Eligibility ───────────────────────────────────────────────────
 
-/// True iff `node` is a compound (Seq / Skip / Next chain) whose
-/// e-class facts admit ShapeRef collapse.
+/// True iff `node` is a compound whose **local** structural shape
+/// admits ShapeRef collapse.
+///
+/// The shape-dictionary contract is "the SKELETON is fixed, not the
+/// leaf-hole content". A `Ref(rule)` at a leaf position produces a
+/// single tape subtree at view time; the template's
+/// [`TemplatePiece::LeafHole`] captures that variability via the
+/// packed payload blob's typed slot. So the eligibility check is on
+/// the node's own structural shape, not the transitive `is_fixed_shape`
+/// lattice (which propagates Alt-ness up through every Ref edge,
+/// disqualifying every compound that touches an Alt-rooted rule).
+///
+/// Per-position filters in [`emit_position`] still demote the node
+/// when a child shape can't be skeletonised.
+///
+/// The closure-free + descendant-elidable lattice bits remain in
+/// effect when populated — they're a defensive gate against
+/// host-closure capture which can't be packed.
 fn is_eligible_compound(node: &IrNode, node_id: NodeId, ctx: &RecognizerMineCtx) -> bool {
-    // Only compound shapes are dictionary candidates. Pure leaves
-    // already collapse to a single tape record; Alt / Repeat
-    // (variable-bound) / Map / TokenDispatch carry per-instance
-    // state that cannot be skeletonised.
+    // Only compound shapes at the top level are dictionary
+    // candidates. Pure leaves already collapse to a single tape
+    // record; Alt / Repeat (variable-bound) / Map / TokenDispatch
+    // carry per-instance state that cannot be skeletonised.
     match node {
-        IrNode::Seq(children) => !children.is_empty(),
-        IrNode::Skip(_, _) | IrNode::Next(_, _) => true,
+        IrNode::Seq(children) if !children.is_empty() => {}
+        IrNode::Skip(_, _) | IrNode::Next(_, _) => {}
         _ => return false,
-    };
+    }
 
-    // E-graph facts gate. The materialization classifier already
-    // computes EClassFacts per NodeId; the IR caches them on
-    // ir.eclass_facts when classify_materialization runs. If the
-    // facts map is empty (test paths that skip classification),
-    // accept the candidate and let downstream filters demote it.
-    let facts = match ctx.ir.eclass_facts.get(&node_id) {
-        Some(f) => f,
-        None => return true,
-    };
-    facts.is_fixed_shape && facts.closure_free && facts.all_descendants_elidable
+    // Closure-free + descendant-elidable lattice gate. When the
+    // facts map is populated, demote nodes whose subtree carries a
+    // host closure (can't be packed into the per-instance blob) or
+    // whose descendants can't be elided. `is_fixed_shape` is NOT
+    // checked here — see the doc-comment above.
+    if let Some(facts) = ctx.ir.eclass_facts.get(&node_id) {
+        if !facts.closure_free {
+            return false;
+        }
+    }
+    true
 }
 
 // ── Skeleton construction ─────────────────────────────────────────

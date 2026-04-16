@@ -2168,6 +2168,10 @@ mod __bbnfbootstrap_emit_impl {
         counter_optional_rules: &[],
         max_nesting_depth: 8u16,
     };
+    /// Shape dictionary — empty for this grammar (selection
+    /// admitted no templates). Reserved symbol so downstream
+    /// driver code can reference it unconditionally.
+    pub const SHAPE_DICT: &[::bbnf::runtime::tape::ShapeEntry] = &[];
     /// AV.4.1 — Allocate this grammar's stage-A PSI stream sized
     /// from [`GRAMMAR_PROFILE`]'s `leaves_per_input_byte`.
     ///

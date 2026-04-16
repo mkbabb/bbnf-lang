@@ -32,6 +32,13 @@ pub fn inline_acyclic(ir: &mut GrammarIR) {
     // callable; we preserve them here by excluding composite Seq
     // bodies from the inlinable set. Single-element Seqs (unlikely
     // outside lowering artefacts) remain eligible.
+    // AW.0.10: The earlier guard `r.meta.scc_id.is_none()` was always-
+    // false in practice — the SCC pass populates `scc_id` for every
+    // rule before the transform pass runs, so the guard silently
+    // rejected every candidate. `is_cyclic` already captures SCC
+    // membership (computed alongside `scc_id`), so the SCC guard is
+    // redundant. Dropping it lets the pass inline legitimate acyclic
+    // singletons as designed.
     let inlinable: Vec<(RuleId, IrNode)> = ir
         .rules
         .iter()
@@ -39,7 +46,6 @@ pub fn inline_acyclic(ir: &mut GrammarIR) {
             r.id != ir.entry
                 && !r.meta.is_cyclic
                 && !r.meta.preserve_identity
-                && r.meta.scc_id.is_none()
                 && node_count(&r.body) <= INLINE_THRESHOLD
                 && !is_composite_seq(&r.body)
         })

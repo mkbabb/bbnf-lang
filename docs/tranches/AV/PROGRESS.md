@@ -983,3 +983,32 @@ resolved (PSI + Stage-C both extended tape_basic.rs).
 
 V4 master status: grammar_roundtrip 6/6, tape_parity 22/22,
 bbnf-tape 79/79. 65 total AV commits on master.
+
+## 2026-04-15 — V5 dispatched
+
+Two parallel agents:
+
+- **av5-css** — AV.5.1–5.5: TapeKind::ShapeRef at slot 13
+  (prerequisite missed by V4 finaliser), ShapeDictMiner IR
+  pass, shape-dict CSP constraint, DTA ShapeRef emission on
+  shape_hash match, CSS bootstrap declaration collapse.
+  Worktree: `../bbnf-wt-av5css`.
+- **av5-bbnf** — AV.5.6 / AV.6.1–6.3: BBNF `big_comment`
+  single-hole template (3-record → 1 ShapeRef), `mapped_
+  factor` empty-branch template, BBNF self-hosting bench
+  +20% gate. Worktree: `../bbnf-wt-av5bbnf`.
+
+Both agents may extend `emitter/dta.rs` additively (new
+match arms / helpers). Cherry-pick order resolves; both
+instructed to keep changes non-overlapping.
+
+### Remaining waves after V5
+
+- V6 — document-level parallel parse (serial).
+- V7 — SIMD keyword dispatch + PHF + selector classifier
+  (4 parallel).
+- V8 — runtime bloom+GADT dedup (serial).
+- V9 — walker + reader migration closure (2 parallel).
+- V10 — bench + FINAL.md (serial, no code changes).
+
+66 commits on master at V5 dispatch. Context at ~44%.

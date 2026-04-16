@@ -28,24 +28,19 @@ impl ScannerPlan {
 }
 
 /// Shared scanner helpers preferred by codegen.
+///
+/// AW-I.W4γ: the `JsonStringDecode` variant retired alongside the
+/// deleted `emitter/string_decode.rs` — decode routing lived inside
+/// the fn-per-rule emission pipeline, which the DTA-wholesale parse
+/// path bypasses. Per-rule string-decode resolution now rides through
+/// the `DTA_SCANNER` bridge at parse time.
 #[derive(Debug, Clone, Copy)]
-#[allow(dead_code)] // AU.3.1: JsonStringDecode is reachable via the
-                    // leaves-emitter routing gate, not via the
-                    // `plan_regex_scanner` classifier — kept for
-                    // structural symmetry.
 pub(crate) enum SharedScanner {
     /// Span-only JSON-style quoted string scan. Used when the
     /// enclosing rule does not declare a String payload — the scanner
     /// matches and advances `state.offset`, but the decoded bytes
     /// never reach the tape (callers fall through to `.map(|_| ())`).
     JsonString,
-    /// AU.3.1: JSON quoted string scan that materialises decoded
-    /// UTF-8 into the tape's arena via `decode_json_string_to_arena`.
-    /// Emitted when the enclosing rule's `payload_types` set
-    /// includes a String-shaped type (agent B's whitelist entry or
-    /// the named-type stub). Rule epilogue calls
-    /// the unified-arena decode push (AU.6.7).
-    JsonStringDecode,
     JsonNumber { fuse_numbers: bool },
     WsBlockComment,
     Ident,
@@ -66,22 +61,6 @@ impl SharedScanner {
         use crate::backend::kernels;
         match self {
             SharedScanner::JsonString => kernels::quoted_string::emit_call_strict(),
-            SharedScanner::JsonStringDecode => {
-                // AU.3.1: route through the emitter's string-decode
-                // helper. The helper owns the full expand — kernel
-                // call + arena frame bookkeeping + tape push —
-                // because the arena write sits between the parse-side
-                // scan and the tape push, which the generic
-                // `kernels::*` modules don't model. The `variant_idx`
-                // placeholder (0) is overridden when the emitter's
-                // regex-match gate calls `emit_decode_call` directly
-                // with the resolved rule index (see
-                // `leaves.rs::current_rule_variant_idx`); this branch
-                // is kept for structural completeness of the plan
-                // variants and for future callers that route through
-                // `plan_regex_scanner` with full context.
-                crate::backend::rust::emitter::string_decode::emit_decode_call(0, false)
-            }
             SharedScanner::JsonNumber { fuse_numbers: true } => {
                 kernels::number::emit_call_fused()
             }
@@ -93,15 +72,6 @@ impl SharedScanner {
             SharedScanner::QuotedString => kernels::quoted_string::emit_call(),
         }
     }
-}
-
-/// AU.3.1: constructor for the string-decode scanner plan. Used by
-/// `emit_regex_match_impl` when the enclosing rule's `payload_types`
-/// contains a String-shaped type and the pattern classifies as a
-/// JSON-style quoted string (`allows_u_escapes: true`).
-#[allow(dead_code)]
-pub(crate) fn shared_json_string_decode_scanner() -> ScannerPlan {
-    ScannerPlan::Shared(SharedScanner::JsonStringDecode)
 }
 
 pub(crate) fn shared_json_string_scanner() -> ScannerPlan {

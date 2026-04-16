@@ -16,7 +16,7 @@ mod prettify;
 pub(crate) mod profile;
 pub mod visitor;
 
-use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr, RuleId, TypeDesc};
+use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 
 use crate::backend::driver::analysis::BackendAnalysis;

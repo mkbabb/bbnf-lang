@@ -15,9 +15,30 @@ use super::types::*;
 /// ## Naming convention
 /// - **`compile_*`** = shared driver methods (make decisions, call emitter)
 /// - **`emit_*`** = emitter trait methods (produce target syntax)
+///
+/// ## Default impls (AW-I.W4γ)
+/// The per-node `emit_*` methods covering Leaves / Seq / Alt / Repeat / Ref /
+/// Binary / Value-manipulation / Ws-trim / Token-dispatch carry default impls
+/// returning `Self::Output::default()` for backends whose parse-emission path
+/// is dead. The Rust backend routes `parse()` through `dta_run` wholesale and
+/// discards per-rule bodies at `emit_rule_function_impl`; it overrides none of
+/// these defaults and the driver's per-rule traversal produces empty tokens
+/// that are discarded downstream. TS + WASM continue to override every method.
+///
+/// The `where Self::Output: Default` bound is the minimal surface that admits
+/// the no-op default — every live backend's `Output` (TokenStream, TsCode,
+/// String) satisfies `Default` trivially.
 pub trait Emitter {
     /// Opaque code fragment produced by emission methods.
-    type Output;
+    ///
+    /// Must implement `Default` so the parse-side emit methods can
+    /// carry a `Self::Output::default()` body. The Rust backend
+    /// overrides only the `emit_rule_function` / `emit_type_definitions`
+    /// / `emit_grammar` / `emit_prettify_*` / hook methods — all other
+    /// methods return the default (empty TokenStream) which the Rust
+    /// `emit_rule_function_impl` discards. TS + WASM override every
+    /// method and never observe the defaults.
+    type Output: Default;
     /// Backend-specific mutable context.
     type Ctx;
 
@@ -25,116 +46,144 @@ pub trait Emitter {
 
     fn emit_literal_match(
         &mut self,
-        value: &str,
-        guaranteed_byte: Option<u8>,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _value: &str,
+        _guaranteed_byte: Option<u8>,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_regex_match(
         &mut self,
-        pattern: &str,
-        regex_id: usize,
-        ir: &GrammarIR,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _pattern: &str,
+        _regex_id: usize,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
-    fn emit_epsilon(&mut self, ctx: &mut Self::Ctx) -> Self::Output;
+    fn emit_epsilon(&mut self, _ctx: &mut Self::Ctx) -> Self::Output {
+        Self::Output::default()
+    }
 
     // ── Sequences ───────────────────────────────────────────────────────
 
     fn emit_seq_all_span(
         &mut self,
-        child_outputs: Vec<Self::Output>,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _child_outputs: Vec<Self::Output>,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_seq_grouped(
         &mut self,
-        groups: Vec<SeqChildGroup<Self::Output>>,
-        result_type: &TypeDesc,
-        flatten: Option<FlattenStrategy>,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _groups: Vec<SeqChildGroup<Self::Output>>,
+        _result_type: &TypeDesc,
+        _flatten: Option<FlattenStrategy>,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     // ── Alternations ────────────────────────────────────────────────────
 
     fn emit_alt_dispatch(
         &mut self,
-        table: &AltDispatch,
-        branches: Vec<(AltBranchInfo, Self::Output)>,
-        fallback: Option<(AltBranchInfo, Self::Output)>,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _table: &AltDispatch,
+        _branches: Vec<(AltBranchInfo, Self::Output)>,
+        _fallback: Option<(AltBranchInfo, Self::Output)>,
+        _alloc: ValuePlacement,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_alt_checkpoint(
         &mut self,
-        branches: Vec<(AltBranchInfo, Self::Output)>,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _branches: Vec<(AltBranchInfo, Self::Output)>,
+        _alloc: ValuePlacement,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_alt_all_literal(
         &mut self,
-        literals: Vec<(String, Self::Output)>,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _literals: Vec<(String, Self::Output)>,
+        _alloc: ValuePlacement,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_key_dispatch(
         &mut self,
-        config: &KeyDispatchConfig,
-        branches: Vec<KeyDispatchBranch<Self::Output>>,
-        fallback: Option<(AltBranchInfo, Self::Output)>,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _config: &KeyDispatchConfig,
+        _branches: Vec<KeyDispatchBranch<Self::Output>>,
+        _fallback: Option<(AltBranchInfo, Self::Output)>,
+        _alloc: ValuePlacement,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     // ── Repetition ──────────────────────────────────────────────────────
 
     fn emit_repeat_many(
         &mut self,
-        body: Self::Output,
-        lo: u32,
-        hi: u32,
-        elem_type: &TypeDesc,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _body: Self::Output,
+        _lo: u32,
+        _hi: u32,
+        _elem_type: &TypeDesc,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_repeat_optional(
         &mut self,
-        body: Self::Output,
-        inner_type: &TypeDesc,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _body: Self::Output,
+        _inner_type: &TypeDesc,
+        _alloc: ValuePlacement,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_sep_by(
         &mut self,
-        element: Self::Output,
-        separator: Self::Output,
-        config: &SepByConfig,
-        elem_type: &TypeDesc,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _element: Self::Output,
+        _separator: Self::Output,
+        _config: &SepByConfig,
+        _elem_type: &TypeDesc,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     // ── References ──────────────────────────────────────────────────────
 
     fn emit_call(
         &mut self,
-        rule_id: RuleId,
-        rule_name: &str,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _rule_id: RuleId,
+        _rule_name: &str,
+        _alloc: ValuePlacement,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_inline_wrap(
         &mut self,
-        body: Self::Output,
-        variant_name: Option<&str>,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _body: Self::Output,
+        _variant_name: Option<&str>,
+        _alloc: ValuePlacement,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     // ── Operator chains ─────────────────────────────────────────────────
 
@@ -159,76 +208,96 @@ pub trait Emitter {
 
     fn emit_skip(
         &mut self,
-        kept: Self::Output,
-        discarded: Self::Output,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _kept: Self::Output,
+        _discarded: Self::Output,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_next(
         &mut self,
-        discarded: Self::Output,
-        kept: Self::Output,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _discarded: Self::Output,
+        _kept: Self::Output,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_minus(
         &mut self,
-        lhs: Self::Output,
-        rhs: Self::Output,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _lhs: Self::Output,
+        _rhs: Self::Output,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_negate(
         &mut self,
-        inner: Self::Output,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _inner: Self::Output,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     // ── Value manipulation ──────────────────────────────────────────────
 
     fn emit_enum_wrap(
         &mut self,
-        inner: Self::Output,
-        variant_name: &str,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _inner: Self::Output,
+        _variant_name: &str,
+        _alloc: ValuePlacement,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
-    fn emit_number_convert(&mut self, allow_leading_dot: bool, ctx: &mut Self::Ctx) -> Self::Output;
+    fn emit_number_convert(&mut self, _allow_leading_dot: bool, _ctx: &mut Self::Ctx) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_constant(
         &mut self,
-        discard_inner: Self::Output,
-        value: &str,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _discard_inner: Self::Output,
+        _value: &str,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     /// Emit a structured value expression (MapExpr).
     /// Walks the expression tree and generates native code for the target backend.
     fn emit_map_expr(
         &mut self,
-        inner: Self::Output,
-        expr: &bbnf_ir::MapExpr,
-        return_type: Option<&bbnf_ir::TypeDesc>,
-        alloc: ValuePlacement,
-        ir: &GrammarIR,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _inner: Self::Output,
+        _expr: &bbnf_ir::MapExpr,
+        _return_type: Option<&bbnf_ir::TypeDesc>,
+        _alloc: ValuePlacement,
+        _ir: &GrammarIR,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     /// Emit a span capture: parse inner for validation, return Span.
     fn emit_span_capture(
         &mut self,
-        inner: Self::Output,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _inner: Self::Output,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     /// Emit a hex conversion: inline char-class scan + user function call.
     fn emit_hex_convert(
         &mut self,
-        inner: Self::Output,
-        fn_path: &str,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _inner: Self::Output,
+        _fn_path: &str,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     /// Try to fuse two chained Map operations into one emission.
     /// Returns `None` if fusion is not supported for this pair — driver falls back
@@ -247,26 +316,32 @@ pub trait Emitter {
 
     fn emit_ws_trim(
         &mut self,
-        ws_pattern: Option<&str>,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _ws_pattern: Option<&str>,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     fn emit_with_ws_trim(
         &mut self,
-        inner: Self::Output,
-        ws_pattern: Option<&str>,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _inner: Self::Output,
+        _ws_pattern: Option<&str>,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     // ── Token dispatch ──────────────────────────────────────────────────
 
     fn emit_token_dispatch(
         &mut self,
-        token: Self::Output,
-        arms: Vec<TokenDispatchArmCompiled<Self::Output>>,
-        fallback: Self::Output,
-        ctx: &mut Self::Ctx,
-    ) -> Self::Output;
+        _token: Self::Output,
+        _arms: Vec<TokenDispatchArmCompiled<Self::Output>>,
+        _fallback: Self::Output,
+        _ctx: &mut Self::Ctx,
+    ) -> Self::Output {
+        Self::Output::default()
+    }
 
     // ── Delimiter scan ──────────────────────────────────────────────────
 

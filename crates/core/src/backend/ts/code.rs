@@ -1,7 +1,7 @@
 //! TsCode output type + TsEmitter / TsEmitCtx structs.
 
 /// A TS code fragment: setup statements + result expression.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct TsCode {
     pub stmts: String,
     pub expr: String,

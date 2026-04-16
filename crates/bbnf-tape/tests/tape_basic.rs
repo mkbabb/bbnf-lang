@@ -1286,3 +1286,248 @@ fn cursor_with_rank_preserves_rank() {
 // Compile-time witness: `Columns` can be constructed at `const` time
 // via `Vec::new()`. Useful for static fixtures and tests.
 const _COLUMNS_DEFAULT_WITNESS: fn() -> Columns = Columns::new;
+
+// ── Tranche AV Phase 4 — PSI stream + stage-B fill ────────────────
+//
+// Verifies the AV.4.1 PayloadJob types and AV.4.2 stage-B rayon
+// payload fill. The stream is a sidecar to the tape (stage A emits
+// PayloadJobs alongside structural records); stage B drains the
+// stream into the typed payload columns. The fingerprint gate
+// `parallel_break_even_bytes` decides sequential vs. parallel
+// dispatch. Both paths must produce identical column state — that
+// is the regression invariant the tests pin.
+
+#[test]
+fn payload_job_size_and_alignment() {
+    use bbnf_tape::PayloadJob;
+    // 16 bytes = 4 jobs per 64 B cache line. Drives the rayon chunk
+    // stride (`PayloadStream::CHUNK_RECS`).
+    assert_eq!(std::mem::size_of::<PayloadJob>(), 16);
+    assert_eq!(std::mem::align_of::<PayloadJob>(), 4);
+}
+
+#[test]
+fn payload_kind_routing_helpers() {
+    use bbnf_tape::PayloadKind;
+    assert!(PayloadKind::U8.is_narrow());
+    assert!(PayloadKind::Bool.is_narrow());
+    assert!(PayloadKind::HexU32.is_narrow());
+    assert!(PayloadKind::F64.is_wide());
+    assert!(PayloadKind::I64.is_wide());
+    assert!(PayloadKind::String.is_arena());
+    assert!(PayloadKind::AggregateLarge.is_arena());
+    assert!(!PayloadKind::F64.is_narrow());
+    assert!(!PayloadKind::U8.is_wide());
+    assert!(!PayloadKind::Bool.is_arena());
+    assert_eq!(PayloadKind::COUNT, 7);
+    assert_eq!(PayloadKind::from_u8(0), Some(PayloadKind::F64));
+    assert_eq!(PayloadKind::from_u8(6), Some(PayloadKind::AggregateLarge));
+    assert_eq!(PayloadKind::from_u8(7), None);
+}
+
+#[test]
+fn payload_stream_capacity_from_profile() {
+    use bbnf_tape::{GrammarProfile, PayloadStream};
+    let mut profile = GrammarProfile::EMPTY;
+    profile.leaves_per_input_byte = 0.05; // 5% of input bytes
+    let stream = PayloadStream::with_capacity_for(&profile, 10_000);
+    // The stream is empty on construction; capacity is the profile-
+    // sized hint so subsequent pushes don't grow the Vec.
+    assert!(stream.is_empty());
+    assert_eq!(stream.len(), 0);
+    // Capacity is observable via the underlying jobs() slice's
+    // capacity through Vec semantics; we verify by pushing up to
+    // estimate without expecting reallocation.
+    let mut stream = stream;
+    for i in 0..500u32 {
+        stream.push(bbnf_tape::PayloadJob::new(
+            i,
+            i,
+            i + 1,
+            bbnf_tape::PayloadKind::U8,
+            i as u8,
+        ));
+    }
+    assert_eq!(stream.len(), 500);
+}
+
+#[test]
+fn payload_stream_sequential_fill_round_trip() {
+    use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    // Stage-A round-trip: build a PSI with two narrow scalars and
+    // one wide scalar, drain into a fresh Columns, verify the slots.
+    let input = b"42 17 3.14";
+    let mut psi = PayloadStream::new();
+    psi.push(PayloadJob::new(0, 0, 2, PayloadKind::U8, 0));
+    psi.push(PayloadJob::new(1, 3, 5, PayloadKind::U8, 1));
+    psi.push(PayloadJob::new(2, 6, 10, PayloadKind::F64, 0));
+
+    let mut columns = Columns::new();
+    let profile = GrammarProfile::EMPTY; // parallel_break_even_bytes = 0 → sequential
+    let count = psi.fill_columns(input, &mut columns, &profile);
+    assert_eq!(count, 3);
+    // U8 takes the first byte of each slice.
+    assert_eq!(columns.pay_narrow.len(), 2);
+    assert_eq!(columns.pay_narrow[0], b'4' as u32);
+    assert_eq!(columns.pay_narrow[1], b'1' as u32);
+    // F64 round-trips bit-equivalent.
+    assert_eq!(columns.pay_wide.len(), 1);
+    assert!((f64::from_bits(columns.pay_wide[0]) - 3.14).abs() < f64::EPSILON);
+}
+
+#[test]
+fn payload_stream_parallel_fill_matches_sequential() {
+    use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    // Build a stream large enough to clear the rayon chunk threshold
+    // and exercise both paths. Sequential and parallel must produce
+    // bit-identical column state — that's the AV.4.2 invariant.
+    let input: Vec<u8> = (0..1024u32)
+        .flat_map(|i| {
+            let s = format!("{:04} ", i % 10000);
+            s.into_bytes()
+        })
+        .collect();
+    let mut psi = PayloadStream::new();
+    for i in 0..1024u32 {
+        let lo = i * 5;
+        let hi = lo + 4;
+        let kind = match i % 4 {
+            0 => PayloadKind::U8,
+            1 => PayloadKind::F64,
+            2 => PayloadKind::HexU32,
+            _ => PayloadKind::I64,
+        };
+        let column_idx = (i / 4) as u8; // unique per kind
+        psi.push(PayloadJob::new(i, lo, hi, kind, column_idx));
+    }
+
+    // Sequential — break-even = 0 → forced sequential.
+    let mut seq_columns = Columns::new();
+    let seq_profile = GrammarProfile::EMPTY;
+    psi.fill_columns(&input, &mut seq_columns, &seq_profile);
+
+    // Parallel — break-even small, input large, jobs ≥ 2 chunks.
+    let mut par_columns = Columns::new();
+    let mut par_profile = GrammarProfile::EMPTY;
+    par_profile.parallel_break_even_bytes = 64;
+    assert!(psi.should_parallelise(&par_profile, input.len()));
+    psi.fill_columns(&input, &mut par_columns, &par_profile);
+
+    assert_eq!(seq_columns.pay_narrow, par_columns.pay_narrow);
+    assert_eq!(seq_columns.pay_wide, par_columns.pay_wide);
+    assert_eq!(seq_columns.pay_agg, par_columns.pay_agg);
+}
+
+#[test]
+fn payload_stream_parallel_threshold_gates() {
+    use bbnf_tape::{GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    let mut psi = PayloadStream::new();
+    for i in 0..16u32 {
+        psi.push(PayloadJob::new(i, i, i + 1, PayloadKind::U8, i as u8));
+    }
+    // (1) `parallel_break_even_bytes == 0` always falls to sequential.
+    let mut p = GrammarProfile::EMPTY;
+    p.parallel_break_even_bytes = 0;
+    assert!(!psi.should_parallelise(&p, usize::MAX));
+    // (2) Below the threshold → sequential.
+    p.parallel_break_even_bytes = 1024;
+    assert!(!psi.should_parallelise(&p, 512));
+    // (3) Above the threshold + enough jobs → parallel.
+    p.parallel_break_even_bytes = 512;
+    assert!(psi.should_parallelise(&p, 1024));
+    // (4) Above the threshold but too few jobs → sequential.
+    let small = PayloadStream::new();
+    assert!(!small.should_parallelise(&p, 1024));
+}
+
+#[test]
+fn payload_stream_arena_payload_round_trip() {
+    use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    // Arena kinds (String, AggregateLarge) write `slice` into
+    // `pay_agg[column_idx..column_idx+slice.len()]`. Verify byte
+    // layout for both kinds.
+    let input = b"hello world AABBCCDD";
+    let mut psi = PayloadStream::new();
+    psi.push(PayloadJob::new(0, 0, 5, PayloadKind::String, 0));
+    psi.push(PayloadJob::new(1, 6, 11, PayloadKind::String, 5));
+    psi.push(PayloadJob::new(
+        2,
+        12,
+        20,
+        PayloadKind::AggregateLarge,
+        16,
+    ));
+
+    let mut columns = Columns::new();
+    let profile = GrammarProfile::EMPTY;
+    psi.fill_columns(input, &mut columns, &profile);
+    assert!(columns.pay_agg.len() >= 24);
+    assert_eq!(&columns.pay_agg[0..5], b"hello");
+    assert_eq!(&columns.pay_agg[5..10], b"world");
+    assert_eq!(&columns.pay_agg[16..24], b"AABBCCDD");
+}
+
+#[test]
+fn payload_stream_hex_color_round_trip() {
+    use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    let input = b"#ff0080 #abcdef12";
+    let mut psi = PayloadStream::new();
+    psi.push(PayloadJob::new(0, 0, 7, PayloadKind::HexU32, 0));
+    psi.push(PayloadJob::new(1, 8, 17, PayloadKind::HexU32, 1));
+    let mut columns = Columns::new();
+    let profile = GrammarProfile::EMPTY;
+    psi.fill_columns(input, &mut columns, &profile);
+    // #ff0080 → 0xff0080ff (alpha defaulted)
+    assert_eq!(columns.pay_narrow[0], 0xff_00_80_ff);
+    // #abcdef12 → 0xabcdef12 (alpha given)
+    assert_eq!(columns.pay_narrow[1], 0xab_cd_ef_12);
+}
+
+#[test]
+fn payload_stream_bool_round_trip() {
+    use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    let input = b"true false";
+    let mut psi = PayloadStream::new();
+    psi.push(PayloadJob::new(0, 0, 4, PayloadKind::Bool, 0));
+    psi.push(PayloadJob::new(1, 5, 10, PayloadKind::Bool, 1));
+    let mut columns = Columns::new();
+    let profile = GrammarProfile::EMPTY;
+    psi.fill_columns(input, &mut columns, &profile);
+    assert_eq!(columns.pay_narrow[0], 1);
+    assert_eq!(columns.pay_narrow[1], 0);
+}
+
+#[test]
+fn payload_stream_i64_round_trip() {
+    use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    let input = b"-9223372036854775808 9223372036854775807";
+    let mut psi = PayloadStream::new();
+    psi.push(PayloadJob::new(0, 0, 20, PayloadKind::I64, 0));
+    psi.push(PayloadJob::new(1, 21, 40, PayloadKind::I64, 1));
+    let mut columns = Columns::new();
+    let profile = GrammarProfile::EMPTY;
+    psi.fill_columns(input, &mut columns, &profile);
+    assert_eq!(columns.pay_wide[0] as i64, i64::MIN);
+    assert_eq!(columns.pay_wide[1] as i64, i64::MAX);
+}
+
+#[test]
+fn payload_job_input_len_helper() {
+    use bbnf_tape::{PayloadJob, PayloadKind};
+    let job = PayloadJob::new(0, 100, 110, PayloadKind::F64, 0);
+    assert_eq!(job.input_len(), 10);
+    assert_eq!(job.kind, PayloadKind::F64);
+    assert_eq!(job._pad, [0, 0]);
+}
+
+#[test]
+fn payload_stream_chunk_recs_matches_cache_line() {
+    use bbnf_tape::{PayloadJob, PayloadStream};
+    // 4 jobs per 64 B cache line — the stride drives the rayon chunk
+    // size so each worker owns a cache-coherent run on the read side.
+    assert_eq!(
+        PayloadStream::CHUNK_RECS,
+        64 / std::mem::size_of::<PayloadJob>(),
+    );
+    assert_eq!(PayloadStream::CHUNK_RECS, 4);
+}

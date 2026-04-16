@@ -400,7 +400,10 @@ covers the 19-entry matrix. Workspace tests 0 failures.
     `mod.rs`, `profile.rs`, `visitor.rs`, `prettify/`
     (sub-dir).
 12. `inline_acyclic` + `fuse_single_use` fire; CSS L4 DTA
-    state count < 2000 (AV.3.6 baseline 2473).
+    state count < 2000 (AV.3.6 baseline 2473). Verification:
+    direct call to `bbnf_ir::passes::recognizers::dta::summarise`
+    in a dedicated test asserting `state_count < 2000`; `grep`
+    on `generated.rs` is supplementary only.
 13. Workspace `cargo test --workspace --no-fail-fast`
     returns 0 failures.
 

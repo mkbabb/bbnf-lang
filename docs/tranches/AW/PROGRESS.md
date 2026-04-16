@@ -362,6 +362,43 @@ budget.
    coordinated set. Continuation agent receives them as one
    composite milestone.
 
+### 12-tranche retrospective + TRANCHE_SPEC authored
+
+Dispatched 12 parallel retrospective agents — one per tranche
+AK through AV — producing forensic analyses at
+`docs/tranches/AW/audit/{LETTER}-retro.md`. Synthesis at
+`docs/tranches/AW/audit/SYNTHESIS.md` coalesces into a
+chronic-deferral ledger, ten recurring anti-patterns with
+tranche-by-tranche evidence, an AU-template of what worked, and
+an anti-pattern → spec-section mapping.
+
+`docs/instructions/TRANCHE_SPEC.md` composes `README.md`,
+`PROFILING.md`, `RESEARCH.md` into a normative tranche-authoring
+workflow, with every rule anchored to an anti-pattern the
+retrospective surfaced. Key additions over prior edicts:
+
+- **Activation-gate rule** — substrate additions require same-
+  wave consumers + runtime-evidence hard gates.
+- **Runtime-evidence clause** — hard gates close on bench /
+  samply / cargo-expand / test, not on source `grep` alone.
+- **Gate-off commit prohibition** — feature-flag-off shipping is
+  deferral; AP.1's `structural_mode = false` is the cautionary
+  tale.
+- **Scope-reveal protocol** — default is re-plan-with-more-
+  agents; mid-tranche scope pivots open a new letter.
+- **Orchestrator role** — explicit enumeration of what the
+  orchestrator delegates (implementation, tests, profiling,
+  bench, doc authoring) vs preserves (orchestration, cherry-
+  picking, claim-hardening, synthesis, re-planning).
+
+AW disposition against the ten anti-patterns: 9 cleared, 1
+refined. AW-I.W4.5 hard-gate 12 phrasing tightened — CSS L4
+DTA state-count verification now calls `summarise` directly,
+not `grep` on `generated.rs`.
+
+Retrospective commits: `48c2b3fd`…`8de53e52` (12 tranche audits)
++ SYNTHESIS + TRANCHE_SPEC.
+
 ### AW re-plan — split into AW-I + AW-II
 
 The orchestrator's earlier "substrate / activation split" retreat

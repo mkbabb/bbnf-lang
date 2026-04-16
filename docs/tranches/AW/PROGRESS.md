@@ -158,24 +158,73 @@ Contents feed each consumer wave:
    per user directive. `docs/benchmarks/post-AV.json` is the
    regression baseline; W0 recovery reads against it.
 
-### Wave 0β — W0 cleanup dispatch
+### Wave 0β — W0 cleanup landed
 
 Five parallel sub-agents in sibling worktrees, disjoint file
 bounds:
 
-- **W0a — `bbnf-tape` internals** (AW.0.1, AW.0.2).
-- **W0b — emitter cleanup + IR transform + white-colour
-  WideScalar** (AW.0.3, AW.0.4, AW.0.8, AW.0.10 — fold of
-  plan's (b) and (e)'s white-colour item to keep emitter
-  writes single-owner).
-- **W0c — layout admission + Color view** (AW.0.5).
-- **W0d — inline-test migration** (AW.0.6, six gorgeous
-  source files, not one).
-- **W0e — bootstrap CI gate + profile ledger** (AW.0.7,
-  AW.0.9).
+- **W0a** (AW.0.1, AW.0.2) — `bbnf-tape` internals. 2 commits.
+- **W0b** (AW.0.3, AW.0.4, AW.0.8, AW.0.10) — emitter
+  cleanup + IR transform + white-colour WideScalar. 4 commits.
+- **W0c** (AW.0.5) — layout admission + Color view. 4 commits.
+- **W0d** (AW.0.6) — inline-test migration (6 files, 40 tests
+  migrated). 6 commits.
+- **W0e** (AW.0.7, AW.0.9) — CI gate + profile ledger
+  (surfaced `branch_priors` as 6th stub slot — chronic
+  residual). 2 commits.
 
-Bootstrap regen runs once post-cherry-pick on master, owned
-by the orchestrator. No agent regens.
+Post-cherry-pick orchestrator work:
+
+- **Merge conflict** on `crates/ir/src/passes/{mod,payload/
+  mod}.rs` between W0b (`scalar_routing` module) and W0c
+  (`named_types` module). Resolved by concatenating both
+  module declarations + re-exports.
+- **W0a integration defect — patched on master** (commit
+  `bfe17d7f`). W0a's `finish()` gated BOTH `derive_frame_
+  depth` AND `finalise` on the flag. But the plan's
+  "`push_compound` writes `sib_skip` inline" premise does
+  not hold: `finalise` is the sole writer of `sib_skip`
+  (push_compound writes only `child_off` / `span_hi`). With
+  the flag off by default (legacy-path), `sib_skip` stayed
+  zero, downstream cursor walks (including the proc-macro's
+  grammar-file parse) saw malformed compounds, and the
+  bootstrap panicked `ir.entry=0, rule count=0`, a self-
+  reproducing stub regression. Fix: always run `finalise`;
+  gate only `derive_frame_depth`. AW.0.1's elision payout
+  shifts to W1 (when the DTA emits `frame_depth` inline),
+  which matches the plan's trajectory — the flag lands in W0
+  as substrate, the win materialises when the DTA goes live.
+- **AW.0.10 reversion** (commit `a3cc62ae` reverts
+  `6d3e256e`). Dropping the `scc_id.is_none()` always-true
+  guard caused a pipeline regression: post-fuse/inline state
+  left `ir.entry` pointing to a removed rule, and bootstrap
+  panicked. The guard drop is correct in isolation — the
+  fuse/inline consumers carry an assumption (probably in the
+  structural-normalizer loop's pass ordering or the
+  `eliminate_epsilon` / `factor_common_prefixes` handling of
+  freshly-fused bodies) that breaks when the passes actually
+  fire. Reverted for W0 to preserve workspace-green; routed
+  to **W1 (AW.1.11, NEW)** as a sub-phase that accompanies
+  the DTA driver activation, since W1 wholesale replaces the
+  fn-per-rule path anyway and can land the fuse/inline
+  activation alongside a coordinated consumer fix. Plan hard
+  gate 12 ("DTA state count drops from 2473") thereby
+  shifts to W1; no deferral beyond the next wave.
+
+Bootstrap regen: 27438-line `generated.rs` (down from 28326
+pre-AW; ~900-line reduction from W0b Span elision + stack-
+frame right-sizing + classifier hoist).
+
+Workspace tests: **1100 passed, 67 ignored, 0 failed**. The
+ignored count exceeds the plan's projected 14 Category A
+because AV-deferred items (AU.6.8 percentage parity,
+AV.0.12 transitive unfurling, bool/children walker dispatch)
+remain pending their scheduled W2/W5 healing waves. Expected
+trajectory: W2.5 heals 3 percentage items; W5.1 heals 7 JSON
+variant-dispatch; W5.2 heals 13 serialize/structural
+roundtrip; W5.5 triages `test_selective_transitive_unfurling`.
+
+### Wave 0 bench checkpoint — pending
 
 ## GrammarProfile population matrix (AW.0.9 ledger)
 

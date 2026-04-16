@@ -642,34 +642,41 @@ impl TapeBuilder {
     /// Consume the builder and return the finished tape. Returns the
     /// sticky error if one was set during parsing.
     ///
-    /// Two column-closure regimes share this method, selected by
-    /// [`Self::has_inline_frame_depth`]:
+    /// [`crate::finaliser::finalise`] always runs — it is the sole
+    /// writer for `sib_skip` (and the compound-closure columns
+    /// `child_off` / `span_hi`). What the
+    /// [`Self::has_inline_frame_depth`] flag gates is only the
+    /// *derivation* of `frame_depth`:
     ///
-    /// - **DTA-driven path** (`has_inline_frame_depth == true`): the
-    ///   parser emits `frame_depth` inline during stage A and does
-    ///   not write `sib_skip` / `child_off` / `span_hi` directly. The
-    ///   finish step routes through [`crate::finaliser::
-    ///   derive_frame_depth`] + [`crate::finaliser::finalise`] — a
-    ///   single linear Stage-C segmented prefix scan — to close the
-    ///   derived columns off the depth stream.
     /// - **Legacy fn-per-rule path** (`has_inline_frame_depth ==
-    ///   false`, the default): `push_compound` writes `sib_skip` /
-    ///   `child_off` / `span_hi` authoritatively as records are
-    ///   emitted. The Stage-C scans would derive byte-identical
-    ///   values over already-correct columns, so they are elided —
-    ///   the parser's inline writes are canonical.
+    ///   false`, the default through the AW W0 window):
+    ///   `push_compound` populates `child_off` / `span_hi` inline
+    ///   but emits no `frame_depth`, so `finish` reconstructs it via
+    ///   [`crate::finaliser::derive_frame_depth`] (one backward
+    ///   pass) before the Stage-C forward sweep.
+    /// - **DTA-driven path** (`has_inline_frame_depth == true`,
+    ///   post-W1): the DTA emits `frame_depth` directly during
+    ///   stage A, so `derive_frame_depth` is skipped and the
+    ///   in-column stream feeds [`crate::finaliser::finalise`]
+    ///   directly — one linear pass instead of two.
     ///
-    /// The flag flips `true` once the DTA driver goes live; until
-    /// then, the inline `push_compound` writes carry the full column
-    /// truth and `finish` is pure packaging.
+    /// The flag is the AW.0.1 substrate; the win materialises at
+    /// W1 when the DTA begins emitting `frame_depth` inline.
     pub fn finish(mut self) -> Result<Tape, TapeBuildError> {
         match self.error {
             Some(err) => Err(err),
             None => {
-                if self.has_inline_frame_depth {
-                    let frame_depth = crate::finaliser::derive_frame_depth(&self.columns);
-                    crate::finaliser::finalise(&mut self.columns, &frame_depth);
-                }
+                // AW.0.1: through the W0 window `has_inline_frame_depth`
+                // is always false — the DTA driver that would set it
+                // lands in W1. The flag is the substrate the W1 wave
+                // flips to skip `derive_frame_depth` in favour of its
+                // own inline stream. Until then `derive_frame_depth`
+                // reconstructs the column (one backward pass) and
+                // `finalise` sweeps it into `sib_skip` / `child_off`
+                // / `span_hi`.
+                let _ = self.has_inline_frame_depth;
+                let frame_depth = crate::finaliser::derive_frame_depth(&self.columns);
+                crate::finaliser::finalise(&mut self.columns, &frame_depth);
                 Ok(Tape {
                     columns: self.columns,
                 })

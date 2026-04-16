@@ -33,7 +33,11 @@ pub use materialization::{
     MaterializationClass, classify_materialization, mat_join,
 };
 pub use metadata::{compute_aliases, compute_transparent};
-pub use payload::{compute_payload_layouts, is_kv_pair_shape, plan_layout, MAX_PAYLOAD_BYTES, PayloadField, PayloadLayout};
+pub use payload::{
+    compute_payload_layouts, compute_payload_layouts_with_resolver, is_kv_pair_shape, plan_layout,
+    plan_layout_with_cap, NamedTypeResolver, NullResolver, PayloadField, PayloadLayout,
+    LARGE_PAYLOAD_MAX, MAX_PAYLOAD_BYTES,
+};
 pub use prefix::factor_common_prefixes;
 pub use profile::GrammarProfile;
 pub use sets::{

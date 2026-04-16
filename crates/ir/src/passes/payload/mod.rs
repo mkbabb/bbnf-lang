@@ -15,8 +15,10 @@
 //! [`bbnf_tape::Tape::payload_bytes`] using `total_bytes`.
 
 mod layout;
+pub mod named_types;
 
 pub use layout::{
-    compute_payload_layouts, is_kv_pair_shape, plan_layout, PayloadField, PayloadLayout,
-    MAX_PAYLOAD_BYTES,
+    compute_payload_layouts, compute_payload_layouts_with_resolver, is_kv_pair_shape, plan_layout,
+    plan_layout_with_cap, PayloadField, PayloadLayout, LARGE_PAYLOAD_MAX, MAX_PAYLOAD_BYTES,
 };
+pub use named_types::{NamedTypeResolver, NullResolver};

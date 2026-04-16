@@ -9,15 +9,34 @@
 use std::collections::HashMap;
 
 use crate::passes::materialization::MaterializationClass;
+use crate::passes::payload::named_types::{NamedTypeResolver, NullResolver};
 use crate::types::{GrammarIR, IrNode, RuleId, TypeDesc};
 
-/// Maximum aggregate payload size in bytes.
+/// Maximum aggregate payload size in bytes for the inline-dispatch
+/// admission arms (bare `Span`, scalar-Alt, KV-pair, plain scalar
+/// tuples).
 ///
 /// 16 bytes matches the size of a single [`bbnf_tape::TapeRec`] and
 /// gives every aggregate at most two 8-byte arena slots. Rules whose
 /// scalar tuple exceeds this fall back to the regular compound
 /// representation rather than promoting to a heap allocation.
 pub const MAX_PAYLOAD_BYTES: u8 = 16;
+
+/// Maximum aggregate payload size in bytes for the AV.0.5
+/// `LargeAggregate` admission arm (backend-resolved named types such
+/// as CSS L4 `Color`, projected to multi-field scalar tuples whose
+/// total exceeds `MAX_PAYLOAD_BYTES`).
+///
+/// 64 bytes comfortably fits the colour-function layout (40 B —
+/// `[u8 space @ 0][7 B pad][f64 c1 @ 8][f64 c2 @ 16][f64 c3 @ 24]
+/// [f64 alpha @ 32]`) and leaves slack for a future `ColorMix`
+/// layout. The emitter's `aggregate_payload_ctor` already dispatches
+/// `> MAX_INLINE_AGGREGATE_BYTES → PayloadData::LargeAggregate`, so
+/// raising the planner's admission cap is what enables these rules
+/// to actually populate a layout at all. Legacy admission arms keep
+/// [`MAX_PAYLOAD_BYTES`] — only the per-backend-resolved named arm
+/// opts into this wider cap.
+pub const LARGE_PAYLOAD_MAX: u8 = 64;
 
 /// Planned aggregate payload layout for a rule.
 ///
@@ -86,6 +105,30 @@ pub struct PayloadField {
 /// `TapeSpanOnly` scalar path because their body is `Map(Regex)`,
 /// not `Alt(...)`.
 pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout> {
+    compute_payload_layouts_with_resolver(ir, &NullResolver)
+}
+
+/// AW.0.5 backend-resolved entry point.
+///
+/// Identical to [`compute_payload_layouts`] except the
+/// `TypeDesc::Named` admission arm consults `resolver` to obtain a
+/// concrete tuple shape. The Rust backend passes
+/// `&RustNamedTypes` at `analyze_grammar` time; VM / TS / WASM paths
+/// that do not supply a resolver keep the historical behaviour
+/// (Named → skip) via the `NullResolver` wrapper in
+/// [`compute_payload_layouts`].
+///
+/// When `resolver.resolve_named(sid)` returns
+/// `Some(TypeDesc::Tuple(fields))`, the planner runs the scalar-
+/// tuple pipeline at the `LARGE_PAYLOAD_MAX` cap so layouts up to
+/// 64 B admit through to `PayloadData::LargeAggregate` via the
+/// emitter's `aggregate_payload_ctor`. The colour-function
+/// `(u8 space, f64 c1, f64 c2, f64 c3, f64 alpha)` planned shape is
+/// 40 B with align-8 padding between the u8 and the first f64.
+pub fn compute_payload_layouts_with_resolver<R: NamedTypeResolver>(
+    ir: &GrammarIR,
+    resolver: &R,
+) -> HashMap<RuleId, PayloadLayout> {
     let mut out = HashMap::new();
     for (rule_id, ty) in &ir.types {
         let layout = match ty {
@@ -126,11 +169,23 @@ pub fn compute_payload_layouts(ir: &GrammarIR) -> HashMap<RuleId, PayloadLayout>
             td if scalar_layout_eligible(ir, *rule_id, td) => {
                 plan_layout(std::slice::from_ref(td))
             }
-            // Named types have no concrete field layout at the IR
-            // layer — typed struct projections are resolved at codegen
-            // time via per-backend type tables rather than a centralised
-            // registry. Skip; the codegen path handles these directly.
-            TypeDesc::Named(_) => continue,
+            // AW.0.5: backend-resolved `TypeDesc::Named(sid)` —
+            // consult the resolver for a concrete scalar-tuple
+            // shape. When the backend maps the name (e.g.
+            // `"Color" → (U8, F64, F64, F64, F64)`), plan the
+            // layout at the wider `LARGE_PAYLOAD_MAX` cap so the
+            // emitter's `aggregate_payload_ctor` routes through
+            // `PayloadData::LargeAggregate`. Per AU.4.2's stated
+            // path — no central `StructRegistry`; the resolver
+            // lives in the backend crate.
+            TypeDesc::Named(sid) => match resolver.resolve_named(*sid) {
+                Some(TypeDesc::Tuple(fields)) => {
+                    plan_layout_with_cap(&fields, LARGE_PAYLOAD_MAX)
+                }
+                // Named resolved to something other than a scalar
+                // tuple (or not at all) — no admission. Skip.
+                _ => continue,
+            },
             // Non-Alt-bodied scalar rules (e.g. `number = /regex/
             // -> f64`) live on the scalar
             // `PayloadData::InlineScalar` / `WideScalar` path —
@@ -358,13 +413,28 @@ pub fn is_kv_pair_shape(fields: &[TypeDesc]) -> bool {
     matches!(fields, [TypeDesc::Span, value] if value.is_scalar_payload())
 }
 
-/// Produce a layout plan for a tuple of scalar TypeDescs.
+/// Produce a layout plan for a tuple of scalar TypeDescs at the
+/// default inline cap.
+///
+/// Delegates to [`plan_layout_with_cap`] with
+/// [`MAX_PAYLOAD_BYTES`] — the 16 B cap that keeps the per-record
+/// `__aggregate_buf` within a single cache line and routes through
+/// `PayloadData::Aggregate`. Callers needing the wider
+/// `LargeAggregate` cap (AW.0.5's `TypeDesc::Named`-resolved arm)
+/// invoke [`plan_layout_with_cap`] directly.
+pub fn plan_layout(fields: &[TypeDesc]) -> Option<PayloadLayout> {
+    plan_layout_with_cap(fields, MAX_PAYLOAD_BYTES)
+}
+
+/// AW.0.5: layout planner parameterised over the admission cap.
 ///
 /// Walks the fields in declaration order, aligning each field to its
 /// natural alignment and bumping the running offset. Returns `None`
-/// if any field is non-scalar or the total would exceed
-/// [`MAX_PAYLOAD_BYTES`].
-pub fn plan_layout(fields: &[TypeDesc]) -> Option<PayloadLayout> {
+/// if any field is non-scalar or the running total would exceed
+/// `cap`. The existing arms pass [`MAX_PAYLOAD_BYTES`] (16) via the
+/// [`plan_layout`] wrapper; the backend-resolved `Named` arm passes
+/// [`LARGE_PAYLOAD_MAX`] (64) so the colour-function 40 B layout fits.
+pub fn plan_layout_with_cap(fields: &[TypeDesc], cap: u8) -> Option<PayloadLayout> {
     let mut offset: u8 = 0;
     let mut planned = Vec::with_capacity(fields.len());
     for f in fields {
@@ -374,7 +444,7 @@ pub fn plan_layout(fields: &[TypeDesc]) -> Option<PayloadLayout> {
         let size = f.payload_size_bytes()?;
         let align = f.payload_align_bytes()?;
         let aligned = (offset + align - 1) & !(align - 1);
-        if aligned + size > MAX_PAYLOAD_BYTES {
+        if aligned.checked_add(size).map_or(true, |end| end > cap) {
             return None;
         }
         planned.push(PayloadField {

@@ -16,6 +16,10 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-expand
+        run: cargo install cargo-expand --locked
+      - name: Bootstrap regen clean
+        run: bash scripts/check-bootstrap-clean.sh
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test --workspace
 

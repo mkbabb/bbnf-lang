@@ -13,8 +13,8 @@ what committed, what blocked, what shifted.
 | W1 | DTA substrate skeleton (walker + cursor O(1) + inline finalise + replay feature) | 1 serial | ✓ landed (stubs open) |
 | W2 | walker + memo + SCC + audit + snapshot migration | 5 parallel (W2.1–W2.4 concurrent; W2.5 sequenced) | ✓ landed (workspace **1078/0/68**) |
 | W3 | `parse()` swap + regen | 1 serial | ✓ landed (workspace intentionally unworkable) |
-| W4 | legacy deletion + cyclic activation + walker extensions + scope-reveal | 6 sub-waves (α/β×4/γ/δ/ε/ζ), ~10 agents | ✓ landed (workspace unworkable; AY scope-pivot opened) |
-| W5 | FINAL-I + AY.md authorship | 1 serial (orchestrator) | ✓ landed (post-AW-I.json deferred to AY close per escape clause) |
+| W4 | legacy deletion + cyclic activation + walker extensions + scope-reveal | 6 sub-waves (α/β×4/γ/δ/ε/ζ), ~10 agents | ✓ landed (workspace unworkable; AW-II scope-pivot opened) |
+| W5 | FINAL-I + AW-II.md authorship | 1 serial (orchestrator) | ✓ landed (post-AW-I.json deferred to AW-II close per escape clause) |
 
 Workspace at AW-I HEAD `ff0b7fe7`: **1101/0/67**.
 Workspace at W2 close: **1078/0/68** (−22 DELETE, −1 new Category A
@@ -24,7 +24,7 @@ Bench schedule: one cold run at AW-I.W5 close →
 `docs/benchmarks/post-AW-I.json`. No per-wave checkpoints —
 W2–W4 touch substrate the legacy path still dominates.
 
-### AW-II — Optimisation + parity
+### AW-III — Optimisation + parity
 
 | Wave | Scope | Agents | Status |
 |------|-------|--------|--------|
@@ -36,14 +36,14 @@ W2–W4 touch substrate the legacy path still dominates.
 | W6 | FINAL + close | 1 serial | pending |
 
 Bench schedule: per-wave cold run at W1–W5 close →
-`docs/benchmarks/post-AW-II-W{N}.json`. W6 composes
+`docs/benchmarks/post-AW-III-W{N}.json`. W6 composes
 `docs/benchmarks/post-AW.json` as multi-wave history.
 
 ### SoA 4-lane — tranche placement
 
 The SoA-substrate reordered-unrolling kernel (AV.2.5) emits
 today via `visitor.rs::emit_visitor_kernels` as a 4-lane
-scalar left-fold-free reducer. **AW-II.W5.1** ships the
+scalar left-fold-free reducer. **AW-III.W5.1** ships the
 `Tape::reduce_column<C,R>` consumer API + per-active-payload-
 column codegen specialisation driven by
 `GRAMMAR_PROFILE.active_columns`, and promotes the scalar
@@ -54,9 +54,9 @@ column codegen specialisation driven by
 Five design docs feed both tranches. `01-dta-driver-design`
 + `03-pratt-lowering-generality` drive AW-I.W2.1
 (walker completion). `02-shaperef-runtime-dispatch` drives
-AW-II.W1.2. `04-named-struct-abi-finalisation` already
+AW-III.W1.2. `04-named-struct-abi-finalisation` already
 consumed by AW-I.W0.5. `05-bench-checkpoint-protocol` drives
-AW-I.W5 + AW-II per-wave benches.
+AW-I.W5 + AW-III per-wave benches.
 
 ---
 
@@ -401,7 +401,7 @@ not `grep` on `generated.rs`.
 Retrospective commits: `48c2b3fd`…`8de53e52` (12 tranche audits)
 + SYNTHESIS + TRANCHE_SPEC.
 
-### AW re-plan — split into AW-I + AW-II
+### AW re-plan — split into AW-I + AW-III
 
 The orchestrator's earlier "substrate / activation split" retreat
 is replaced with a full re-plan. [`AW-I.md`](./AW-I.md) carries
@@ -414,7 +414,7 @@ in-tranche; `fn __<rule>` helpers delete in-tranche;
 `MemoStore` retires in-tranche; fuse/inline fires in-tranche.
 No `parse_dta`-style additive shadowing.
 
-[`AW-II.md`](./AW-II.md) carries AV's optimisation substrate
+[`AW-III.md`](./AW-III.md) carries AV's optimisation substrate
 — PSI rayon + ShapeRef + Bug 2b (W1, 3 parallel), PHF + SIMD
 compare + selector classifier + scanner (W2, 4 parallel),
 document-parallel + bloom + Pratt (W3, 4 parallel), walker +
@@ -543,10 +543,10 @@ Route forward options (orchestrator decision pending):
    dispatches.
 2. **Declare AW substrate-activation close** — FINAL.md
    honestly records W0 + W1 substrate + partial activation;
-   remaining activation + W2–W6 roll to AY (new tranche)
+   remaining activation + W2–W6 roll to AW-II (new tranche)
    dedicated to DTA walker completion + consumer migration.
 3. **Restructure** — split AW into AW (W0 + W1 substrate,
-   closing now) and AY (full activation + W2–W6 levers).
+   closing now) and AW-II (full activation + W2–W6 levers).
    Mechanical redocumentation but keeps momentum on what's
    achieved.
 
@@ -627,7 +627,7 @@ next wave.
 ### Orchestrator-landed artefacts (sequence from AW-I HEAD
 `fb8dd225`):
 
-- `817882a6` docs(AW-II): scope refinements — chronic
+- `817882a6` docs(AW-III): scope refinements — chronic
   deferrals folded into W2/W3.
 - `d102e007` W2.4 audit.
 - `c25e63a0` W2.3 SCC recompute.
@@ -684,7 +684,7 @@ primitives, not cross-module API. `TypeMap` already tracks
 typed rules; the body-shape scan is the expedient gate until a
 unified "pin-candidate" predicate registry lands in a future
 tranche. Registered as `pluggable_pin_registry` debt in the
-AW-II seed items below.
+AW-III seed items below.
 
 ### W2.5 Category A ignore
 
@@ -709,7 +709,7 @@ conventions.
 ### W2 close — master state
 
 Commit sequence from AW-I HEAD `fb8dd225`:
-- `817882a6` docs(AW-II) scope refinements
+- `817882a6` docs(AW-III) scope refinements
 - `d102e007` W2.4 audit
 - `c25e63a0` W2.3 SCC recompute
 - `705d17f7` docs(AW-I) scope-reveal replan
@@ -755,7 +755,7 @@ bootstrap idempotency regression — a second `scripts/bootstrap-
 bbnf.sh` run would collapse to 23 lines because the committed
 DTA-path `BbnfBootstrap::parse` can't parse bbnf.bbnf.
 
-## 2026-04-16 — AW-I.W4 six-sub-wave execution + scope-pivot to AY
+## 2026-04-16 — AW-I.W4 six-sub-wave execution + scope-pivot to AW-II
 
 The largest wave of AW-I. Ten agents across six sub-waves; ~4600
 lines deleted; two genuine scope-pivots handled; one tranche
@@ -892,17 +892,17 @@ Single serial agent (`adbd33ec2186d0dfe`). Seven commits:
   direct-child to descendant-based lookups.
 - `ba9e14a8` — `fix(lower/expression): extend wrapper detection
   for DTA tape shapes`. Partial — outer expression shape unblocked;
-  systematic lowering migration scope-revealed to AY.
+  systematic lowering migration scope-revealed to AW-II.
 - `e784a648` — `chore(bootstrap/debug_parse): dump imports and
   pretties`. Debug harness augmentation.
-- `da39ad60` — `docs(AW-I/audit): W4 scope-reveal + AY seed`.
+- `da39ad60` — `docs(AW-I/audit): W4 scope-reveal + AW-II seed`.
   Audit + successor-tranche seed.
 
 **W4ζ scope-reveal taken**. Per TRANCHE_SPEC §"Scope-reveal
 protocol" item 4: "Mid-tranche plan pivots open a new letter."
 The lowering-pipeline migration (every `find_child_by_kind` call
 site in `lower/**`, `graph/**`, `types.rs`) is a multi-wave
-consumer audit orthogonal to AW-I's DTA activation thesis. AY
+consumer audit orthogonal to AW-I's DTA activation thesis. AW-II
 opens to carry it.
 
 ### AW-I tranche close
@@ -910,7 +910,7 @@ opens to carry it.
 **Workspace state**: `bbnf` + `bbnf-tape` + `bbnf-ir` + `bbnf-ser` +
 `egraph` + `csp-solver` + dependencies compile cleanly
 (`cargo check -p bbnf --lib` exits 0); gorgeous subgrammar dev-deps
-derive-panic until AY's lowering migration lands. Workspace test
+derive-panic until AW-II's lowering migration lands. Workspace test
 suite cannot run end-to-end; isolated-crate tests pass:
 - `bbnf-tape`: 11 walker_arms passing (7 W2.1 + 1 W4δ paren + 3
   counter-slot/PSI-refresh additions).
@@ -919,7 +919,7 @@ suite cannot run end-to-end; isolated-crate tests pass:
 
 **Per-phase landing count**: every W0-W4 sub-phase has commit
 citations in FINAL-I.md. Hard gates 1-11 met; gates 9 reclassified
-as plan-miscalibration (documented); gates 12-13 deferred to AY
+as plan-miscalibration (documented); gates 12-13 deferred to AW-II
 close with named destination per escape-clause extension.
 
 **Architectural gains preserved on master**:
@@ -942,15 +942,15 @@ close with named destination per escape-clause extension.
 **FINAL-I.md** composed at `docs/tranches/AW/FINAL-I.md` with
 full hard-gate attribution + cross-tranche debt ledger.
 
-**AY.md** composed at `docs/tranches/AY/AY.md`: five waves
+**AW-II.md** composed at `docs/tranches/AW/AW-II.md`: five waves
 migrating the lowering pipeline's tape-shape assumptions. Budget
 ~4-5 waves of ~1k-line changes each, predominantly
 `crates/core/src/lower/**`. No further bbnf-tape driver changes
 anticipated.
 
 `post-AW-I.json` bench matrix NOT produced per escape-clause
-extension; will compose at AY close as `post-AW.json` multi-wave
-history rooted at AW-I's W2 baseline and AY-W1 through AY-W5
+extension; will compose at AW-II close as `post-AW.json` multi-wave
+history rooted at AW-I's W2 baseline and AW-II.W1 through AW-II.W5
 measurements.
 
 ### AW-I HEAD

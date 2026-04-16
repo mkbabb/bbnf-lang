@@ -251,7 +251,7 @@ only because it once was. The audit:
    recovery behaviour than the default? Record per-site
    verdict.
 4. If every BBNF site reduces to the structural default,
-   route `@recover` for **removal in AY**: drop the
+   route `@recover` for **removal in AW-II**: drop the
    directive grammar, drop the bootstrap annotations, drop
    the codegen path. The deprecation removes one historical
    directive without changing any observable parse
@@ -264,7 +264,7 @@ only because it once was. The audit:
 The audit ships in `docs/tranches/AX/recover-audit.md` as a
 standalone artefact (one section per site, concrete
 verdict). The removal-or-retention decision does not block
-AX completion; AY inherits whichever direction the audit
+AX completion; AW-II inherits whichever direction the audit
 recommends.
 
 ### Phase 4 — Closure language-feature closure (X4)
@@ -370,7 +370,7 @@ X7 dispatches.
 10. `crates/core/tests/recovery_parity.rs` lands; per-grammar canonical malformed inputs each assert a specific recovery point + downstream parse continuation.
 11. `@recover` semantics refinement preserves AT/AU bootstrap-recovery behaviour (BBNF self-hosting recovery test suite passes unchanged).
 12. `RecoveryEvent` stream produces audit-friendly output; CLI inspector reads it.
-13. `docs/tranches/AX/recover-audit.md` lands with a per-site verdict for every `@recover` annotation in the BBNF self-host grammar; AY inherits the removal-or-retention decision the audit recommends.
+13. `docs/tranches/AX/recover-audit.md` lands with a per-site verdict for every `@recover` annotation in the BBNF self-host grammar; AW-II inherits the removal-or-retention decision the audit recommends.
 
 ### X4–X6 — Subsystem closures
 

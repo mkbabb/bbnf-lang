@@ -17,7 +17,7 @@ gate, white-colour WideScalar routing — lands alongside.
 `cursor.child(0)` is O(1) `idx + 1` under pre-order.
 `dta-replay` feature-gates the decision log + `DtaSnapshot`.
 
-AW-II (follow-on tranche, see `AW-II.md`) carries the
+AW-III (follow-on tranche, see `AW-III.md`) carries the
 optimisation levers — PSI rayon, ShapeRef dispatch, PHF /
 SIMD keyword tables, selector classifier, document-level
 parallel parse, bloom + GADT dedup, Pratt generalisation,
@@ -388,7 +388,7 @@ category-A items.
 
 Single agent. Compose `docs/tranches/AW/FINAL-I.md`: per-
 phase recap, hard-gate status table, invariant verification
-with commit citations, cross-tranche debt reconciled, AW-II
+with commit citations, cross-tranche debt reconciled, AW-III
 seed-items enumerated. Run the 19-entry parse-bench matrix
 cold once; compose `docs/benchmarks/post-AW-I.json` per the
 research/05 schema. Confirm `cargo test --workspace`
@@ -509,12 +509,12 @@ covers the 19-entry matrix. Workspace tests 0 failures.
 - `research/01-dta-driver-design.md` feeds W2.1 (walker
   contract, FrameStack + counters, replay signature
   variance).
-- `research/02-shaperef-runtime-dispatch.md` feeds AW-II.W1
+- `research/02-shaperef-runtime-dispatch.md` feeds AW-III.W1
   (not consumed in AW-I).
 - `research/03-pratt-lowering-generality.md` feeds W2.1
   `ShuntingYard` arm (precedence-LUT format, reducer
-  semantics) and AW-II.W3 (Pratt generalisation).
+  semantics) and AW-III.W3 (Pratt generalisation).
 - `research/04-named-struct-abi-finalisation.md` consumed
   by W0.5 (landed).
 - `research/05-bench-checkpoint-protocol.md` feeds W5
-  bench composition and AW-II close.
+  bench composition and AW-III close.

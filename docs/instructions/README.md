@@ -357,6 +357,48 @@ bash scripts/bootstrap-bbnf.sh
 diff /tmp/gen1.rs crates/core/src/grammar/generated.rs  # must be empty
 ```
 
+### Self-host circular-dependency escape
+
+The bootstrap script uses the *currently-compiled* `bbnf` library's
+`BbnfBootstrap::parse` to parse `bbnf.bbnf` itself. When a tranche
+rewrites the parser in a way that makes the post-rewrite
+`BbnfBootstrap::parse` fail on `bbnf.bbnf` before the emitter
+regenerates the correct table, the script cannot close its own loop:
+running it recompiles `bbnf` against the stale `generated.rs`, tries
+to parse `bbnf.bbnf` with the broken parser, fails, emits an
+essentially-empty output. AW-I.W3 opened this state; AW-I.W4ζ
+escaped it via a one-shot recipe:
+
+```bash
+# 1. Check out a known-good fn-per-rule generated.rs. Pick the
+#    commit before the parser rewrite landed. If the DtaTable
+#    struct has since grown fields, hand-patch the missing ones
+#    with inert defaults (`entry: DtaRuleId(0)`, etc.) to restore
+#    compile.
+git checkout <pre-rewrite-HEAD>^ -- crates/core/src/grammar/generated.rs
+# (hand-patch DtaTable literal here if the struct grew)
+
+# 2. Confirm the lib compiles against the restored generated.rs.
+cargo check -p bbnf --lib
+
+# 3. Run bootstrap. The bbnf lib now carries the OLD working parser;
+#    the proc macro's `BbnfBootstrap::parse` succeeds on bbnf.bbnf
+#    and hands the AST to the CURRENT emitter + walker + lifter,
+#    emitting a fresh DTA-based generated.rs.
+rm -rf target/.bbnf-cache/ crates/target/.bbnf-cache/
+bash scripts/bootstrap-bbnf.sh
+
+# 4. Commit the new generated.rs. Idempotency check follows
+#    (gen1 == gen2). If the second bootstrap emits a truncated
+#    stub, the parser-consumer contract still has gaps — follow
+#    the TRANCHE_SPEC §Root-cause discipline walk-through.
+```
+
+Commits `87f65214` (transient entry patch) and `49656fd4` (one-shot
+regen) are the template. The recipe is a legitimate orchestrator
+move, not a workaround — it breaks an architecturally-inherent
+circular dependency that only arises during parser-rewrite tranches.
+
 ## Performance claims
 
 - **Every claimed perf win has a samply profile.** No speculative

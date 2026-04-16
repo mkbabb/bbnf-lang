@@ -17,10 +17,10 @@ Sources: `docs/tranches/AW/audit/{AK,AL,AM,AN,AO,AP,AQ,AR,AS,AT,AU,AV}-retro.md`
 | Scanner-architecture cluster | AR.6.x / AS.5.x | AR → AS → AT → AU → AV → AW ledger | AX scope |
 | CSS L4 tailwind offset 387594 | AN.3 | AN → AO → AP → AQ → AR | healed at AR |
 | StructRegistry | AS.2.3 | AS → AT → deleted AU.4.2 | path re-opened as backend-type-tables; Color view in AW-I.W0.5 |
-| Bug 2b residuals | AU/AV | AU → AV → AW.2.5 → AW-II.W1.3 | AW-II.W1.3 |
+| Bug 2b residuals | AU/AV | AU → AV → AW.2.5 → AW-III.W1.3 | AW-III.W1.3 |
 | Fuse/inline activation | AU PROGRESS (`scc_id.is_none()` guard no-op) | AU → AV → AW.0.10 reverted → AW-I.W2.3 + W4.5 | AW-I.W4.5 |
-| Structural-dispatch infrastructure | AM.5 / AO / AP | AM → AO → AP → AQ.5 deleted | deleted; AW-II.W2.3 selector classifier replaces |
-| Visitor 6× SIMD-packed gate | AV.2.5 | AV.2.5 partial (3.3× scalar) → AW.6.3 → AW-II.W5.1 | AW-II.W5.1 |
+| Structural-dispatch infrastructure | AM.5 / AO / AP | AM → AO → AP → AQ.5 deleted | deleted; AW-III.W2.3 selector classifier replaces |
+| Visitor 6× SIMD-packed gate | AV.2.5 | AV.2.5 partial (3.3× scalar) → AW.6.3 → AW-III.W5.1 | AW-III.W5.1 |
 
 ## Recurring anti-patterns
 
@@ -242,18 +242,18 @@ codifies:
 
 ## AW disposition check
 
-Against the ten anti-patterns above, AW-I + AW-II currently
+Against the ten anti-patterns above, AW-I + AW-III currently
 stand:
 
 - Substrate-without-activation: **cleared.** AW-I.W3 swaps
   `parse()` to dispatch through `dta_run`; AW-I.W4 deletes the
   legacy. No substrate lands without same-wave consumer.
-- Silent deferrals: **cleared.** AW-I.md / AW-II.md enumerate
+- Silent deferrals: **cleared.** AW-I.md / AW-III.md enumerate
   routed items with destinations; `parse_dta` additive-shadow
   retires in AW-I.W3.
 - Plan-only docs: **cleared.** PROGRESS.md rolling; FINAL-I.md +
   FINAL.md scheduled at W5 / W6 closes respectively.
-- Label discipline: **cleared.** AW-I / AW-II split authored
+- Label discipline: **cleared.** AW-I / AW-III split authored
   with AW.md preserved as historical; no label collision.
 - Gate-off commits: **watchable.** AW-I.W0 `has_inline_frame_
   depth: bool = false` is correct-default (legacy path), flipped
@@ -269,7 +269,7 @@ stand:
 - Commit-before-parallelise: **cleared** for W0; to maintain
   through W2-W4.
 - Bench omission: **declared.** AW-I one bench at W5 close;
-  AW-II per-wave through W5 aggregating at W6. Plan-declared.
+  AW-III per-wave through W5 aggregating at W6. Plan-declared.
 - Research edict: **cleared.** AW ran its own 5-agent research
   wave (commits `6917125`–`8846ee2`).
 

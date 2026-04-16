@@ -122,6 +122,16 @@ named as owner of the regen. Orchestrator owns the regen window.
 - Orchestrator cherry-picks accepted commits onto master.
 - **Master clean before every wave dispatch.** Cherry-pick-then-
   dispatch. No in-flight concurrency on shared files.
+- **N-agent shared-file consolidation.** When four-plus agents
+  write disjoint hunks of one file (`mod.rs` module declarations,
+  a shared trait-impl block, etc.), per-commit cherry-pick can hit
+  3-way merge conflicts on line-number shifts after the first
+  commits land. Plan an orchestrator-led consolidation commit in
+  that wave's schedule: the first two commits cherry-pick cleanly,
+  remaining agents' work lands via direct orchestrator surgery on
+  master with attribution to each agent's worktree. AW-I.W4β's
+  `47496993` is the template. Don't discover this at integration
+  time — name the consolidator in the wave's plan entry.
 
 ## Phase structure
 
@@ -152,6 +162,23 @@ Closes on:
 
 A gate closing on "grep finds the string" without runtime evidence
 is insufficient.
+
+### Gate floor-check at plan time
+
+A gate declaring a numeric threshold (line count, state count,
+hit-rate, self-time reduction) MUST carry a floor check at plan
+time. The plan author computes the minimum achievable value from
+structural facts (e.g. `generated.rs`'s mandatory view-accessor
+lines + prettify emission + const tables) and sets the gate above
+that floor. AW-I gate 9 ("generated.rs ≤ 12000 lines") shipped
+without a floor check — the real floor was ~19k from view
+accessors + prettify. The gate was structurally unreachable and
+reclassified at close as "plan miscalibration".
+
+If the floor analysis is hard (the metric depends on code not yet
+written), declare the gate as a soft-target + rationale-satisfied
+fallback rather than a hard numeric. Don't ship a gate that can't
+close.
 
 ### Activation-gate rule
 
@@ -226,6 +253,49 @@ When execution reveals the plan's scope was under-estimated:
    author `{NEXT_LETTER}.md`. `SYNTHESIS.md` records AR
    (audit-driven replan kept under AR/) and AS (mid-stream re-
    plan of AR-audit leftovers) as the anti-examples.
+
+### Two valid scope-reveal response modes
+
+AW-I demonstrated both. Name the mode at the moment of reveal;
+don't drift between them.
+
+- **Absorb.** The revealed work fits inside the existing wave
+  schedule. Move it forward (reorder), split a wave, or fold into
+  an adjacent wave whose scope already borders the revealed work.
+  Plan documents revise in place; PROGRESS.md records the
+  absorb. AW-I.W2.3's SCC-recompute activation surfaced snapshot-
+  migration work; AW-I absorbed it by moving W4.5's migration up
+  into a new W2.5 sub-phase, keeping W2's "workspace green at
+  close" invariant intact.
+- **New letter.** The revealed work requires a fresh wave
+  schedule and can't be absorbed without silent deferral. Close
+  the current tranche on what landed (FINAL.md + deferred-ledger
+  with named destination), author `{NEXT_LETTER}.md`. AW-I.W4ζ's
+  lowering-pipeline migration was too broad to absorb into W4;
+  opened AW-II as the immediate successor. Where a predecessor
+  plan already named a next letter for unrelated work (e.g. the
+  AW-II-as-optimisation authorship before the AW-I reveal), the
+  reveal's letter shifts the numbered successor forward (old
+  AW-II becomes AW-III).
+
+The discriminator is mechanical: can the revealed work land in a
+declared or slightly-extended wave of the current tranche without
+silent deferral? Yes → absorb. No → new letter. If the revealed
+work spans both substrate AND consumer changes that together
+exceed a single wave's complexity budget, prefer new letter.
+
+### Root-cause discipline under cascading reveals
+
+When three-plus layers of symptoms trace to one root cause, stop
+patching each symptom and trace the full data flow. AW-I.W4ζ's
+offset-72 failure was masked by three surface symptoms (walker
+state machine error, tape shape mismatch, consumer decoder
+failure) before the root cause — walker `variant_idx` left at 0
+on rule-entry compounds — surfaced. The root cause gave a single-
+commit fix; chasing symptoms would have shipped three
+work-around commits and left the underlying bug. When you find
+yourself patching at a new layer for the same observable failure,
+pause and walk the producer → tape → consumer path end-to-end.
 
 ## Closing ceremony
 

@@ -149,7 +149,7 @@ suite is unaffected by the W4γ extensions.
 4. **Emitter default-impl cost.** The Rust backend invokes the
    driver's per-rule `compile_node` walk and discards every
    resulting `TokenStream` at `emit_rule_function_impl`. Wasted
-   work; an AW-II lever gates the traversal behind an
+   work; an AW-III lever gates the traversal behind an
    emitter-level `skip_per_rule_emission()` hook.
 
 ## Architectural notes

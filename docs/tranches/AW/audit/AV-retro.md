@@ -70,7 +70,7 @@ SIMD widening.
 
 None within AV. The V5-boundary scope cut was the only course
 correction; the plan document stayed frozen. Contrast AW, which
-split into AW-I + AW-II mid-execution (commit `ff0b7fe7`).
+split into AW-I + AW-III mid-execution (commit `ff0b7fe7`).
 
 ## 7. Lessons → AW process artefacts
 

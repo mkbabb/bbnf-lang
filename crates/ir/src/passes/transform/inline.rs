@@ -42,6 +42,8 @@ pub fn inline_acyclic(ir: &mut GrammarIR) {
                 && r.meta.scc_id.is_none()
                 && node_count(&r.body) <= INLINE_THRESHOLD
                 && !is_composite_seq(&r.body)
+                && !body_has_map(&r.body)
+                && !is_consumer_pinned(r, ir.debug_all)
         })
         .map(|r| (r.id, r.body.clone()))
         .collect();
@@ -73,6 +75,47 @@ pub fn inline_acyclic(ir: &mut GrammarIR) {
 /// body and the layout computation loses its anchor rule.
 fn is_composite_seq(node: &IrNode) -> bool {
     matches!(node, IrNode::Seq(children) if children.len() >= 2)
+}
+
+/// True when a rule is pinned by a consumer-visible directive —
+/// mirror of `bbnf_ir::passes::transform::fuse::is_consumer_pinned`.
+/// `@pretty` / `@debug` / grammar-wide `debug_all` require the rule
+/// to retain its identity so downstream instrumentation can attach
+/// to it by name.
+fn is_consumer_pinned(rule: &crate::IrRule, debug_all: bool) -> bool {
+    rule.meta.directives.pretty.is_some() || rule.meta.directives.debug || debug_all
+}
+
+/// True when the rule body contains any `IrNode::Map` anywhere — the
+/// grammar's typed-materialisation signature. See the sibling
+/// `bbnf_ir::passes::transform::fuse::body_has_map` for the full
+/// rationale. Both passes run inside the structural normaliser loop
+/// before `compute_payload_layouts`, so we use a recursive
+/// body-shape scan — `factor_common_prefixes` can re-group an Alt so
+/// that typed Map nodes migrate under inner Seq nodes, bypassing a
+/// top-level-only check.
+fn body_has_map(node: &IrNode) -> bool {
+    match node {
+        IrNode::Map { .. } => true,
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => false,
+        IrNode::Seq(children) => children.iter().any(body_has_map),
+        IrNode::Alt(branches, _) => branches.iter().any(|b| body_has_map(&b.node)),
+        IrNode::Repeat { inner, .. }
+        | IrNode::Negate(inner)
+        | IrNode::OptionalWhitespace(inner) => body_has_map(inner),
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            body_has_map(a) || body_has_map(b)
+        }
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            body_has_map(token)
+                || arms.iter().any(|a| body_has_map(&a.continuation))
+                || body_has_map(fallback)
+        }
+    }
 }
 
 /// Count the number of nodes in an IR tree (for threshold check).

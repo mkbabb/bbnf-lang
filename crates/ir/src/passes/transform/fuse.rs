@@ -45,6 +45,17 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
     // a candidate aggregate payload layout (e.g. `length = number,
     // lengthUnit` → `(f64, u8)`). Even at single-use reference count
     // they must stay callable so the aggregate epilogue fires.
+    //
+    // AW-I.W2.5: rules whose body is an `Alt` with `Map` branches
+    // (`add_op = "+" -> 0u8 | "-" -> 1u8`) carry a scalar-Alt payload
+    // layout via `compute_payload_layouts`'s `scalar_layout_eligible`
+    // gate. Post-W2.3 the fuse pass fires on acyclic rules; inlining a
+    // scalar-Alt rule into its (non-Alt-branch) caller merges the
+    // typed Alt into the caller's context where the per-branch
+    // MapExpr writes have no aggregate buffer to target — the rule's
+    // `[Nu8]` aggregate epilogue evaporates. The typed-materialisation
+    // invariant demands every `->` annotation reach the tape emitter;
+    // fusing these rules violates that contract.
     let fusable: Vec<(RuleId, IrNode)> = ir
         .rules
         .iter()
@@ -55,10 +66,11 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
                 && r.meta.scc_id.is_none()
                 && ref_counts.get(r.id as usize).copied().unwrap_or(0) == 1
                 && !is_composite_seq(&r.body)
+                && !body_has_map(&r.body)
+                && !is_consumer_pinned(r, ir.debug_all)
         })
         .map(|r| (r.id, r.body.clone()))
         .collect();
-
     if fusable.is_empty() {
         return;
     }
@@ -84,6 +96,74 @@ pub fn fuse_single_use(ir: &mut GrammarIR) {
 /// structural loop.
 fn is_composite_seq(node: &IrNode) -> bool {
     matches!(node, IrNode::Seq(children) if children.len() >= 2)
+}
+
+/// True when a rule is pinned by a consumer-visible directive — the
+/// set of user-facing attributes whose semantics require the rule to
+/// retain its identity across the structural loop. Mirrors the gate
+/// in `bbnf_ir::passes::materialization::pin_sweep::is_rule_pinned`.
+///
+/// - `@pretty` — prettifier driver consults the rule by name.
+/// - `@debug` — debug-trace instrumentation expects a rule boundary
+///   for per-rule span / event capture.
+/// - `debug_all` — grammar-wide `@debug *` directive; every rule is
+///   debug-instrumented.
+///
+/// Fusing / inlining any of these silently loses the user's
+/// directive. The materialisation map pin-sweep runs *after* fuse,
+/// so without this guard the rule disappears before its directive
+/// can propagate.
+fn is_consumer_pinned(rule: &crate::IrRule, debug_all: bool) -> bool {
+    rule.meta.directives.pretty.is_some() || rule.meta.directives.debug || debug_all
+}
+
+/// True when the rule body contains any `IrNode::Map` anywhere — the
+/// grammar's typed-materialisation signature.
+///
+/// A `Map` node carries a `FnId` that projects a parsed sub-tree into
+/// a typed value (scalar, KV-pair field, aggregate element). Rules
+/// with one or more `Map` nodes in their body own typed payload
+/// annotations, and the codegen emits per-branch / per-Map
+/// `PayloadData` writes into the rule's own aggregate buffer.
+/// `compute_payload_layouts` later admits these rules into the
+/// aggregate planner via `scalar_layout_eligible` (scalar-Alt shape:
+/// `add_op = "+" -> 0u8 | "-" -> 1u8`) or the Tuple path (composite
+/// Seq: `length = number, lengthUnit`).
+///
+/// Post-W2.3 SCC recompute, the fuse / inline passes activate on
+/// acyclic rules. Merging a typed-Map rule into its caller drops the
+/// per-branch writes' aggregate buffer — the rule's `[Nu8]` / `[U8]`
+/// epilogue evaporates, silently violating the typed-materialisation
+/// invariant ("every `->` in the grammar must reach the tape
+/// emitter"). Pre-`factor_common_prefixes` the guard could rely on
+/// top-level branch shape; post-factor the Alt may be re-grouped into
+/// `Seq`-wrapped prefix branches where the Map has moved deeper —
+/// a recursive scan matches both shapes.
+///
+/// Both `fuse.rs` and `inline.rs` use this guard; the sibling copy
+/// lives in `bbnf_ir::passes::transform::inline::body_has_map`.
+fn body_has_map(node: &IrNode) -> bool {
+    match node {
+        IrNode::Map { .. } => true,
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => false,
+        IrNode::Seq(children) => children.iter().any(body_has_map),
+        IrNode::Alt(branches, _) => branches.iter().any(|b| body_has_map(&b.node)),
+        IrNode::Repeat { inner, .. }
+        | IrNode::Negate(inner)
+        | IrNode::OptionalWhitespace(inner) => body_has_map(inner),
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            body_has_map(a) || body_has_map(b)
+        }
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            body_has_map(token)
+                || arms.iter().any(|a| body_has_map(&a.continuation))
+                || body_has_map(fallback)
+        }
+    }
 }
 
 /// Count `Ref(id)` occurrences in an IR tree.

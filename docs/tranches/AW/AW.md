@@ -1,5 +1,17 @@
 # Tranche AW — The Activation
 
+> **Split into AW-I + AW-II.** [`AW-I.md`](./AW-I.md) carries
+> W0 + W1-substrate (landed) plus walker completion, legacy
+> `fn __<rule>` deletion, `parse()` swap, `MemoStore`
+> retirement, fuse/inline activation. [`AW-II.md`](./AW-II.md)
+> carries PSI rayon, ShapeRef dispatch, PHF/SIMD keyword
+> tables, selector classifier, scanner closure, document-
+> parallel parse, bloom + GADT dedup, Pratt generalisation,
+> parity harnesses, visitor API, bench parity. `FINAL.md`
+> composes at AW-II.W6. This file preserves the original plan
+> as reference; AW-I.md and AW-II.md are authoritative for
+> execution.
+
 AW is the substrate-activation tranche. AV laid every emission
 channel — `pub const DTA_TABLE`, `pub const GRAMMAR_PROFILE`,
 `pub const SHAPE_DICT`, `pub const BBNF_SHAPE_DICT`, the

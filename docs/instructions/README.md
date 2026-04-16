@@ -62,6 +62,21 @@ architectural changes to any of them are first-class work items, not
   tranche is accepted only when the plan document declares the
   deferral explicitly, with rationale, at plan time — not silently
   during execution.
+- **Execute the plan, not around it.** Large architectural changes
+  the plan stipulates — substrate swap, path deletion, cascading
+  pass rewrite, wholesale deletion of a helper module set — land
+  in the declaring tranche. Placeholder arms, single-probe stubs,
+  `Unsupported` branches, additive `parse_*`-style surfaces
+  shadowing the primary path, and "substrate only" landings that
+  leave the consumer unwired are architectural debt, not
+  pragmatism. Under contact, dispatch more agents, split into sub-
+  waves, carry plan-declared intentional unworkability across
+  waves — but execute. Conservative engineering means high-quality
+  execution; architecture-aversion is its opposite. Escalate to
+  the user only for hard environmental blockers (upstream compiler
+  bug, irrecoverable state, authorization boundary) — scope
+  reveal-under-contact is re-plan-with-more-agents territory, not
+  escalation territory.
 - **Generated files are output of fresh regen; never hand-patch.**
   `generated.rs` is produced by `scripts/bootstrap-bbnf.sh`. The
   only legitimate edits are via that script.

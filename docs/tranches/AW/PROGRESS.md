@@ -306,6 +306,32 @@ budget.
    coordinated set. Continuation agent receives them as one
    composite milestone.
 
+### AW re-plan — split into AW-I + AW-II
+
+The orchestrator's earlier "substrate / activation split" retreat
+is replaced with a full re-plan. [`AW-I.md`](./AW-I.md) carries
+full activation in six waves: W0 + W1-substrate (landed),
+walker completion + memo retirement + SCC plumbing + snapshot
+audit (W2, 4 parallel), `parse()` swap + regen (W3),
+legacy deletion + fuse activation + snapshot migration (W4,
+5 parallel), FINAL-I + bench + close (W5). Walker stubs fill
+in-tranche; `fn __<rule>` helpers delete in-tranche;
+`MemoStore` retires in-tranche; fuse/inline fires in-tranche.
+No `parse_dta`-style additive shadowing.
+
+[`AW-II.md`](./AW-II.md) carries AV's optimisation substrate
+— PSI rayon + ShapeRef + Bug 2b (W1, 3 parallel), PHF + SIMD
+compare + selector classifier + scanner (W2, 4 parallel),
+document-parallel + bloom + Pratt (W3, 4 parallel), walker +
+reader + parity harnesses (W4, 3 parallel), `Tape::reduce_
+column` + SIMD pack + bench parity (W5, 2 parallel), FINAL
+(W6).
+
+The edict now lives in `docs/instructions/README.md` §Code
+discipline — **Execute the plan, not around it.** Scope-
+reveal-under-contact is re-plan-with-more-agents territory,
+not escalation territory.
+
 ### W1b continuation — landed, with genuine scope change
 
 Focused continuation agent (a61626ac) landed five commits on

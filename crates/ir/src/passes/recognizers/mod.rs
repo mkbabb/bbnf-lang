@@ -67,6 +67,7 @@ mod node_facts;
 mod punct_ws_region;
 mod quoted_string;
 mod separator_list;
+pub mod shape_dict_bbnf;
 mod signature;
 mod token_led_branches;
 pub mod visitor;

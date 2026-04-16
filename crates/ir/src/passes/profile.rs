@@ -23,6 +23,9 @@
 //! [`EClassFacts`]: crate::egraph::analysis::EClassFacts
 
 use crate::GrammarIR;
+use crate::passes::recognizers::shape_dict_bbnf::{
+    mine_bbnf_shape_templates, BbnfShapeTemplate,
+};
 use crate::passes::recognizers::visitor::{mine_visitors, VisitorDescriptor};
 
 /// Consolidated per-grammar fingerprint — the owned IR-side
@@ -106,6 +109,19 @@ pub struct GrammarProfile {
     /// construction. When the directive lands, `mine_visitors` walks
     /// the parsed descriptors; this accessor signature does not change.
     pub reorder_unroll_visitors: Vec<VisitorDescriptor>,
+
+    // ── Shape dictionary (V5, AV.5.6) ───────────────────────────────
+
+    /// BBNF-specific shape templates mined from the grammar IR.
+    ///
+    /// Each entry describes a rule body whose multi-record tape skeleton
+    /// collapses to a single ShapeRef record. The emitter checks this
+    /// list at codegen time; rules with a matching template emit the
+    /// collapsed ShapeRef path instead of the normal per-rule skeleton.
+    ///
+    /// Populated by [`mine_bbnf_shape_templates`] via
+    /// [`GrammarIR::profile`]. Empty for non-BBNF grammars.
+    pub bbnf_shape_templates: Vec<BbnfShapeTemplate>,
 }
 
 impl GrammarIR {
@@ -172,6 +188,11 @@ impl GrammarIR {
         // forward plan.
         let reorder_unroll_visitors = mine_visitors(self);
 
+        // V5 AV.5.6 — BBNF-specific shape templates. Mines rule bodies
+        // for collapsible patterns (big_comment, mapped_factor empty
+        // branch). Empty for non-BBNF grammars.
+        let bbnf_shape_templates = mine_bbnf_shape_templates(self);
+
         GrammarProfile {
             push_compound_count,
             push_leaf_count,
@@ -184,6 +205,7 @@ impl GrammarIR {
             structural_alphabet,
             structural_digraphs,
             reorder_unroll_visitors,
+            bbnf_shape_templates,
         }
     }
 }

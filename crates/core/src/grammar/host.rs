@@ -29,7 +29,7 @@ use std::borrow::Cow;
 use parse_that::Span;
 
 use super::generated::{BbnfBootstrap, BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
-use crate::lower::tape_walk::find_child_by_kind;
+use crate::lower::tape_walk::find_descendant_by_kind;
 use crate::pipeline::directives::DirectiveMaps;
 use crate::runtime::Parsed;
 use crate::types::*;
@@ -557,29 +557,6 @@ fn decode_import<'a>(item: BbnfBootstrapNodeView<'a>) -> ImportDirective<'a> {
         span: directive_span,
         items: names,
     }
-}
-
-/// Depth-first search for the first descendant whose `rule_kind()`
-/// matches `target`. Checks the root first, then recurses through
-/// children. Used to reach `import_items` / `import_path` compounds
-/// that live underneath transparent / wrapper compounds that dedup
-/// may or may not have collapsed.
-fn find_descendant_by_kind<'a>(
-    view: BbnfBootstrapNodeView<'a>,
-    target: BbnfBootstrapRuleKind,
-) -> Option<BbnfBootstrapNodeView<'a>> {
-    if view.rule_kind() == target {
-        return Some(view);
-    }
-    if let Some(direct) = find_child_by_kind(view, target) {
-        return Some(direct);
-    }
-    for child in view.children() {
-        if let Some(found) = find_descendant_by_kind(child, target) {
-            return Some(found);
-        }
-    }
-    None
 }
 
 /// Collect every `identifier`-kind descendant of `view` into `out`.

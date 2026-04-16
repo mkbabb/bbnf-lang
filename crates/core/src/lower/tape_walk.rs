@@ -86,6 +86,41 @@ pub(crate) fn find_child_by_kind<'tape>(
     view.children().find(|c| c.rule_kind() == target)
 }
 
+/// Depth-first search for the first descendant whose `rule_kind()`
+/// matches `target`. Checks the root first, then the direct children
+/// (via [`find_child_by_kind`]), then recurses into each child in
+/// document order.
+///
+/// Under DTA, semantic children of a rule compound often sit inside
+/// an intermediate Seq wrapper emitted by the lifter's tape-shape
+/// requirement. Direct-child scans (`find_child_by_kind`) miss the
+/// target when the rule body is `Seq([..., target_rule, ...])`;
+/// this descent sees through those wrappers without false positives
+/// (the search is targeted — it returns the first occurrence only).
+///
+/// Use this whenever the target rule_kind is a nested-rule output
+/// that may surface one or two compounds deeper than the caller's
+/// immediate view. Leaf-immediate targets (identifier, literal,
+/// regex that are guaranteed direct children under the grammar)
+/// can keep `find_child_by_kind` — it's cheaper.
+pub(crate) fn find_descendant_by_kind<'tape>(
+    view: BbnfBootstrapNodeView<'tape>,
+    target: BbnfBootstrapRuleKind,
+) -> Option<BbnfBootstrapNodeView<'tape>> {
+    if view.rule_kind() == target {
+        return Some(view);
+    }
+    if let Some(direct) = find_child_by_kind(view, target) {
+        return Some(direct);
+    }
+    for child in view.children() {
+        if let Some(found) = find_descendant_by_kind(child, target) {
+            return Some(found);
+        }
+    }
+    None
+}
+
 /// Peel a closed whitelist of single-child transparent wrapper
 /// rules. Returns the innermost non-wrapper view.
 ///

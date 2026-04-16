@@ -513,9 +513,46 @@ fn compile_ast_common<'a>(
                 let fingerprint = ir.structural_fingerprint();
 
                 bbnf_ir::passes::canonicalize_aliases(&mut ir);
+                // AW-I.W2.3 — SCC recompute plumbing between passes.
+                //
+                // `inline_acyclic` and `fuse_single_use` guard their
+                // candidate sets with `!is_cyclic && scc_id.is_none()`,
+                // which reads the SCC metadata populated by
+                // `compute_scc`. Without an in-loop recompute the
+                // metadata drifts relative to the mid-iteration rule
+                // graph (alias canonicalization / prior inlining
+                // restructure refs; freshly-emergent SCCs retain the
+                // stale ids the initial lowering stamped). The two
+                // calls below keep the metadata fresh:
+                //
+                // 1. top-of-iteration, after `canonicalize_aliases` —
+                //    so `inline_acyclic` reads SCC ids that reflect
+                //    the canonicalized reference graph.
+                // 2. inter-pass, between `inline_acyclic` and
+                //    `fuse_single_use` — so fuse sees metadata that
+                //    reflects any SCCs inlining just collapsed.
+                //
+                // Convention collision. `lower::metadata::build_rule_meta`
+                // stamps `scc_id = Some(id)` for every rule (singleton
+                // SCCs included) while `compute_scc` stamps `None` for
+                // acyclic rules. Pre-W2.3 the guards read lowering-time
+                // values and were therefore always false — the passes
+                // were dormant by accident. Calling `compute_scc` inside
+                // the loop realigns the field to the authoritative post-
+                // loop convention and the guards begin to fire on
+                // acyclic rules. Tranche-plan invariant: this is the
+                // exact state W4.5 needs as its starting point before
+                // dropping the guards themselves (inline.rs:42 /
+                // fuse.rs:55). The resulting test regressions (sheets
+                // parity, payload layouts, grammar roundtrips, tape
+                // parity) are the ~45-test delta PROGRESS.md §"W1b
+                // continuation" forecast; W4.5's snapshot-migration
+                // consumes the coordinated update.
+                bbnf_ir::passes::compute_scc(&mut ir);
                 bbnf_ir::passes::prune_unreachable(&mut ir);
                 bbnf_ir::passes::inline_acyclic(&mut ir);
                 bbnf_ir::passes::prune_unreachable(&mut ir);
+                bbnf_ir::passes::compute_scc(&mut ir);
                 bbnf_ir::passes::fuse_single_use(&mut ir);
                 bbnf_ir::passes::prune_unreachable(&mut ir);
                 bbnf_ir::passes::eliminate_epsilon(&mut ir);

@@ -55,6 +55,7 @@
 //! gain for bootstrapping the V4 driver outweighs the binary-size
 //! cost.
 
+use bbnf_ir::passes::recognizers::shape_dict_bbnf::{BbnfShapeKind, BbnfShapeTemplate};
 use bbnf_ir::passes::{
     Associativity, CounterOptional, DtaState, FrameKind, PrecedenceEntry, StateId,
 };
@@ -78,6 +79,7 @@ use quote::{format_ident, quote};
 /// legacy fn-per-rule" — the transitional contract until AV.3.6.
 pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
     let table = bbnf_ir::passes::lift_dta(ir);
+    let bbnf_shapes = emit_bbnf_shape_dict(ir);
     if table.states.is_empty() {
         let psi_helper = emit_psi_helper();
         return quote! {
@@ -88,6 +90,8 @@ pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
                 ::bbnf::runtime::tape::DtaTable::EMPTY;
 
             #psi_helper
+
+            #bbnf_shapes
         };
     }
 
@@ -202,6 +206,8 @@ pub fn emit_dta_table(ir: &GrammarIR) -> TokenStream {
             };
 
         #psi_helper
+
+        #bbnf_shapes
     }
 }
 
@@ -467,5 +473,104 @@ fn precedence_entry_literal(e: &PrecedenceEntry) -> TokenStream {
             op_rule: ::bbnf::runtime::tape::DtaRuleId(#op_rule),
             op_discriminant: #disc,
         }
+    }
+}
+
+// ── AV.5.6 / AV.6.1–6.3 — BBNF shape dictionary emission ──────────
+//
+// Composes with V5a's `TapeKind::ShapeRef` substrate. The rule
+// codegen consults `BBNF_SHAPE_DICT` at compile time (via the
+// emitter — see `dispatch.rs` integration) to decide whether a
+// rule's body collapses to a single `ShapeRef` push instead of the
+// normal fn-per-rule emission.
+//
+// Each entry encodes:
+// - `kind` — the structural pattern (BigComment, MappedFactorEmpty)
+// - `shape_hash` — canonical 64-bit dedup key
+// - `payload_bytes` — packed payload blob size (8 for big_comment's
+//   Span, 0 for mapped_factor's empty branch)
+//
+// The dict is a `pub const` so downstream tests can verify
+// per-grammar templates land. Empty for non-BBNF grammars.
+
+/// Emit the per-grammar BBNF shape dictionary.
+///
+/// Produces a `static __BBNF_SHAPE_TEMPLATES` array plus a
+/// `pub const BBNF_SHAPE_DICT` reference. Empty for grammars whose
+/// `IR::profile().bbnf_shape_templates` is empty (every non-BBNF
+/// grammar). The constant is always emitted so consumers can rely on
+/// its presence.
+fn emit_bbnf_shape_dict(ir: &GrammarIR) -> TokenStream {
+    let templates = ir.profile().bbnf_shape_templates;
+    if templates.is_empty() {
+        return quote! {
+            /// BBNF shape dictionary — empty for this grammar.
+            /// Populated only for grammars whose rules match the
+            /// BBNF-specific shape patterns (`big_comment`,
+            /// `mapped_factor` empty branch). See AV.5.6 / AV.6.1–6.3.
+            pub const BBNF_SHAPE_DICT: &[::bbnf::runtime::tape::BbnfShapeEntry] = &[];
+        };
+    }
+
+    let entry_literals: Vec<TokenStream> =
+        templates.iter().map(bbnf_shape_template_literal).collect();
+    let entries_len = templates.len();
+    let entries_ident = format_ident!("__BBNF_SHAPE_TEMPLATES");
+
+    quote! {
+        // ── BBNF shape dictionary (AV.5.6 / AV.6.1–6.3) ─────────────
+        //
+        // Each entry describes a rule body whose multi-record tape
+        // skeleton collapses to a single `ShapeRef` record + an
+        // optional packed payload blob. The codegen checks the entry's
+        // `kind` at the rule emission site to dispatch to the
+        // collapsed `push_shape_ref` path.
+        static #entries_ident:
+            [::bbnf::runtime::tape::BbnfShapeEntry; #entries_len] = [
+            #(#entry_literals),*
+        ];
+
+        /// BBNF shape dictionary — non-empty for BBNF self-hosting.
+        /// The codegen for `__big_comment` / `__mapped_factor` checks
+        /// this dictionary at compile time and emits a single
+        /// `push_shape_ref` per match. See AV.5.6 / AV.6.1–6.3.
+        pub const BBNF_SHAPE_DICT:
+            &[::bbnf::runtime::tape::BbnfShapeEntry] = &#entries_ident;
+    }
+}
+
+/// Encode one BBNF shape template as a `BbnfShapeEntry` literal.
+///
+/// The runtime tape side (V5a) defines the `BbnfShapeEntry` struct
+/// alongside `TapeKind::ShapeRef`. This function emits the literal
+/// using fully-qualified paths so the compose order with V5a is
+/// deterministic.
+fn bbnf_shape_template_literal(t: &BbnfShapeTemplate) -> TokenStream {
+    let kind = bbnf_shape_kind_literal(t.kind);
+    let hash = Literal::u64_unsuffixed(t.shape_hash);
+    let payload_bytes = Literal::u16_unsuffixed(t.payload_bytes);
+    let rule_name = &t.rule_name;
+    quote! {
+        ::bbnf::runtime::tape::BbnfShapeEntry {
+            rule_name: #rule_name,
+            kind: #kind,
+            shape_hash: #hash,
+            payload_bytes: #payload_bytes,
+        }
+    }
+}
+
+/// Encode a `BbnfShapeKind` as a tape-side enum literal.
+///
+/// Maps the IR-side `BbnfShapeKind` to the runtime `BbnfShapeKind`
+/// enum exposed by `bbnf::runtime::tape` (V5a substrate).
+fn bbnf_shape_kind_literal(k: BbnfShapeKind) -> TokenStream {
+    match k {
+        BbnfShapeKind::BigComment => quote! {
+            ::bbnf::runtime::tape::BbnfShapeKind::BigComment
+        },
+        BbnfShapeKind::MappedFactorEmpty => quote! {
+            ::bbnf::runtime::tape::BbnfShapeKind::MappedFactorEmpty
+        },
     }
 }

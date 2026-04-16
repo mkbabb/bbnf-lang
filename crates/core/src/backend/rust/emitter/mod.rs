@@ -10,7 +10,6 @@ mod binary;
 mod dispatch;
 pub(crate) mod dta;
 mod grammar;
-mod map_value;
 mod operator_chain;
 mod prettify;
 pub(crate) mod profile;
@@ -217,66 +216,6 @@ impl Emitter for RustEmitter {
 
     fn emit_negate(&mut self, inner: TokenStream, ctx: &mut Self::Ctx) -> TokenStream {
         self.emit_negate_impl(inner, ctx)
-    }
-
-    fn emit_enum_wrap(
-        &mut self,
-        inner: TokenStream,
-        variant_name: &str,
-        alloc: ValuePlacement,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_enum_wrap_impl(inner, variant_name, alloc, ctx)
-    }
-
-    fn emit_number_convert(&mut self, allow_leading_dot: bool, ctx: &mut Self::Ctx) -> TokenStream {
-        self.emit_number_convert_impl(allow_leading_dot, ctx)
-    }
-
-    fn emit_constant(
-        &mut self,
-        discard_inner: TokenStream,
-        value: &str,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_constant_impl(discard_inner, value, ctx)
-    }
-
-    fn emit_map_expr(
-        &mut self,
-        inner: TokenStream,
-        expr: &MapExpr,
-        return_type: Option<&TypeDesc>,
-        _alloc: ValuePlacement,
-        ir: &GrammarIR,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_map_expr_impl(inner, expr, return_type, ir, ctx)
-    }
-
-    fn emit_span_capture(&mut self, inner: TokenStream, ctx: &mut Self::Ctx) -> TokenStream {
-        self.emit_span_capture_impl(inner, ctx)
-    }
-
-    fn emit_hex_convert(
-        &mut self,
-        inner: TokenStream,
-        fn_path: &str,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
-        self.emit_hex_convert_impl(inner, fn_path, ctx)
-    }
-
-    fn emit_fused_map(
-        &mut self,
-        inner: TokenStream,
-        inner_fd: &FnDescriptor,
-        outer_fd: &FnDescriptor,
-        alloc: ValuePlacement,
-        ir: &GrammarIR,
-        ctx: &mut Self::Ctx,
-    ) -> Option<TokenStream> {
-        self.emit_fused_map_impl(inner, inner_fd, outer_fd, alloc, ir, ctx)
     }
 
     fn emit_ws_trim(&mut self, ws_pattern: Option<&str>, ctx: &mut Self::Ctx) -> TokenStream {

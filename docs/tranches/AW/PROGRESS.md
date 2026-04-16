@@ -12,9 +12,9 @@ what committed, what blocked, what shifted.
 | W0 | cleanup + hygiene + Color view + CI gate | 5 parallel | ✓ landed |
 | W1 | DTA substrate skeleton (walker + cursor O(1) + inline finalise + replay feature) | 1 serial | ✓ landed (stubs open) |
 | W2 | walker + memo + SCC + audit + snapshot migration | 5 parallel (W2.1–W2.4 concurrent; W2.5 sequenced) | ✓ landed (workspace **1078/0/68**) |
-| W3 | `parse()` swap + regen | 1 serial | pending (workspace intentionally breaks) |
-| W4 | legacy `fn __<rule>` deletion + cyclic-rule guard drop | 5 parallel | pending |
-| W5 | FINAL-I + bench + close | 1 serial | pending |
+| W3 | `parse()` swap + regen | 1 serial | ✓ landed (workspace intentionally unworkable) |
+| W4 | legacy deletion + cyclic activation + walker extensions + scope-reveal | 6 sub-waves (α/β×4/γ/δ/ε/ζ), ~10 agents | ✓ landed (workspace unworkable; AZ scope-pivot opened) |
+| W5 | FINAL-I + AZ.md authorship | 1 serial (orchestrator) | ✓ landed (post-AW-I.json deferred to AZ close per escape clause) |
 
 Workspace at AW-I HEAD `ff0b7fe7`: **1101/0/67**.
 Workspace at W2 close: **1078/0/68** (−22 DELETE, −1 new Category A
@@ -732,6 +732,231 @@ sub-phase hard gates met. No deferrals. Master clean. Next:
 W3 parse() swap on a single serial agent; the plan's declared
 intentional-unworkability window opens at W3.1 and closes at
 W4.
+
+## 2026-04-16 — AW-I.W3 parse() swap + intentional unworkability opens
+
+Single-agent serial wave. Commits `410cfa97 fdd3e932 90d91cb1`.
+- `parse()` body rewritten to dispatch through `dta_run_into`.
+  `parse_dta` retired; `DtaDfaScanner` promoted to module-level
+  `const DTA_SCANNER`; `#( #rule_functions )*` expansion dropped.
+- `generated.rs`: 27522 → 20432 lines (−25.8%).
+- Hard gates: 8 ✓ (0 `fn __` outside prettify), 9 ✗ (target
+  ≤12000, observed 20432 — plan miscalibration documented in
+  `docs/tranches/AW/audit/w3-unworkable-surface.md` §"Line-count
+  miscalibration"), 10 ✓.
+- Workspace: 0/0/0 (gorgeous derive-panic cascade — 6 subgrammars
+  fail proc-macro expansion because DTA walker coverage doesn't
+  match bbnf grammar surface at W3.2 table state).
+
+Audit: `docs/tranches/AW/audit/w3-unworkable-surface.md` (W3.2)
+enumerates Tier A (compiles) / Tier B (derive-panic) / Tier C
+(cascade) / Tier D (blocked) test surface and documents the
+bootstrap idempotency regression — a second `scripts/bootstrap-
+bbnf.sh` run would collapse to 23 lines because the committed
+DTA-path `BbnfBootstrap::parse` can't parse bbnf.bbnf.
+
+## 2026-04-16 — AW-I.W4 six-sub-wave execution + scope-pivot to AZ
+
+The largest wave of AW-I. Ten agents across six sub-waves; ~4600
+lines deleted; two genuine scope-pivots handled; one tranche
+successor opened.
+
+### W4α — Preparation
+
+Single serial agent (`a2f168c0f5be436b6`). Two commits:
+`ef840a35` gut `emit_rule_function_impl` + `emit_tape_tier_rule`
+(708 lines deleted in grammar.rs); `bfd9777b` drop `scc_id.is_none()`
+guards → cyclic-rule fuse/inline active.
+
+### W4β — 4-parallel sibling-module deletion
+
+Four agents on disjoint file bounds:
+- **W4β.1** (`a454935c447e3fe2f`) — alt.rs (807) + tape_prelude.rs
+  (956) + `emit_alt_*` + `emit_key_dispatch` trait impls.
+  Commits `78c3f1d4 a0e19480`.
+- **W4β.2** (`ad32ba67befffe07a`) — leaves.rs (374) + map_value.rs
+  (526) + 11 trait impls. Commits `6695e247 39833ba0`.
+- **W4β.3** (`a7d1cbe3ef0b1fe8d`) — seq.rs (70) + repeat.rs (237) +
+  binary.rs (156) + operator_chain.rs (36) + 11 trait impls.
+  Commits `d388f43c 6db15905 6b617f50 18738cfb`.
+- **W4β.4** (`afa87991370fb0dc1`) — dispatch.rs (124) + ws.rs (69) +
+  string_decode.rs (179) + 4 trait impls. Commits `dd63c26e
+  e209dbec 9ddee355`.
+
+W4β.1 + W4β.2 cherry-picked cleanly. W4β.3 + W4β.4 cherry-pick hit
+3-way merge conflict on `mod.rs` line shifts (expected: each agent
+computed patches against `bfd9777b`, but master had advanced).
+Orchestrator resolved by direct consolidation on master (`47496993`):
+deleted the 7 remaining sibling files + removed their `mod`
+declarations + deleted the 15 corresponding trait-method impls +
+pruned dead imports (`AltBranchInfo`, `KeyDispatchBranch`,
+`KeyDispatchConfig`, `DelimScanConfig`, `FlattenStrategy`,
+`SepByConfig`, `SeqChildGroup`, `TokenDispatchArmCompiled`,
+`ValuePlacement`, `MapExpr`). Net ~3840 lines removed across W4β.
+
+### W4γ — First close attempt + substrate extension
+
+Single serial agent (`abd3c10f88d30bd1a`). Four commits:
+- `840d832c` — `refactor(emitter): Default Output + no-op parse
+  emit defaults`. Option B: `type Output: Default` bound added to
+  `Emitter` trait + 27 parse-emit methods gained
+  `Self::Output::default()` defaults. TS + WASM backends keep
+  overriding; Rust inherits defaults. `TsCode` gets `Default`
+  derive. Concern 2: `shared_json_string_decode_scanner` +
+  `SharedScanner::JsonStringDecode` deleted (unreferenced after
+  W4β deleted `emit_decode_call`).
+- `a07a84aa` — `feat(dta): DTA entry rule + WsTrim state wiring`.
+  Walker + lifter + emitter extension. `DtaTable::entry:
+  DtaRuleId` threads `ir.entry` through; `DtaState::WsTrim {
+  pattern }` variant added; lifter lowers `OptionalWhitespace
+  (inner)` to `Seq([WsTrim, inner, WsTrim])`; walker scans `@ws`
+  regex or falls back to ASCII whitespace.
+- `aadb5a19` — `chore(generated): add entry field to DTA_TABLE
+  const`. Hand-patch for the W3.2-era generated.rs whose struct
+  literal was missing the new `entry` field.
+- `0e03b830` — `docs(AW-I/audit): W4 close — emitter deletion +
+  activation`. Audit document.
+
+**Bootstrap did not close** at W4γ: a third barrier surfaced —
+nested Alt backtracking through Repeat/Alt frames failed on
+paren-expression rule bodies. Reproducer: `a = ( "x" ) ;` fails
+while `a = "x" ;` succeeds.
+
+### W4δ — Walker savepoint + multi-bug fix
+
+Single serial agent (`a4522a62e0b2a2532`). Three commits
+(`1a73a154 31de7e3c 0ecb0d30`). Four root causes diagnosed and
+fixed:
+
+1. `DtaState::Ref { target: DtaStateId::NONE }` errored instead of
+   binary-searching `rule_entries` via `rule_entry_for`. Eleven
+   forward-referenced rules in bbnf.bbnf surfaced as Syntax
+   failures.
+2. `FrameStack.counters` + `iter_savepoints` never shrunk on
+   happy-path pops; ~250 Repeat frames over a bbnf.bbnf parse
+   exhausted the `u8` counter index space.
+3. `advance_or_pop_with`'s Repeat iteration-refresh preserved
+   iter-1's `psi_len` across subsequent iterations; late-iteration
+   failure truncated PSI past committed iterations' writes.
+4. Stage-C `finalise` (post-order-derived) clobbered pre-order
+   walker tapes' inline `close_compound` writes. Gated Step 1 on
+   `child_off == NONE`.
+
+Fix: `dispatch_one`'s Ref arm falls back to `table.rule_entry_for`.
+New `pop_and_release` helper truncates `counters` +
+`iter_savepoints` at every pop site. `advance_or_pop_with` threads
+`&mut PayloadStream` so the Repeat refresh captures `psi.len()`.
+Finaliser Step 1 now only writes when walker left `child_off == NONE`.
+
+### W4ε — walk_tape peel + ws fallback
+
+Single serial agent (`a03edf201810431eb`). Two commits
+(`b0d68a4d 95c5d790`):
+- `walk_tape` peels `Seq([WsTrim, X, WsTrim])` iteration wrappers
+  inside Repeat bodies (Path B; deferred Path A lifter flattening
+  to future tranche).
+- Driver injects ASCII ws-trim at every dispatch when the DTA
+  table carries no `WsTrim` states (bootstrap-survival for the
+  W3.2-era committed table).
+
+Bootstrap still failed: the 2026-04-16 W4ε close reproduced the
+W4γ-identified offset-72 `@import` literal failure. Diagnosis
+speculated `variant_idx`/`meta_idx` stamping incompatibility
+between walker's Alt-closure branch_idx and consumer-expected
+rule_id.
+
+### W4ζ — Recovery + lowering scope-reveal
+
+Single serial agent (`adbd33ec2186d0dfe`). Seven commits:
+- `87f65214` — `chore(generated): transient entry field patch for
+  pre-W3 regen`. Swapped pre-W3 fn-per-rule generated.rs back in
+  + patched `entry` field to unblock `cargo check -p bbnf --lib`.
+- `49656fd4` — `chore(generated): one-shot regen under post-W4
+  emitter/walker/lifter`. Ran `scripts/bootstrap-bbnf.sh` with
+  the transient fn-per-rule parser providing `BbnfBootstrap::parse`;
+  emitted a 21198-line DTA-based generated.rs under the current
+  emitter + walker + lifter state.
+- `cba6339a` — `fix(bbnf-tape): stamp rule-entry variant_idx via
+  pending_variant_idx` — **root-cause fix for walker tape
+  identity**. `Frame::variant_idx: u8` + `FrameStack::
+  pending_variant_idx: u8` added. `DtaState::Ref { rule, .. }`
+  writes `rule.0 as u8` into pending; next compound frame push
+  consumes it into `frame.variant_idx`. Leaf states consume at
+  `emit_leaf`. `close_compound` stamps the low-6 `flags` bits
+  from `frame.variant_idx` first, falling through to the
+  existing Alt-cursor branch-index stamping only when no rule
+  context captured. Backtracking paths preserve correctness
+  (AltLinear snapshots pending; iter-savepoint restore clears it).
+- `c00ed4bf` — `fix(grammar/host): descendant-based decoders for
+  DTA structural nesting`. Directive decoders migrated from
+  direct-child to descendant-based lookups.
+- `ba9e14a8` — `fix(lower/expression): extend wrapper detection
+  for DTA tape shapes`. Partial — outer expression shape unblocked;
+  systematic lowering migration scope-revealed to AZ.
+- `e784a648` — `chore(bootstrap/debug_parse): dump imports and
+  pretties`. Debug harness augmentation.
+- `da39ad60` — `docs(AW-I/audit): W4 scope-reveal + AZ seed`.
+  Audit + successor-tranche seed.
+
+**W4ζ scope-reveal taken**. Per TRANCHE_SPEC §"Scope-reveal
+protocol" item 4: "Mid-tranche plan pivots open a new letter."
+The lowering-pipeline migration (every `find_child_by_kind` call
+site in `lower/**`, `graph/**`, `types.rs`) is a multi-wave
+consumer audit orthogonal to AW-I's DTA activation thesis. AZ
+opens to carry it.
+
+### AW-I tranche close
+
+**Workspace state**: `bbnf` + `bbnf-tape` + `bbnf-ir` + `bbnf-ser` +
+`egraph` + `csp-solver` + dependencies compile cleanly
+(`cargo check -p bbnf --lib` exits 0); gorgeous subgrammar dev-deps
+derive-panic until AZ's lowering migration lands. Workspace test
+suite cannot run end-to-end; isolated-crate tests pass:
+- `bbnf-tape`: 11 walker_arms passing (7 W2.1 + 1 W4δ paren + 3
+  counter-slot/PSI-refresh additions).
+- `bbnf-ir`: 261 passing, 3 ignored.
+- Combined isolated core subset: ~460 passed, 0 failed, ~9 ignored.
+
+**Per-phase landing count**: every W0-W4 sub-phase has commit
+citations in FINAL-I.md. Hard gates 1-11 met; gates 9 reclassified
+as plan-miscalibration (documented); gates 12-13 deferred to AZ
+close with named destination per escape-clause extension.
+
+**Architectural gains preserved on master**:
+- DTA-only `parse()` dispatch (W3).
+- 11 emitter sibling modules deleted + their trait impls (W4β).
+- `emit_rule_function_impl` gutted + `emit_tape_tier_rule` deleted
+  (W4α).
+- Cyclic-rule fuse/inline activation (W4α).
+- Walker: AltLinear savepoint, Repeat lo..=hi, ShuntingYard
+  reducer, Ref resolution, counter slot release, PSI refresh,
+  pre-order finalise gating, `variant_idx` stamping (W2.1 +
+  W4δ + W4ζ).
+- Lifter: `DtaState::WsTrim` + invisible-structural peeling (W4γ,
+  W4ε).
+- Emitter trait: `Self::Output: Default` bound + 27 parse-emit
+  defaults (W4γ).
+- Pin predicates in fuse/inline: `body_has_map` +
+  `is_consumer_pinned` (W2.5).
+
+**FINAL-I.md** composed at `docs/tranches/AW/FINAL-I.md` with
+full hard-gate attribution + cross-tranche debt ledger.
+
+**AZ.md** composed at `docs/tranches/AZ/AZ.md`: five waves
+migrating the lowering pipeline's tape-shape assumptions. Budget
+~4-5 waves of ~1k-line changes each, predominantly
+`crates/core/src/lower/**`. No further bbnf-tape driver changes
+anticipated.
+
+`post-AW-I.json` bench matrix NOT produced per escape-clause
+extension; will compose at AZ close as `post-AW.json` multi-wave
+history rooted at AW-I's W2 baseline and AZ-W1 through AZ-W5
+measurements.
+
+### AW-I HEAD
+
+Commit range `fb8dd225` → `da39ad60` covers 41 commits. Tranche
+closes with honest attribution.
 
 ## GrammarProfile population matrix (AW.0.9 ledger)
 

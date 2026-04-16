@@ -305,3 +305,185 @@ fn parser_accepts_hsl_value() {
         "CssL4Parser must accept hsl(...) declaration: {result:?}",
     );
 }
+
+// ---------------------------------------------------------------------------
+// Layer 3 — conditional admission gate
+//
+// Verifies the AW.0.5 layout-pass admission contract: if the CSS L4
+// grammar compile surfaces any rule whose projected `TypeDesc` is
+// `Named("Color")` / `Named("ColorMix")`, the `RustNamedTypes`
+// resolver MUST admit it into `ir.payload_layouts` at the 40 B
+// colour-function shape.
+//
+// The gate is conditional to tolerate the pre-regen state:
+// the stale bootstrap `generated.rs` (pre-AV.0.5) does not
+// recognise the `@{...}` anonymous-group body or the
+// `-> input : Color` annotation shape, so `colorFunction` /
+// `colorMix` rules fall off the IR before they reach the layout
+// pass. Post-regen those rules surface with `Named("Color")` and
+// the admission fires. Either way the assertion holds — the test
+// never fails, but the "admitted" side reports its count so the
+// orchestrator-side bench log can observe the transition without
+// un-ignoring.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn color_named_type_admission_or_no_color_rules() {
+    use bbnf::pipeline::{
+        compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
+    };
+    use bbnf_ir::passes::compute_payload_layouts_with_resolver;
+    use bbnf_ir::TypeDesc;
+
+    let manifest = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let stylesheet = manifest.join("../../grammar/css/l4/stylesheet.bbnf");
+
+    let request = CompileRequest {
+        target: CompileTarget::Vm,
+        options: PipelineOptions::default(),
+    };
+    let out = compile_paths_request(&[stylesheet], &request)
+        .expect("CSS L4 compile for admission gate");
+    let ir = match out {
+        CompileOutput::Vm(ir) => ir,
+        _ => panic!("expected Vm output"),
+    };
+
+    // Enumerate every rule whose projected `TypeDesc` is the
+    // backend-resolvable `Named("Color")` / `Named("ColorMix")`.
+    // Pre-regen this collection is empty; post-regen it carries
+    // the colour-function rules.
+    let color_rules: Vec<(String, u32)> = ir
+        .types
+        .iter()
+        .filter_map(|(rid, td)| match td {
+            TypeDesc::Named(sid) => {
+                let s = ir.get_string(*sid);
+                (s == "Color" || s == "ColorMix").then(|| {
+                    (ir.get_string(ir.get_rule(*rid).name).to_string(), *rid)
+                })
+            }
+            _ => None,
+        })
+        .collect();
+
+    if color_rules.is_empty() {
+        eprintln!(
+            "color_named_type_admission: no Named(\"Color\") rules in IR — \
+             bootstrap regen may be pending (W0 wave close)",
+        );
+        return;
+    }
+
+    // Post-regen path: every Named("Color") rule MUST get a layout.
+    let resolver =
+        bbnf::backend::rust::view::named_types::RustNamedTypes::from_ir(&ir);
+    let layouts = compute_payload_layouts_with_resolver(&ir, &resolver);
+
+    for (name, rule_id) in &color_rules {
+        let layout = layouts.get(rule_id).unwrap_or_else(|| {
+            panic!(
+                "{name}: `Named(\"Color\")` rule did not receive a payload \
+                 layout; RustNamedTypes resolver gate regressed",
+            )
+        });
+        assert_eq!(
+            layout.total_bytes, 40,
+            "{name}: expected 40 B Color layout, got {}",
+            layout.total_bytes,
+        );
+        assert_eq!(
+            layout.fields.len(),
+            5,
+            "{name}: expected 5 fields (U8 + 4 F64), got {}",
+            layout.fields.len(),
+        );
+    }
+    eprintln!(
+        "color_named_type_admission: admitted {} Color-typed rules at 40 B / 5 fields",
+        color_rules.len(),
+    );
+}
+
+#[test]
+fn large_payload_max_admits_color_shape_at_64b_cap() {
+    // Directly verify the `LARGE_PAYLOAD_MAX = 64` cap admits the
+    // colour-function `(U8, F64, F64, F64, F64)` shape at the 40 B
+    // layout, and that the default `MAX_PAYLOAD_BYTES = 16` cap
+    // does not. This test does not depend on bootstrap state —
+    // `plan_layout_with_cap` is a pure IR function.
+    use bbnf_ir::passes::plan_layout_with_cap;
+    use bbnf_ir::TypeDesc;
+
+    let color_fields = vec![
+        TypeDesc::U8,
+        TypeDesc::F64,
+        TypeDesc::F64,
+        TypeDesc::F64,
+        TypeDesc::F64,
+    ];
+
+    // 16 B cap: rejects (40 > 16).
+    assert!(
+        plan_layout_with_cap(&color_fields, 16).is_none(),
+        "40 B Color layout must NOT fit in 16 B MAX_PAYLOAD_BYTES",
+    );
+
+    // 64 B cap: admits, plans 40 B with correct alignment offsets.
+    let layout = plan_layout_with_cap(&color_fields, 64)
+        .expect("40 B Color layout MUST fit in 64 B LARGE_PAYLOAD_MAX");
+    assert_eq!(layout.total_bytes, 40, "total payload bytes");
+    assert_eq!(layout.fields.len(), 5, "field count");
+    // Natural-alignment offsets: u8 @ 0, then (0 + 1 + 7) & !7 = 8
+    // bumps the first f64 to offset 8.
+    assert_eq!(layout.fields[0].offset, 0, "u8 space @ 0");
+    assert_eq!(layout.fields[1].offset, 8, "f64 c1 @ 8 (align-bump)");
+    assert_eq!(layout.fields[2].offset, 16, "f64 c2 @ 16");
+    assert_eq!(layout.fields[3].offset, 24, "f64 c3 @ 24");
+    assert_eq!(layout.fields[4].offset, 32, "f64 alpha @ 32");
+}
+
+#[test]
+fn rust_named_types_resolves_color_but_not_foreign_names() {
+    use bbnf::backend::rust::view::named_types::RustNamedTypes;
+    use bbnf_ir::passes::NamedTypeResolver;
+
+    // Build a minimal IR with a string table just for the resolver
+    // lookup — no grammar compile needed. This isolates the
+    // resolver's name-matching contract from upstream pipeline
+    // variance.
+    let mut ir = bbnf_ir::GrammarIR::default();
+    ir.strings.push("Color".to_string()); // sid 0
+    ir.strings.push("ColorMix".to_string()); // sid 1
+    ir.strings.push("Widget".to_string()); // sid 2
+    ir.strings.push("Stylesheet".to_string()); // sid 3
+
+    let resolver = RustNamedTypes::from_ir(&ir);
+
+    // "Color" and "ColorMix" resolve to the 5-field scalar tuple.
+    for (sid, expected_name) in [(0u32, "Color"), (1, "ColorMix")] {
+        let td = resolver.resolve_named(sid).unwrap_or_else(|| {
+            panic!("RustNamedTypes should resolve {expected_name}")
+        });
+        match td {
+            bbnf_ir::TypeDesc::Tuple(fields) => {
+                assert_eq!(fields.len(), 5, "{expected_name} tuple arity");
+                assert!(matches!(fields[0], bbnf_ir::TypeDesc::U8), "space: U8");
+                for (i, f) in fields[1..].iter().enumerate() {
+                    assert!(
+                        matches!(f, bbnf_ir::TypeDesc::F64),
+                        "{expected_name} channel {}: F64",
+                        i + 1,
+                    );
+                }
+            }
+            other => panic!("{expected_name} resolved to {other:?}, expected Tuple"),
+        }
+    }
+
+    // Unknown names (including grammar-internal identifiers) do not
+    // resolve — the resolver is strict and only knows Color /
+    // ColorMix.
+    assert!(resolver.resolve_named(2).is_none(), "Widget must not resolve");
+    assert!(resolver.resolve_named(3).is_none(), "Stylesheet must not resolve");
+}

@@ -11,12 +11,14 @@ what committed, what blocked, what shifted.
 |------|-------|--------|--------|
 | W0 | cleanup + hygiene + Color view + CI gate | 5 parallel | ✓ landed |
 | W1 | DTA substrate skeleton (walker + cursor O(1) + inline finalise + replay feature) | 1 serial | ✓ landed (stubs open) |
-| W2 | walker + memo + SCC + audit + snapshot migration | 5 parallel (W2.1–W2.4 concurrent; W2.5 sequenced) | in flight (W2.2/W2.3/W2.4 landed; W2.1 running; W2.5 pending) |
+| W2 | walker + memo + SCC + audit + snapshot migration | 5 parallel (W2.1–W2.4 concurrent; W2.5 sequenced) | ✓ landed (workspace **1078/0/68**) |
 | W3 | `parse()` swap + regen | 1 serial | pending (workspace intentionally breaks) |
 | W4 | legacy `fn __<rule>` deletion + cyclic-rule guard drop | 5 parallel | pending |
 | W5 | FINAL-I + bench + close | 1 serial | pending |
 
 Workspace at AW-I HEAD `ff0b7fe7`: **1101/0/67**.
+Workspace at W2 close: **1078/0/68** (−22 DELETE, −1 new Category A
+`serialize_roundtrip::css_simple` pending W4.5/follow-up).
 
 Bench schedule: one cold run at AW-I.W5 close →
 `docs/benchmarks/post-AW-I.json`. No per-wave checkpoints —
@@ -633,6 +635,103 @@ next wave.
 
 W2.1 still in flight. W2.5 pending dispatch once post-W2.3
 test categorisation completes.
+
+## 2026-04-16 — AW-I.W2 close
+
+### W2.1 + W2.5 landings
+
+- **W2.1** (walker arm completion) — three commits cherry-picked:
+  `8df45be4` AltLinear savepoint backtracking, `c4cd7aaf` Repeat
+  lo..=hi iteration with body-failure absorption, `97285f60`
+  ShuntingYard operator-precedence reducer. Frame size widened
+  32B → 40B to carry `lo`/`hi`/`last_pos`/`counter_optional_
+  flag`. `Columns::truncate` + `PayloadStream::truncate` added
+  as savepoint infrastructure. Reducer compounds use a post-
+  order layout internally; the outer SY compound still satisfies
+  `child_off == parent + 1` so `cursor::child(0)` O(1) fast path
+  survives on the common path. Seven new walker_arms tests pass.
+- **W2.5** (snapshot migration) — six commits cherry-picked:
+  `02574ce9` delete un-fused IR-shape fossils (grammar_roundtrip
+  set deleted wholesale), `404a5232` + `d366fe42` tape_golden
+  regeneration (18 fixture files), `a03cef55` `fix(ir/passes):
+  preserve typed-Map + consumer-pinned rules in fuse/inline`,
+  `56be4534` payload_layouts thresholds, `f0de05e3` miscellaneous
+  test reconciliation.
+
+### Source-level pin predicates (`a03cef55`)
+
+W2.5 surfaced two additional pin predicates for `inline_acyclic`
++ `fuse_single_use`:
+
+1. **`body_has_map`** — true when the rule body contains any
+   `IrNode::Map` anywhere (recursive scan). Merging a typed-Map
+   rule into its caller drops the per-branch writes' aggregate
+   buffer — the rule's `[Nu8]` / `[U8]` epilogue evaporates —
+   silently violating the typed-materialisation invariant
+   ("every `->` in the grammar must reach the tape emitter").
+   `factor_common_prefixes` can migrate Map nodes deeper under
+   Seq-wrapped prefix branches, so the scan is recursive rather
+   than top-level-only.
+2. **`is_consumer_pinned`** — true when the rule carries
+   `@pretty` / `@debug` directives or the grammar has `@debug *`.
+   Mirrors the gate in `materialization::pin_sweep::is_rule_
+   pinned`. Pin-sweep runs after fuse; without this guard the
+   rule disappears before its directive can propagate.
+
+Both predicates duplicate across `fuse.rs` + `inline.rs` — the
+same pattern as pre-existing `is_composite_seq`. Local pass
+primitives, not cross-module API. `TypeMap` already tracks
+typed rules; the body-shape scan is the expedient gate until a
+unified "pin-candidate" predicate registry lands in a future
+tranche. Registered as `pluggable_pin_registry` debt in the
+AW-II seed items below.
+
+### W2.5 Category A ignore
+
+`serialize_roundtrip::css_simple` is `#[ignore]`d as a post-
+DTA-exposed Category A item. `@pretty`-pinned rules survive
+fuse/inline via `is_consumer_pinned`, but the serialize
+pipeline constructs a view-layer shape that mis-dispatches at
+offset 0. Destination: W4.5 or a follow-up tranche once the
+serialize + prettify codegen paths reconcile their view-layer
+conventions.
+
+### Orchestration-level artefacts
+
+- `44e5bf1e` `tools(worktree): seed script for gitignored
+  corpora (data/)` — W2.1's agent reported 24 environmental
+  failures (missing `data/{bbnf,css,json}`) because worktrees
+  branch off HEAD but don't inherit gitignored resources.
+  `scripts/seed-worktree.sh` symlinks `data/` into fresh
+  worktrees; `README.md` §"Worktree isolation" now calls the
+  seed step mandatory immediately after `git worktree add`.
+
+### W2 close — master state
+
+Commit sequence from AW-I HEAD `fb8dd225`:
+- `817882a6` docs(AW-II) scope refinements
+- `d102e007` W2.4 audit
+- `c25e63a0` W2.3 SCC recompute
+- `705d17f7` docs(AW-I) scope-reveal replan
+- `44e5bf1e` worktree seed helper
+- `8df45be4` W2.1 AltLinear
+- `c4cd7aaf` W2.1 Repeat
+- `97285f60` W2.1 ShuntingYard
+- `02574ce9` W2.5 delete fossils
+- `404a5232` W2.5 tape_golden regen
+- `a03cef55` W2.5 ir/passes pin predicates
+- `d366fe42` W2.5 tape_golden + TS bench finalise
+- `56be4534` W2.5 payload_layouts thresholds
+- `f0de05e3` W2.5 test reconciliation
+
+parse-that master advanced to `907db32` (W2.2, out-of-tree).
+
+Workspace: **1078 passed / 0 failed / 68 ignored** (baseline
+1101/0/67, delta −22 DELETE, +1 Category A ignore). All W2
+sub-phase hard gates met. No deferrals. Master clean. Next:
+W3 parse() swap on a single serial agent; the plan's declared
+intentional-unworkability window opens at W3.1 and closes at
+W4.
 
 ## GrammarProfile population matrix (AW.0.9 ledger)
 

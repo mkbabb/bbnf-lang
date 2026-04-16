@@ -2168,6 +2168,35 @@ mod __bbnfbootstrap_emit_impl {
         counter_optional_rules: &[],
         max_nesting_depth: 8u16,
     };
+    /// AV.4.1 — Allocate this grammar's stage-A PSI stream sized
+    /// from [`GRAMMAR_PROFILE`]'s `leaves_per_input_byte`.
+    ///
+    /// The runtime stage-A driver (AV.3.6 / V4) calls this once
+    /// at parse start; every subsequent `PayloadJob::push` lands
+    /// in pre-allocated memory.
+    #[inline]
+    pub fn psi_with_capacity(input_len: usize) -> ::bbnf::runtime::tape::PayloadStream {
+        ::bbnf::runtime::tape::PayloadStream::with_capacity_for(
+            &GRAMMAR_PROFILE,
+            input_len,
+        )
+    }
+    /// AV.4.2 — Drive stage-B's payload fill over the PSI stream.
+    ///
+    /// Single API for sequential and parallel paths; the dispatch
+    /// fork lives inside
+    /// [`PayloadStream::fill_columns`](::bbnf::runtime::tape::PayloadStream::fill_columns)
+    /// on `GRAMMAR_PROFILE.parallel_break_even_bytes`. Inputs
+    /// below the break-even gate run sequentially; above, the
+    /// rayon `par_chunks` walk takes over.
+    #[inline]
+    pub fn fill_payloads(
+        psi: &::bbnf::runtime::tape::PayloadStream,
+        input: &[u8],
+        columns: &mut ::bbnf::runtime::tape::Columns,
+    ) -> usize {
+        psi.fill_columns(input, columns, &GRAMMAR_PROFILE)
+    }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct int_litView<'p> {

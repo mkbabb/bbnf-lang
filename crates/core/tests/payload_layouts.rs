@@ -123,17 +123,18 @@ fn compile_and_compute_layouts(
 #[test]
 fn test_json_payload_layouts_baseline() {
     let (_ir, layouts) = compile_and_compute_layouts("json", "json/json.bbnf");
-    // Bare-Span rules (comma, colon, string) and scalar-Alt rules
-    // (bool = "true" -> true | "false" -> false) each register a
-    // single-field layout via `compute_payload_layouts`. Map-bodied
-    // scalar rules (null = "null" -> 0u8, number = /regex/ -> f64)
-    // remain on the `TapeSpanOnly` scalar path (`InlineScalar` /
-    // `WideScalar`) — body shape is `Map`, not `Alt`, so
-    // `scalar_layout_eligible` rejects them.
+    // AW-I.W2.5: post-fuse the single-use bare-Span rules `comma` and
+    // `colon` (Seq(Literal(",") / Literal(":"), OptionalWhitespace))
+    // carry no `IrNode::Map` in their bodies, so the
+    // fuse / inline `body_has_map` guard permits inlining — they
+    // collapse into their `pair` / `object` callers. Only `string`
+    // (bare-Span regex body) and `bool` (scalar-Alt) survive to
+    // receive single-field layouts. Map-bodied scalar rules
+    // (null, number) stay on the `TapeSpanOnly` scalar path.
     assert!(
-        layouts.len() >= 4,
-        "json: expected at least 4 payload layouts (bare-Span + \
-         scalar-Alt admissions), got {}",
+        layouts.len() >= 2,
+        "json: expected at least 2 payload layouts (string bare-Span + \
+         bool scalar-Alt), got {}",
         layouts.len()
     );
 }
@@ -205,15 +206,16 @@ fn test_css_pretty_payload_layouts_baseline() {
 #[test]
 fn test_json_payload_layouts() {
     let (_ir, layouts) = compile_and_compute_layouts("json", "json/json.bbnf");
-    // AV.0.1 close-out: scalar-Alt rules (`bool = "true" -> true |
-    // "false" -> false`) join bare-Span rules (comma, colon,
-    // string) in the aggregate planner. Map-bodied scalar rules
-    // (`null = "null" -> 0u8`, `number = /regex/ -> f64`) stay on
-    // the scalar `InlineScalar` / `WideScalar` path.
+    // AW-I.W2.5: post-fuse bare-Span rules without `Map` in their
+    // body (comma, colon) are eligible for inlining under the
+    // `body_has_map` guard; only `string` (Regex body) and `bool`
+    // (scalar-Alt) survive to register a layout. Map-bodied scalar
+    // rules (null, number) route through the `TapeSpanOnly` scalar
+    // path.
     assert!(
-        layouts.len() >= 4,
-        "json: expected at least 4 payload layouts (bare-Span + \
-         scalar-Alt admissions), got {}",
+        layouts.len() >= 2,
+        "json: expected at least 2 payload layouts (string bare-Span + \
+         bool scalar-Alt), got {}",
         layouts.len()
     );
 }
@@ -247,15 +249,15 @@ fn test_sheets_payload_layouts() {
 #[test]
 fn test_ebnf_payload_layouts() {
     let (_ir, layouts) = compile_and_compute_layouts("ebnf", "ebnf/ebnf.bbnf");
-    // EBNF has no numeric scalar payloads, but bare-Span rules
-    // (letter, digit, symbol, terminator, S) admit the AV.0.2
-    // single-field `[Span @ 0, total 8]` layout. No scalar-Alt
-    // admissions — EBNF's Alt-bodied rules project to Span via
-    // their regex-of-literals branches, not a distinct scalar
-    // type.
+    // AW-I.W2.5: post-fuse single-use bare-Span rules without any
+    // `IrNode::Map` in their bodies (e.g. `terminator`, `S`) are
+    // inlined at their sole call site — only `letter`, `digit`,
+    // `symbol` survive with Regex-bodied single-field layouts.
+    // Alt-bodied EBNF rules project to Span via their regex-of-
+    // literals branches, not a distinct scalar type.
     assert!(
-        layouts.len() >= 5,
-        "ebnf: expected at least 5 bare-Span payload layouts, got {}",
+        layouts.len() >= 3,
+        "ebnf: expected at least 3 bare-Span payload layouts, got {}",
         layouts.len()
     );
 }

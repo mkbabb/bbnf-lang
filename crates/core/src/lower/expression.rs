@@ -115,13 +115,18 @@ fn dispatch_expression<'a>(
     );
     let is_wrapper_kind = matches!(
         node.kind(),
-        TapeKind::Rule | TapeKind::Repeat,
+        TapeKind::Rule | TapeKind::Repeat | TapeKind::Seq | TapeKind::Alt,
     );
     if is_unknown_or_sentinel && is_wrapper_kind {
         let parent_offset = node.cursor().offset();
         let substantive: Vec<BbnfBootstrapNodeView<'a>> = node
             .children()
-            .filter(|c| c.kind() == TapeKind::Rule)
+            .filter(|c| {
+                matches!(
+                    c.kind(),
+                    TapeKind::Rule | TapeKind::Seq | TapeKind::Alt,
+                )
+            })
             // Cycle guard: drop any child whose tape offset
             // equals the parent's. A malformed compound whose
             // children include itself would otherwise re-enter
@@ -411,7 +416,13 @@ fn collect_binary_operands<'a>(
     };
     let mut operands = vec![first];
     let rest: Vec<BbnfBootstrapNodeView<'a>> = children.collect();
-    if rest.len() == 1 && rest[0].kind() == TapeKind::Repeat {
+    // The Repeat wrapper is `TapeKind::Repeat` under the legacy
+    // fn-per-rule emission and `TapeKind::Rule` under DTA (the lifter
+    // collapses Repeat frames into Rule records). Both forms need
+    // flattening to reveal the operand siblings.
+    if rest.len() == 1
+        && matches!(rest[0].kind(), TapeKind::Repeat | TapeKind::Rule)
+    {
         operands.extend(rest[0].children());
     } else {
         operands.extend(rest);
@@ -960,14 +971,18 @@ fn lower_leaf_by_span_text<'a>(
     ctx: &mut LowerCtx<'a>,
 ) -> Option<IrNode> {
     use ::bbnf::runtime::tape::TapeKind;
-    // Only Rule / Span leaves carry semantic spans we can
-    // classify; Repeat / Optional wrappers should be handled
-    // by `iter_rep_children` further up.
+    // Classify by the node's span text regardless of kind — under
+    // DTA a `/regex/` or `"string"` leaf may be wrapped in a Seq/Alt
+    // compound whose span still encodes the full token. The
+    // `is_single_token_span` caller gate upstream guarantees we
+    // only reach here when the span is a single closed bbnf token.
     match node.kind() {
         TapeKind::Rule
         | TapeKind::Span
         | TapeKind::Literal
-        | TapeKind::Regex => {}
+        | TapeKind::Regex
+        | TapeKind::Seq
+        | TapeKind::Alt => {}
         _ => return None,
     }
     let raw = node.span_text();

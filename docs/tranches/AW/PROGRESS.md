@@ -20,6 +20,20 @@ Workspace at AW-I HEAD `ff0b7fe7`: **1101/0/67**.
 Workspace at W2 close: **1078/0/68** (−22 DELETE, −1 new Category A
 `serialize_roundtrip::css_simple` pending W4.5/follow-up).
 
+### AW-II — DTA Self-Host Round-Trip
+
+| Wave | Scope | Agents | Status |
+|------|-------|--------|--------|
+| W1 | `lower/expression.rs` — grouped term + directive terminator + substrate helper | 1 serial | ✓ landed (BbnfBootstrap derive expands cleanly; gorgeous grammars still hit binary_factor per plan → W2) |
+| W2 | binary_factor operator recognition | 1 serial | pending |
+| W3 | find_child_by_kind audit + migration across lower/**, graph/**, types.rs | 3 parallel | pending |
+| W4 | value_expr `->` lowering | 1 serial | pending |
+| W5 | Round-trip + bench matrix + FINAL | 1 serial (orchestrator) | pending |
+
+Bench schedule: one cold run at AW-II.W5 close →
+`docs/benchmarks/post-AW.json` as multi-wave history. AW-I W2 baseline
+(1078/0/68) is the comparison anchor.
+
 Bench schedule: one cold run at AW-I.W5 close →
 `docs/benchmarks/post-AW-I.json`. No per-wave checkpoints —
 W2–W4 touch substrate the legacy path still dominates.

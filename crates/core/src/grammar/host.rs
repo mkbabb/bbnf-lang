@@ -176,23 +176,79 @@ pub(crate) fn extract_for_pipeline<'a>(
 fn walk_tape<'a, S: GrammarSink<'a>>(parsed: &'a Parsed<'a, BbnfBootstrap>, sink: &mut S) {
     let root = parsed.view();
 
-    // `grammar = grammar_item*` — the rule body is a single Repeat
-    // compound whose direct children are the individual
-    // `grammar_item` compounds. Flatten the Repeat wrapper, peel
-    // transparent grammar_item / directive wrappers, and dispatch
-    // each item to `absorb_item`.
+    // `grammar = ( grammar_item ?w ) *` — under the DTA lifter the
+    // per-iteration `?w` modifier expands `OptionalWhitespace(X)`
+    // into a `Seq([WsTrim, X, WsTrim])`. The tape surface:
+    //
+    //     Rule compound (grammar rule entry; `parsed.view()`)
+    //       └─ Seq compound (one per iteration wrapper; the
+    //          OptionalWhitespace lowering)
+    //            └─ X subtree (the grammar_item; WsTrim states emit
+    //               no records)
+    //
+    // For grammars whose entry body is a bare `grammar_item *`
+    // (no `?w`) the Seq wrapper is absent and iteration children
+    // are grammar_items directly — `peel_iter_wrapper` handles both
+    // shapes uniformly.
+    //
+    // TODO-postAW: collapse these structural-invisible Seqs at the
+    // lifter (or mark them transparent) so consumers don't re-peel.
+    // See the `iter_rep_children` helper in `crate::lower::tape_walk`
+    // for the existing consumer-side mirror.
     use ::bbnf::runtime::tape::TapeKind;
     for item in root.children() {
+        // An explicit `TapeKind::Repeat` wrapper — legacy fn-per-rule
+        // emission retained this shape in a few places. Under the DTA
+        // `frame_to_tape_kind(Repeat) == Rule`, so this branch is
+        // effectively dead, but we keep it so the walker tolerates
+        // shape shifts after regen.
         if item.kind() == TapeKind::Repeat {
             for grandchild in item.children() {
-                let inner = peel_wrappers(grandchild);
+                let peeled = peel_iter_wrapper(grandchild);
+                let inner = peel_wrappers(peeled);
                 absorb_item(inner, sink);
             }
         } else {
-            let inner = peel_wrappers(item);
+            let peeled = peel_iter_wrapper(item);
+            let inner = peel_wrappers(peeled);
             absorb_item(inner, sink);
         }
     }
+}
+
+/// Peel a single structural-invisible Seq wrapper introduced by
+/// `OptionalWhitespace(X)` lowering inside a Repeat body.
+///
+/// The DTA lifter expands `OptionalWhitespace(X)` to
+/// `Seq([WsTrim, X, WsTrim])`. `WsTrim` states emit no tape
+/// records, so the iteration compound has exactly one record-
+/// emitting direct child — the `X` subtree. When `item.kind()` is
+/// `TapeKind::Seq` AND the compound has exactly one compound child,
+/// peel to that child. Otherwise return `item` unchanged so
+/// user-written Seq compounds (an `identifier "=" rhs ";"`-style
+/// concatenation that reaches the walker directly) round-trip.
+fn peel_iter_wrapper<'a>(item: BbnfBootstrapNodeView<'a>) -> BbnfBootstrapNodeView<'a> {
+    use ::bbnf::runtime::tape::TapeKind;
+    if item.kind() != TapeKind::Seq {
+        return item;
+    }
+    // The Seq must have a compound first child and no siblings to
+    // safely peel — multi-child Seqs are user-written concatenations.
+    let Some(first) = item.child(0) else {
+        return item;
+    };
+    if !matches!(
+        first.kind(),
+        TapeKind::Rule | TapeKind::Alt | TapeKind::Repeat | TapeKind::Seq,
+    ) {
+        return item;
+    }
+    let mut iter = item.children();
+    iter.next();
+    if iter.next().is_some() {
+        return item;
+    }
+    first
 }
 
 /// Peel the transparent `grammar_item` and `directive` wrappers.

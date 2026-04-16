@@ -18,7 +18,6 @@ pub(crate) mod profile;
 mod repeat;
 mod seq;
 pub(crate) mod string_decode;
-pub(crate) mod tape_prelude;
 pub mod visitor;
 mod ws;
 

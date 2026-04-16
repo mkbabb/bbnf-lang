@@ -88,11 +88,9 @@ fn cursor_walks_children() {
     b.push_leaf(TapeKind::Span, 2, 3, 0, 0);
     let compound = b.push_compound(TapeKind::Seq, children_start, 0, 3, 0, 0);
 
-    // Cursor sibling walks read `sib_skip`, which Stage-C derives
-    // from `child_off` + `frame_depth`. AW.0.1 gates Stage-C on the
-    // DTA's inline-frame-depth flag; opt in so the legacy-API-built
-    // tape is closed before the cursor reads it.
-    b.enable_inline_frame_depth();
+    // Post-order legacy-API tape — `finish()` derives frame_depth
+    // from the `child_off` column and sweeps it through `finalise`
+    // to close `sib_skip`. No inline frame-depth opt-in required.
     let tape = b.finish().unwrap();
     let cursor = TapeCursor::new(&tape, compound);
 
@@ -1048,9 +1046,8 @@ fn sibling_skip_walks_direct_children_forward() {
     // outer compound (children at 0, 3, 4)
     let outer_children = TapeOffset(0);
     let outer = b.push_compound(TapeKind::Rule, outer_children, 0, 4, 0, 0);
-    // AW.0.1: Stage-C populates `sib_skip`, which the assertions below
-    // and the cursor's forward walk both depend on. Opt in.
-    b.enable_inline_frame_depth();
+    // Post-order legacy tape — `finish()` derives frame_depth from
+    // `child_off` and closes `sib_skip` via `finalise`.
     let tape = b.finish().unwrap();
 
     let cursor = TapeCursor::new(&tape, outer);
@@ -1094,8 +1091,8 @@ fn sibling_skip_nested_compound() {
     b.push_leaf(TapeKind::Span, 3, 4, 3, 0);
     let outer_children = TapeOffset(0);
     let _outer = b.push_compound(TapeKind::Rule, outer_children, 0, 4, 0, 0);
-    // AW.0.1: `sib_skip` is a Stage-C output; opt in to close it.
-    b.enable_inline_frame_depth();
+    // Post-order legacy tape — `finish()` closes `sib_skip` via the
+    // derived-depth Stage-C pass.
     let tape = b.finish().unwrap();
 
     // Inner (x y) children: x@1, y@2. sib_skip[1]=1, sib_skip[2]=0.
@@ -1626,17 +1623,18 @@ fn snapshot_shape(cols: &Columns) -> (usize, Vec<Off>, Vec<bool>) {
 /// `tape_snapshot` clones columns without mutating `child_off`,
 /// preserving the exact `child_off` values the parser wrote — which
 /// is the input shape both algorithms were designed to consume.
-fn assert_stage_c_matches_v2(mut b: TapeBuilder, label: &str) {
+fn assert_stage_c_matches_v2(b: TapeBuilder, label: &str) {
     let pre_snapshot = b.tape_snapshot();
     let (n, child_off, has_children) = snapshot_shape(pre_snapshot.columns());
     let v2 = reference_v2_sibling_skip(n, &child_off, &has_children);
 
-    // The Stage-C bit-equality regression *is* the DTA-driven closure
-    // path; AW.0.1 gates Stage-C on `has_inline_frame_depth`, so opt
-    // in explicitly here. The reference V2 walk above still runs
-    // against the pre-finalise column snapshot, keeping the
-    // comparison honest.
-    b.enable_inline_frame_depth();
+    // The Stage-C bit-equality regression runs against tapes built
+    // via the post-order `push_leaf` / `push_compound` API — not the
+    // DTA driver's inline frame_depth path. Leave
+    // `has_inline_frame_depth` unset; `finish()` will reconstruct
+    // the depth column via `derive_frame_depth` and sweep it through
+    // `finalise`. The V2 reference walk above operates on the same
+    // pre-finalise column snapshot, keeping the comparison honest.
     let tape = b.finish().unwrap();
     assert_eq!(
         tape.columns().sib_skip, v2,
@@ -2106,7 +2104,6 @@ fn cursor_child_zero_is_o1_under_preorder() {
         DtaFrameKind, DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable,
     };
     use bbnf_tape::psi::PayloadStream;
-    use bbnf_tape::Columns;
 
     // Three Literal states + one Seq state referencing them in order.
     // Static arrays keep lifetimes `'static` as the DTA contract
@@ -2148,56 +2145,32 @@ fn cursor_child_zero_is_o1_under_preorder() {
         }
     }
 
-    let mut columns = Columns::new();
+    let mut builder = TapeBuilder::new();
+    builder.enable_inline_frame_depth();
     let mut psi = PayloadStream::new();
-    let mut frame_depth: Vec<u8> = Vec::new();
     let input: &[u8] = b"";
-    dta_run(
-        &TABLE,
-        input,
-        &NoScanner,
-        &mut columns,
-        &mut psi,
-        &mut frame_depth,
-    )
-    .expect("empty-literal DTA run");
 
-    assert_eq!(columns.len(), 4, "Seq + 3 literal leaves");
+    // Drive the DTA against an empty input. The `dta_run_into_builder`
+    // adapter consumes the separate `&mut Columns` + `&mut Vec<u8>`
+    // the driver wants without fighting the borrow checker over the
+    // builder's aggregate borrow.
+    builder
+        .dta_run_into(&TABLE, input, &NoScanner, &mut psi)
+        .expect("empty-literal DTA run");
+
+    assert_eq!(builder.columns().len(), 4, "Seq + 3 literal leaves");
     // Pre-order layout: parent at 0, children at 1..=3.
-    assert_eq!(columns.child_off_at(0).0, 1, "child_off = parent + 1");
-    assert!(columns.has_children_at(0));
+    assert_eq!(
+        builder.columns().child_off_at(0).0,
+        1,
+        "child_off = parent + 1"
+    );
+    assert!(builder.columns().has_children_at(0));
 
-    // Finalise to populate sib_skip from the DTA-emitted frame_depth.
-    bbnf_tape::finalise(&mut columns, &frame_depth);
-
-    // Wrap in a Tape and drive a cursor through child(0). The
-    // fast-path branch in `first_child_root` returns offset 1 directly
-    // because `child_off == parent_idx + 1`.
-    let tape = finalise_to_tape(columns);
+    // `finish()` runs `finalise` directly off the DTA-written
+    // `frame_depth` stream — no `derive_frame_depth` reconstruction.
+    let tape = builder.finish().expect("finalise succeeds");
     let root = TapeCursor::new(&tape, TapeOffset(0));
     let first = root.child(0).expect("first child present");
     assert_eq!(first.offset().0, 1);
-}
-
-/// Helper — wraps populated `Columns` into a `Tape` so pre-order
-/// cursor tests can read through the public cursor API without the
-/// `TapeBuilder`'s post-order emission path.
-///
-/// Uses the builder's `tape_snapshot` indirectly: construct a builder,
-/// move the columns in by cloning every subcolumn, then call
-/// `finish()` to obtain a `Tape`. The columns are already finalised
-/// (sib_skip populated by the caller), so `finish` only wraps them;
-/// the `has_inline_frame_depth` path skips the internal stage-C pass.
-fn finalise_to_tape(columns: bbnf_tape::Columns) -> Tape {
-    let mut b = TapeBuilder::new();
-    b.enable_inline_frame_depth();
-    // Move each column into the builder by swapping with an empty
-    // scratch buffer — avoids a full clone.
-    let mut scratch = columns;
-    std::mem::swap(b.columns_mut(), &mut scratch);
-    // Columns are already finalised; `finish` will run finalise over
-    // an externally-derived frame_depth length of 0 (which no-ops on
-    // an empty depth slice — but the columns already carry valid
-    // sib_skip / child_off / span_hi). Use the direct snapshot path.
-    b.tape_snapshot()
 }

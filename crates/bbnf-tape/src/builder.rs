@@ -107,20 +107,32 @@ pub struct TapeBuilder {
     /// Stage-C activation gate.
     ///
     /// When `true`, the DTA driver is emitting `frame_depth` inline
-    /// during stage A and [`Self::finish`] routes through
-    /// [`crate::finaliser::derive_frame_depth`] +
-    /// [`crate::finaliser::finalise`] to close `sib_skip` / `span_hi` /
-    /// `child_off` off the parallel depth stream.
+    /// during stage A and [`Self::finish`] consumes [`Self::frame_depth`]
+    /// directly via [`crate::finaliser::finalise`] — no
+    /// `derive_frame_depth` reconstruction pass.
     ///
     /// When `false` (the legacy fn-per-rule path through the AW W0
-    /// window), `push_compound` writes those columns inline and the
-    /// Stage-C scans are skipped at `finish` time — running them would
-    /// overwrite already-correct data with byte-identical derived
-    /// values, costing two extra O(N) tape passes per parse.
+    /// window), `push_compound` writes `sib_skip` / `span_hi` /
+    /// `child_off` inline; [`Self::finish`] still runs
+    /// [`crate::finaliser::derive_frame_depth`] to synthesise the
+    /// depth stream a finalise pass demands from a post-order tape,
+    /// then [`crate::finaliser::finalise`] closes the sibling-skip
+    /// column off it.
     ///
     /// Default `false`. The DTA driver flips this to `true` at init
     /// time in W1 once the generated parser emits `frame_depth` inline.
     pub(crate) has_inline_frame_depth: bool,
+    /// Per-record depth byte stream.
+    ///
+    /// Populated by the DTA driver when the builder is opted into
+    /// inline frame-depth emission (see
+    /// [`Self::enable_inline_frame_depth`]). Each `push` or
+    /// `reserve_compound` in the driver stamps one byte here in
+    /// lockstep with the structural columns. [`Self::finish`] hands
+    /// this slice to [`crate::finaliser::finalise`] directly when the
+    /// flag is set, skipping the legacy
+    /// [`crate::finaliser::derive_frame_depth`] reconstruction pass.
+    pub(crate) frame_depth: Vec<u8>,
 }
 
 /// Error state surfaced through [`TapeBuilder::finish`].
@@ -148,6 +160,7 @@ impl TapeBuilder {
             columns: Columns::with_capacity(expected),
             error: None,
             has_inline_frame_depth: false,
+            frame_depth: Vec::new(),
         }
     }
 
@@ -666,17 +679,26 @@ impl TapeBuilder {
         match self.error {
             Some(err) => Err(err),
             None => {
-                // AW.0.1: through the W0 window `has_inline_frame_depth`
-                // is always false — the DTA driver that would set it
-                // lands in W1. The flag is the substrate the W1 wave
-                // flips to skip `derive_frame_depth` in favour of its
-                // own inline stream. Until then `derive_frame_depth`
-                // reconstructs the column (one backward pass) and
-                // `finalise` sweeps it into `sib_skip` / `child_off`
-                // / `span_hi`.
-                let _ = self.has_inline_frame_depth;
-                let frame_depth = crate::finaliser::derive_frame_depth(&self.columns);
-                crate::finaliser::finalise(&mut self.columns, &frame_depth);
+                // AW.1.4: when the DTA driver has populated
+                // `self.frame_depth` inline (via the
+                // `enable_inline_frame_depth` opt-in), pass the pre-
+                // populated stream to `finalise` directly and skip
+                // the `derive_frame_depth` reconstruction. Otherwise
+                // (legacy post-order path), reconstruct the depth
+                // column from `child_off` first.
+                if self.has_inline_frame_depth {
+                    debug_assert_eq!(
+                        self.frame_depth.len(),
+                        self.columns.len(),
+                        "inline frame_depth length {} != columns length {}",
+                        self.frame_depth.len(),
+                        self.columns.len(),
+                    );
+                    crate::finaliser::finalise(&mut self.columns, &self.frame_depth);
+                } else {
+                    let frame_depth = crate::finaliser::derive_frame_depth(&self.columns);
+                    crate::finaliser::finalise(&mut self.columns, &frame_depth);
+                }
                 Ok(Tape {
                     columns: self.columns,
                 })
@@ -704,6 +726,49 @@ impl TapeBuilder {
     #[inline]
     pub fn columns_mut(&mut self) -> &mut Columns {
         &mut self.columns
+    }
+
+    /// Mutable handle on the in-progress per-record frame_depth
+    /// stream.
+    ///
+    /// Populated by the DTA driver in lockstep with column writes
+    /// when the builder is opted into inline frame-depth emission.
+    /// [`Self::finish`] reads this slice directly to skip the
+    /// `derive_frame_depth` reconstruction pass the legacy path
+    /// needs.
+    #[inline]
+    pub fn frame_depth_mut(&mut self) -> &mut Vec<u8> {
+        &mut self.frame_depth
+    }
+
+    /// Run the DTA driver against `input` and write its output
+    /// directly into this builder.
+    ///
+    /// The DTA walker needs simultaneous `&mut` access to the
+    /// builder's [`Columns`] and per-record `frame_depth` stream.
+    /// Exposing both accessors from the outside costs the caller a
+    /// split-borrow dance; this method takes them internally and
+    /// forwards them to [`crate::driver::dta_run`] in one call.
+    ///
+    /// On success, the builder's columns and `frame_depth` are
+    /// populated and a subsequent [`Self::finish`] closes the
+    /// tape via the inline-frame-depth [`crate::finaliser::finalise`]
+    /// path.
+    pub fn dta_run_into<'t>(
+        &mut self,
+        table: &'t crate::dta::DtaTable,
+        input: &'t [u8],
+        scanner: &'t dyn crate::driver::RegexScanner,
+        psi: &mut crate::psi::PayloadStream,
+    ) -> Result<crate::tape::TapeOffset, crate::driver::DtaError> {
+        crate::driver::dta_run(
+            table,
+            input,
+            scanner,
+            &mut self.columns,
+            psi,
+            &mut self.frame_depth,
+        )
     }
 
     /// Access the in-progress tape view for debug inspection.

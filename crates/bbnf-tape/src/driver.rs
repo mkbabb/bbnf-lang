@@ -90,7 +90,9 @@ pub const COUNTER_INLINE_SLOTS: usize = 16;
 ///
 /// Pushed when the driver enters a `Seq` / `Repeat` / `ShuntingYard`
 /// state; popped when the child list is exhausted (or the Repeat body
-/// fails). Size kept at 32 B so two frames share one cache line.
+/// fails). Size widened to 40 B in W2.1 to carry Repeat iteration
+/// bookkeeping (`last_pos`, `lo`/`hi`, `counter_optional_flag`) without
+/// a second allocation.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct Frame {
@@ -123,6 +125,70 @@ pub struct Frame {
     /// The frame's kind tag as a tape TapeKind discriminant. Computed
     /// once at push to avoid re-deriving at pop.
     pub tape_kind: TapeKind,
+    /// Byte position at the start of the current iteration (Repeat)
+    /// or at frame entry (all other kinds). Used by the Repeat arm to
+    /// detect position stagnation for the unbounded `*` case.
+    pub last_pos: u32,
+    /// Lower bound for Repeat frames (inclusive); unused for other
+    /// kinds. Saturated to `u16::MAX`.
+    pub lo: u16,
+    /// Upper bound for Repeat frames (inclusive); unused for other
+    /// kinds. Saturated to `u16::MAX` which the arm treats as
+    /// unbounded.
+    pub hi: u16,
+    /// Repeat counter-optional flag (AV.3.2). Non-zero when the
+    /// owning rule appears in `table.counter_optional_rules` — in
+    /// that case, position-stagnant iterations count toward `lo`.
+    pub counter_optional_flag: u8,
+}
+
+/// One entry on the ShuntingYard reducer's auxiliary operator stack.
+///
+/// The reducer consults this stack to decide when to emit an operator
+/// compound. Each entry records enough to re-emit the binary compound
+/// correctly: `op_rule` + `op_discriminant` + the LHS tape offset the
+/// compound will point at via `child_off`.
+#[derive(Clone, Copy, Debug)]
+pub struct OpStackEntry {
+    /// Rule id whose variant_idx the runtime threads into the pushed
+    /// compound.
+    pub op_rule: DtaRuleId,
+    /// Which Alt branch index within `op_rule` — the typed payload's
+    /// u8 discriminant.
+    pub op_discriminant: u8,
+    /// Precedence bucket (higher = tighter binding).
+    pub precedence: u8,
+    /// Left vs right associativity.
+    pub associativity: crate::dta::DtaAssociativity,
+    /// Tape index of the LHS operand's root — used as `child_off` for
+    /// the eventual emitted op compound.
+    pub lhs_idx: u32,
+    /// Byte offset where the LHS span began — the emitted compound's
+    /// `span_lo`.
+    pub lhs_span_lo: u32,
+}
+
+/// Snapshot of the output buffers + stack state captured at a Repeat
+/// frame's iteration boundary.
+///
+/// The Repeat arm's body-failure logic restores the walker to this
+/// snapshot when the body fails with `counter >= lo`, allowing the
+/// Repeat to close at the current count rather than propagate the
+/// failure. One snapshot per live Repeat frame; slot indexed by the
+/// frame's `counter_idx` (which doubles as the iter-savepoint slot).
+#[derive(Clone, Copy, Debug)]
+pub struct IterSavepoint {
+    /// `columns.len()` at iteration start.
+    pub cols_len: u32,
+    /// `frame_depth.len()` at iteration start.
+    pub fd_len: u32,
+    /// `psi.len()` at iteration start.
+    pub psi_len: u32,
+    /// Byte position at iteration start.
+    pub pos: u32,
+    /// `FrameStack` length state at iteration start — restored with
+    /// [`FrameStack::restore`].
+    pub stack: FrameStackSavepoint,
 }
 
 /// Byte-aligned stack of live [`Frame`]s.
@@ -138,6 +204,41 @@ pub struct FrameStack {
     inline_len: u8,
     /// Parallel counter register column.
     pub counters: Vec<u32>,
+    /// Auxiliary operator stack for the ShuntingYard reducer. Kept
+    /// alongside the frame stack so savepoints can snapshot it
+    /// atomically with the other structural columns. Realistic chain
+    /// depths are ≤ 6 (research/03 §2); inline 8 avoids the heap edge
+    /// in the hot path while remaining `Vec`-backed for spill safety.
+    pub op_stack: Vec<OpStackEntry>,
+    /// Parallel iteration-savepoint column for live Repeat frames.
+    /// Indexed by the Repeat frame's `counter_idx`. An iteration
+    /// savepoint is written at each iteration start so body-failure
+    /// handling can restore and close the compound at `counter >=
+    /// lo`.
+    pub iter_savepoints: Vec<IterSavepoint>,
+}
+
+/// Savepoint captured by [`FrameStack::savepoint`] — used by the
+/// `AltLinear` arm for branch backtracking and by Repeat iteration
+/// bookkeeping.
+///
+/// Records the `inline_len`, `overflow.len()`, `counters.len()`,
+/// `op_stack.len()`, and `iter_savepoints.len()` at capture time. On
+/// restore, each buffer truncates back to the captured length; inline
+/// frames are truncated via `inline_len` alone (the underlying array
+/// is overwritten in place by future pushes).
+#[derive(Clone, Copy, Debug)]
+pub struct FrameStackSavepoint {
+    /// `inline_len` at capture time.
+    pub inline_len: u8,
+    /// `overflow.len()` at capture time.
+    pub overflow_len: u32,
+    /// `counters.len()` at capture time.
+    pub counters_len: u32,
+    /// `op_stack.len()` at capture time.
+    pub op_stack_len: u32,
+    /// `iter_savepoints.len()` at capture time.
+    pub iter_savepoints_len: u32,
 }
 
 impl FrameStack {
@@ -156,12 +257,18 @@ impl FrameStack {
             parent_rec: 0,
             child_mark: 0,
             tape_kind: TapeKind::Rule,
+            last_pos: 0,
+            lo: 0,
+            hi: 0,
+            counter_optional_flag: 0,
         };
         Self {
             inline: [template; STACK_INLINE_DEPTH],
             overflow: Vec::new(),
             inline_len: 0,
             counters: Vec::with_capacity(COUNTER_INLINE_SLOTS),
+            op_stack: Vec::with_capacity(8),
+            iter_savepoints: Vec::with_capacity(COUNTER_INLINE_SLOTS),
         }
     }
 
@@ -213,6 +320,37 @@ impl FrameStack {
         }
         let idx = (self.inline_len - 1) as usize;
         Some(&mut self.inline[idx])
+    }
+
+    /// Capture a savepoint — the full stack's length state so a
+    /// caller can restore it after a failed branch probe.
+    ///
+    /// Infrastructure for the `AltLinear` arm. Not a separate module
+    /// because the savepoint is intimately tied to `FrameStack`'s
+    /// internal lengths and the two are never used independently.
+    #[inline]
+    pub fn savepoint(&self) -> FrameStackSavepoint {
+        FrameStackSavepoint {
+            inline_len: self.inline_len,
+            overflow_len: self.overflow.len() as u32,
+            counters_len: self.counters.len() as u32,
+            op_stack_len: self.op_stack.len() as u32,
+            iter_savepoints_len: self.iter_savepoints.len() as u32,
+        }
+    }
+
+    /// Restore the stack to a prior savepoint. Truncates each backing
+    /// buffer to the captured length; no cloning, no deep restore —
+    /// only the lengths matter because every push either overwrites
+    /// an inline slot or appends to a `Vec`, so future pushes paper
+    /// over any stale data beyond the truncation boundary.
+    #[inline]
+    pub fn restore(&mut self, sp: FrameStackSavepoint) {
+        self.inline_len = sp.inline_len;
+        self.overflow.truncate(sp.overflow_len as usize);
+        self.counters.truncate(sp.counters_len as usize);
+        self.op_stack.truncate(sp.op_stack_len as usize);
+        self.iter_savepoints.truncate(sp.iter_savepoints_len as usize);
     }
 }
 
@@ -361,9 +499,10 @@ fn dta_run_with_log(
         match dispatch_one(
             table, input, scanner, columns, psi, frame_depth, &mut stack,
             state, &mut pos,
-        )? {
-            StepResult::Next(next) => state = next,
-            StepResult::Done => break,
+        ) {
+            Ok(StepResult::Next(next)) => state = next,
+            Ok(StepResult::Done) => break,
+            Err(e) => return Err(e),
         }
     }
     if (pos as usize) < input.len() {
@@ -394,9 +533,10 @@ fn dta_run_core(
         match dispatch_one(
             table, input, scanner, columns, psi, frame_depth, &mut stack,
             state, &mut pos,
-        )? {
-            StepResult::Next(next) => state = next,
-            StepResult::Done => break,
+        ) {
+            Ok(StepResult::Next(next)) => state = next,
+            Ok(StepResult::Done) => break,
+            Err(e) => return Err(e),
         }
     }
     if (pos as usize) < input.len() {
@@ -409,6 +549,40 @@ fn dta_run_core(
 enum StepResult {
     Next(DtaStateId),
     Done,
+}
+
+/// Nested walker that drives dispatch from `entry_state` until the
+/// stack depth returns to `stop_depth` (the Alt-frame boundary). On
+/// success, returns the next state the outer walker should dispatch,
+/// or [`StepResult::Done`] when the stack fully drains. On syntax
+/// failure, returns the error so the caller can restore the savepoint
+/// and try the next branch.
+fn try_branch(
+    table: &DtaTable,
+    input: &[u8],
+    scanner: &dyn RegexScanner,
+    columns: &mut Columns,
+    psi: &mut PayloadStream,
+    frame_depth: &mut Vec<u8>,
+    stack: &mut FrameStack,
+    entry_state: DtaStateId,
+    pos: &mut u32,
+    stop_depth: u8,
+) -> Result<StepResult, DtaError> {
+    let mut state = entry_state;
+    loop {
+        match dispatch_one(
+            table, input, scanner, columns, psi, frame_depth, stack, state, pos,
+        )? {
+            StepResult::Next(next) => {
+                state = next;
+                if stack.depth() <= stop_depth {
+                    return Ok(StepResult::Next(next));
+                }
+            }
+            StepResult::Done => return Ok(StepResult::Done),
+        }
+    }
 }
 
 fn dispatch_one(
@@ -430,7 +604,7 @@ fn dispatch_one(
         DtaState::Epsilon => {
             // No column emission, no byte advance — step to the
             // parent's next child (or terminate).
-            advance_or_pop(columns, frame_depth, stack, *pos)
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, stack, pos)
         }
         DtaState::Literal { text } => {
             let bytes = text.as_bytes();
@@ -446,7 +620,7 @@ fn dispatch_one(
             let lo = *pos;
             *pos = end as u32;
             emit_leaf(columns, frame_depth, stack, TapeKind::Literal, lo, *pos);
-            advance_or_pop(columns, frame_depth, stack, *pos)
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, stack, pos)
         }
         DtaState::Regex { pattern } => {
             let match_len = scanner
@@ -466,7 +640,7 @@ fn dispatch_one(
             // common numeric payload. The emitter-driven lowering in
             // AW.1.2 threads the right kind through.
             psi.push(PayloadJob::new(rec_idx, lo, *pos, PayloadKind::F64, 0));
-            advance_or_pop(columns, frame_depth, stack, *pos)
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, stack, pos)
         }
         DtaState::Seq { children, frame } => {
             // Reserve the parent row — pre-order: parent sits at the
@@ -490,11 +664,17 @@ fn dispatch_one(
                 parent_rec,
                 child_mark,
                 tape_kind,
+                last_pos: *pos,
+                lo: 0,
+                hi: 0,
+                counter_optional_flag: 0,
             });
             if children.is_empty() {
                 // Degenerate Seq — close immediately.
                 close_compound(columns, stack, *pos);
-                return advance_or_pop(columns, frame_depth, stack, *pos);
+                return advance_or_pop_with(
+                    Some(table), Some(input), columns, frame_depth, stack, pos,
+                );
             }
             Ok(StepResult::Next(children[0]))
         }
@@ -529,12 +709,16 @@ fn dispatch_one(
             Ok(StepResult::Next(chosen))
         }
         DtaState::AltLinear { branches } => {
-            // Linear Alt branches are attempted in order. This arm is
-            // reached when FIRST sets did not admit a byte dispatch;
-            // the driver commits to each branch in turn and backtracks
-            // on failure. W1 implements a single-probe commit — the
-            // first branch wins. The AX backtracking substrate turns
-            // this into a real backtracking Alt with savepoints.
+            // Linear Alt: attempt each branch in order with savepoint
+            // backtracking. On entry we push an Alt frame that will
+            // wrap the chosen branch in a compound; the Alt frame's
+            // `cursor` records the selected branch index for the
+            // emitter's variant_idx stamp.
+            //
+            // The savepoint restore truncates `psi` alongside columns
+            // and frame_depth — this is the AV.0.1 Bug-1 carry-forward:
+            // a branch's payload writes land on the correct side of
+            // the savepoint, so subsequent branches see a clean PSI.
             if branches.is_empty() {
                 return Err(DtaError::Syntax {
                     offset: *pos,
@@ -542,23 +726,98 @@ fn dispatch_one(
                     failing_rule: DtaRuleId(u32::MAX),
                 });
             }
-            if let Some(top) = stack.top_mut() {
-                if matches!(top.kind, DtaFrameKind::Alt) {
-                    top.cursor = branches[0].0;
+
+            let start_depth = stack.depth();
+            let start_pos = *pos;
+
+            // Reserve an Alt compound frame. The branch's subtree is
+            // emitted into the compound's child run; on successful
+            // branch close, the Alt frame's cursor carries the branch
+            // index (the variant_idx).
+            let parent_rec = columns.len() as u32;
+            reserve_compound(columns, frame_depth, start_depth, TapeKind::Alt, *pos);
+            let child_mark = columns.len() as u32;
+            stack.push(Frame {
+                kind: DtaFrameKind::Alt,
+                counter_idx: u8::MAX,
+                cursor: 0,
+                children: &[],
+                repeat_inner: DtaStateId::NONE,
+                parent_rec,
+                child_mark,
+                tape_kind: TapeKind::Alt,
+                last_pos: *pos,
+                lo: 0,
+                hi: 0,
+                counter_optional_flag: 0,
+            });
+
+            // Savepoint AFTER pushing the Alt frame so a failed branch
+            // restores the stack to exactly "Alt frame pushed, no body
+            // yet".
+            let sp_after_push = stack.savepoint();
+            let cols_len_after_push = columns.len();
+            let fd_len_after_push = frame_depth.len();
+            let psi_len_after_push = psi.len();
+
+            let mut last_err: Option<DtaError> = None;
+            for (branch_idx, &branch) in branches.iter().enumerate() {
+                *pos = start_pos;
+                // Stamp the branch index onto the Alt frame. Writable
+                // even after a failed attempt because the cursor is
+                // refreshed below; only the successful branch's index
+                // persists to close_compound.
+                if let Some(top) = stack.top_mut() {
+                    top.cursor = branch_idx as u16;
+                }
+                match try_branch(
+                    table,
+                    input,
+                    scanner,
+                    columns,
+                    psi,
+                    frame_depth,
+                    stack,
+                    branch,
+                    pos,
+                    start_depth,
+                ) {
+                    Ok(next) => return Ok(next),
+                    Err(e @ DtaError::Syntax { .. }) => {
+                        // Restore columns + frame_depth + psi + stack
+                        // back to the post-push savepoint. The psi
+                        // truncation closes Bug-1 (AV.0.1) by making
+                        // sure the failed branch's payload writes do
+                        // not leak into the next branch's view.
+                        columns.truncate(cols_len_after_push);
+                        frame_depth.truncate(fd_len_after_push);
+                        psi.truncate(psi_len_after_push);
+                        stack.restore(sp_after_push);
+                        last_err = Some(e);
+                    }
+                    Err(e) => return Err(e),
                 }
             }
-            Ok(StepResult::Next(branches[0]))
+
+            // All branches exhausted — propagate the last syntax error.
+            // Pop the Alt frame (it never successfully closed) and
+            // restore columns/psi past its parent-row reservation.
+            columns.truncate(parent_rec as usize);
+            frame_depth.truncate(parent_rec as usize);
+            // Stack already restored to post-push; pop the Alt frame.
+            stack.pop();
+            Err(last_err.unwrap_or(DtaError::Syntax {
+                offset: start_pos,
+                failing_state: state,
+                failing_rule: DtaRuleId(u32::MAX),
+            }))
         }
-        DtaState::Repeat { inner, lo: _, hi: _, .. } => {
-            // Repeat opens a frame whose counter tracks iteration
-            // count; the AV.3.2 counter-optional marker extends this
-            // to admit empty bodies. W1 implements the greedy
-            // baseline — enter the body, advance-or-pop consults the
-            // Repeat frame on each body completion to decide whether
-            // to re-enter or emit the compound close.
-            //
-            // `child_mark = parent + 1` under pre-order — see the
-            // AW.1.10 note on `DtaState::Seq` above.
+        DtaState::Repeat { inner, lo: _, hi: _, counter_optional: _ } => {
+            // W2.1 Commit 1 lands AltLinear only. Repeat iteration
+            // semantics (lo..=hi loop + body-failure absorption) land
+            // in the follow-on commit; this commit keeps the single-
+            // iteration behaviour for the Repeat arm so non-Alt
+            // grammars continue to function through W2.1 Commit 1.
             let parent_rec = columns.len() as u32;
             reserve_compound(columns, frame_depth, stack.depth(), TapeKind::Rule, *pos);
             let child_mark = columns.len() as u32;
@@ -571,17 +830,18 @@ fn dispatch_one(
                 parent_rec,
                 child_mark,
                 tape_kind: TapeKind::Rule,
+                last_pos: *pos,
+                lo: 0,
+                hi: 0,
+                counter_optional_flag: 0,
             });
             Ok(StepResult::Next(inner))
         }
         DtaState::ShuntingYard { head, .. } => {
-            // The shunting-yard loop collapses an operator-precedence
-            // chain into one state. W1 enters the head operand; full
-            // operator-precedence dispatch with the precedence table
-            // lands in W4.6 (Pratt lowering). For now, treat as a
-            // forward ref to the head state — the chain semantics
-            // follow the normal Seq / Ref path until the Pratt
-            // frontend takes over.
+            // W2.1 Commit 1 lands AltLinear only. Operator-precedence
+            // reduction for the ShuntingYard arm lands in the follow-
+            // on commit; this commit forwards to `head` so non-SY
+            // grammars continue to function.
             Ok(StepResult::Next(head))
         }
     }
@@ -651,6 +911,13 @@ fn close_compound(columns: &mut Columns, stack: &FrameStack, pos: u32) {
             columns.child_off[parent] = TapeOffset(frame.child_mark);
             columns.flags[parent] |= 0x40;
         }
+        // Stamp variant_idx (low 6 bits) for Alt frames — the
+        // AltLinear / ByteDispatch recorded the branch index on
+        // `cursor` at branch-select time.
+        if matches!(frame.kind, DtaFrameKind::Alt) {
+            let variant = (frame.cursor as u8) & 0x3F;
+            columns.flags[parent] = (columns.flags[parent] & 0xC0) | variant;
+        }
     }
 }
 
@@ -668,13 +935,21 @@ fn stack_top(stack: &FrameStack) -> Option<&Frame> {
 }
 
 /// Advance the topmost frame's cursor; pop and propagate when the
-/// frame's child list is exhausted. Returns the next state to
-/// dispatch, or [`StepResult::Done`] when the stack drains.
-fn advance_or_pop(
+/// frame's child list is exhausted.
+///
+/// Takes optional `table` / `input` references so the Repeat +
+/// ShuntingYard arms (landing in the W2.1 follow-on commits) can
+/// consult compile-time metadata and peek operator bytes. Commit 1's
+/// AltLinear path does not exercise either parameter — the plumbing
+/// is pre-wired to keep the call-site API stable across the W2.1
+/// series.
+fn advance_or_pop_with(
+    _table: Option<&DtaTable>,
+    _input: Option<&[u8]>,
     columns: &mut Columns,
     _frame_depth: &mut Vec<u8>,
     stack: &mut FrameStack,
-    pos: u32,
+    pos: &mut u32,
 ) -> Result<StepResult, DtaError> {
     loop {
         let Some(top) = stack.top_mut() else {
@@ -689,21 +964,23 @@ fn advance_or_pop(
             }
             DtaFrameKind::Alt => {
                 // Alt frames resolve on the first successful branch —
-                // the ByteDispatch / AltLinear stamp is already
-                // recorded in `cursor`. Close and pop.
+                // the AltLinear arm already stamped `cursor` with the
+                // branch index, and the branch's subtree sits inside
+                // the Alt compound's child run. Close and pop.
             }
             DtaFrameKind::Repeat => {
-                // Greedy Repeat: re-enter the body. W1 exits after
-                // the first iteration — the backtracking substrate
-                // in AX turns this into a proper lo..=hi loop.
+                // W2.1 Commit 1: single-iteration behaviour. Full
+                // lo..=hi iteration + body-failure absorption land in
+                // the Repeat-arm follow-on commit.
             }
             DtaFrameKind::ShuntingYard => {
-                // Same shape as Alt — the precedence-driven reducer
-                // lands in W4.6.
+                // W2.1 Commit 1: forward-ref behaviour. Operator-
+                // precedence reducer lands in the SY-arm follow-on
+                // commit.
             }
         }
         // Close the compound and pop.
-        close_compound(columns, stack, pos);
+        close_compound(columns, stack, *pos);
         stack.pop();
     }
 }

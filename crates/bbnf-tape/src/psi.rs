@@ -289,6 +289,14 @@ impl PayloadStream {
         self.jobs.is_empty()
     }
 
+    /// Truncate the job stream to `new_len` jobs. Used by the DTA
+    /// walker's `AltLinear` backtracking to discard payload writes
+    /// from a failed branch before probing the next one.
+    #[inline]
+    pub fn truncate(&mut self, new_len: usize) {
+        self.jobs.truncate(new_len);
+    }
+
     /// Whether the parallel Stage-B path should fire for an input of
     /// `input_len` bytes given the grammar's profile.
     ///

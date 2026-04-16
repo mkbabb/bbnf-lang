@@ -160,6 +160,26 @@ impl Columns {
         self.kinds.is_empty()
     }
 
+    /// Truncate the six structural columns + `child_off` to `new_len`
+    /// records. Typed-payload columns are NOT truncated here — they
+    /// are written by Stage B once the structural pass is complete,
+    /// so backtracking inside Stage A cannot leak partial payload
+    /// writes.
+    ///
+    /// Used by the DTA walker's `AltLinear` backtracking to discard
+    /// structural rows pushed by a failed branch before probing the
+    /// next one.
+    #[inline]
+    pub fn truncate(&mut self, new_len: usize) {
+        self.kinds.truncate(new_len);
+        self.flags.truncate(new_len);
+        self.extra.truncate(new_len);
+        self.span_lo.truncate(new_len);
+        self.span_hi.truncate(new_len);
+        self.sib_skip.truncate(new_len);
+        self.child_off.truncate(new_len);
+    }
+
     /// Append one structural row across the six structural columns
     /// plus `child_off`, returning the row's position.
     ///

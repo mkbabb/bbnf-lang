@@ -27399,6 +27399,7 @@ mod __bbnfbootstrap_emit_impl {
         pub fn run<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -27414,8 +27415,6 @@ mod __bbnfbootstrap_emit_impl {
             let pos: &mut u32 = &mut pos_owned;
             let mut slot_owned: u32 = 0;
             let slot: &mut u32 = &mut slot_owned;
-            let idx_owned = ::bbnf::runtime::tape::stage1::StructuralIndex::new();
-            let idx: &::bbnf::runtime::tape::stage1::StructuralIndex = &idx_owned;
             let boundary_ws = ::bbnf::runtime::tape::first_ws_pattern(table);
             if let ::core::option::Option::Some(pat) = boundary_ws {
                 ::bbnf::runtime::tape::trim_with_pattern(scanner, pat, input, pos);
@@ -37874,12 +37873,13 @@ mod __bbnfbootstrap_emit_impl {
     pub fn dta_run_BbnfBootstrap<__S: ::bbnf::runtime::tape::RegexScanner>(
         input: &[u8],
         scanner: &__S,
+        idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
         columns: &mut ::bbnf::runtime::tape::Columns,
         psi: &mut ::bbnf::runtime::tape::PayloadStream,
         frame_depth: &mut ::std::vec::Vec<u8>,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
-        __dta_walker_inline::run::<__S>(input, scanner, columns, psi, frame_depth)
+        __dta_walker_inline::run::<__S>(input, scanner, idx, columns, psi, frame_depth)
     }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
@@ -55784,11 +55784,16 @@ mod __bbnfbootstrap_emit_impl {
             );
             builder.enable_inline_frame_depth();
             let mut psi = psi_with_capacity(input.len());
+            const STRUCTURAL_ALPHABET: ::bbnf::runtime::scan::StructuralAlphabet =
+                ::bbnf::runtime::scan::StructuralAlphabet::from_profile(&GRAMMAR_PROFILE);
+            let idx =
+                ::bbnf::runtime::scan::scan_structural(input.as_bytes(), &STRUCTURAL_ALPHABET);
             let root_off = {
                 let (columns, frame_depth) = builder.columns_and_frame_depth_mut();
                 dta_run_BbnfBootstrap(
                     input.as_bytes(),
                     &DTA_SCANNER,
+                    &idx,
                     columns,
                     &mut psi,
                     frame_depth,

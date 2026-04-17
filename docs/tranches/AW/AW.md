@@ -7,16 +7,25 @@
 > [`AW-II.md`](./AW-II.md) carries the DTA self-host round-trip
 > (lowering pipeline migration off fn-per-rule tape-shape
 > assumptions onto DTA's Seq-wrapped structural layer).
-> [`AW-III.md`](./AW-III.md) carries DTA correctness + viability
-> validation: Cluster A/C/D residuals close, 67 `#[ignore]`
-> audit, samply viability profile, minimum-viable lever subset.
-> [`AW-IV.md`](./AW-IV.md) (formerly the plan named AW-III)
-> carries PSI rayon, ShapeRef dispatch, PHF/SIMD keyword tables,
-> selector classifier, scanner closure, document-parallel parse,
-> bloom + GADT dedup, Pratt generalisation, parity harnesses,
-> visitor API, bench parity. `FINAL.md` composes per-letter;
-> this file preserves the original plan as reference; AW-I.md
-> through AW-IV.md are authoritative for execution.
+> [`AW-III.md`](./AW-III.md) is the **fused correctness + architectural-
+> transposition** tranche: Cluster A/C/D residuals close, 67 `#[ignore]`
+> audit, then the three general emitter passes that flatten the DTA
+> interpreter into a per-grammar specialised tape automaton —
+> walker-specialisation pass + stage-1 SIMD structural-bitmap pass + fused
+> SoA write API — plus activation of the five emitter-mined consumers
+> (ShapeRef, PHF, ClassifyByte, direct-to-struct, Pratt const-fold). Hard
+> gate: **strict-better-than post-AU on ≥ 15/19 entries**. Six waves; no
+> deferrals.
+> [`AW-IV.md`](./AW-IV.md) is the **granular exceed + parity harnesses**
+> tranche: AVX2 widening, scanner PaddedView migration + cluster
+> consolidation, NEON 17-digit float scan, bloom + GADT dedup +
+> grammar-level pattern hoisting, document-parallel fork over the AW-III
+> stage-1 index, `reduce_column<C, R>` visitor + 4-lane SIMD pack,
+> cost-model grid sweep, sonic-rs + lightningcss parity harnesses, AU
+> walker/reader migration carry-overs. Hard gate: **every entry exceeds
+> post-AU; parity harnesses CI-gated**.
+> `FINAL.md` composes per-letter; this file preserves the original plan as
+> reference; AW-I.md through AW-IV.md are authoritative for execution.
 
 AW is the substrate-activation tranche. AV laid every emission
 channel — `pub const DTA_TABLE`, `pub const GRAMMAR_PROFILE`,

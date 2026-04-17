@@ -1,137 +1,129 @@
-# Tranche AW-III — DTA Correctness & Viability Validation
+# Tranche AW-III — Correctness Closure & Architectural Transposition
 
-AW-III closes the correctness arc AW-I + AW-II opened: every residual
-failure deferred from AW-II, every `#[ignore]` that accumulated across
-the preceding tranches, and the load-bearing question this whole arc
-leaves unanswered — **is the DTA-primary parse path viable?**
+AW-III closes the correctness arc AW-I + AW-II opened AND ships the
+architectural transposition that makes the DTA into the kind of flattened
+tape automaton it claims to be. Six waves; one tranche. **No deferrals,
+regardless of newfound scope.**
 
 At AW-II close, workspace sits at **1050 passed / 50 failed / 67 ignored**
 and the 14 measured bench entries show **5–40× regression vs post-AU**.
-The regression is uncomfortable: it could mean the DTA has genuine
-head-room AW-IV's optimisation levers recover, or it could mean the
-state-machine-interpreted walker is fundamentally outclassed by the
-per-rule inlined emitter it replaced. AW-III answers that question
-empirically before AW-IV spends another tranche on optimisation work
-that rests on a premise it hasn't validated.
+The eight-agent research wave (six perf-* + two correctness audits +
+arch-comparison) named the regression's shape: `dispatch_one` is a 14-arm
+tagged-union interpreter floor (~24% self-time everywhere), and a stage-1
+SIMD structural-bitmap pre-pass has been chronically deferred since AQ.5
+(`2f7c1bd4`) and never attempted optimally. The follow-up six-agent wave
+(`aw3-r1` through `r6` + `SYNTHESIS-2-PATH-FORWARD.md`) resolved the
+architectural transposition: three general emitter passes that mechanically
+specialise the walker per grammar from existing IR facts.
 
-Scope triad:
+This is the only path. AW-III ships it.
+
+## Scope
 
 1. **Correctness closure** — every AW-II residual (Cluster A parse
-   failures, Cluster C payload activation, Cluster D integration)
-   lands green. No `#[ignore]` added; every existing one audited
-   (close or delete honestly).
-2. **Viability profile** — samply-measured attribution of the 5–40×
-   regression across representative bench entries. Bottleneck named,
-   not guessed.
-3. **Minimum-viable specialisation** — activate the smallest coherent
-   set of AW-IV levers that the viability profile implicates (typically
-   PSI rayon + ShapeRef dispatch + PHF/SIMD keyword). If closing the
-   regression gap to < 2× of post-AU is infeasible even with every
-   lever active, AW-III declares DTA non-viable and escalates an
-   architecture decision back to the user — not silently-deferred
-   optimisation work.
+   failures, Cluster C payload activation, Cluster D integration) lands
+   green. No `#[ignore]` added; every existing one audited.
+2. **Architectural transposition** — three general emitter passes
+   (walker specialisation, stage-1 SIMD structural-bitmap, fused SoA
+   write API) plus activation of the five emitter-mined consumers
+   (ShapeRef, PHF, ClassifyByte, direct-to-struct, Pratt const-fold).
+3. **19-entry bench matrix** — every entry measurable, **strict-better-
+   than post-AU on ≥ 15/19** with three sheets-small entries documented
+   as small-input tradeoff.
 
-AW-IV's wave schedule (the optimisation arc, formerly AW-III) presumes
-viability proven. AW-III proves or disproves it.
+AW-IV picks up granular exceed + parity harnesses. AX inherits the same
+substrate.
 
 ## Architectural thesis
 
-The DTA walker is a state-machine interpreter over a table emitted per
-grammar. Every input byte visits ≥1 walker state; every state transition
-costs ~10s of CPU cycles (match dispatch + Frame update + PSI/counter
-bookkeeping + branch-prediction miss). The pre-DTA fn-per-rule path
-compiled each rule to an inlined Rust function, letting LLVM inline the
-entire parse tree; the CPU pipeline stayed warm and per-byte cost fell
-below one cycle for common cases.
+The DTA walker today runs at ~29 cyc/byte on JSON twitter vs post-AU RD's
+~1.78 cyc/byte. The 16× gap is canonical state-machine-interpreter
+overhead — implementation, not architectural. simdjson and sonic-rs are
+flattened tape automata at ~0.9–1.0 cyc/byte; the same property is
+recoverable for DTA via three general emitter passes triggered by IR-
+structural properties (no per-grammar hand-written branches, per the §7
+invariant):
 
-The 5–40× regression is exactly the arithmetic of state-machine
-dispatch overhead versus inlined recursive descent. AW-IV's levers
-amortise some of this cost (PSI rayon parallelises writes; ShapeRef
-collapses same-shape rules; PHF + SIMD keyword dispatches the common
-Alt fast-path in one probe), but none of them eliminate the per-byte
-dispatch baseline.
+1. **General walker-specialisation pass** — walks `DtaTable.states` and
+   lowers each `DtaState` variant to inlined Rust; the enum match
+   disappears in the *output* (the table still carries it, replay still
+   consults it). One pass; per-grammar OUTPUT because per-grammar IR.
+   Industry-standard state-machine-as-labelled-blocks pattern.
+2. **General stage-1 SIMD bitmap pass** — reads `compute_structural_
+   alphabet` (already mined; field defaults to `&[]` because no consumer
+   exists) and emits a per-grammar `scan_structural_<grammar>` whose
+   intrinsics are mechanically chosen from alphabet cardinality + digraph
+   count + quote-class count.
+3. **Fused SoA write API** — one bounds-check + 7 unchecked stores
+   replaces 7 `Vec::push` per `reserve_compound` (~15–20% recovery
+   uniformly).
 
-**The load-bearing question**: given every AW-IV lever active, can the
-DTA walker land **within 2× of post-AU** on the 14 measured entries?
-
-- **Yes**: DTA is viable; uniform shape + replay/recovery/incremental-
-  reparse benefits outweigh the modest regression. AW-IV is green-lit.
-- **No**: DTA is a correctness-architecture win with an unacceptable
-  performance cost. AW-III escalates the architecture decision:
-  revert to fn-per-rule (undoing AW-I/II), accept the regression as a
-  documented tradeoff, or find a specialisation not in AW-IV's inventory.
-
-AW-III's W4 viability profile surfaces the data. AW-III's W5 activates
-the minimum-viable specialisation. AW-III's W6 reads the verdict.
+These are not new levers; they are the *general* form of mechanisms the
+AW-IV-as-originally-planned tried to ship per-grammar. The transposition
+is what makes them honest.
 
 ## Invariants
 
 1. **Every `#[ignore]` at AW-II close is audited and dispositioned**.
-   Each existing ignored test resolves as one of: (a) **CLOSE** —
-   test is valid, ignore lifted, passes under current state;
-   (b) **DELETE** — test is stale, removed with commit-message
-   rationale; (c) **INVESTIGATE-then-resolve** — root cause fixed,
-   ignore lifted. Under no circumstance does AW-III close with an
-   ignored-count > 0 that hasn't been dispositioned in this tranche.
-2. **No new `#[ignore]` added in this tranche**. Inherited edict from
-   the operational protocol — strengthened here into a hard gate.
-3. **Producer-side surfaces within scope**. Walker, lifter, emitter,
-   IR passes, all editable. AW-I/II froze them under the "consumer
-   migration" thesis; AW-III's thesis is "close every gap, wherever
-   it lives."
-4. **One path**. Inherited from AW-I. No dual-path builds, no
-   feature-flagged fallbacks, no "legacy mode" shims.
-5. **Viability is measured, not asserted**. W4's samply attribution
-   sidecar on the worst-regression entry (json_twitter @ 16×) is the
-   truth anchor. No claim of "DTA viable" without a profile to cite.
-6. **Bootstrap idempotent at every wave boundary** — inherited.
-7. **Full generalization — no grammar-specific fixes** (added 2026-04-17).
-   Every optimisation mechanism must be a general recogniser pass + general
-   walker arm + general emitter pass, triggered by grammar-structural
-   properties (Alt density, keyword count, shape repetition, operator
-   chain depth), NOT by grammar identity. Concretely:
-   - PHF keyword applies to EVERY Alt-with-literal-branches — JSON's 3
-     keywords + delimiter + escape patterns, BBNF's 8 directives, Sheets'
-     150 functions, CSS's 163 named colours. Same mechanism, different
-     workload density.
-   - Direct-to-struct applies to EVERY named-type with fixed layout —
-     CSS Color, JSON Value tree, BBNF AST, Sheets formula AST. Not a
-     per-grammar opt-in.
-   - `DtaState::ClassifyByte` LUT applies to ANY Alt with mutually-
-     disjoint FIRST sets — CSS compound selectors, BBNF directive
-     prefixes, JSON escape dispatch. Named "classifier" without the
-     "selector" CSS-bias.
-   - ShapeRef applies to EVERY compound with repeat-ratio above a
-     threshold, mined by a general recogniser pass.
-   - Codegen-specialised walker emits `dta_run_{grammar}` for every
-     primary grammar, not a subset.
-   Per-grammar IMPACT varies because grammars have different workload
-   densities (CSS has dense keywords; JSON has sparse); per-grammar
-   MECHANISM does not vary. A fix that only applies to one grammar is
-   rejected as a specialisation smell.
+   CLOSE / DELETE / INVESTIGATE-then-resolve. Under no circumstance does
+   AW-III close with an undispositioned ignored count > 0.
+2. **No new `#[ignore]` added in this tranche.** Inherited edict
+   strengthened into a hard gate.
+3. **Producer-side surfaces in scope at all waves**. Walker, lifter,
+   emitter, IR passes, all editable.
+4. **One path.** No dual-path builds, no feature-flagged fallbacks, no
+   "legacy mode" shims. The walker-specialisation pass replaces the
+   interpretive `dispatch_one` hot path entirely; `dispatch_one` survives
+   only as a cold-path fallback for replay-introspection (the AX
+   substrate consumes it; the parse hot path does not).
+5. **Bootstrap idempotent at every wave boundary.**
+6. **Full generalization — no grammar-specific fixes.** Every emitter
+   pass is triggered by grammar-structural IR properties (alphabet
+   cardinality, Alt density, keyword count, shape repetition, operator
+   chain depth, state count, state visit frequency), NOT by grammar
+   identity. The grammar's name appears nowhere in any hand-written
+   code path. Per-grammar IMPACT varies because grammars have different
+   IR; per-grammar MECHANISM does not vary. A pass that ever branches
+   on grammar name is rejected as a §6 violation — same standard the
+   AW-III-original plan declares for PHF, ClassifyByte, ShapeRef,
+   direct-to-struct.
+7. **No deferrals, regardless of newfound scope.** Inherited from
+   `docs/instructions/README.md` and strengthened: scope-reveal under
+   contact triggers re-plan-with-more-agents (per the operational
+   protocol's parallel-orchestration contract), never silent forward-
+   routing. The architectural transposition is one path, not a wave-
+   budget. If a wave reveals more work, the work belongs to that wave.
+   Escalation is permitted only for hard environmental blockers
+   (compiler bug, authorisation boundary, irrecoverable state); scope-
+   reveal is not an escalation condition.
 
-## Wave schedule (refined 2026-04-17 from SYNTHESIS.md)
+## Wave schedule
 
 | Wave | Scope | Agents | Workspace at close |
 |------|-------|--------|--------------------|
-| W1 | **Six-point DTA payload wiring** + **two structural levers (Pratt `Next` peel + Scanner closure)** | 1 serial (producer-deep) | Cluster 1 + Groups A-ignores close; 47 tests pass-flip |
-| W2 | **Parse completeness** — single EOF/trailing-ws fix closes 4-5 tests; EBNF offset-0; CSV | 1 serial | workspace 0-failed or near-zero |
-| W3 | **Ignored audit + close** — 14 CLOSE lifted, 4 DELETE removed, Group A/B cascade from W1/W2, Groups C/D/E/F/G routed-or-closed per relaxed gate | 2 parallel | ignored count ≤ 27 (or ≤ 10 if scope expanded); every remaining has in-file rationale or successor-tranche reference |
-| W4 | **Viability profile** — samply on json_twitter, sheets_parse_stress, bbnf_ebnf. Decision document | 1 serial | viable / not-viable / conditional landed (pre-staged by SYNTHESIS.md) |
-| W5 | **Minimum-viable specialisation** — ShapeRef consumer + PHF keyword + fused push_compound + selector classifier (CSS) + PSI rayon calibration | 3 parallel | post-AW-III.json within 2× of post-AU on 18/19 entries; Sheets documented tradeoff |
-| W6 | FINAL + full 19-entry bench matrix + close | 1 serial (orchestrator) | `post-AW-III.json` exists; `FINAL.md` exists; green workspace |
+| W1 | Six-point payload wiring + Pratt `Next` peel + scanner closure | 1 serial (producer-deep) | Cluster 1 + Group A ignores close; 47 tests pass-flip; HashMap-per-scan eliminated |
+| W2 | Parse completeness — EOF/trailing-ws + EBNF offset-0 + CSV | 1 serial | workspace 0-failed or near-zero; 5 AW-II-blocked bench entries unblocked |
+| W3 | Ignored audit + close — CLOSE 14 + DELETE 4 + cascades A/B; rest routed | 2 parallel | every remaining ignore has in-file rationale or routing entry |
+| **W4** | **General walker-specialisation pass** + cargo-asm verification | 3 parallel | every grammar's emitted walker shows zero `dispatch_one` symbols on hot path; JSON twitter ≥ 1800 MB/s |
+| **W5** | **General stage-1 SIMD bitmap pass** + driver dual-cursor redesign + fused SoA write API + new `bbnf-simd-scan` crate | 3 parallel | bitmap sustains ≥ 2 GB/s on 1 MB JSON; walker consumes via cursor; fused writes replace `reserve_compound` everywhere; AQ-5 failure modes verified absent |
+| **W6** | Five emitter-mined consumer activations + 19-entry bench matrix + FINAL | 3 parallel + 1 serial close | strict-better than post-AU on ≥ 15/19 entries; `post-AW-III.json` exists; `FINAL-III.md` exists; green workspace |
+
+**Intra-tranche bench checkpoints** (attribution clarity per architectural lever):
+
+- `docs/benchmarks/post-AW-III-W4.json` — walker specialisation only; samply confirms `dispatch_one` symbol absent from hot path.
+- `docs/benchmarks/post-AW-III-W5.json` — + stage-1 SIMD + fused writes + dual-cursor; samply attributes bitmap kernel self-time + cursor contention.
+- `docs/benchmarks/post-AW-III-W6.json` — + five consumer activations; samply attributes ShapeRef hit-rate, PHF share, ClassifyByte share, direct-to-struct share, Pratt const-fold share.
+
+Three sidecar files; each closes its wave; W6's FINAL-III aggregates them into multi-wave history. Per-lever contribution preserved; bigger AW-III win preserved; no consumer deferred.
 
 ## Phases
 
-### W1 — DTA payload wiring + structural levers (refined 2026-04-17)
+### W1 — DTA payload wiring + structural levers
 
-Owner: `crates/bbnf-tape/src/{dta,driver}.rs`, `crates/ir/src/passes/recognizers/dta.rs`, `crates/core/src/backend/rust/emitter/dta.rs`, `crates/ir/src/passes/materialization/**`.
-
-**SYNTHESIS.md refined W1 from a 6-point payload-only wave into an 8-point
-wave** that also closes two structural one-peel/one-field levers whose absence
-blocks Pratt firing on CSS + forces HashMap-lookup-per-scan everywhere. Both
-added fixes are < 100 LOC each and unlock W5 lever work that would otherwise
-be blocked on them.
+Owner: `crates/bbnf-tape/src/{dta,driver}.rs`,
+`crates/ir/src/passes/recognizers/dta.rs`,
+`crates/core/src/backend/rust/emitter/dta.rs`,
+`crates/ir/src/passes/materialization/**`.
 
 **Six payload-wiring points** (Cluster 1 target — 37 tests):
 
@@ -142,39 +134,38 @@ be blocked on them.
 5. Bootstrap regen under the extended schema. Verify idempotent.
 6. `frame_to_tape_kind` promotes Seq → KvPair when the enclosing rule's layout is `KvPair` (Hole #5).
 
-**Two structural one-fix levers** (surface per SYNTHESIS.md):
+**Bug 2b residuals folded into the same wave** (originally AV V0 deferrals; coupled tightly to the Six-point payload wiring; ship together):
 
-7. **Pratt `IrNode::Next` peel** — extend `strip_transparent_owned` at `crates/ir/src/passes/recognizers/dta.rs:885-890` to peel `IrNode::Next(a, b)` alongside `IrNode::Seq`. Unblocks `match_operator_chain_rule` on CSS `calc()` / `min()` / `max()` / `clamp()` — every grammar using `>>` as operator separator. CSS L4's mathExpr + mathProduct Pratt-lift immediately; state count drops; walker dispatch depth drops.
-8. **Scanner closure** — add `pattern_dfa: Arc<Dfa>` field to `DtaState::Regex`; populate at lift time from the compile-time pattern constant. Walker `dispatch_one` Regex arm uses the pre-bound `Arc<Dfa>` directly — no global HashMap lookup, no SipHash, no `Arc::clone` on the hot path. Eliminates 6-33% self-time depending on grammar per P1/P2/P4/P5 attribution.
+- **`pinned_number_drops_f64_payload`** (Sheets `number -> f64`): Map-bodied regex rule needs admission to the layout pass. Extend `scalar_layout_eligible` at `crates/ir/src/passes/payload/layout.rs` to admit Map-bodied rules whose body is a regex match producing a typed scalar payload — F64 / I64 / U64 / Bool / U8.
+- **Sheets `boolean` FALSE branch drops `0u8`**: dispatch composer today requires literal-branch Alts. `boolean` uses regex-branch (`/TRUE/i`, `/FALSE/i`). Extend dispatch composer at `crates/core/src/backend/rust/emitter/dispatch.rs` to admit `Map { Regex, BoolLit }` branches.
+- **3 CSS percentage InlineScalar reader tests**: `payload_u8` reader call sites in `crates/core/tests/css_l4_parity.rs` flip from `#[ignore]` to active once the payload wiring lands. Cascade closes naturally; ensure they're un-ignored at W1 close.
 
-Hard gate: `cargo test --workspace --no-fail-fast` Cluster 1 count drops from 37 → ≤ 5. Scanner closure verifiable via samply comparison: `cached_dfa` / `HashMap::get` drops out of top-20. Pratt peel verifiable via summarise call on CSS L4 DTA — new ShuntingYard state count > 0.
+**Two structural one-fix levers**:
 
-### W2 — Parse completeness (refined with P1/C1 EOF insight)
+7. **Pratt `IrNode::Next` peel** — extend `strip_transparent_owned` at `crates/ir/src/passes/recognizers/dta.rs:885-890` to peel `IrNode::Next(a, b)` alongside `IrNode::Seq`. Unblocks `match_operator_chain_rule` on CSS `calc()` / `min()` / `max()` / `clamp()`. State count drops; walker dispatch depth drops.
+8. **Scanner closure** — add `pattern_dfa: Arc<Dfa>` field to `DtaState::Regex`; populate at lift time from the compile-time pattern constant. Walker `dispatch_one` Regex arm uses the pre-bound `Arc<Dfa>` directly — no global HashMap lookup, no SipHash, no `Arc::clone` on the hot path. Eliminates 6–33% self-time depending on grammar per perf-01..05 attribution.
+
+**Hard gate**: `cargo test --workspace --no-fail-fast` Cluster 1 count drops from 37 → ≤ 5. Scanner closure verifiable via samply: `cached_dfa` / `HashMap::get` drops out of top-20. Pratt peel verifiable via summarise call on CSS L4 DTA — new ShuntingYard state count > 0. Bug 2b: `pinned_number_drops_f64_payload` flips; Sheets `boolean` FALSE flips; 3 percentage tests un-ignored.
+
+### W2 — Parse completeness
 
 Owner: diagnose per-test; fix likely spans `crates/bbnf-tape/src/driver.rs`, `crates/ir/src/passes/recognizers/dta.rs`, `crates/core/src/lower/**`.
-
-**SYNTHESIS.md's load-bearing refinement**: P1 found `json/data` fails at
-offset 35490 of 35491 bytes; `json/canada` fails at 2251050 of 2251051 —
-**both one byte from EOF**. Paired with `css_tailwind` offset 3633741 (near
-end of 3,749,612-byte input) and `css_bootstrap` / `css_normalize`
-truncation, this is **one shared EOF / trailing-whitespace handling gap**
-rather than 4-5 separate large-file bugs. Primary W2 sub-wave is therefore
-a single-fix EOF handling closure.
 
 **Clusters** (13 failures + 1 CSV escalation):
 
 - **Cluster 2 (shared EOF)**: `json_data`, `json_canada`, `parse_data_json`, `parse_canada_json`, `css_tailwind`, `css_bootstrap` truncation, `css_normalize` truncation (7 tests). Walker EOF / trailing-whitespace handling. **Single fix.**
-- **Cluster 3 (EBNF offset-0)**: `ebnf_minimal`, `ebnf_recursive_list`, `ebnf_expr_grammar`, `ebnf_root_has_at_least_one_rule`, `ebnf_prettify::parse_{single,multi}_rule` (6 tests). Every EBNF grammar fails at `Syntax { offset: 0, rule: None }`, including `digit = "0" | "1" ;`. AW-II.W5b's Minus + double-Repeat were necessary but insufficient; remaining upstream gap in `@ws` or first-literal dispatch for EBNF.
+- **Cluster 3 (EBNF offset-0)**: `ebnf_minimal`, `ebnf_recursive_list`, `ebnf_expr_grammar`, `ebnf_root_has_at_least_one_rule`, `ebnf_prettify::parse_{single,multi}_rule` (6 tests). Every EBNF grammar fails at `Syntax { offset: 0, rule: None }`. AW-II.W5b's Minus + double-Repeat were necessary but insufficient; remaining upstream gap in `@ws` or first-literal dispatch for EBNF.
 - **Cluster 5 (CSV Repeat-of-Seq)**: `csv_multi` (1 test) — `csv = record, ( /\r?\n/ >> record ) *` Repeat walker regression at the record-separator boundary.
 
-Hard gate: Cluster 2 + 3 + 5 closed; all 5 AW-II-blocked bench entries measurable (`data`, `canada`, `tailwind`).
+**Hard gate**: Cluster 2 + 3 + 5 closed; all 5 AW-II-blocked bench entries measurable (`data`, `canada`, `tailwind`).
 
-### W3 — Ignored-test audit + close (refined gate)
+### W3 — Ignored-test audit + close
 
 Owner: two parallel agents (C2 audit already produced `ignores-audit.md`).
 
 **Pre-staged dispositions from AW-III.C2** (58 unique source ignores):
-- **CLOSE — 14 tests**: already verified passing when `#[ignore]` lifted (7 in `structural.rs` + 7 in `serialize_roundtrip.rs` including the `css_simple` that AW-I.W2.5 marked Category A). Mechanical attribute lift.
+
+- **CLOSE — 14 tests**: already verified passing when `#[ignore]` lifted. Mechanical attribute lift.
 - **DELETE — 4 tests**: 3 `unreachable!()` stubs + 2 gorgeous visualisation dumps (non-checked-in fixtures). Mechanical test-function deletion with rationale.
 - **INVESTIGATE — 40 tests** across 7 root-cause groups:
   - A (10): CSS percentage + JSON variant_idx — **cascades from W1 payload wiring**.
@@ -185,76 +176,264 @@ Owner: two parallel agents (C2 audit already produced `ignores-audit.md`).
   - F (4): gorgeous prettify multi-rule + pprint-vm hint-semantics drift.
   - G (7): miscellaneous producer-side + test-data.
 
-**Gate refinement** (from SYNTHESIS.md):
-- CLOSE (14) + DELETE (4) + Group A cascade (10) + Group B cascade (1) = **29 tests dispositioned at W3 close**.
-- Residual: **~27 tests** in Groups C/D/E/F/G.
-- The plan's original "ignored ≤ 10" gate is infeasible without expanding scope into Groups C/F/G. Revised gate: **every remaining ignored test has either (a) an in-file comment naming the successor tranche, or (b) a row in `docs/tranches/AW/audit/ignore-routing.md` declaring its destination**.
+**Hard gate**: CLOSE batch lifted + DELETE batch removed + `docs/tranches/AW/audit/ignore-routing.md` exists with successor-tranche mappings for every remaining ignored test.
 
-Artefact inherits `docs/tranches/AW/research/ignores-audit.md` from C2; W3 produces `docs/tranches/AW/audit/ignore-routing.md` with successor-tranche mappings.
+### W4 — General walker-specialisation pass
 
-Hard gate: CLOSE batch lifted + DELETE batch removed + routing document exists covering every remaining ignored test. No ignored test without either in-file rationale or routing entry.
+Owner: 3 parallel agents.
+- (a) IR-side: emitter-pass scaffolding + `state_visit_frequency` mining.
+- (b) Codegen-side: lowering each `DtaState` variant to inlined Rust labels.
+- (c) Driver-side: collapse `dispatch_one` to cold-path replay surface; remove from hot path; verify `cargo asm` clean.
 
-### W4 — Viability profile (pre-staged by SYNTHESIS.md)
+**The pass.** Lives at `crates/core/src/backend/rust/emitter/dta_walker.rs`. Signature:
 
-Owner: serial orchestrator + samply (re-measurement post-W1/W2 to confirm or refute SYNTHESIS.md's pre-stage).
+```rust
+pub fn emit_specialised_walker(
+    grammar: &str,            // symbol-namespace prefix; no behavioural branch
+    table: &DtaTable,         // existing IR fact
+    alphabet: &StructuralAlphabet, // existing IR fact (extended in W5)
+    profile: &GrammarProfile, // existing IR fact
+) -> TokenStream;
+```
 
-**SYNTHESIS.md pre-stage** (from 8-agent research at HEAD `3c33bc35`):
-- **JSON / CSS / BBNF — VIABLE within 2-5× of post-AU**. Scanner closure + ShapeRef + fused push_compound recover the majority. Bench parity practical after W5.
-- **Sheets — NOT VIABLE within 2×**. Modelled ceiling 8-9× residual with full W5 scope. `dispatch_one` tagged-union floor isn't addressed by any AW-IV lever.
+Mechanically lowers `DtaTable.states` to inlined Rust. Per state:
 
-**W4 action**: after W1 + W2 close, re-run samply on `json_twitter`, `sheets_parse_stress`, `bbnf_ebnf`. Compare attribution shifts against SYNTHESIS.md's pre-stage. Commit `docs/tranches/AW/audit/viability-profile.md` as the authoritative decision document.
+- `Seq` → child sequence with frame open/close inlined.
+- `ByteDispatch` → `match input[pos] { ... }` over the table's `[DtaStateId; 256]`.
+- `AltLinear` → savepoint loop with branches inlined.
+- `Regex` → inlined `find_at` against the state's `pattern_dfa: Arc<Dfa>` (W1.8 lift-time closure).
+- `Literal` → byte cmp.
+- `Repeat` → counter-bounded loop.
+- `ShuntingYard` → operator-precedence step using emitted `PRECEDENCE_LUT` (populated by W6 Pratt const-fold consumer).
+- `Ref` → continue dispatch.
 
-**If pre-stage holds** (W4 post-W1/W2 numbers match SYNTHESIS.md predictions):
-- Green-light W5 activation.
-- Sheets escalation for user: accept 8-9× as DTA-architecture tradeoff, OR open new tranche for codegen-specialised per-grammar walkers.
+Transitions resolve at emit time. The output is one function with N labelled blocks and direct control flow — the industry-standard state-machine pattern.
 
-**If pre-stage fails** (W1/W2 closures unlock better-than-expected amortisation, or uncover new bottlenecks):
-- W4 document re-draws the viability envelope.
-- W5 scope expands/contracts accordingly.
+**Hot/cold partitioning** is the only emit-time decision the pass makes, driven by IR cardinality (state count vs LLVM inlining budget — pluggable via the egraph cost model):
 
-Hard gate: decision document exists citing post-W1/W2 samply numbers; user escalation on sheets documented with explicit options.
+- `state_count ≤ HOT_BUDGET` → single function, all states inline.
+- `state_count > HOT_BUDGET` → mine `state_visit_frequency` (same IR fact PHF frequency-ordering uses); hot states inline in the outer loop, cold states emit as `#[cold] #[inline(never)]` siblings called via branch.
 
-### W5 — Structural specialisation (expanded 2026-04-17 — folds in key AW-IV items)
+Both strategies are general; the choice is driven by IR cardinality, not grammar name.
 
-Owner: 3 parallel agents; scope expanded per the "structural, not granular" fold-in directive.
+**Hard gate**: the emitter pass is `pub fn` with no grammar-name branch (`grep` for grammar identifiers in the pass body returns zero hits in conditional branches; only in symbol naming). For every grammar in the corpus, `cargo asm -p bbnf <bench_bin> dta_run_<grammar>` shows no `dispatch_one` symbol in the hot path. JSON twitter bench ≥ 1800 MB/s (sonic-parity ratio ≥ 0.65). The `dispatch_one` enum still exists in `dta.rs` and is still consulted by the cold-path replay surface (AX substrate); it is absent from the parse hot path.
 
-**Primary structural levers** (the 2× envelope reached):
-- **ShapeRef runtime dispatch** — walker-side `push_shape_ref` consumer for the already-emitted `SHAPE_DICT` (13 CSS L4 entries + new JSON + new BBNF dicts emitted by this wave).
-- **PHF keyword tables (universal)** — general emitter pass mining EVERY Alt-with-literal-branches pattern across the grammar, not just "keyword rules". CSS (163-branch namedColor + 72-branch keywords + 92-branch properties); BBNF (directive prefixes + keyword alts); JSON (`true`/`false`/`null` + delimiter dispatch + string-escape table); Sheets (150 function names + operator alts). Branch-count threshold gates emission; the *mechanism* is grammar-agnostic per invariant 7.
-- **Fused `push_compound` write** — replace `reserve_compound`'s 7-vector row with a single struct-write.
-- **`DtaState::ClassifyByte` LUT** — general mechanism for ANY Alt with mutually-disjoint FIRST sets. CSS `compoundSelector` (5-way) + BBNF `directive` (`@`-prefix second-byte) + JSON escape (`\` second-byte) + Sheets function first-letter. Renamed from "selector classifier" to shed CSS-bias per invariant 7.
-- **PSI rayon stage-B CALIBRATION** (folded in from AW-IV.W1.1) — populate `parallel_break_even_bytes` per grammar. No code; only constants from viability samply on canada/data_xl/bootstrap. Folded in because it's literally a handful of constants — not a granular optimisation but a calibration.
+### W5 — Stage-1 SIMD structural bitmap pass + driver redesign + fused SoA write API
 
-**Structural specialisation (folded in from AW-IV.W3, without which viability is not definitively proven)**:
+Owner: 3 parallel agents.
+- (a) IR-side: enrich `compute_structural_alphabet` (digraph_mask, digraph_pairs, quote_classes); new pass for kernel-shape selection.
+- (b) Kernel-side: new crate `bbnf-simd-scan` (NEON kernel + AVX2 sibling + CLMUL/PMULL parity + shift-XOR fallback).
+- (c) Driver-side: dual-cursor redesign + savepoint extension + fused write API + `reserve_compound` migration.
 
-- **W5.6 Codegen-specialised per-grammar walkers** — emit `dta_run_json`, `dta_run_css`, `dta_run_bbnf`, `dta_run_sheets`, `dta_run_ebnf` with inlined `DtaState` arms. **This closes the `dispatch_one` tagged-union floor (~24% self-time) that SYNTHESIS.md flagged as unaddressable by amortisation levers alone.** Without this in AW-III, the Sheets viability question escalates; with it, AW-III definitively answers "yes, DTA is viable."
-- **W5.7 Direct-to-struct expansion (universal)** — extend beyond CSS Color (current sole consumer) to **every named-type with fixed layout**: JSON `Value` tree, BBNF AST (RuleEntry + RhsNode + directive variants), Sheets formula AST (Expr + Literal + Cell + FnCall). Any future grammar with a top-level named-type automatically enters the fast path via the general named-type resolver at `crates/core/src/backend/rust/view/named_types.rs`. Per invariant 7, this is a general mechanism, not per-grammar codegen.
-- **W5.8 Per-grammar Pratt const-fold** — W1.7 landed the `IrNode::Next` peel; W5.8 completes the calibration: per-grammar `PRECEDENCE_LUT` population (CSS 148 operators + BBNF value_expr tower + Sheets arithmetic), const-fold precedence levels into the specialised walker's ShuntingYard arm. Depends on W5.6 specialisation being active; natural extension.
+**The pass.** Lives at `crates/core/src/generate/dta/stage1.rs`. Signature:
 
-**Kept in AW-IV (genuinely granular — micro-optimisation, arch-specific, or consumer-side)**:
-- SIMD u8x32 AVX2 widening (arch-gated x86_64 tuning).
-- Scanner PaddedView migration (arch/perf-specific).
-- Bloom + GADT dedup (modest benefit; optimisation layer).
-- Document-parallel fork (complex, benefit only on large inputs — separate tranche).
-- `reduce_column<C,R>` visitor API (consumer-side, not parse hot path).
-- SIMD 4-lane pack (micro-optimisation).
-- sonic-rs + lightningcss parity harnesses (verification).
-- Full PHF frequency-ordering + length-bucket tail (PHF stays in III; the frequency + bucket refinement is IV granular).
+```rust
+pub fn emit_structural_scanner(
+    grammar: &str,            // symbol prefix
+    alphabet: &StructuralAlphabet,
+) -> TokenStream;
+```
 
-Hard gate (revised): `cargo bench` on the full 19-entry matrix (5 AW-II-blocked entries unblocked at W2) shows **geomean within 2× of post-AU on ALL 19 entries** (no Sheets escalation — W5.6 codegen-specialisation closes the floor). AW-III proves DTA viability definitively; AW-IV delivers the exceed-RD surplus.
+Alphabet IR enriched at `crates/ir/src/passes/sets/structural_alphabet.rs`:
 
-### W6 — FINAL + full bench matrix + close
+- `singletons: BitSet<u8>` — already mined.
+- `digraph_mask: [u64; 4]` — first-byte bitset; **NEW**.
+- `digraph_pairs: &[(u8, u8)]` — second-byte targets per first-byte; **NEW**.
+- `quote_classes: BitSet<u8>` — string-toggle bytes; **NEW**.
 
-Orchestrator serial.
+Pass mechanically chooses kernel shape from cardinality:
 
-1. Full workspace test: 0 failed, ≤ 10 ignored (ideally 0).
-2. Full 19-entry bench matrix (all 5 AW-II-blocked entries now measurable).
-3. `docs/benchmarks/post-AW-III.json` — bench-checkpoint sidecar.
-4. `docs/tranches/AW/FINAL-III.md` — close document with hard-gate attribution.
-5. Update `docs/benchmarks/post-AW.json` multi-wave history with AW-III close entry.
-6. Update `docs/tranches/AW/FINAL-I.md` + `FINAL-II.md` successor chains to reference AW-IV as the optimisation successor.
+- `|singletons| ≤ 8` → nibble-LUT collapse (one `vqtbl1q_u8` per 16-byte lane).
+- `9 ≤ |singletons| ≤ 16` → wide-LUT (lift the `1 << i` cap from R2 §5.1).
+- `|singletons| > 16` → multi-pass cmpeq + OR-reduce.
+- `|digraph_pairs| > 0` → `vextq_u8` shifted-compare per pair, OR into mask.
+- `|quote_classes| > 0` → CLMUL/PMULL parity (x86) or 6-op shift-XOR (NEON).
 
-Hard gate: green workspace; bench matrix within viability envelope or escalated to user; FINAL authored.
+Output type at `crates/bbnf-tape/src/stage1.rs`:
+
+```rust
+pub struct StructuralIndex { pub positions: Vec<u32>, pub kinds: Vec<u8> }
+```
+
+**New crate `bbnf-simd-scan`** holds the architecture-neutral kernel infrastructure (per the §architecture invariants — general-purpose constructs in their own crates). Full structure, no stubs:
+
+```
+crates/bbnf-simd-scan/
+├── Cargo.toml             — workspace member; deps: bbnf-tape (StructuralIndex);
+│                            no other workspace deps
+├── src/
+│   ├── lib.rs             — public API; re-exports per-arch kernels under
+│   │                        cfg-gated modules; `pub fn scan_structural` entry
+│   │                        function dispatches by `target_feature`
+│   ├── alphabet.rs        — `pub struct StructuralAlphabet { singletons,
+│   │                        digraph_mask, digraph_pairs, quote_classes }` (mirrors
+│   │                        IR side); kernel-shape selector
+│   ├── neon.rs            — `#[cfg(target_arch = "aarch64")]` — NEON path:
+│   │                        nibble-LUT collapse via `vqtbl1q_u8`, wide-LUT for
+│   │                        9–16 singletons, `vshrn_n_u16` movemask, `vextq_u8`
+│   │                        digraph compare, 6-op shift-XOR quote parity.
+│   │                        Apple M-class P-core targeted; E-core verified
+│   │                        functional
+│   ├── avx2.rs            — `#[cfg(all(target_arch = "x86_64", target_feature
+│   │                        = "avx2"))]` — `_mm256_loadu_si256` +
+│   │                        `_mm256_cmpeq_epi8` + `_mm256_movemask_epi8`;
+│   │                        PCLMULQDQ quote parity; `tzcnt`-loop compaction
+│   ├── avx512.rs          — `#[cfg(target_feature = "avx512vbmi2")]` —
+│   │                        `_mm512_cmpeq_epi8` + `_mm512_mask_compressstoreu_epi8`
+│   │                        for index compaction; opt-in via build flag
+│   ├── wasm.rs            — `#[cfg(target_arch = "wasm32")]` — `i8x16.swizzle`
+│   │                        + `i8x16.bitmask`; matches NEON shape
+│   ├── scalar.rs          — portable scalar fallback for arches without SIMD
+│   │                        intrinsics; correctness reference for fuzz
+│   ├── compaction.rs      — bitmap → `Vec<u32>` index compaction;
+│   │                        `tzcnt`-loop default; PEXT specialisation under
+│   │                        BMI2 cfg; arch-neutral
+│   └── parity.rs          — quote-state computation: CLMUL where available,
+│                            6-op shift-XOR ladder fallback; arch-neutral
+│                            interface
+├── benches/
+│   └── stage1_throughput.rs — per-arch throughput on canonical corpus:
+│                              twitter, citm, canada (JSON);
+│                              bootstrap, tailwind (CSS)
+└── tests/
+    ├── correctness.rs      — every kernel must produce identical
+    │                         StructuralIndex on the canonical corpus; scalar
+    │                         path is the reference
+    ├── quote_parity.rs     — string-state correctness against escape-rich
+    │                         inputs (twitter, JSON pathological); CLMUL vs
+    │                         shift-XOR equivalence
+    ├── digraph.rs          — CSS `/*` `*/`, BBNF `(*` `*)` `->`, EBNF `(*`
+    │                         `*)` digraph detection
+    └── fuzz.rs             — proptest: random byte sequences; assert
+                              StructuralIndex.positions matches scalar
+                              reference byte-for-byte
+```
+
+The crate is fully implemented at W5 close — no `unimplemented!()`, no
+`todo!()`, no `#[cfg]`-gated empty stubs. Every per-arch path either ships or
+is `#[cfg]`-gated out cleanly with a published-rationale comment (e.g.
+`avx512.rs` may be opt-in if AVX-512 hardware isn't available for testing in
+CI; the path compiles and tests under x86_64 cross-compilation with `RUSTFLAGS=
+"-C target-feature=+avx512vbmi2"`).
+
+**Driver redesign.** `crates/bbnf-tape/src/driver.rs`:
+
+- Replace `pos: u32` cursor with `Cursor<'a> { src: &'a [u8], idx: &'a StructuralIndex, pos: u32, slot: u32 }`.
+- `ByteDispatch` reads `idx.kinds[cursor.slot]`, advances `cursor.slot`.
+- `Regex` scans bounded to `[cursor.pos, idx.positions[cursor.slot])` — no open-ended tail.
+- New `DtaState::ConsumeToNextStructural` → O(1) cursor jump.
+- `WsTrim` collapses to `cursor.pos = idx.positions[cursor.slot]`.
+- `FrameStackSavepoint` gains `slot: u32` (fixes the AQ-5 unsaved-cursor failure mode by extending the existing record — no parallel savepoint structure).
+
+**Fused SoA write API.** `crates/bbnf-tape/src/columns.rs`:
+
+```rust
+impl Columns {
+    pub fn push_compound_fused(&mut self, kind: TapeKind, span_lo: u32) -> u32 {
+        let idx = self.len;
+        if idx >= self.cap { self.grow_all(); }
+        unsafe { /* 7 unchecked stores */ }
+        self.len = idx + 1;
+        idx as u32
+    }
+}
+```
+
+Existing `reserve_compound` migrates to call `push_compound_fused`; old call sites delete entirely (no `#[deprecated]` shim — direct migration per the no-legacy-code invariant).
+
+**Hard gate**: the bitmap kernel sustains ≥ 2 GB/s on 1 MB JSON; walker consumes via the dual cursor; AQ-5 failure modes (scalar quote-parity, duplicated Alt arms, unsaved cursor on checkpoint, disabled WS elision) all verified absent (test fixtures per failure mode). Every `self.<column>.push` site in `driver.rs` hot path is replaced by `push_compound_fused` or `push_leaf_fused`; `grep -n 'self\.\w*\.push' crates/bbnf-tape/src/driver.rs` returns zero for hot-path call sites. samply confirms `reserve_compound` < 5% self-time on every bench.
+
+### W6 — Emitter-mined consumer activations + 19-entry bench matrix + FINAL
+
+Owner: 3 parallel agents + 1 serial close.
+
+**Five emitter-mined consumers**, each a general pass triggered by IR-structural properties. Full implementations; no stubs:
+
+#### W6.1 ShapeRef runtime dispatch
+Owner: `crates/bbnf-tape/src/driver.rs` (compound-emit branch); `crates/bbnf-tape/src/shape_dict.rs`; `crates/core/src/backend/rust/emitter/grammar.rs` for `active_columns` + `shape_dict` population.
+
+Mining pass at `crates/ir/src/passes/recognizers/shape_dict.rs` already exists and emits 13 CSS L4 entries; W6 activates the **consumer**:
+
+```rust
+// In specialised walker compound-emit branch (emitted by W4 walker pass):
+if let Some(ref_idx) = SHAPE_DICT.lookup(shape_hash) {
+    cols.push_shape_ref(span, ref_idx, packed_payload);
+} else {
+    cols.push_compound_fused(kind, span_lo);  // W5 fused write
+    /* ...children... */
+    cols.close_compound(span_hi);
+}
+```
+
+Strict-injective compile-time collision assertion: `emit_shape_dict_arrays` verifies every emitted hash unique per grammar; fails compilation on collision. Runtime walker consults via single indexed load + equality compare, no `columns_range_eq` confirm. View-layer `ShapeRefSyntheticChild` cursor expansion already landed (AV.5.1); W6.1 verifies parity via new `crates/core/tests/shape_ref_view_parity.rs` (walks every CSS L4 declaration in `bootstrap.css`, emits once with dispatch enabled and once with a per-grammar flag disabling it, asserts byte-identical typed-AST projections).
+
+**Hard gate**: `bootstrap.css` declaration record count drops ≥ 30%; `shape_ref_view_parity` test passes; `GRAMMAR_PROFILE.shape_dict` non-empty for CSS L4 + JSON Value tree + BBNF rule shape.
+
+#### W6.2 PHF keyword tables (universal)
+Owner: `crates/core/src/backend/rust/emitter/keyword_dispatch.rs` (new — emitter pass); `crates/ir/src/passes/recognizers/keyword_stats.rs` (new — mining pass).
+
+Emitter mines **every Alt-with-literal-branches** pattern across the grammar (CSS 163-branch namedColor + 72-branch keywords + 92-branch properties; BBNF 8-directive prefixes + keyword Alts; JSON `true`/`false`/`null` + delimiter dispatch + string-escape table; Sheets 150 function names + operator Alts). Threshold gates emission; the *mechanism* is grammar-agnostic per invariant 6.
+
+```rust
+pub fn emit_keyword_phf(
+    grammar: &str,                // symbol-prefix only
+    rule_id: RuleId,
+    branches: &[LiteralBranch],   // mined IR fact
+) -> Option<TokenStream>;
+// Returns None when |branches| < threshold; mechanism is general.
+```
+
+Walker's `AltLinear` arm in the W4-emitted specialised walker consults the PHF directly — one PHF lookup instead of N-branch linear scan or byte-dispatch.
+
+**Hard gate**: `grep -rn 'const [A-Z_]*: \[&\[u8\]' crates/core/src/backend/rust/emitter/` returns 0 (every keyword table PHF-routed). At least one PHF table per primary grammar (CSS, BBNF, Sheets, JSON).
+
+#### W6.3 `DtaState::ClassifyByte` LUT
+Owner: `crates/core/src/backend/rust/emitter/classify_byte.rs` (new); `crates/bbnf-tape/src/dta.rs` (new `DtaState::ClassifyByte` variant + walker arm); `crates/ir/src/passes/recognizers/disjoint_first.rs` (new mining pass).
+
+General mechanism for ANY Alt with mutually-disjoint FIRST sets. CSS `compoundSelector` (5-way) + BBNF `directive` (`@`-prefix second-byte) + JSON escape (`\` second-byte) + Sheets function first-letter — same mechanism, different workload density per invariant 6. Renamed from "selector classifier" to shed CSS bias.
+
+```rust
+DtaState::ClassifyByte {
+    table: &'static [DtaStateId; 256],  // emitted at codegen time
+    fallback: DtaStateId,
+}
+```
+
+Walker arm reads `table[input[pos]]` and dispatches in one indexed load. The W4 walker-specialisation pass inlines this directly; the variant is the wire contract for the table emission.
+
+**Hard gate**: samply on bootstrap + tailwind shows `__compoundSelector` self-time < 15% (was 33–43% pre-AU). At least one `ClassifyByte` table emitted per primary grammar where mining identifies disjoint-FIRST Alt.
+
+#### W6.4 Direct-to-struct expansion (universal)
+Owner: `crates/core/src/backend/rust/view/named_types.rs` (existing — extend resolver); `crates/core/src/backend/rust/emitter/grammar.rs` (extend `emit_view_impl`).
+
+Extend beyond CSS Color (current sole consumer) to every named-type with fixed layout: JSON `Value` tree, BBNF AST (`RuleEntry` + `RhsNode` + directive variants), Sheets formula AST (`Expr` + `Literal` + `Cell` + `FnCall`). The universal resolver mines `TypeDesc::Named` annotations from the grammar and emits the projection without per-grammar opt-in. Any future grammar with a top-level named type automatically enters the fast path.
+
+```rust
+pub fn resolve_named_type(
+    type_desc: &TypeDesc,         // mined IR fact
+) -> Option<NamedTypeBinding>;
+// Returns None when the type isn't fixed-layout; emitter falls through to
+// the generic `view().as_value()` accessor.
+```
+
+**Hard gate**: every primary grammar's top-level type projects via the resolver; `crates/core/tests/{json_value_parity, css_color_parity, bbnf_ast_parity, sheets_expr_parity}.rs` show field-for-field equivalence with hand-written reference projections.
+
+#### W6.5 Per-grammar Pratt const-fold
+Owner: `crates/ir/src/passes/recognizers/operator_chain.rs` (extend); `crates/core/src/backend/rust/emitter/precedence.rs` (new).
+
+W1.7 landed the `IrNode::Next` peel; W6.5 completes the calibration. Per-grammar `PRECEDENCE_LUT: [u8; 256]` packed as `prec(4b) | assoc(1b) | arity(2b) | two_byte(1b)` plus sparse `&'static [DtaPrecedenceEntry]` for second-byte + op_rule + discriminant. Mining pass extracts operator precedence from the grammar IR (CSS 148 operators + BBNF value_expr tower + Sheets arithmetic).
+
+The W4-emitted specialised walker's `ShuntingYard` arm consults the emitted LUT, not hardcoded per-grammar dispatch. Healing `test_let_parses_as_let_call` (Sheets dispatch surface) — the Pratt reducer subsumes the LET/IF/LAMBDA dispatch; un-ignore the test as cascade.
+
+**Hard gate**: CSS `calc(2 * (3 + 4))` produces correct AST shape; BBNF `value_or` tower produces correct associativity; `test_let_parses_as_let_call` un-ignored + passing; per-grammar `PRECEDENCE_LUT` const populated for every grammar with mined operators.
+
+Each consumer is a separate file/module; agents partition by file bound (no overlap).
+
+**19-entry bench matrix.** Cold per-parse, mimalloc, sequential. Every entry from the post-AV reality-check matrix measured.
+
+**FINAL.** `docs/tranches/AW/FINAL-III.md` with hard-gate attribution per phase. `docs/benchmarks/post-AW-III.json` with 19-entry matrix + multi-wave history. `docs/tranches/AW/PROGRESS.md` complete.
+
+**Hard gate**: **strict-better-than post-AU on ≥ 15/19 entries**. The three sheets-small entries (`parse_simple` 505 B, `parse_nested` 1.5 KB, `parse_stress` 1.8 KB) are documented small-input tradeoff (stage-1 amortisation; not a per-grammar specialisation, a cardinality fact). All other entries strictly better. Workspace test 0 failures; ignored count = dispositioned-routed-residual only.
 
 ## Cross-tranche debt inherited from AW-II
 
@@ -264,16 +443,20 @@ Hard gate: green workspace; bench matrix within viability envelope or escalated 
 | Cluster C (37 payload activation) | AW-II.W5c residuals; root cause diagnosed | W1 |
 | Cluster D (1 integration: test_large_grammar) | AW-II.W5c residuals | W2 or W3 |
 | 67 ignored tests | accumulated across AW-series | W3 |
-| 5 blocked bench entries (data_s, canada, tailwind) | AW-II.W5 bench matrix | W6 after W2 closes parse failures |
-| CSS L4 state_count plan-miscalibration documentation | AW-II.W5.11 | orchestrator note in FINAL-III; no corrective work needed |
-| `serialize_roundtrip::css_simple` ignore | AW-I.W2.5 carry | W3 (audit + close or delete) |
+| 5 blocked bench entries (data_s, canada, tailwind) | AW-II.W5 bench matrix | W6 (after W2 closure) |
+| `serialize_roundtrip::css_simple` ignore | AW-I.W2.5 carry | W3 (CLOSE batch) |
 
-## Cross-tranche debt deferred to AW-IV
+## Cross-tranche debt deferred to AW-IV (granular exceed)
 
 | Item | Origin | AW-IV wave |
 |------|--------|-------------|
-| Full AW-IV lever activation (all of PSI rayon, ShapeRef, PHF+SIMD, selector classifier, scanner PaddedView, document-parallel, bloom+GADT, Pratt generalisation, reduce_column+SIMD-pack, parity harnesses) | AV substrate; AW-III activates minimum-viable subset only | AW-IV W1–W5 |
-| Full bench parity to match-or-beat post-AU | AW-III targets within 2×; AW-IV closes the gap | AW-IV W5–W6 |
+| AVX2 u8x32 widening (arch-gated x86_64 tuning) | AN.5 chronic | AW-IV W1 |
+| Scanner PaddedView migration + scanner cluster consolidation + NEON 17-digit | CO-E2 / AR.6.x / AT.4.3 chronics | AW-IV W2 |
+| Bloom + GADT runtime dedup + grammar-level pattern hoisting | AP.4.2 chronic | AW-IV W3 |
+| Document-parallel fork over the stage-1 structural index | substrate landed in AW-III.W5 | AW-IV W4 |
+| `Tape::reduce_column<C, R>` visitor + 4-lane SIMD pack | AV.2.5 substrate | AW-IV W5 |
+| sonic-rs + lightningcss parity harnesses | competitor parity | AW-IV W5 |
+| Cost-model grid sweep (egraph CostWeights calibration) | AM.6 chronic | AW-IV W3 or W4 |
 
 ## Operational posture
 
@@ -281,46 +464,42 @@ Inherits `docs/instructions/README.md` + `docs/instructions/TRANCHE_SPEC.md` in 
 
 Specific notes:
 
-- **Producer-side surfaces in-scope at all waves**. AW-I/II framed
-  walker/lifter/emitter as "frozen"; AW-III's thesis rejects that framing
-  — the remaining gaps are producer-side, and closing them is the wave.
-- **`#[ignore]` discipline**: audit-then-close. Never add a new ignore,
-  never leave an existing one un-dispositioned.
-- **Bootstrap regen permitted at any wave boundary**. Idempotency
-  verified at every regen. W1 + W5 likely candidates; orchestrator
-  signs off on each.
-- **Escape clause**: declared at plan time for the "not-viable" W4
-  outcome. If viability fails, AW-III ships FINAL-III with the
-  escalation and the user decides the next step. The tranche does not
-  silently-defer by opening yet another letter.
-- **Profiling discipline**: every performance claim in W4/W5/W6 cites
-  a samply profile per `docs/instructions/PROFILING.md`. No speculative
-  throughput numbers.
+- **No deferrals, regardless of newfound scope.** Reiterated from invariant 7. If a wave reveals more work, the work belongs to that wave — re-plan-with-more-agents per the operational protocol's parallel-orchestration contract; never silent forward-routing.
+- **Producer-side surfaces in scope at all waves.**
+- **`#[ignore]` discipline**: audit-then-close. Never add a new ignore; never leave an existing one un-dispositioned.
+- **Bootstrap regen permitted at any wave boundary.** Idempotency verified at every regen. W1 + W4 + W5 likely candidates; orchestrator signs off on each.
+- **Profiling discipline**: every performance claim cites a samply profile per `docs/instructions/PROFILING.md`. No speculative throughput numbers.
+- **`cargo asm` discipline**: every codegen-specialisation claim cites a `cargo asm` artefact showing the expected output (or the absence of an unexpected symbol).
 
 ## Research artefacts
 
-AW-III opened with an 8-agent pre-plan research wave at 2026-04-17 producing:
+AW-III opened with an 8-agent pre-plan research wave at 2026-04-17:
 
 - `docs/tranches/AW/research/perf-01-json.md` — samply json_monolithic
 - `docs/tranches/AW/research/perf-02-css.md` — samply css_l4
-- `docs/tranches/AW/research/perf-03-sheets.md` — samply sheets (viability-critical)
+- `docs/tranches/AW/research/perf-03-sheets.md` — samply sheets
 - `docs/tranches/AW/research/perf-04-bbnf.md` — samply bbnf_monolithic
-- `docs/tranches/AW/research/perf-05-json-value.md` — samply bbnf-vs-sonic twin pair
-- `docs/tranches/AW/research/perf-06-code-audit.md` — lever firing + precedence + dead code + direct-to-struct + type inference
-- `docs/tranches/AW/research/residuals-triage.md` — 50 failing tests per-test categorisation
-- `docs/tranches/AW/research/ignores-audit.md` — 58 ignored tests CLOSE/DELETE/INVESTIGATE
-- `docs/tranches/AW/research/SYNTHESIS.md` — cross-artefact synthesis + refined wave schedule
+- `docs/tranches/AW/research/perf-05-json-value.md` — bbnf-vs-sonic twin pair
+- `docs/tranches/AW/research/perf-06-code-audit.md` — lever firing audit
+- `docs/tranches/AW/research/residuals-triage.md` — 50 failing tests categorised
+- `docs/tranches/AW/research/ignores-audit.md` — 58 ignored tests dispositioned
+- `docs/tranches/AW/research/SYNTHESIS.md` — first-pass synthesis
+- `docs/tranches/AW/research/arch-comparison.md` — DTA vs simdjson/sonic-rs/RD
 
-These nine documents pre-stage AW-III's wave schedule above. Inherited AW-II
-context: `find-child-audit.md`, `w4-scope-reveal.md`, W5c's diagnostic commit
-`acd5d942` payload trace.
+A follow-up six-agent wave at 2026-04-17 produced the architectural transposition synthesis:
+
+- `docs/tranches/AW/research/aw3-r1-simdjson-cycle-attribution.md`
+- `docs/tranches/AW/research/aw3-r2-stage1-simd-bitmap.md` — full archaeology + canonical design
+- `docs/tranches/AW/research/aw3-r3-codegen-walker-proof.md`
+- `docs/tranches/AW/research/aw3-r4-cycle-accounting.md`
+- `docs/tranches/AW/research/aw3-r5-path-a-keep-dta.md`
+- `docs/tranches/AW/research/aw3-r6-path-b-rip-dta.md` — devil's-advocate; rejected for §6
+- `docs/tranches/AW/research/SYNTHESIS-2-PATH-FORWARD.md`
+
+These artefacts pre-stage AW-III's wave schedule above.
 
 ## Successor chain
 
-AW-III closes green → AW-IV opens (full optimisation arc, the plan
-formerly named AW-III, now at `docs/tranches/AW/AW-IV.md`).
+AW-III closes green → AW-IV opens (granular exceed + parity harnesses). AX inherits the same substrate (DTA_TABLE const + DtaSnapshot + decision log) verbatim; stage-1 bitmap is deterministic, replay re-derives.
 
-AW-III escalates non-viable → user decision; AW-IV's premise revisited.
-
-Indefatigable. No deferrals. No stubs. No shims. No new `#[ignore]`.
-Viability measured, not asserted.
+Indefatigable. No deferrals. No stubs. No shims. No new `#[ignore]`. No grammar-specific code paths. Architectural transposition ships in this tranche.

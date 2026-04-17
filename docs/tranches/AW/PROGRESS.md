@@ -1389,3 +1389,83 @@ its populated-by-design `&[]` for `keyword_tables` records here
 post-W3 (distinct from stub-carried). The `branch_priors` slot
 is chronic residual, not an AW gate — its presence as `&[]`
 post-W6 does not fail AW.0.9 on its own.
+
+## 2026-04-17 — Architectural transposition planning iteration
+
+Eight-agent pre-plan research wave (perf-01..06 + residuals-triage +
+ignores-audit) plus arch-comparison.md committed at HEAD `f34531e7`
+established the diagnosis: `dispatch_one` 24% self-time floor is
+implementation, not architectural; stage-1 SIMD bitmap pre-pass
+chronically deferred since AQ.5 (`2f7c1bd4`) and never attempted in
+driver-consumed form.
+
+A six-agent follow-up wave at HEAD `f34531e7` produced the
+architectural transposition synthesis:
+
+- `aw3-r1-simdjson-cycle-attribution.md` — instruction-level cycle budgets
+- `aw3-r2-stage1-simd-bitmap.md` — full archaeology + canonical design
+- `aw3-r3-codegen-walker-proof.md` — LLVM inlining proof + JSON sketch
+- `aw3-r4-cycle-accounting.md` — DTA-vs-RD per-byte decomposition
+- `aw3-r5-path-a-keep-dta.md` — keep DTA + layer specialisation
+- `aw3-r6-path-b-rip-dta.md` — devil's-advocate rewrite (rejected for §6
+  full-generalization invariant; cited only for substrate-survives map)
+- `SYNTHESIS-2-PATH-FORWARD.md` — composition synthesis
+
+**Plan restructure decision** (per user directive, 2026-04-17):
+
+- **AW-III fused as correctness + architectural transposition**: original
+  scope (correctness + viability validation + minimum-viable specialisation)
+  expanded to include the three general emitter passes (walker
+  specialisation + stage-1 SIMD bitmap + fused SoA write API) plus the five
+  emitter-mined consumer activations (ShapeRef, PHF, ClassifyByte,
+  direct-to-struct, Pratt const-fold). Six waves; intra-tranche bench
+  checkpoints per wave for attribution clarity.
+- **AW-IV restructured as granular exceed + parity harnesses**: AVX2/WASM
+  widening + scanner cluster consolidation + bloom + GADT + grammar-level
+  pattern hoisting + document-parallel fork + reduce_column visitor +
+  parity harnesses + cost-model grid + AU walker/reader migration carry-
+  overs. Six waves.
+- **No new tranche letter**: AW-V was considered and rejected per user
+  directive (fuse III + IV; AW-V granularity moves to AW-IV).
+- **No prototype phase**: walker-specialisation pass is mechanically
+  identical in shape to existing emitter passes that demonstrably work;
+  verification is `cargo asm` on first emitted walker, folded into AW-III
+  W4's first commit; no parallel-codebase stub.
+- **No viability-profile gate**: this is the only path; samply baseline
+  becomes evidence input to emitter heuristics (state-frequency for hot/
+  cold partitioning), not a gating decision.
+- **§6 generalization invariant strengthened**: every emitter pass
+  triggered by IR-structural properties; per-grammar OUTPUT comes from
+  per-grammar IR; per-grammar MECHANISM does not exist.
+- **No deferrals, regardless of newfound scope**: scope-reveal under
+  contact triggers re-plan-with-more-agents per the operational protocol's
+  parallel-orchestration contract; never silent forward-routing.
+
+**AX update**: snapshot/replay/incremental-reparse refreshed against the
+AW-III dual-cursor design (`pos: u32` + `slot: u32`); structural-index
+re-derivation is deterministic, ~5% replay-time overhead. Recovery skip-
+ahead becomes O(1) cursor jump via the structural index.
+
+**Verbatim-preserved items** (audit confirms zero scope drop from prior
+AW-III + AW-IV plans): all six payload-wiring points, Pratt Next-peel,
+scanner closure, EOF/EBNF/CSV completeness, ignored audit, ShapeRef,
+PHF (basic + frequency ordering + length-bucket tail), SIMD keyword
+compare, ClassifyByte, direct-to-struct, Pratt const-fold, AVX2 widening,
+PaddedView migration, scanner cluster, NEON 17-digit, bloom + GADT +
+pattern hoisting, document-parallel fork, PSI rayon walker integration +
+stress verification, GrammarProfile calibration, variant_idx coherence,
+serialize/structural roundtrip, reduce_column + 4-lane SIMD pack,
+sonic-rs + lightningcss parity harnesses, Bug 2b residuals, cost-model
+grid sweep. AX seeds preserved in AW-IV §AX seeds: AltLinear backtracking
+cost model, Global CSP solve, AP.5.4 deferred UTF-8, AQ.8.3 TLS-recycled
+scratch, FDMP mimalloc segment-class, per-grammar column overlays, AV.3.6
+DTA state-count narrowing.
+
+bbnf-simd-scan crate fully specified at AW-III W5: lib + 8 modules (alphabet,
+neon, avx2, avx512, wasm, scalar, compaction, parity) + 4 tests
+(correctness, quote_parity, digraph, fuzz) + 1 bench. No stubs, no
+`unimplemented!()`, no empty `#[cfg]` paths.
+
+Six worktrees `bbnf-wt-aw3-r{1..6}` carry the verbatim research deliverables;
+all copied to `docs/tranches/AW/research/` on master. Worktrees ready for
+deletion on user sign-off.

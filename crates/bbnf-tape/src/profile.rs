@@ -170,7 +170,7 @@ pub struct GrammarProfile {
     /// unconditionally used.
     pub parallel_break_even_bytes: u32,
 
-    // ── Byte-class dispatch (V1, from StructuralAlphabet) ────────────
+    // ── Byte-class dispatch (V1, from StructuralAlphabet; AW-III.W5.a extends) ─
 
     /// Sorted single-byte structural alphabet — bytes that could
     /// terminate a scanner's inner loop. Empty when the grammar has
@@ -182,6 +182,20 @@ pub struct GrammarProfile {
     /// (`/*`, `*/`, `->`, `(*`, `*)`). First byte is always in
     /// `structural_alphabet`.
     pub structural_digraphs: &'static [[u8; 2]],
+
+    /// 256-bit bitmap of `structural_digraphs` first-bytes, packed
+    /// as four `u64` words. Word `i` covers bytes `64*i .. 64*(i+1)`.
+    /// Pre-computed at codegen time so the SIMD kernel masks
+    /// candidate-opener lanes in one ANDS without a derefenced loop
+    /// over `structural_digraphs`. AW-III.W5.a.
+    pub structural_digraph_mask: [u64; 4],
+
+    /// Sorted bytes that toggle string mode. Drives the CLMUL/PMULL
+    /// (x86) or 6-op shift-XOR (NEON) quote-parity correction the
+    /// SIMD kernel applies before compaction so inside-string bytes
+    /// are masked off. Mined from `IrNode::Regex` whose
+    /// classification is `RegexClass::QuotedString`. AW-III.W5.a.
+    pub structural_quote_classes: &'static [u8],
 
     // ── Columnar substrate selection (V2) ────────────────────────────
 
@@ -239,6 +253,8 @@ impl GrammarProfile {
         parallel_break_even_bytes: 0,
         structural_alphabet: &[],
         structural_digraphs: &[],
+        structural_digraph_mask: [0u64; 4],
+        structural_quote_classes: &[],
         active_columns: &[],
         list_rules: &[],
         keyword_tables: &[],

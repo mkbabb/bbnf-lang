@@ -40,6 +40,8 @@ mod __bbnfbootstrap_emit_impl {
             parallel_break_even_bytes: 0u32,
             structural_alphabet: &[],
             structural_digraphs: &[],
+            structural_digraph_mask: [0, 0, 0, 0],
+            structural_quote_classes: &[],
             active_columns: &[],
             list_rules: &[],
             keyword_tables: &[],

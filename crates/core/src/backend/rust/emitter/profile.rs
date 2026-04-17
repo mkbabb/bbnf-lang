@@ -93,6 +93,33 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
         )
     };
 
+    // AW-III.W5.a — pre-computed digraph first-byte bitmap. The
+    // `[u64; 4]` lays out as a const-evaluable inline literal; no
+    // supporting `static`.
+    let digraph_mask_words = profile
+        .structural_digraph_mask
+        .iter()
+        .map(|w| Literal::u64_unsuffixed(*w));
+    let digraph_mask_ref = quote! { [#(#digraph_mask_words),*] };
+
+    // AW-III.W5.a — quote-class bytes (sorted, ASCII range).
+    let (quote_classes_decl, quote_classes_ref) = if profile.structural_quote_classes.is_empty() {
+        (TokenStream::new(), quote! { &[] })
+    } else {
+        let bytes: Vec<Literal> = profile
+            .structural_quote_classes
+            .iter()
+            .map(|b| Literal::u8_unsuffixed(*b))
+            .collect();
+        let len = profile.structural_quote_classes.len();
+        (
+            quote! {
+                static __GRAMMAR_PROFILE_QUOTE_CLASSES: [u8; #len] = [#(#bytes),*];
+            },
+            quote! { &__GRAMMAR_PROFILE_QUOTE_CLASSES },
+        )
+    };
+
     // AV.2.5 — one `VisitorId(i)` per descriptor in
     // `reorder_unroll_visitors`, positional so the id matches the
     // index of the emitted kernel in the grammar `impl` block.
@@ -120,6 +147,7 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
     quote! {
         #alphabet_decl
         #digraphs_decl
+        #quote_classes_decl
         #visitors_decl
 
         /// Per-grammar codegen fingerprint — consolidated static
@@ -139,6 +167,8 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
                 parallel_break_even_bytes: #parallel_break_even_bytes,
                 structural_alphabet: #alphabet_ref,
                 structural_digraphs: #digraphs_ref,
+                structural_digraph_mask: #digraph_mask_ref,
+                structural_quote_classes: #quote_classes_ref,
                 active_columns: &[],
                 list_rules: &[],
                 keyword_tables: &[],

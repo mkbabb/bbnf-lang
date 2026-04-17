@@ -843,6 +843,8 @@ const _SAMPLE_PROFILE: GrammarProfile = GrammarProfile {
     parallel_break_even_bytes: 65_536,
     structural_alphabet: &_SAMPLE_ALPHABET,
     structural_digraphs: &_SAMPLE_DIGRAPHS,
+    structural_digraph_mask: [0u64; 4],
+    structural_quote_classes: &[],
     active_columns: &[],
     list_rules: &_SAMPLE_LIST_RULES,
     keyword_tables: &[],

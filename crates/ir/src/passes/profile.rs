@@ -83,7 +83,7 @@ pub struct GrammarProfile {
     /// sequential. V6 populates; V1 defaults to 0 (no parallel path).
     pub parallel_break_even_bytes: u32,
 
-    // ── Byte-class dispatch (V1, from StructuralAlphabet) ────────────
+    // ── Byte-class dispatch (V1, from StructuralAlphabet; AW-III.W5.a extends) ─
 
     /// Sorted single-byte structural alphabet. Empty when the
     /// grammar has no structural-alphabet fingerprint or the
@@ -92,6 +92,18 @@ pub struct GrammarProfile {
 
     /// Two-byte digraphs observed at scanner boundaries.
     pub structural_digraphs: Vec<[u8; 2]>,
+
+    /// 256-bit bitmap of `structural_digraphs` first-bytes, packed
+    /// as four `u64` words. Pre-computed at IR time so the SIMD
+    /// kernel masks candidate-opener lanes in one ANDS without a
+    /// derefenced loop. AW-III.W5.a.
+    pub structural_digraph_mask: [u64; 4],
+
+    /// Sorted bytes that toggle string mode. Mined from
+    /// `IrNode::Regex` whose classification is
+    /// `RegexClass::QuotedString`. Drives the SIMD kernel's
+    /// quote-parity correction. AW-III.W5.a.
+    pub structural_quote_classes: Vec<u8>,
 
     // ── Reorder-unroll visitors (V2, AV.2.5) ─────────────────────────
 
@@ -168,7 +180,12 @@ impl GrammarIR {
         let payload_bytes_per_input_byte =
             records_per_byte * (push_leaf_with_count as f32 / total_pushes as f32) * 16.0;
 
-        let (structural_alphabet, structural_digraphs) = match self.structural_alphabet.as_ref() {
+        let (
+            structural_alphabet,
+            structural_digraphs,
+            structural_digraph_mask,
+            structural_quote_classes,
+        ) = match self.structural_alphabet.as_ref() {
             Some(alphabet) => (
                 alphabet.single_bytes_vec(),
                 alphabet
@@ -177,8 +194,10 @@ impl GrammarIR {
                     .copied()
                     .map(|(a, b)| [a, b])
                     .collect(),
+                alphabet.digraph_mask,
+                alphabet.quote_classes_vec(),
             ),
-            None => (Vec::new(), Vec::new()),
+            None => (Vec::new(), Vec::new(), [0u64; 4], Vec::new()),
         };
 
         // V2 AV.2.5 — visitor-recognition pass. Empty for every
@@ -204,6 +223,8 @@ impl GrammarIR {
             parallel_break_even_bytes: 0,
             structural_alphabet,
             structural_digraphs,
+            structural_digraph_mask,
+            structural_quote_classes,
             reorder_unroll_visitors,
             bbnf_shape_templates,
         }

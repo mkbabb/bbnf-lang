@@ -69,6 +69,10 @@ use bbnf_ir::passes::recognizers::dta::{
 use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 
+use super::helpers::{
+    emit_advance_or_pop_inline, emit_close_compound_inline, emit_emit_leaf_inline,
+    emit_emit_leaf_with_payload_inline, emit_psi_push_inline,
+};
 use super::hot_cold::HotColdPartition;
 use super::{dfa_match_fn_ident, regex_scan_adapter_ident};
 
@@ -321,33 +325,24 @@ fn emit_consume_to_next_structural_arm(_idx: usize) -> TokenStream {
 
 // ── Per-variant lowering routines ───────────────────────────────────
 
-/// AW-III.W4.d — emit the post-leaf advance pattern: try the
-/// inline-always Seq-fast-path first, fall through to the full
-/// `advance_or_pop_with` body when the fast path doesn't apply.
+/// AW-IV.W2.1 — emit the post-leaf advance pattern with the Seq-fast-
+/// path splice inline.
 ///
-/// JSON twitter visits a Seq frame for ~80% of leaf emit sites; the
-/// fast path inlines an in-place cursor++ and a child-state read,
-/// folding the dominant case directly into the calling arm. The
-/// non-Seq fall-through (Alt close, Repeat re-entry, SY reducer,
-/// stack drain) goes through the full helper which LLVM keeps
-/// out-of-line.
+/// The fast path (peek top + Seq cursor advance) was a cross-crate
+/// call to `bbnf_tape::advance_seq_fast` before W2.1; it now splices
+/// its body verbatim into each arm via
+/// [`emit_advance_or_pop_inline`]. The non-Seq fall-through
+/// (`advance_or_pop_with` — Alt close, Repeat re-entry, SY reducer,
+/// stack drain) remains behind a single call boundary reached only
+/// from the ≤20% minority path; its ~250-line body covers the SY
+/// reducer's precedence loop and would explode per-arm code size if
+/// inlined at every leaf-emit site.
+///
+/// JSON twitter visits a Seq frame for ~80% of leaf emit sites per
+/// the post-AW-III samply; the spliced fast path folds the dominant
+/// case directly into the calling arm.
 fn emit_advance_or_pop_call() -> TokenStream {
-    quote! {
-        if let ::core::option::Option::Some(next) =
-            ::bbnf::runtime::tape::advance_seq_fast(stack)
-        {
-            ::core::result::Result::Ok(next)
-        } else {
-            // AW-III.W5.c — slot threaded through alongside pos so
-            // the iter-savepoint capture inside the Repeat re-entry
-            // path snapshots the dual cursor atomically.
-            ::bbnf::runtime::tape::advance_or_pop_with(
-                ::core::option::Option::Some(table),
-                ::core::option::Option::Some(input),
-                columns, frame_depth, psi, stack, pos, slot,
-            )
-        }
-    }
+    emit_advance_or_pop_inline()
 }
 
 /// `Epsilon` — no column emission, no byte advance. Drop pending
@@ -377,24 +372,32 @@ fn emit_literal_arm(idx: usize, payload: LiteralPayload) -> TokenStream {
     let text_ident = format_ident!("__DTA_LITERAL_{}", idx);
     let payload_tok = literal_payload_token(payload);
     let advance = emit_advance_or_pop_call();
+    let rec_ident = format_ident!("_rec");
+    // AW-IV.W2.1 — splice `emit_leaf` / `emit_leaf_with_payload`
+    // bodies inline. The cross-crate fn call was the per-leaf
+    // dispatch boundary post-W1; inlining the variant-resolution +
+    // column push at the arm level flattens the hot path.
     let payload_arm = if matches!(payload, LiteralPayload::None) {
-        quote! {
-            ::bbnf::runtime::tape::emit_leaf(
-                columns, frame_depth, stack,
-                ::bbnf::runtime::tape::TapeKind::Literal,
-                lo, *pos,
-            );
-        }
+        let emit = emit_emit_leaf_inline(
+            &rec_ident,
+            quote! { ::bbnf::runtime::tape::TapeKind::Literal },
+            quote! { lo },
+            quote! { *pos },
+        );
+        quote! { #emit }
     } else {
+        let emit = emit_emit_leaf_with_payload_inline(
+            &rec_ident,
+            quote! { ::bbnf::runtime::tape::TapeKind::Span },
+            quote! { lo },
+            quote! { *pos },
+            quote! { arena_off },
+        );
         quote! {
             let arena_off = ::bbnf::runtime::tape::stage_literal_payload_in_arena(
                 columns, payload,
             );
-            ::bbnf::runtime::tape::emit_leaf_with_payload(
-                columns, frame_depth, stack,
-                ::bbnf::runtime::tape::TapeKind::Span,
-                lo, *pos, arena_off,
-            );
+            #emit
         }
     };
     quote! {
@@ -441,17 +444,37 @@ fn emit_regex_arm(
     let dfa_ident = dfa_match_fn_ident(grammar, idx);
     let payload_tok = regex_payload_token(payload);
     let advance = emit_advance_or_pop_call();
+    // AW-IV.W2.1 — splice the emit_leaf / emit_leaf_with_payload +
+    // psi.push helper bodies inline. Every helper call that was
+    // crossing the bbnf-tape boundary becomes an in-arm sequence of
+    // field stores + column pushes.
+    let rec_ident = format_ident!("_rec_none");
+    let emit_leaf_none = emit_emit_leaf_inline(
+        &rec_ident,
+        quote! { ::bbnf::runtime::tape::TapeKind::Span },
+        quote! { lo },
+        quote! { *pos },
+    );
     let emit_payload = if payload.is_none() {
-        quote! {
-            ::bbnf::runtime::tape::emit_leaf(
-                columns, frame_depth, stack,
-                ::bbnf::runtime::tape::TapeKind::Span,
-                lo, *pos,
-            );
-        }
+        quote! { #emit_leaf_none }
     } else {
         // Per the cold-path semantics: arena-reserve worst-case width
         // up front so the PSI worker performs only the decode + store.
+        let rec_ident_some = format_ident!("_rec_some");
+        let emit_leaf_some = emit_emit_leaf_with_payload_inline(
+            &rec_ident_some,
+            quote! { ::bbnf::runtime::tape::TapeKind::Span },
+            quote! { lo },
+            quote! { *pos },
+            quote! { ::bbnf::runtime::tape::TapeOffset(arena_off) },
+        );
+        let psi_push = emit_psi_push_inline(
+            quote! { rec_idx },
+            quote! { lo },
+            quote! { *pos },
+            quote! { kind },
+            quote! { arena_off },
+        );
         quote! {
             if let ::core::option::Option::Some(kind) = payload {
                 let width = match (kind, kind.arena_byte_width()) {
@@ -462,20 +485,10 @@ fn emit_regex_arm(
                 let arena_off = columns.pay_agg.len() as u32;
                 columns.pay_agg.resize(arena_off as usize + width, 0);
                 let rec_idx = columns.len() as u32;
-                ::bbnf::runtime::tape::emit_leaf_with_payload(
-                    columns, frame_depth, stack,
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    lo, *pos, ::bbnf::runtime::tape::TapeOffset(arena_off),
-                );
-                psi.push(::bbnf::runtime::tape::PayloadJob::new(
-                    rec_idx, lo, *pos, kind, arena_off,
-                ));
+                #emit_leaf_some
+                #psi_push
             } else {
-                ::bbnf::runtime::tape::emit_leaf(
-                    columns, frame_depth, stack,
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    lo, *pos,
-                );
+                #emit_leaf_none
             }
         }
     };
@@ -522,6 +535,7 @@ fn emit_seq_arm(
     let frame_tok = frame_kind_token(frame);
     let promote_tok = seq_promote_token(promote);
     let advance = emit_advance_or_pop_call();
+    let close = emit_close_compound_inline(quote! { *pos });
     let _ = children; // referenced via the emitted static array
     quote! {
         let children: &'static [::bbnf::runtime::tape::DtaStateId] = &#children_ident;
@@ -552,7 +566,8 @@ fn emit_seq_arm(
             promote,
         });
         if children.is_empty() {
-            ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
+            // AW-IV.W2.1 — close_compound body spliced inline.
+            #close
             #advance
         } else {
             ::core::result::Result::Ok(
@@ -778,6 +793,7 @@ fn emit_repeat_arm(
     let counter_optional_flag_u8 = if counter_optional.is_some() { 1u8 } else { 0u8 };
     let counter_optional_flag_lit = Literal::u8_unsuffixed(counter_optional_flag_u8);
     let advance = emit_advance_or_pop_call();
+    let close = emit_close_compound_inline(quote! { *pos });
     quote! {
         let inner: ::bbnf::runtime::tape::DtaStateId =
             ::bbnf::runtime::tape::DtaStateId(#inner_lit);
@@ -835,7 +851,8 @@ fn emit_repeat_arm(
         // AW-III.W5.c — captures the dual-cursor slot.
         stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
         if #hi_lit == 0u32 {
-            ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
+            // AW-IV.W2.1 — close_compound body spliced inline.
+            #close
             #advance
         } else {
             ::core::result::Result::Ok(

@@ -89,13 +89,25 @@ index already knows where it is.
    driver carries one entry point; incremental is a snapshot
    + re-walk, not a separate code path. No fallback parser,
    no dual build.
-3. **Workspace green at every wave boundary.** AW
+3. **Cold-path replay surface is load-bearing AX substrate.**
+   `bbnf_tape::driver::dispatch_one` + the helper functions
+   (`emit_leaf`, `push_compound_fused`, `advance_or_pop_with`,
+   `trim_with_pattern`, `handle_repeat_failure`, etc.) survive
+   in `bbnf-tape` after AW-IV's hot-path abrogation precisely
+   because AX consults them as its replay surface. The
+   per-grammar walker emits hot logic inline (zero cross-crate
+   calls); the cold path stays as the table-interpretive
+   reference implementation that decision-log replay, snapshot
+   resume, and recovery-event capture all consult. This is the
+   one bbnf-tape surface that AW-IV explicitly preserves; do
+   not let any hot-path-cleanup pass delete it.
+4. **Workspace green at every wave boundary.** AW
    re-established this discipline; AX preserves it.
-4. **Bench checkpoints per wave.** AW's bench-checkpoint
+5. **Bench checkpoints per wave.** AW's bench-checkpoint
    contract carries forward. AX's wave gates target
    incremental-edit latency and recovery correctness, not
    raw cold-parse throughput.
-5. **The pre-existing subsystem failures close in this
+6. **The pre-existing subsystem failures close in this
    tranche.** Closure language-feature gap, analysis
    structural-mode gates, gorgeous fixture tests, pprint-vm
    hint tests — each gets a dedicated phase. The Category A

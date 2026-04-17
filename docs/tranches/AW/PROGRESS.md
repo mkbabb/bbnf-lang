@@ -86,38 +86,79 @@ Bench schedule: W4 samply sidecar on representative entries; W5 post-
 activation re-bench; W6 full 19-entry matrix → `docs/benchmarks/
 post-AW-III.json` + update `post-AW.json` multi-wave history.
 
-### AW-IV — Optimisation + parity (formerly the plan named AW-III)
+### AW-IV — Interpreter Abrogation (re-scoped 2026-04-17 post-AW-III)
+
+The AW-III FINAL recorded substrate-without-consumer landings on every
+emitter-mined lever and the throughput gate missed (0 of 17 parse
+entries beat post-AU). Post-tranche source audit confirmed the
+diagnosis: per-state arms still load `match table.states[N]` at
+runtime; the regex DFA is a runtime interpreter at 32% self-time;
+the wire-contract pipeline silently drops mined data on the way to
+`GRAMMAR_PROFILE`; helper calls cross the bbnf-tape boundary per byte.
+AW-IV is re-scoped to abrogate every remaining runtime dispatch
+surface — emit hot logic directly into the per-grammar walker; keep
+`bbnf-tape` only as the cold-path replay surface for AX.
 
 | Wave | Scope | Agents | Status |
 |------|-------|--------|--------|
-| W1 | PSI rayon + ShapeRef + Bug 2b residuals | 3 parallel | pending |
-| W2 | PHF + SIMD keyword + selector classifier + scanner closure | 4 parallel | pending |
-| W3 | document-parallel + bloom + Pratt generalisation + profile calibration | 4 parallel | pending |
-| W4 | walker + reader + sonic-rs + lightningcss parity harnesses | 3 parallel | pending |
-| W5 | `Tape::reduce_column<C,R>` + SoA 4-lane SIMD pack + bench parity | 2 parallel | pending |
-| W6 | FINAL + close | 1 serial | pending |
+| W1 | Interpreter abrogation core: hoist DtaState into arm bodies + structural-alphabet mining fix + wire-contract emission fix + DFA codegen with direct named calls + scanner-trait deletion | 4 parallel | pending |
+| W2 | Per-grammar inline emission of hot helpers (emit_leaf, push_compound_fused, advance_or_pop_with, trim_with_pattern, psi.push) — strategy is *emit the body inline*, not hope LTO inlines cross-crate; LTO + `#[inline(always)]` are verification fallbacks | 2 parallel | pending |
+| W3 | Five emitter-mined consumer activations (ShapeRef + PHF + ClassifyByte + Pratt LUT consumer + direct-to-struct view wiring) + CTNS lifter + bounded Regex via inverse-alphabet — gated on W1 + W2 closed | 5 parallel | pending |
+| W4 | Granular SIMD widening (AVX2 u8x32, NEON 17-digit, scanner cluster) + bloom/GADT dedup + grammar-level pattern hoisting + document-parallel fork over stage-1 index | 4 parallel | pending |
+| W5 | `Tape::reduce_column<C,R>` + 4-lane SIMD pack + sonic-rs/lightningcss parity harnesses + cost-model grid sweep | 3 parallel | pending |
+| W6 | FINAL + 19-entry bench matrix + multi-wave aggregator | 1 serial | pending |
 
 Bench schedule: per-wave cold run at W1–W5 close →
 `docs/benchmarks/post-AW-IV-W{N}.json`. W6 composes the AW-IV close
 entry into `docs/benchmarks/post-AW.json` multi-wave history.
 
-AW-IV presumes AW-III has declared DTA viable; the first lever set
-(AW-III.W5 minimum-viable specialisation) already active.
+**Wave sequencing is strict.** W1 closes before W2 opens (helper
+inlining can only be verified after the per-state arms call helpers
+directly, not through trait/fn-pointer indirections). W2 closes before
+W3 opens (consumer activations land on a flat hot path or they wire
+into the same indirection that defeats them). W4 + W5 are layered
+multipliers; they presume W1+W2+W3 have produced a flat, consumer-
+active hot path. Reverse this order and the multipliers stack on
+indirected substrate and produce no measurable gain.
+
+**Verification ledger per wave** (per the operational protocol's
+*Wave verification ledger* contract — `docs/instructions/README.md`):
+
+- `nm target/release/deps/<bench>` symbol-presence assertions per the
+  wave's hard gate.
+- `.profiles/samply/aw4-w{N}/<bench>/` attribution citations.
+- Wire-contract end-to-end test additions when the wave touches the
+  IR-mining → const-literal pipeline.
+- `cargo asm` confirmation of inlined arm bodies / direct calls /
+  hoisted literals.
+
+AW-IV plan: `docs/tranches/AW/AW-IV.md` is the source of truth for
+scope + hard gates + critical files.
 
 ### Successor chain
 
 **AW-II → AW-III → AW-IV → AX** is the canonical arc.
 
-- AW-II closes correctness-partial at 1050/50/67; routes 50 residuals
-  + 67 ignores + 5 blocked bench entries + viability question to AW-III.
-- AW-III closes correctness + audits ignores + validates DTA viability
-  via samply + activates minimum-viable lever subset. Decides viable /
-  not-viable via W4 profile.
-- AW-IV (formerly the plan named AW-III; renamed 2026-04-17 following
-  AW-II.W5 scope-reveal) activates the remaining optimisation levers
-  to match/beat post-AU bench numbers.
-- AX lands replay/recovery/incremental-reparse consumers on a
-  stable, bench-verified, viability-proven codebase.
+- AW-II closed correctness-partial at 1050/50/67; routed 50 residuals
+  + 67 ignores + 5 blocked bench entries to AW-III.
+- AW-III closed at 1469/0/54: correctness complete; architectural
+  scaffold landed (walker per grammar, stage-1 SIMD crate, dual-cursor,
+  fused writes, five consumer substrates); throughput gate missed
+  because the scaffold remained interpreted at the helper-call
+  boundary, the regex DFA boundary, and the per-arm runtime data
+  unpacking. FINAL-III records this honestly per the operational
+  protocol's no-deferrals invariant; AW-IV opens on the explicit
+  abrogation work.
+- AW-IV abrogates every remaining runtime dispatch surface: emit hot
+  logic inline; delete the scanner trait + cross-crate helper calls;
+  hoist DtaState data into arm bodies; emit per-pattern DFA code
+  directly into the walker; activate the five emitter-mined consumers
+  on a flat hot path. Hard gate: every parse entry exceeds post-AU.
+- AX lands replay/recovery/incremental-reparse consumers on the
+  AW-IV substrate (DTA_TABLE + DtaSnapshot + decision log + stage-1
+  StructuralIndex preserved verbatim under W1's emit-direct
+  abrogation; the cold-path `dispatch_one` stays as the AX replay
+  surface).
 
 ### SoA 4-lane — tranche placement
 

@@ -1458,28 +1458,40 @@ fn payload_stream_parallel_threshold_gates() {
 #[test]
 fn payload_stream_arena_payload_round_trip() {
     use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
-    // Arena kinds (String, AggregateLarge) write `slice` into
-    // `pay_agg[column_idx..column_idx+slice.len()]`. Verify byte
-    // layout for both kinds.
+    // AW-III.W1: `String` payloads land as `(len: u32 LE, bytes)`
+    // arena frames per the `Tape::payload_string_bytes` reader
+    // contract; `AggregateLarge` keeps the verbatim byte copy. The
+    // String decoder strips surrounding quotes from the matched
+    // slice when present (JSON-style); inputs without quotes pass
+    // through unchanged.
     let input = b"hello world AABBCCDD";
     let mut psi = PayloadStream::new();
     psi.push(PayloadJob::new(0, 0, 5, PayloadKind::String, 0));
-    psi.push(PayloadJob::new(1, 6, 11, PayloadKind::String, 5));
+    // String1: needs 4-byte prefix + 5-byte body = 9 bytes,
+    // landing at offset 9.
+    psi.push(PayloadJob::new(1, 6, 11, PayloadKind::String, 9));
     psi.push(PayloadJob::new(
         2,
         12,
         20,
         PayloadKind::AggregateLarge,
-        16,
+        18,
     ));
 
     let mut columns = Columns::new();
     let profile = GrammarProfile::EMPTY;
     psi.fill_columns(input, &mut columns, &profile);
-    assert!(columns.pay_agg.len() >= 24);
-    assert_eq!(&columns.pay_agg[0..5], b"hello");
-    assert_eq!(&columns.pay_agg[5..10], b"world");
-    assert_eq!(&columns.pay_agg[16..24], b"AABBCCDD");
+    assert!(columns.pay_agg.len() >= 26);
+    // String 0: len=5, bytes="hello"
+    let len0 = u32::from_le_bytes(columns.pay_agg[0..4].try_into().unwrap());
+    assert_eq!(len0, 5);
+    assert_eq!(&columns.pay_agg[4..9], b"hello");
+    // String 1 at offset 9: len=5, bytes="world"
+    let len1 = u32::from_le_bytes(columns.pay_agg[9..13].try_into().unwrap());
+    assert_eq!(len1, 5);
+    assert_eq!(&columns.pay_agg[13..18], b"world");
+    // AggregateLarge at offset 18: 8 verbatim bytes.
+    assert_eq!(&columns.pay_agg[18..26], b"AABBCCDD");
 }
 
 #[test]

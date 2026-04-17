@@ -70,10 +70,11 @@ pub use cursor::{ChildIter, ColumnRank, ShapeRefChildIter, ShapeRefSyntheticChil
 //
 // Cold path: [`dta_run_cold`] is the dispatch_one + walk-table loop
 // preserved verbatim for the AX replay subsystem and walker-arm
-// regression tests. Helpers ([`emit_leaf`], [`reserve_compound`],
+// regression tests. Helpers ([`emit_leaf`], [`emit_leaf_with_payload`],
 // [`close_compound`], [`advance_or_pop_with`], [`frame_to_tape_kind`],
 // etc.) are re-exported so the emitted walker can call them as
-// inlined helpers.
+// inlined helpers. AW-III.W5.c: `reserve_compound` helper deleted;
+// compounds emit via [`Columns::push_compound_fused`] directly.
 pub use driver::{
     advance_or_pop_with, advance_seq_fast, close_compound, dispatch_one,
     dta_run_cold, emit_leaf, emit_leaf_with_payload, emit_reducer_compound,

@@ -1,0 +1,99 @@
+{
+  "tranche": "AW-IV",
+  "wave": "W1",
+  "checkpoint": "post-AW-IV-W1",
+  "date": "2026-04-17",
+  "master_head": "c7173389",
+  "scope": "Interpreter abrogation core — DtaState arm hoist + per-state DFA codegen + scanner-trait elimination + structural-alphabet mining definition + wire-contract emission path + pipeline pass-order fix",
+  "verification_ledger": {
+    "symbols_absent_json_monolithic": [
+      "dispatch_one",
+      "RegexScanner",
+      "DtaDfaScanner",
+      "find_at",
+      "cached_dfa",
+      "try_branch",
+      "__dfa_match_*"
+    ],
+    "symbols_present_json_monolithic": [
+      "__dta_walker_inline::run (1 occurrence — per-grammar walker)",
+      "dta_run_<grammar> (1 occurrence — public entry)",
+      "handle_repeat_failure (1 occurrence — cold-path repeat absorption)"
+    ],
+    "symbols_present_css_l4": [
+      "dispatch_one (1 — reachable through try_branch from AltLinear arms)",
+      "try_branch (1 — AltLinear/Minus branch attempt helper)",
+      "handle_repeat_failure (2)",
+      "__dfa_match_* (26 functions — not inlined; called directly from walker arms)"
+    ],
+    "wire_contract_tests": "19 / 0 / 0 (grammar_profile_wire_contract.rs)",
+    "structural_alphabet_cardinality": {
+      "json": 6,
+      "css_l4": 17,
+      "bbnf": 17,
+      "sheets": 13
+    },
+    "workspace_tests": "1345 passed / 0 failed / 36 ignored",
+    "bootstrap_idempotent": true
+  },
+  "benches": {
+    "json_monolithic": {
+      "twitter": {"mb_s": 246, "ns_iter": 2563437},
+      "citm": {"mb_s": 284, "ns_iter": 6063024},
+      "canada": {"mb_s": 142, "ns_iter": 15763641},
+      "data_xl": {"mb_s": 185, "ns_iter": 114656249},
+      "data_s": {"mb_s": 243, "ns_iter": 145957}
+    },
+    "css_l4": {
+      "normalize": {"mb_s": 16, "ns_iter": 362187},
+      "bootstrap": {"mb_s": 9, "ns_iter": 28507974},
+      "tailwind": {"mb_s": 10, "ns_iter": 340511108}
+    },
+    "google_sheets_monolithic": {
+      "parse_simple": {"mb_s": 4, "ns_iter": 107057},
+      "parse_nested": {"mb_s": 5, "ns_iter": 269708},
+      "parse_stress": {"mb_s": 4, "ns_iter": 422170},
+      "format_simple": {"mb_s": 41, "ns_iter": 145},
+      "format_stress": {"mb_s": 45, "ns_iter": 4396}
+    },
+    "bbnf_monolithic": {
+      "json": {"mb_s": 10, "ns_iter": 52639},
+      "ebnf": {"mb_s": 6, "ns_iter": 213131},
+      "css_pretty": {"mb_s": 22, "ns_iter": 115127},
+      "google_sheets": {"mb_s": 33, "ns_iter": 224788},
+      "bbnf_self": {"mb_s": 13, "ns_iter": 386477},
+      "css_l4_grammar": {"mb_s": 20, "ns_iter": 2634687}
+    }
+  },
+  "delta_vs_post_AW_III": {
+    "json_twitter": "+44.7% (170 -> 246)",
+    "json_citm": "+33.3% (213 -> 284)",
+    "json_canada": "+44.9% (98 -> 142)",
+    "json_data_xl": "+35.0% (137 -> 185)",
+    "json_data_s": "+48.2% (164 -> 243)",
+    "css_normalize": "+14.3% (14 -> 16)",
+    "css_bootstrap": "+12.5% (8 -> 9)",
+    "css_tailwind": "+11.1% (9 -> 10)",
+    "sheets_parse_simple": "0% (4 -> 4)",
+    "sheets_parse_nested": "+25.0% (4 -> 5)",
+    "sheets_parse_stress": "+33.3% (3 -> 4)",
+    "bbnf_json": "+11.1% (9 -> 10)",
+    "bbnf_ebnf": "0% (6 -> 6)",
+    "bbnf_css_pretty": "+10.0% (20 -> 22)",
+    "bbnf_google_sheets": "+13.8% (29 -> 33)",
+    "bbnf_bbnf_self": "+8.3% (12 -> 13)",
+    "bbnf_css_l4_grammar": "+5.3% (19 -> 20)"
+  },
+  "hard_gate_status": {
+    "symbols_absent_json": "MET",
+    "per_grammar_dfa_fns_present": "MET",
+    "structural_index_non_trivial": "MET (per-grammar cardinality bounded; populated for every primary grammar)",
+    "wire_contract_tests_pass": "MET (19/0/0)",
+    "json_twitter_ge_600_mb_s": "MISS (246 / 600 = 41% of gate)"
+  },
+  "gate_miss_attribution": {
+    "primary": "Per-byte helper-call boundary across bbnf-tape — emit_leaf, push_compound_fused, push_leaf_fused, advance_or_pop_with, close_compound, psi.push, handle_repeat_failure are all cross-crate function-call boundaries on every leaf record.",
+    "secondary": "Cold-path bridge through try_branch -> dispatch_one for AltLinear / Minus arms (CSS L4, BBNF, Sheets affected; JSON twitter unaffected because compute_dispatch admits its Alts as ByteDispatch).",
+    "next_wave_remediation": "W2 inlines the helper bodies into walker arms; AltLinear consumer activation in W3.2 (PHF) replaces the try_branch attempt with a direct dispatch."
+  }
+}

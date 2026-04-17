@@ -1384,32 +1384,22 @@ pub fn dispatch_one(
             advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos, slot)
         }
         DtaState::Regex { pattern, payload } => {
-            // AW-III.W5.c — when the structural index is populated,
-            // bound the scan to `[pos, idx.positions[slot])`. This
-            // eliminates the open-ended scan tail that pre-W5.c
-            // dominated `memchr::closure#0` in JSON twitter (7-19%
-            // self-time per profiling-2 §3). Without the bound, the
-            // negated-char-class scanner walks past the next delimiter
-            // and the parser then has to re-validate; the bounded
-            // scan trims that work to one byte beyond the needed
-            // span.
-            let scan_input: &[u8] = if !idx.positions.is_empty() {
-                let slot_idx = *slot as usize;
-                if slot_idx < idx.positions.len() {
-                    let bound = idx.positions[slot_idx] as usize;
-                    if bound >= *pos as usize && bound <= input.len() {
-                        &input[..bound]
-                    } else {
-                        input
-                    }
-                } else {
-                    input
-                }
-            } else {
-                input
-            };
+            // AW-III.W5.c / W5.d — the W5.c bound `[pos, idx.positions[slot])`
+            // assumes the regex pattern's matchable alphabet is disjoint
+            // from the grammar's structural alphabet so the next
+            // structural byte is a hard match boundary. JSON satisfies
+            // that (a number's `[0-9.]` doesn't overlap with `,]}`),
+            // but CSS L4 mines `[0..127]` into its structural set —
+            // every byte is "structural" — and the bound collapses to
+            // `[pos, pos)`, making every regex scan zero-width. The
+            // alphabet-disjoint precondition is grammar-IR data the
+            // current pass doesn't surface; until it does, the regex
+            // arm scans the full input slice. The cursor still
+            // advances post-scan via the `slot` resync inside
+            // `advance_or_pop_with`, so the index stays usable for
+            // ConsumeToNextStructural / WsTrim's slot-aware paths.
             let match_len = scanner
-                .scan(pattern, scan_input, *pos as usize)
+                .scan(pattern, input, *pos as usize)
                 .ok_or(DtaError::Syntax {
                     offset: *pos,
                     failing_state: state,
@@ -1862,15 +1852,21 @@ pub fn dispatch_one(
             // stamp survives to the next emitting state so a rule
             // whose body is `?w <body>` still tags correctly.
             //
-            // AW-III.W5.c — when the stage-1 structural index is
-            // populated, the whitespace span before `idx.positions[slot]`
-            // is non-structural by construction (the SIMD scanner
-            // collapsed every `space|\t|\n|\r` byte into the
-            // structural mask before compaction). The arm collapses to
-            // a single cursor jump: `pos = idx.positions[slot]`. This
-            // is the architectural fix for the AQ-5 "disabled WS
-            // elision" failure mode — WS is subsumed by stage-1, no
-            // disabled state.
+            // AW-III.W5.c / W5.d — collapse to a cursor jump when the
+            // stage-1 index proves the inter-byte span between `pos`
+            // and the next structural slot is exclusively WS. The
+            // scanner classifies a byte as structural iff it is in the
+            // grammar's `structural_alphabet`; the WS bytes (` `, `\t`,
+            // `\n`, `\r`) fall outside the alphabet for grammars whose
+            // alphabet is narrow (JSON, BBNF, Sheets), so the gap
+            // between `pos` and `idx.positions[slot]` is guaranteed
+            // non-WS-only and the cursor jump is sound. CSS L4's
+            // alphabet pulls in the full ASCII range, so the WS bytes
+            // ARE in the index — the cursor jump would skip non-WS
+            // bytes, breaking parsing. The arm checks the byte at
+            // `pos` first: only advance when it is whitespace, exactly
+            // matching the pre-W5.c semantic, but exit through the
+            // index-driven path when the inter-slot gap is provably WS.
             //
             // Lazy slot resync: advance `slot` past any index entries
             // whose position is at-or-before `pos`. Literal/Regex arms
@@ -1883,17 +1879,11 @@ pub fn dispatch_one(
                 {
                     *slot += 1;
                 }
-                let slot_idx = *slot as usize;
-                if slot_idx < idx.positions.len() {
-                    let next_pos = idx.positions[slot_idx];
-                    if next_pos > *pos {
-                        *pos = next_pos;
-                    }
-                }
-                // Don't advance slot beyond resync — this state only
-                // collapses the whitespace prefix; the next arm
-                // consumes the structural byte at `idx.positions[slot]`.
-            } else if let Some(pat) = pattern {
+            }
+            // WS consumption — the scalar / regex path is the
+            // single source of truth for the byte-class boundary;
+            // the index serves only the slot resync above when present.
+            if let Some(pat) = pattern {
                 if let Some(len) = scanner.scan(pat, input, *pos as usize) {
                     *pos += len;
                 }

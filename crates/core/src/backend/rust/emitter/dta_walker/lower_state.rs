@@ -28,9 +28,9 @@
 //! - `Epsilon` — clear pending stamp + `advance_or_pop_with`.
 //! - `Literal { text, payload }` — byte cmp inline; emit_leaf with
 //!   `TapeKind::Span`/`Literal` keyed by payload presence; advance.
-//! - `Regex { pattern, payload }` — direct `__dfa_match_<grammar>_<idx>`
-//!   call + emit_leaf_with_payload when payload is Some; PSI push;
-//!   advance.
+//! - `Regex { pattern, payload }` — inline DFA body splice (labelled
+//!   `'__dfa:` block yielding `Option<u32>`) + emit_leaf_with_payload
+//!   when payload is Some; PSI push; advance.
 //! - `Seq { children, frame, promote }` — reserve compound, push frame,
 //!   transition to `children[0]`.
 //! - `ByteDispatch { table, fallback }` — 256-entry LUT inlined as
@@ -42,8 +42,8 @@
 //!   transition to inner.
 //! - `Ref { rule, target }` — set `pending_variant_idx`, transition to
 //!   target (or `rule_entry_for(rule)` when target is NONE).
-//! - `WsTrim { pattern }` — codegen-time direct `__dfa_match_<grammar>_<idx>`
-//!   call when pattern is Some; `trim_ascii_ws` otherwise; advance.
+//! - `WsTrim { pattern }` — codegen-time inline DFA body splice when
+//!   pattern is Some; `trim_ascii_ws` otherwise; advance.
 //! - `Minus { primary, excluded }` — probe excluded with deep snapshot;
 //!   on success → Syntax error; on failure → transition to primary.
 //! - `ShuntingYard { head, precedence }` — reserve compound, push SY
@@ -66,15 +66,17 @@ use bbnf_ir::passes::recognizers::dta::{
     CounterOptional, DtaState as IrState, DtaTable, FrameKind, LiteralPayload,
     RegexPayloadKind, SeqPromote, StateId,
 };
+use bbnf_ir::GrammarIR;
 use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 
+use super::super::dfa_codegen;
 use super::helpers::{
     emit_advance_or_pop_inline, emit_close_compound_inline, emit_emit_leaf_inline,
     emit_emit_leaf_with_payload_inline, emit_psi_push_inline,
 };
 use super::hot_cold::HotColdPartition;
-use super::{dfa_match_fn_ident, regex_scan_adapter_ident};
+use super::regex_scan_adapter_ident;
 
 /// Emit the body of the outer `match cur { ... }` dispatch.
 ///
@@ -83,14 +85,16 @@ use super::{dfa_match_fn_ident, regex_scan_adapter_ident};
 /// dispatch sees a single uniform `Result<StepResult, DtaError>`
 /// return shape.
 ///
-/// AW-IV.W1.α — the `grammar` argument threads through to the
-/// per-state Regex arm so it can compose the direct-named DFA match
-/// function identifier (`__dfa_match_<grammar>_<state_idx>`). The
-/// interpreter-shaped `scanner.scan(pattern, ...)` indirection
-/// disappears; the hot path emits a literal function call the compiler
-/// can inline at the call site.
+/// AW-IV.W1.4-aggro — the `ir` + `table` arguments thread through to
+/// the per-state Regex / WsTrim arms so those arms can splice the DFA's
+/// `loop { match state { ... } }` body directly at the call site via
+/// [`dfa_codegen::emit_dfa_inline_body`]. There is no separately-emitted
+/// `__dfa_match_*` fn; the hot path's walker arm IS the DFA match loop,
+/// visible to LLVM as a straight-line match basic block (no function
+/// call boundary anywhere on the hot regex / WsTrim path).
 pub(super) fn emit_state_dispatch_arms(
     grammar: &str,
+    ir: &GrammarIR,
     table: &DtaTable,
     partition: &HotColdPartition,
 ) -> TokenStream {
@@ -102,7 +106,7 @@ pub(super) fn emit_state_dispatch_arms(
             let id = idx as u16;
             let id_lit = Literal::u16_unsuffixed(id);
             if partition.is_hot(id) {
-                let body = emit_state_arm_body(grammar, idx, state);
+                let body = emit_state_arm_body(grammar, ir, table, idx, state);
                 quote! {
                     #id_lit => { #body }
                 }
@@ -132,15 +136,17 @@ pub(super) fn emit_state_dispatch_arms(
 /// supplies them from its own enclosing scope; the cold sibling
 /// receives them through the function signature.
 ///
-/// AW-IV.W1.α — the `<__S: RegexScanner>` generic + `scanner: &__S`
-/// parameter are abrogated. Cold-sibling arm bodies that used to
-/// traverse `scanner.scan(pattern, …)` now call
-/// `__dfa_match_<grammar>_<idx>` directly; helper calls that
-/// previously took `scanner: &dyn RegexScanner` (try_branch,
-/// handle_repeat_failure_bounded) take the per-grammar
-/// `__regex_scan_<grammar>` adapter W1.β emits.
+/// AW-IV.W1.4-aggro — cold siblings consume the same `emit_state_arm_body`
+/// that the hot path does, so their Regex / WsTrim arms also splice the
+/// DFA body inline (no fn-call boundary inside the cold sibling
+/// either). The per-grammar `__regex_scan_<grammar>` adapter — emitted
+/// by `dfa_codegen::emit_regex_scan_adapter` at grammar scope — is used
+/// only by the replay-surface helpers (`try_branch`,
+/// `handle_repeat_failure_bounded`) the cold sibling dispatches into
+/// via fn-pointer, not for the DFA match itself.
 pub(super) fn emit_cold_siblings(
     grammar: &str,
+    ir: &GrammarIR,
     table: &DtaTable,
     partition: &HotColdPartition,
 ) -> TokenStream {
@@ -157,7 +163,7 @@ pub(super) fn emit_cold_siblings(
                 return None;
             }
             let cold_ident = cold_sibling_ident(id);
-            let body = emit_state_arm_body(grammar, idx, state);
+            let body = emit_state_arm_body(grammar, ir, table, idx, state);
             Some(quote! {
                 #[cold]
                 #[inline(never)]
@@ -194,11 +200,13 @@ pub(super) fn emit_cold_siblings(
                     // receive uniform arguments matching the hot
                     // path's invocation shape.
                     //
-                    // AW-IV.W1.α — `<__S: RegexScanner>` generic and
-                    // `scanner: &__S` parameter removed. Helpers
-                    // consume a per-grammar
-                    // `__regex_scan_<grammar>` fn-pointer adapter
-                    // W1.β emits.
+                    // AW-IV.W1.4-aggro — the Regex / WsTrim arms splice
+                    // the DFA's `loop { match state { ... } }` body
+                    // directly from `dfa_codegen::emit_dfa_inline_body`;
+                    // no fn-call boundary sits on the cold path's DFA
+                    // walk either. Replay-surface helpers consume the
+                    // per-grammar `__regex_scan_<grammar>` fn-pointer
+                    // adapter as their regex-scan argument.
                     let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
                     'step: {
                         #body
@@ -219,14 +227,21 @@ fn cold_sibling_ident(id: u16) -> proc_macro2::Ident {
 /// produces a `Result<StepResult, DtaError>` value the outer
 /// dispatch loop consumes to set the next `cur` or terminate.
 ///
-/// AW-IV.W1.α — every arm body opens with literal `let` bindings
+/// AW-IV.W1.4-aggro — every arm body opens with literal `let` bindings
 /// computed from the codegen-time `DtaState` value; the runtime
 /// `match table.states[N] { Variant { fields } => (fields), _ =>
-/// unreachable_unchecked() }` unpack is abrogated. `grammar` threads
-/// through so the Regex arm can compose the
-/// `__dfa_match_<grammar>_<idx>` ident for the direct DFA call that
-/// replaces the `scanner.scan` indirection.
-fn emit_state_arm_body(grammar: &str, idx: usize, state: &IrState) -> TokenStream {
+/// unreachable_unchecked() }` unpack is abrogated. `ir` + `table`
+/// thread through so the Regex and WsTrim arms can splice the DFA's
+/// loop body inline via [`dfa_codegen::emit_dfa_inline_body`]. No
+/// function call separates the walker arm from the DFA match loop; the
+/// arm body contains the DFA state machine as a labelled block.
+fn emit_state_arm_body(
+    grammar: &str,
+    ir: &GrammarIR,
+    table: &DtaTable,
+    idx: usize,
+    state: &IrState,
+) -> TokenStream {
     let kind_tag = state_kind_tag(state);
     let body = match state {
         IrState::Epsilon => emit_epsilon_arm(idx),
@@ -234,7 +249,7 @@ fn emit_state_arm_body(grammar: &str, idx: usize, state: &IrState) -> TokenStrea
             emit_literal_arm(idx, *payload)
         }
         IrState::Regex { pattern: _, payload } => {
-            emit_regex_arm(grammar, idx, *payload)
+            emit_regex_arm(grammar, ir, table, idx, *payload)
         }
         IrState::Seq { children, frame, promote } => {
             emit_seq_arm(idx, children, *frame, *promote)
@@ -261,7 +276,9 @@ fn emit_state_arm_body(grammar: &str, idx: usize, state: &IrState) -> TokenStrea
         IrState::Ref { rule, target } => {
             emit_ref_arm(idx, *rule, *target)
         }
-        IrState::WsTrim { pattern } => emit_ws_trim_arm(grammar, idx, pattern.is_some()),
+        IrState::WsTrim { pattern } => {
+            emit_ws_trim_arm(grammar, ir, table, idx, pattern.is_some())
+        }
         IrState::Minus { primary, excluded } => {
             emit_minus_arm(grammar, idx, *primary, *excluded)
         }
@@ -423,25 +440,27 @@ fn emit_literal_arm(idx: usize, payload: LiteralPayload) -> TokenStream {
     }
 }
 
-/// `Regex { pattern, payload }` — direct `__dfa_match_<grammar>_<idx>`
-/// call inline; emit_leaf with `TapeKind::Span`; PSI push when
-/// payload is Some.
+/// `Regex { pattern, payload }` — inline DFA body splice; emit_leaf
+/// with `TapeKind::Span`; PSI push when payload is Some.
 ///
-/// AW-IV.W1.α — the `match table.states[N]` destructure is hoisted
-/// into a literal `payload` binding; the `pattern` field is encoded
-/// into the per-state DFA match function emitted by W1.β
-/// (`__dfa_match_<grammar>_<idx>`). The `scanner.scan(pattern, …)`
-/// indirection is replaced with a direct function call the compiler
-/// sees as a concrete ident at codegen time — LLVM inlines the DFA
-/// body at the call site without cross-function pointer-chasing
-/// analysis.
+/// AW-IV.W1.4-aggro — the `match table.states[N]` destructure is
+/// hoisted into a literal `payload` binding; the `pattern` field is
+/// encoded into the DFA's byte-classes / state-arms whose body is
+/// spliced directly into this arm by
+/// [`dfa_codegen::emit_dfa_inline_body`]. There is no fn call; the arm
+/// contains the DFA's `loop { match state { ... } }` as a labelled
+/// block returning `Option<u32>`. LLVM sees the walker arm, the DFA
+/// state machine, and the leaf-emission body as one straight-line basic
+/// block — no function-call boundary anywhere on the regex hot path.
 fn emit_regex_arm(
     grammar: &str,
+    ir: &GrammarIR,
+    table: &DtaTable,
     idx: usize,
     payload: Option<RegexPayloadKind>,
 ) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
-    let dfa_ident = dfa_match_fn_ident(grammar, idx);
+    let dfa_inline_body = dfa_codegen::emit_dfa_inline_body(grammar, ir, table, idx);
     let payload_tok = regex_payload_token(payload);
     let advance = emit_advance_or_pop_call();
     // AW-IV.W2.1 — splice the emit_leaf / emit_leaf_with_payload +
@@ -494,7 +513,20 @@ fn emit_regex_arm(
     };
     quote! {
         let payload: ::core::option::Option<::bbnf::runtime::tape::PayloadKind> = #payload_tok;
-        let match_len = match #dfa_ident(input, *pos as usize) {
+        // AW-IV.W1.4-aggro — splice the DFA's loop body inline. The
+        // inner block shadows `pos` with a local `usize` so the DFA
+        // body's `__dfa_p: usize = pos` initialisation and the trailing
+        // `end - pos as u32` subtraction bind against a concrete
+        // `usize`; the block's value is `Option<u32>` (the matched
+        // prefix length). LLVM sees the walker arm's dispatch, the DFA
+        // state machine, and the leaf-emission sequence as one
+        // straight-line basic block — zero function-call boundary on
+        // the regex hot path.
+        let dfa_result: ::core::option::Option<u32> = {
+            let pos: usize = *pos as usize;
+            #dfa_inline_body
+        };
+        let match_len = match dfa_result {
             ::core::option::Option::Some(n) => n,
             ::core::option::Option::None => {
                 break 'step ::core::result::Result::Err(
@@ -903,24 +935,47 @@ fn emit_ref_arm(
     }
 }
 
-/// `WsTrim { pattern }` — codegen-time direct DFA call when the
-/// state carries a pattern, `trim_ascii_ws` otherwise.
+/// `WsTrim { pattern }` — codegen-time inline DFA body splice when
+/// the state carries a pattern, `trim_ascii_ws` otherwise.
 ///
-/// AW-IV.W1.α — the pattern's presence is known at codegen time;
-/// emit the direct `__dfa_match_<grammar>_<idx>` call for
-/// pattern-bearing WsTrim states (the DFA function is emitted by
-/// W1.β), and `trim_ascii_ws` for pattern-less states. The runtime
-/// `match table.states[N]` against the pattern field is abrogated,
-/// as is the `scanner.scan(pat, …)` indirection.
-fn emit_ws_trim_arm(grammar: &str, idx: usize, has_pattern: bool) -> TokenStream {
+/// AW-IV.W1.4-aggro — the pattern's presence is known at codegen time;
+/// pattern-bearing WsTrim states splice the DFA's loop body inline via
+/// [`dfa_codegen::emit_dfa_inline_body`] inside a fixed-point `loop {
+/// ... }` that drains every consecutive whitespace run. Pattern-less
+/// states fall to `trim_ascii_ws`. No fn-call boundary appears on the
+/// WsTrim hot path — the DFA state machine is spliced as a labelled
+/// block returning `Option<u32>` per iteration.
+fn emit_ws_trim_arm(
+    grammar: &str,
+    ir: &GrammarIR,
+    table: &DtaTable,
+    idx: usize,
+    has_pattern: bool,
+) -> TokenStream {
     let advance = emit_advance_or_pop_call();
     let scan_path = if has_pattern {
-        let dfa_ident = dfa_match_fn_ident(grammar, idx);
+        let dfa_inline_body = dfa_codegen::emit_dfa_inline_body(grammar, ir, table, idx);
+        // AW-IV.W1.4-aggro — drive the DFA body inline in a fixed-
+        // point loop. Each iteration shadows `pos` locally with the
+        // current `*pos as usize` so the DFA body's `__dfa_p: usize =
+        // pos` + `pos as u32` subtraction bind against a concrete
+        // `usize`. On a non-zero match, advance the walker's `*pos` by
+        // the matched length; on `Some(0)` / `None` the loop breaks.
+        // The `*pos` mutation happens outside the shadowed scope so
+        // the walker's `&mut u32` is not aliased.
         quote! {
-            if let ::core::option::Option::Some(len) =
-                #dfa_ident(input, *pos as usize)
-            {
-                *pos += len;
+            loop {
+                let dfa_result: ::core::option::Option<u32> = {
+                    let pos: usize = *pos as usize;
+                    #dfa_inline_body
+                };
+                match dfa_result {
+                    ::core::option::Option::Some(0)
+                    | ::core::option::Option::None => break,
+                    ::core::option::Option::Some(len) => {
+                        *pos += len;
+                    }
+                }
             }
         }
     } else {

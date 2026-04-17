@@ -205,6 +205,16 @@ fn emit_state_arm_body(idx: usize, state: &IrState) -> TokenStream {
         IrState::ByteDispatch { table: disp, fallback } => {
             emit_byte_dispatch_arm(idx, disp, *fallback)
         }
+        IrState::ClassifyByte { table: disp, fallback } => {
+            // AW-III.W6.3 — Lower via the same per-byte match skeleton
+            // as ByteDispatch. The distinct IR variant preserves
+            // mining provenance; the emitter body is identical because
+            // the dispatch shape is identical (one indexed load + NONE-
+            // fallback branch). Separating the emitters lets a future
+            // tranche specialize ClassifyByte further (e.g. a proper
+            // LLVM jumptable hint) without disturbing ByteDispatch.
+            super::super::classify_byte::emit_classify_byte_arm(idx, disp, *fallback)
+        }
         IrState::AltLinear { branches } => {
             emit_alt_linear_arm(idx, branches)
         }
@@ -220,6 +230,9 @@ fn emit_state_arm_body(idx: usize, state: &IrState) -> TokenStream {
         }
         IrState::ShuntingYard { head, .. } => {
             emit_shunting_yard_arm(idx, *head)
+        }
+        IrState::ConsumeToNextStructural { pattern: _ } => {
+            emit_consume_to_next_structural_arm(idx)
         }
     };
     quote! {
@@ -239,12 +252,37 @@ fn state_kind_tag(state: &IrState) -> &'static str {
         IrState::Regex { .. } => "regex",
         IrState::Seq { .. } => "seq",
         IrState::ByteDispatch { .. } => "byte_dispatch",
+        IrState::ClassifyByte { .. } => "classify_byte",
         IrState::AltLinear { .. } => "alt_linear",
         IrState::Repeat { .. } => "repeat",
         IrState::Ref { .. } => "ref_target",
         IrState::ShuntingYard { .. } => "shunting_yard",
         IrState::WsTrim { .. } => "ws_trim",
         IrState::Minus { .. } => "minus",
+        IrState::ConsumeToNextStructural { .. } => "consume_to_next_structural",
+    }
+}
+
+/// AW-III.W5-carry — Emit the CTNS arm body. Collapses the regex
+/// scan to a single cursor jump via the stage-1 structural index
+/// (when populated) or degrades to ASCII-whitespace trim when the
+/// index is empty.
+fn emit_consume_to_next_structural_arm(_idx: usize) -> TokenStream {
+    let advance = emit_advance_or_pop_call();
+    quote! {
+        if !idx.positions.is_empty() {
+            let slot_idx = *slot as usize;
+            if slot_idx < idx.positions.len() {
+                *pos = idx.positions[slot_idx];
+                *slot = (slot_idx + 1) as u32;
+            } else {
+                *pos = input.len() as u32;
+            }
+        } else {
+            ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
+        }
+        stack.pending_variant_idx = u8::MAX;
+        #advance
     }
 }
 

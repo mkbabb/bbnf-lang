@@ -207,6 +207,36 @@ pub enum DtaState {
         table: Vec<StateId>,
         fallback: Option<StateId>,
     },
+    /// AW-III.W6.3 — ClassifyByte dispatched Alt — mined by
+    /// `disjoint_first` pass when every branch's FIRST set is
+    /// mutually-disjoint. Structurally equivalent to `ByteDispatch`
+    /// but the IR discriminant preserves mining provenance so the
+    /// emitter can specialize downstream (inline as `match`,
+    /// const-fold via LLVM jumptable) without re-deriving the
+    /// disjointness analysis. Per §6 the mechanism is grammar-agnostic.
+    ClassifyByte {
+        table: Vec<StateId>,
+        fallback: Option<StateId>,
+    },
+    /// AW-III.W5-carry — ConsumeToNextStructural lift.
+    ///
+    /// Emitted when the [`pattern_alphabet`](super::pattern_alphabet)
+    /// miner proves a regex pattern's matchable-byte set is disjoint
+    /// from the grammar's structural alphabet. The walker collapses
+    /// what would have been a byte-by-byte regex scan to an O(1)
+    /// cursor jump: `cursor.pos = idx.positions[cursor.slot];
+    /// cursor.slot += 1;`.
+    ///
+    /// Carries no payload — the matched bytes form a structural-hole
+    /// span whose content is read back via `span_lo..span_hi` if the
+    /// downstream emitter needs it. When the structural index is
+    /// empty (cold-path replay), the walker falls back to the
+    /// conventional regex scan via the interior `pattern` field.
+    ConsumeToNextStructural {
+        /// Original pattern — used as the cold-path fallback when the
+        /// stage-1 structural index is empty.
+        pattern: StringId,
+    },
     /// Alt with no pairwise-disjoint FIRST sets — the driver tries
     /// each branch in order with a single backtrack per branch (happy
     /// path has no branch fall-through; diagnostic mode replays).
@@ -505,6 +535,31 @@ impl<'ir> DtaBuilder<'ir> {
         self.lift_node_with_payload(node, LiteralPayload::None, None)
     }
 
+    /// AW-III.W6.3 — look up the disjoint_first mining entry for an
+    /// `IrNode::Alt`. Returns `None` when the Alt didn't admit
+    /// ClassifyByte substitution (overlapping FIRST sets, empty
+    /// branches, or the mining pass didn't run).
+    fn lookup_disjoint_first(
+        &self,
+        node: &IrNode,
+    ) -> Option<&'ir crate::passes::recognizers::disjoint_first::DisjointFirstTable> {
+        let dag = self.ir.dag.as_ref()?;
+        let node_id = dag.node_for(node)?;
+        self.ir.disjoint_first_tables.get(&node_id)
+    }
+
+    /// AW-III.W5-carry — check whether an `IrNode::Regex` node has
+    /// been admitted to `ConsumeToNextStructural` lifting.
+    fn is_ctns_lifted(&self, node: &IrNode) -> bool {
+        let Some(dag) = self.ir.dag.as_ref() else {
+            return false;
+        };
+        let Some(node_id) = dag.node_for(node) else {
+            return false;
+        };
+        self.ir.ctns_lifts.contains(&node_id)
+    }
+
     /// AW-III.W1 — lift `node` while threading caller-supplied payload
     /// resolutions into a `Literal` / `Regex` leaf. The
     /// `IrNode::Map { inner, fn_id }` arm walks `fn_id` into a typed
@@ -527,10 +582,27 @@ impl<'ir> DtaBuilder<'ir> {
                 text: *sid,
                 payload: literal_payload,
             }),
-            IrNode::Regex(sid) => self.alloc_state(DtaState::Regex {
-                pattern: *sid,
-                payload: regex_payload,
-            }),
+            IrNode::Regex(sid) => {
+                // AW-III.W5-carry — consult the CTNS lifter. When the
+                // pattern's matchable alphabet is disjoint from the
+                // grammar's structural alphabet, lift to
+                // `ConsumeToNextStructural` so the walker's hot path
+                // collapses the byte-by-byte regex scan into a single
+                // cursor jump.
+                //
+                // Payload lifting defers to the regex path: CTNS
+                // emits structural-only spans. When a payload
+                // decoder is attached, the Regex path survives so
+                // the scan captures the matched bytes for decoding.
+                if regex_payload.is_none() && self.is_ctns_lifted(node) {
+                    self.alloc_state(DtaState::ConsumeToNextStructural { pattern: *sid })
+                } else {
+                    self.alloc_state(DtaState::Regex {
+                        pattern: *sid,
+                        payload: regex_payload,
+                    })
+                }
+            }
             IrNode::Epsilon => self.alloc_state(DtaState::Epsilon),
             IrNode::Seq(children) => {
                 let child_states: Vec<StateId> =
@@ -559,6 +631,26 @@ impl<'ir> DtaBuilder<'ir> {
                         )
                     })
                     .collect();
+                // AW-III.W6.3 — consult the disjoint_first mining
+                // pass. When the Alt is admitted, emit a ClassifyByte
+                // state that dispatches in one indexed load. The
+                // ClassifyByte lowering preserves mining provenance
+                // so the emitter can specialise further downstream.
+                if let Some(disjoint) = self.lookup_disjoint_first(node) {
+                    let mut table = vec![StateId::NONE; 256];
+                    for (byte, branch_idx) in disjoint.table.iter().enumerate() {
+                        if *branch_idx == u8::MAX {
+                            continue;
+                        }
+                        if let Some(&state) = branch_states.get(*branch_idx as usize) {
+                            table[byte] = state;
+                        }
+                    }
+                    return self.alloc_state(DtaState::ClassifyByte {
+                        table,
+                        fallback: None,
+                    });
+                }
                 if let Some(ad) = dispatch {
                     let fallback = ad
                         .fallback_idx

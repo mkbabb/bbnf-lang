@@ -338,6 +338,40 @@ pub enum DtaState {
     /// driver falls back to a single `WsTrim`-shaped scan so the
     /// state is semantically valid in either configuration.
     ConsumeToNextStructural,
+    /// AW-III.W6.3 — ClassifyByte dispatch.
+    ///
+    /// A 256-entry lookup table keyed on the current input byte — the
+    /// walker reads `table[input[pos]]` and transitions in a single
+    /// indexed load, replacing N-way linear Alt dispatch when the IR
+    /// pass identifies an Alt whose branches have mutually-disjoint
+    /// FIRST sets.
+    ///
+    /// This is the general mechanism for any disjoint-first Alt in any
+    /// grammar — CSS `compoundSelector` (5-way), BBNF `directive`
+    /// (`@`-prefix second-byte), JSON escape (`\` second-byte), Sheets
+    /// function first-letter etc. Per the §6 generalization invariant
+    /// the mechanism is grammar-agnostic; only the mined table entries
+    /// vary per-grammar.
+    ///
+    /// Unlike [`DtaState::ByteDispatch`], which can appear anywhere in
+    /// the state machine and routes control to child state-ids,
+    /// `ClassifyByte` is emitted when the IR pass explicitly recognizes
+    /// a disjoint-first Alt and lowers it to a state-id lookup table.
+    /// The structural distinction preserves the mining provenance so
+    /// the emitter can specialize downstream (e.g. inlining the table
+    /// as a `match` expression) without re-deriving the disjointness
+    /// analysis.
+    ///
+    /// `fallback` is the state dispatched when `table[b] ==
+    /// DtaStateId::NONE`; [`DtaStateId::NONE`] here means "no fallback;
+    /// raise Syntax".
+    ClassifyByte {
+        /// 256-entry dispatch table.
+        table: &'static [DtaStateId; 256],
+        /// Catch-all fallback tried when `table[b] == NONE`.
+        /// `DtaStateId::NONE` → raise Syntax.
+        fallback: DtaStateId,
+    },
     /// AW-II.W5b — Set-difference state (IrNode::Minus semantic).
     ///
     /// Match `primary` only if `excluded` does NOT match at the same

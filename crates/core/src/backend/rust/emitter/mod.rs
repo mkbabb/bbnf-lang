@@ -10,9 +10,11 @@
 //! entry), `dta`/`profile`/`visitor` (codegen data), `prettify`
 //! sub-dir (separate emission channel).
 
+pub(crate) mod classify_byte;
 pub(crate) mod dta;
 pub mod dta_walker;
 mod grammar;
+pub(crate) mod keyword_dispatch;
 mod prettify;
 pub(crate) mod profile;
 pub mod visitor;

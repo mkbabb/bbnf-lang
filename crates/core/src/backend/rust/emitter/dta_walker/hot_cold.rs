@@ -181,9 +181,11 @@ fn successors(state: &DtaState) -> Vec<StateId> {
         DtaState::Literal { .. }
         | DtaState::Regex { .. }
         | DtaState::Epsilon
-        | DtaState::WsTrim { .. } => Vec::new(),
+        | DtaState::WsTrim { .. }
+        | DtaState::ConsumeToNextStructural { .. } => Vec::new(),
         DtaState::Seq { children, .. } => children.iter().copied().collect(),
-        DtaState::ByteDispatch { table, fallback } => {
+        DtaState::ByteDispatch { table, fallback }
+        | DtaState::ClassifyByte { table, fallback } => {
             let mut out: Vec<StateId> = table
                 .iter()
                 .copied()

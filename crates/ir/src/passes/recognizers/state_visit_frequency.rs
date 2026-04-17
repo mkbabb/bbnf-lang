@@ -276,10 +276,14 @@ fn for_each_outgoing_edge<F: FnMut(StateId, u32, u32)>(state: &DtaState, mut vis
                 visit(child, 1, 1);
             }
         }
-        DtaState::ByteDispatch { table, fallback } => {
+        DtaState::ByteDispatch { table, fallback }
+        | DtaState::ClassifyByte { table, fallback } => {
             // Sum byte density per target: the more bytes that route to
             // a state, the more frequently the runtime dispatches into
             // it. The fallback receives the residual probability mass.
+            // AW-III.W6.3 — ClassifyByte shares the same frequency
+            // model as ByteDispatch (both are byte-indexed state-id
+            // routers; only the mining provenance differs).
             let mut counts: HashMap<u16, u32> = HashMap::new();
             for &target in table.iter() {
                 if target == StateId::NONE {
@@ -326,7 +330,8 @@ fn for_each_outgoing_edge<F: FnMut(StateId, u32, u32)>(state: &DtaState, mut vis
         DtaState::Literal { .. }
         | DtaState::Regex { .. }
         | DtaState::Epsilon
-        | DtaState::WsTrim { .. } => {}
+        | DtaState::WsTrim { .. }
+        | DtaState::ConsumeToNextStructural { .. } => {}
     }
 }
 

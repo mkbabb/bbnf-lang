@@ -211,6 +211,45 @@ impl RustEmitter {
         let walker_fn_ident =
             super::dta_walker::walker_fn_ident(ident.to_string().as_str());
 
+        // AW-III.W6.2 — emit PHF keyword tables for every literal-led
+        // Alt whose mined branch count exceeds the threshold. The
+        // emitted statics live at module scope alongside GRAMMAR_PROFILE
+        // so the specialised walker's `AltLinear` arm (or future
+        // ClassifyByte specialisations) can consult them via a binary
+        // search helper fn. Per §6, the mechanism runs over every
+        // grammar's Alt space; per-grammar impact varies with the
+        // mined branch counts.
+        let keyword_phf_tables = {
+            let mut tables: Vec<(u32, &[super::keyword_dispatch::LiteralBranch])> = Vec::new();
+            // Allocate owned branch buffers per rule so the borrow
+            // lives long enough for emit_keyword_tables's consumption.
+            let mut owned: Vec<(u32, Vec<super::keyword_dispatch::LiteralBranch>)> = Vec::new();
+            for rule in &ir.rules {
+                if rule.meta.is_transparent {
+                    continue;
+                }
+                let Some(dag) = ir.dag.as_ref() else { continue };
+                let Some(body_id) = dag.node_for(&rule.body) else { continue };
+                if let Some(branches) = ir.keyword_branches.get(&body_id) {
+                    let lits: Vec<super::keyword_dispatch::LiteralBranch> = branches
+                        .iter()
+                        .map(|kb| super::keyword_dispatch::LiteralBranch {
+                            bytes: kb.bytes.clone(),
+                            branch_idx: kb.branch_idx,
+                        })
+                        .collect();
+                    owned.push((rule.id, lits));
+                }
+            }
+            for (rid, lits) in owned.iter() {
+                tables.push((*rid, lits.as_slice()));
+            }
+            super::keyword_dispatch::emit_keyword_tables(
+                ident.to_string().as_str(),
+                tables,
+            )
+        };
+
         // Tranche AV Phase 2 — AV.2.5 reordered-unrolling kernels for
         // typed-payload visitors. One free-function per descriptor
         // with a 4-lane reordered accumulator (Sum) or lane-wise
@@ -255,9 +294,19 @@ impl RustEmitter {
 
             #grammar_arr
 
+            // AW-III.W6.1 — The DTA table must be emitted BEFORE
+            // GRAMMAR_PROFILE so the profile literal's `shape_dict:
+            // SHAPE_DICT` reference resolves at const-eval time.
+            // `emit_shape_dict_arrays` lives inside emit_dta_table and
+            // always declares a `pub const SHAPE_DICT` (either
+            // populated with the CSP-admitted entries, or `&[]` when
+            // selection is empty).
+            #dta_table
+
             #grammar_profile
 
-            #dta_table
+            // AW-III.W6.2 — PHF keyword tables for literal-led Alts.
+            #keyword_phf_tables
 
             #dta_walker
 

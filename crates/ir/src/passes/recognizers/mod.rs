@@ -58,13 +58,17 @@
 
 mod balanced_wrap;
 mod comment_ws;
+pub mod consume_to_next_structural;
 mod context_facts_miner;
 pub mod delim_scan;
+pub mod disjoint_first;
 pub mod dta;
 mod identifier;
 pub mod kernel_shape;
 pub mod key_dispatch;
+pub mod keyword_stats;
 mod node_facts;
+pub mod pattern_alphabet;
 mod punct_ws_region;
 mod quoted_string;
 mod separator_list;
@@ -87,11 +91,15 @@ pub use signature::{compute_shape_hash, hash_recognizer_shape};
 
 pub use balanced_wrap::BalancedWrapMiner;
 pub use comment_ws::CommentWsMiner;
+pub use consume_to_next_structural::{ConsumeToNextStructuralMiner, CtnsLiftSet};
 pub use context_facts_miner::ContextFactsMiner;
 pub use delim_scan::DelimScanMiner;
+pub use disjoint_first::{DisjointFirstMap, DisjointFirstMiner, DisjointFirstTable};
 pub use identifier::IdentifierMiner;
 pub use kernel_shape::{KernelShape, KernelStrategy, select_kernel_strategy};
 pub use key_dispatch::KeyDispatchMiner;
+pub use keyword_stats::{KeywordBranch, KeywordBranchMap, KeywordStatsMiner};
+pub use pattern_alphabet::{PatternAlphabet, PatternAlphabetMap, PatternAlphabetMiner};
 pub use punct_ws_region::PunctWsRegionMiner;
 pub use quoted_string::QuotedStringMiner;
 pub use separator_list::SeparatorListMiner;
@@ -132,6 +140,15 @@ pub struct MineOutputs {
     pub key_dispatch_configs: HashMap<NodeId, KeyDispatchMatch>,
     pub context_facts: ContextFactsMap,
     pub shape_dict_templates: ShapeDictMap,
+    /// AW-III.W6.2 — per-Alt-NodeId literal-branch mining.
+    pub keyword_branches: KeywordBranchMap,
+    /// AW-III.W6.3 — per-Alt-NodeId disjoint-FIRST dispatch tables.
+    pub disjoint_first_tables: DisjointFirstMap,
+    /// AW-III.W5-carry — per-Regex-NodeId matchable-byte alphabets.
+    pub pattern_alphabets: PatternAlphabetMap,
+    /// AW-III.W5-carry — set of Regex NodeIds whose regex admits
+    /// lifting to `DtaState::ConsumeToNextStructural`.
+    pub ctns_lifts: CtnsLiftSet,
 }
 
 /// A recognizer-mining pass. Called once per node during the unified
@@ -241,6 +258,12 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
     let outputs = if let Some(dag) = ir.dag.as_ref() {
         let ctx = RecognizerMineCtx { ir, dag };
         let punct_ws_region_miner = PunctWsRegionMiner::new();
+        // AW-III.W6 — miner order is load-bearing:
+        // - PatternAlphabetMiner must precede ConsumeToNextStructuralMiner
+        //   because CTNS reads the per-pattern alphabet bitmap from
+        //   outputs.
+        // - KeywordStatsMiner + DisjointFirstMiner run independently over
+        //   Alt nodes; no cross-dependency.
         let miners: &[&dyn RecognizerMiner] = &[
             &ContextFactsMiner,
             &QuotedStringMiner,
@@ -253,6 +276,10 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
             &DelimScanMiner,
             &KeyDispatchMiner,
             &ShapeDictMiner,
+            &KeywordStatsMiner,
+            &DisjointFirstMiner,
+            &PatternAlphabetMiner,
+            &ConsumeToNextStructuralMiner,
         ];
         let mut outputs = MineOutputs::default();
         for rule in &ir.rules {
@@ -283,6 +310,15 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
     // budget; the emitter then bakes the survivors into
     // `GrammarProfile::shape_dict`.
     ir.shape_dict_templates = outputs.shape_dict_templates;
+    // AW-III.W6 — commit the new mining outputs so the emitter can
+    // consume them. Each of these is its own consumer activation
+    // (PHF, ClassifyByte, CTNS); the miners land substrate, the
+    // emitter reads it, the walker consumes via the emitted lowered
+    // code — one codegen path, one set of facts.
+    ir.keyword_branches = outputs.keyword_branches;
+    ir.disjoint_first_tables = outputs.disjoint_first_tables;
+    ir.pattern_alphabets = outputs.pattern_alphabets;
+    ir.ctns_lifts = outputs.ctns_lifts;
 
     // Tranche Y.0 / Y.4: the family-recognizer flag gates the driver's
     // per-node `try_emit_family_kernel` probe. Post-Y.4 the only

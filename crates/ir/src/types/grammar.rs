@@ -236,6 +236,53 @@ pub struct GrammarIR {
     #[serde(skip, default)]
     pub shape_dict_selection: passes::csp_strategy::constraints::shape_dict::ShapeDictSelection,
 
+    /// AW-III.W6.2 — per-Alt keyword-branch mining.
+    ///
+    /// Populated by
+    /// [`passes::recognizers::keyword_stats::KeywordStatsMiner`]. The
+    /// emitter reads each rule's Alt body, looks up its NodeId in this
+    /// map, and emits a PHF keyword table when the branch count
+    /// crosses [`crate::backend::rust::emitter::keyword_dispatch::
+    /// PHF_MIN_BRANCHES`]. Below the threshold the emitter falls back
+    /// to linear Alt dispatch.
+    /// Not serialized.
+    #[serde(skip, default)]
+    pub keyword_branches: passes::recognizers::keyword_stats::KeywordBranchMap,
+
+    /// AW-III.W6.3 — per-Alt disjoint-FIRST dispatch tables.
+    ///
+    /// Populated by
+    /// [`passes::recognizers::disjoint_first::DisjointFirstMiner`]. The
+    /// emitter reads each Alt body, looks up its NodeId in this map,
+    /// and emits a `DtaState::ClassifyByte` lowering when the entry
+    /// exists.
+    /// Not serialized.
+    #[serde(skip, default)]
+    pub disjoint_first_tables: passes::recognizers::disjoint_first::DisjointFirstMap,
+
+    /// AW-III.W5-carry — per-Regex matchable-byte alphabets.
+    ///
+    /// Populated by
+    /// [`passes::recognizers::pattern_alphabet::PatternAlphabetMiner`].
+    /// Consumed by the walker's Regex arm to bound its scan when the
+    /// pattern's alphabet is disjoint from the grammar's structural
+    /// alphabet.
+    /// Not serialized.
+    #[serde(skip, default)]
+    pub pattern_alphabets: passes::recognizers::pattern_alphabet::PatternAlphabetMap,
+
+    /// AW-III.W5-carry — NodeIds admitted to `ConsumeToNextStructural`
+    /// lifting.
+    ///
+    /// Populated by
+    /// [`passes::recognizers::consume_to_next_structural::ConsumeToNextStructuralMiner`].
+    /// The emitter emits `DtaState::ConsumeToNextStructural` in place
+    /// of `DtaState::Regex` for any `IrNode::Regex` whose NodeId is in
+    /// this set.
+    /// Not serialized.
+    #[serde(skip, default)]
+    pub ctns_lifts: passes::recognizers::consume_to_next_structural::CtnsLiftSet,
+
     /// Tranche AQ.6.B — per-rule aggregate payload layouts.
     ///
     /// Populated by [`passes::compute_payload_layouts`] after

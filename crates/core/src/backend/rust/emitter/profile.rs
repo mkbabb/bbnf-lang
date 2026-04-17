@@ -44,6 +44,12 @@ use quote::quote;
 /// Lives at module scope in `generated.rs`, immediately after the
 /// `GRAMMAR_<Ident>` string array and before the view types + rule
 /// functions.
+///
+/// AW-III.W6.1 — `shape_dict` now references the `SHAPE_DICT` const
+/// emitted by [`super::dta::emit_dta_table`] via
+/// `emit_shape_dict_arrays`. When the CSP selection is empty, the
+/// emitter still emits `pub const SHAPE_DICT: &[ShapeEntry] = &[];`
+/// so the profile field's reference is always valid.
 pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
     let push_compound_count = profile.push_compound_count;
     let push_leaf_count = profile.push_leaf_count;
@@ -175,7 +181,11 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
                 active_columns: &[],
                 list_rules: &[],
                 keyword_tables: &[],
-                shape_dict: &[],
+                // AW-III.W6.1 — Wire the SHAPE_DICT const emitted by
+                // emit_shape_dict_arrays. When the CSP selection is
+                // empty, SHAPE_DICT is still defined as &[] so this
+                // reference is always valid.
+                shape_dict: SHAPE_DICT,
                 branch_priors: &[],
                 dedup_eligible_rules: &[],
                 reorder_unroll_visitors: #visitors_ref,

@@ -1552,6 +1552,40 @@ pub fn dispatch_one(
             stack.pending_variant_idx = (rule.0 & 0xFF) as u8;
             Ok(StepResult::Next(chosen))
         }
+        DtaState::ClassifyByte { table: disp, fallback } => {
+            // AW-III.W6.3 — ClassifyByte is semantically equivalent to
+            // ByteDispatch but is emitted exclusively for Alts mined by
+            // the disjoint_first pass (all branches have mutually-
+            // disjoint FIRST sets). The cold-path semantic here is a
+            // single indexed load + NONE-fallback branch, matching the
+            // ByteDispatch arm below; the hot-path emitter specialises
+            // it to a `match` expression over the mined byte classes.
+            let b = if !idx.positions.is_empty() {
+                let slot_idx = *slot as usize;
+                if slot_idx < idx.positions.len() && idx.positions[slot_idx] == *pos {
+                    idx.kinds[slot_idx]
+                } else {
+                    input.get(*pos as usize).copied().unwrap_or(0)
+                }
+            } else {
+                input.get(*pos as usize).copied().unwrap_or(0)
+            };
+            let next = disp[b as usize];
+            let chosen = if next == DtaStateId::NONE { fallback } else { next };
+            if chosen == DtaStateId::NONE {
+                return Err(DtaError::Syntax {
+                    offset: *pos,
+                    failing_state: state,
+                    failing_rule: DtaRuleId(u32::MAX),
+                });
+            }
+            if let Some(top) = stack.top_mut() {
+                if matches!(top.kind, DtaFrameKind::Alt) {
+                    top.cursor = chosen.0;
+                }
+            }
+            Ok(StepResult::Next(chosen))
+        }
         DtaState::ByteDispatch { table: disp, fallback } => {
             // AW-III.W5.c — when the dual-cursor's structural index is
             // populated AND its current slot's position matches `pos`,

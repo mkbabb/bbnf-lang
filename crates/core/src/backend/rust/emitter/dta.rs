@@ -378,6 +378,42 @@ fn emit_state_literal(
                 }
             }
         }
+        DtaState::ClassifyByte { table, fallback } => {
+            // AW-III.W6.3 — ClassifyByte lowers to a 256-entry LUT
+            // identical in shape to ByteDispatch; the distinct variant
+            // preserves mining provenance so the emitted walker can
+            // lower it via the disjoint-first specialiser.
+            let table_ident = format_ident!("__DTA_CLASSIFY_{}", idx);
+            let entries: Vec<_> = table.iter().map(|s| state_id_literal(*s)).collect();
+            support.extend(quote! {
+                static #table_ident:
+                    [::bbnf::runtime::tape::DtaStateId; 256] =
+                    [#(#entries),*];
+            });
+            let fallback_lit = match fallback {
+                Some(s) => state_id_literal(*s),
+                None => state_id_none_literal(),
+            };
+            quote! {
+                ::bbnf::runtime::tape::DtaState::ClassifyByte {
+                    table: &#table_ident,
+                    fallback: #fallback_lit,
+                }
+            }
+        }
+        DtaState::ConsumeToNextStructural { pattern: _ } => {
+            // AW-III.W5-carry — Lower to the tape-side CTNS variant.
+            // The original pattern is currently not emitted as part of
+            // the tape-side variant (tape-side CTNS takes no field);
+            // the cold-path fallback uses the slot index directly.
+            // Future tranches will thread the pattern string through
+            // for complete cold-path parity; until then the CTNS arm
+            // falls back to the slot-aware trim when the structural
+            // index is empty, matching the driver's existing behaviour.
+            quote! {
+                ::bbnf::runtime::tape::DtaState::ConsumeToNextStructural
+            }
+        }
         DtaState::AltLinear { branches } => {
             let branches_ident = format_ident!("__DTA_ALT_LIN_{}", idx);
             let branches_len = branches.len();

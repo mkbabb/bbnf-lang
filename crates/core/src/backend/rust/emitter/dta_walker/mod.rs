@@ -137,6 +137,11 @@ pub fn emit_specialised_walker(
 ) -> TokenStream {
     let _ = (alphabet, profile); // W5 / W6 consumers attach later.
     let fn_ident = walker_fn_ident(grammar);
+    // AW-IV.W2.1 — body splice for the main-loop's Repeat-failure
+    // absorber. Replaces the cross-crate
+    // `bbnf_tape::handle_repeat_failure` call with the stack-walk +
+    // iter-savepoint restore + close-compound logic at source level.
+    let repeat_failure_splice = helpers::emit_handle_repeat_failure_inline();
 
     if table.states.is_empty() {
         return quote! {
@@ -307,11 +312,14 @@ pub fn emit_specialised_walker(
                         ::core::result::Result::Err(
                             e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
                         ) => {
-                            match ::bbnf::runtime::tape::handle_repeat_failure(
-                                table, input, idx,
-                                columns, psi, frame_depth,
-                                stack, pos, slot,
-                            )? {
+                            // AW-IV.W2.1 — body splice replaces the
+                            // cross-crate `handle_repeat_failure` call.
+                            // `_ = idx;` matches the runtime helper's
+                            // signature threading (see
+                            // `handle_repeat_failure`'s body in
+                            // `bbnf-tape/src/driver.rs`).
+                            let _ = idx;
+                            match #repeat_failure_splice? {
                                 ::bbnf::runtime::tape::RepeatAbsorbResult::Continue(next) => {
                                     cur = next.0;
                                 }

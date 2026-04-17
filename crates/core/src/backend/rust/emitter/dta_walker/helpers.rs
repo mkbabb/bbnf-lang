@@ -179,18 +179,13 @@ pub(super) fn emit_emit_leaf_inline(
 pub(super) fn emit_close_compound_inline(span_hi_expr: TokenStream) -> TokenStream {
     quote! {
         {
-            // Peek top frame without taking a mutable borrow —
-            // mirror of `bbnf_tape::driver::stack_top`.
-            let __top_frame: ::core::option::Option<&::bbnf::runtime::tape::Frame> = {
-                if let ::core::option::Option::Some(f) = stack.overflow.last() {
-                    ::core::option::Option::Some(f)
-                } else if stack.inline_len == 0 {
-                    ::core::option::Option::None
-                } else {
-                    ::core::option::Option::Some(&stack.inline[(stack.inline_len - 1) as usize])
-                }
-            };
-            if let ::core::option::Option::Some(__frame) = __top_frame {
+            // Peek top frame through the `#[inline(always)]`
+            // `stack_top` helper. The helper's body is ~8 lines; the
+            // cross-crate inline annotation folds it into the splice
+            // site without relying on private-field access.
+            if let ::core::option::Option::Some(__frame) =
+                ::bbnf::runtime::tape::stack_top(stack)
+            {
                 let __parent = __frame.parent_rec as usize;
                 let __span_hi_val: u32 = #span_hi_expr;
                 let __has_children = (columns.len() as u32) > __frame.child_mark;
@@ -198,9 +193,16 @@ pub(super) fn emit_close_compound_inline(span_hi_expr: TokenStream) -> TokenStre
                 // AW-III.W1.6 — KvPair promotion path. Mine the most
                 // recent child whose `PAYLOAD_IN_ARENA_BIT` is set,
                 // flatten into a KvPair leaf, truncate children.
-                if matches!(__frame.promote, ::bbnf::runtime::tape::SeqPromote::KvPair)
-                    && __has_children
-                {
+                // `if let pat = expr` over `matches!` — the macro
+                // emits an attribute on the inner `match` that Rust
+                // 2024 treats as unstable when the call sits at
+                // expression position inside `if`.
+                let __is_kvpair = if let ::bbnf::runtime::tape::SeqPromote::KvPair = __frame.promote {
+                    true
+                } else {
+                    false
+                };
+                if __is_kvpair && __has_children {
                     let mut __scalar_arena_off: ::core::option::Option<
                         ::bbnf::runtime::tape::TapeOffset,
                     > = ::core::option::Option::None;
@@ -223,12 +225,19 @@ pub(super) fn emit_close_compound_inline(span_hi_expr: TokenStream) -> TokenStre
                         let __preserved = columns.extra[__parent]
                             & ::bbnf::runtime::tape::TapeRec::META_IDX_HI_BIT;
                         columns.extra[__parent] = __preserved | __parent_extra;
+                        // `if let` avoids the `matches!` attribute
+                        // wrapping that Rust 2024 rejects at
+                        // expression-position attribute syntax.
+                        let __is_alt = if let ::bbnf::runtime::tape::DtaFrameKind::Alt
+                            = __frame.kind
+                        {
+                            true
+                        } else {
+                            false
+                        };
                         if __frame.variant_idx != u8::MAX {
                             columns.flags[__parent] = __frame.variant_idx;
-                        } else if matches!(
-                            __frame.kind,
-                            ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                        ) {
+                        } else if __is_alt {
                             columns.flags[__parent] = __frame.cursor as u8;
                         }
                         columns.truncate(__frame.child_mark as usize);
@@ -240,12 +249,16 @@ pub(super) fn emit_close_compound_inline(span_hi_expr: TokenStream) -> TokenStre
                             columns.extra[__parent] |=
                                 ::bbnf::runtime::tape::TapeRec::HAS_CHILDREN_BIT;
                         }
+                        let __is_alt = if let ::bbnf::runtime::tape::DtaFrameKind::Alt
+                            = __frame.kind
+                        {
+                            true
+                        } else {
+                            false
+                        };
                         if __frame.variant_idx != u8::MAX {
                             columns.flags[__parent] = __frame.variant_idx;
-                        } else if matches!(
-                            __frame.kind,
-                            ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                        ) {
+                        } else if __is_alt {
                             columns.flags[__parent] = __frame.cursor as u8;
                         }
                     }
@@ -256,12 +269,16 @@ pub(super) fn emit_close_compound_inline(span_hi_expr: TokenStream) -> TokenStre
                         columns.extra[__parent] |=
                             ::bbnf::runtime::tape::TapeRec::HAS_CHILDREN_BIT;
                     }
+                    let __is_alt = if let ::bbnf::runtime::tape::DtaFrameKind::Alt
+                        = __frame.kind
+                    {
+                        true
+                    } else {
+                        false
+                    };
                     if __frame.variant_idx != u8::MAX {
                         columns.flags[__parent] = __frame.variant_idx;
-                    } else if matches!(
-                        __frame.kind,
-                        ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    ) {
+                    } else if __is_alt {
                         columns.flags[__parent] = __frame.cursor as u8;
                     }
                 }
@@ -304,7 +321,12 @@ pub(super) fn emit_advance_or_pop_inline() -> TokenStream {
                         break 'fast ::core::option::Option::None;
                     }
                 };
-                if matches!(__top.kind, ::bbnf::runtime::tape::DtaFrameKind::Seq) {
+                // Direct `if let` pattern — avoids the `matches!` macro
+                // whose expansion inserts `#[allow(…)]` on the inner
+                // match expression, which Rust 2024 parses as an
+                // unstable expression attribute when the macro call
+                // sits mid-expression.
+                if let ::bbnf::runtime::tape::DtaFrameKind::Seq = __top.kind {
                     let __next_cursor = __top.cursor + 1;
                     if (__next_cursor as usize) < __top.children.len() {
                         __top.cursor = __next_cursor;
@@ -330,6 +352,127 @@ pub(super) fn emit_advance_or_pop_inline() -> TokenStream {
                     columns, frame_depth, psi, stack, pos, slot,
                 )
             }
+        }
+    }
+}
+
+/// AW-IV.W2.1 — inline body of the main-loop Repeat-failure absorber.
+///
+/// Splices the `handle_repeat_failure` body directly at the outer
+/// loop's Syntax-error handler. The body walks the stack downward
+/// looking for the innermost Repeat frame whose `counter >= lo`;
+/// on match, restores the iter savepoint, closes the compound
+/// (via the spliced `close_compound` body), pops the Repeat frame,
+/// and hands the result to `advance_or_pop_with` (the cold helper —
+/// its ~250-line body stays behind a single call boundary).
+///
+/// The grammar-agnostic body reads only IR-structural facts from
+/// the live frame stack. Per the §6 invariant, the same tokens
+/// render for every grammar — the compile-time knowledge of which
+/// states ARE Repeat is reflected in the frame.kind discriminator,
+/// which the emitted body matches at runtime (every frame carries
+/// its kind). Grammar-level Repeat inventory does not specialise the
+/// body; the stack-walk is uniform.
+///
+/// The `result_ident` ident captures a `Result<RepeatAbsorbResult,
+/// DtaError>` the caller assigns from the splice's terminal
+/// expression.
+pub(super) fn emit_handle_repeat_failure_inline() -> TokenStream {
+    let close_compound_splice = emit_close_compound_inline(quote! { *pos });
+    quote! {
+        {
+            // AW-IV.W2.1 — inline body of
+            // `handle_repeat_failure(table, input, idx, columns,
+            //                         psi, frame_depth, stack, pos, slot)`.
+            //
+            // `idx` is threaded through for signature uniformity
+            // with `dispatch_one` + `try_branch`; the absorption
+            // logic does not consult the structural index directly
+            // (the slot restore happens via `sp.stack.slot`).
+            let mut __scan_depth = stack.depth();
+            let mut __outcome: ::core::result::Result<
+                ::bbnf::runtime::tape::RepeatAbsorbResult,
+                ::bbnf::runtime::tape::DtaError,
+            > = ::core::result::Result::Ok(
+                ::bbnf::runtime::tape::RepeatAbsorbResult::NotAbsorbed,
+            );
+            'absorb: while __scan_depth > 0 {
+                let __frame_idx = (__scan_depth - 1) as usize;
+                // `frame_at` is `#[inline]` on bbnf-tape — the body
+                // folds into the splice site. Avoids the private-field
+                // access that a hand-inlined copy would require.
+                let __frame = ::bbnf::runtime::tape::frame_at(stack, __frame_idx);
+                // `if let` over `matches!` for the same reason as
+                // the other splice sites — the macro's attribute
+                // output is unstable at expression position.
+                let __is_repeat = if let ::bbnf::runtime::tape::DtaFrameKind::Repeat
+                    = __frame.kind
+                {
+                    true
+                } else {
+                    false
+                };
+                if __is_repeat {
+                    let __counter_idx = __frame.counter_idx as usize;
+                    let __counter_val = stack.counters[__counter_idx];
+                    if __counter_val as u32 >= __frame.lo as u32 {
+                        let __sp = stack.iter_savepoints[__counter_idx];
+                        columns.truncate(__sp.cols_len as usize);
+                        frame_depth.truncate(__sp.fd_len as usize);
+                        psi.truncate(__sp.psi_len as usize);
+                        // AW-III.W1: roll back staged arena bytes.
+                        columns.pay_agg.truncate(__sp.pay_agg_len as usize);
+                        stack.restore(__sp.stack);
+                        // AW-I.W4ζ — clear pending rule-entry stamp
+                        // from the failed iteration body's Refs so
+                        // it doesn't leak to the next sibling's
+                        // compound push.
+                        stack.pending_variant_idx = u8::MAX;
+                        *pos = __sp.pos;
+                        // AW-III.W5.c — restore the structural cursor
+                        // slot captured into `sp.stack.slot` at
+                        // iteration entry.
+                        *slot = __sp.stack.slot;
+                        // AW-IV.W2.1 — `close_compound` body spliced
+                        // inline. Mirrors the cold path's
+                        // close-then-pop sequence.
+                        #close_compound_splice
+                        // Pop the Repeat frame; release its counter
+                        // slot (mirror of `pop_and_release` —
+                        // `#[inline(always)]` on bbnf-tape).
+                        ::bbnf::runtime::tape::pop_and_release(stack);
+                        // Delegate the subsequent advance to the
+                        // cold `advance_or_pop_with` helper (its
+                        // ~250-line SY reducer stays out-of-line).
+                        match ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns, frame_depth, psi, stack, pos, slot,
+                        ) {
+                            ::core::result::Result::Ok(
+                                ::bbnf::runtime::tape::StepResult::Next(__n),
+                            ) => {
+                                __outcome = ::core::result::Result::Ok(
+                                    ::bbnf::runtime::tape::RepeatAbsorbResult::Continue(__n),
+                                );
+                            }
+                            ::core::result::Result::Ok(
+                                ::bbnf::runtime::tape::StepResult::Done,
+                            ) => {
+                                __outcome = ::core::result::Result::Ok(
+                                    ::bbnf::runtime::tape::RepeatAbsorbResult::Done,
+                                );
+                            }
+                            ::core::result::Result::Err(__e) => {
+                                __outcome = ::core::result::Result::Err(__e);
+                            }
+                        }
+                        break 'absorb;
+                    }
+                }
+                __scan_depth -= 1;
+            }
+            __outcome
         }
     }
 }

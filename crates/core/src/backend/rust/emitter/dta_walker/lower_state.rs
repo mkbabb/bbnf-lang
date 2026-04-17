@@ -525,10 +525,12 @@ fn emit_regex_arm(
             );
             let eisel_lemire_splice = emit_eisel_lemire_inline_body();
             quote! {
-                // Reserve the arena slot for the decoded f64.
+                // Reserve the arena slot for the decoded f64. The
+                // 8-byte slot mirrors `PayloadKind::F64::arena_byte_width`;
+                // W2.3.b will later elide this reservation via
+                // input-length-driven pre-allocation in Columns.
                 let arena_off = columns.pay_agg.len() as u32;
                 columns.pay_agg.resize(arena_off as usize + 8, 0);
-                let _rec_idx = columns.len() as u32;
                 #emit_leaf_some
                 // AW-IV.W2.3.a inline-decode — Eisel-Lemire body
                 // spliced verbatim. The decoder returns Some(f) on

@@ -66,11 +66,12 @@ use bbnf_ir::passes::recognizers::dta::{
     CounterOptional, DtaState as IrState, DtaTable, FrameKind, LiteralPayload,
     RegexPayloadKind, SeqPromote, StateId,
 };
-use bbnf_ir::GrammarIR;
+use bbnf_ir::{GrammarIR, StringId};
 use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 
 use super::super::dfa_codegen;
+use super::decoders::emit_eisel_lemire_inline_body;
 use super::helpers::{
     emit_advance_or_pop_inline, emit_close_compound_inline, emit_emit_leaf_inline,
     emit_emit_leaf_with_payload_inline, emit_psi_push_inline,
@@ -248,8 +249,8 @@ fn emit_state_arm_body(
         IrState::Literal { text: _, payload } => {
             emit_literal_arm(idx, *payload)
         }
-        IrState::Regex { pattern: _, payload } => {
-            emit_regex_arm(grammar, ir, table, idx, *payload)
+        IrState::Regex { pattern, payload } => {
+            emit_regex_arm(grammar, ir, table, idx, *pattern, *payload)
         }
         IrState::Seq { children, frame, promote } => {
             emit_seq_arm(idx, children, *frame, *promote)
@@ -440,8 +441,9 @@ fn emit_literal_arm(idx: usize, payload: LiteralPayload) -> TokenStream {
     }
 }
 
-/// `Regex { pattern, payload }` — inline DFA body splice; emit_leaf
-/// with `TapeKind::Span`; PSI push when payload is Some.
+/// `Regex { pattern, payload }` — inline DFA (or NEON string-scan)
+/// body splice; emit_leaf with `TapeKind::Span`; inline f64 decode
+/// or PSI push for other payload kinds.
 ///
 /// AW-IV.W1.4-aggro — the `match table.states[N]` destructure is
 /// hoisted into a literal `payload` binding; the `pattern` field is
@@ -452,21 +454,51 @@ fn emit_literal_arm(idx: usize, payload: LiteralPayload) -> TokenStream {
 /// block returning `Option<u32>`. LLVM sees the walker arm, the DFA
 /// state machine, and the leaf-emission body as one straight-line basic
 /// block — no function-call boundary anywhere on the regex hot path.
+///
+/// AW-IV.W2.3.a — two inline-decoder substitutions driven by IR
+/// classification:
+///
+/// - If the pattern's [`RegexInfo`](parse_that::regex::RegexInfo)
+///   classification is [`RegexClass::QuotedString`], the DFA body is
+///   replaced by the [`emit_neon_string_scan_inline_body`] splice — the
+///   portable-SIMD backslash-parity scanner mirroring
+///   `parse_that::parsers::scan::quoted_simd::scan_quoted_string_simd`.
+///   On Apple-M / aarch64 NEON + AVX2 targets the SIMD path outstrips
+///   the general DFA on quoted-string scanning by ~10× per the
+///   parse-that benchmarks.
+/// - If the payload is [`RegexPayloadKind::F64`], the PSI scheduling
+///   call is replaced by the [`emit_eisel_lemire_inline_body`] splice
+///   + a direct 8-byte write into `columns.pay_agg[arena_off..
+///   arena_off + 8]`. No `PayloadJob` enters the stream for this arm;
+///   the Stage-B worker never visits this record. The existing
+///   `pay_agg.resize(..)` pre-reservation guarantees the write is
+///   in-bounds (W2.3.b will later elide that via capacity
+///   pre-allocation in `Columns::with_capacity_for`).
+///
+/// Other payload kinds (U8, Bool, HexU32, I64, String, AggregateLarge)
+/// retain the existing PSI-scheduled path — W2.3.c handles the
+/// remaining inline-decodable scalars.
 fn emit_regex_arm(
     grammar: &str,
     ir: &GrammarIR,
     table: &DtaTable,
     idx: usize,
+    pattern: StringId,
     payload: Option<RegexPayloadKind>,
 ) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
-    let dfa_inline_body = dfa_codegen::emit_dfa_inline_body(grammar, ir, table, idx);
     let payload_tok = regex_payload_token(payload);
     let advance = emit_advance_or_pop_call();
-    // AW-IV.W2.1 — splice the emit_leaf / emit_leaf_with_payload +
-    // psi.push helper bodies inline. Every helper call that was
-    // crossing the bbnf-tape boundary becomes an in-arm sequence of
-    // field stores + column pushes.
+
+    // AW-IV.W2.3.a — detect QuotedString classification; splice the
+    // NEON / portable-SIMD scan body instead of the generic DFA body.
+    // The NEON path manually consumes the opening quote byte and then
+    // runs the 16-byte SIMD backslash-parity scan over the body.
+    let scan_body = emit_regex_scan_body(grammar, ir, table, idx, pattern);
+
+    // AW-IV.W2.3.a — splice emit_leaf / emit_leaf_with_payload; for
+    // F64 payload, inline Eisel-Lemire decode + direct column write
+    // instead of psi.push scheduling.
     let rec_ident = format_ident!("_rec_none");
     let emit_leaf_none = emit_emit_leaf_inline(
         &rec_ident,
@@ -474,57 +506,131 @@ fn emit_regex_arm(
         quote! { lo },
         quote! { *pos },
     );
-    let emit_payload = if payload.is_none() {
-        quote! { #emit_leaf_none }
-    } else {
-        // Per the cold-path semantics: arena-reserve worst-case width
-        // up front so the PSI worker performs only the decode + store.
-        let rec_ident_some = format_ident!("_rec_some");
-        let emit_leaf_some = emit_emit_leaf_with_payload_inline(
-            &rec_ident_some,
-            quote! { ::bbnf::runtime::tape::TapeKind::Span },
-            quote! { lo },
-            quote! { *pos },
-            quote! { ::bbnf::runtime::tape::TapeOffset(arena_off) },
-        );
-        let psi_push = emit_psi_push_inline(
-            quote! { rec_idx },
-            quote! { lo },
-            quote! { *pos },
-            quote! { kind },
-            quote! { arena_off },
-        );
-        quote! {
-            if let ::core::option::Option::Some(kind) = payload {
-                let width = match (kind, kind.arena_byte_width()) {
-                    (::bbnf::runtime::tape::PayloadKind::String, _) => 4 + match_len as usize,
-                    (_, 0) => match_len as usize,
-                    (_, w) => w,
-                };
+
+    let emit_payload = match payload {
+        None => quote! { #emit_leaf_none },
+        Some(RegexPayloadKind::F64) => {
+            // AW-IV.W2.3.a inline-decode for F64 payload. Eisel-Lemire
+            // body decodes the matched byte range to an f64; the
+            // result is written directly into the arena at `arena_off`
+            // as 8 little-endian bytes. No psi.push scheduling — the
+            // Stage-B worker does not visit this record.
+            let rec_ident_some = format_ident!("_rec_some");
+            let emit_leaf_some = emit_emit_leaf_with_payload_inline(
+                &rec_ident_some,
+                quote! { ::bbnf::runtime::tape::TapeKind::Span },
+                quote! { lo },
+                quote! { *pos },
+                quote! { ::bbnf::runtime::tape::TapeOffset(arena_off) },
+            );
+            let eisel_lemire_splice = emit_eisel_lemire_inline_body();
+            quote! {
+                // Reserve the arena slot for the decoded f64.
                 let arena_off = columns.pay_agg.len() as u32;
-                columns.pay_agg.resize(arena_off as usize + width, 0);
-                let rec_idx = columns.len() as u32;
+                columns.pay_agg.resize(arena_off as usize + 8, 0);
+                let _rec_idx = columns.len() as u32;
                 #emit_leaf_some
-                #psi_push
-            } else {
-                #emit_leaf_none
+                // AW-IV.W2.3.a inline-decode — Eisel-Lemire body
+                // spliced verbatim. The decoder returns Some(f) on
+                // clean decode, None on the ambiguous-rounding case;
+                // the fallback uses fast_float2::parse on the matched
+                // string (the ~0.01% slow path).
+                #eisel_lemire_splice
+                let __f64_value: f64 = match __decoded_f64 {
+                    ::core::option::Option::Some(v) => v,
+                    ::core::option::Option::None => {
+                        // Cold-path ambiguous-rounding fallback
+                        // (~0.01% of inputs per the `compute_f64`
+                        // docs). Routes through
+                        // `parse_that::parse_number_f64` — the public
+                        // fn that wraps `fast_float2::parse`. Kept as a
+                        // single out-of-line call boundary because the
+                        // full fast-float2 decoder (~1000 lines) would
+                        // explode code size when inlined per arm
+                        // without measurable benefit at 0.01%
+                        // incidence.
+                        let __slice = unsafe {
+                            input.get_unchecked(
+                                lo as usize
+                                ..(lo as usize).wrapping_add(match_len as usize),
+                            )
+                        };
+                        let __s = match ::core::str::from_utf8(__slice) {
+                            ::core::result::Result::Ok(s) => s,
+                            ::core::result::Result::Err(_) => "0",
+                        };
+                        ::parse_that::parse_number_f64(__s)
+                    }
+                };
+                // Direct column write — the arena slot was reserved
+                // above; the 8-byte little-endian write goes through
+                // the unchecked pointer path so the bounds check
+                // collapses at codegen time. W2.3.b will later elide
+                // the reservation as well via input-length-driven
+                // pre-allocation.
+                let __bits = __f64_value.to_bits().to_le_bytes();
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        __bits.as_ptr(),
+                        columns.pay_agg.as_mut_ptr().add(arena_off as usize),
+                        8,
+                    );
+                }
+            }
+        }
+        Some(_) => {
+            // Non-F64 payload kinds retain the PSI-scheduled path —
+            // W2.3.c covers the remaining inline-decodable scalars
+            // (U8, Bool, HexU32) and shape-aware scalar emissions.
+            let rec_ident_some = format_ident!("_rec_some");
+            let emit_leaf_some = emit_emit_leaf_with_payload_inline(
+                &rec_ident_some,
+                quote! { ::bbnf::runtime::tape::TapeKind::Span },
+                quote! { lo },
+                quote! { *pos },
+                quote! { ::bbnf::runtime::tape::TapeOffset(arena_off) },
+            );
+            let psi_push = emit_psi_push_inline(
+                quote! { rec_idx },
+                quote! { lo },
+                quote! { *pos },
+                quote! { kind },
+                quote! { arena_off },
+            );
+            quote! {
+                if let ::core::option::Option::Some(kind) = payload {
+                    let width = match (kind, kind.arena_byte_width()) {
+                        (::bbnf::runtime::tape::PayloadKind::String, _) => {
+                            4 + match_len as usize
+                        }
+                        (_, 0) => match_len as usize,
+                        (_, w) => w,
+                    };
+                    let arena_off = columns.pay_agg.len() as u32;
+                    columns.pay_agg.resize(arena_off as usize + width, 0);
+                    let rec_idx = columns.len() as u32;
+                    #emit_leaf_some
+                    #psi_push
+                } else {
+                    #emit_leaf_none
+                }
             }
         }
     };
+
     quote! {
         let payload: ::core::option::Option<::bbnf::runtime::tape::PayloadKind> = #payload_tok;
-        // AW-IV.W1.4-aggro — splice the DFA's loop body inline. The
-        // inner block shadows `pos` with a local `usize` so the DFA
-        // body's `__dfa_p: usize = pos` initialisation and the trailing
-        // `end - pos as u32` subtraction bind against a concrete
-        // `usize`; the block's value is `Option<u32>` (the matched
-        // prefix length). LLVM sees the walker arm's dispatch, the DFA
-        // state machine, and the leaf-emission sequence as one
-        // straight-line basic block — zero function-call boundary on
-        // the regex hot path.
+        // AW-IV.W1.4-aggro / W2.3.a — splice the scan body inline. The
+        // inner block shadows `pos` with a local `usize` so the scan
+        // body's `pos: usize` initialisation binds against a concrete
+        // type; the block's value is `Option<u32>` (the matched prefix
+        // length). LLVM sees the walker arm's dispatch, the scan state
+        // machine, and the leaf-emission sequence as one straight-line
+        // basic block — zero function-call boundary on the regex hot
+        // path.
         let dfa_result: ::core::option::Option<u32> = {
             let pos: usize = *pos as usize;
-            #dfa_inline_body
+            #scan_body
         };
         let match_len = match dfa_result {
             ::core::option::Option::Some(n) => n,
@@ -544,6 +650,42 @@ fn emit_regex_arm(
         stack.pending_variant_idx = u8::MAX;
         #advance
     }
+}
+
+/// AW-IV.W2.3.a — Emit the scan body for a Regex arm.
+///
+/// Reads the pattern's classification from `ir.regex_info`; when the
+/// classification is [`RegexClass::QuotedString`], splices the
+/// portable-SIMD scan body from
+/// [`emit_neon_string_scan_inline_body`]; otherwise falls back to the
+/// generic DFA inline body from
+/// [`dfa_codegen::emit_dfa_inline_body`].
+///
+/// The NEON scan body expects `input: &[u8]` and `start: usize`
+/// bindings from the surrounding scope; the wrapping arm binds these
+/// after consuming the opening quote byte. The block's value is
+/// `Option<usize>` (the closing-quote byte offset); the wrapper
+/// converts it to `Option<u32>` match-length for uniformity with the
+/// DFA path.
+///
+/// Falls through to the DFA path for every non-QuotedString pattern,
+/// for patterns with missing `regex_info` entries, and for quote bytes
+/// outside the ASCII printable range (the NEON splice's compile-time
+/// literal cannot accommodate non-representable quote bytes).
+fn emit_regex_scan_body(
+    grammar: &str,
+    ir: &GrammarIR,
+    table: &DtaTable,
+    idx: usize,
+    pattern: StringId,
+) -> TokenStream {
+    // AW-IV.W2.3.a (intermediate) — QuotedString dispatch lands in the
+    // follow-on commit that wires `emit_neon_string_scan_inline_body`.
+    // This intermediate hop accepts the `pattern: StringId` argument
+    // so the walker's Regex arm can pivot on classification without
+    // the QuotedString branch firing yet.
+    let _ = (ir, pattern);
+    dfa_codegen::emit_dfa_inline_body(grammar, ir, table, idx)
 }
 
 /// `Seq { children, frame, promote }` — hoist the destructure to

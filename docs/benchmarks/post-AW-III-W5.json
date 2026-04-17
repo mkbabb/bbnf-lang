@@ -1,0 +1,106 @@
+{
+  "tag": "post-AW-III-W5",
+  "tranche": "AW-III",
+  "wave": "W5",
+  "wave_subagent": "W5.d (stage-1 SIMD integration: scan_structural wired into parse())",
+  "date": "2026-04-17",
+  "commit_w5c_close": "ccdbc1d8",
+  "commit_w5d_close": "876e5094",
+  "arch": "aarch64-apple-darwin",
+  "scope_note": "AW-III.W5.d closes the stage-1 SIMD pre-pass integration opened by W5.a/b/c. Pre-W5.d the emitted parse() constructed `let idx = StructuralIndex::new()` inline and threaded the empty index through the walker — the bbnf-simd-scan kernel was compiled, benchmarked (4775 MB/s standalone on twitter), and verified correct, but the hot path never invoked it. W5.d wires the pipeline: the emitted parse() body now constructs `STRUCTURAL_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_profile(&GRAMMAR_PROFILE)` as a `const`, calls `bbnf_simd_scan::scan_structural(input.as_bytes(), &STRUCTURAL_ALPHABET)` once per parse, and passes `&idx` through the walker. Walker signature gains `idx: &StructuralIndex` and the inner `__dta_walker_inline::run` accepts it from the caller. The type bridge between `GrammarProfile` and `bbnf_simd_scan::StructuralAlphabet` migrates `structural_digraphs` from `&'static [[u8; 2]]` to `&'static [(u8, u8)]` so the same `.rodata` literal feeds both sides — no shim, no wrapper. samply on twitter post-W5.d confirms `bbnf_simd_scan::neon::scan` at 12.13% self-time (hard-gate proof the kernel runs). The JSON twitter throughput target (≥ 1500 MB/s) is NOT met: twitter measures 170 MB/s, a -11% regression vs W4.d's 192 MB/s. The regression is the SIMD scan's per-parse cost (12% new overhead) that the walker's dual-cursor doesn't yet amortise — the W5.c arm collapse for Regex turned out to be unsound for dense-alphabet grammars (CSS L4 mines `[0..127]` as the structural set; every byte is structural so the bound `[pos, idx.positions[slot])` collapses to zero-width scans) and has been reverted to scan the full input. The Regex bound speedup requires per-pattern alphabet narrowing — IR data the current pass doesn't surface; deferred to the next tranche. Walker consumption of the populated index via slot-advancing remains in place for ByteDispatch (which reads `idx.kinds[slot]` via the W5.c arm) and WsTrim's slot resync — those paths benefit in the absence of the dense-alphabet pathology.",
+  "wave_gate_summary": "Per AW-III.md §W5: (a) bitmap kernel sustains ≥ 2 GB/s on 1 MB JSON — VERIFIED at W5.b standalone (4775 MB/s on twitter). (b) walker consumes via dual cursor — VERIFIED, parse() constructs StructuralIndex and threads it through the walker. (c) AQ-5 failure modes verified absent — VERIFIED at W5.c. (d) self.<column>.push count = 0 in driver.rs hot path — VERIFIED at W5.c. (e) samply confirms reserve_compound < 5% — VERIFIED at W5.c. W5.d-specific hard gate: (f) bbnf_simd_scan symbol appears in samples — VERIFIED, bbnf_simd_scan::neon::scan at 12.13%. (g) JSON twitter ≥ 1500 MB/s — NOT MET (170 MB/s); gap attributed to the Regex bound revert (alphabet-disjoint precondition unmet for dense-alphabet grammars) + walker self-time unchanged until ConsumeToNextStructural arm is lifted into the IR. (h) workspace tests 1246+/0/35 — VERIFIED (1246/0/35).",
+  "wave_gate_status_w5d": {
+    "bitmap_kernel_2gb_per_s":            { "met": true, "evidence": "W5.b standalone stage1_throughput bench measured 4775 MB/s on twitter JSON." },
+    "walker_dual_cursor_consumes_idx":    { "met": true, "evidence": "crates/core/src/backend/rust/emitter/grammar.rs `parse()` constructs `idx` via `bbnf_simd_scan::scan_structural`; crates/core/src/backend/rust/emitter/dta_walker/mod.rs `pub fn #fn_ident` accepts `idx: &StructuralIndex` and passes to `__dta_walker_inline::run`; the inner module's `run` consumes via `idx.kinds[slot]` (ByteDispatch) and `idx.positions[slot]` (WsTrim slot resync)." },
+    "aq5_failure_modes_absent":           { "met": true, "evidence": "W5.c added crates/bbnf-tape/tests/driver_dual_cursor.rs with scalar quote-parity + duplicated Alt arms + unsaved cursor + disabled WS elision regression fixtures; all pass." },
+    "hot_path_push_count_zero":           { "met": true, "evidence": "W5.c: grep -n 'self\\.\\w*\\.push' crates/bbnf-tape/src/driver.rs hot-path returns zero results." },
+    "reserve_compound_under_5pct":        { "met": true, "evidence": "W5.c: reserve_compound deleted; push_compound_fused is the only compound emit path." },
+    "bbnf_simd_scan_in_samples":          { "met": true, "actual_pct": 12.13, "evidence": ".profiles/samply/aw3-w5d/json_monolithic/twitter/profile.json.gz top-20 self-time includes bbnf_simd_scan::neon::scan at 12.13% (506/4173 samples). Hard-gate proof the kernel runs on the hot path." },
+    "json_twitter_1500_mbps":             { "met": false, "actual_mb_per_s": 170, "actual_ns_per_iter": 3708918, "rationale": "W4.d twitter was 192 MB/s; W5.d drops to 170 MB/s (-11%). The drop is the SIMD scan's 12.13% self-time overhead without compensating walker speedup — the W5.c Regex bound collapse turned out to be unsound for dense-alphabet grammars (CSS L4 mines [0..127] as structural; every byte is structural so the bound `[pos, idx.positions[slot])` collapses to zero-width scans and every parse fails at offset 0). The Regex arm reverts to full-input scan in W5.d. Restoring the Regex bound speedup needs per-pattern alphabet narrowing — the IR must surface each regex pattern's matchable byte set so the bound check can verify disjointness from the structural set; deferred to the next tranche. The walker still benefits from ByteDispatch's `idx.kinds[slot]` lookup (one indexed u8 load vs `input.get(pos)` bounds check) and WsTrim's slot-resync path, but those gains don't cover the SIMD scan's overhead at twitter's input size." },
+    "workspace_tests_1246_passing":       { "met": true, "evidence": "cargo test --workspace --no-fail-fast: 1246 passed / 0 failed / 35 ignored." },
+    "bootstrap_idempotent":               { "met": true, "evidence": "scripts/bootstrap-bbnf.sh produces md5 09b212f3684955f251b7a1d91031fd20 (56102 lines) on consecutive runs after `find . -name .bbnf-cache -exec rm -rf {} +` cache clear." }
+  },
+  "workspace_test_count": "1246 passed / 0 failed / 35 ignored",
+  "bootstrap_md5": "09b212f3684955f251b7a1d91031fd20",
+  "bootstrap_lines": 56102,
+  "type_bridge_summary": {
+    "before": "bbnf_tape::GrammarProfile::structural_digraphs: &'static [[u8; 2]]; bbnf_simd_scan::StructuralAlphabet::digraph_pairs: &'static [(u8, u8)] — distinct shapes required a wrapper layer.",
+    "after":  "Both unify at &'static [(u8, u8)]. The profile emitter lowers `static __GRAMMAR_PROFILE_DIGRAPHS: [(u8, u8); N]`; both the tape-side profile field and the SIMD scanner alphabet's digraph_pairs bind to the same underlying static. `StructuralAlphabet::from_profile(&GrammarProfile) -> Self` is `const fn`, so the parse() entry's `const STRUCTURAL_ALPHABET: StructuralAlphabet = from_profile(&GRAMMAR_PROFILE)` compiles to a .rodata constant with zero construction cost.",
+    "touched_files": [
+      "crates/bbnf-tape/src/profile.rs (structural_digraphs type)",
+      "crates/bbnf-tape/tests/tape_basic.rs (sample literal shape)",
+      "crates/ir/src/passes/profile.rs (IR-side shape)",
+      "crates/core/src/backend/rust/emitter/profile.rs (emitter lowering)",
+      "crates/bbnf-simd-scan/src/alphabet.rs (from_profile constructor)"
+    ]
+  },
+  "samply_attribution_post_w5d": {
+    "path": ".profiles/samply/aw3-w5d/json_monolithic/twitter/",
+    "files": ["profile.json.gz", "profile.json.syms.json"],
+    "method": "samply record --save-only --unstable-presymbolicate -- json_monolithic-1ac88c6c56bb5032 --bench twitter; cwd=crates/core",
+    "sample_count": 4173,
+    "top_self_time_symbols": [
+      { "pct": 36.64, "symbol": "json_monolithic::__jsonparser_emit_impl::__dta_walker_inline::run::<DtaDfaScanner>", "category": "per-grammar specialised walker" },
+      { "pct": 31.92, "symbol": "<json_monolithic::__jsonparser_emit_impl::DtaDfaScanner as bbnf_tape::driver::RegexScanner>::scan", "category": "regex scanner — runtime DFA interpreter" },
+      { "pct": 12.13, "symbol": "bbnf_simd_scan::neon::scan", "category": "stage-1 SIMD structural pre-pass (AW-III.W5.d new hot symbol)" },
+      { "pct":  7.79, "symbol": "bbnf_tape::finaliser::finalise", "category": "tape close + sib_skip walk" },
+      { "pct":  4.46, "symbol": "bbnf_tape::psi::write_decoded", "category": "PSI stage-B payload writes" },
+      { "pct":  2.37, "symbol": "<HashMap<usize, &Dfa, RandomState>>::get", "category": "regex cache HashMap probing" },
+      { "pct":  1.13, "symbol": "_platform_memset", "category": "libc memset" },
+      { "pct":  0.91, "symbol": "bbnf_tape::driver::handle_repeat_failure", "category": "Repeat absorb error path" },
+      { "pct":  0.72, "symbol": "core::str::converts::from_utf8", "category": "input decode" },
+      { "pct":  0.55, "symbol": "_platform_memmove", "category": "libc memmove" }
+    ],
+    "delta_vs_w4d": {
+      "__dta_walker_inline::run":  { "w4d_pct": 42.61, "w5d_pct": 36.64, "note": "-5.97pp; proportional reduction as bbnf_simd_scan took its share + WsTrim/Regex arm simplification." },
+      "scanner.scan":              { "w4d_pct": 37.00, "w5d_pct": 31.92, "note": "-5.08pp; proportional reduction." },
+      "bbnf_simd_scan::neon::scan":{ "w4d_pct":  0.00, "w5d_pct": 12.13, "note": "new hot symbol; stage-1 SIMD pre-pass now active." },
+      "finalise":                  { "w4d_pct":  9.08, "w5d_pct":  7.79, "note": "-1.29pp." },
+      "psi.write_decoded":         { "w4d_pct":  4.14, "w5d_pct":  4.46, "note": "+0.32pp." }
+    },
+    "interpretation": "The stage-1 SIMD kernel takes 12.13% of walker-parse time on JSON twitter — the pre-pass runs once and produces the StructuralIndex the walker's ByteDispatch arm consults. The W5.c dual-cursor arm rewrites consume the index via `idx.kinds[slot]` (ByteDispatch) and `idx.positions[slot]` (WsTrim slot resync). The remaining walker self-time (36.64%) and scanner self-time (31.92%) dominate because the Regex bound speedup that W5.c claimed was unsound for dense-alphabet grammars and reverts to full-input scan in W5.d. The 170 MB/s twitter throughput vs W4.d's 192 MB/s is a -11% regression — the SIMD pre-pass runs but doesn't amortise on the walker side yet. The next step is per-pattern alphabet narrowing on the IR so the Regex bound can be restored with a disjointness witness, or alternatively lifting `DtaState::ConsumeToNextStructural` out of substrate-only status (the arm landed in W5.c but no lifter emits it today)."
+  },
+  "bench_matrix": {
+    "json_monolithic": {
+      "data_s":  { "ns_per_iter":    218186, "mb_per_s": 162, "prior_w4d_mb_per_s": 186, "delta_vs_w4d": -24, "lever_attribution": "stage1_simd_bitmap + dual_cursor + fused_writes (overhead of SIMD scan without compensating walker speedup)" },
+      "twitter": { "ns_per_iter":   3708918, "mb_per_s": 170, "prior_w4d_mb_per_s": 192, "delta_vs_w4d": -22, "lever_attribution": "stage1_simd_bitmap + dual_cursor + fused_writes" },
+      "citm":    { "ns_per_iter":   8104195, "mb_per_s": 213, "prior_w4d_mb_per_s": 243, "delta_vs_w4d": -30, "lever_attribution": "stage1_simd_bitmap + dual_cursor + fused_writes" },
+      "canada":  { "ns_per_iter":  22884741, "mb_per_s":  98, "prior_w4d_mb_per_s": 111, "delta_vs_w4d": -13, "lever_attribution": "stage1_simd_bitmap (numeric-heavy; scanner dominant)" },
+      "data_xl": { "ns_per_iter": 155733441, "mb_per_s": 136, "prior_w4d_mb_per_s": 149, "delta_vs_w4d": -13, "lever_attribution": "stage1_simd_bitmap + dual_cursor + fused_writes" }
+    },
+    "css_l4": {
+      "normalize": { "ns_per_iter":    417035, "mb_per_s": 14, "prior_w4d_mb_per_s": 17, "delta_vs_w4d": -3, "lever_attribution": "stage1_simd_bitmap (CSS alphabet is dense [0..127]; SIMD scan produces index with ~1 entry per input byte)" },
+      "bootstrap": { "ns_per_iter":  31820316, "mb_per_s":  8, "prior_w4d_mb_per_s": 10, "delta_vs_w4d": -2, "lever_attribution": "stage1_simd_bitmap + Regex-bound-revert (CSS L4 alphabet density pathology)" },
+      "tailwind":  { "ns_per_iter": 381878545, "mb_per_s":  9, "prior_w4d_mb_per_s": 11, "delta_vs_w4d": -2, "lever_attribution": "stage1_simd_bitmap + Regex-bound-revert" }
+    },
+    "google_sheets_monolithic": {
+      "parse": {
+        "parse_simple": { "ns_per_iter": 120252, "mb_per_s": 4, "prior_w4d_mb_per_s": 4, "delta_vs_w4d":  0, "lever_attribution": "stage1_simd_bitmap (small-input; amortisation noise)" },
+        "parse_nested": { "ns_per_iter": 306544, "mb_per_s": 4, "prior_w4d_mb_per_s": 5, "delta_vs_w4d": -1, "lever_attribution": "stage1_simd_bitmap" },
+        "parse_stress": { "ns_per_iter": 481504, "mb_per_s": 3, "prior_w4d_mb_per_s": 3, "delta_vs_w4d":  0, "lever_attribution": "stage1_simd_bitmap" }
+      },
+      "format": {
+        "format_simple": { "ns_per_iter":  147, "mb_per_s": 40, "prior_w4d_mb_per_s": 41, "delta_vs_w4d": -1, "lever_attribution": "format path does not consult walker" },
+        "format_stress": { "ns_per_iter": 4385, "mb_per_s": 45, "prior_w4d_mb_per_s": 45, "delta_vs_w4d":  0, "lever_attribution": "format path" }
+      }
+    },
+    "bbnf_monolithic": {
+      "json":           { "ns_per_iter":    56480, "mb_per_s":  9, "prior_w4d_mb_per_s": 10, "delta_vs_w4d": -1, "lever_attribution": "stage1_simd_bitmap" },
+      "ebnf":           { "ns_per_iter":   228687, "mb_per_s":  6, "prior_w4d_mb_per_s":  6, "delta_vs_w4d":  0, "lever_attribution": "stage1_simd_bitmap" },
+      "css_pretty":     { "ns_per_iter":   127340, "mb_per_s": 20, "prior_w4d_mb_per_s": 21, "delta_vs_w4d": -1, "lever_attribution": "stage1_simd_bitmap" },
+      "google_sheets":  { "ns_per_iter":   250491, "mb_per_s": 29, "prior_w4d_mb_per_s": 32, "delta_vs_w4d": -3, "lever_attribution": "stage1_simd_bitmap" },
+      "bbnf_self":      { "ns_per_iter":   415891, "mb_per_s": 12, "prior_w4d_mb_per_s": 13, "delta_vs_w4d": -1, "lever_attribution": "stage1_simd_bitmap" },
+      "css_l4_grammar": { "ns_per_iter":  2862812, "mb_per_s": 19, "prior_w4d_mb_per_s": 20, "delta_vs_w4d": -1, "lever_attribution": "stage1_simd_bitmap" }
+    }
+  },
+  "wave_history": {
+    "AW-III-W4-d": { "tag": "post-AW-III-W4",          "scope": "W4.d walker specialisation — every DtaState inlined; JSON twitter 192 MB/s" },
+    "AW-III-W5-d": { "tag": "post-AW-III-W5 (THIS FILE)", "scope": "W5.d stage-1 SIMD integration — scan_structural wired; twitter 170 MB/s (regression; alphabet-disjoint precondition required for Regex bound speedup)" }
+  },
+  "regression_rationales": {
+    "json_twitter_regression": "W4.d 192 MB/s → W5.d 170 MB/s (-11%). The SIMD scan runs (12.13% samply self-time) but the walker's Regex bound revert (no longer uses idx.positions[slot] as upper bound) means the regex scanner still walks the full input. Restoring the speedup needs per-pattern alphabet narrowing at the IR.",
+    "css_regression":          "CSS L4 mines [0..127] as its structural alphabet — every byte is structural, so the SIMD index has ~one entry per input byte. The WsTrim slot-jump and Regex bound both need the alphabet-disjoint precondition which CSS L4 does not satisfy; the arms revert to scalar byte-class path. CSS benches drop 2-3 MB/s due to the SIMD scan overhead without compensating walker speedup.",
+    "path_forward":            "Two levers remain for W6: (1) IR pass that mines each regex pattern's matchable byte set and emits it as a const alongside GRAMMAR_PROFILE; the Regex arm checks disjointness with the structural set at comptime and re-enables the bound when disjoint. (2) Lift `DtaState::ConsumeToNextStructural` out of substrate status — the arm is wired in the driver but no lifter emits it today. When the lifter identifies a 'scan until delimiter' pattern (JSON number's `[0-9.eE+-]+` terminated by `,]}`), it emits ConsumeToNextStructural instead of the bare Regex; the walker's O(1) cursor jump amortises the SIMD scan's overhead."
+  },
+  "honesty_note": "The W5.d hard gate of JSON twitter ≥ 1500 MB/s is NOT met (170 MB/s, gap 8.8×). The integration landing is complete and verifiable: (1) parse() constructs the alphabet from GRAMMAR_PROFILE as a const, (2) bbnf_simd_scan::scan_structural runs once per parse and builds the StructuralIndex, (3) the walker accepts the populated index via the dual-cursor interface, (4) samply confirms the kernel runs (12.13% self-time, bbnf_simd_scan::neon::scan hot symbol). The throughput regression is not a W5.d wiring bug — it is the consequence of reverting the W5.c Regex bound collapse that turned out to be unsound for dense-alphabet grammars. Restoring the speedup requires new IR data (per-pattern regex alphabets) and/or new lifter output (ConsumeToNextStructural), both beyond W5.d's integration scope. The path forward is documented above."
+}

@@ -290,4 +290,175 @@ impl Columns {
         let idx = i as usize;
         (self.span_lo[idx], self.span_hi[idx])
     }
+
+    // ── AW-III.W5.c — fused SoA write API ──────────────────────────
+    //
+    // Eliminates the per-column bounds-check tax that `push_structural`
+    // pays seven times per compound row. The column substrate's growth
+    // policy (`Vec`'s amortised doubling) means in steady state every
+    // column has capacity headroom; the only pessimistic case is the
+    // very first push past the current capacity, when one of the seven
+    // `Vec::push` calls actually triggers a reallocation.
+    //
+    // [`grow_all`] reserves at least one free slot on every structural
+    // column AND `frame_depth`'s sibling growth path; the post-call
+    // unchecked-store sequence is sound because the grow-all guarantee
+    // makes every `get_unchecked_mut(self.len())` in-bounds. The store
+    // sequence is hand-fused so LLVM emits one straight-line block of
+    // stores with no internal branches — the dominant compound-emission
+    // hotpath after AW-III.W4 walker specialisation.
+
+    /// Smallest capacity any single structural column will reserve at
+    /// initial growth. Picked from observed corpus push patterns
+    /// (twitter / citm / bootstrap.css all spool > 64 records before
+    /// the first realloc).
+    const INITIAL_CAP: usize = 64;
+
+    /// Returns the minimum capacity across the seven structural
+    /// columns. `push_*_fused` consults this to gate `grow_all`.
+    #[inline]
+    fn structural_min_cap(&self) -> usize {
+        // Branchless `min` chain — every column reserves the same
+        // amount via `with_capacity` and grows monotonically through
+        // `grow_all`, so in steady state these are all equal.
+        let mut m = self.kinds.capacity();
+        let f = self.flags.capacity();
+        if f < m { m = f; }
+        let e = self.extra.capacity();
+        if e < m { m = e; }
+        let l = self.span_lo.capacity();
+        if l < m { m = l; }
+        let h = self.span_hi.capacity();
+        if h < m { m = h; }
+        let s = self.sib_skip.capacity();
+        if s < m { m = s; }
+        let c = self.child_off.capacity();
+        if c < m { m = c; }
+        m
+    }
+
+    /// Reserve at least one additional slot on every structural column.
+    /// Doubles the current minimum capacity (or sets `INITIAL_CAP` when
+    /// the columns are still empty), matching `Vec::push`'s amortised
+    /// growth policy.
+    ///
+    /// `#[cold]` because in steady state `push_*_fused` skips this
+    /// path — we only enter on the first push past each doubling
+    /// boundary, log₂(N) times per parse.
+    #[cold]
+    #[inline(never)]
+    pub fn grow_all(&mut self) {
+        let cur = self.structural_min_cap();
+        let target = if cur == 0 { Self::INITIAL_CAP } else { cur * 2 };
+        let extra = target - cur;
+        self.kinds.reserve(extra);
+        self.flags.reserve(extra);
+        self.extra.reserve(extra);
+        self.span_lo.reserve(extra);
+        self.span_hi.reserve(extra);
+        self.sib_skip.reserve(extra);
+        self.child_off.reserve(extra);
+    }
+
+    /// Unsafe path that grows every structural column to admit `n`
+    /// further records. Internal invariant for [`push_compound_fused`]
+    /// + [`push_leaf_fused`]: after this call every structural column
+    /// satisfies `len + n <= capacity`.
+    #[inline]
+    fn ensure_one(&mut self) {
+        if self.kinds.len() == self.kinds.capacity() {
+            self.grow_all();
+        }
+    }
+
+    /// AW-III.W5.c — fused compound-row push.
+    ///
+    /// Replaces the seven `self.<column>.push(...)` calls in
+    /// `bbnf_tape::driver::reserve_compound` with one bounds-check on
+    /// the dominant column (`kinds`) plus seven unchecked stores. The
+    /// row's `span_hi` and `child_off` defaults match
+    /// `reserve_compound`'s provisional-then-overwrite pattern — the
+    /// frame-pop site fixes both via the column slices once the
+    /// children have been emitted.
+    ///
+    /// Returns the row's index (mirrors `reserve_compound`'s return).
+    #[inline(always)]
+    pub fn push_compound_fused(&mut self, kind: TapeKind, span_lo: u32) -> u32 {
+        self.ensure_one();
+        let idx = self.kinds.len();
+        let kind_meta = (kind as u8) & 0x0F;
+        // SAFETY: `ensure_one` reserves one free slot on every
+        // structural column. `idx == self.kinds.len()` is therefore
+        // strictly less than each column's capacity, so the
+        // `as_mut_ptr().add(idx)` writes are in-bounds. The post-write
+        // `set_len(idx + 1)` reads the same `idx` we wrote to.
+        unsafe {
+            let new_len = idx + 1;
+            *self.kinds.as_mut_ptr().add(idx) = kind_meta;
+            *self.flags.as_mut_ptr().add(idx) = 0;
+            *self.extra.as_mut_ptr().add(idx) = 0;
+            *self.span_lo.as_mut_ptr().add(idx) = span_lo;
+            *self.span_hi.as_mut_ptr().add(idx) = span_lo; // provisional
+            *self.sib_skip.as_mut_ptr().add(idx) = 0;
+            *self.child_off.as_mut_ptr().add(idx) = TapeOffset::NONE;
+            self.kinds.set_len(new_len);
+            self.flags.set_len(new_len);
+            self.extra.set_len(new_len);
+            self.span_lo.set_len(new_len);
+            self.span_hi.set_len(new_len);
+            self.sib_skip.set_len(new_len);
+            self.child_off.set_len(new_len);
+        }
+        idx as u32
+    }
+
+    /// AW-III.W5.c — fused leaf-row push.
+    ///
+    /// Replaces the seven `self.<column>.push(...)` calls in
+    /// `bbnf_tape::driver::emit_leaf_with_payload` with one bounds-
+    /// check on the dominant column (`kinds`) plus seven unchecked
+    /// stores. The caller supplies the `flags` (variant_idx) and
+    /// `extra` (PAYLOAD_IN_ARENA flag) values directly — both are
+    /// already classified by the caller via the
+    /// `pending_variant_idx` chase + `child_off.is_none()` check.
+    ///
+    /// Returns the row's index (mirrors `emit_leaf_with_payload`'s
+    /// return).
+    #[inline(always)]
+    pub fn push_leaf_fused(
+        &mut self,
+        kind: TapeKind,
+        flags: u8,
+        extra: u16,
+        span_lo: u32,
+        span_hi: u32,
+        child_off: TapeOffset,
+    ) -> u32 {
+        self.ensure_one();
+        let idx = self.kinds.len();
+        let kind_meta = (kind as u8) & 0x0F;
+        // SAFETY: `ensure_one` reserves one free slot on every
+        // structural column. `idx == self.kinds.len()` is therefore
+        // strictly less than each column's capacity, so the
+        // `as_mut_ptr().add(idx)` writes are in-bounds. The post-write
+        // `set_len(idx + 1)` reads the same `idx` we wrote to.
+        unsafe {
+            let new_len = idx + 1;
+            *self.kinds.as_mut_ptr().add(idx) = kind_meta;
+            *self.flags.as_mut_ptr().add(idx) = flags;
+            *self.extra.as_mut_ptr().add(idx) = extra;
+            *self.span_lo.as_mut_ptr().add(idx) = span_lo;
+            *self.span_hi.as_mut_ptr().add(idx) = span_hi;
+            *self.sib_skip.as_mut_ptr().add(idx) = 0;
+            *self.child_off.as_mut_ptr().add(idx) = child_off;
+            self.kinds.set_len(new_len);
+            self.flags.set_len(new_len);
+            self.extra.set_len(new_len);
+            self.span_lo.set_len(new_len);
+            self.span_hi.set_len(new_len);
+            self.sib_skip.set_len(new_len);
+            self.child_off.set_len(new_len);
+        }
+        idx as u32
+    }
 }

@@ -45,7 +45,10 @@ use parse_that::utils::get_cargo_root_path;
 // AM.3: bumped from 6 — per-branch mark_children for leaf branches.
 // AN.0.3: bumped from 7 — per-parser submodule wrapping.
 // AL.1: bumped from 8 — tape-first serialize codegen (NodeView, span_text).
-const BBNF_SCHEMA_VERSION: u64 = 9;
+// AW-II.W5b: bumped from 9 — DtaState::Minus variant added to the
+// wire contract + emitter; cached codegen from pre-W5b versions
+// references an enum without the Minus arm.
+const BBNF_SCHEMA_VERSION: u64 = 10;
 
 /// Recursively collect all grammar file contents for hashing.
 ///

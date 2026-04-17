@@ -284,8 +284,18 @@ fn emit_is_grammar_name_agnostic() {
     // Every difference between the two outputs must be a substitution
     // of the grammar name. Strip the grammar-specific symbol
     // identifiers and compare.
-    let stripped_a = s_a.replace("dta_run_alpha", "__GRAMMAR__");
-    let stripped_b = s_b.replace("dta_run_beta", "__GRAMMAR__");
+    // Strip every per-grammar symbol the W1.α / W1.β emitters mint —
+    // `dta_run_<g>`, `__regex_scan_<g>`, `__dfa_match_<g>_<state_idx>` —
+    // so the §6 proof reduces to "the rest of the token stream is
+    // byte-identical between grammars."
+    let stripped_a = s_a
+        .replace("dta_run_alpha", "__GRAMMAR_RUN__")
+        .replace("__regex_scan_alpha", "__GRAMMAR_REGEX_SCAN__")
+        .replace("__dfa_match_alpha", "__GRAMMAR_DFA__");
+    let stripped_b = s_b
+        .replace("dta_run_beta", "__GRAMMAR_RUN__")
+        .replace("__regex_scan_beta", "__GRAMMAR_REGEX_SCAN__")
+        .replace("__dfa_match_beta", "__GRAMMAR_DFA__");
     assert_eq!(
         stripped_a, stripped_b,
         "emitter output differs beyond the grammar-name substitution; §6 violation"

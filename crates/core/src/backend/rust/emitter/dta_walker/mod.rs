@@ -178,7 +178,6 @@ pub fn emit_specialised_walker(
     let dispatch_arms = lower_state::emit_state_dispatch_arms(grammar, table, &partition);
     let cold_siblings = lower_state::emit_cold_siblings(grammar, table, &partition);
     let boundary_ws = emit_boundary_ws(grammar, table);
-    let regex_scan_ident = regex_scan_adapter_ident(grammar);
     let entry_state_lookup = quote! {
         let mut cur: u16 = {
             let s = table.rule_entry_for(table.entry);
@@ -309,7 +308,7 @@ pub fn emit_specialised_walker(
                             e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
                         ) => {
                             match ::bbnf::runtime::tape::handle_repeat_failure(
-                                table, input, #regex_scan_ident, idx,
+                                table, input, idx,
                                 columns, psi, frame_depth,
                                 stack, pos, slot,
                             )? {

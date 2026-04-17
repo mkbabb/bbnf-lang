@@ -731,6 +731,21 @@ fn dta_run_core(
     // grammars that handle whitespace explicitly via regex (CSV,
     // JSON, EBNF) parse correctly while leaving `?w`-using grammars
     // (BBNF, CSS, Sheets) intact via their lifted WsTrim states.
+    //
+    // Boundary trim: extract the first WsTrim state's pattern from
+    // the table (if any) so the leading + trailing whitespace at the
+    // input boundary uses the grammar's declared semantics. JSON
+    // declares `?w` via its `comma`/`colon` rules but has no
+    // top-level wrapper, so the entry rule's first compound expects
+    // input bytes immediately. RFC 8259 admits surrounding
+    // whitespace; the boundary trim honours that without the
+    // grammar needing a synthetic top-level wrapper. Grammars
+    // without any `?w` site (CSV) get no boundary trim — their
+    // whitespace is structurally meaningful.
+    let boundary_ws = first_ws_pattern(table);
+    if let Some(pat) = boundary_ws {
+        trim_with_pattern(scanner, pat, input, &mut pos);
+    }
 
     loop {
         match dispatch_one(
@@ -751,10 +766,50 @@ fn dta_run_core(
             Err(e) => return Err(e),
         }
     }
+    if let Some(pat) = boundary_ws {
+        trim_with_pattern(scanner, pat, input, &mut pos);
+    }
     if (pos as usize) < input.len() {
         return Err(DtaError::UnexpectedEnd { offset: pos });
     }
     Ok(TapeOffset(root_rec))
+}
+
+/// AW-III.W2 — locate the WsTrim pattern the grammar uses, if any.
+/// Returns `Some(Some(pattern))` when the grammar declared `@ws`
+/// with a regex (the WsTrim state carries the pattern str),
+/// `Some(None)` when the grammar uses `?w` without `@ws` (default
+/// ASCII whitespace fallback), and `None` when the grammar has no
+/// `?w` sites at all (CSV / similar).
+#[inline]
+fn first_ws_pattern(table: &DtaTable) -> Option<Option<&'static str>> {
+    for state in table.states.iter() {
+        if let DtaState::WsTrim { pattern } = state {
+            return Some(*pattern);
+        }
+    }
+    None
+}
+
+/// AW-III.W2 — trim using the grammar's declared whitespace
+/// semantics. Mirrors the `DtaState::WsTrim` arm: when `pattern`
+/// carries a regex pattern, scan with the supplied scanner;
+/// otherwise fall back to ASCII whitespace (matches `?w` default
+/// semantics).
+#[inline]
+fn trim_with_pattern(
+    scanner: &dyn RegexScanner,
+    pattern: Option<&'static str>,
+    input: &[u8],
+    pos: &mut u32,
+) {
+    if let Some(pat) = pattern {
+        if let Some(len) = scanner.scan(pat, input, *pos as usize) {
+            *pos += len;
+        }
+    } else {
+        trim_ascii_ws(input, pos);
+    }
 }
 
 /// AW-I.W4ε bootstrap fallback: trim ASCII whitespace in-place at

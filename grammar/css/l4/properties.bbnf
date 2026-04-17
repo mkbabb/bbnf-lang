@@ -197,7 +197,13 @@ boxSizingDecl  = "box-sizing" , ":" ?w , ((boxSizingKeyword | value) ?w) * , imp
 cursorDecl     = "cursor"     , ":" ?w , ((cursorKeyword | value) ?w) * , importantSuffix , ";" ? ;
 
 // --- Custom property declaration (CSS Variables, --prefix) ---
-customPropertyDecl = /--[\w-]+/ , ":" ?w , /[^;!}]*/ , importantSuffix , ";" ? ;
+// AW-III.W2: custom-property values must accept comments containing
+// `!` (Tailwind's `var(--tw-empty,/*!*/)` idiom). The value regex
+// matches non-stop bytes OR balanced block comments; comments are
+// recognised explicitly so `!` inside `/*...*/` doesn't terminate
+// the value scan. Outside a comment, `!` still ends the value (so
+// `!important` stays available for `importantSuffix`).
+customPropertyDecl = /--[\w-]+/ , ":" ?w , /(?:[^;!}\/]|\/\*[^*]*(?:\*+[^\/][^*]*)*\*+\/|\/[^*])*/ , importantSuffix , ";" ? ;
 
 // --- Generic fallback declaration (catches ALL unlisted properties) ---
 // Uses raw value pattern to handle any CSS value syntax (negative values,

@@ -3,7 +3,13 @@
 @import "media.bbnf" ;
 
 // Comment-aware whitespace: skip block comments as whitespace.
-@ws /(?s)(?:\s|\/\*.*?\*\/)*/ ;
+// Uses DFA-compatible comment body: [^*]* matches non-star chars, then
+// (\*+[^/][^*]*)* handles star sequences that aren't followed by /, and
+// \*+/ matches the closing. Avoids non-greedy .*? which the parse-that
+// DFA backend compiles as greedy .* (subset construction discards the
+// NFA's lazy/greedy ε-priority), causing the entire region between two
+// `/*` ... `*/` pairs to be swallowed as one comment.
+@ws /(?s)(?:\s|\/\*[^*]*(?:\*+[^\/][^*]*)*\*+\/)*/ ;
 @token ident ;
 
 blockContent = ((declaration | ruleItem) ?w) * ;

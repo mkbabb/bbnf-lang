@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@mkbabb/glass-ui";
+import { Tooltip, TooltipTrigger, TooltipContent, DockIconButton } from "@mkbabb/glass-ui";
 import FormatterSettings from "@/components/layout/FormatterSettings.vue";
 import { Copy, Link2, RotateCcw } from "lucide-vue-next";
 
@@ -23,14 +23,12 @@ const copyLabel = computed(() => props.activeResultLabel === "Parsed AST" ? "Cop
     <div class="flex items-center gap-0.5">
         <Tooltip>
             <TooltipTrigger as-child>
-                <button
-                    type="button"
+                <DockIconButton
                     :disabled="!canCopyResult"
-                    class="dock-icon-btn"
                     @click="emit('copyResult')"
                 >
                     <Copy class="h-4 w-4" />
-                </button>
+                </DockIconButton>
             </TooltipTrigger>
             <TooltipContent side="top" :side-offset="8" class="max-w-xs">
                 <p class="text-sm sm:text-base">{{ copyLabel }}</p>
@@ -39,13 +37,9 @@ const copyLabel = computed(() => props.activeResultLabel === "Parsed AST" ? "Cop
 
         <Tooltip>
             <TooltipTrigger as-child>
-                <button
-                    type="button"
-                    class="dock-icon-btn"
-                    @click="emit('shareLink')"
-                >
+                <DockIconButton @click="emit('shareLink')">
                     <Link2 class="h-4 w-4" />
-                </button>
+                </DockIconButton>
             </TooltipTrigger>
             <TooltipContent side="top" :side-offset="8" class="max-w-xs">
                 <p class="text-sm sm:text-base">Share Link</p>
@@ -54,13 +48,9 @@ const copyLabel = computed(() => props.activeResultLabel === "Parsed AST" ? "Cop
 
         <Tooltip>
             <TooltipTrigger as-child>
-                <button
-                    type="button"
-                    class="dock-icon-btn"
-                    @click="emit('resetPlayground')"
-                >
+                <DockIconButton @click="emit('resetPlayground')">
                     <RotateCcw class="h-4 w-4" />
-                </button>
+                </DockIconButton>
             </TooltipTrigger>
             <TooltipContent side="top" :side-offset="8" class="max-w-xs">
                 <p class="text-sm sm:text-base">Reset playground</p>

@@ -76,6 +76,20 @@ architectural changes to any of them are first-class work items, not
   Escalate only for hard environmental blockers — compiler bug,
   authorization boundary, irrecoverable state. Scope-reveal is
   not an escalation condition.
+- **Substrate-with-consumer is one unit of work.** A wave that
+  lands an emitter pass, an IR field, a const slot, or a runtime
+  variant *without verifying its output is consumed in the hot
+  path* has not closed — it has staged a deferral. The completion
+  criterion is not "the pass exists" but "the pass's output drives
+  runtime behaviour and that fact is verified by samply
+  attribution, symbol presence, or a wire-contract test that
+  asserts the data flows from mining through emit to runtime use."
+  An empty `pub const` slot with a functioning emitter is a
+  deferral. An emitted dispatch table that no consumer reads is a
+  deferral. A consumer call replaced by a fallback path is a
+  deferral. Substrate without consumer is the pattern that
+  masquerades as scope-revelation; it is rejected on the same
+  footing as a placeholder arm.
 - **NO god modules.** At every level — crate, module, file —
   separate concerns into proper sub-units. A file that grows past
   a natural responsibility boundary factors into a directory
@@ -179,6 +193,43 @@ prior sessions have lost work when it was violated.
   into master.
 - When an agent's report and a saved artefact disagree, trust the
   artefact.
+
+**Wave verification ledger.** Every wave the orchestrator closes
+records, in `PROGRESS.md`, the verification artefacts that
+established the close — not the agent's claim of the close. The
+ledger entries are mandatory for any wave whose hard gate involves
+emitted code, runtime behaviour, performance, or substrate
+activation:
+
+- **Symbol verification.** `nm target/release/deps/<bench>` over
+  the bench binary establishes which symbols are present and
+  absent in the compiled hot path. A wave that claims symbol X is
+  removed verifies the absence; a wave that claims helpers are
+  inlined verifies *those* helpers are also absent (eliminating one
+  dispatcher does not remove dispatch when the per-state arms call
+  cross-crate helpers — every such call is a real function-call
+  boundary if the callee does not inline).
+- **Wire-contract end-to-end test.** Any pipeline of the shape
+  *IR mining → emitter pass → `pub const` literal → runtime
+  consumer* carries one test that exercises the full path. A
+  fixture grammar with known mineable data is processed through
+  the full pipeline; the resulting `pub const` literal is asserted
+  to contain the mined values; a runtime invocation is asserted to
+  consume the const non-trivially (samply or counter). A test at
+  the mining-pass level OR at the emitter level alone is
+  *insufficient* — the projection silently drops data when only
+  one boundary is asserted.
+- **Samply attribution per lever.** A wave that claims a lever
+  fires cites the samply self-time line item showing the consumer
+  symbol present (or the previously-dominant symbol absent). The
+  citation is a `.profiles/samply/<wave>/<bench>/` path the
+  orchestrator can re-load, not a paraphrase.
+- **Substrate-without-consumer is rejected at wave close.** If the
+  ledger cannot point at a runtime consumer for every emitted
+  substrate the wave introduced, the wave has not closed; the
+  orchestrator re-plans with additional agents per the
+  scope-reveal contract. Agent-reported "consumer wiring deferred
+  to follow-on" is the deferral pattern; it does not close a wave.
 
 **Agent briefing.**
 
@@ -412,6 +463,20 @@ circular dependency that only arises during parser-rewrite tranches.
   artefact citation is a vibe, not evidence.
 - **Separate emitted-code facts from runtime hotspot facts.** Both
   are required; neither alone is sufficient.
+- **Cross-crate inlining is verified with `nm`, not assumed.**
+  Removing one dispatcher does not eliminate dispatch when the
+  emitted code calls cross-crate helpers — every such call is a
+  real function-call boundary if the callee does not inline, and
+  the function-call boundary IS a dispatcher in that case. Every
+  perf claim that invokes "specialised" / "inlined" / "compiled"
+  code paths cites `nm target/release/deps/<bench>` showing both:
+  (a) the dispatcher symbol absent, and (b) the cross-crate helper
+  symbols absent. If the helpers are present in the bench binary,
+  they are not inlined; whatever dispatch the wave claimed to
+  eliminate has been moved to the helper-call boundary, not
+  removed. Workspace LTO + `#[inline(always)]` on every hot helper,
+  OR per-grammar inline emission of the helper bodies, are the only
+  two answers; verify whichever ships.
 
 ## Architecture invariants
 
@@ -446,6 +511,31 @@ circular dependency that only arises during parser-rewrite tranches.
   dispatch tables, payload layouts, scanner alphabets, capacity
   closures, column selectors, keyword tables — all emitted,
   never hand-written.
+- **Hoist emitter-known data into emitted code.** When the emitter
+  knows a value at codegen time, the emitted code carries the
+  literal — not a runtime indirection through the source array
+  the emitter populated. A `match SOURCE_ARRAY[N] { Variant {
+  field } => field, _ => unreachable_unchecked() }` inside a body
+  that the emitter knows IS index N is a runtime memory load of
+  data the emitter possesses; the literal `let field =
+  <known_value>;` is the codegen form. LLVM's per-site
+  specialisation depends on the literal binding; the
+  runtime-`match`-against-`unreachable_unchecked` pattern preserves
+  the source-array indirection and defeats const-folding in
+  practice (whether or not it is theoretically recoverable through
+  ThinLTO). Mechanism, not optimism.
+- **Wire-contract pipelines have end-to-end tests.** Any pipeline
+  of the shape *IR mining → IR pass → emitter pass → `pub const`
+  literal → runtime consumer* carries one test that exercises the
+  full path. Not "the IR pass produces the right value" + "the
+  emitter pass formats the right syntax" separately — those leave
+  the projection silently dropping data when the two contracts
+  drift. The test loads the runtime const literal (via the same
+  symbol the consumer reads) and asserts it contains the mined
+  values for a fixture grammar with known mineable data. Mining-
+  side tests + emitter-side tests alone are *insufficient*; the
+  projection between them silently drops data when only one
+  boundary is asserted.
 
 ## Indefatigability
 

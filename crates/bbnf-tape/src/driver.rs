@@ -1871,7 +1871,18 @@ pub fn dispatch_one(
             // is the architectural fix for the AQ-5 "disabled WS
             // elision" failure mode — WS is subsumed by stage-1, no
             // disabled state.
+            //
+            // Lazy slot resync: advance `slot` past any index entries
+            // whose position is at-or-before `pos`. Literal/Regex arms
+            // don't currently update `slot` when they consume bytes;
+            // WsTrim's collapse needs slot to point at the NEXT
+            // structural byte's index entry, not a stale earlier one.
             if !idx.positions.is_empty() {
+                while (*slot as usize) < idx.positions.len()
+                    && idx.positions[*slot as usize] <= *pos
+                {
+                    *slot += 1;
+                }
                 let slot_idx = *slot as usize;
                 if slot_idx < idx.positions.len() {
                     let next_pos = idx.positions[slot_idx];
@@ -1879,9 +1890,9 @@ pub fn dispatch_one(
                         *pos = next_pos;
                     }
                 }
-                // Don't advance slot — this state only collapses the
-                // whitespace prefix; the next arm consumes the
-                // structural byte at `idx.positions[slot]`.
+                // Don't advance slot beyond resync — this state only
+                // collapses the whitespace prefix; the next arm
+                // consumes the structural byte at `idx.positions[slot]`.
             } else if let Some(pat) = pattern {
                 if let Some(len) = scanner.scan(pat, input, *pos as usize) {
                     *pos += len;

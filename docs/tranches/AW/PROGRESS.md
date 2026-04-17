@@ -75,12 +75,12 @@ W2–W4 touch substrate the legacy path still dominates.
 
 | Wave | Scope | Agents | Status |
 |------|-------|--------|--------|
-| W1 | DTA payload wiring — DtaState::Regex/Literal carry PayloadKind; lifter threads from IrNode::Map; walker consumes; Seq→KvPair promotion. Cluster C close (36 tests). | 1 serial | pending |
-| W2 | DTA parse completeness — EBNF offset-0, CSS truncation, JSON large-file. Cluster A close (13 tests). Unblocks 5 bench entries. | 1 serial | pending |
-| W3 | Ignored-test audit + close — all 67 existing `#[ignore]` dispositioned. | 2 parallel (by grammar family) | pending |
-| W4 | Viability profile — samply attribution on json_twitter, sheets_parse_stress, bbnf_ebnf. Binary decision document. | 1 serial | pending |
-| W5 | Minimum-viable specialisation — activate AW-IV lever subset the W4 profile implicates. | 2–3 parallel | pending |
-| W6 | FINAL + full 19-entry bench matrix + close | 1 serial | pending |
+| W1 | Six-point payload wiring + Pratt Next peel + scanner closure + Bug 2b | 1 serial (W1) + 1 serial sub-wave (W1.A) | ✓ landed (workspace **1103/16/64**) |
+| W2 | Parse completeness — EOF/trailing-ws + EBNF offset-0 + CSS truncation + CSV | 1 serial | pending |
+| W3 | Ignored-test audit + close — CLOSE 14 + DELETE 4 + cascades A/B; rest routed | 2 parallel | pending |
+| W4 | General walker-specialisation pass + cargo-asm verification | 3 parallel | pending |
+| W5 | General stage-1 SIMD bitmap pass + driver dual-cursor + fused SoA + bbnf-simd-scan crate | 3 parallel | pending |
+| W6 | Five emitter-mined consumer activations + 19-entry bench matrix + FINAL | 3 parallel + 1 serial | pending |
 
 Bench schedule: W4 samply sidecar on representative entries; W5 post-
 activation re-bench; W6 full 19-entry matrix → `docs/benchmarks/
@@ -1469,3 +1469,89 @@ neon, avx2, avx512, wasm, scalar, compaction, parity) + 4 tests
 Six worktrees `bbnf-wt-aw3-r{1..6}` carry the verbatim research deliverables;
 all copied to `docs/tranches/AW/research/` on master. Worktrees ready for
 deletion on user sign-off.
+
+## 2026-04-17 — AW-III W1 landed
+
+### W1 main + W1.A sub-wave
+
+Master HEAD `46e945ab`. Workspace **1103 passed / 16 failed / 64 ignored**
+(+53 passed / −34 failed / −3 ignored vs AW-II close).
+
+**W1 main** (10 commits b7c42c14..4e8a3405) — single serial agent in
+worktree `bbnf-wt-aw3-w1`. Six payload-wiring points + Pratt `Next`
+peel + scanner closure + three Bug 2b residuals. 31 of 37 Cluster 1
+tests closed; 6 escapes carried to W1.A.
+
+- `b7c42c14` — schema bump: `payload: Option<PayloadKind>` on
+  `DtaState::Literal/Regex`; `LiteralPayload` discriminant.
+- `fdf68483` — lifter threads `IrNode::Map`'s `FnDescriptor` →
+  `PayloadKind`; `strip_transparent_owned` peels `IrNode::Next/Skip`
+  alongside `Seq` (Pratt W1.7 cascade).
+- `b3ef8301` — walker activates Literal/Regex payload from `state.payload`;
+  Seq→KvPair promotion via `frame_to_tape_kind`.
+- `c2e4de56` — arena rollback on Alt/Repeat/Minus restore (cascade
+  fix uncovered by W1.3 payload activation).
+- `1f829c8b` — SY reducer emits per-op Span leaves (Sheets pinned ops
+  Bug 2b cascade).
+- `2bffacf2` — Pratt peel verification: CSS L4 ShuntingYard state
+  count = 1 (was 0).
+- `7b7c78a9` — JSON String length-prefix arena framing + scanner
+  closure: `&'static Dfa` per-state pre-resolution; HashMap +
+  `Arc::clone` + SipHash out of top-20 self-time on json_monolithic
+  twitter samply.
+- `61372223` — bootstrap regen under extended schema (md5
+  `362a01ada2edae4018ca7348fbd5cb03`, 21479 lines, idempotent).
+- `3f716b0e c0ccdc96` — test-side adapters for new framing + trie-
+  folded named-color shape.
+
+**W1.A sub-wave** (4 commits 46c4b860..46e945ab) — single serial
+agent in worktree `bbnf-wt-aw3-w1a`. Six escapes from W1 closed:
+4 JSON escape-decoder tests + variant_idx widening + Literal-arm
+inheritance.
+
+- `46c4b860` — widen `variant_idx` from 6 bits (mod-64 collision on
+  CSS L4's 148-rule corpus) to 8 bits via repurposing `flags` slot;
+  `extra` slot absorbs `HAS_CHILDREN_BIT` + `META_IDX_HI_BIT`.
+  TapeRec stays 16 bytes (no growth).
+- `9b1eb623` — walker adopts widened width; `nearest_variant_frame`
+  inheritance: Literal arm walks frame stack to find nearest
+  variant_idx-bearing frame; array `]` Literal correctly inherits
+  enclosing `value` rule's variant_idx (==9).
+- `7c655298` — JSON string-escape decoder kernel:
+  `crates/bbnf-tape/src/decoders/json_string.rs` + `psi.rs`
+  `PayloadKind::String` arm dispatches kernel; `\n`/`\t`/`\uXXXX`/
+  surrogate-pair handling; 7 unit tests.
+- `46e945ab` — parity tests adapt to widened variant_idx + IR
+  introspection.
+
+### Hard-gate verification (orchestrator-independent)
+
+- `cargo test --workspace --no-fail-fast` → 1103/16/64 ✓
+- bootstrap idempotency: `diff` between consecutive
+  `crates/core/src/grammar/generated.rs` regens — empty (zero-line
+  diff) ✓
+- Pratt Next peel: `css_l4_pratt_next_peel_emits_shunting_yard_state`
+  + `sheets_shunting_yard_state_materialises` + 4 SY harness tests
+  all pass ✓
+- Scanner closure samply (twitter): top-5 self-time =
+  `<DtaDfaScanner>::scan` (29.96%, was 26.50% — single hot path now)
+  + `dispatch_one` (23.93%) + `advance_or_pop_with` (9.50%) +
+  `reserve_compound` (8.40%) + `finalise` (5.88%); HashMap +
+  `Arc::clone` + SipHash absent ✓
+- Cluster 1 closure: 37/37 (W1 closed 31, W1.A closed 6) ✓
+
+### W1 → W2 hand-off
+
+Residual 16 failures are pure W2 cluster:
+- Cluster 2 (8): `css_{bootstrap,normalize,tailwind,test_import}_tape_parity`,
+  `json_{canada,data}_tape_parity`, `parse_{canada,data}_json`.
+- Cluster 3 (6): `ebnf_{minimal,recursive_list,expr_grammar,
+  root_has_at_least_one_rule}_tape_parity`,
+  `ebnf_prettify::parse_{single,multi}_rule`.
+- Cluster 5 (1): `csv_multi`.
+- Escalation (1): `test_large_grammar` (LSP inlay-hint heuristic;
+  W3 disposition).
+
+`css_test_import_tape_parity` is a new entry surfaced by W1's
+schema/payload changes — coupled to W2's CSS truncation work
+(Cluster 2 cascade).

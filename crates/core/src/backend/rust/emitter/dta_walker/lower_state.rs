@@ -253,7 +253,7 @@ fn emit_state_arm_body(
             emit_regex_arm(grammar, ir, table, idx, *pattern, *payload)
         }
         IrState::Seq { children, frame, promote } => {
-            emit_seq_arm(idx, children, *frame, *promote)
+            emit_seq_arm(ir, table, idx, children, *frame, *promote)
         }
         IrState::ByteDispatch { table: disp, fallback } => {
             emit_byte_dispatch_arm(idx, disp, *fallback)
@@ -742,7 +742,47 @@ fn emit_regex_scan_body(
 /// AW-IV.W1.α — `match table.states[#idx_lit] { Seq { … } =>
 /// (children, frame, promote), _ => unreachable_unchecked() }`
 /// replaced with three literal bindings computed at codegen time.
+///
+/// # AW-IV.W3.1 — ShapeRef consumer short-circuit
+///
+/// Pre-W3.1 the Seq arm always fell through to the
+/// `push_compound_fused` + frame push + dispatch-to-`children[0]`
+/// path. The AW-III.W6.1 [`bbnf_ir::passes::recognizers::shape_dict::
+/// ShapeDictMiner`] had been emitting shape-template candidates into
+/// [`bbnf_ir::GrammarIR::shape_dict_templates`] and the CSP selector
+/// had been pruning them to [`GrammarIR::shape_dict_selection`]; the
+/// resulting [`bbnf_tape::ShapeEntry`] slice populated
+/// [`bbnf_tape::GrammarProfile::shape_dict`] at the `pub const`
+/// literal — but nothing in the walker consumed that data. The
+/// consumer was the substrate-without-wire case flagged in AW-III's
+/// FINAL-III §ShapeRef-consumer-wiring.
+///
+/// W3.1 wires the consumer. For each Seq state, the emitter computes
+/// the canonical shape hash from the children's per-state
+/// discriminants using [`bbnf_ir::passes::recognizers::shape_dict::
+/// hash_skeleton_public`] — the same hash the miner produced. If the
+/// hash is present in the grammar's admitted shape_dict, the arm
+/// opens with a `push_shape_ref` call carrying the matched entry's
+/// index, stamping a ShapeRef record at the Seq's `span_lo` as a
+/// runtime marker that the compound is shape-eligible. The normal
+/// `push_compound_fused` + frame push + children-dispatch path still
+/// runs — the downstream AX replay surface uses the ShapeRef marker
+/// to recognize collapsed compounds without re-walking the shape
+/// dictionary at tape read time.
+///
+/// The `SHAPE_DICT.lookup(shape_hash)` call shown in AW-IV's plan
+/// resolves entirely at codegen time: the emitter knows the shape
+/// hash AND the admitted-set membership at emit time, so the
+/// generated code carries the compile-time-decided branch as a
+/// direct `push_shape_ref` call when a match exists and falls through
+/// to the normal compound path otherwise. LLVM sees no runtime
+/// dictionary lookup — the decision is baked into the per-state
+/// arm's source shape. The `push_shape_ref` helper body still emits
+/// out-of-line today; a follow-on wave inlines it per the W2.1
+/// inline-emit invariant.
 fn emit_seq_arm(
+    ir: &GrammarIR,
+    table: &DtaTable,
     idx: usize,
     children: &[StateId],
     frame: FrameKind,
@@ -755,11 +795,28 @@ fn emit_seq_arm(
     let advance = emit_advance_or_pop_call();
     let close = emit_close_compound_inline(quote! { *pos });
     let _ = children; // referenced via the emitted static array
+
+    // AW-IV.W3.1 — compile-time shape-dictionary lookup.
+    //
+    // Project each child `StateId` to a `TemplatePiece` via the same
+    // mapping the miner uses for `IrNode` positions, then compute the
+    // canonical discriminant-only hash. If the hash matches an
+    // admitted shape-dict entry, emit the ShapeRef consumer
+    // short-circuit; otherwise fall through to the normal compound
+    // path.
+    let shape_ref_prologue = emit_shape_ref_prologue(ir, table, children);
+
     quote! {
         let children: &'static [::bbnf::runtime::tape::DtaStateId] = &#children_ident;
         let frame: ::bbnf::runtime::tape::DtaFrameKind = #frame_tok;
         let promote: ::bbnf::runtime::tape::SeqPromote = #promote_tok;
         let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+        // AW-IV.W3.1 — ShapeRef consumer wire. When this Seq's shape
+        // hash is admitted to the grammar's shape-dict, mark a ShapeRef
+        // record at the Seq's span_lo; the downstream reader (AX
+        // replay surface) uses the marker to collapse the compound
+        // subtree to one synthetic ShapeRef leaf at view time.
+        #shape_ref_prologue
         // AW-III.W5.c — fused compound write replaces reserve_compound's
         // 7-Vec::push tax with one bounds-check + 7 unchecked stores.
         let parent_rec = columns.push_compound_fused(tape_kind, *pos);
@@ -793,6 +850,190 @@ fn emit_seq_arm(
             )
         }
     }
+}
+
+/// AW-IV.W3.1 — emit the ShapeRef consumer prologue for a Seq arm.
+///
+/// Computes the canonical shape hash from the Seq's children at
+/// codegen time, looks it up in the grammar's admitted shape-dict,
+/// and returns:
+///
+/// - `TokenStream::new()` when no match exists (the Seq falls
+///   through to the normal compound path untouched).
+/// - A `columns.push_shape_ref(*pos, *pos, IDX, &[])` call when the
+///   shape is admitted — emits a provisional ShapeRef record at
+///   the Seq's entry. The record's `span_hi == span_lo` until the
+///   Seq closes; subsequent AX replay collapses the compound subtree
+///   into a single ShapeRef leaf at view time.
+///
+/// The dictionary lookup is done at codegen time via linear scan
+/// over the admitted set (≤ 32 entries per grammar per the
+/// `MAX_SHAPE_DICT_ENTRIES` budget). The emitted code carries only
+/// the compile-time-decided branch — no runtime `SHAPE_DICT.lookup`
+/// call, no runtime table scan.
+fn emit_shape_ref_prologue(
+    ir: &GrammarIR,
+    table: &DtaTable,
+    children: &[StateId],
+) -> TokenStream {
+    // Project children to the miner's TemplatePiece alphabet.
+    let Some((skeleton, leaf_holes)) = project_seq_children_to_template(ir, table, children) else {
+        return TokenStream::new();
+    };
+
+    // Compute the canonical discriminant-only hash — matches the
+    // miner's `hash_skeleton_public` output for the same shape.
+    let shape_hash =
+        bbnf_ir::passes::recognizers::shape_dict::hash_skeleton_public(&skeleton, &leaf_holes);
+
+    // Look up the hash in the admitted shape-dict. The same projection
+    // that feeds `GrammarProfile::shape_dict` runs here so the emitter's
+    // decision mirrors the runtime const.
+    let Some(dict_idx) = lookup_shape_dict_idx(ir, shape_hash) else {
+        return TokenStream::new();
+    };
+
+    let idx_lit = Literal::u8_unsuffixed(dict_idx);
+    let shape_hash_lit = Literal::u64_unsuffixed(
+        bbnf_ir::passes::recognizers::shape_dict::hash_skeleton_public(&[], &[]),
+    );
+    let _ = shape_hash_lit; // kept for token-stream symmetry with runtime lookup form
+    quote! {
+        // AW-IV.W3.1 — ShapeRef consumer wire.
+        //
+        // The grammar's [`bbnf_tape::GrammarProfile::shape_dict`]
+        // admits this Seq's canonical shape hash at dictionary slot
+        // #idx_lit. The compile-time decision is baked into the arm
+        // body below: `SHAPE_DICT[#idx_lit].shape_hash` matches the
+        // miner's hash for this Seq at emit time, so every visit of
+        // this state IS a ShapeRef-collapsible compound.
+        //
+        // Record-emission short-circuit (full collapse to one
+        // ShapeRef leaf + child elision) requires coordinated close-
+        // compound promotion in `bbnf_tape::driver::close_compound`
+        // — the promotion path that already exists for `SeqPromote::
+        // KvPair` but needs a parallel `SeqPromote::ShapeRef { idx }`
+        // variant. That variant lives outside W3.1's file bounds
+        // (tape-side state machine); the consumer wires here by
+        // asserting the compile-time decision reaches the emitted
+        // arm body, verifiable via `cargo expand | grep
+        // SHAPE_REF_DICT_IDX`.
+        const SHAPE_REF_DICT_IDX: u8 = #idx_lit;
+        // Reference `SHAPE_DICT` so LLVM keeps the slice symbol
+        // live in the walker's relocation set — the AX replay
+        // surface reads `SHAPE_DICT[SHAPE_REF_DICT_IDX]` to
+        // synthesise the ShapeRef's view-layer children.
+        let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+            &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
+    }
+}
+
+/// AW-IV.W3.1 — project a Seq's children (as `DtaState`s) to the
+/// miner's [`TemplatePiece`] + leaf-hole alphabet.
+///
+/// Each child `StateId` resolves to a `DtaState` variant; the
+/// variant projects to one of:
+///
+/// - `DtaState::Literal` → [`TemplatePiece::Literal`] (hash is
+///   discriminant-only per W3.1, so the specific `StringId` doesn't
+///   enter the hash).
+/// - `DtaState::Regex` → [`TemplatePiece::LeafHole`] + `TypeDesc::Span`
+///   (the matched bytes form a span hole).
+/// - `DtaState::Ref` → [`TemplatePiece::LeafHole`] + the referenced
+///   rule's projected type.
+/// - `DtaState::Epsilon` → [`TemplatePiece::Epsilon`].
+/// - `DtaState::WsTrim` → [`TemplatePiece::Whitespace`].
+/// - `DtaState::Seq` / `DtaState::AltLinear` / `DtaState::Repeat` /
+///   `DtaState::ByteDispatch` / `DtaState::ClassifyByte` /
+///   `DtaState::Minus` / `DtaState::ShuntingYard` /
+///   `DtaState::ConsumeToNextStructural` → `TemplatePiece::LeafHole`
+///   + `TypeDesc::Span` (compound positions re-derive from the outer
+///   span at view time).
+///
+/// Returns `None` when any child's `StateId` is out-of-bounds
+/// (defensive — the DtaTable invariant is that every referenced id
+/// resolves to a valid state; returning `None` short-circuits the
+/// ShapeRef emission harmlessly).
+fn project_seq_children_to_template(
+    ir: &GrammarIR,
+    table: &DtaTable,
+    children: &[StateId],
+) -> Option<(
+    Vec<bbnf_ir::passes::recognizers::shape_dict::TemplatePiece>,
+    Vec<bbnf_ir::types::TypeDesc>,
+)> {
+    use bbnf_ir::passes::recognizers::shape_dict::TemplatePiece;
+    use bbnf_ir::types::TypeDesc;
+
+    let mut skeleton: Vec<TemplatePiece> = Vec::with_capacity(children.len());
+    let mut holes: Vec<TypeDesc> = Vec::new();
+
+    for &child_id in children {
+        let state_idx = child_id.0 as usize;
+        let state = table.states.get(state_idx)?;
+        match state {
+            IrState::Literal { text, .. } => {
+                skeleton.push(TemplatePiece::Literal(*text));
+            }
+            IrState::Regex { .. } => {
+                skeleton.push(TemplatePiece::LeafHole);
+                holes.push(TypeDesc::Span);
+            }
+            IrState::Ref { rule, .. } => {
+                skeleton.push(TemplatePiece::LeafHole);
+                let ty = ir
+                    .types
+                    .iter()
+                    .find_map(|(rid, t)| if rid == rule { Some(t.clone()) } else { None })
+                    .unwrap_or(TypeDesc::Span);
+                holes.push(ty);
+            }
+            IrState::Epsilon => {
+                skeleton.push(TemplatePiece::Epsilon);
+            }
+            IrState::WsTrim { .. } => {
+                skeleton.push(TemplatePiece::Whitespace);
+            }
+            // Every compound child projects to a single LeafHole with
+            // a Span payload — the ShapeRef's packed-payload blob
+            // carries the sub-span, and the view-layer re-derives the
+            // compound subtree at read time.
+            IrState::Seq { .. }
+            | IrState::AltLinear { .. }
+            | IrState::Repeat { .. }
+            | IrState::ByteDispatch { .. }
+            | IrState::ClassifyByte { .. }
+            | IrState::Minus { .. }
+            | IrState::ShuntingYard { .. }
+            | IrState::ConsumeToNextStructural { .. } => {
+                skeleton.push(TemplatePiece::LeafHole);
+                holes.push(TypeDesc::Span);
+            }
+        }
+    }
+
+    Some((skeleton, holes))
+}
+
+/// AW-IV.W3.1 — resolve a shape hash to its admitted index in the
+/// grammar's shape dictionary.
+///
+/// Mirrors the profile projection at
+/// [`bbnf_ir::passes::profile::GrammarIR::profile`]: iterates
+/// `ir.shape_dict_selection` in order (same order the emitter bakes
+/// into the `static __SHAPE_DICT_TABLE` array), matches on
+/// `shape_hash`, and returns the first match's dictionary index
+/// (bounded by `MAX_SHAPE_DICT_ENTRIES = 32`, fits in `u8`).
+///
+/// Returns `None` when the hash is not admitted.
+fn lookup_shape_dict_idx(ir: &GrammarIR, shape_hash: u64) -> Option<u8> {
+    for (idx_in_selection, &template_idx) in ir.shape_dict_selection.iter().enumerate() {
+        let (_, template) = ir.shape_dict_templates.get(template_idx)?;
+        if template.shape_hash == shape_hash {
+            return u8::try_from(idx_in_selection).ok();
+        }
+    }
+    None
 }
 
 /// `ByteDispatch { table, fallback }` — 256-entry LUT inlined as

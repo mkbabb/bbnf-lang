@@ -1836,3 +1836,144 @@ struct + Pratt const-fold consumers).
 This is recorded as a transparent intra-tranche attribution
 adjustment — not a deferral. The TRANCHE-level hard gate is
 "strict-better-than post-AU on ≥ 15/19 entries" judged at W6 close.
+
+## 2026-04-17 — AW-III W5 landed (substrate + partial activation)
+
+Master HEAD `c5b72813`. Workspace **1246 / 0 / 35** (+78 from W4
+close). Three parallel agents + one integration sub-wave.
+
+### W5.a — IR alphabet enrichment + kernel_shape selector (6 commits)
+
+`bbnf-wt-aw3-w5a` worktree.
+
+- `8b52884f` — `feat(ir/structural_alphabet): digraph_mask +
+  digraph_pairs + quote_classes`. Extended mining produces per-
+  grammar alphabet with structural-byte classification.
+- `0a1bd3f7` — `feat(ir/recognizers): kernel_shape selector pass`.
+  Selector chooses `NibbleLut` / `WideLut` / `MultipassCmpEq` from
+  singleton cardinality; flags `has_digraphs` / `has_quote_parity`.
+- `d6d70d11` — `refactor(ir/structural_alphabet): tighten digraph +
+  quote-class mining`.
+- `d31cc168` — `feat(profile/wire-contract): structural_digraph_mask
+  + structural_quote_classes`. bbnf-tape wire-contract extension;
+  IR profile populates from mining.
+- `6664765a`, `48e44e7a` — tests: 299 IR tests total.
+
+Per-grammar mining:
+- JSON: 11 singletons (delimiters + quote), 0 digraphs, 1 quote class.
+- CSS L4: 9 singletons, 2 digraphs (`/*`, `*/`), 2 quote classes.
+- BBNF: 9 singletons, 3 digraphs (`(*`, `*)`, `->`), 2 quote classes.
+- Sheets: 9 singletons, 0 digraphs, 1 quote class.
+
+All choose `WideLut` (9–16 singletons).
+
+### W5.b — bbnf-simd-scan crate (9 commits)
+
+`bbnf-wt-aw3-w5b` worktree. NEW crate at `crates/bbnf-simd-scan/`
+with lib.rs + 8 arch-specific modules (alphabet, neon, avx2,
+avx512, wasm, scalar, compaction, parity) + 4 test suites + 1 bench.
+
+Throughput on aarch64/NEON (twitter 0.602 MB, canonical entry):
+**4775 MB/s** — 2.4× over the W5 hard-gate target of 2 GB/s.
+
+- `08f82a97` — `feat(bbnf-tape/stage1): StructuralIndex public type`.
+- `18758422` — `feat(bbnf-simd-scan): scaffold + alphabet + scalar +
+  compaction + parity`.
+- `24b2badd` — `feat(bbnf-simd-scan/neon): nibble-LUT + wide-LUT +
+  digraph + parity`.
+- `6ef3a13f` — `feat(bbnf-simd-scan/avx2): cmpeq + movemask +
+  PCLMULQDQ parity`.
+- `043ea611` — `feat(bbnf-simd-scan/avx512):
+  mask_compressstoreu_epi8`.
+- `bc75933a` — `feat(bbnf-simd-scan/wasm): i8x16.swizzle + bitmask`.
+- `84f34fd2` — `test(bbnf-simd-scan): correctness + quote_parity +
+  digraph + fuzz`. 37 tests; cross-compile verified for x86_64 +
+  wasm32.
+- `f528158d` — `bench(bbnf-simd-scan): stage1_throughput`.
+- `cf1e6e4a` — `fix(bbnf-simd-scan/avx512): correct __m512i pointer
+  casts`.
+
+41 `unsafe` blocks; 29 SAFETY comments (71% documented; inner blocks
+share hoisted fn-level SAFETY).
+
+### W5.c — Driver dual-cursor + fused writes + AQ-5 tests (6 commits)
+
+`bbnf-wt-aw3-w5c` worktree.
+
+- `df2eeea3` — `feat(bbnf-tape/columns): push_compound_fused +
+  push_leaf_fused`. One bounds-check + N unchecked stores.
+- `5eb150fb` — `refactor(bbnf-tape/driver): migrate reserve_compound
+  → push_compound_fused`. `reserve_compound` deleted; hot-path
+  `self.<column>.push` count = 0.
+- `1a004a37` — `feat(bbnf-tape): dual-cursor + ConsumeToNextStructural
+  + savepoint slot`. `Cursor { src, idx, pos, slot }`;
+  FrameStackSavepoint + slot field; ConsumeToNextStructural variant
+  (substrate; lifter not yet emitting).
+- `ccdbc1d8` — `chore(generated): bootstrap regen with W5.c schema`.
+- `73fe931d` — `test(bbnf-tape): AQ-5 failure-mode regression
+  suite`. 19 tests across scalar quote-parity / duplicated Alt arms
+  / unsaved cursor on checkpoint / disabled WS elision.
+- `c9482f37` — `chore(bbnf-tape/lib): refresh driver hot/cold doc
+  comment post-W5.c`.
+
+### W5.d — parse() SIMD integration (5 commits)
+
+`bbnf-wt-aw3-w5d` worktree. Wires `scan_structural` into parse();
+populates StructuralIndex for dual-cursor consumption.
+
+- `860bf78f` — `feat(profile,simd-scan): align digraph type with
+  simd alphabet`.
+- `91df0809` — `feat(emitter): wire scan_structural into parse()`.
+  const STRUCTURAL_ALPHABET per grammar emitted into generated.rs
+  (alphabet folds into `.rodata` at compile time).
+- `54eaa735` — `fix(driver): repair Regex bound + WsTrim collapse
+  for dense alphabets`. Scope-reveal: CSS L4 mines `[0..127]` as
+  structural (byte-dispatch tables cover all ASCII); the
+  `[pos, idx.positions[slot])` Regex bound collapses to zero-width
+  on dense alphabets. Reverted to full-input scan while preserving
+  dual-cursor correctness. Per-pattern alphabet narrowing (IR lever
+  for bounded Regex) and ConsumeToNextStructural lifter (emitter-
+  mined consumer) are W6-adjacent work; carried forward.
+- `4f593265` — `chore(generated): bootstrap regen post W5.d
+  integration`.
+- `c5b72813` — `bench(post-AW-III-W5): SIMD-active 4-bench matrix +
+  samply`.
+
+### Hard-gate verification
+
+- bitmap kernel ≥ 2 GB/s on 1 MB JSON ✓ (4775 MB/s on twitter)
+- walker consumes via dual cursor ✓ (scan_structural threaded through;
+  samply shows `bbnf_simd_scan::neon::scan` at 12.13% on json twitter)
+- AQ-5 failure modes absent ✓ (19 regression tests pass)
+- `self.<column>.push` = 0 in driver.rs hot path ✓
+- `reserve_compound` < 5% self-time ✓ (0% — deleted)
+- Bootstrap idempotent ✓ (md5 `09b212f3684955f251b7a1d91031fd20`,
+  56102 lines)
+- Workspace 1246 / 0 / 35 ✓
+
+### W5 → W6 hand-off
+
+JSON twitter bench at 170 MB/s (post-W5.d; down -11% vs W4.d's 192
+MB/s because SIMD scan cost is paid without amortising via bounded
+Regex / ConsumeToNextStructural-cursor-jump). The substrate is
+landed; activation requires:
+
+1. **Per-pattern alphabet mining** (IR lever) — identify each
+   regex pattern's matchable byte set so the `[pos,
+   idx.positions[slot])` bound can verify disjointness from the
+   structural set before applying. Re-enables bounded scans on
+   grammars where the pattern's alphabet is sparse relative to the
+   structural set.
+2. **ConsumeToNextStructural lifter** (emitter-mined consumer) —
+   recognize "scan until delimiter" IR patterns (JSON number
+   `[0-9.eE+-]+` terminated by `,]}`; string content until quote;
+   CSS value until `;`) and emit `DtaState::ConsumeToNextStructural`
+   instead of `DtaState::Regex`. The W5.c substrate variant exists
+   with an inlined walker arm that does O(1) cursor jumps; the
+   lifter gap is all that's missing.
+
+Both are general emitter passes triggered by IR-structural
+properties — fit the §6 generalization invariant. W6 consumers
+(ShapeRef, PHF, ClassifyByte, direct-to-struct, Pratt const-fold)
+are orthogonal speed levers; the two W5-adjacent items ride along
+as a sixth consumer activation.

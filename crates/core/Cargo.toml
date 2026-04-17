@@ -16,6 +16,7 @@ parse_that = "0.4"
 bbnf-ir = { version = "0.1", path = "../ir" }
 bbnf-ser = { version = "0.1", path = "../ser" }
 bbnf-tape = { version = "0.1", path = "../bbnf-tape" }
+bbnf-simd-scan = { version = "0.1", path = "../bbnf-simd-scan" }
 egraph = { path = "../egraph" }
 csp-solver = "0.1"
 rustc-hash = "2"

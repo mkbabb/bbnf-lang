@@ -374,12 +374,33 @@ impl RustEmitter {
                         );
                     builder.enable_inline_frame_depth();
                     let mut psi = psi_with_capacity(input.len());
+                    // AW-III.W5.d — stage-1 SIMD structural pre-pass.
+                    //
+                    // `STRUCTURAL_ALPHABET` is a `const` projection of
+                    // `GRAMMAR_PROFILE`'s structural fields into the
+                    // scanner's alphabet shape; the underlying data
+                    // lives in the same `.rodata` statics. The scanner
+                    // picks the optimal per-arch kernel at runtime via
+                    // `bbnf_simd_scan::scan_structural` and produces a
+                    // `StructuralIndex` — the walker's dual cursor
+                    // then advances by slot (`idx.positions[slot]`)
+                    // instead of walking every byte.
+                    const STRUCTURAL_ALPHABET:
+                        ::bbnf::runtime::scan::StructuralAlphabet =
+                        ::bbnf::runtime::scan::StructuralAlphabet::from_profile(
+                            &GRAMMAR_PROFILE,
+                        );
+                    let idx = ::bbnf::runtime::scan::scan_structural(
+                        input.as_bytes(),
+                        &STRUCTURAL_ALPHABET,
+                    );
                     let root_off = {
                         let (columns, frame_depth) =
                             builder.columns_and_frame_depth_mut();
                         #walker_fn_ident(
                             input.as_bytes(),
                             &DTA_SCANNER,
+                            &idx,
                             columns,
                             &mut psi,
                             frame_depth,

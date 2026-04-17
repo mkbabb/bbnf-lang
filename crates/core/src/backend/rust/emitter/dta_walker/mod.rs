@@ -111,6 +111,7 @@ pub fn emit_specialised_walker(
                 _table: &::bbnf::runtime::tape::DtaTable,
                 _input: &[u8],
                 _scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+                _idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
                 _columns: &mut ::bbnf::runtime::tape::Columns,
                 _psi: &mut ::bbnf::runtime::tape::PayloadStream,
                 _frame_depth: &mut ::std::vec::Vec<u8>,
@@ -191,6 +192,7 @@ pub fn emit_specialised_walker(
             pub fn run<__S: ::bbnf::runtime::tape::RegexScanner>(
                 input: &[u8],
                 scanner: &__S,
+                idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
                 columns: &mut ::bbnf::runtime::tape::Columns,
                 psi: &mut ::bbnf::runtime::tape::PayloadStream,
                 frame_depth: &mut ::std::vec::Vec<u8>,
@@ -212,16 +214,13 @@ pub fn emit_specialised_walker(
                 let stack: &mut ::bbnf::runtime::tape::FrameStack = &mut stack_owned;
                 let mut pos_owned: u32 = 0;
                 let pos: &mut u32 = &mut pos_owned;
-                // AW-III.W5.c — dual cursor's structural slot. The
-                // hot path will populate `idx` once the W5.b SIMD
-                // scanner is wired into the parse prologue; until
-                // then the empty index drives the structural-aware
-                // arms to fall back to byte-stepping. The driver
-                // semantics are correct in both cases.
+                // AW-III.W5.d — dual cursor's structural slot.
+                // `idx` now arrives populated from the caller's
+                // `bbnf_simd_scan::scan_structural` call; the
+                // structural-aware arms consume slot-indexed lookups
+                // instead of byte-stepping.
                 let mut slot_owned: u32 = 0;
                 let slot: &mut u32 = &mut slot_owned;
-                let idx_owned = ::bbnf::runtime::tape::stage1::StructuralIndex::new();
-                let idx: &::bbnf::runtime::tape::stage1::StructuralIndex = &idx_owned;
 
                 // AW-III.W2 boundary trim — extract the grammar's
                 // declared `@ws` semantic so leading whitespace at the
@@ -316,6 +315,7 @@ pub fn emit_specialised_walker(
         pub fn #fn_ident<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -324,7 +324,7 @@ pub fn emit_specialised_walker(
             ::bbnf::runtime::tape::DtaError,
         > {
             __dta_walker_inline::run::<__S>(
-                input, scanner, columns, psi, frame_depth,
+                input, scanner, idx, columns, psi, frame_depth,
             )
         }
     }

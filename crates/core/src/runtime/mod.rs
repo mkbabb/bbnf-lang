@@ -34,6 +34,21 @@ pub use parsed::{Parsed, Root};
 /// of view.
 pub use bbnf_tape as tape;
 
+/// Re-export the `bbnf-simd-scan` public surface from `bbnf::runtime`.
+///
+/// The emitted `parse()` body constructs a
+/// [`scan::StructuralAlphabet`] from `GRAMMAR_PROFILE` (via
+/// `StructuralAlphabet::from_profile`) and calls
+/// [`scan::scan_structural`] to build the per-parse
+/// [`scan::StructuralIndex`] before invoking the specialised walker.
+/// The walker consumes the index via its dual-cursor slot column,
+/// turning per-byte dispatch into O(1) cursor jumps.
+///
+/// AW-III.W5.d — integrates the SIMD pre-pass kernel into the hot
+/// path. Pre-W5.d the emitted walker received an empty index; the
+/// bitmap kernel never ran.
+pub use bbnf_simd_scan as scan;
+
 /// AW.0.5: typed view-layer projections the generated `.as_color()`
 /// shims reference. The Rust-side `Color` struct + `ColorSpace`
 /// enum live in the backend's `view/color.rs`; this re-export

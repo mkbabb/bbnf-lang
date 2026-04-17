@@ -14345,19 +14345,19 @@ mod __bbnfbootstrap_emit_impl {
             offset: usize,
         ) -> ::core::option::Option<u32> {
             use ::std::collections::HashMap;
-            use ::std::sync::{Mutex, OnceLock};
+            use ::std::sync::{OnceLock, RwLock};
             static SLOTS: OnceLock<
-                Mutex<HashMap<usize, &'static ::parse_that::regex::dfa::Dfa>>,
+                RwLock<HashMap<usize, &'static ::parse_that::regex::dfa::Dfa>>,
             > = OnceLock::new();
-            let slots = SLOTS.get_or_init(|| Mutex::new(HashMap::new()));
+            let slots = SLOTS.get_or_init(|| RwLock::new(HashMap::new()));
             let key = pattern.as_ptr() as usize;
             let dfa: &'static ::parse_that::regex::dfa::Dfa = {
-                let map = slots.lock().unwrap();
+                let map = slots.read().unwrap();
                 if let Some(d) = map.get(&key).copied() {
                     d
                 } else {
                     drop(map);
-                    let mut map = slots.lock().unwrap();
+                    let mut map = slots.write().unwrap();
                     if let Some(d) = map.get(&key).copied() {
                         d
                     } else {

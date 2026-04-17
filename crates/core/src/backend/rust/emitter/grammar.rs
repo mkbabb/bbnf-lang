@@ -250,24 +250,33 @@ impl RustEmitter {
                     input: &[u8],
                     offset: usize,
                 ) -> ::core::option::Option<u32> {
-                    // Per-pattern OnceLock keyed on the interned
-                    // `&'static str` pointer. The DashMap key is the
-                    // pattern's address (transmuted through `usize`)
-                    // so the lookup amortises to a single AtomicU64
-                    // load on warm hits.
+                    // AW-III.W1.8 — bypass the global `cached_dfa`
+                    // HashMap on the hot path. The pattern's interned
+                    // `&'static str` pointer IS the cache key; the
+                    // resolved `&'static Dfa` is leaked once on first
+                    // touch. Lookups use a global `RwLock<HashMap>`
+                    // keyed on pointer (Sip13-free, just `usize`
+                    // hashing); read-only path takes the read lock
+                    // and returns a `&'static Dfa` directly. The
+                    // leak is bounded by the grammar's regex count
+                    // (≤ a few hundred per shipped grammar) and
+                    // lives for the process lifetime — symmetric
+                    // with the global HashMap in
+                    // `parse_that::cached_dfa` minus the per-scan
+                    // Sip13 + Arc::clone overhead.
                     use ::std::collections::HashMap;
-                    use ::std::sync::{Mutex, OnceLock};
-                    static SLOTS: OnceLock<Mutex<HashMap<usize, &'static ::parse_that::regex::dfa::Dfa>>> =
+                    use ::std::sync::{OnceLock, RwLock};
+                    static SLOTS: OnceLock<RwLock<HashMap<usize, &'static ::parse_that::regex::dfa::Dfa>>> =
                         OnceLock::new();
-                    let slots = SLOTS.get_or_init(|| Mutex::new(HashMap::new()));
+                    let slots = SLOTS.get_or_init(|| RwLock::new(HashMap::new()));
                     let key = pattern.as_ptr() as usize;
                     let dfa: &'static ::parse_that::regex::dfa::Dfa = {
-                        let map = slots.lock().unwrap();
+                        let map = slots.read().unwrap();
                         if let Some(d) = map.get(&key).copied() {
                             d
                         } else {
                             drop(map);
-                            let mut map = slots.lock().unwrap();
+                            let mut map = slots.write().unwrap();
                             if let Some(d) = map.get(&key).copied() {
                                 d
                             } else {

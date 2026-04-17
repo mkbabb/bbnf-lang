@@ -124,6 +124,20 @@ impl TapeRec {
     /// the decoded content is `source[span_lo + 1 .. span_hi - 1]`.
     pub const STRING_BORROW_BIT: u16 = 0x0001;
 
+    /// AW-III.W1 — bit in [`TapeRec::extra`] that marks a leaf whose
+    /// `child_off` is an arena byte offset (`pay_agg`) rather than a
+    /// column rank (`pay_narrow` / `pay_wide`).
+    ///
+    /// Set by the DTA walker for every typed-leaf payload (constant
+    /// from `Map { Literal, IntLit }`, decoded from `Map { Regex,
+    /// FnDescriptor }`). The scalar readers (`payload_u8` / etc.)
+    /// branch on this bit: when set, they slice `pay_agg` directly;
+    /// when clear, they read the legacy `pay_narrow` / `pay_wide`
+    /// column at the column-rank index. The dual path is kept so
+    /// pre-DTA `push_leaf_with(InlineScalar / WideScalar)` plumbing
+    /// (unit tests) survives unchanged.
+    pub const PAYLOAD_IN_ARENA_BIT: u16 = 0x0002;
+
     /// Pack a [`TapeKind`] and `meta_idx` into the `kind_meta` and
     /// `flags` bytes. Returns `(kind_meta, flags_meta_bit)` where
     /// `flags_meta_bit` is `0x00` or `0x80` — the caller ORs it into
@@ -190,6 +204,13 @@ impl TapeRec {
     #[inline]
     pub fn is_string_borrowed(&self) -> bool {
         (self.extra & Self::STRING_BORROW_BIT) != 0
+    }
+
+    /// AW-III.W1 — true iff this leaf's `child_off` is an arena byte
+    /// offset (`pay_agg`) rather than a column rank.
+    #[inline]
+    pub fn payload_in_arena(&self) -> bool {
+        (self.extra & Self::PAYLOAD_IN_ARENA_BIT) != 0
     }
 
     // ── ShapeRef accessors (AV.5.1) ──────────────────────────────
@@ -353,50 +374,80 @@ impl Tape {
     // rank for scalars, arena byte offset for aggregates.
 
     /// Read an inline-packed scalar payload (≤ 4 bytes) from the
-    /// `pay_narrow` column.
+    /// `pay_narrow` column or — when [`TapeRec::payload_in_arena`]
+    /// is set — from the unified arena (`pay_agg`).
     ///
     /// `T` must be `Copy` and its size must be ≤ 4 bytes. Wider
     /// scalars live in `pay_wide` and must be read via
     /// [`Self::payload_wide`].
+    ///
+    /// AW-III.W1 dual path: pre-W1 `push_leaf_with(InlineScalar)`
+    /// plumbing wrote into `pay_narrow` and stamped `child_off` to
+    /// the column rank — those records keep `payload_in_arena() ==
+    /// false`. Post-W1 the DTA walker writes the constant byte into
+    /// `pay_agg` and sets the arena bit; the reader slices the arena
+    /// at `child_off`.
     #[inline]
     fn payload_inline<T: Copy>(&self, rec: TapeRec) -> Option<T> {
         debug_assert!(std::mem::size_of::<T>() <= 4);
         if rec.child_off.is_none() {
             return None;
         }
-        let rank = rec.child_off.0 as usize;
-        if rank >= self.columns.pay_narrow.len() {
-            return None;
-        }
-        let raw = self.columns.pay_narrow[rank];
-        let bytes = raw.to_le_bytes();
+        let n = std::mem::size_of::<T>();
+        let bytes = if rec.payload_in_arena() {
+            let off = rec.child_off.0 as usize;
+            let arena = &self.columns.pay_agg;
+            if off + n > arena.len() {
+                return None;
+            }
+            let mut buf = [0u8; 4];
+            buf[..n].copy_from_slice(&arena[off..off + n]);
+            buf
+        } else {
+            let rank = rec.child_off.0 as usize;
+            if rank >= self.columns.pay_narrow.len() {
+                return None;
+            }
+            self.columns.pay_narrow[rank].to_le_bytes()
+        };
         let mut v: std::mem::MaybeUninit<T> = std::mem::MaybeUninit::uninit();
         // SAFETY: `T` is `Copy` and size_of::<T>() <= 4, matching the
         // width of `bytes`. The copy writes size_of::<T>() bytes from
-        // the column entry, which is always initialised.
+        // a fully-initialised 4-byte buffer.
         unsafe {
             std::ptr::copy_nonoverlapping(
                 bytes.as_ptr(),
                 v.as_mut_ptr() as *mut u8,
-                std::mem::size_of::<T>(),
+                n,
             );
             Some(v.assume_init())
         }
     }
 
-    /// Read a wide (8-byte) scalar payload from the `pay_wide`
-    /// column.
+    /// Read a wide (8-byte) scalar payload from the `pay_wide` column
+    /// or — when [`TapeRec::payload_in_arena`] is set — from the
+    /// unified arena.
     #[inline]
     fn payload_wide<T: Copy>(&self, rec: TapeRec) -> Option<T> {
         debug_assert!(std::mem::size_of::<T>() == 8);
         if rec.child_off.is_none() {
             return None;
         }
-        let rank = rec.child_off.0 as usize;
-        if rank >= self.columns.pay_wide.len() {
-            return None;
-        }
-        let raw = self.columns.pay_wide[rank].to_le_bytes();
+        let raw = if rec.payload_in_arena() {
+            let off = rec.child_off.0 as usize;
+            let arena = &self.columns.pay_agg;
+            if off + 8 > arena.len() {
+                return None;
+            }
+            let arr: [u8; 8] = arena[off..off + 8].try_into().ok()?;
+            arr
+        } else {
+            let rank = rec.child_off.0 as usize;
+            if rank >= self.columns.pay_wide.len() {
+                return None;
+            }
+            self.columns.pay_wide[rank].to_le_bytes()
+        };
         let mut v: std::mem::MaybeUninit<T> = std::mem::MaybeUninit::uninit();
         // SAFETY: `T` is `Copy` of size 8; the source is the full
         // 8-byte LE representation of the stored `u64`.

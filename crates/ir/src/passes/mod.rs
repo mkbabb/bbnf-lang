@@ -60,7 +60,8 @@ pub use csp_strategy::{
 };
 pub use recognizers::dta::{
     lift_dta, Associativity, CounterOptional, DtaBuilder, DtaProfile, DtaState, DtaSummary,
-    DtaTable, FrameKind, PrecedenceEntry, PrecedenceTable, StateId, summarise as summarise_dta,
+    DtaTable, FrameKind, LiteralPayload, PrecedenceEntry, PrecedenceTable, RegexPayloadKind,
+    SeqPromote, StateId, summarise as summarise_dta,
 };
 pub use recognizers::mine_recognizers;
 pub use recognizers::visitor::{mine_visitors, VisitorColumn, VisitorDescriptor, VisitorReduce};

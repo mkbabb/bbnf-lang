@@ -75,6 +75,22 @@ pub enum DtaCounterOptional {
     Lookahead = 2,
 }
 
+/// AW-III.W1.6 — Seq compound emission promotion.
+///
+/// The lifter stamps this on every `DtaState::Seq` to instruct the
+/// walker which tape shape to emit. `Default` keeps the legacy
+/// `TapeKind::Seq` compound + structural children; `KvPair`
+/// collapses the Seq projection — known by the lifter to be
+/// `Tuple([Span, scalar])` via the rule's payload_layout — into a
+/// flat `TapeKind::KvPair` leaf whose `child_off` points at the
+/// scalar bytes in the arena.
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum SeqPromote {
+    Default = 0,
+    KvPair = 1,
+}
+
 /// AW-III.W1 — Literal-leaf payload classification + lifted constant.
 ///
 /// The lifter resolves the enclosing `Map { Literal, MapExpr::IntLit }`
@@ -228,6 +244,12 @@ pub enum DtaState {
         /// Frame kind attached to this Seq when it materialises a
         /// record.
         frame: DtaFrameKind,
+        /// AW-III.W1.6 — Seq → KvPair promotion classification. The
+        /// lifter sets `KvPair` when the enclosing rule's
+        /// `payload_layouts` entry matches `Tuple([Span, scalar])`;
+        /// the walker then emits a flat `TapeKind::KvPair` leaf
+        /// instead of a Seq compound + children.
+        promote: SeqPromote,
     },
     /// Byte-class dispatched Alt — `table[b]` is the branch state
     /// for first byte `b`, or [`DtaStateId::NONE`] if no branch

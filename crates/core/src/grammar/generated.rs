@@ -905,34 +905,47 @@ mod __bbnfbootstrap_emit_impl {
     static __DTA_STATES: [::bbnf::runtime::tape::DtaState; 496usize] = [
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_0,
+            payload: ::core::option::Option::Some(
+                ::bbnf::runtime::tape::PayloadKind::I64,
+            ),
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_1,
+            payload: ::core::option::Option::Some(
+                ::bbnf::runtime::tape::PayloadKind::F64,
+            ),
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_2,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_3,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_4,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_5,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_6,
+            payload: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_7,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_8_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::KvPair,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_9,
+            payload: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(4),
@@ -940,6 +953,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_11,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(4),
@@ -948,6 +962,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_13_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(13),
@@ -958,12 +973,15 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_15_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_16,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_17,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(4),
@@ -972,6 +990,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_19_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(19),
@@ -982,6 +1001,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_21_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(5),
@@ -989,6 +1009,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_23,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(19),
@@ -996,6 +1017,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_25,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -1006,6 +1028,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_28_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(19),
@@ -1014,6 +1037,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_30_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(30),
@@ -1024,6 +1048,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_32_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(32),
@@ -1033,10 +1058,12 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_34,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_35_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(0),
@@ -1068,6 +1095,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_43,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(19),
@@ -1082,64 +1110,80 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_47_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_48,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_49_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_50,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_51,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_52,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_53,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_54,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_55,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_56,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_57,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_58,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_59,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_60,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_61,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_62,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_63,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_64,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_65,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_66,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_67,
@@ -1151,6 +1195,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_69_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(8),
@@ -1176,6 +1221,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_76_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(12),
@@ -1184,6 +1230,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_78_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(78),
@@ -1194,6 +1241,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_80_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(12),
@@ -1220,6 +1268,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_87_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(14),
@@ -1228,6 +1277,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_89_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(89),
@@ -1238,6 +1288,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_91_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(15),
@@ -1245,6 +1296,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_93,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -1255,6 +1307,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_96_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(15),
@@ -1263,6 +1316,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_98_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(98),
@@ -1273,6 +1327,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_100_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(16),
@@ -1280,6 +1335,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_102,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -1290,6 +1346,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_105_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(16),
@@ -1298,6 +1355,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_107_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(107),
@@ -1308,9 +1366,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_109_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_110,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(4),
@@ -1318,6 +1378,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_112,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -1328,6 +1389,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_115_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(4),
@@ -1336,6 +1398,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_117_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(117),
@@ -1345,6 +1408,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_119,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(19),
@@ -1353,6 +1417,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_121_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(18),
@@ -1367,6 +1432,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_125,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -1377,6 +1443,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_128_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(21),
@@ -1385,113 +1452,146 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_130_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_131,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_132,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_133,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_134,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_135,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_136,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_137,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_138,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_139,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_140,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_141,
+            payload: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_142,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_143,
+            payload: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_144,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_145,
+            payload: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_146,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_147_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_148,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_149,
+            payload: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_150,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_151_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_152,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_153,
+            payload: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_154,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_155_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_156,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_157,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_158,
+            payload: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_159,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_160_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::KvPair,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_161,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_162,
+            payload: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_163,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_164_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -1502,16 +1602,20 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_167_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::KvPair,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_168,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_169,
+            payload: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_170_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -1522,6 +1626,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_173_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::KvPair,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
@@ -1540,9 +1645,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_178_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_179,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(179),
@@ -1553,6 +1660,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_181_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(181),
@@ -1562,9 +1670,11 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_183,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_184,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
@@ -1572,6 +1682,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_186,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(28),
@@ -1586,9 +1697,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_190_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_191,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -1599,6 +1712,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_194_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(28),
@@ -1613,10 +1727,12 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_198_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_199_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(199),
@@ -1626,10 +1742,12 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_201,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_202_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(202),
@@ -1640,6 +1758,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_204_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(23),
@@ -1651,6 +1770,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_207,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(38),
@@ -1665,16 +1785,20 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_211_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_212,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_213_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_214,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(38),
@@ -1689,16 +1813,20 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_218_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_219,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_220_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_221,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(38),
@@ -1713,16 +1841,20 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_225_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_226,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_227_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_228,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(38),
@@ -1737,28 +1869,35 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_232_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_233,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_234_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_235,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_236,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_237,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_238,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_239,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_240,
@@ -1786,6 +1925,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_246_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(30),
@@ -1810,6 +1950,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_251_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(31),
@@ -1817,6 +1958,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_253,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -1827,6 +1969,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_256_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(19),
@@ -1845,10 +1988,12 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_260_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_261_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(261),
@@ -1859,15 +2004,19 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_263_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_264,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_265,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_266,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_267,
@@ -1889,6 +2038,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_272_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(32),
@@ -1897,6 +2047,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_274_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(274),
@@ -1907,6 +2058,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_276_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(34),
@@ -1921,9 +2073,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_280_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_281,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(281),
@@ -1934,6 +2088,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_283_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(283),
@@ -1954,9 +2109,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_288_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_289,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(289),
@@ -1967,6 +2124,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_291_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(291),
@@ -1976,6 +2134,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_293,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
@@ -1983,6 +2142,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_295,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -1993,6 +2153,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_298_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
@@ -2001,6 +2162,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_300_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(300),
@@ -2010,6 +2172,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_302,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2020,6 +2183,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_305_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(38),
@@ -2028,6 +2192,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_307_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(37),
@@ -2046,6 +2211,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_312,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2056,6 +2222,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_315_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(38),
@@ -2070,12 +2237,15 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_319_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_320,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_321,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_322,
@@ -2083,22 +2253,28 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_323_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_324,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_325,
+            payload: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_326,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_327_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::KvPair,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_328,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2109,6 +2285,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_331_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
@@ -2116,6 +2293,7 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_333,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2126,6 +2304,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_336_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
@@ -2134,6 +2313,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_338_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(338),
@@ -2144,6 +2324,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_340_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2154,16 +2335,20 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_343_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_344,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_345_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_346,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2174,6 +2359,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_349_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(41),
@@ -2188,9 +2374,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_353_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_354,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2201,6 +2389,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_357_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(40),
@@ -2209,6 +2398,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_359_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(40),
@@ -2226,12 +2416,15 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_364_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_365,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_366,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_367,
@@ -2245,9 +2438,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_369_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_370,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2258,6 +2453,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_373_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
@@ -2272,6 +2468,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_377_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(38),
@@ -2286,12 +2483,15 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_381_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_382,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_383,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_384,
@@ -2305,6 +2505,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_386_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
@@ -2312,16 +2513,20 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_388,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Regex {
             pattern: __DTA_REGEX_389,
+            payload: ::core::option::Option::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_390,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_391_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(391),
@@ -2332,9 +2537,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_393_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_394,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2345,9 +2552,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_397_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_398,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
@@ -2365,6 +2574,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_403_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(44),
@@ -2379,6 +2589,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_407_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(407),
@@ -2388,9 +2599,11 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_409,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_410,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_411,
@@ -2404,9 +2617,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_413_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_414,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2417,6 +2632,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_417_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(24),
@@ -2431,12 +2647,15 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_421_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_422,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_423,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_424,
@@ -2450,9 +2669,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_426_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_427,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2463,6 +2684,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_430_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
@@ -2477,12 +2699,15 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_434_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_435,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_436,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_437,
@@ -2496,9 +2721,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_439_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_440,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2509,9 +2736,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_443_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_444,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
@@ -2529,12 +2758,15 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_449_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_450,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_451,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_452,
@@ -2548,9 +2780,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_454_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_455,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2561,6 +2795,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_458_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(22),
@@ -2575,9 +2810,11 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_462_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_463,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2588,6 +2825,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_466_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(21),
@@ -2602,10 +2840,12 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_470_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_471_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(471),
@@ -2615,9 +2855,11 @@ mod __bbnfbootstrap_emit_impl {
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_473,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_474,
+            payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
         ::bbnf::runtime::tape::DtaState::AltLinear {
             branches: &__DTA_ALT_LIN_475,
@@ -2631,6 +2873,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_477_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(42),
@@ -2695,6 +2938,7 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_494_CHILDREN,
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+            promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(494),

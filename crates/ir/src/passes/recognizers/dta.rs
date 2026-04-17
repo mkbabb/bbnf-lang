@@ -109,6 +109,21 @@ pub enum FrameKind {
     ShuntingYard,
 }
 
+/// AW-III.W1.6 — Seq emission promotion classification.
+///
+/// `Default` keeps the legacy structural Seq-compound emission (one
+/// parent record + N children). `KvPair` instructs the walker to
+/// emit the Seq as a flat `TapeKind::KvPair` leaf — the rule's
+/// projection collapses to (key span, scalar payload) so the
+/// compound + children layout is wasteful structural overhead.
+/// Triggered by the lifter when the enclosing rule's
+/// `payload_layouts` entry matches the KvPair shape.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum SeqPromote {
+    Default,
+    KvPair,
+}
+
 /// AW-III.W1 — IR-side mirror of `bbnf_tape::LiteralPayload`.
 ///
 /// The lifter resolves the enclosing `Map { Literal,
@@ -177,6 +192,13 @@ pub enum DtaState {
         /// record. `None` means transparent — the driver inherits the
         /// parent's frame.
         frame: FrameKind,
+        /// AW-III.W1.6 — when the enclosing rule's payload_layout is
+        /// the KvPair shape (`Tuple([Span, scalar])`), the lifter
+        /// stamps `KvPair` here so the walker emits the entire Seq's
+        /// (key span, scalar bytes) projection as a single flat
+        /// `TapeKind::KvPair` leaf instead of a structural compound.
+        /// `Default` keeps the legacy Seq compound emission.
+        promote: SeqPromote,
     },
     /// Byte-class dispatched Alt. `table[b]` is the StateId for the
     /// branch whose FIRST set admits byte `b`, or
@@ -453,7 +475,30 @@ impl<'ir> DtaBuilder<'ir> {
         }
 
         let entry = self.lift_node(&rule.body);
+        // AW-III.W1.6 — Seq → KvPair promotion. When the enclosing
+        // rule's `payload_layouts` entry exists AND the entry state
+        // is a Seq, mark the Seq as KvPair-promoted so the walker
+        // emits a flat `TapeKind::KvPair` leaf instead of a Seq
+        // compound. The KvPair-shape gate ([`Tuple([Span, scalar])`])
+        // is upstream — this just consumes the layout pass's
+        // decision. CSS `dirPseudo` / `hex` and friends collapse via
+        // this promotion.
+        if self.ir.payload_layouts.contains_key(&rule.id) {
+            self.maybe_promote_to_kv_pair(entry);
+        }
         self.rule_entries.insert(rule.id, entry);
+    }
+
+    /// AW-III.W1.6 — promote a Seq state to KvPair when the
+    /// enclosing rule has an aggregate payload_layout. Idempotent;
+    /// non-Seq states are left alone.
+    fn maybe_promote_to_kv_pair(&mut self, entry: StateId) {
+        let idx = entry.0 as usize;
+        if let Some(state) = self.states.get_mut(idx) {
+            if let DtaState::Seq { promote, .. } = state {
+                *promote = SeqPromote::KvPair;
+            }
+        }
     }
 
     fn lift_node(&mut self, node: &IrNode) -> StateId {
@@ -493,6 +538,7 @@ impl<'ir> DtaBuilder<'ir> {
                 self.alloc_state(DtaState::Seq {
                     children: child_states,
                     frame: FrameKind::Seq,
+                    promote: SeqPromote::Default,
                 })
             }
             IrNode::Alt(branches, dispatch) => {
@@ -571,6 +617,7 @@ impl<'ir> DtaBuilder<'ir> {
                 self.alloc_state(DtaState::Seq {
                     children: vec![a_state, b_state],
                     frame: FrameKind::Seq,
+                    promote: SeqPromote::Default,
                 })
             }
             IrNode::Next(a, b) => {
@@ -579,6 +626,7 @@ impl<'ir> DtaBuilder<'ir> {
                 self.alloc_state(DtaState::Seq {
                     children: vec![a_state, b_state],
                     frame: FrameKind::Seq,
+                    promote: SeqPromote::Default,
                 })
             }
             IrNode::Minus(primary, excluded) => {
@@ -608,6 +656,7 @@ impl<'ir> DtaBuilder<'ir> {
                 self.alloc_state(DtaState::Seq {
                     children: vec![inner_state],
                     frame: FrameKind::Seq,
+                    promote: SeqPromote::Default,
                 })
             }
             IrNode::Map { inner, fn_id } => {
@@ -657,6 +706,7 @@ impl<'ir> DtaBuilder<'ir> {
                 self.alloc_state(DtaState::Seq {
                     children: vec![ws_before, inner_state, ws_after],
                     frame: FrameKind::Seq,
+                    promote: SeqPromote::Default,
                 })
             }
             IrNode::TokenDispatch { token, arms: _, fallback } => {
@@ -668,6 +718,7 @@ impl<'ir> DtaBuilder<'ir> {
                 self.alloc_state(DtaState::Seq {
                     children: vec![token_state, fallback_state],
                     frame: FrameKind::Seq,
+                    promote: SeqPromote::Default,
                 })
             }
         };
@@ -1126,11 +1177,19 @@ fn int_literal_payload(value: i64, return_type: Option<&TypeDesc>) -> LiteralPay
 /// into the matching `RegexPayloadKind`. Returns `None` for
 /// non-decodable shapes (`Tuple`, `Enum`, etc.) — those flow through
 /// the structural path.
+///
+/// `Bool` projects to its dedicated `Bool` decoder (case-insensitive
+/// `true`/`false` discrimination) rather than `U8`. `U8`/`I8` would
+/// reduce the matched bytes to `slice[0]`, which is the wrong byte
+/// for case-insensitive scanners (`/TRUE/i` matches `T` or `t` —
+/// neither is `1`). Sheets `boolean = /TRUE/i -> true` is the
+/// canonical case.
 fn regex_payload_from_return(return_type: Option<&TypeDesc>) -> Option<RegexPayloadKind> {
     let td = return_type?;
     Some(match td {
         TypeDesc::F64 => RegexPayloadKind::F64,
-        TypeDesc::U8 | TypeDesc::I8 | TypeDesc::Bool => RegexPayloadKind::U8,
+        TypeDesc::Bool => RegexPayloadKind::Bool,
+        TypeDesc::U8 | TypeDesc::I8 => RegexPayloadKind::U8,
         TypeDesc::U32 | TypeDesc::I32 => RegexPayloadKind::HexU32,
         TypeDesc::I64 | TypeDesc::U64 => RegexPayloadKind::I64,
         TypeDesc::Span => return None, // Span lives in span_lo/hi — no decoder

@@ -68,7 +68,7 @@
 
 use crate::columns::Columns;
 use crate::dta::{
-    DtaFrameKind, DtaRuleId, DtaState, DtaStateId, DtaTable, LiteralPayload,
+    DtaFrameKind, DtaRuleId, DtaState, DtaStateId, DtaTable, LiteralPayload, SeqPromote,
 };
 use crate::kind::TapeKind;
 use crate::psi::{PayloadJob, PayloadStream};
@@ -153,6 +153,14 @@ pub struct Frame {
     /// `u8::MAX` indicates "no rule context" — the compound uses the
     /// existing Alt-cursor stamping (for non-rule-entry Alt frames).
     pub variant_idx: u8,
+    /// AW-III.W1.6 — Seq → KvPair promotion classification.
+    ///
+    /// Set from the lifted `DtaState::Seq.promote`. When `KvPair`,
+    /// `close_compound` collapses the parent compound + children
+    /// into a single flat `TapeKind::KvPair` leaf whose `child_off`
+    /// points at the scalar payload's arena offset (mined from the
+    /// last child with `payload_in_arena()` set).
+    pub promote: SeqPromote,
 }
 
 /// One entry on the ShuntingYard reducer's auxiliary operator stack.
@@ -287,6 +295,7 @@ impl FrameStack {
             hi: 0,
             counter_optional_flag: 0,
             variant_idx: u8::MAX,
+            promote: SeqPromote::Default,
         };
         Self {
             inline: [template; STACK_INLINE_DEPTH],
@@ -699,7 +708,7 @@ fn handle_repeat_failure(
                 // the next sibling's compound push.
                 stack.pending_variant_idx = u8::MAX;
                 *pos = sp.pos;
-                close_compound(columns, stack, *pos);
+                close_compound(columns, frame_depth, stack, *pos);
                 pop_and_release(stack);
                 let res = advance_or_pop_with(
                     Some(table), Some(input), columns, frame_depth, psi, stack, pos,
@@ -746,7 +755,7 @@ fn handle_repeat_failure_bounded(
                 // the next sibling's compound push.
                 stack.pending_variant_idx = u8::MAX;
                 *pos = sp.pos;
-                close_compound(columns, stack, *pos);
+                close_compound(columns, frame_depth, stack, *pos);
                 pop_and_release(stack);
                 let res = advance_or_pop_with(
                     Some(table), Some(input), columns, frame_depth, psi, stack, pos,
@@ -887,12 +896,14 @@ fn dispatch_one(
             *pos = end as u32;
             // AW-III.W1: when the lifter resolved an enclosing `Map {
             // Literal, IntLit/BoolLit/FloatLit }`, the const-folded
-            // value lives in `payload`. Promote `TapeKind::Literal` →
-            // `TapeKind::Span` so downstream `payload_bytes` /
-            // `payload_scalar` readers recognise the leaf as
-            // payload-bearing, then write the lifted constant into the
-            // arena and stamp `child_off` to the arena offset. With no
-            // payload the legacy structural-only emission survives.
+            // value lives in `payload`. The leaf is emitted as a
+            // payload-bearing `TapeKind::Span` (the matched bytes are
+            // the canonical span; the constant rides in the arena via
+            // `child_off`). Compound Seq promotion to `TapeKind::
+            // KvPair` happens at the enclosing rule's level via
+            // `frame_to_tape_kind` when the rule's `payload_layout`
+            // matches the KvPair shape. Without payload the legacy
+            // structural-only emission survives.
             if payload.is_some() {
                 let arena_off = stage_literal_payload_in_arena(columns, payload);
                 emit_leaf_with_payload(
@@ -961,7 +972,7 @@ fn dispatch_one(
             stack.pending_variant_idx = u8::MAX;
             advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
         }
-        DtaState::Seq { children, frame } => {
+        DtaState::Seq { children, frame, promote } => {
             // Reserve the parent row — pre-order: parent sits at the
             // lowest index in its subtree, children flow in after.
             // `child_mark` is the column length AFTER the parent row
@@ -970,6 +981,15 @@ fn dispatch_one(
             // cursor's AW.1.10 fast path recognises this layout as
             // `child_off == parent + 1` and degrades `child(0)` to
             // an O(1) lookup.
+            //
+            // AW-III.W1.6 — when `promote == KvPair`, the parent row
+            // is provisionally pushed as a KvPair leaf (the same
+            // structural slot the Seq compound would have used) and
+            // `close_compound` collapses the children into a flat
+            // record at frame-pop time. The provisional kind is the
+            // same `Seq` placeholder pre-W1 used so `child_mark`
+            // arithmetic stays uniform; the `promote` field on the
+            // frame is what triggers the close-time collapse.
             let parent_rec = columns.len() as u32;
             let tape_kind = frame_to_tape_kind(frame);
             reserve_compound(columns, frame_depth, stack.depth(), tape_kind, *pos);
@@ -995,10 +1015,11 @@ fn dispatch_one(
                 hi: 0,
                 counter_optional_flag: 0,
                 variant_idx,
+                promote,
             });
             if children.is_empty() {
                 // Degenerate Seq — close immediately.
-                close_compound(columns, stack, *pos);
+                close_compound(columns, frame_depth, stack, *pos);
                 return advance_or_pop_with(
                     Some(table), Some(input), columns, frame_depth, psi, stack, pos,
                 );
@@ -1113,6 +1134,7 @@ fn dispatch_one(
                 hi: 0,
                 counter_optional_flag: 0,
                 variant_idx,
+                promote: SeqPromote::Default,
             });
 
             // Savepoint AFTER pushing the Alt frame so a failed branch
@@ -1247,6 +1269,7 @@ fn dispatch_one(
                 hi: saturating_u16(hi),
                 counter_optional_flag,
                 variant_idx,
+                promote: SeqPromote::Default,
             });
 
             // Fill in the stack savepoint AFTER the push so body
@@ -1256,7 +1279,7 @@ fn dispatch_one(
 
             // Handle degenerate `hi == 0` — close immediately.
             if hi == 0 {
-                close_compound(columns, stack, *pos);
+                close_compound(columns, frame_depth, stack, *pos);
                 return advance_or_pop_with(
                     Some(table), Some(input), columns, frame_depth, psi, stack, pos,
                 );
@@ -1390,6 +1413,7 @@ fn dispatch_one(
                 hi: 0,
                 counter_optional_flag: 0,
                 variant_idx,
+                promote: SeqPromote::Default,
             });
             let _ = head; // head is retrieved from the state at dispatch time
             Ok(StepResult::Next(head))
@@ -1437,8 +1461,11 @@ fn emit_leaf(
 /// Same column-write shape as [`emit_leaf`] except the polymorphic
 /// `child_off` slot carries the arena byte offset where the typed
 /// payload bytes live (written by [`stage_literal_payload_in_arena`]
-/// or the PSI stage-B drain). Downstream readers (`payload_bytes`,
-/// `payload_scalar`) consult `child_off` to recover the slot.
+/// or the PSI stage-B drain). The record's
+/// [`TapeRec::PAYLOAD_IN_ARENA_BIT`] is set when `child_off !=
+/// NONE`, signalling to scalar readers (`payload_u8`,
+/// `payload_scalar::<T>`) that they should slice `pay_agg` directly
+/// instead of indirecting through `pay_narrow` / `pay_wide`.
 #[inline]
 fn emit_leaf_with_payload(
     columns: &mut Columns,
@@ -1462,7 +1489,12 @@ fn emit_leaf_with_payload(
         0
     };
     columns.flags.push(variant);
-    columns.extra.push(0);
+    let extra: u16 = if child_off.is_none() {
+        0
+    } else {
+        crate::tape::TapeRec::PAYLOAD_IN_ARENA_BIT
+    };
+    columns.extra.push(extra);
     columns.span_lo.push(span_lo);
     columns.span_hi.push(span_hi);
     columns.sib_skip.push(0);
@@ -1578,12 +1610,75 @@ fn lookup_precedence(
 
 /// Close the topmost compound frame — stamp `span_hi`, `child_off`,
 /// and `has_children` on the reserved parent row.
+///
+/// AW-III.W1.6 — when the frame's `promote == KvPair`, the children
+/// (already emitted by the inner state walks) collapse into a single
+/// flat `TapeKind::KvPair` leaf at the parent's slot. The parent's
+/// `child_off` is rewritten to the scalar payload's arena offset
+/// (mined from the last child whose
+/// [`TapeRec::PAYLOAD_IN_ARENA_BIT`] is set), the kind byte is
+/// repacked from `Seq` → `KvPair`, the `has_children` bit is left
+/// clear, and the trailing child records are truncated. Tape size
+/// shrinks by `(children_count - 0)` records per KvPair-promoted
+/// rule body — the structural saving the layout pass paid for.
 #[inline]
-fn close_compound(columns: &mut Columns, stack: &FrameStack, pos: u32) {
+fn close_compound(
+    columns: &mut Columns,
+    frame_depth: &mut Vec<u8>,
+    stack: &FrameStack,
+    pos: u32,
+) {
     if let Some(frame) = stack_top(stack) {
         let parent = frame.parent_rec as usize;
         let has_children = (columns.len() as u32) > frame.child_mark;
         columns.span_hi[parent] = pos;
+        // AW-III.W1.6 — KvPair promotion path. Mine the most recent
+        // child whose `PAYLOAD_IN_ARENA_BIT` is set (the scalar value
+        // of the (key, scalar) pair), flatten into a KvPair leaf,
+        // truncate the children. When no payload-bearing child exists
+        // (e.g. the body's typed leaf was elided by an upstream
+        // optimisation), the promotion is a no-op fallback to the
+        // structural Seq close — the layout-pass invariant should
+        // make this branch unreachable but failing soft beats panic.
+        if matches!(frame.promote, SeqPromote::KvPair) && has_children {
+            let mut scalar_arena_off: Option<TapeOffset> = None;
+            let parent_extra: u16 = crate::tape::TapeRec::PAYLOAD_IN_ARENA_BIT;
+            for i in (frame.child_mark as usize)..columns.len() {
+                if (columns.extra[i] & crate::tape::TapeRec::PAYLOAD_IN_ARENA_BIT) != 0 {
+                    scalar_arena_off = Some(columns.child_off[i]);
+                }
+            }
+            if let Some(off) = scalar_arena_off {
+                // Rewrite parent's kind byte to KvPair (preserve high
+                // 4 bits = meta_idx low nibble).
+                let meta_hi = columns.kinds[parent] & 0xF0;
+                columns.kinds[parent] = meta_hi | (TapeKind::KvPair as u8 & 0x0F);
+                columns.child_off[parent] = off;
+                columns.extra[parent] = parent_extra;
+                // Variant_idx stamping for the KvPair flat record:
+                // the rule's variant_idx wins (frame.variant_idx);
+                // fall through to the legacy Alt-cursor stamp when
+                // no rule context.
+                if frame.variant_idx != u8::MAX {
+                    let variant = frame.variant_idx & 0x3F;
+                    columns.flags[parent] = (columns.flags[parent] & 0xC0) | variant;
+                } else if matches!(frame.kind, DtaFrameKind::Alt) {
+                    let variant = (frame.cursor as u8) & 0x3F;
+                    columns.flags[parent] = (columns.flags[parent] & 0xC0) | variant;
+                }
+                // Drop has_children — KvPair is a leaf.
+                columns.flags[parent] &= !0x40;
+                // Truncate the children — the parent is now a self-
+                // contained leaf record. Both the structural columns
+                // and the parallel `frame_depth` stream shrink to the
+                // pre-children mark.
+                columns.truncate(frame.child_mark as usize);
+                frame_depth.truncate(frame.child_mark as usize);
+                return;
+            }
+            // Fall through to legacy compound close when no
+            // payload-bearing child surfaced.
+        }
         if has_children {
             // Pre-order: first child sits at `parent + 1` — the
             // O(1) `idx + 1` lookup AW.1.10 relies on.
@@ -1836,7 +1931,7 @@ fn advance_or_pop_with(
             }
         }
         // Close the compound and pop.
-        close_compound(columns, stack, *pos);
+        close_compound(columns, frame_depth, stack, *pos);
         pop_and_release(stack);
     }
 }

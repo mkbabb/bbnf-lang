@@ -55,6 +55,7 @@
 //! gain for bootstrapping the V4 driver outweighs the binary-size
 //! cost.
 
+use bbnf_ir::passes::recognizers::dta::{LiteralPayload, RegexPayloadKind, SeqPromote};
 use bbnf_ir::passes::recognizers::shape_dict::{ShapeTemplate, TemplatePiece};
 use bbnf_ir::passes::recognizers::shape_dict_bbnf::{BbnfShapeKind, BbnfShapeTemplate};
 use bbnf_ir::passes::{
@@ -287,41 +288,57 @@ fn emit_state_literal(
     support: &mut TokenStream,
 ) -> TokenStream {
     match state {
-        DtaState::Literal { text } => {
+        DtaState::Literal { text, payload } => {
             // AW.1.2: resolve the IR-interned StringId to the actual
             // byte sequence the driver will compare against input.
             // Emitted as a `&str` literal via `proc_macro2::Literal::
             // string` so arbitrary content (UTF-8, escape sequences,
             // embedded quotes) round-trips verbatim through the token
             // stream.
+            //
+            // AW-III.W1: emit the lifter-resolved `LiteralPayload`
+            // alongside the text so the walker writes the constant
+            // into the arena post-match.
             let text_ident = format_ident!("__DTA_LITERAL_{}", idx);
             let text_str = ir.get_string(*text);
             let text_literal = Literal::string(text_str);
             support.extend(quote! {
                 static #text_ident: &str = #text_literal;
             });
+            let payload_lit = literal_payload_literal(*payload);
             quote! {
-                ::bbnf::runtime::tape::DtaState::Literal { text: #text_ident }
+                ::bbnf::runtime::tape::DtaState::Literal {
+                    text: #text_ident,
+                    payload: #payload_lit,
+                }
             }
         }
-        DtaState::Regex { pattern } => {
+        DtaState::Regex { pattern, payload } => {
             // AW.1.2: same resolution as `Literal`. The driver's regex
             // arm feeds this pattern into the caller-supplied
             // `RegexScanner` implementation.
+            //
+            // AW-III.W1: emit the lifter-resolved `RegexPayloadKind`
+            // selector alongside the pattern so the walker enqueues
+            // the matching `PayloadJob`.
             let pat_ident = format_ident!("__DTA_REGEX_{}", idx);
             let pat_str = ir.get_string(*pattern);
             let pat_literal = Literal::string(pat_str);
             support.extend(quote! {
                 static #pat_ident: &str = #pat_literal;
             });
+            let payload_lit = regex_payload_literal(*payload);
             quote! {
-                ::bbnf::runtime::tape::DtaState::Regex { pattern: #pat_ident }
+                ::bbnf::runtime::tape::DtaState::Regex {
+                    pattern: #pat_ident,
+                    payload: #payload_lit,
+                }
             }
         }
         DtaState::Epsilon => quote! {
             ::bbnf::runtime::tape::DtaState::Epsilon
         },
-        DtaState::Seq { children, frame } => {
+        DtaState::Seq { children, frame, promote } => {
             let children_ident = format_ident!("__DTA_SEQ_{}_CHILDREN", idx);
             let children_len = children.len();
             let child_literals: Vec<_> = children.iter().map(|s| state_id_literal(*s)).collect();
@@ -331,10 +348,12 @@ fn emit_state_literal(
                     [#(#child_literals),*];
             });
             let frame_lit = frame_kind_literal(*frame);
+            let promote_lit = seq_promote_literal(*promote);
             quote! {
                 ::bbnf::runtime::tape::DtaState::Seq {
                     children: &#children_ident,
                     frame: #frame_lit,
+                    promote: #promote_lit,
                 }
             }
         }
@@ -493,6 +512,15 @@ fn frame_kind_literal(f: FrameKind) -> TokenStream {
     }
 }
 
+/// AW-III.W1.6 — emit the IR `SeqPromote` as its tape-side `const`
+/// literal.
+fn seq_promote_literal(p: SeqPromote) -> TokenStream {
+    match p {
+        SeqPromote::Default => quote! { ::bbnf::runtime::tape::SeqPromote::Default },
+        SeqPromote::KvPair => quote! { ::bbnf::runtime::tape::SeqPromote::KvPair },
+    }
+}
+
 fn counter_optional_variant(c: CounterOptional) -> TokenStream {
     match c {
         CounterOptional::Nested => {
@@ -509,6 +537,67 @@ fn associativity_literal(a: Associativity) -> TokenStream {
         Associativity::Left => quote! { ::bbnf::runtime::tape::DtaAssociativity::Left },
         Associativity::Right => quote! { ::bbnf::runtime::tape::DtaAssociativity::Right },
     }
+}
+
+/// AW-III.W1 — emit the IR `LiteralPayload` as its tape-side `const`
+/// literal. The two enums share variant names; this is the 1:1
+/// projection.
+fn literal_payload_literal(p: LiteralPayload) -> TokenStream {
+    match p {
+        LiteralPayload::None => {
+            quote! { ::bbnf::runtime::tape::LiteralPayload::None }
+        }
+        LiteralPayload::U8(v) => {
+            let lit = Literal::u8_unsuffixed(v);
+            quote! { ::bbnf::runtime::tape::LiteralPayload::U8(#lit) }
+        }
+        LiteralPayload::Bool(b) => {
+            let lit = if b { quote!(true) } else { quote!(false) };
+            quote! { ::bbnf::runtime::tape::LiteralPayload::Bool(#lit) }
+        }
+        LiteralPayload::U32(v) => {
+            let lit = Literal::u32_unsuffixed(v);
+            quote! { ::bbnf::runtime::tape::LiteralPayload::U32(#lit) }
+        }
+        LiteralPayload::U64(v) => {
+            let lit = Literal::u64_unsuffixed(v);
+            quote! { ::bbnf::runtime::tape::LiteralPayload::U64(#lit) }
+        }
+        LiteralPayload::F64(v) => {
+            // proc_macro2's `Literal::f64_unsuffixed` wraps `Display`
+            // for the value; bit-exact round-trip is the canonical
+            // const-fold path. Special floats (NaN, infinities) are
+            // routed through the bit constructor to preserve identity.
+            if v.is_finite() {
+                let lit = Literal::f64_unsuffixed(v);
+                quote! { ::bbnf::runtime::tape::LiteralPayload::F64(#lit) }
+            } else {
+                let bits = Literal::u64_unsuffixed(v.to_bits());
+                quote! { ::bbnf::runtime::tape::LiteralPayload::F64(f64::from_bits(#bits)) }
+            }
+        }
+    }
+}
+
+/// AW-III.W1 — emit the IR `RegexPayloadKind` selector as
+/// `Option<bbnf_tape::PayloadKind>`. `None` lowers to `::None`;
+/// `Some(_)` lowers via the per-variant `PayloadKind` constructor.
+fn regex_payload_literal(p: Option<RegexPayloadKind>) -> TokenStream {
+    let Some(kind) = p else {
+        return quote! { ::core::option::Option::None };
+    };
+    let variant = match kind {
+        RegexPayloadKind::F64 => quote! { ::bbnf::runtime::tape::PayloadKind::F64 },
+        RegexPayloadKind::U8 => quote! { ::bbnf::runtime::tape::PayloadKind::U8 },
+        RegexPayloadKind::Bool => quote! { ::bbnf::runtime::tape::PayloadKind::Bool },
+        RegexPayloadKind::HexU32 => quote! { ::bbnf::runtime::tape::PayloadKind::HexU32 },
+        RegexPayloadKind::I64 => quote! { ::bbnf::runtime::tape::PayloadKind::I64 },
+        RegexPayloadKind::String => quote! { ::bbnf::runtime::tape::PayloadKind::String },
+        RegexPayloadKind::AggregateLarge => {
+            quote! { ::bbnf::runtime::tape::PayloadKind::AggregateLarge }
+        }
+    };
+    quote! { ::core::option::Option::Some(#variant) }
 }
 
 // ── AV.5.4 — Shape-dictionary emission ────────────────────────────

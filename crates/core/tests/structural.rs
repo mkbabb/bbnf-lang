@@ -60,7 +60,6 @@ fn load_data(name: &str) -> Option<String> {
 // ── Test: object with array value ──────────────────────────────────────
 
 #[test]
-#[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"]
 fn structural_object_with_array() {
     let input = r#"{"key": [1, true, null]}"#;
     let parsed = JsonParser::parse(input)
@@ -104,7 +103,6 @@ fn structural_object_with_array() {
 // ── Test: array with 3 numbers ─────────────────────────────────────────
 
 #[test]
-#[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"]
 fn structural_array_three_numbers() {
     let input = "[1, 2, 3]";
     let parsed = JsonParser::parse(input)
@@ -138,7 +136,6 @@ fn structural_array_three_numbers() {
 // ── Test: object with 2 pairs ──────────────────────────────────────────
 
 #[test]
-#[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"]
 fn structural_object_two_pairs() {
     let input = r#"{"a": 1, "b": "hello"}"#;
     let parsed = JsonParser::parse(input)
@@ -186,7 +183,6 @@ fn structural_object_two_pairs() {
 // ── Test: nested objects ───────────────────────────────────────────────
 
 #[test]
-#[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"]
 fn structural_nested_objects() {
     let input = r#"{"outer": {"inner": 42}}"#;
     let parsed = JsonParser::parse(input)
@@ -227,7 +223,6 @@ fn structural_nested_objects() {
 // ── Test: empty containers ─────────────────────────────────────────────
 
 #[test]
-#[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"]
 fn structural_empty_array() {
     let input = "[]";
     let parsed = JsonParser::parse(input)
@@ -242,7 +237,6 @@ fn structural_empty_array() {
 }
 
 #[test]
-#[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"]
 fn structural_empty_object() {
     let input = "{}";
     let parsed = JsonParser::parse(input)
@@ -394,7 +388,6 @@ fn structural_tape_record_bounds() {
 // ── Test: large file structural sanity ─────────────────────────────────
 
 #[test]
-#[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"]
 fn structural_data_json_sanity() {
     let input = match load_data("json/data.json") {
         Some(s) => s,

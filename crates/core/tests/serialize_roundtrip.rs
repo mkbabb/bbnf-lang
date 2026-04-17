@@ -138,11 +138,11 @@ fn json_rt(input: &str) {
 #[test] fn json_false()     { assert_eq!(json_emit("false"), "false"); }
 #[test] fn json_number()    { json_rt("42"); }
 #[test] fn json_string()    { assert_eq!(json_emit(r#""hello""#), r#""hello""#); }
-#[test] #[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"] fn json_empty_arr() { json_rt("[]"); }
-#[test] #[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"] fn json_array()     { json_rt("[1, 2, 3]"); }
-#[test] #[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"] fn json_empty_obj() { json_rt("{}"); }
-#[test] #[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"] fn json_object()    { json_rt(r#"{"key": "value"}"#); }
-#[test] #[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"] fn json_nested()    { json_rt(r#"{"a": [1, 2], "b": {"c": true}}"#); }
+#[test] fn json_empty_arr() { json_rt("[]"); }
+#[test] fn json_array()     { json_rt("[1, 2, 3]"); }
+#[test] fn json_empty_obj() { json_rt("{}"); }
+#[test] fn json_object()    { json_rt(r#"{"key": "value"}"#); }
+#[test] fn json_nested()    { json_rt(r#"{"a": [1, 2], "b": {"c": true}}"#); }
 
 // ── CSV ──────────────────────────────────────────────────────────────────────
 
@@ -189,7 +189,6 @@ fn ebnf_emit(input: &str) -> String {
 }
 
 #[test]
-#[ignore = "EBNF grammar parse fails under tape-first (pre-existing)"]
 fn ebnf_rule() {
     let e = ebnf_emit("digit = \"0\" | \"1\" | \"2\" ;\n");
     assert!(!e.is_empty(), "EBNF empty");
@@ -228,7 +227,6 @@ fn sheets_simple() {
 // ── BBNF ─────────────────────────────────────────────────────────────────────
 
 #[test]
-#[ignore = "AW open scope: serialize/structural roundtrip — surfaced post-V5 ShapeRef substrate; route to AW V6+ walker/reader closure"]
 fn bbnf_rule() {
     // Double-quoted literals now work — unescape moved to lowering.
     let input = "x = /[a-z]+/ ;\ny = \"hello\" ;\n";
@@ -261,7 +259,6 @@ fn css_pretty_rt(input: &str) {
 }
 
 #[test]
-#[ignore = "AW-I.W2.5: CSS pretty grammar under `serialize` mode fails to parse the simple block form post-SCC-recompute activation. The `@pretty`-pinned rules survive fuse / inline via `is_consumer_pinned`, but the serialize pipeline constructs a view-layer shape that mis-dispatches at offset 0. Route: W4.5 or a follow-up tranche once the serialize + prettify codegen paths reconcile their view-layer conventions."]
 fn css_simple() {
     css_pretty_rt("body { color: red; }");
 }

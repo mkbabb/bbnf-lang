@@ -512,6 +512,41 @@ fn emit_regex_arm(
     // runs the 16-byte SIMD backslash-parity scan over the body.
     let scan_body = emit_regex_scan_body(grammar, ir, table, idx, pattern);
 
+    // AW-IV.W3.5c — bounded-Regex admission. When the pattern's
+    // last-byte-set is disjoint from the grammar's structural alphabet,
+    // the DFA scan is guaranteed to terminate at-or-before the next
+    // structural byte. The walker shadows `input` with a slice capped
+    // at `idx.positions[slot]`, so the spliced DFA body's
+    // `input.get(__dfa_p)` naturally stops before the bound. LLVM lowers
+    // the reslicing to a single bounds-clamp; no runtime branch per
+    // byte.
+    //
+    // Admission check derives from the pattern text + structural
+    // alphabet (both are codegen-time data), so the bound is folded in
+    // statically. Payload-bearing arms retain unbounded scanning — the
+    // payload decoders (Eisel-Lemire, String-SIMD) expect the full
+    // matched range and reading a bounded slice could truncate the
+    // decode. The optimisation targets the non-payload Span emission
+    // path where the matched range is consumed only for span bounds.
+    let bounded_scan = payload.is_none()
+        && admits_bounded_regex_scan(ir, pattern);
+    let scan_body_wrapped = if bounded_scan {
+        quote! {
+            let __upper_bound = {
+                let slot_idx = *slot as usize;
+                if slot_idx < idx.positions.len() {
+                    (idx.positions[slot_idx] as usize).min(input.len())
+                } else {
+                    input.len()
+                }
+            };
+            let input: &[u8] = &input[..__upper_bound];
+            #scan_body
+        }
+    } else {
+        scan_body
+    };
+
     // AW-IV.W2.3.a — splice emit_leaf / emit_leaf_with_payload; for
     // F64 payload, inline Eisel-Lemire decode + direct column write
     // instead of psi.push scheduling.
@@ -648,7 +683,7 @@ fn emit_regex_arm(
         // path.
         let dfa_result: ::core::option::Option<u32> = {
             let pos: usize = *pos as usize;
-            #scan_body
+            #scan_body_wrapped
         };
         let match_len = match dfa_result {
             ::core::option::Option::Some(n) => n,
@@ -668,6 +703,69 @@ fn emit_regex_arm(
         stack.pending_variant_idx = u8::MAX;
         #advance
     }
+}
+
+/// AW-IV.W3.5c — codegen-time admission test for the bounded-Regex
+/// walker arm.
+///
+/// Returns `true` when the pattern's mined last-byte set is disjoint
+/// from the grammar's structural alphabet: the pattern terminates at-
+/// or-before the next structural byte, so the walker may cap the DFA's
+/// scan at `idx.positions[slot]` without risking a truncated mid-match.
+///
+/// The lookup walks every `NodeId` carrying this pattern's
+/// `StringId` — the `PatternAlphabetMiner` keys its output by
+/// `NodeId`, but the last-byte-set itself depends only on the pattern
+/// text, so any matching entry is authoritative. A successful match
+/// requires `is_last_byte_tight` (the NFA computation succeeded) AND
+/// disjointness from the structural alphabet.
+///
+/// Returns `false` when:
+/// - The grammar has no mined structural alphabet (bounded scan has
+///   no upper bound to apply).
+/// - No `PatternAlphabet` entry exists for any `NodeId` with this
+///   pattern.
+/// - `is_last_byte_tight == false` for every matching entry (NFA
+///   construction failed or zero-width accept).
+/// - The `last_byte_set` intersects the structural alphabet — the
+///   pattern can accept on a structural byte, so the bounded slice
+///   would exclude a valid match.
+fn admits_bounded_regex_scan(ir: &GrammarIR, pattern: StringId) -> bool {
+    let Some(structural) = ir.structural_alphabet.as_ref() else {
+        return false;
+    };
+    let structural_mask = structural.singletons_mask();
+    if structural_mask.iter().all(|&w| w == 0) {
+        return false;
+    }
+
+    // Find any `NodeId` whose `DagNode::Regex` carries this pattern
+    // string. The miner populates `ir.pattern_alphabets` per NodeId,
+    // but the computed last-byte-set depends only on the pattern
+    // text, so any matching entry suffices.
+    let Some(dag) = ir.dag.as_ref() else {
+        return false;
+    };
+    for (node_id, dag_node) in dag.iter() {
+        if let bbnf_ir::dag::DagNode::Regex(sid) = dag_node {
+            if *sid == pattern {
+                if let Some(alphabet) = ir.pattern_alphabets.get(&node_id) {
+                    if !alphabet.is_last_byte_tight {
+                        continue;
+                    }
+                    let last = &alphabet.last_byte_set;
+                    let disjoint = (last[0] & structural_mask[0]) == 0
+                        && (last[1] & structural_mask[1]) == 0
+                        && (last[2] & structural_mask[2]) == 0
+                        && (last[3] & structural_mask[3]) == 0;
+                    if disjoint {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
 }
 
 /// AW-IV.W2.3.a — Emit the scan body for a Regex arm.

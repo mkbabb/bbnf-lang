@@ -875,9 +875,22 @@ fn grammar_profile_total_push_sites_sums_three_counts() {
 
 #[test]
 fn grammar_profile_capacity_for_scales_with_input_len() {
-    // 0.5 + 0.25 = 0.75 records/byte; 1024 bytes ⇒ 768 records + 2
+    // AW-IV.W2.3.b — the formula combines the per-grammar density
+    // estimate with the AR-audit floor (sonic-rs parity):
+    //   `max(ceil(density * len), len / 2) + 2`
+    //
+    // _SAMPLE_PROFILE has compounds=0.5 + leaves=0.25 = 0.75
+    // records/byte; 1024 bytes ⇒ density=768, floor=512, max=768,
+    // +2 = 770. The density dominates for this profile.
     assert_eq!(_SAMPLE_PROFILE.capacity_for(1024), 770);
     assert_eq!(_SAMPLE_PROFILE.capacity_for(0), 2);
+    // AR-audit floor activates when the per-grammar density is below
+    // the sonic-rs baseline — the EMPTY profile has zero density so
+    // the AR floor governs: `1024 / 2 + 2 = 514`.
+    assert_eq!(GrammarProfile::EMPTY.capacity_for(1024), 514);
+    // Dense grammars (density > 0.5) are unaffected by the floor; the
+    // density-based estimate dominates.
+    assert!(_SAMPLE_PROFILE.capacity_for(1024) > GrammarProfile::EMPTY.capacity_for(1024));
 }
 
 #[test]

@@ -270,17 +270,58 @@ impl GrammarProfile {
     };
 
     /// Reserve size for `TapeBuilder::with_capacity` given an input
-    /// length (bytes). Returns `input_len * (compounds + leaves) + 2`
-    /// rounded to the nearest integer — the `+ 2` is a one-record
-    /// pad covering empty inputs and the end-of-parse compound.
+    /// length (bytes). Combines the per-grammar density estimate with
+    /// the AR-audit floor `input_len / 2 + 2` (sonic-rs ratio) so the
+    /// fused-push hot path in [`push_compound_fused`] /
+    /// [`push_leaf_fused`] never undershoots pre-allocation — cold-path
+    /// `grow_all` fall-through stays reachable but unexercised on
+    /// corpus input.
     ///
-    /// Callers that need `const` evaluation at codegen time use the
-    /// raw `compounds_per_input_byte + leaves_per_input_byte` fields
-    /// directly; this helper is a runtime convenience.
+    /// # Formula
+    ///
+    /// ```text
+    /// max(
+    ///     ceil((compounds_per_byte + leaves_per_byte) * input_len),
+    ///     input_len / 2,
+    /// ) + 2
+    /// ```
+    ///
+    /// The `+ 2` is a one-record pad covering empty inputs and the
+    /// end-of-parse compound.
+    ///
+    /// # AW-IV.W2.3.b — pre-allocation invariant
+    ///
+    /// The per-grammar term captures density for deep grammars (CSS
+    /// L4: every declaration / value / selector emits ~1.0
+    /// records/byte; JSON: ~1.0; Sheets: ~1.0) — those cannot fit
+    /// inside `input_len / 2`. The AR-audit floor captures the
+    /// `(1, 2)` degenerate fallback for sparse grammars where
+    /// `PushFingerprint::capacity_ratio()` returns the conservative
+    /// `(1, 2)` — so the fused path's pre-condition holds even when
+    /// the V1 density estimate reads zero (the `GrammarProfile::EMPTY`
+    /// case, tests, ungated grammars).
+    ///
+    /// Pre-AW-IV the helper used only the per-grammar term. The
+    /// AR-audit floor is new in W2.3.b; it keeps `capacity_for` from
+    /// undershooting on grammars whose V1 fingerprint has yet to
+    /// populate.
+    ///
+    /// Callers that want a grammar-aware soft-hint for sub-column
+    /// sizing (`pay_narrow`, `pay_wide`, `pay_agg`) read the raw
+    /// per-byte fields directly.
+    ///
+    /// [`push_compound_fused`]: crate::columns::Columns::push_compound_fused
+    /// [`push_leaf_fused`]: crate::columns::Columns::push_leaf_fused
     #[inline]
     pub fn capacity_for(&self, input_len: usize) -> usize {
         let per_byte = self.compounds_per_input_byte + self.leaves_per_input_byte;
-        ((input_len as f32) * per_byte) as usize + 2
+        let density_based = ((input_len as f32) * per_byte) as usize;
+        // AR-audit floor: `input_len / 2` covers sparse grammars whose
+        // V1 fingerprint returns the `(1, 2)` fallback and every
+        // grammar where the density estimate is below the
+        // sonic-rs-baseline record-per-2-bytes ratio.
+        let ar_floor = input_len / 2;
+        density_based.max(ar_floor) + 2
     }
 
     /// Total emitted push-site count — `push_compound + push_leaf +

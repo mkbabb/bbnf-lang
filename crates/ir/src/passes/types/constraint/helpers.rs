@@ -119,22 +119,34 @@ pub(super) fn join_types(branch_types: &[&TypeDesc]) -> TypeDesc {
 }
 
 /// Extract the semantically meaningful payload type from a branch's
-/// projected `TypeDesc`, stripping the structural `Span` inserted by
-/// `factor_common_prefixes`.
+/// projected `TypeDesc`, stripping the structural `Span` prefixes
+/// inserted by `factor_common_prefixes`.
+///
+/// `factor_common_prefixes` re-groups alternations by common literal
+/// prefixes recursively. A branch like `"aliceblue" -> 0xF0F8FFFFu32`
+/// may end up wrapped as `Tuple([Span, Tuple([Span, Tuple([Span,
+/// U32])])])` once multi-level factoring runs (e.g. the CSS L4
+/// `namedColor` alt with 148 branches produces a multi-level trie).
+/// Each prefix `Span` originated from a shared literal byte split out
+/// by the trie; only the innermost type carries semantic payload.
 ///
 /// Accepts:
-/// - a bare scalar payload (`needs_payload_slot()`); returns it
-/// - `Tuple([Span, T])` where `T` is a scalar payload; returns `T`
+/// - a bare non-Span scalar payload (`needs_payload_slot`); returns
+///   it.
+/// - `Tuple([Span, T])` where `T` recursively resolves to an effective
+///   payload type; returns the innermost type.
 ///
-/// Returns `None` for anything else — compound types stay compound
-/// under the Alt join.
+/// Returns `None` for anything else — bare `Span` (which is handled
+/// by the outer homogeneity check), multi-field tuples without a
+/// leading Span prefix, BoxedEnum, Vec, Option, Named, Enum. Those
+/// shapes stay compound under the Alt join.
 fn effective_payload_type(ty: &TypeDesc) -> Option<TypeDesc> {
     if ty.needs_payload_slot() {
         return Some(ty.clone());
     }
     if let TypeDesc::Tuple(elems) = ty {
-        if elems.len() == 2 && elems[0] == TypeDesc::Span && elems[1].needs_payload_slot() {
-            return Some(elems[1].clone());
+        if elems.len() == 2 && elems[0] == TypeDesc::Span {
+            return effective_payload_type(&elems[1]);
         }
     }
     None

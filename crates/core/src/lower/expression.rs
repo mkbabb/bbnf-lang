@@ -1617,55 +1617,72 @@ fn lower_map_arrow<'a>(
     // so when the leaf rule_kind is `value_atom` we recover the type
     // suffix from the span text — the span IS the authoritative source
     // of the literal's textual form.
+    // Numeric literal suffix → scalar type.
+    //
+    // Every leading-byte-numeric literal carries its textual form in
+    // its span; the suffix disambiguates the scalar type (`0u8`, `3.14f64`).
+    // Under DTA the rule_kind is one of `int_lit` / `float_lit` (real
+    // leaf rules), `value_atom` (optimizer inlined the leaf into the
+    // atom), or `int_lit` / `Unknown` as the walker's sentinel for
+    // compounds never stamped by a `DtaState::Ref`. All cases share
+    // the same disambiguator — a digit or `.` leading the trimmed
+    // span text. Gate on that; rule_kind variance across inlining
+    // modes is structural noise.
     let return_type = return_type.or_else(|| {
         let leaf = deep_unwrap_value(value_expr);
-        let text = match leaf.rule_kind() {
-            BbnfBootstrapRuleKind::int_lit | BbnfBootstrapRuleKind::float_lit => {
-                Some(leaf.span_text())
-            }
-            BbnfBootstrapRuleKind::value_atom => {
-                // value_atom inlined the leaf — inspect leading byte to
-                // decide if this is a numeric literal.
-                let t = leaf.span_text().trim_start();
-                match t.as_bytes().first() {
-                    Some(b'0'..=b'9') | Some(b'.') => Some(t),
-                    _ => None,
-                }
-            }
-            _ => None,
-        };
-        text.and_then(|t| {
-            let (_, suffix) = split_numeric_suffix(t);
-            if suffix.is_empty() {
-                None
-            } else {
-                Some(TypeDesc::from_scalar_name(suffix).unwrap_or_else(|| {
-                    let sid = ctx.strings.intern(suffix);
-                    TypeDesc::Named(sid)
-                }))
-            }
-        })
+        let t = leaf.span_text().trim_start();
+        let first_byte = t.as_bytes().first().copied();
+        let kind_admits = matches!(
+            leaf.rule_kind(),
+            BbnfBootstrapRuleKind::int_lit
+                | BbnfBootstrapRuleKind::float_lit
+                | BbnfBootstrapRuleKind::value_atom
+                | BbnfBootstrapRuleKind::Unknown
+        );
+        let is_numeric = matches!(first_byte, Some(b'0'..=b'9') | Some(b'.'));
+        if !(kind_admits && is_numeric) {
+            return None;
+        }
+        let (_, suffix) = split_numeric_suffix(t);
+        if suffix.is_empty() {
+            None
+        } else {
+            Some(TypeDesc::from_scalar_name(suffix).unwrap_or_else(|| {
+                let sid = ctx.strings.intern(suffix);
+                TypeDesc::Named(sid)
+            }))
+        }
     });
 
     // Bool literal → bool type.
-    // Same recovery: when `bool_lit` has been folded into `value_atom`,
-    // detect `true`/`false` from the span text.
+    //
+    // `bool_lit` is the canonical rule_kind when the grammar's own
+    // `bool_lit` rule surfaces its own compound. Under DTA the
+    // optimizer frequently inlines `value_atom`'s alt of leaves into
+    // the atom compound (rule_kind stays `value_atom`) or further
+    // inlines the atom wrapper itself into an anonymous Seq whose
+    // walker sentinel rule_kind lands as `int_lit` / `Unknown`.
+    // Every case collapses to the same disambiguation: the trimmed
+    // span text is exactly `true` or `false` bounded by a non-
+    // identifier byte. Gate on that disambiguator rather than on a
+    // rule_kind whitelist — rule_kind drift under DTA is structural
+    // noise, not a signal.
     let return_type = return_type.or_else(|| {
         let leaf = deep_unwrap_value(value_expr);
-        let is_bool = match leaf.rule_kind() {
-            BbnfBootstrapRuleKind::bool_lit => true,
-            BbnfBootstrapRuleKind::value_atom => {
-                let t = leaf.span_text().trim_start();
-                let is_word_boundary = |s: &str, len: usize| {
-                    !s.as_bytes()
-                        .get(len)
-                        .is_some_and(|b| b.is_ascii_alphanumeric() || *b == b'_')
-                };
-                (t.starts_with("true") && is_word_boundary(t, 4))
-                    || (t.starts_with("false") && is_word_boundary(t, 5))
-            }
-            _ => false,
+        let t = leaf.span_text().trim_start();
+        let is_word_boundary = |s: &str, len: usize| {
+            !s.as_bytes()
+                .get(len)
+                .is_some_and(|b| b.is_ascii_alphanumeric() || *b == b'_')
         };
+        let is_bool = matches!(leaf.rule_kind(), BbnfBootstrapRuleKind::bool_lit)
+            || matches!(
+                leaf.rule_kind(),
+                BbnfBootstrapRuleKind::value_atom
+                    | BbnfBootstrapRuleKind::int_lit
+                    | BbnfBootstrapRuleKind::Unknown
+            ) && ((t.starts_with("true") && is_word_boundary(t, 4))
+                || (t.starts_with("false") && is_word_boundary(t, 5)));
         if is_bool {
             Some(TypeDesc::Bool)
         } else {

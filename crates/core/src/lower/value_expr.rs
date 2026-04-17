@@ -477,13 +477,19 @@ fn lower_value_unary<'a>(
 
 /// Find the first child compound of a unary view that looks like an
 /// atom (or a transparent wrapper around one). The grammar
-/// guarantees `value_atom` is the sole child compound; under
-/// structural mode that compound is what `node.children().next()`
-/// yields.
+/// guarantees `value_atom` is the sole child compound.
+///
+/// Under DTA the atom sits inside an anonymous Seq wrapper emitted
+/// by the walker for the unary's body; `node.children().next()` may
+/// return that wrapper rather than the `value_atom` compound itself.
+/// Descend to the first `value_atom` descendant to resolve under
+/// both DTA and fn-per-rule shapes uniformly.
 fn first_atom_child<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Option<BbnfBootstrapNodeView<'a>> {
-    node.children().next()
+    find_descendant_by_kind(node, BbnfBootstrapRuleKind::value_atom)
+        .filter(|v| v.cursor().offset() != node.cursor().offset())
+        .or_else(|| node.children().next())
 }
 
 // ─── Atom classification ─────────────────────────────────────────────────────
@@ -548,14 +554,20 @@ fn lower_value_atom<'a>(
 /// Lower a parenthesised atom: `( value_expr )`. The structural
 /// shape pushes only the inner `value_expr` compound (the parens
 /// consume bytes without pushing). The grammar guarantees exactly
-/// one child compound here.
+/// one semantic child compound here.
+///
+/// Under DTA the atom's body is wrapped in an anonymous Seq
+/// compound; `children().next()` may return that wrapper rather
+/// than the `value_expr` record directly. Descend to the first
+/// `value_expr` descendant; the outer `node.rule_kind()` is
+/// `value_atom`, not `value_expr`, so the descent correctly returns
+/// a distinct inner view.
 fn lower_paren_atom<'a>(
     node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,
 ) -> MapExpr {
-    let inner = node
-        .children()
-        .next()
+    let inner = find_descendant_by_kind(node, BbnfBootstrapRuleKind::value_expr)
+        .or_else(|| node.children().next())
         .expect("lower_paren_atom: parenthesised atom is missing its value_expr child");
     dispatch_value_expr(inner, ctx)
 }

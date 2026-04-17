@@ -74,7 +74,7 @@
 use std::collections::HashMap;
 
 use crate::passes::sets::PushFingerprint;
-use crate::{GrammarIR, IrNode, IrRule, RuleId, StringId, TypeDesc};
+use crate::{FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr, RuleId, StringId, TypeDesc};
 
 // ── State identifiers ───────────────────────────────────────────────
 
@@ -109,14 +109,65 @@ pub enum FrameKind {
     ShuntingYard,
 }
 
+/// AW-III.W1 — IR-side mirror of `bbnf_tape::LiteralPayload`.
+///
+/// The lifter resolves the enclosing `Map { Literal,
+/// MapExpr::IntLit/BoolLit/FloatLit }` into one of these variants;
+/// the emitter lowers each variant 1:1 to its tape-side counterpart.
+/// `None` is the structural-only sentinel.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum LiteralPayload {
+    /// No `->` annotation; emit the legacy structural Literal arm.
+    None,
+    /// `Map { Literal, IntLit }` projecting to `u8`.
+    U8(u8),
+    /// `Map { Literal, BoolLit }`.
+    Bool(bool),
+    /// `Map { Literal, IntLit }` projecting to `u32`.
+    U32(u32),
+    /// `Map { Literal, IntLit }` projecting to `i64`/`u64`.
+    U64(u64),
+    /// `Map { Literal, FloatLit }` projecting to `f64`.
+    F64(f64),
+}
+
+/// AW-III.W1 — IR-side mirror of `bbnf_tape::PayloadKind` for the
+/// regex-decoder selector.
+///
+/// The lifter resolves an enclosing `Map { Regex, FnDescriptor }` into
+/// the matching decoder variant. `None` skips the Stage-B job.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum RegexPayloadKind {
+    F64,
+    U8,
+    Bool,
+    HexU32,
+    I64,
+    String,
+    AggregateLarge,
+}
+
 /// A single DFA state — one node in the lifted grammar.
 #[derive(Clone, Debug, PartialEq)]
 pub enum DtaState {
     /// Match a literal byte sequence at the current offset.
-    Literal { text: StringId },
+    Literal {
+        text: StringId,
+        /// AW-III.W1 — typed-leaf payload threaded from the enclosing
+        /// `Map { Literal, MapExpr::IntLit/BoolLit/FloatLit }`. The
+        /// emitter lowers this 1:1 into `bbnf_tape::LiteralPayload`.
+        payload: LiteralPayload,
+    },
     /// Match a regex pattern at the current offset (runs through the
     /// regex subsystem; no DFA inlining here).
-    Regex { pattern: StringId },
+    Regex {
+        pattern: StringId,
+        /// AW-III.W1 — decoder selector for the matched bytes; the
+        /// emitter lowers `Some(_)` to `bbnf_tape::PayloadKind::*` and
+        /// the walker enqueues a `PayloadJob`. `None` keeps the
+        /// payload-less Span emission.
+        payload: Option<RegexPayloadKind>,
+    },
     /// Match nothing, consume nothing.
     Epsilon,
     /// Linear composition — run each child state in order.
@@ -406,11 +457,35 @@ impl<'ir> DtaBuilder<'ir> {
     }
 
     fn lift_node(&mut self, node: &IrNode) -> StateId {
+        self.lift_node_with_payload(node, LiteralPayload::None, None)
+    }
+
+    /// AW-III.W1 — lift `node` while threading caller-supplied payload
+    /// resolutions into a `Literal` / `Regex` leaf. The
+    /// `IrNode::Map { inner, fn_id }` arm walks `fn_id` into a typed
+    /// `LiteralPayload` (constants) or `RegexPayloadKind` (decoders)
+    /// and recurses with the payload propagated; `Alt` propagates the
+    /// caller-supplied payload to every branch so the per-branch
+    /// `Map { Literal, IntLit }` shape (Sheets `add_op = "+" -> 0u8 |
+    /// "-" -> 1u8`) lands correctly when reached through an outer
+    /// per-branch lift.
+    fn lift_node_with_payload(
+        &mut self,
+        node: &IrNode,
+        literal_payload: LiteralPayload,
+        regex_payload: Option<RegexPayloadKind>,
+    ) -> StateId {
         self.current_depth = self.current_depth.saturating_add(1);
         self.max_depth = self.max_depth.max(self.current_depth);
         let id = match node {
-            IrNode::Literal(sid) => self.alloc_state(DtaState::Literal { text: *sid }),
-            IrNode::Regex(sid) => self.alloc_state(DtaState::Regex { pattern: *sid }),
+            IrNode::Literal(sid) => self.alloc_state(DtaState::Literal {
+                text: *sid,
+                payload: literal_payload,
+            }),
+            IrNode::Regex(sid) => self.alloc_state(DtaState::Regex {
+                pattern: *sid,
+                payload: regex_payload,
+            }),
             IrNode::Epsilon => self.alloc_state(DtaState::Epsilon),
             IrNode::Seq(children) => {
                 let child_states: Vec<StateId> =
@@ -421,9 +496,22 @@ impl<'ir> DtaBuilder<'ir> {
                 })
             }
             IrNode::Alt(branches, dispatch) => {
+                // AW-III.W1: caller-supplied payload propagates into
+                // every branch so the per-branch `Map { Literal,
+                // IntLit }` shape (Sheets `add_op = "+" -> 0u8 | "-"
+                // -> 1u8`) inherits its discriminant when the Alt is
+                // reached through an outer Map. Inner per-branch Maps
+                // (the Sheets shape) override their parent's payload
+                // because their own FnDescriptor specifies the value.
                 let branch_states: Vec<StateId> = branches
                     .iter()
-                    .map(|b| self.lift_node(&b.node))
+                    .map(|b| {
+                        self.lift_node_with_payload(
+                            &b.node,
+                            literal_payload,
+                            regex_payload,
+                        )
+                    })
                     .collect();
                 if let Some(ad) = dispatch {
                     let fallback = ad
@@ -522,7 +610,33 @@ impl<'ir> DtaBuilder<'ir> {
                     frame: FrameKind::Seq,
                 })
             }
-            IrNode::Map { inner, .. } => self.lift_node(inner),
+            IrNode::Map { inner, fn_id } => {
+                // AW-III.W1: resolve the FnDescriptor into a typed
+                // payload classification and propagate it into the
+                // recursive lift. The pre-W1 lifter dropped the Map
+                // wrapper wholesale (`self.lift_node(inner)`), losing
+                // every typed-leaf annotation. The arms below mirror
+                // the codegen routing in `bbnf-tape::psi`:
+                //
+                //   - `IntLit` / `FloatLit` / `BoolLit` over a literal
+                //     scanner → `LiteralPayload::*`. Walker writes the
+                //     constant into the arena post-match.
+                //   - `NumberConvert` over a regex → `RegexPayloadKind::F64`.
+                //   - `HexConvert` over a regex → `RegexPayloadKind::HexU32`.
+                //   - `SpanCapture` (input : Span) — no payload, stays
+                //     structural.
+                //   - `EnumWrap` / `BoxWrap` — no payload classification;
+                //     they project compound type shape, not leaf data.
+                let fn_desc = self.ir.fns.get(*fn_id as usize);
+                let (lit_payload, rx_payload) = resolve_map_payload(fn_desc, inner);
+                let inherit_lit = if matches!(lit_payload, LiteralPayload::None) {
+                    literal_payload
+                } else {
+                    lit_payload
+                };
+                let inherit_rx = rx_payload.or(regex_payload);
+                self.lift_node_with_payload(inner, inherit_lit, inherit_rx)
+            }
             IrNode::OptionalWhitespace(inner) => {
                 // AW-I.W4γ: `?w` lowers to a Seq `[WsTrim, inner, WsTrim]`
                 // matching the VM compiler's `TrimWs + inner + TrimWs`
@@ -877,15 +991,180 @@ fn collect_inlined_alt_operators(
     Some(out)
 }
 
+/// AW-III.W1 — resolve a `Map { inner, fn_id }` into the typed-leaf
+/// payload classification the lifter threads into the lifted leaf.
+///
+/// Returns `(LiteralPayload, Option<RegexPayloadKind>)` — at most one
+/// is non-trivial depending on `inner`'s shape:
+///
+/// - `inner` matches `Literal(_)` (or `Map`-chained over one):
+///   `MapExpr::IntLit(value)` / `BoolLit(value)` / `FloatLit(value)`
+///   convert into `LiteralPayload::U8/U32/U64/Bool/F64` per the
+///   destination width inferred from the value bounds.
+/// - `inner` matches `Regex(_)`:
+///   - `FnDescriptor::NumberConvert` → `RegexPayloadKind::F64`.
+///   - `FnDescriptor::HexConvert` → `RegexPayloadKind::HexU32`.
+///   - `FnDescriptor::Expr { return_type: Some(...) }` over a regex
+///     with `MapExpr::Input` body → typed Span / String routing.
+///
+/// `SpanCapture`, `EnumWrap`, `BoxWrap`, and `Expr` arms whose return
+/// shape is structural (Tuple / Enum / Boxed) yield no leaf payload —
+/// the typed value lives in the parent's compound-payload aggregate.
+fn resolve_map_payload(
+    fn_desc: Option<&FnDescriptor>,
+    inner: &IrNode,
+) -> (LiteralPayload, Option<RegexPayloadKind>) {
+    let Some(desc) = fn_desc else {
+        return (LiteralPayload::None, None);
+    };
+    let inner_is_literal = matches!(strip_to_leaf(inner), IrNode::Literal(_));
+    let inner_is_regex = matches!(strip_to_leaf(inner), IrNode::Regex(_));
+    match desc {
+        FnDescriptor::Expr { expr, return_type } => {
+            if inner_is_literal {
+                if let Some(payload) = literal_payload_from_expr(expr, return_type.as_ref()) {
+                    return (payload, None);
+                }
+            }
+            if inner_is_regex {
+                if let Some(kind) = regex_payload_from_return(return_type.as_ref()) {
+                    return (LiteralPayload::None, Some(kind));
+                }
+            }
+            (LiteralPayload::None, None)
+        }
+        FnDescriptor::NumberConvert { .. } => {
+            if inner_is_regex {
+                (LiteralPayload::None, Some(RegexPayloadKind::F64))
+            } else {
+                (LiteralPayload::None, None)
+            }
+        }
+        FnDescriptor::HexConvert { .. } => {
+            if inner_is_regex {
+                (LiteralPayload::None, Some(RegexPayloadKind::HexU32))
+            } else {
+                (LiteralPayload::None, None)
+            }
+        }
+        // SpanCapture leaves the matched bytes as the canonical
+        // payload — the runtime reads them via `span_lo` / `span_hi`
+        // directly; no decoder slot needed.
+        FnDescriptor::SpanCapture => (LiteralPayload::None, None),
+        // EnumWrap / BoxWrap project compound type shape only — the
+        // typed leaves are the inner node's own payloads.
+        FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => {
+            (LiteralPayload::None, None)
+        }
+    }
+}
+
+/// Strip Map / OptionalWhitespace wrappers down to the underlying
+/// leaf node — used by [`resolve_map_payload`] to classify what
+/// scanner the Map encloses.
+fn strip_to_leaf(node: &IrNode) -> &IrNode {
+    match node {
+        IrNode::Map { inner, .. }
+        | IrNode::OptionalWhitespace(inner) => strip_to_leaf(inner),
+        _ => node,
+    }
+}
+
+/// Decode `MapExpr` constants into a [`LiteralPayload`].
+///
+/// The width is inferred from the explicit `return_type` annotation
+/// when present (CSS `dirKeyword 'ltr' -> 0u8` carries return_type =
+/// `Some(U8)`); falls back to value-bound inference when absent
+/// (lifter has no type-context for a bare integer literal).
+fn literal_payload_from_expr(
+    expr: &MapExpr,
+    return_type: Option<&TypeDesc>,
+) -> Option<LiteralPayload> {
+    match expr {
+        MapExpr::IntLit(v) => Some(int_literal_payload(*v, return_type)),
+        MapExpr::BoolLit(b) => Some(LiteralPayload::Bool(*b)),
+        MapExpr::FloatLit(v) => Some(LiteralPayload::F64(*v)),
+        // Constant-foldable subtree — fold then re-classify.
+        _ => {
+            let mut folded = expr.clone();
+            folded.constant_fold();
+            match folded {
+                MapExpr::IntLit(v) => Some(int_literal_payload(v, return_type)),
+                MapExpr::BoolLit(b) => Some(LiteralPayload::Bool(b)),
+                MapExpr::FloatLit(v) => Some(LiteralPayload::F64(v)),
+                _ => None,
+            }
+        }
+    }
+}
+
+/// Map an `IntLit(i64)` to its narrow payload variant per the
+/// declared `return_type`. When unannotated, the lifter chooses the
+/// narrowest variant that holds the value.
+fn int_literal_payload(value: i64, return_type: Option<&TypeDesc>) -> LiteralPayload {
+    let by_type = return_type.and_then(|td| match td {
+        TypeDesc::U8 | TypeDesc::I8 => Some(LiteralPayload::U8(value as u8)),
+        TypeDesc::U16 | TypeDesc::I16 => Some(LiteralPayload::U32(value as u32)),
+        TypeDesc::U32 | TypeDesc::I32 => Some(LiteralPayload::U32(value as u32)),
+        TypeDesc::U64 | TypeDesc::I64 => Some(LiteralPayload::U64(value as u64)),
+        TypeDesc::F64 => Some(LiteralPayload::F64(value as f64)),
+        TypeDesc::Bool => Some(LiteralPayload::Bool(value != 0)),
+        _ => None,
+    });
+    by_type.unwrap_or_else(|| {
+        if (0..=255).contains(&value) {
+            LiteralPayload::U8(value as u8)
+        } else if (i32::MIN as i64..=u32::MAX as i64).contains(&value) {
+            LiteralPayload::U32(value as u32)
+        } else {
+            LiteralPayload::U64(value as u64)
+        }
+    })
+}
+
+/// Map an explicit return-type annotation on `Map { Regex, Expr }`
+/// into the matching `RegexPayloadKind`. Returns `None` for
+/// non-decodable shapes (`Tuple`, `Enum`, etc.) — those flow through
+/// the structural path.
+fn regex_payload_from_return(return_type: Option<&TypeDesc>) -> Option<RegexPayloadKind> {
+    let td = return_type?;
+    Some(match td {
+        TypeDesc::F64 => RegexPayloadKind::F64,
+        TypeDesc::U8 | TypeDesc::I8 | TypeDesc::Bool => RegexPayloadKind::U8,
+        TypeDesc::U32 | TypeDesc::I32 => RegexPayloadKind::HexU32,
+        TypeDesc::I64 | TypeDesc::U64 => RegexPayloadKind::I64,
+        TypeDesc::Span => return None, // Span lives in span_lo/hi — no decoder
+        _ => return None,
+    })
+}
+
 /// Strip transparent wrappers (OptionalWhitespace, Map) from a node,
 /// returning a cloned owned tree with the wrappers dissolved. Used
 /// by the chain matcher because pattern-bind against owned enum
 /// variants sidesteps the nested-box lifetime tangle that a
 /// borrowed-walk would introduce.
+///
+/// AW-III.W1.7 — also peel `IrNode::Next(a, b)` so the chain matcher
+/// recognises sequences shaped as `Next(operand, Repeat(...))` (CSS
+/// `calc(2 * (3 + 4))` lowers `value `>>` operator chain` via
+/// `Next`, not `Seq`). Without the peel `match_operator_chain_rule`
+/// rejects every `Next`-shaped rule, leaving the lifter to emit a
+/// long ByteDispatch chain instead of a single shunting-yard state.
+/// The peel lifts both operands in order and wraps them in a
+/// synthetic `Seq` so the chain detector's `Seq(operand, tail)`
+/// pattern matches.
 fn strip_transparent_owned(node: &IrNode) -> IrNode {
     match node {
         IrNode::OptionalWhitespace(inner) => strip_transparent_owned(inner),
         IrNode::Map { inner, .. } => strip_transparent_owned(inner),
+        IrNode::Next(a, b) => IrNode::Seq(vec![
+            strip_transparent_owned(a),
+            strip_transparent_owned(b),
+        ]),
+        IrNode::Skip(a, b) => IrNode::Seq(vec![
+            strip_transparent_owned(a),
+            strip_transparent_owned(b),
+        ]),
         _ => node.clone(),
     }
 }

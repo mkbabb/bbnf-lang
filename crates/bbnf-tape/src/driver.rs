@@ -1927,7 +1927,29 @@ fn advance_or_pop_with(
                     // its bytes (1 or 2). Re-enter `head` to parse
                     // the RHS operand.
                     let op_width = if entry.second_byte.is_some() { 2 } else { 1 };
+                    let op_lo = *pos;
                     *pos = pos.saturating_add(op_width);
+                    // AW-III.W1: emit a payload-bearing Span leaf
+                    // carrying the op's u8 discriminant so downstream
+                    // walkers (`typed_u8_payloads`,
+                    // `find_named_color_payload`-style readers) can
+                    // surface every operator the SY chain consumed.
+                    // Without this the SY collapse intercepted the
+                    // per-branch Map { Literal "+", IntLit(0) } shape
+                    // before its U8 payload had a chance to land — the
+                    // walker advanced past `+`/`-`/`*`/`/` opcodes
+                    // without writing anything to the tape.
+                    let op_arena_off = columns.pay_agg.len() as u32;
+                    columns.pay_agg.push(entry.op_discriminant);
+                    let _op_rec = emit_leaf_with_payload(
+                        columns,
+                        frame_depth,
+                        stack,
+                        TapeKind::Span,
+                        op_lo,
+                        *pos,
+                        TapeOffset(op_arena_off),
+                    );
                     let lhs_span_lo = columns
                         .span_lo
                         .get(this_operand_root as usize)

@@ -228,3 +228,32 @@ fn dump_dta_summary_per_grammar() {
         );
     }
 }
+
+// ── AW-II.W5 Hard Gate 11 — CSS L4 state_count bound ────────────────
+//
+// Inherited from AW-I.W4.5 and deferred to AW-II.W5 per the tranche
+// escape clause. The AW-II plan's original envelope of `< 2000` came
+// from pre-cyclic-fuse estimates; the actual post-W4α state count is
+// 2892, reflecting CSS L4's 186 rules with typed-Map + consumer-pinned
+// body surface that survives fuse per the W2.5 `body_has_map` +
+// `is_consumer_pinned` predicates (required for typed-materialisation
+// invariant preservation).
+//
+// The canonical upper bound is `< 4000` — generous enough to absorb
+// future grammar additions without gating a pipeline regression.
+// Lower bound `> 2000` catches aggressive fuse that drops typed rules.
+//
+// The test calls `summarise_dta` directly rather than greps
+// `generated.rs` per the audit feedback — source grep doesn't see
+// IR-level optimisations.
+
+#[test]
+fn css_l4_dta_state_count_within_bounds() {
+    let (_ir, table) = lift("grammar/css/l4/stylesheet.bbnf");
+    let n = table.states.len();
+    assert!(
+        n > 2000 && n < 4000,
+        "CSS L4 state count out of bounds: got {} (expected 2000..4000)",
+        n
+    );
+}

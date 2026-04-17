@@ -63,13 +63,20 @@ COLD_HELPERS=(
     'try_branch'
 )
 
-# Per-grammar walker entry symbols (at least one must be PRESENT per
-# bench — the specialised hot path). Match both:
-#   dta_run_<grammar>            — stable surface surfacing the walker
-#   __dta_walker_inline::run     — internal inlined module entry
-WALKER_ENTRIES=(
-    'dta_run_|dta_walker_inline'
-)
+# Per-grammar walker entry: `__dta_walker_inline::run` (mangled as
+# `...dta_walker_inline3run`; the `3run` suffix is the rustc name
+# length prefix that uniquely identifies the `run` entry inside the
+# inline module). At least one must be PRESENT per bench — the
+# specialised hot path. Matching only `3run` avoids the module-prefix
+# false-positive where every generated helper nested inside the
+# `___dta_walker_inline` module shares the prefix.
+#
+# The `dta_run_<grammar>` stable surface (per AW-IV plan §W1) is a
+# thin wrapper around `__dta_walker_inline::run`; when emitted it
+# also matches a non-length-prefixed form — rg the same symbol ends
+# in `dta_run_<Grammar>` terminated by the grammar name identifier.
+WALKER_ENTRY_LABEL='walker-entry (run/dta_run_<grammar>)'
+WALKER_ENTRIES_PATTERN='dta_walker_inline3run|[0-9]+dta_run_[A-Z]'
 
 emit() {
     if [[ -n "$REPORT" ]]; then
@@ -148,17 +155,15 @@ for bench_name in 'json_monolithic' 'css_l4' 'google_sheets_monolithic' 'bbnf_mo
         emit_line "$(printf '   cold  %-28s %4d  %s' "$sym" "$n" "$status")"
     done
 
-    # Walker entries (at least one must be PRESENT).
-    for pat in "${WALKER_ENTRIES[@]}"; do
-        n="$(printf '%s' "$nm_out" | grep -cE "$pat" || true)"
-        if [[ "$n" -gt 0 ]]; then
-            status='PRESENT (per-grammar walker entry)'
-        else
-            status='ABSENT (per-grammar walker missing — tranche invariant failure)'
-            [[ "$STRICT" == "1" ]] && overall_fail=1
-        fi
-        emit_line "$(printf '   entry %-28s %4d  %s' "$pat" "$n" "$status")"
-    done
+    # Walker entry (at least one must be PRESENT).
+    n="$(printf '%s' "$nm_out" | grep -cE "$WALKER_ENTRIES_PATTERN" || true)"
+    if [[ "$n" -gt 0 ]]; then
+        status='PRESENT (per-grammar walker entry)'
+    else
+        status='ABSENT (per-grammar walker missing — tranche invariant failure)'
+        [[ "$STRICT" == "1" ]] && overall_fail=1
+    fi
+    emit_line "$(printf '   entry %-28s %4d  %s' "$WALKER_ENTRY_LABEL" "$n" "$status")"
 
     emit ""
 done

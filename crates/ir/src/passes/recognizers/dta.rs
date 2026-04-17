@@ -590,11 +590,22 @@ impl<'ir> DtaBuilder<'ir> {
                 // collapses the byte-by-byte regex scan into a single
                 // cursor jump.
                 //
-                // Payload lifting defers to the regex path: CTNS
-                // emits structural-only spans. When a payload
-                // decoder is attached, the Regex path survives so
-                // the scan captures the matched bytes for decoding.
-                if regex_payload.is_none() && self.is_ctns_lifted(node) {
+                // The lift is gated on both:
+                // 1. no payload decoder (CTNS emits structural-only
+                //    spans; decoders need the scanned byte range).
+                // 2. the lifter flagging this NodeId (the miner's
+                //    admission check proves alphabet disjointness).
+                //
+                // CTNS lift is DISABLED by default until the emitter
+                // + walker consumer surface a matching record-
+                // emission path. The substrate ships; the consumer
+                // activation awaits downstream wiring. This gate
+                // keeps the IR-side admission active for test
+                // inspection while preventing the walker from
+                // consuming the lift (which would break parsing on
+                // any grammar whose regex arm writes a Span record).
+                let ctns_enabled = false;
+                if ctns_enabled && regex_payload.is_none() && self.is_ctns_lifted(node) {
                     self.alloc_state(DtaState::ConsumeToNextStructural { pattern: *sid })
                 } else {
                     self.alloc_state(DtaState::Regex {
@@ -632,24 +643,35 @@ impl<'ir> DtaBuilder<'ir> {
                     })
                     .collect();
                 // AW-III.W6.3 — consult the disjoint_first mining
-                // pass. When the Alt is admitted, emit a ClassifyByte
-                // state that dispatches in one indexed load. The
-                // ClassifyByte lowering preserves mining provenance
-                // so the emitter can specialise further downstream.
-                if let Some(disjoint) = self.lookup_disjoint_first(node) {
-                    let mut table = vec![StateId::NONE; 256];
-                    for (byte, branch_idx) in disjoint.table.iter().enumerate() {
-                        if *branch_idx == u8::MAX {
-                            continue;
+                // pass only when the upstream dispatch analysis
+                // didn't populate its own table. The upstream pass
+                // (`compute_dispatch`) is authoritative for Alt
+                // admission — it owns fallback-branch handling, the
+                // 128-entry table construction, and the heuristic
+                // admission budget. The disjoint_first miner is a
+                // more restrictive grammar-shape check that may
+                // admit Alts the dispatch pass rejected (e.g. when
+                // the dispatch heuristic prefers linear over LUT for
+                // few-branch cases). When the dispatch pass has
+                // already admitted the Alt, defer to its table —
+                // the linear-branch case falls through to AltLinear
+                // as before.
+                if dispatch.is_none() {
+                    if let Some(disjoint) = self.lookup_disjoint_first(node) {
+                        let mut table = vec![StateId::NONE; 256];
+                        for (byte, branch_idx) in disjoint.table.iter().enumerate() {
+                            if *branch_idx == u8::MAX {
+                                continue;
+                            }
+                            if let Some(&state) = branch_states.get(*branch_idx as usize) {
+                                table[byte] = state;
+                            }
                         }
-                        if let Some(&state) = branch_states.get(*branch_idx as usize) {
-                            table[byte] = state;
-                        }
+                        return self.alloc_state(DtaState::ClassifyByte {
+                            table,
+                            fallback: None,
+                        });
                     }
-                    return self.alloc_state(DtaState::ClassifyByte {
-                        table,
-                        fallback: None,
-                    });
                 }
                 if let Some(ad) = dispatch {
                     let fallback = ad

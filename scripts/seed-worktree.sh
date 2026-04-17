@@ -23,10 +23,20 @@ if [[ ! -d "$WORKTREE_PATH" ]]; then
 fi
 
 # `data/` is gitignored (bbnf/, css/, json/, sheets/ corpora live here).
-# Symlink the main checkout's copy into the worktree; parse-tests +
-# fixture comparisons resolve identically to the main tree.
-if [[ -d "$ROOT/data" && ! -e "$WORKTREE_PATH/data" ]]; then
-    ln -s "$ROOT/data" "$WORKTREE_PATH/data"
+# Symlink each top-level sub-corpus individually so a partially-seeded
+# worktree (e.g. one that already has data/sheets/ from an earlier run)
+# still gets every corpus — the old "top-level data/" symlink guard
+# refused to repair partial state because data/ existed. Each sub-
+# corpus symlinks iff it isn't already present.
+if [[ -d "$ROOT/data" ]]; then
+    mkdir -p "$WORKTREE_PATH/data"
+    for corpus in "$ROOT"/data/*/; do
+        name=$(basename "$corpus")
+        target="$WORKTREE_PATH/data/$name"
+        if [[ ! -e "$target" ]]; then
+            ln -s "$corpus" "$target"
+        fi
+    done
 fi
 
 echo "seeded: $WORKTREE_PATH"

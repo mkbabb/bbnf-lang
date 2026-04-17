@@ -412,6 +412,19 @@ impl RustEmitter {
                 #extra
                 #visitor_kernels
 
+                /// AW-IV.W1.δ — associated-constant accessor for the
+                /// grammar's consolidated codegen fingerprint. Alias
+                /// of the module-scope `GRAMMAR_PROFILE` const; the
+                /// underlying bytes live in `.rodata` once. Downstream
+                /// consumers (wire-contract tests, per-grammar
+                /// introspection, cross-grammar harnesses) use
+                /// `<Grammar>::GRAMMAR_PROFILE` to disambiguate when
+                /// multiple grammars coexist in the same test file —
+                /// the module-scope `pub use ...::*` would otherwise
+                /// collide on the unqualified `GRAMMAR_PROFILE` name.
+                pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile =
+                    GRAMMAR_PROFILE;
+
                 /// Parse an input string and return a zero-copy
                 /// `Parsed<'_, Self>` that borrows the input directly.
                 ///

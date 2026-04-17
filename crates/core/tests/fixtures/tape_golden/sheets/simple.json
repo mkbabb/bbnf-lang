@@ -1,6 +1,6 @@
 {
-  "root_kind": "Rule",
-  "root_variant_idx": 35,
-  "root_children_count": 1,
-  "total_records": 68
+  "root_kind": "Seq",
+  "root_variant_idx": 0,
+  "root_children_count": 2,
+  "total_records": 83
 }

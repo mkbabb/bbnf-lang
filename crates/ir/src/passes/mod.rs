@@ -39,7 +39,7 @@ pub use payload::{
     PayloadField, PayloadLayout, LARGE_PAYLOAD_MAX, MAX_PAYLOAD_BYTES,
 };
 pub use prefix::factor_common_prefixes;
-pub use profile::GrammarProfile;
+pub use profile::{BranchPriorIr, GrammarProfile, KeywordTableIr, ShapeEntryIr};
 pub use sets::{
     compute_first_sets, compute_follow_sets, compute_push_fingerprint, compute_rule_deps,
     compute_scc, factor_regex_with_lookahead, generate_dispatch_tables, sort_alt_branches,

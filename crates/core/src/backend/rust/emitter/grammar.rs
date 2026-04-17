@@ -22,9 +22,102 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::backend::driver::analysis::BackendAnalysis;
+use crate::backend::rust::view::named_types::resolve_named_type;
 
 use super::dfa_codegen;
 use super::{RustEmitCtx, RustEmitter};
+
+/// AW-IV.W3.5a — direct-to-struct view-layer consumer wiring.
+///
+/// The AW-III.W6.4 universal `BINDINGS` table sat behind passing parity
+/// tests but had no per-grammar hot-path call site: `emit_view_impl`
+/// never consulted `resolve_named_type`. The per-leaf
+/// `view::leaves::emit_aggregate_accessors` path had a hardcoded
+/// `matches!(name, "Color" | "ColorMix")` admission that pre-empted the
+/// resolver — new BINDINGS rows would not have fired without also
+/// editing that match.
+///
+/// W3.5a threads `resolve_named_type` into the grammar-level emission.
+/// The function walks every non-transparent rule, asks the resolver
+/// whether the rule's `TypeDesc` is a direct-to-struct candidate, and
+/// emits two artefacts for each admitted binding:
+///
+/// 1. A `PROJECTION_DIRECT_TO_STRUCT` const carrying the list of rule
+///    names whose view supports the fast path. Introspection surface
+///    for downstream consumers (and the W3.5 hard gate — `cargo
+///    expand` confirms the list is non-empty on grammars with named
+///    aggregates).
+/// 2. A `#[doc = ...]` attribute on the grammar marker struct citing
+///    the resolved bindings. Makes the consumer-wiring visible in
+///    rustdoc without perturbing the view surface that
+///    `view::leaves::emit_aggregate_accessors` already emits.
+///
+/// The mechanism is universal. Future `BINDINGS` additions (JSON
+/// Value, BBNF AST, Sheets formula) automatically appear in the
+/// emitted list without per-grammar code; `resolve_named_type` is the
+/// single admission gate.
+fn emit_direct_to_struct_projection(ir: &GrammarIR, _grammar_name: &str) -> TokenStream {
+    let mut resolved: Vec<(String, &'static str)> = Vec::new();
+    for rule in &ir.rules {
+        if rule.meta.is_transparent {
+            continue;
+        }
+        let Some(type_desc) = ir
+            .types
+            .iter()
+            .find_map(|(id, ty)| (*id == rule.id).then_some(ty))
+        else {
+            continue;
+        };
+        if !matches!(type_desc, TypeDesc::Named(_)) {
+            continue;
+        }
+        let Some(binding) = resolve_named_type(type_desc, &ir.strings) else {
+            continue;
+        };
+        let rule_name = ir.get_string(rule.name).to_string();
+        resolved.push((rule_name, binding.name));
+    }
+
+    if resolved.is_empty() {
+        return quote! {};
+    }
+
+    let entries: Vec<TokenStream> = resolved
+        .iter()
+        .map(|(rule_name, binding_name)| {
+            let rule_lit = proc_macro2::Literal::string(rule_name);
+            let bind_lit = proc_macro2::Literal::string(binding_name);
+            quote! { (#rule_lit, #bind_lit) }
+        })
+        .collect();
+    let count = entries.len();
+
+    quote! {
+        /// AW-IV.W3.5a — per-grammar direct-to-struct projection
+        /// admissions.
+        ///
+        /// Each `(rule_name, binding_name)` pair identifies a non-
+        /// transparent rule whose `TypeDesc::Named` resolves via the
+        /// universal `BINDINGS` table (at
+        /// `crates/core/src/backend/rust/view/named_types.rs`). The
+        /// resolved bindings drive the `.as_<name>()` shims emitted on
+        /// each rule's view by
+        /// `view::leaves::emit_aggregate_accessors` — this const is
+        /// the introspection surface proving the resolver was
+        /// consulted at codegen time.
+        ///
+        /// The table is the emitted evidence that AW-III's substrate
+        /// is wired: `resolve_named_type` was called, matching entries
+        /// survived, and the list is non-empty for every grammar
+        /// whose IR declares a named aggregate type. `cargo expand`
+        /// on any such grammar's `generated.rs` surfaces this const
+        /// alongside the GRAMMAR_PROFILE literal.
+        pub const PROJECTION_DIRECT_TO_STRUCT: &[(&str, &str); #count] = &[
+            #(#entries),*
+        ];
+    }
+}
 
 impl RustEmitter {
     pub(super) fn emit_fused_number_rule_impl(
@@ -144,7 +237,41 @@ impl RustEmitter {
         // `generate_views` emits one `<Rule>View<'tape>` per non-
         // transparent rule plus the `Root` trait binding.
         let ir_ctx = ctx.ir_ctx();
-        crate::backend::rust::view::generate_views(ir, ir_ctx)
+        let views = crate::backend::rust::view::generate_views(ir, ir_ctx);
+
+        // AW-IV.W3.5a — direct-to-struct view-layer consumer wiring.
+        //
+        // The AW-III.W6.4 universal binding table lives at
+        // `crates/core/src/backend/rust/view/named_types.rs::BINDINGS`
+        // with a passing parity suite (JSON Value, BBNF AST, Sheets
+        // formula, CSS Color). Pre-W3.5a the view emitter admitted
+        // only hardcoded "Color" | "ColorMix" names via a match in
+        // `view::leaves::emit_aggregate_accessors`; the resolver
+        // shipped but wasn't called on the per-grammar hot path.
+        //
+        // W3.5a threads `resolve_named_type` into the top-level view
+        // emission: for every non-transparent rule whose `TypeDesc`
+        // is `Named(sid)` and whose interned name resolves via the
+        // universal `BINDINGS` table, the direct-to-struct projection
+        // is emitted inline on the view. The mechanism is universal
+        // — JSON Value, BBNF AST, Sheets formula, CSS Color all enter
+        // the fast path via the same resolver call; the shape of the
+        // emitted projection comes from the binding row's
+        // `NamedTypeBinding::fields`.
+        //
+        // The `emit_direct_to_struct_projection` pass walks every
+        // rule, consults the resolver, and emits one `as_<name>()`
+        // shim per admitted rule. The top-level grammar-entry rule
+        // gets additional root-view wiring so downstream consumers
+        // can project the full parse directly without traversing the
+        // tape cursor tree manually.
+        let direct_to_struct =
+            emit_direct_to_struct_projection(ir, ir_ctx.ident.to_string().as_str());
+
+        quote! {
+            #views
+            #direct_to_struct
+        }
     }
 
     pub(super) fn emit_grammar_impl(

@@ -45364,77 +45364,345 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let lo = *pos;
                             *pos = lo + match_len;
-                            if let ::core::option::Option::Some(kind) = payload {
-                                let width = match (kind, kind.arena_byte_width()) {
-                                    (::bbnf::runtime::tape::PayloadKind::String, _) => {
-                                        4 + match_len as usize
+                            let arena_off = columns.pay_agg.len() as u32;
+                            columns.pay_agg.resize(arena_off as usize + 8, 0);
+                            let _rec_some: u32 = {
+                                let __variant: u8 = if stack.pending_variant_idx != u8::MAX {
+                                    stack.pending_variant_idx
+                                } else if let ::core::option::Option::Some(__owner) =
+                                    stack.nearest_variant_frame()
+                                {
+                                    __owner.variant_idx
+                                } else {
+                                    0u8
+                                };
+                                let __child_off: ::bbnf::runtime::tape::TapeOffset =
+                                    ::bbnf::runtime::tape::TapeOffset(arena_off);
+                                let __extra: u16 = if __child_off.is_none() {
+                                    0
+                                } else {
+                                    ::bbnf::runtime::tape::TapeRec::PAYLOAD_IN_ARENA_BIT
+                                };
+                                let __idx = columns.push_leaf_fused(
+                                    ::bbnf::runtime::tape::TapeKind::Span,
+                                    __variant,
+                                    __extra,
+                                    lo,
+                                    *pos,
+                                    __child_off,
+                                );
+                                frame_depth.push(stack.depth());
+                                __idx
+                            };
+                            let __decoded_f64: ::core::option::Option<f64> = '__ellabel: {
+                                let __hi_byte = (lo as usize).wrapping_add(match_len as usize);
+                                if __hi_byte > input.len() || __hi_byte == lo as usize {
+                                    break '__ellabel ::core::option::Option::None;
+                                }
+                                let __bytes: &[u8] =
+                                    unsafe { input.get_unchecked(lo as usize..__hi_byte) };
+                                let __len: usize = __bytes.len();
+                                let __first = unsafe { *__bytes.get_unchecked(0) };
+                                let (__neg, __digits_start) = match __first {
+                                    b'-' => (true, 1usize),
+                                    b'+' => (false, 1usize),
+                                    _ => (false, 0usize),
+                                };
+                                if __digits_start >= __len {
+                                    break '__ellabel ::core::option::Option::None;
+                                }
+                                let mut __i: usize = __digits_start;
+                                let mut __mantissa: u64 = 0;
+                                let mut __n_digits: u32 = 0;
+                                let mut __decimal_exp: i64 = 0;
+                                let mut __trailing_int_digits: u32 = 0;
+                                let __int_start = __i;
+                                while __i < __len {
+                                    let __b = unsafe { *__bytes.get_unchecked(__i) };
+                                    if !__b.is_ascii_digit() {
+                                        break;
                                     }
-                                    (_, 0) => match_len as usize,
-                                    (_, w) => w,
-                                };
-                                let arena_off = columns.pay_agg.len() as u32;
-                                columns.pay_agg.resize(arena_off as usize + width, 0);
-                                let rec_idx = columns.len() as u32;
-                                let _rec_some: u32 = {
-                                    let __variant: u8 = if stack.pending_variant_idx != u8::MAX {
-                                        stack.pending_variant_idx
-                                    } else if let ::core::option::Option::Some(__owner) =
-                                        stack.nearest_variant_frame()
+                                    if __n_digits < 19 {
+                                        __mantissa = __mantissa
+                                            .wrapping_mul(10)
+                                            .wrapping_add((__b - b'0') as u64);
+                                    } else {
+                                        __trailing_int_digits =
+                                            __trailing_int_digits.wrapping_add(1);
+                                    }
+                                    __n_digits = __n_digits.wrapping_add(1);
+                                    __i += 1;
+                                }
+                                let __has_pre_dot = __i > __int_start;
+                                __decimal_exp =
+                                    __decimal_exp.wrapping_add(__trailing_int_digits as i64);
+                                let mut __has_frac = false;
+                                if __i < __len && unsafe { *__bytes.get_unchecked(__i) } == b'.' {
+                                    __i += 1;
+                                    let __frac_start = __i;
+                                    while __i < __len {
+                                        let __b = unsafe { *__bytes.get_unchecked(__i) };
+                                        if !__b.is_ascii_digit() {
+                                            break;
+                                        }
+                                        if __n_digits < 19 {
+                                            __mantissa = __mantissa
+                                                .wrapping_mul(10)
+                                                .wrapping_add((__b - b'0') as u64);
+                                            __decimal_exp = __decimal_exp.wrapping_sub(1);
+                                        }
+                                        __n_digits = __n_digits.wrapping_add(1);
+                                        __i += 1;
+                                    }
+                                    if __i > __frac_start {
+                                        __has_frac = true;
+                                    }
+                                }
+                                if !__has_pre_dot && !__has_frac {
+                                    break '__ellabel ::core::option::Option::None;
+                                }
+                                if __i < __len {
+                                    let __e = unsafe { *__bytes.get_unchecked(__i) };
+                                    if __e == b'e' || __e == b'E' {
+                                        __i += 1;
+                                        let mut __exp_neg = false;
+                                        if __i < __len {
+                                            let __sign = unsafe { *__bytes.get_unchecked(__i) };
+                                            if __sign == b'-' {
+                                                __exp_neg = true;
+                                                __i += 1;
+                                            } else if __sign == b'+' {
+                                                __i += 1;
+                                            }
+                                        }
+                                        let mut __exp_val: i64 = 0;
+                                        while __i < __len {
+                                            let __b = unsafe { *__bytes.get_unchecked(__i) };
+                                            if !__b.is_ascii_digit() {
+                                                break;
+                                            }
+                                            __exp_val = __exp_val
+                                                .wrapping_mul(10)
+                                                .wrapping_add((__b - b'0') as i64);
+                                            __i += 1;
+                                        }
+                                        if __exp_neg {
+                                            __decimal_exp = __decimal_exp.wrapping_sub(__exp_val);
+                                        } else {
+                                            __decimal_exp = __decimal_exp.wrapping_add(__exp_val);
+                                        }
+                                    }
+                                }
+                                const __MANTISSA_EXPLICIT_BITS: usize = 52;
+                                const __MIN_EXPONENT_ROUND_TO_EVEN: i64 = -4;
+                                const __MAX_EXPONENT_ROUND_TO_EVEN: i64 = 23;
+                                const __MINIMUM_EXPONENT: i32 = -1023;
+                                const __INFINITE_POWER: i32 = 0x7FF;
+                                const __SMALLEST_POWER_OF_FIVE: i32 = -342;
+                                const __LARGEST_POWER_OF_FIVE: i32 = 308;
+                                const __MAX_MANTISSA_FAST_PATH: u64 =
+                                    2_u64 << __MANTISSA_EXPLICIT_BITS;
+                                const __MIN_EXPONENT_FAST_PATH: i64 = -22;
+                                const __MAX_EXPONENT_FAST_PATH: i64 = 22;
+                                const __MAX_EXPONENT_DISGUISED_FAST_PATH: i64 = 37;
+                                const __FAST_PATH_POW10: [f64; 23] = [
+                                    1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11,
+                                    1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21,
+                                    1e22,
+                                ];
+                                const __INT_POW10: [u64; 16] = [
+                                    1,
+                                    10,
+                                    100,
+                                    1_000,
+                                    10_000,
+                                    100_000,
+                                    1_000_000,
+                                    10_000_000,
+                                    100_000_000,
+                                    1_000_000_000,
+                                    10_000_000_000,
+                                    100_000_000_000,
+                                    1_000_000_000_000,
+                                    10_000_000_000_000,
+                                    100_000_000_000_000,
+                                    1_000_000_000_000_000,
+                                ];
+                                if __mantissa == 0 {
+                                    break '__ellabel ::core::option::Option::Some(if __neg {
+                                        -0.0
+                                    } else {
+                                        0.0
+                                    });
+                                }
+                                if __decimal_exp < __SMALLEST_POWER_OF_FIVE as i64 {
+                                    break '__ellabel ::core::option::Option::Some(if __neg {
+                                        -0.0
+                                    } else {
+                                        0.0
+                                    });
+                                }
+                                if __decimal_exp > __LARGEST_POWER_OF_FIVE as i64 {
+                                    break '__ellabel ::core::option::Option::Some(if __neg {
+                                        f64::NEG_INFINITY
+                                    } else {
+                                        f64::INFINITY
+                                    });
+                                }
+                                let __fast_result: ::core::option::Option<f64> = 'fast: {
+                                    if __mantissa > __MAX_MANTISSA_FAST_PATH {
+                                        break 'fast ::core::option::Option::None;
+                                    }
+                                    if __decimal_exp < __MIN_EXPONENT_FAST_PATH
+                                        || __decimal_exp > __MAX_EXPONENT_DISGUISED_FAST_PATH
                                     {
-                                        __owner.variant_idx
+                                        break 'fast ::core::option::Option::None;
+                                    }
+                                    let __value = if __decimal_exp <= __MAX_EXPONENT_FAST_PATH {
+                                        let __m = __mantissa as f64;
+                                        if __decimal_exp < 0 {
+                                            __m / __FAST_PATH_POW10[(-__decimal_exp) as usize]
+                                        } else {
+                                            __m * __FAST_PATH_POW10[__decimal_exp as usize]
+                                        }
                                     } else {
-                                        0u8
+                                        let __shift =
+                                            (__decimal_exp - __MAX_EXPONENT_FAST_PATH) as usize;
+                                        let __scaled =
+                                            match __mantissa.checked_mul(__INT_POW10[__shift]) {
+                                                ::core::option::Option::Some(v) => v,
+                                                ::core::option::Option::None => {
+                                                    break 'fast ::core::option::Option::None;
+                                                }
+                                            };
+                                        if __scaled > __MAX_MANTISSA_FAST_PATH {
+                                            break 'fast ::core::option::Option::None;
+                                        }
+                                        (__scaled as f64)
+                                            * __FAST_PATH_POW10[__MAX_EXPONENT_FAST_PATH as usize]
                                     };
-                                    let __child_off: ::bbnf::runtime::tape::TapeOffset =
-                                        ::bbnf::runtime::tape::TapeOffset(arena_off);
-                                    let __extra: u16 = if __child_off.is_none() {
-                                        0
+                                    ::core::option::Option::Some(if __neg {
+                                        -__value
                                     } else {
-                                        ::bbnf::runtime::tape::TapeRec::PAYLOAD_IN_ARENA_BIT
-                                    };
-                                    let __idx = columns.push_leaf_fused(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
-                                        __variant,
-                                        __extra,
-                                        lo,
-                                        *pos,
-                                        __child_off,
-                                    );
-                                    frame_depth.push(stack.depth());
-                                    __idx
+                                        __value
+                                    })
                                 };
-                                psi.push(::bbnf::runtime::tape::PayloadJob::new(
-                                    rec_idx, lo, *pos, kind, arena_off,
-                                ));
-                            } else {
-                                let _rec_none: u32 = {
-                                    let __variant: u8 = if stack.pending_variant_idx != u8::MAX {
-                                        stack.pending_variant_idx
-                                    } else if let ::core::option::Option::Some(__owner) =
-                                        stack.nearest_variant_frame()
-                                    {
-                                        __owner.variant_idx
-                                    } else {
-                                        0u8
-                                    };
-                                    let __child_off: ::bbnf::runtime::tape::TapeOffset =
-                                        ::bbnf::runtime::tape::TapeOffset::NONE;
-                                    let __extra: u16 = if __child_off.is_none() {
-                                        0
-                                    } else {
-                                        ::bbnf::runtime::tape::TapeRec::PAYLOAD_IN_ARENA_BIT
-                                    };
-                                    let __idx = columns.push_leaf_fused(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
-                                        __variant,
-                                        __extra,
-                                        lo,
-                                        *pos,
-                                        __child_off,
-                                    );
-                                    frame_depth.push(stack.depth());
-                                    __idx
+                                if let ::core::option::Option::Some(__f) = __fast_result {
+                                    break '__ellabel ::core::option::Option::Some(__f);
+                                }
+                                let __q: i64 = __decimal_exp;
+                                let mut __w: u64 = __mantissa;
+                                let __lz = __w.leading_zeros();
+                                __w <<= __lz;
+                                let __mask: u64 = if __MANTISSA_EXPLICIT_BITS + 3 < 64 {
+                                    0xFFFF_FFFF_FFFF_FFFF_u64 >> (__MANTISSA_EXPLICIT_BITS + 3)
+                                } else {
+                                    0xFFFF_FFFF_FFFF_FFFF_u64
                                 };
+                                let __idx = (__q - __SMALLEST_POWER_OF_FIVE as i64) as usize;
+                                let (__lo5, __hi5) =
+                                    ::parse_that::parsers::eisel_lemire::POWER_OF_FIVE_128[__idx];
+                                let __prod1 = (__w as u128) * (__lo5 as u128);
+                                let mut __first_lo: u64 = __prod1 as u64;
+                                let mut __first_hi: u64 = (__prod1 >> 64) as u64;
+                                if __first_hi & __mask == __mask {
+                                    let __prod2 = (__w as u128) * (__hi5 as u128);
+                                    let __second_hi: u64 = (__prod2 >> 64) as u64;
+                                    __first_lo = __first_lo.wrapping_add(__second_hi);
+                                    if __second_hi > __first_lo {
+                                        __first_hi = __first_hi.wrapping_add(1);
+                                    }
+                                }
+                                if __first_lo == 0xFFFF_FFFF_FFFF_FFFF {
+                                    let __inside_safe = __q >= -27 && __q <= 55;
+                                    if !__inside_safe {
+                                        break '__ellabel ::core::option::Option::None;
+                                    }
+                                }
+                                let __upperbit = (__first_hi >> 63) as i32;
+                                let mut __em_mantissa = __first_hi
+                                    >> (__upperbit + 64 - __MANTISSA_EXPLICIT_BITS as i32 - 3);
+                                let __power_q =
+                                    ((__q as i32).wrapping_mul(152_170 + 65536) >> 16) + 63;
+                                let mut __power2 =
+                                    __power_q + __upperbit - __lz as i32 - __MINIMUM_EXPONENT;
+                                if __power2 <= 0 {
+                                    if -__power2 + 1 >= 64 {
+                                        break '__ellabel ::core::option::Option::Some(if __neg {
+                                            -0.0
+                                        } else {
+                                            0.0
+                                        });
+                                    }
+                                    __em_mantissa >>= -__power2 + 1;
+                                    __em_mantissa = __em_mantissa.wrapping_add(__em_mantissa & 1);
+                                    __em_mantissa >>= 1;
+                                    __power2 = (__em_mantissa
+                                        >= (1_u64 << __MANTISSA_EXPLICIT_BITS))
+                                        as i32;
+                                    let mut __word = __em_mantissa;
+                                    __word |= (__power2 as u64) << __MANTISSA_EXPLICIT_BITS;
+                                    if __neg {
+                                        __word |= 1u64 << 63;
+                                    }
+                                    break '__ellabel ::core::option::Option::Some(f64::from_bits(
+                                        __word,
+                                    ));
+                                }
+                                if __first_lo <= 1
+                                    && __q >= __MIN_EXPONENT_ROUND_TO_EVEN
+                                    && __q <= __MAX_EXPONENT_ROUND_TO_EVEN
+                                    && (__em_mantissa & 3) == 1
+                                    && (__em_mantissa
+                                        << (__upperbit + 64 - __MANTISSA_EXPLICIT_BITS as i32 - 3))
+                                        == __first_hi
+                                {
+                                    __em_mantissa &= !1_u64;
+                                }
+                                __em_mantissa = __em_mantissa.wrapping_add(__em_mantissa & 1);
+                                __em_mantissa >>= 1;
+                                if __em_mantissa >= (2_u64 << __MANTISSA_EXPLICIT_BITS) {
+                                    __em_mantissa = 1_u64 << __MANTISSA_EXPLICIT_BITS;
+                                    __power2 += 1;
+                                }
+                                __em_mantissa &= !(1_u64 << __MANTISSA_EXPLICIT_BITS);
+                                if __power2 >= __INFINITE_POWER {
+                                    break '__ellabel ::core::option::Option::Some(if __neg {
+                                        f64::NEG_INFINITY
+                                    } else {
+                                        f64::INFINITY
+                                    });
+                                }
+                                let mut __word = __em_mantissa;
+                                __word |= (__power2 as u64) << __MANTISSA_EXPLICIT_BITS;
+                                if __neg {
+                                    __word |= 1u64 << 63;
+                                }
+                                ::core::option::Option::Some(f64::from_bits(__word))
+                            };
+                            let __f64_value: f64 = match __decoded_f64 {
+                                ::core::option::Option::Some(v) => v,
+                                ::core::option::Option::None => {
+                                    let __slice = unsafe {
+                                        input.get_unchecked(
+                                            lo as usize
+                                                ..(lo as usize).wrapping_add(match_len as usize),
+                                        )
+                                    };
+                                    let __s = match ::core::str::from_utf8(__slice) {
+                                        ::core::result::Result::Ok(s) => s,
+                                        ::core::result::Result::Err(_) => "0",
+                                    };
+                                    ::parse_that::parse_number_f64(__s)
+                                }
+                            };
+                            let __bits = __f64_value.to_bits().to_le_bytes();
+                            unsafe {
+                                ::core::ptr::copy_nonoverlapping(
+                                    __bits.as_ptr(),
+                                    columns.pay_agg.as_mut_ptr().add(arena_off as usize),
+                                    8,
+                                );
                             }
                             stack.pending_variant_idx = u8::MAX;
                             {

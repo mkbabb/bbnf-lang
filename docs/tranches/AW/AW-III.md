@@ -85,6 +85,30 @@ the minimum-viable specialisation. AW-III's W6 reads the verdict.
    sidecar on the worst-regression entry (json_twitter @ 16×) is the
    truth anchor. No claim of "DTA viable" without a profile to cite.
 6. **Bootstrap idempotent at every wave boundary** — inherited.
+7. **Full generalization — no grammar-specific fixes** (added 2026-04-17).
+   Every optimisation mechanism must be a general recogniser pass + general
+   walker arm + general emitter pass, triggered by grammar-structural
+   properties (Alt density, keyword count, shape repetition, operator
+   chain depth), NOT by grammar identity. Concretely:
+   - PHF keyword applies to EVERY Alt-with-literal-branches — JSON's 3
+     keywords + delimiter + escape patterns, BBNF's 8 directives, Sheets'
+     150 functions, CSS's 163 named colours. Same mechanism, different
+     workload density.
+   - Direct-to-struct applies to EVERY named-type with fixed layout —
+     CSS Color, JSON Value tree, BBNF AST, Sheets formula AST. Not a
+     per-grammar opt-in.
+   - `DtaState::ClassifyByte` LUT applies to ANY Alt with mutually-
+     disjoint FIRST sets — CSS compound selectors, BBNF directive
+     prefixes, JSON escape dispatch. Named "classifier" without the
+     "selector" CSS-bias.
+   - ShapeRef applies to EVERY compound with repeat-ratio above a
+     threshold, mined by a general recogniser pass.
+   - Codegen-specialised walker emits `dta_run_{grammar}` for every
+     primary grammar, not a subset.
+   Per-grammar IMPACT varies because grammars have different workload
+   densities (CSS has dense keywords; JSON has sparse); per-grammar
+   MECHANISM does not vary. A fix that only applies to one grammar is
+   rejected as a specialisation smell.
 
 ## Wave schedule (refined 2026-04-17 from SYNTHESIS.md)
 
@@ -196,15 +220,15 @@ Owner: 3 parallel agents; scope expanded per the "structural, not granular" fold
 
 **Primary structural levers** (the 2× envelope reached):
 - **ShapeRef runtime dispatch** — walker-side `push_shape_ref` consumer for the already-emitted `SHAPE_DICT` (13 CSS L4 entries + new JSON + new BBNF dicts emitted by this wave).
-- **PHF keyword tables** — per-grammar emitter pass populating `keyword_tables`. CSS (163-branch namedColor + 72-branch keywords + 92-branch properties); BBNF keywords; JSON (`true`/`false`/`null`).
+- **PHF keyword tables (universal)** — general emitter pass mining EVERY Alt-with-literal-branches pattern across the grammar, not just "keyword rules". CSS (163-branch namedColor + 72-branch keywords + 92-branch properties); BBNF (directive prefixes + keyword alts); JSON (`true`/`false`/`null` + delimiter dispatch + string-escape table); Sheets (150 function names + operator alts). Branch-count threshold gates emission; the *mechanism* is grammar-agnostic per invariant 7.
 - **Fused `push_compound` write** — replace `reserve_compound`'s 7-vector row with a single struct-write.
-- **Selector classifier** — CSS-only. `DtaState::ClassifyByte` LUT for the 5-way `compoundSelector` Alt.
+- **`DtaState::ClassifyByte` LUT** — general mechanism for ANY Alt with mutually-disjoint FIRST sets. CSS `compoundSelector` (5-way) + BBNF `directive` (`@`-prefix second-byte) + JSON escape (`\` second-byte) + Sheets function first-letter. Renamed from "selector classifier" to shed CSS-bias per invariant 7.
 - **PSI rayon stage-B CALIBRATION** (folded in from AW-IV.W1.1) — populate `parallel_break_even_bytes` per grammar. No code; only constants from viability samply on canada/data_xl/bootstrap. Folded in because it's literally a handful of constants — not a granular optimisation but a calibration.
 
 **Structural specialisation (folded in from AW-IV.W3, without which viability is not definitively proven)**:
 
 - **W5.6 Codegen-specialised per-grammar walkers** — emit `dta_run_json`, `dta_run_css`, `dta_run_bbnf`, `dta_run_sheets`, `dta_run_ebnf` with inlined `DtaState` arms. **This closes the `dispatch_one` tagged-union floor (~24% self-time) that SYNTHESIS.md flagged as unaddressable by amortisation levers alone.** Without this in AW-III, the Sheets viability question escalates; with it, AW-III definitively answers "yes, DTA is viable."
-- **W5.7 Direct-to-struct expansion** — extend beyond CSS Color (current sole consumer) to JSON `Value` tree + BBNF AST struct. A1 audit confirmed the pattern is a named-type-resolver extension, not new codegen architecture. Structural, not granular.
+- **W5.7 Direct-to-struct expansion (universal)** — extend beyond CSS Color (current sole consumer) to **every named-type with fixed layout**: JSON `Value` tree, BBNF AST (RuleEntry + RhsNode + directive variants), Sheets formula AST (Expr + Literal + Cell + FnCall). Any future grammar with a top-level named-type automatically enters the fast path via the general named-type resolver at `crates/core/src/backend/rust/view/named_types.rs`. Per invariant 7, this is a general mechanism, not per-grammar codegen.
 - **W5.8 Per-grammar Pratt const-fold** — W1.7 landed the `IrNode::Next` peel; W5.8 completes the calibration: per-grammar `PRECEDENCE_LUT` population (CSS 148 operators + BBNF value_expr tower + Sheets arithmetic), const-fold precedence levels into the specialised walker's ShuntingYard arm. Depends on W5.6 specialisation being active; natural extension.
 
 **Kept in AW-IV (genuinely granular — micro-optimisation, arch-specific, or consumer-side)**:

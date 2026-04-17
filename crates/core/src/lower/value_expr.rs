@@ -760,29 +760,82 @@ fn recover_call_path(trimmed: &str) -> String {
 /// `value_expr` compounds. We scan all Repeat children and gather
 /// any nested compound whose kind is `Rule` (i.e., a `value_expr`
 /// rule push) — that gives us each arg in source order.
+///
+/// Under DTA the atom compound's body sits inside an anonymous Seq
+/// wrapper; `node.children()` returns `[Seq]` rather than the
+/// expected Repeat siblings. Descend through anonymous wrappers
+/// first, then apply the Repeat-scan logic on the true body.
+/// Additionally — under DTA a `value_expr` push surfaces as a
+/// compound whose `rule_kind == value_expr`, not just any
+/// `TapeKind::Rule`. Gate on rule_kind to avoid mistaking a nested
+/// anonymous Seq-Rule for an argument.
 fn collect_fn_call_args<'a>(
     node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,
 ) -> Vec<MapExpr> {
     use ::bbnf::runtime::tape::TapeKind;
     let mut args: Vec<MapExpr> = Vec::new();
+
+    // Descend through the DTA Seq wrapper to reach the atom body
+    // whose direct children are the path + arg-list Repeats.
+    let body = descend_anonymous_wrappers(node);
+
+    // Arg is any descendant `value_expr` compound — but we must
+    // avoid collecting args from any nested parenthesised
+    // sub-expression or closure body. The arg list lives inside
+    // the trailing Repeat of the fn-call atom; iterate that
+    // Repeat's direct children (not descendants) to avoid
+    // cross-boundary collection.
+    //
     // The atom may have multiple Repeat children — one for the
     // path's `(::ident)*` segment list and one for the optional
-    // arg list. Walk every Repeat and pull out any nested Rule
-    // compound; only the arg-list Repeat will contain Rule pushes
-    // (the path Repeat contains only inlined ident scans which
-    // push nothing).
-    for child in node.children() {
+    // arg list. Walk every Repeat (direct children of the atom
+    // body) and pull out any nested compound. The path Repeat
+    // contains only inlined ident scans which push nothing; the
+    // arg-list Repeat contains `value_expr` rule compounds.
+    let is_value_expr = |v: &BbnfBootstrapNodeView<'a>| {
+        v.rule_kind() == BbnfBootstrapRuleKind::value_expr
+    };
+    for child in body.children() {
         if child.kind() == TapeKind::Repeat {
             for inner in child.children() {
                 match inner.kind() {
-                    TapeKind::Rule => args.push(dispatch_value_expr(inner, ctx)),
+                    TapeKind::Rule => {
+                        // Under DTA a Rule compound may be an
+                        // anonymous Seq-wrapper around the real
+                        // value_expr rather than the value_expr
+                        // itself. Prefer the value_expr descendant
+                        // when the direct child's rule_kind isn't
+                        // already value_expr.
+                        if is_value_expr(&inner) {
+                            args.push(dispatch_value_expr(inner, ctx));
+                        } else if let Some(ve) = find_descendant_by_kind(
+                            inner,
+                            BbnfBootstrapRuleKind::value_expr,
+                        ) {
+                            args.push(dispatch_value_expr(ve, ctx));
+                        } else {
+                            // Optimizer fully inlined — dispatch on
+                            // the compound directly; the handler
+                            // classifies by rule_kind.
+                            args.push(dispatch_value_expr(inner, ctx));
+                        }
+                    }
                     TapeKind::Repeat => {
                         // The optional arg list's tail-rest Repeat
                         // (`(, value_expr)*`) — recurse one level.
                         for grand in inner.children() {
                             if grand.kind() == TapeKind::Rule {
-                                args.push(dispatch_value_expr(grand, ctx));
+                                if is_value_expr(&grand) {
+                                    args.push(dispatch_value_expr(grand, ctx));
+                                } else if let Some(ve) = find_descendant_by_kind(
+                                    grand,
+                                    BbnfBootstrapRuleKind::value_expr,
+                                ) {
+                                    args.push(dispatch_value_expr(ve, ctx));
+                                } else {
+                                    args.push(dispatch_value_expr(grand, ctx));
+                                }
                             }
                         }
                     }
@@ -928,10 +981,17 @@ fn lower_value_closure<'a>(
     // The body is the trailing `value_expr` rule compound — it's
     // the only Rule child this compound contains (the param
     // identifiers don't push).
+    //
+    // Under DTA the body `value_expr` may sit inside an anonymous
+    // Seq wrapper emitted by the walker; a direct `TapeKind::Rule`
+    // first-match could pick that wrapper (also `TapeKind::Rule`
+    // under the walker's `frame_to_tape_kind(Seq) == Rule` policy)
+    // rather than the real value_expr. Descend to the value_expr
+    // descendant; fall back to the first TapeKind::Rule child for
+    // non-DTA shapes.
     use ::bbnf::runtime::tape::TapeKind;
-    let body = node
-        .children()
-        .find(|c| c.kind() == TapeKind::Rule)
+    let body = find_descendant_by_kind(node, BbnfBootstrapRuleKind::value_expr)
+        .or_else(|| node.children().find(|c| c.kind() == TapeKind::Rule))
         .expect("lower_value_closure: missing body value_expr child");
 
     // Bind each param into the value-environment frame. The first
@@ -998,9 +1058,12 @@ pub(crate) fn unwrap_value_ident_str<'a>(
                 let text = cur.span_text().trim();
                 return if text.contains("::") { None } else { Some(text) };
             }
-            // Top-level value_expr wrapper — peel into the single child.
+            // Top-level value_expr wrapper — peel into the inner
+            // head. Under DTA, `children().next()` picks the
+            // anonymous Seq wrapper rather than the semantic head;
+            // descend to the first value-layer rule compound.
             BbnfBootstrapRuleKind::value_expr => {
-                cur = cur.children().next()?;
+                cur = value_expr_head(cur)?;
             }
             // Precedence-chain wrappers: descend through the
             // first-and-only operand if there are no operators.
@@ -1010,7 +1073,10 @@ pub(crate) fn unwrap_value_ident_str<'a>(
             | BbnfBootstrapRuleKind::value_add
             | BbnfBootstrapRuleKind::value_mul => {
                 // Single-operand chain → text == operand text. Use
-                // `collect_chain_operands` to detect.
+                // `collect_chain_operands` to detect. The operand
+                // collection is already DTA-aware (W4.2 migration)
+                // so this site inherits the descent through any
+                // anonymous wrappers transparently.
                 let operands = collect_chain_operands(cur);
                 if operands.len() != 1 {
                     return None;
@@ -1019,12 +1085,17 @@ pub(crate) fn unwrap_value_ident_str<'a>(
             }
             BbnfBootstrapRuleKind::value_unary => {
                 // Bare unary (no `!`/`-`) — descend into the atom.
+                // Under DTA the atom sits one Seq deeper; descend to
+                // the value_atom descendant rather than picking the
+                // anonymous wrapper via `children().next()`.
                 let text = cur.span_text();
                 let first = text.as_bytes().first().copied();
                 if first == Some(b'!') || first == Some(b'-') {
                     return None;
                 }
-                cur = cur.children().next()?;
+                cur = find_descendant_by_kind(cur, BbnfBootstrapRuleKind::value_atom)
+                    .filter(|v| v.cursor().offset() != cur.cursor().offset())
+                    .or_else(|| cur.children().next())?;
             }
             BbnfBootstrapRuleKind::value_atom => {
                 // Atom is identifier-shaped iff its leading non-ws
@@ -1066,10 +1137,14 @@ pub(crate) fn deep_unwrap_value<'a>(
     let mut cur = node;
     loop {
         match cur.rule_kind() {
-            // Top-level value_expr wrapper — peel into the single child.
+            // Top-level value_expr wrapper — peel into the inner
+            // head. Under DTA, `children().next()` picks the
+            // anonymous Seq wrapper rather than the semantic head;
+            // use `value_expr_head` to descend to the first
+            // value-layer rule.
             BbnfBootstrapRuleKind::value_expr => {
-                if let Some(child) = cur.children().next() {
-                    cur = child;
+                if let Some(head) = value_expr_head(cur) {
+                    cur = head;
                 } else {
                     return cur;
                 }
@@ -1091,8 +1166,15 @@ pub(crate) fn deep_unwrap_value<'a>(
                 if first == Some(b'!') || first == Some(b'-') {
                     return cur;
                 }
-                if let Some(child) = cur.children().next() {
-                    cur = child;
+                // Under DTA the atom sits one Seq deeper; descend to
+                // the value_atom descendant rather than picking the
+                // anonymous wrapper via `children().next()`.
+                if let Some(atom) =
+                    find_descendant_by_kind(cur, BbnfBootstrapRuleKind::value_atom)
+                        .filter(|v| v.cursor().offset() != cur.cursor().offset())
+                        .or_else(|| cur.children().next())
+                {
+                    cur = atom;
                 } else {
                     return cur;
                 }

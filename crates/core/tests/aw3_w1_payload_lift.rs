@@ -98,34 +98,38 @@ fn sheets_number_regex_carries_f64_payload() {
     );
 }
 
+/// AW-III.W1.2 — confirm the lifter projects 150+ named-color U32
+/// payloads through the trie-factored Alt expansion. The literal
+/// text on each leaf state is the suffix-distinguishing fragment
+/// (the prefix-folding pass strips shared prefixes), but the U32
+/// payload threads through to every leaf carrying its color's RGBA
+/// constant. Spot-check by counting non-None U32 payloads — the CSS
+/// L4 grammar declares 148+ named colors plus a few other U32-typed
+/// rules.
 #[test]
-fn css_named_color_white_carries_u32_payload() {
-    let (ir, table) = lift("grammar/css/l4/stylesheet.bbnf");
-    let mut payloads: Vec<(String, LiteralPayload)> = Vec::new();
-    for state in &table.states {
-        if let DtaState::Literal { text, payload } = state {
-            if !matches!(payload, LiteralPayload::None) {
-                payloads.push((ir.get_string(*text).to_string(), *payload));
-            }
-        }
-    }
-    let white = payloads.iter().find(|(t, _)| t == "white");
-    eprintln!("found white = {white:?}");
-    eprintln!("First 5 U32 payloads: {:?}", payloads.iter().filter(|(_, p)| matches!(p, LiteralPayload::U32(_))).take(5).collect::<Vec<_>>());
-    eprintln!("Last 5 U32 payloads: {:?}", payloads.iter().filter(|(_, p)| matches!(p, LiteralPayload::U32(_))).rev().take(5).collect::<Vec<_>>());
-    eprintln!("payload count = {}", payloads.len());
-    let mut u8_count = 0;
-    let mut u32_count = 0;
-    for (_, p) in &payloads {
-        match p {
-            LiteralPayload::U8(_) => u8_count += 1,
-            LiteralPayload::U32(_) => u32_count += 1,
-            _ => {}
-        }
-    }
-    eprintln!("u8 count = {u8_count}, u32 count = {u32_count}");
-    assert!(white.is_some(), "namedColor 'white' must lift with payload");
-    assert_eq!(white.unwrap().1, LiteralPayload::U32(0xFFFFFFFF));
+fn css_named_colors_lift_with_u32_payloads() {
+    let (_ir, table) = lift("grammar/css/l4/stylesheet.bbnf");
+    let u32_count = table
+        .states
+        .iter()
+        .filter(|s| matches!(s, DtaState::Literal { payload: LiteralPayload::U32(_), .. }))
+        .count();
+    assert!(
+        u32_count >= 100,
+        "CSS L4 must lift 100+ U32-payload Literal states (one per \
+         named-color suffix); observed {u32_count}",
+    );
+    // Confirm `white`'s 0xFFFFFFFF lands somewhere in the table —
+    // the trie-folding leaf may carry just a suffix of `white`
+    // (e.g. just `e` after stripping `whit`), so locate by U32
+    // value instead of literal text.
+    let has_white_value = table.states.iter().any(|s| {
+        matches!(s, DtaState::Literal { payload: LiteralPayload::U32(0xFFFFFFFF), .. })
+    });
+    assert!(
+        has_white_value,
+        "white = 0xFFFFFFFFu32 must appear in the U32 payload table",
+    );
 }
 
 #[test]

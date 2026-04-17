@@ -53454,31 +53454,235 @@ mod __bbnfbootstrap_emit_impl {
                             let _ = "shunting_yard";
                             let head: ::bbnf::runtime::tape::DtaStateId =
                                 ::bbnf::runtime::tape::DtaStateId(81);
-                            let parent_rec = columns
-                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
-                            frame_depth.push(stack.depth());
-                            let child_mark = columns.len() as u32;
-                            let variant_idx = stack.pending_variant_idx;
-                            stack.pending_variant_idx = u8::MAX;
-                            stack.push(::bbnf::runtime::tape::Frame {
-                                kind: ::bbnf::runtime::tape::DtaFrameKind::ShuntingYard,
-                                counter_idx: u8::MAX,
-                                cursor: 0,
-                                children: &[],
-                                repeat_inner: ::bbnf::runtime::tape::DtaStateId(82 as u16),
-                                parent_rec,
-                                child_mark,
-                                tape_kind: ::bbnf::runtime::tape::TapeKind::Rule,
-                                last_pos: *pos,
-                                lo: 0,
-                                hi: 0,
-                                counter_optional_flag: 0,
-                                variant_idx,
-                                promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                            });
-                            ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
-                                head,
-                            ))
+                            static __DTA_SY_WALKER_CHILDREN_82:
+                                [::bbnf::runtime::tape::DtaStateId; 2] = [
+                                ::bbnf::runtime::tape::DtaStateId(81),
+                                ::bbnf::runtime::tape::DtaStateId(82),
+                            ];
+                            let __sy_is_reducer = match stack.top_mut() {
+                                ::core::option::Option::Some(__top) => {
+                                    let __kind_is_seq =
+                                        if let ::bbnf::runtime::tape::DtaFrameKind::Seq = __top.kind
+                                        {
+                                            true
+                                        } else {
+                                            false
+                                        };
+                                    __kind_is_seq && __top.repeat_inner.0 == 82
+                                }
+                                ::core::option::Option::None => false,
+                            };
+                            if !__sy_is_reducer {
+                                let parent_rec = columns.push_compound_fused(
+                                    ::bbnf::runtime::tape::TapeKind::Rule,
+                                    *pos,
+                                );
+                                frame_depth.push(stack.depth());
+                                let child_mark = columns.len() as u32;
+                                let variant_idx = stack.pending_variant_idx;
+                                stack.pending_variant_idx = u8::MAX;
+                                stack.push(::bbnf::runtime::tape::Frame {
+                                    kind: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+                                    counter_idx: u8::MAX,
+                                    cursor: 0,
+                                    children: &__DTA_SY_WALKER_CHILDREN_82,
+                                    repeat_inner: ::bbnf::runtime::tape::DtaStateId(82),
+                                    parent_rec,
+                                    child_mark,
+                                    tape_kind: ::bbnf::runtime::tape::TapeKind::Rule,
+                                    last_pos: *pos,
+                                    lo: 0,
+                                    hi: 0,
+                                    counter_optional_flag: 0,
+                                    variant_idx,
+                                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
+                                });
+                                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
+                                    head,
+                                ))
+                            } else {
+                                let (__sy_parent_rec, __sy_child_mark) = {
+                                    let __top = stack
+                                        .top_mut()
+                                        .expect("AW-IV.W3.4: reducer top frame must exist");
+                                    (__top.parent_rec, __top.child_mark)
+                                };
+                                let mut __this_operand_root: u32 = __sy_child_mark;
+                                let __op_byte: u8 = input.get(*pos as usize).copied().unwrap_or(0);
+                                let __lut_byte: u8 = PRECEDENCE_LUT[__op_byte as usize];
+                                let _ = 82;
+                                let __new_prec: ::core::option::Option<u8> = if __lut_byte == 0 {
+                                    ::core::option::Option::None
+                                } else {
+                                    ::core::option::Option::Some(__lut_byte & 0x0Fu8)
+                                };
+                                loop {
+                                    let Some(top_op) = stack.op_stack.last().copied() else {
+                                        break;
+                                    };
+                                    let __should_reduce = match __new_prec {
+                                        ::core::option::Option::None => true,
+                                        ::core::option::Option::Some(p) => {
+                                            let __is_left =
+                                                        if let ::bbnf::runtime::tape::DtaAssociativity::Left =
+                                                                top_op.associativity {
+                                                            true
+                                                        } else { false };
+                                            top_op.precedence > p
+                                                || (top_op.precedence == p && __is_left)
+                                        }
+                                    };
+                                    if !__should_reduce {
+                                        break;
+                                    }
+                                    stack.op_stack.pop();
+                                    let __compound_idx =
+                                        ::bbnf::runtime::tape::emit_reducer_compound(
+                                            columns,
+                                            frame_depth,
+                                            stack.depth(),
+                                            top_op.lhs_idx,
+                                            top_op.op_discriminant,
+                                            top_op.lhs_span_lo,
+                                            *pos,
+                                        );
+                                    __this_operand_root = __compound_idx;
+                                    let _ = top_op.op_rule;
+                                }
+                                if __lut_byte != 0 {
+                                    let __assoc_bit: u8 = (__lut_byte >> 4) & 0x01u8;
+                                    let __assoc: ::bbnf::runtime::tape::DtaAssociativity =
+                                        if __assoc_bit == 0 {
+                                            ::bbnf::runtime::tape::DtaAssociativity::Left
+                                        } else {
+                                            ::bbnf::runtime::tape::DtaAssociativity::Right
+                                        };
+                                    let __precedence: u8 = __lut_byte & 0x0Fu8;
+                                    let __two_byte: u8 = (__lut_byte >> 7) & 0x01u8;
+                                    let (__op_width, __op_rule, __op_discriminant) = if __two_byte
+                                        == 0
+                                    {
+                                        let mut __found_rule: ::bbnf::runtime::tape::DtaRuleId =
+                                            ::bbnf::runtime::tape::DtaRuleId(0u32);
+                                        let mut __found_disc: u8 = 0u8;
+                                        for __e in PRECEDENCE_ENTRIES.iter() {
+                                            if __e.byte == __op_byte && __e.second_byte.is_none() {
+                                                __found_rule = __e.op_rule;
+                                                __found_disc = __e.op_discriminant;
+                                                break;
+                                            }
+                                        }
+                                        (1u32, __found_rule, __found_disc)
+                                    } else {
+                                        let __second: ::core::option::Option<u8> =
+                                            input.get(*pos as usize + 1).copied();
+                                        let mut __found_rule: ::bbnf::runtime::tape::DtaRuleId =
+                                            ::bbnf::runtime::tape::DtaRuleId(0u32);
+                                        let mut __found_disc: u8 = 0u8;
+                                        let mut __matched_two_byte: bool = false;
+                                        for __e in PRECEDENCE_ENTRIES.iter() {
+                                            if __e.byte == __op_byte && __e.second_byte == __second
+                                            {
+                                                __found_rule = __e.op_rule;
+                                                __found_disc = __e.op_discriminant;
+                                                __matched_two_byte = __e.second_byte.is_some();
+                                                break;
+                                            }
+                                        }
+                                        let __width = if __matched_two_byte { 2u32 } else { 1u32 };
+                                        (__width, __found_rule, __found_disc)
+                                    };
+                                    let __op_lo = *pos;
+                                    *pos = (*pos).saturating_add(__op_width);
+                                    let __op_arena_off = columns.pay_agg.len() as u32;
+                                    columns.pay_agg.push(__op_discriminant);
+                                    let _ = ::bbnf::runtime::tape::emit_leaf_with_payload(
+                                        columns,
+                                        frame_depth,
+                                        stack,
+                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        __op_lo,
+                                        *pos,
+                                        ::bbnf::runtime::tape::TapeOffset(__op_arena_off),
+                                    );
+                                    let __lhs_span_lo = columns
+                                        .span_lo
+                                        .get(__this_operand_root as usize)
+                                        .copied()
+                                        .unwrap_or(*pos);
+                                    stack.op_stack.push(::bbnf::runtime::tape::OpStackEntry {
+                                        op_rule: __op_rule,
+                                        op_discriminant: __op_discriminant,
+                                        precedence: __precedence,
+                                        associativity: __assoc,
+                                        lhs_idx: __this_operand_root,
+                                        lhs_span_lo: __lhs_span_lo,
+                                    });
+                                    let __pos_val = *pos;
+                                    if let ::core::option::Option::Some(__top) = stack.top_mut() {
+                                        __top.cursor = 0;
+                                        __top.last_pos = __pos_val;
+                                    }
+                                    ::core::result::Result::Ok(
+                                        ::bbnf::runtime::tape::StepResult::Next(head),
+                                    )
+                                } else {
+                                    let __sy_parent = __sy_parent_rec as usize;
+                                    columns.child_off[__sy_parent] =
+                                        ::bbnf::runtime::tape::TapeOffset(__this_operand_root);
+                                    columns.extra[__sy_parent] |=
+                                        ::bbnf::runtime::tape::TapeRec::HAS_CHILDREN_BIT;
+                                    columns.span_hi[__sy_parent] = *pos;
+                                    let __variant_idx_opt =
+                                        stack.top_mut().map(|__top| __top.variant_idx);
+                                    if let ::core::option::Option::Some(__vi) = __variant_idx_opt {
+                                        if __vi != u8::MAX {
+                                            columns.flags[__sy_parent] = __vi;
+                                        }
+                                    }
+                                    ::bbnf::runtime::tape::pop_and_release(stack);
+                                    {
+                                        let __fast: ::core::option::Option<
+                                            ::bbnf::runtime::tape::StepResult,
+                                        > = 'fast: {
+                                            let __top = match stack.top_mut() {
+                                                ::core::option::Option::Some(__t) => __t,
+                                                ::core::option::Option::None => {
+                                                    break 'fast ::core::option::Option::None;
+                                                }
+                                            };
+                                            if let ::bbnf::runtime::tape::DtaFrameKind::Seq =
+                                                __top.kind
+                                            {
+                                                let __next_cursor = __top.cursor + 1;
+                                                if (__next_cursor as usize) < __top.children.len() {
+                                                    __top.cursor = __next_cursor;
+                                                    break 'fast ::core::option::Option::Some(
+                                                        ::bbnf::runtime::tape::StepResult::Next(
+                                                            __top.children[__next_cursor as usize],
+                                                        ),
+                                                    );
+                                                }
+                                            }
+                                            ::core::option::Option::None
+                                        };
+                                        if let ::core::option::Option::Some(__next) = __fast {
+                                            ::core::result::Result::Ok(__next)
+                                        } else {
+                                            ::bbnf::runtime::tape::advance_or_pop_with(
+                                                ::core::option::Option::Some(table),
+                                                ::core::option::Option::Some(input),
+                                                columns,
+                                                frame_depth,
+                                                psi,
+                                                stack,
+                                                pos,
+                                                slot,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                         83 => {
                             let _ = "ref_target";

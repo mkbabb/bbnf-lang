@@ -1645,50 +1645,343 @@ fn emit_minus_arm(
     }
 }
 
-/// `ShuntingYard { head, .. }` — reserve the outer compound, push the
-/// SY frame with `repeat_inner = state` (the SY state-id used by
-/// `advance_or_pop_with`'s reducer), transition to `head`. The
-/// reducer loop stays in `advance_or_pop_with` per the W4.d
-/// architectural decision: the operator-precedence reducer's body
-/// size + dynamic precedence-table consumption do not benefit from
-/// per-state inlining, and the SY chain visits a head-state-bounded
-/// number of bytes per parse (≤ chain length × operands).
+/// `ShuntingYard { head, .. }` — both SY-entry and SY-reducer inlined
+/// into a single walker arm, driven by the `PRECEDENCE_LUT[256]`
+/// constant emitted at AW-III.W6.5.
+///
+/// # AW-IV.W3.4 — Pratt LUT consumer + reducer inline migration
+///
+/// Pre-W3.4 `emit_shunting_yard_arm` lowered only the SY-entry
+/// semantics (push the SY frame, transition to `head`); the
+/// operator-precedence reducer lived in
+/// [`bbnf_tape::driver::advance_or_pop_with`]'s `ShuntingYard` arm,
+/// whose reducer body consulted [`bbnf_tape::driver::lookup_precedence`]
+/// — a linear scan over `PRECEDENCE_ENTRIES` evaluated per operand
+/// boundary. Samply on sheets `parse_stress` attributed the bulk of SY
+/// self-time to the scan + the cross-crate call into
+/// `advance_or_pop_with`.
+///
+/// W3.4 migrates the reducer body into the walker arm itself. The
+/// cost of that migration is one synthetic Seq-kind marker frame with
+/// `children = &[head, self_state_id]`: after `head` completes,
+/// `advance_or_pop_with`'s **Seq** arm (not SY) advances the marker
+/// frame's cursor from `0` → `1` and dispatches `children[1] =
+/// self_state_id`, re-entering this walker arm with the marker on top.
+/// On re-entry the arm runs the reducer inline — peek next byte,
+/// load `PRECEDENCE_LUT[byte]`, unpack `(prec, assoc, arity,
+/// two_byte)` from the packed u8, consult the small
+/// `PRECEDENCE_ENTRIES` slice only to recover `(op_rule,
+/// op_discriminant)` + the second byte for two-byte operators. The
+/// reducer decides: push op + `Next(head)` (with `cursor = 0` reset
+/// so the marker frame re-dispatches `head` again), or reduce the
+/// remaining `op_stack` entries + close the outer compound.
+///
+/// With the reducer living here rather than in
+/// `advance_or_pop_with`, the **SY branch of `advance_or_pop_with`
+/// never fires on the hot path**: the walker's SY state only ever
+/// pushes the Seq-kind marker frame, so the frame kind the
+/// `advance_or_pop_with` outer loop sees for our SY context is
+/// `Seq`, not `ShuntingYard`. `lookup_precedence` loses its only
+/// hot-path caller and is annotated `#[cold] #[inline(never)]` so
+/// workspace LTO drops it from every per-grammar bench binary.
+///
+/// # Bit layout (mirror of `emitter/precedence.rs::pack_lut_byte`)
+///
+/// ```text
+/// bits 0..=3  precedence   (0..=15; 0 = not an operator)
+/// bit  4      associativity (0 = Left, 1 = Right)
+/// bits 5..=6  arity        (0 = Binary, 1 = Prefix, 2 = Postfix)
+/// bit  7      two_byte flag (1 = consult PRECEDENCE_ENTRIES for second byte)
+/// ```
+///
+/// The one-byte fast path is a single LUT indexed load + three
+/// constant shifts; the two-byte fallback walks the sparse slice
+/// (typically ≤ 8 entries per grammar — cheap linear scan) only when
+/// the LUT byte's bit 7 is set.
 fn emit_shunting_yard_arm(
     idx: usize,
     head: StateId,
 ) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
     let head_lit = Literal::u16_unsuffixed(head.0);
+    let self_id_lit = Literal::u16_unsuffixed(idx as u16);
+    let children_ident = format_ident!("__DTA_SY_WALKER_CHILDREN_{}", idx);
+    let advance = emit_advance_or_pop_call();
     quote! {
         let head: ::bbnf::runtime::tape::DtaStateId =
             ::bbnf::runtime::tape::DtaStateId(#head_lit);
-        // AW-III.W5.c — fused compound write.
-        let parent_rec = columns.push_compound_fused(
-            ::bbnf::runtime::tape::TapeKind::Rule, *pos,
-        );
-        frame_depth.push(stack.depth());
-        let child_mark = columns.len() as u32;
-        let variant_idx = stack.pending_variant_idx;
-        stack.pending_variant_idx = u8::MAX;
-        stack.push(::bbnf::runtime::tape::Frame {
-            kind: ::bbnf::runtime::tape::DtaFrameKind::ShuntingYard,
-            counter_idx: u8::MAX,
-            cursor: 0,
-            children: &[],
-            repeat_inner: ::bbnf::runtime::tape::DtaStateId(#idx_lit as u16),
-            parent_rec,
-            child_mark,
-            tape_kind: ::bbnf::runtime::tape::TapeKind::Rule,
-            last_pos: *pos,
-            lo: 0,
-            hi: 0,
-            counter_optional_flag: 0,
-            variant_idx,
-            promote: ::bbnf::runtime::tape::SeqPromote::Default,
-        });
-        ::core::result::Result::Ok(
-            ::bbnf::runtime::tape::StepResult::Next(head),
-        )
+        // AW-IV.W3.4 — walker-local marker children slice: [head,
+        // self_state_id]. After `head` completes, the Seq arm in
+        // `advance_or_pop_with` advances our marker frame's cursor
+        // from 0 → 1 and dispatches `children[1] = self_state_id`,
+        // routing control back into this arm for the reducer.
+        static #children_ident: [::bbnf::runtime::tape::DtaStateId; 2] = [
+            ::bbnf::runtime::tape::DtaStateId(#head_lit),
+            ::bbnf::runtime::tape::DtaStateId(#self_id_lit),
+        ];
+        // Entry-vs-reducer discriminator. On entry the stack's top
+        // frame is the enclosing caller's (Seq/Repeat/etc.); on
+        // reducer re-entry the top frame is our own Seq-kind marker
+        // whose `repeat_inner.0 == self_state_id`. Standard Seq
+        // frames set `repeat_inner = DtaStateId::NONE` so this check
+        // is unambiguous across the grammar.
+        let __sy_is_reducer = match stack.top_mut() {
+            ::core::option::Option::Some(__top) => {
+                let __kind_is_seq = if let ::bbnf::runtime::tape::DtaFrameKind::Seq
+                    = __top.kind
+                {
+                    true
+                } else {
+                    false
+                };
+                __kind_is_seq && __top.repeat_inner.0 == #self_id_lit
+            }
+            ::core::option::Option::None => false,
+        };
+        if !__sy_is_reducer {
+            // Entry mode: reserve the outer SY compound, push the
+            // Seq-kind marker frame, dispatch `head` to parse the
+            // first operand. The marker frame's `children = [head,
+            // self_state_id]` + `repeat_inner = self_state_id`
+            // distinguish it from any other Seq frame in the
+            // grammar; `advance_or_pop_with`'s Seq arm naturally
+            // routes back here after `head` completes.
+            //
+            // AW-III.W5.c — fused compound write.
+            let parent_rec = columns.push_compound_fused(
+                ::bbnf::runtime::tape::TapeKind::Rule, *pos,
+            );
+            frame_depth.push(stack.depth());
+            let child_mark = columns.len() as u32;
+            let variant_idx = stack.pending_variant_idx;
+            stack.pending_variant_idx = u8::MAX;
+            stack.push(::bbnf::runtime::tape::Frame {
+                kind: ::bbnf::runtime::tape::DtaFrameKind::Seq,
+                counter_idx: u8::MAX,
+                cursor: 0,
+                children: &#children_ident,
+                repeat_inner: ::bbnf::runtime::tape::DtaStateId(#self_id_lit),
+                parent_rec,
+                child_mark,
+                tape_kind: ::bbnf::runtime::tape::TapeKind::Rule,
+                last_pos: *pos,
+                lo: 0,
+                hi: 0,
+                counter_optional_flag: 0,
+                variant_idx,
+                promote: ::bbnf::runtime::tape::SeqPromote::Default,
+            });
+            ::core::result::Result::Ok(
+                ::bbnf::runtime::tape::StepResult::Next(head),
+            )
+        } else {
+            // Reducer mode: an operand just completed. Consult the
+            // packed precedence LUT for the next byte; decide reduce
+            // or push-op.
+            //
+            // Clone out the frame fields we need so the mutable
+            // borrow on `stack` releases before we touch op_stack.
+            let (__sy_parent_rec, __sy_child_mark) = {
+                let __top = stack
+                    .top_mut()
+                    .expect("AW-IV.W3.4: reducer top frame must exist");
+                (__top.parent_rec, __top.child_mark)
+            };
+            // The operand root defaults to the outer compound's
+            // first child (child_mark). The reduce loop rewrites
+            // this to each reducer compound's tape index as it
+            // collapses top-of-op-stack entries.
+            let mut __this_operand_root: u32 = __sy_child_mark;
+
+            // AW-IV.W3.4 — inline PRECEDENCE_LUT byte-load +
+            // bit-unpack. Replaces the pre-W3.4 linear scan over
+            // `PRECEDENCE_ENTRIES` that `advance_or_pop_with`'s SY
+            // arm performed via `lookup_precedence`. One indexed
+            // byte load + three constant shifts for the one-byte
+            // fast path; the sparse slice walk fires only when the
+            // packed byte's bit 7 is set.
+            let __op_byte: u8 = input
+                .get(*pos as usize)
+                .copied()
+                .unwrap_or(0);
+            let __lut_byte: u8 = PRECEDENCE_LUT[__op_byte as usize];
+            let _ = #idx_lit; // keep idx_lit in scope
+            let __new_prec: ::core::option::Option<u8> = if __lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(__lut_byte & 0x0Fu8)
+            };
+
+            // Reduce the op stack: for each top entry whose
+            // precedence > new_prec (or equal + left-assoc), emit a
+            // reducer compound pointing at the entry's `lhs_idx`.
+            // When no new op fires (`__new_prec == None`), reduce
+            // every remaining op.
+            loop {
+                let Some(top_op) = stack.op_stack.last().copied() else {
+                    break;
+                };
+                let __should_reduce = match __new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p) => {
+                        let __is_left = if let ::bbnf::runtime::tape::DtaAssociativity::Left
+                            = top_op.associativity
+                        {
+                            true
+                        } else {
+                            false
+                        };
+                        top_op.precedence > p
+                            || (top_op.precedence == p && __is_left)
+                    }
+                };
+                if !__should_reduce {
+                    break;
+                }
+                stack.op_stack.pop();
+                let __compound_idx = ::bbnf::runtime::tape::emit_reducer_compound(
+                    columns,
+                    frame_depth,
+                    stack.depth(),
+                    top_op.lhs_idx,
+                    top_op.op_discriminant,
+                    top_op.lhs_span_lo,
+                    *pos,
+                );
+                __this_operand_root = __compound_idx;
+                let _ = top_op.op_rule;
+            }
+
+            if __lut_byte != 0 {
+                // Push-op path: peek operator discriminants from
+                // PRECEDENCE_ENTRIES (small, typically ≤ 8); consume
+                // the op's bytes; emit an op-discriminant Span leaf
+                // into the arena; push the OpStackEntry; reset the
+                // marker frame's `cursor` to 0 so the next head
+                // completion re-routes here.
+                let __assoc_bit: u8 = (__lut_byte >> 4) & 0x01u8;
+                let __assoc: ::bbnf::runtime::tape::DtaAssociativity =
+                    if __assoc_bit == 0 {
+                        ::bbnf::runtime::tape::DtaAssociativity::Left
+                    } else {
+                        ::bbnf::runtime::tape::DtaAssociativity::Right
+                    };
+                let __precedence: u8 = __lut_byte & 0x0Fu8;
+                let __two_byte: u8 = (__lut_byte >> 7) & 0x01u8;
+                // Resolve op_rule + op_discriminant + op_width from
+                // the sparse slice. The slice is small — the inline
+                // linear walk folds to a sequence of byte compares
+                // at LLVM codegen. `lookup_precedence` is NOT called;
+                // the slice walk lives entirely inside this arm.
+                let (__op_width, __op_rule, __op_discriminant) = if __two_byte == 0 {
+                    let mut __found_rule: ::bbnf::runtime::tape::DtaRuleId =
+                        ::bbnf::runtime::tape::DtaRuleId(0u32);
+                    let mut __found_disc: u8 = 0u8;
+                    for __e in PRECEDENCE_ENTRIES.iter() {
+                        if __e.byte == __op_byte && __e.second_byte.is_none() {
+                            __found_rule = __e.op_rule;
+                            __found_disc = __e.op_discriminant;
+                            break;
+                        }
+                    }
+                    (1u32, __found_rule, __found_disc)
+                } else {
+                    let __second: ::core::option::Option<u8> = input
+                        .get(*pos as usize + 1)
+                        .copied();
+                    let mut __found_rule: ::bbnf::runtime::tape::DtaRuleId =
+                        ::bbnf::runtime::tape::DtaRuleId(0u32);
+                    let mut __found_disc: u8 = 0u8;
+                    let mut __matched_two_byte: bool = false;
+                    for __e in PRECEDENCE_ENTRIES.iter() {
+                        if __e.byte == __op_byte && __e.second_byte == __second {
+                            __found_rule = __e.op_rule;
+                            __found_disc = __e.op_discriminant;
+                            __matched_two_byte = __e.second_byte.is_some();
+                            break;
+                        }
+                    }
+                    let __width = if __matched_two_byte { 2u32 } else { 1u32 };
+                    (__width, __found_rule, __found_disc)
+                };
+                let __op_lo = *pos;
+                *pos = (*pos).saturating_add(__op_width);
+                // AW-III.W1 — emit a payload-bearing Span leaf
+                // carrying the op's u8 discriminant (mirror of the
+                // pre-W3.4 path in `advance_or_pop_with`'s SY arm so
+                // typed walkers surface every operator in the chain).
+                let __op_arena_off = columns.pay_agg.len() as u32;
+                columns.pay_agg.push(__op_discriminant);
+                let _ = ::bbnf::runtime::tape::emit_leaf_with_payload(
+                    columns,
+                    frame_depth,
+                    stack,
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    __op_lo,
+                    *pos,
+                    ::bbnf::runtime::tape::TapeOffset(__op_arena_off),
+                );
+                let __lhs_span_lo = columns
+                    .span_lo
+                    .get(__this_operand_root as usize)
+                    .copied()
+                    .unwrap_or(*pos);
+                stack.op_stack.push(::bbnf::runtime::tape::OpStackEntry {
+                    op_rule: __op_rule,
+                    op_discriminant: __op_discriminant,
+                    precedence: __precedence,
+                    associativity: __assoc,
+                    lhs_idx: __this_operand_root,
+                    lhs_span_lo: __lhs_span_lo,
+                });
+                // Reset marker frame cursor so the next head
+                // completion re-routes through advance_or_pop_with's
+                // Seq arm back to this SY state. Also refresh
+                // last_pos so the Seq arm's stagnation check
+                // wouldn't trip (defensive — Seq doesn't check
+                // stagnation, but keeping the field honest matches
+                // the pre-W3.4 SY arm's invariant).
+                let __pos_val = *pos;
+                if let ::core::option::Option::Some(__top) = stack.top_mut() {
+                    __top.cursor = 0;
+                    __top.last_pos = __pos_val;
+                }
+                ::core::result::Result::Ok(
+                    ::bbnf::runtime::tape::StepResult::Next(head),
+                )
+            } else {
+                // Close path: no more operators. Patch the outer SY
+                // compound's `child_off` to point at the final
+                // reduced operand (replacing the default `child_mark`
+                // that a plain close_compound would stamp). Mirror of
+                // the pre-W3.4 close in `advance_or_pop_with`'s SY
+                // arm.
+                let __sy_parent = __sy_parent_rec as usize;
+                columns.child_off[__sy_parent] =
+                    ::bbnf::runtime::tape::TapeOffset(__this_operand_root);
+                columns.extra[__sy_parent] |=
+                    ::bbnf::runtime::tape::TapeRec::HAS_CHILDREN_BIT;
+                columns.span_hi[__sy_parent] = *pos;
+                // Stamp variant_idx if the frame captured one at
+                // push time (mirror of close_compound's variant
+                // stamping).
+                let __variant_idx_opt = stack
+                    .top_mut()
+                    .map(|__top| __top.variant_idx);
+                if let ::core::option::Option::Some(__vi) = __variant_idx_opt {
+                    if __vi != u8::MAX {
+                        columns.flags[__sy_parent] = __vi;
+                    }
+                }
+                // Pop our marker frame; the enclosing frame's
+                // advance logic takes over.
+                ::bbnf::runtime::tape::pop_and_release(stack);
+                // Fall through to advance_or_pop — the enclosing
+                // Seq / Repeat / Alt frame advances (or closes) as
+                // normal.
+                #advance
+            }
+        }
     }
 }
 

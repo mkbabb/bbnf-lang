@@ -99,28 +99,16 @@ fn json_structural_alphabet_carries_mined_delimiters() {
 fn json_structural_quote_classes_flows_through_projection() {
     let prof = &JsonFixture::GRAMMAR_PROFILE;
     let qc = quote_classes(prof);
-    // CROSS-CUT: `compute_structural_alphabet` currently runs BEFORE
-    // `compute_regex_info` in the pipeline (see
-    // `crates/core/src/pipeline/compile.rs:664-668`); the mining pass
-    // consults `ir.regex_info` for QuotedString classification, but
-    // the table is empty when it runs, so `structural_quote_classes`
-    // lands empty for every grammar that compiles via that path. The
-    // IR-level fixture tests at `crates/ir/tests/structural_alphabet_extended.rs`
-    // pass because they run `compute_structural_alphabet` against an
-    // IR that has `regex_info` pre-populated.
-    //
-    // AW-IV.W1.δ's scope is the PROJECTION from IR to const literal;
-    // the upstream mining ordering is a separate concern (file bounds
-    // exclude pipeline/compile.rs). The wire-contract assertion here
-    // is that the slot is REACHABLE and matches the mining's current
-    // output — if/when the pipeline is reordered, this test flips to
-    // `qc.contains(&b'"')` as a no-op.
-    assert_eq!(
-        qc,
-        Vec::<u8>::new(),
-        "JSON structural_quote_classes wire-contract: slot is reachable, \
-         mining pipeline ordering suppresses content (see test doc-comment); \
-         got {:?}",
+    // AW-IV.W1.δ wire-contract: `compute_regex_info` precedes
+    // `compute_structural_alphabet` in the pipeline (the W1.δ
+    // pass-order fix), so the QuotedString classification reaches
+    // the structural-alphabet miner and `b'"'` lands in the
+    // quote-class set. The const literal reflects the mined value.
+    assert!(
+        qc.contains(&b'"'),
+        "JSON structural_quote_classes wire-contract: expected the \
+         double-quote class (b'\"') to flow through to the const \
+         literal; got {:?}",
         qc
     );
 }
@@ -208,16 +196,21 @@ fn bbnf_structural_digraphs_contain_arrow() {
 fn bbnf_structural_quote_classes_flows_through_projection() {
     let prof = &BbnfFixture::GRAMMAR_PROFILE;
     let qc = quote_classes(prof);
-    // CROSS-CUT — see `json_structural_quote_classes_flows_through_projection`
-    // for the full note. The pipeline's
-    // `compute_structural_alphabet → compute_regex_info` ordering
-    // produces empty `structural_quote_classes` on every grammar.
-    // The wire contract flows; the content is gated by an upstream
-    // pass ordering fix outside W1.δ's file bounds.
-    assert_eq!(
-        qc,
-        Vec::<u8>::new(),
-        "BBNF structural_quote_classes wire-contract: slot reachable, content gated upstream"
+    // BBNF's three string forms (`"…"`, `'…'`, `` `…` ``) lower as
+    // separate `Literal "<quote>" + Regex /…/ + Literal "<quote>"`
+    // sequences; the regex content is not classified as `QuotedString`
+    // by `compute_regex_info` (the classifier looks for one-shot
+    // `<q>…<q>` regex shapes, not split literal-regex-literal Seqs).
+    // The quote-class slot is therefore empty for BBNF — the wire-
+    // contract is REACHABILITY of the slot, not coverage of every
+    // physically-quoted byte the grammar carries. Asserting `is_empty`
+    // here is the slot-reachable proof.
+    assert!(
+        qc.is_empty(),
+        "BBNF structural_quote_classes wire-contract: BBNF's split \
+         literal/regex/literal quote shape doesn't reach the \
+         QuotedString classifier; expected empty, got {:?}",
+        qc
     );
 }
 
@@ -297,11 +290,14 @@ fn css_l4_structural_alphabet_contains_block_delimiters() {
 fn css_l4_structural_quote_classes_flows_through_projection() {
     let prof = &CssL4Fixture::GRAMMAR_PROFILE;
     let qc = quote_classes(prof);
-    // CROSS-CUT — see `json_structural_quote_classes_flows_through_projection`.
-    assert_eq!(
-        qc,
-        Vec::<u8>::new(),
-        "CSS L4 structural_quote_classes wire-contract: slot reachable, content gated upstream"
+    // CSS L4 string content uses double-quote delimiters; the
+    // QuotedString classification reaches the alphabet miner once
+    // the W1.δ pass-order fix is in place.
+    assert!(
+        qc.contains(&b'"'),
+        "CSS L4 structural_quote_classes wire-contract: expected `\"` \
+         in the quote-class set; got {:?}",
+        qc
     );
 }
 
@@ -364,11 +360,13 @@ fn sheets_structural_alphabet_contains_formula_delimiters() {
 fn sheets_structural_quote_classes_flows_through_projection() {
     let prof = &SheetsFixture::GRAMMAR_PROFILE;
     let qc = quote_classes(prof);
-    // CROSS-CUT — see `json_structural_quote_classes_flows_through_projection`.
-    assert_eq!(
-        qc,
-        Vec::<u8>::new(),
-        "Sheets structural_quote_classes wire-contract: slot reachable, content gated upstream"
+    // Sheets formula strings use double-quote delimiters; the
+    // classification flows through after the W1.δ pass-order fix.
+    assert!(
+        qc.contains(&b'"'),
+        "Sheets structural_quote_classes wire-contract: expected `\"` \
+         in the quote-class set; got {:?}",
+        qc
     );
 }
 

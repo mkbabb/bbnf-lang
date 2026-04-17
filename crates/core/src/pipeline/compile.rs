@@ -661,11 +661,19 @@ fn compile_ast_common<'a>(
         // first-byte data. The alphabet is read at codegen time by
         // the scanner-kernel emitters in
         // `crates/core/src/generate/regex/emit/simd.rs`.
-        timer.span("compute_structural_alphabet", || {
-            bbnf_ir::passes::sets::compute_structural_alphabet(&mut ir);
-        });
+        // AW-IV.W1.δ — `compute_regex_info` precedes
+        // `compute_structural_alphabet` so the latter's quote-class
+        // mining can read the `RegexClass::QuotedString` classification
+        // off `ir.regex_info`. Pre-AW-IV the order was inverted, which
+        // left `structural_quote_classes` empty for every non-bootstrap
+        // grammar — the wire-contract pipeline carried `&[]` through
+        // for that slot. Reordering activates it without touching
+        // either pass body.
         timer.span("compute_regex_info", || {
             bbnf_ir::passes::compute_regex_info(&mut ir);
+        });
+        timer.span("compute_structural_alphabet", || {
+            bbnf_ir::passes::sets::compute_structural_alphabet(&mut ir);
         });
         timer.span("mine_recognizers", || {
             bbnf_ir::passes::mine_recognizers(&mut ir);

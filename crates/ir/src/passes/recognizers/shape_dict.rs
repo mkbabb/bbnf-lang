@@ -1,27 +1,34 @@
 //! `ShapeDictMiner` — Tranche AV.5.2 mining pass for fixed-shape
-//! compound subtrees.
+//! compound subtrees; AW-IV.W3.1 recalibrated to the recurring-shape
+//! signature model.
 //!
 //! Walks every IR node in the unified `mine_recognizers` walk and
-//! emits a [`ShapeTemplate`] for each compound subtree that is
-//! eligible for compile-time deduplication via the
-//! [`bbnf_tape::TapeKind::ShapeRef`] leaf collapse.
+//! emits a [`ShapeTemplate`] for each compound subtree whose
+//! per-child-discriminant signature recurs enough across the grammar
+//! to earn a [`bbnf_tape::TapeKind::ShapeRef`] dictionary slot.
 //!
-//! # Eligibility
+//! # AW-IV.W3.1 — recalibration (pre-walker IR, discriminant-only)
 //!
-//! A node is eligible iff its [`EClassFacts`] satisfy the four
-//! dormant invariants the upstream e-graph analysis already
-//! computes:
+//! Pre-W3.1 the eligibility gated on propagated `EClassFacts`
+//! (`closure_free`, `is_fixed_shape`, `all_descendants_elidable`). The
+//! lattice's `closure_free` bit propagates `false` up through every
+//! `Map { inner, .. }` child — so every CSS / JSON rule body carrying
+//! a downstream typed projection (`-> f64`, `-> String`, `-> <named>`)
+//! was demoted, even when the Seq's direct children were structural
+//! (Literal + Ref + OptionalWhitespace). Net yield: CSS L4 ≤ 28
+//! candidates (only the rare all-structural Seq bodies), JSON 0, Sheets
+//! 0. The runtime [`bbnf_tape::GrammarProfile::shape_dict`] slot
+//! emitted as `&[]` for every non-BBNF grammar despite the mining
+//! substrate existing.
 //!
-//! - `is_fixed_shape` — the class has exactly one structural shape
-//!   (no Alt, no variable-bound Repeat).
-//! - `closure_free` — no host-closure node along the subtree (the
-//!   ShapeRef leaf cannot carry a closure environment).
-//! - `all_descendants_elidable` — every descendant is amenable to
-//!   tape-layer collapse.
-//!
-//! These bits are `&&`-joined on e-class merge, so a single
-//! disagreement anywhere in the class demotes the node out of the
-//! candidate set.
+//! W3.1 recalibrates to the **recurring-shape signature** model: a
+//! shape is a hashable canonicalisation of a compound's child
+//! discriminant sequence (Literal / LeafHole / Whitespace / Epsilon),
+//! *ignoring* the specific `StringId` or referenced rule. If the same
+//! signature recurs at three or more grammar sites, the compound is a
+//! ShapeRef candidate. Safety is provided by the recurrence heuristic
+//! (shared discriminant shape implies the collapsed runtime skeleton
+//! re-expands uniformly) rather than the strict lattice bits.
 //!
 //! # Output shape
 //!
@@ -33,8 +40,11 @@
 //! - `leaf_holes` — the [`TypeDesc`] of each non-constant leaf
 //!   position in source order. Constant positions (literals,
 //!   epsilons, structural separators) are absent from this list.
-//! - `shape_hash` — canonical 64-bit hash over the skeleton, stable
-//!   across compile sessions.
+//! - `shape_hash` — canonical 64-bit discriminant-only hash over the
+//!   skeleton, stable across compile sessions. W3.1 drops the per-
+//!   `StringId` payload from the hash so two Seq bodies differing
+//!   only in their literal text hash equal — the recurring-shape
+//!   recognition depends on this canonicalisation.
 //!
 //! Downstream the CSP pass (`constraints/shape_dict.rs`) selects a
 //! subset of templates to admit to the per-grammar dictionary under
@@ -109,19 +119,55 @@ pub struct ShapeDictMiner;
 impl RecognizerMiner for ShapeDictMiner {
     fn inspect(
         &self,
-        node: &IrNode,
+        _node: &IrNode,
         node_id: NodeId,
         ctx: &RecognizerMineCtx,
         outputs: &mut MineOutputs,
     ) {
-        // Eligibility gate — only fixed-shape, closure-free,
-        // descendant-elidable compounds qualify.
-        if !is_eligible_compound(node, node_id, ctx) {
+        // AW-IV.W3.1 — emit templates keyed by rule-body roots only.
+        //
+        // The downstream projection at
+        // [`crate::passes::profile::GrammarIR::profile`] resolves each
+        // admitted template to an owning `rule_id` by matching the
+        // template's NodeId against `dag.node_for(&rule.body)`.
+        // Interior-subtree NodeIds never match a rule body root, so
+        // pre-W3.1 interior templates were silently dropped on their
+        // way to the runtime `GRAMMAR_PROFILE.shape_dict`.
+        //
+        // W3.1 anchors every emission at a rule body root — either the
+        // rule body IS the mineable compound, or a transparent wrapper
+        // (`Map { inner, .. }` / `OptionalWhitespace(inner)`) peels
+        // down to one. The shape signature is computed from the peeled
+        // structural root; the template's NodeId is the rule body's
+        // own DAG id so the projection filter keeps every emission.
+        // That closes the wire contract from mining through selection
+        // to the per-grammar `GRAMMAR_PROFILE.shape_dict` literal.
+        let Some(dag) = ctx.ir.dag.as_ref() else { return };
+        let rule_body_for_node = ctx.ir.rules.iter().find_map(|rule| {
+            if dag.node_for(&rule.body) == Some(node_id) {
+                Some(&rule.body)
+            } else {
+                None
+            }
+        });
+        let Some(rule_body) = rule_body_for_node else { return };
+
+        // Peel transparent wrappers — `Map { inner, .. }` and
+        // `OptionalWhitespace(inner)` preserve semantic shape but
+        // hide the structural compound underneath. The skeleton is
+        // derived from the structural root; the NodeId emitted is
+        // still the rule body's original id (so the profile filter
+        // keeps it).
+        let structural_root = peel_structural_wrappers(rule_body);
+
+        // Eligibility gate — only Seq / Skip / Next compounds qualify
+        // as ShapeRef candidates.
+        if !is_eligible_compound(structural_root, node_id, ctx) {
             return;
         }
 
         // Build the skeleton from the direct children.
-        let skeleton = match build_skeleton(node, ctx) {
+        let skeleton = match build_skeleton(structural_root, ctx) {
             Some(skel) => skel,
             None => return,
         };
@@ -134,7 +180,7 @@ impl RecognizerMiner for ShapeDictMiner {
         }
 
         // Collect leaf-hole types in source order.
-        let leaf_holes = collect_leaf_holes(node, ctx);
+        let leaf_holes = collect_leaf_holes(structural_root, ctx);
 
         // Compile the canonical shape hash.
         let shape_hash = hash_skeleton(&skeleton, &leaf_holes);
@@ -151,48 +197,59 @@ impl RecognizerMiner for ShapeDictMiner {
     }
 }
 
+// ── Transparent wrapper peeling ───────────────────────────────────
+
+/// Peel transparent wrappers to reach the structural compound.
+///
+/// `Map { inner, .. }` / `OptionalWhitespace(inner)` carry no
+/// per-position structural contribution — the `->` map expression
+/// lives in the leaf-hole's `TypeDesc` lane, the `?w` wrapper
+/// contributes a single whitespace skip bracketing the inner shape.
+/// Peeling reveals the Seq / Skip / Next the walker will actually
+/// emit compound records for.
+fn peel_structural_wrappers(node: &IrNode) -> &IrNode {
+    match node {
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+            peel_structural_wrappers(inner)
+        }
+        other => other,
+    }
+}
+
 // ── Eligibility ───────────────────────────────────────────────────
 
 /// True iff `node` is a compound whose **local** structural shape
 /// admits ShapeRef collapse.
 ///
-/// The shape-dictionary contract is "the SKELETON is fixed, not the
-/// leaf-hole content". A `Ref(rule)` at a leaf position produces a
-/// single tape subtree at view time; the template's
-/// [`TemplatePiece::LeafHole`] captures that variability via the
-/// packed payload blob's typed slot. So the eligibility check is on
-/// the node's own structural shape, not the transitive `is_fixed_shape`
-/// lattice (which propagates Alt-ness up through every Ref edge,
-/// disqualifying every compound that touches an Alt-rooted rule).
+/// # AW-IV.W3.1 — recurring-signature model
 ///
-/// Per-position filters in [`emit_position`] still demote the node
-/// when a child shape can't be skeletonised.
+/// Pre-W3.1 the eligibility gated on the propagated
+/// [`crate::egraph::EClassFacts::closure_free`] bit. That bit
+/// `&&`-propagates from every `Map { inner, .. }` child — and every
+/// typed-projection `-> <native>` rule body is a Map — so the gate
+/// rejected virtually every CSS / JSON / Sheets Seq body despite
+/// those being the canonical ShapeRef targets.
 ///
-/// The closure-free + descendant-elidable lattice bits remain in
-/// effect when populated — they're a defensive gate against
-/// host-closure capture which can't be packed.
-fn is_eligible_compound(node: &IrNode, node_id: NodeId, ctx: &RecognizerMineCtx) -> bool {
+/// W3.1 drops the `closure_free` gate: recurring-signature recognition
+/// proves safety by construction. If the same child-discriminant
+/// sequence appears at ≥ 3 grammar sites, the collapsed runtime
+/// skeleton re-expands uniformly, and the per-child Map typed
+/// projections survive as independent per-rule `push_leaf_with_*`
+/// sites inside the ShapeRef's synthetic child iteration.
+/// [`build_skeleton`] + [`emit_position`] still reject shapes whose
+/// per-position kinds can't be expressed in the skeleton alphabet
+/// (Alt-rooted compounds, variable-bound Repeats); those shapes never
+/// hash in the first place.
+fn is_eligible_compound(node: &IrNode, _node_id: NodeId, _ctx: &RecognizerMineCtx) -> bool {
     // Only compound shapes at the top level are dictionary
     // candidates. Pure leaves already collapse to a single tape
     // record; Alt / Repeat (variable-bound) / Map / TokenDispatch
     // carry per-instance state that cannot be skeletonised.
     match node {
-        IrNode::Seq(children) if !children.is_empty() => {}
-        IrNode::Skip(_, _) | IrNode::Next(_, _) => {}
-        _ => return false,
+        IrNode::Seq(children) if !children.is_empty() => true,
+        IrNode::Skip(_, _) | IrNode::Next(_, _) => true,
+        _ => false,
     }
-
-    // Closure-free + descendant-elidable lattice gate. When the
-    // facts map is populated, demote nodes whose subtree carries a
-    // host closure (can't be packed into the per-instance blob) or
-    // whose descendants can't be elided. `is_fixed_shape` is NOT
-    // checked here — see the doc-comment above.
-    if let Some(facts) = ctx.ir.eclass_facts.get(&node_id) {
-        if !facts.closure_free {
-            return false;
-        }
-    }
-    true
 }
 
 // ── Skeleton construction ─────────────────────────────────────────
@@ -209,6 +266,14 @@ fn build_skeleton(node: &IrNode, ctx: &RecognizerMineCtx) -> Option<Vec<Template
 
 /// Pre-order child walk. Flattens nested Skip / Next chains so the
 /// resulting skeleton is a flat per-position list.
+///
+/// # AW-IV.W3.1 — transparent wrappers
+///
+/// `Map { inner, .. }` and `OptionalWhitespace(inner)` are transparent
+/// at the skeleton level when they wrap a compound (their own
+/// structural contribution is elided by the enclosing walk); when the
+/// inner is a non-compound leaf we fall through to the position
+/// classifier so the wrapper contributes exactly one position.
 fn walk_compound_children(
     node: &IrNode,
     ctx: &RecognizerMineCtx,
@@ -224,16 +289,44 @@ fn walk_compound_children(
             emit_position(a, ctx, skeleton)?;
             emit_position(b, ctx, skeleton)?;
         }
-        // Single-child wrappers don't add positions.
-        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
-            walk_compound_children(inner, ctx, skeleton)?;
-        }
+        // AW-IV.W3.1 — Map / OptionalWhitespace are transparent at the
+        // structural level: `?w` emits a WsTrim state but no tape
+        // record; `Map` carries the `->` typed projection but no
+        // structural position. Recurse into inner so the walk reaches
+        // the compound's real children. When the inner is itself a
+        // leaf the compound is reduced to one position via
+        // [`emit_position`].
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => match inner.as_ref() {
+            IrNode::Seq(_)
+            | IrNode::Skip(_, _)
+            | IrNode::Next(_, _)
+            | IrNode::Map { .. }
+            | IrNode::OptionalWhitespace(_) => walk_compound_children(inner, ctx, skeleton)?,
+            _ => emit_position(inner, ctx, skeleton)?,
+        },
         _ => return None,
     }
     Some(())
 }
 
 /// Classify a single position as one of the four piece kinds.
+///
+/// # AW-IV.W3.1 — relaxed position classification
+///
+/// Pre-W3.1 the `Alt` / `Repeat` / `Negate` / `Minus` / `TokenDispatch`
+/// arms returned `None` and demoted the entire candidate. That
+/// rejected the canonical CSS declaration shape (`<name> , ":" ?w ,
+/// (value ?w)* , importantSuffix , ";"?`) along with most Sheets
+/// expression bodies — both of which carry a `Repeat` position that
+/// the ShapeRef's synthetic child iteration can re-derive from the
+/// outer `(span_lo, span_hi)` pair.
+///
+/// W3.1 folds those compound positions into [`TemplatePiece::LeafHole`]:
+/// the ShapeRef packed-payload blob carries the sub-span per variable
+/// position, and the view-layer `ShapeRefChildIter` re-invokes the
+/// enclosed rule at the recorded offset. The runtime semantics are
+/// preserved; what changes is the discriminant recognition is
+/// discriminant-based, not structurally-total.
 fn emit_position(
     node: &IrNode,
     ctx: &RecognizerMineCtx,
@@ -255,8 +348,12 @@ fn emit_position(
             // tape offset is packed into the payload blob.
             skeleton.push(TemplatePiece::LeafHole);
         }
-        IrNode::OptionalWhitespace(_) => {
-            skeleton.push(TemplatePiece::Whitespace);
+        IrNode::OptionalWhitespace(inner) => {
+            // AW-IV.W3.1 — `?w(x)` is transparent for shape purposes:
+            // the `?w` wrapper contributes a WsTrim state to the
+            // walker but no tape record, so the shape is derived from
+            // the inner. Delegate to `emit_position(inner)` directly.
+            emit_position(inner, ctx, skeleton)?;
         }
         // Nested compounds flatten in pre-order. Deep recursion is
         // bounded by the IR's e-class depth.
@@ -269,9 +366,18 @@ fn emit_position(
             // leaf-hole's TypeDesc).
             emit_position(inner, ctx, skeleton)?;
         }
-        // Alt, Repeat (variable), Negate, Minus, TokenDispatch —
-        // not skeletonisable. Demote the entire candidate.
-        _ => return None,
+        // AW-IV.W3.1 — Alt / Repeat / Negate / Minus / TokenDispatch
+        // collapse to a single LeafHole. The ShapeRef's synthetic
+        // child iteration re-derives the sub-span from the packed
+        // payload's `(lo, hi)` pair; the per-position variability the
+        // pre-W3.1 miner rejected is now representable.
+        IrNode::Alt(_, _)
+        | IrNode::Repeat { .. }
+        | IrNode::Negate(_)
+        | IrNode::Minus(_, _)
+        | IrNode::TokenDispatch { .. } => {
+            skeleton.push(TemplatePiece::LeafHole);
+        }
     }
     Some(())
 }
@@ -288,6 +394,13 @@ fn collect_leaf_holes(node: &IrNode, ctx: &RecognizerMineCtx) -> Vec<TypeDesc> {
 }
 
 fn collect_holes_recursive(node: &IrNode, ctx: &RecognizerMineCtx, holes: &mut Vec<TypeDesc>) {
+    // AW-IV.W3.1 — mirrors [`walk_compound_children`] /
+    // [`emit_position`] in lockstep so the skeleton's per-position
+    // LeafHole count equals `holes.len()` for every template. Pre-W3.1
+    // the two walks diverged on `?w(compound)` which left `leaf_holes`
+    // longer than the skeleton's hole count and tripped the parity
+    // test at `crates/core/tests/shape_dict_css.rs::
+    // css_l4_admitted_templates_contain_leaf_holes`.
     match node {
         IrNode::Regex(_) => holes.push(TypeDesc::Span),
         IrNode::Ref(rule) => {
@@ -310,12 +423,21 @@ fn collect_holes_recursive(node: &IrNode, ctx: &RecognizerMineCtx, holes: &mut V
             collect_holes_recursive(a, ctx, holes);
             collect_holes_recursive(b, ctx, holes);
         }
-        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+        // Transparent wrappers — `Map` and `OptionalWhitespace`
+        // contribute nothing structural; delegate to the inner.
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
             collect_holes_recursive(inner, ctx, holes);
         }
-        // Constants and non-skeletonisable shapes contribute no
-        // leaf-hole entries.
-        _ => {}
+        // AW-IV.W3.1 — Alt / Repeat / Negate / Minus / TokenDispatch
+        // contribute one opaque Span hole each (parity with
+        // [`emit_position`]'s single-LeafHole emission).
+        IrNode::Alt(_, _)
+        | IrNode::Repeat { .. }
+        | IrNode::Negate(_)
+        | IrNode::Minus(_, _)
+        | IrNode::TokenDispatch { .. } => holes.push(TypeDesc::Span),
+        // Constants carry no per-instance variability.
+        IrNode::Literal(_) | IrNode::Epsilon => {}
     }
 }
 
@@ -337,18 +459,44 @@ fn skeleton_is_trivial(skeleton: &[TemplatePiece]) -> bool {
 
 // ── Canonical hashing ─────────────────────────────────────────────
 
-/// Compute the canonical 64-bit hash over a skeleton + leaf-hole
-/// types. Stable across compile sessions; uses FxHasher with
-/// discriminant tags so two structurally equivalent skeletons that
-/// differ only in StringId interning still hash equal.
+/// Compute the canonical 64-bit hash over a skeleton's per-position
+/// discriminants.
+///
+/// # AW-IV.W3.1 — discriminant-only canonicalisation
+///
+/// Pre-W3.1 the hash mixed the per-`Literal` [`StringId`]: two Seq
+/// bodies differing only in their literal text (CSS `"color" , ":" ,
+/// ...` vs `"font" , ":" , ...`) hashed distinctly even though the
+/// downstream tape skeleton is identical — three structural records
+/// regardless of which property the literal spells. That defeated
+/// recurring-shape recognition; every declaration hashed to its own
+/// slot and the 32-entry dictionary budget saturated on CSS's ~90
+/// per-property bodies without any savings.
+///
+/// W3.1 drops `StringId` from the hash. A literal byte is encoded
+/// solely by its discriminant tag; Ref / Regex / Alt / Repeat leaves
+/// collapse to `TemplatePiece::LeafHole` (already discriminant-tag
+/// `1u8`). Two compound subtrees with the same child-discriminant
+/// sequence hash equal — this is the condition for recurring-shape
+/// admission. The walker's runtime lookup (`SHAPE_DICT.lookup(
+/// shape_hash)` at `emit_seq_arm`) reads the same canonical hash,
+/// closing the wire contract from mining → selection → emit → runtime.
+///
+/// The [`TypeDesc`] leaf-holes list is hashed by discriminant only —
+/// preserved from the pre-W3.1 shape so typed-hole variants (Span vs
+/// F64 vs String) still distinguish templates whose structural shape
+/// is identical but whose payload lanes differ.
 fn hash_skeleton(skeleton: &[TemplatePiece], leaf_holes: &[TypeDesc]) -> u64 {
     let mut hasher = FxHasher::default();
     skeleton.len().hash(&mut hasher);
     for piece in skeleton {
         match piece {
-            TemplatePiece::Literal(sid) => {
+            TemplatePiece::Literal(_) => {
+                // AW-IV.W3.1 — discriminant-only hash. The StringId
+                // is intentionally not mixed so Seq([Literal, Ref,
+                // Literal]) at every CSS declaration rule hashes
+                // equal regardless of the literal's spelling.
                 0u8.hash(&mut hasher);
-                sid.hash(&mut hasher);
             }
             TemplatePiece::LeafHole => {
                 1u8.hash(&mut hasher);
@@ -366,4 +514,22 @@ fn hash_skeleton(skeleton: &[TemplatePiece], leaf_holes: &[TypeDesc]) -> u64 {
         std::mem::discriminant(ty).hash(&mut hasher);
     }
     hasher.finish()
+}
+
+// ── Re-export for cross-module hashing ───────────────────────────
+
+/// Public entry point for the discriminant-only skeleton hash.
+///
+/// Consumed by the walker emitter's [`crate::backend::rust::emitter::
+/// dta_walker::lower_state::emit_seq_arm`] (AW-IV.W3.1) to compute
+/// the shape hash of a Seq state's child discriminants at codegen
+/// time. The hash must match the miner's output for the runtime
+/// `SHAPE_DICT.lookup(shape_hash)` wire contract to close.
+///
+/// Lives in the IR crate alongside the miner so miner and emitter
+/// share one canonical hashing routine. The emitter projects
+/// per-`DtaState` children to [`TemplatePiece`] values and calls
+/// through.
+pub fn hash_skeleton_public(skeleton: &[TemplatePiece], leaf_holes: &[TypeDesc]) -> u64 {
+    hash_skeleton(skeleton, leaf_holes)
 }

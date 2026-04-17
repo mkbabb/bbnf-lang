@@ -26,7 +26,7 @@ Workspace at W2 close: **1078/0/68** (−22 DELETE, −1 new Category A
 |------|-------|--------|--------|
 | W1 | `lower/expression.rs` — grouped term + directive terminator + substrate helper | 1 serial | ✓ landed (BbnfBootstrap derive expands cleanly; gorgeous grammars still hit binary_factor per plan → W2) |
 | W2 | binary_factor operator recognition — consumer route (flatten iteration pair Seq + span-text operator detection) | 1 serial | ✓ landed (cargo check clean; **1035/62/67** workspace tests) |
-| W3 | find_child_by_kind audit + migration across lower/**, graph/**, types.rs | 3 parallel | pending |
+| W3 | find_child_by_kind audit + migration across lower/**, graph/**, types.rs | 3 parallel | ✓ landed (1035/62/67 — no regression; 9 migrations + 2 substrate primitives + 3 audit files + 1 consolidated index) |
 | W4 | value_expr `->` lowering | 1 serial | pending |
 | W5 | Round-trip + bench matrix + FINAL | 1 serial (orchestrator) | pending |
 

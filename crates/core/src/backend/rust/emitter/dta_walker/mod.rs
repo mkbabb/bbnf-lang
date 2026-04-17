@@ -55,7 +55,7 @@
 
 use bbnf_ir::passes::lift_dta;
 use bbnf_ir::passes::profile::GrammarProfile;
-use bbnf_ir::passes::recognizers::dta::DtaTable;
+use bbnf_ir::passes::recognizers::dta::{DtaState, DtaTable};
 use bbnf_ir::passes::sets::StructuralAlphabet;
 use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
@@ -94,6 +94,18 @@ fn sanitise_grammar(grammar: &str) -> String {
 /// `__dta_walker_inline` scope.
 pub(crate) fn dfa_match_fn_ident(grammar: &str, idx: usize) -> proc_macro2::Ident {
     format_ident!("__dfa_match_{}_{}", sanitise_grammar(grammar), idx)
+}
+
+/// Compose the per-grammar regex-scan adapter ident —
+/// `__regex_scan_<grammar>`. The adapter's signature is
+/// `fn(&str, &[u8], usize) -> Option<u32>`; the body dispatches on
+/// the pattern string to the matching per-state DFA match function.
+/// Used by the cold sibling's `try_branch` / `handle_repeat_failure`
+/// call sites (helpers whose signatures W1.β rewrites to take
+/// `regex_scan: fn(...)`). The hot path does NOT use this adapter —
+/// its Regex arms call `dfa_match_fn_ident(grammar, idx)` directly.
+pub(crate) fn regex_scan_adapter_ident(grammar: &str) -> proc_macro2::Ident {
+    format_ident!("__regex_scan_{}", sanitise_grammar(grammar))
 }
 
 /// AW-III.W4 — the central emitter pass.
@@ -135,11 +147,15 @@ pub fn emit_specialised_walker(
             /// fails with `InvalidState`. The surrounding `parse()`
             /// should route through the legacy fn-per-rule path until
             /// the lifter expands its coverage.
+            ///
+            /// AW-IV.W1.α — signature drops the `scanner: &dyn
+            /// RegexScanner` parameter; the per-grammar walker no
+            /// longer depends on a trait-object scanner (direct
+            /// `__dfa_match_<grammar>_<idx>` calls supply the regex
+            /// semantics).
             #[allow(dead_code)]
             pub fn #fn_ident(
-                _table: &::bbnf::runtime::tape::DtaTable,
                 _input: &[u8],
-                _scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
                 _idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
                 _columns: &mut ::bbnf::runtime::tape::Columns,
                 _psi: &mut ::bbnf::runtime::tape::PayloadStream,
@@ -161,6 +177,8 @@ pub fn emit_specialised_walker(
     let helper_block = helpers::emit_inline_helpers();
     let dispatch_arms = lower_state::emit_state_dispatch_arms(grammar, table, &partition);
     let cold_siblings = lower_state::emit_cold_siblings(grammar, table, &partition);
+    let boundary_ws = emit_boundary_ws(grammar, table);
+    let regex_scan_ident = regex_scan_adapter_ident(grammar);
     let entry_state_lookup = quote! {
         let mut cur: u16 = {
             let s = table.rule_entry_for(table.entry);
@@ -217,10 +235,17 @@ pub fn emit_specialised_walker(
             /// the runtime variant + its slice references resolve at
             /// compile time, not via a `&'static [DtaState]` indirect
             /// load each visit.
+            ///
+            /// AW-IV.W1.α — the `<__S: RegexScanner>` generic + the
+            /// `scanner: &__S` parameter are abrogated. The hot path's
+            /// Regex / WsTrim arms call `__dfa_match_<grammar>_<idx>`
+            /// by literal name; the cold sibling's helper-bound
+            /// `try_branch` / `handle_repeat_failure` calls pass the
+            /// per-grammar `__regex_scan_<grammar>` adapter as a
+            /// concrete fn pointer. No trait-object dispatch survives.
             #[allow(dead_code)]
-            pub fn run<__S: ::bbnf::runtime::tape::RegexScanner>(
+            pub fn run(
                 input: &[u8],
-                scanner: &__S,
                 idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
                 columns: &mut ::bbnf::runtime::tape::Columns,
                 psi: &mut ::bbnf::runtime::tape::PayloadStream,
@@ -251,16 +276,15 @@ pub fn emit_specialised_walker(
                 let mut slot_owned: u32 = 0;
                 let slot: &mut u32 = &mut slot_owned;
 
-                // AW-III.W2 boundary trim — extract the grammar's
-                // declared `@ws` semantic so leading whitespace at the
-                // input boundary is honoured the same way the
-                // cold-path `dta_run_core` honours it.
-                let boundary_ws = ::bbnf::runtime::tape::first_ws_pattern(table);
-                if let ::core::option::Option::Some(pat) = boundary_ws {
-                    ::bbnf::runtime::tape::trim_with_pattern(
-                        scanner, pat, input, pos,
-                    );
-                }
+                // AW-IV.W1.α — boundary trim is a codegen-time
+                // decision: the emitter scans `table.states` for the
+                // first `DtaState::WsTrim`, emits a direct DFA match
+                // loop when a pattern exists, the ASCII trim when the
+                // pattern is `None`, or no code at all when the
+                // grammar has no `WsTrim` state. The runtime
+                // `first_ws_pattern` table scan + `trim_with_pattern`
+                // scanner-trait indirection are both abrogated.
+                #boundary_ws
 
                 #entry_state_lookup
 
@@ -285,7 +309,8 @@ pub fn emit_specialised_walker(
                             e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
                         ) => {
                             match ::bbnf::runtime::tape::handle_repeat_failure(
-                                table, input, idx, columns, psi, frame_depth,
+                                table, input, #regex_scan_ident, idx,
+                                columns, psi, frame_depth,
                                 stack, pos, slot,
                             )? {
                                 ::bbnf::runtime::tape::RepeatAbsorbResult::Continue(next) => {
@@ -305,11 +330,7 @@ pub fn emit_specialised_walker(
                     }
                 }
 
-                if let ::core::option::Option::Some(pat) = boundary_ws {
-                    ::bbnf::runtime::tape::trim_with_pattern(
-                        scanner, pat, input, pos,
-                    );
-                }
+                #boundary_ws
                 if (*pos as usize) < input.len() {
                     return ::core::result::Result::Err(
                         ::bbnf::runtime::tape::DtaError::UnexpectedEnd {
@@ -339,11 +360,16 @@ pub fn emit_specialised_walker(
         /// static. Removing the parameter eliminates the dynamic
         /// indirect load that gated `match table.states[N]`
         /// const-folding.
+        ///
+        /// AW-IV.W1.α — the `<__S: RegexScanner>` generic + the
+        /// `scanner: &__S` parameter are abrogated. Every regex
+        /// semantic on the hot path flows through direct
+        /// `__dfa_match_<grammar>_<idx>` calls emitted by W1.β; no
+        /// trait-object dispatch survives.
         #[allow(dead_code)]
         #[inline]
-        pub fn #fn_ident<__S: ::bbnf::runtime::tape::RegexScanner>(
+        pub fn #fn_ident(
             input: &[u8],
-            scanner: &__S,
             idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
@@ -352,11 +378,50 @@ pub fn emit_specialised_walker(
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
         > {
-            __dta_walker_inline::run::<__S>(
-                input, scanner, idx, columns, psi, frame_depth,
+            __dta_walker_inline::run(
+                input, idx, columns, psi, frame_depth,
             )
         }
     }
+}
+
+/// AW-IV.W1.α — codegen-time boundary whitespace trim.
+///
+/// Walks `table.states` once at codegen time for the first
+/// `DtaState::WsTrim` variant. When found with a pattern, emit an
+/// inline loop calling the per-state DFA match function directly;
+/// when found with no pattern, emit an ASCII-whitespace trim; when
+/// no WsTrim state exists in the table, emit nothing. The runtime
+/// `first_ws_pattern(table)` + `trim_with_pattern(scanner, ...)`
+/// indirection is replaced by a compile-time decision whose output
+/// is the literal direct call — LLVM sees a concrete function ident
+/// (or a concrete ASCII scan) at every boundary trim site.
+fn emit_boundary_ws(grammar: &str, table: &DtaTable) -> TokenStream {
+    for (idx, state) in table.states.iter().enumerate() {
+        match state {
+            DtaState::WsTrim { pattern: Some(_) } => {
+                let dfa_ident = dfa_match_fn_ident(grammar, idx);
+                return quote! {
+                    loop {
+                        match #dfa_ident(input, *pos as usize) {
+                            ::core::option::Option::Some(0)
+                            | ::core::option::Option::None => break,
+                            ::core::option::Option::Some(n) => {
+                                *pos += n;
+                            }
+                        }
+                    }
+                };
+            }
+            DtaState::WsTrim { pattern: None } => {
+                return quote! {
+                    ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
+                };
+            }
+            _ => {}
+        }
+    }
+    TokenStream::new()
 }
 
 /// Emit the symbol identifier for the per-grammar walker function. The

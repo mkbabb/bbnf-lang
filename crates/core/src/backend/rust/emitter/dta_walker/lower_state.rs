@@ -70,7 +70,7 @@ use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 
 use super::hot_cold::HotColdPartition;
-use super::dfa_match_fn_ident;
+use super::{dfa_match_fn_ident, regex_scan_adapter_ident};
 
 /// Emit the body of the outer `match cur { ... }` dispatch.
 ///
@@ -106,8 +106,8 @@ pub(super) fn emit_state_dispatch_arms(
                 let cold_ident = cold_sibling_ident(id);
                 quote! {
                     #id_lit => {
-                        #cold_ident::<__S>(
-                            input, scanner, idx, columns, psi, frame_depth,
+                        #cold_ident(
+                            input, idx, columns, psi, frame_depth,
                             stack, pos, slot,
                         )
                     }
@@ -127,6 +127,14 @@ pub(super) fn emit_state_dispatch_arms(
 /// reference because their lowered body mutates them — the hot path
 /// supplies them from its own enclosing scope; the cold sibling
 /// receives them through the function signature.
+///
+/// AW-IV.W1.α — the `<__S: RegexScanner>` generic + `scanner: &__S`
+/// parameter are abrogated. Cold-sibling arm bodies that used to
+/// traverse `scanner.scan(pattern, …)` now call
+/// `__dfa_match_<grammar>_<idx>` directly; helper calls that
+/// previously took `scanner: &dyn RegexScanner` (try_branch,
+/// handle_repeat_failure_bounded) take the per-grammar
+/// `__regex_scan_<grammar>` adapter W1.β emits.
 pub(super) fn emit_cold_siblings(
     grammar: &str,
     table: &DtaTable,
@@ -150,9 +158,8 @@ pub(super) fn emit_cold_siblings(
                 #[cold]
                 #[inline(never)]
                 #[allow(clippy::too_many_arguments)]
-                fn #cold_ident<__S: ::bbnf::runtime::tape::RegexScanner>(
+                fn #cold_ident(
                     input: &[u8],
-                    scanner: &__S,
                     idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
                     columns: &mut ::bbnf::runtime::tape::Columns,
                     psi: &mut ::bbnf::runtime::tape::PayloadStream,
@@ -176,12 +183,18 @@ pub(super) fn emit_cold_siblings(
                     // avoiding ambiguity when multiple parsers
                     // co-exist in the same parent scope (test files).
                     //
-                    // AW-III.W5.c — cold siblings now carry the dual
+                    // AW-III.W5.c — cold siblings carry the dual
                     // cursor (`slot`) + structural index (`idx`)
                     // through their parameter list so the W5 helpers
                     // (try_branch, handle_repeat_failure_bounded)
                     // receive uniform arguments matching the hot
                     // path's invocation shape.
+                    //
+                    // AW-IV.W1.α — `<__S: RegexScanner>` generic and
+                    // `scanner: &__S` parameter removed. Helpers
+                    // consume a per-grammar
+                    // `__regex_scan_<grammar>` fn-pointer adapter
+                    // W1.β emits.
                     let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
                     'step: {
                         #body
@@ -236,7 +249,7 @@ fn emit_state_arm_body(grammar: &str, idx: usize, state: &IrState) -> TokenStrea
             super::super::classify_byte::emit_classify_byte_arm(idx, disp, *fallback)
         }
         IrState::AltLinear { branches } => {
-            emit_alt_linear_arm(idx, branches)
+            emit_alt_linear_arm(grammar, idx, branches)
         }
         IrState::Repeat { inner, lo, hi, counter_optional } => {
             emit_repeat_arm(idx, *inner, *lo, *hi, *counter_optional)
@@ -246,7 +259,7 @@ fn emit_state_arm_body(grammar: &str, idx: usize, state: &IrState) -> TokenStrea
         }
         IrState::WsTrim { pattern } => emit_ws_trim_arm(grammar, idx, pattern.is_some()),
         IrState::Minus { primary, excluded } => {
-            emit_minus_arm(idx, *primary, *excluded)
+            emit_minus_arm(grammar, idx, *primary, *excluded)
         }
         IrState::ShuntingYard { head, .. } => {
             emit_shunting_yard_arm(idx, *head)
@@ -407,8 +420,9 @@ fn emit_literal_arm(idx: usize, payload: LiteralPayload) -> TokenStream {
     }
 }
 
-/// `Regex { pattern, payload }` — scanner.scan inline; emit_leaf with
-/// `TapeKind::Span`; PSI push when payload is Some.
+/// `Regex { pattern, payload }` — direct `__dfa_match_<grammar>_<idx>`
+/// call inline; emit_leaf with `TapeKind::Span`; PSI push when
+/// payload is Some.
 ///
 /// AW-IV.W1.α — the `match table.states[N]` destructure is hoisted
 /// into a literal `payload` binding; the `pattern` field is encoded
@@ -622,10 +636,17 @@ fn emit_byte_dispatch_arm(
 /// AW-IV.W1.α — `branches` binds to the emitted
 /// `__DTA_ALT_LIN_<idx>` static array (the same symbol `dta.rs`
 /// declares at module scope); the runtime `match table.states[N]`
-/// destructure is abrogated.
-fn emit_alt_linear_arm(idx: usize, branches: &[StateId]) -> TokenStream {
+/// destructure is abrogated. The `try_branch` helper gains the
+/// per-grammar `__regex_scan_<grammar>` adapter as its regex-scan
+/// argument instead of the removed `scanner: &dyn RegexScanner`.
+fn emit_alt_linear_arm(
+    grammar: &str,
+    idx: usize,
+    branches: &[StateId],
+) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
     let branches_ident = format_ident!("__DTA_ALT_LIN_{}", idx);
+    let regex_scan_ident = regex_scan_adapter_ident(grammar);
     let _ = branches; // referenced via the emitted static array
     quote! {
         let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &#branches_ident;
@@ -692,7 +713,7 @@ fn emit_alt_linear_arm(idx: usize, branches: &[StateId]) -> TokenStream {
                 top.cursor = branch_idx as u16;
             }
             match ::bbnf::runtime::tape::try_branch(
-                table, input, scanner, idx, columns, psi, frame_depth, stack,
+                table, input, #regex_scan_ident, idx, columns, psi, frame_depth, stack,
                 branch, pos, slot, start_depth,
             ) {
                 ::core::result::Result::Ok(next) => {
@@ -901,8 +922,11 @@ fn emit_ws_trim_arm(grammar: &str, idx: usize, has_pattern: bool) -> TokenStream
 /// → restore and dispatch `primary`.
 ///
 /// AW-IV.W1.α — `primary` / `excluded` hoisted to literal bindings
-/// computed from the codegen-time IR node.
+/// computed from the codegen-time IR node; `try_branch` takes the
+/// per-grammar `__regex_scan_<grammar>` fn pointer instead of the
+/// deleted `scanner: &dyn RegexScanner`.
 fn emit_minus_arm(
+    grammar: &str,
     idx: usize,
     primary: StateId,
     excluded: StateId,
@@ -910,6 +934,7 @@ fn emit_minus_arm(
     let idx_lit = Literal::usize_unsuffixed(idx);
     let primary_lit = Literal::u16_unsuffixed(primary.0);
     let excluded_lit = Literal::u16_unsuffixed(excluded.0);
+    let regex_scan_ident = regex_scan_adapter_ident(grammar);
     quote! {
         let primary: ::bbnf::runtime::tape::DtaStateId =
             ::bbnf::runtime::tape::DtaStateId(#primary_lit);
@@ -924,7 +949,7 @@ fn emit_minus_arm(
         let pay_agg_len = columns.pay_agg.len();
         let start_depth = stack.depth();
         let probe = ::bbnf::runtime::tape::try_branch(
-            table, input, scanner, idx, columns, psi, frame_depth, stack,
+            table, input, #regex_scan_ident, idx, columns, psi, frame_depth, stack,
             excluded, pos, slot, start_depth,
         );
         columns.truncate(cols_len);

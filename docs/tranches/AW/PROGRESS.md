@@ -1616,3 +1616,73 @@ disposition surface per `research/ignores-audit.md`:
 - Routed residuals: Groups C (analysis-mode), D (closure lowering),
   E (CSP GAC alldiff), F (pprint/prettify), G (miscellaneous) —
   documented in audit + routed to successor tranches.
+
+## 2026-04-17 — AW-III W3 landed (correctness phase complete)
+
+Master HEAD `46a5ad9e`. Workspace **1142 / 0 / 35** (+23 / 0 / −29
+vs W2 close). Two parallel agents.
+
+### W3.A — mechanical lifts + deletions + cascade (4 commits)
+
+`bbnf-wt-aw3-w3a` worktree, single agent.
+
+- `8d9a13b5` — `test(core): lift CLOSE batch ignores — serialize +
+  structural roundtrip + ebnf_rule`. 15 lifts (7 serialize_roundtrip
+  + 7 structural + 1 ebnf_rule cascade from W2). All pass.
+- `d21fa698` — `test(ir,gorgeous): delete stale ignores —
+  unreachable stubs + visualisation dumps`. 3 unreachable!() stubs
+  removed from `cost_weights_unified.rs`; `biome_compare.rs` +
+  `biome_compare2.rs` deleted entirely (visualisation-dump pattern,
+  fixtures absent). No Cargo.toml changes (tests auto-discovered).
+- `064cec1a` — `test(core/json_parity): lift Group A cascade
+  post-W1 payload wiring`. 7 lifts + producer-side fold-in:
+  audit's claim that W1.A's variant_idx widening + decoder kernel
+  closed all 7 was partially incorrect — only `null_materialises_u8_payload`
+  + `bool_materialises_false_payload` passed when lifted. Per the
+  no-deferrals invariant, the walker in `json_parity.rs` was updated:
+  (a) `kids.reverse()` removed (post-AV substrate already produces
+  forward source order); (b) hard-coded variant_idx table replaced
+  with IR-introspected `json_rule_id()` + `OnceLock` cache;
+  (c) `payload_string()` replaced with `payload_string_with_source(rec, source)`
+  to honour W1.A's borrowed-string decoder kernel. All 7 now pass.
+- `878df7f3` — `test(core/pipeline): lift
+  pipeline_google_sheets_multiline_let after rule-name update`.
+  Audit's `arithmetic_expr` was wrong; actual surviving rule is
+  `comparison_expr` (verified via `ir.rules.iter()`).
+
+### W3.B — ignore-routing documentation (1 commit)
+
+`bbnf-wt-aw3-w3b` worktree, single agent. File-bound disjoint from
+W3.A (only writes new docs, no test modifications).
+
+- `46a5ad9e` — `docs(AW-III/audit): ignore-routing for W3 residual
+  + per-group mappings`. Two new docs:
+  - `docs/tranches/AW/audit/ignore-routing.md` (201 lines) —
+    successor-tranche mappings for every remaining ignore. Groups
+    C (analysis-mode) → analysis-mode-refresh tranche; D (closures)
+    → grammar-closures project; E (CSP GAC) → csc411-csp-tranche;
+    F (pprint/prettify) → gorgeous/pprint-refresh tranche; G
+    (miscellaneous) → mixed per-test routing.
+  - `docs/tranches/AW/audit/W3-residual-disposition.md` (117 lines)
+    — supplemental analysis with per-successor counts and the
+    plan-target-vs-actual reconciliation (plan target `≤ 10`;
+    actual `35`; deviation justified per the audit's Option 1(a)
+    framework: every residual ignore has on-file rationale + named
+    successor tranche).
+
+### Hard-gate verification (orchestrator-independent)
+
+- `cargo test --workspace --no-fail-fast` → **1142 / 0 / 35** ✓
+- All lifted tests pass; no regressions ✓
+- Both routing docs exist + populated ✓
+- Three rationale-staleness flags from W3.B noted (carry into
+  follow-up; not blocking)
+
+### W3 → W4 hand-off
+
+Correctness phase complete. Workspace is green; ignored count is
+audit-routed. W4 opens the architectural transposition: general
+walker-specialisation pass. The DTA-vs-RD 16× gap (29 cyc/byte
+twitter vs 1.78 cyc/byte) is implementation, not architectural —
+W4's general emitter pass mechanically lowers `DtaTable.states` to
+inlined Rust labels per the §6 generalization invariant.

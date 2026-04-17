@@ -11,6 +11,7 @@
 //! sub-dir (separate emission channel).
 
 pub mod classify_byte;
+pub mod dfa_codegen;
 pub(crate) mod dta;
 pub mod dta_walker;
 mod grammar;

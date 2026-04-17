@@ -48,6 +48,7 @@
 pub mod builder;
 pub mod columns;
 pub mod cursor;
+pub mod decoders;
 pub mod driver;
 pub mod dta;
 pub mod finaliser;

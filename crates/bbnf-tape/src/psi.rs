@@ -600,42 +600,19 @@ unsafe fn write_decoded(job: &PayloadJob, input: &[u8], cells: &ColumnCells) {
             }
         }
         PayloadKind::String => {
-            // AW-III.W1: JSON-style string payloads land as a
-            // `(len: u32 LE, bytes)` arena frame so the
-            // `Tape::payload_string_bytes` reader can recover the
-            // decoded content. The decode kernel at this stage
-            // copies the matched bytes verbatim — the JSON-specific
-            // escape decoder belongs in the kernel registry (a
-            // future tranche extends this with per-grammar decoder
-            // selection); for now the verbatim copy honours
-            // borrow-safe inputs (no escapes) and ASCII-clean
-            // strings, matching `payload_string_with_source`'s
-            // borrow-safe fast path semantics.
-            //
-            // The matched slice still includes the surrounding
-            // quotes ("hello" → `"hello"`); strip them before
-            // staging so the reader returns the unquoted content.
-            let trimmed = if slice.len() >= 2
-                && slice.first() == Some(&b'"')
-                && slice.last() == Some(&b'"')
-            {
-                &slice[1..slice.len() - 1]
-            } else {
-                slice
-            };
-            let len = trimmed.len() as u32;
-            let len_bytes = len.to_le_bytes();
-            debug_assert!(dst_off + 4 + trimmed.len() <= cells.pay_agg_len);
+            // AW-III.W1.A: route through the JSON string-escape
+            // decoder kernel — `\n`, `\t`, `\"`, `\\`, `\/`, `\b`,
+            // `\f`, `\r`, `\uXXXX`, and `\uD8XX\uDCXX` surrogate
+            // pairs all decode into the arena frame. The kernel is
+            // general per `decoders/json_string`; the dispatch sits
+            // here because `PayloadKind::String` is the lifter's
+            // canonical "string with escapes" classification.
             unsafe {
-                std::ptr::copy_nonoverlapping(
-                    len_bytes.as_ptr(),
-                    cells.pay_agg.add(dst_off),
-                    4,
-                );
-                std::ptr::copy_nonoverlapping(
-                    trimmed.as_ptr(),
-                    cells.pay_agg.add(dst_off + 4),
-                    trimmed.len(),
+                crate::decoders::json_string::decode_into(
+                    slice,
+                    cells.pay_agg,
+                    dst_off,
+                    cells.pay_agg_len,
                 );
             }
         }

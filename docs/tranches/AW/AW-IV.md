@@ -67,34 +67,32 @@ per grammar.
 
 ## Wave schedule (refined 2026-04-17 to exceed recursive descent)
 
-**Re-scoping after AW-III SYNTHESIS.md.** AW-III lands structural levers
-(Pratt `IrNode::Next` peel, scanner closure, ShapeRef consumer, PHF keyword,
-fused push_compound, selector classifier) as minimum-viable for closing the
-20× gap to 2-5×. AW-IV's job extended from "match post-AU" to **EXCEED
-post-AU** by folding in two capabilities not in the original AW-III-era plan:
+**Re-scoped after AW-III SYNTHESIS.md + structural fold-in directive.**
+AW-III absorbs every STRUCTURAL item from the original AW-IV plan:
+Pratt `IrNode::Next` peel, scanner closure, ShapeRef consumer, PHF
+keyword tables, fused push_compound, selector classifier, PSI rayon
+CALIBRATION (constants only), **codegen-specialised per-grammar walkers**,
+**direct-to-struct expansion** (JSON + BBNF), and per-grammar Pratt
+const-fold. AW-III definitively answers the DTA viability question by
+reaching **geomean within 2× of post-AU on ALL 19 entries** (including
+sheets, which the codegen-specialisation closes).
 
-1. **Codegen-specialised per-grammar walkers** — emit `dta_run_json`,
-   `dta_run_css`, `dta_run_bbnf`, etc., with inlined `DtaState` arms instead
-   of the generic `dta_run` interpreter. Recovers LLVM inlining on the common
-   path (the 24% `dispatch_one` tagged-union floor that P3 sheets analysis
-   flagged as unaddressable by original AW-IV levers).
-2. **Direct-to-struct expansion beyond CSS Color** — JSON value-struct fast
-   path + BBNF AST-struct fast path. The A1 audit confirmed direct-to-struct
-   fires only for CSS Color at AW-II close; universal expansion closes the
-   payload-materialisation overhead beyond the 7-8% leaf residual.
-
-These two additions transform AW-IV from "amortise dispatch" to "eliminate
-dispatch on the common path while preserving DTA's uniform-tape substrate."
+**AW-IV is now the granular-optimisation tranche.** Arch-gated SIMD
+widening, scanner PaddedView migration, bloom + GADT dedup,
+document-parallel fork, reduce_column visitor API, SIMD 4-lane column
+pack, and sonic-rs / lightningcss parity harnesses. These are
+refinements that layer over AW-III's 2× envelope to achieve the
+**EXCEED post-AU** goal — implementation refinements, not new
+architectural levers.
 
 | Wave | Scope | Agents | Bench gate |
 |------|-------|--------|------------|
-| W1 | PSI rayon stage-B (fills) + ShapeRef consumer-side completion beyond AW-III (JSON/BBNF dicts) + Bug 2b residuals | 3 parallel | canada 4c per-core scales; bootstrap ≥ 700 MB/s |
-| W2 | PHF/freq/bucket expansion + SIMD u8x32 + scanner PaddedView migration + scanner-cluster | 4 parallel | bootstrap ≥ 900 MB/s; tailwind 4c ≥ 1.4 GB/s |
-| W3 | **Codegen-specialised per-grammar walkers** (NEW) — emitter pass produces `dta_run_{grammar}` with inlined state arms + direct-to-struct expansion (JSON + BBNF) | 3 parallel | **sheets post-W3 within 2× of post-AU; dispatch_one floor eliminated** |
-| W4 | document-parallel fork + bloom + GADT dedup + cost-model grid | 4 parallel | tailwind 4c ≥ 1.2 GB/s; canada 4c ≥ 1800 MB/s |
-| W5 | Walker + reader + sonic-rs + lightningcss parity harnesses | 3 parallel | parity harnesses green |
-| W6 | reduce_column<C,R> visitor API + SIMD 4-lane pack + bench parity confirmation | 3 parallel | **every entry EXCEEDS post-AU**; parity harness green |
-| W7 | FINAL + close | 1 serial | post-AW-IV.json composed with geomean > 1.0× post-AU |
+| W1 | PSI rayon stage-B walker integration (fills, lock-free workers) — layered over AW-III's calibration + ShapeRef tail (patterns AW-III deferred) + Bug 2b residuals | 3 parallel | canada 4c per-core scales; bootstrap ≥ 700 MB/s |
+| W2 | PHF frequency-ordering + length-bucket tail (refinement over AW-III's PHF) + SIMD u8x32 AVX2 widening + scanner PaddedView migration + scanner-cluster closure | 4 parallel | bootstrap ≥ 900 MB/s; tailwind 4c ≥ 1.4 GB/s |
+| W3 | Document-level parallel parse fork + bloom + GADT dedup + cost-model grid | 4 parallel | tailwind 4c ≥ 1.2 GB/s; canada 4c ≥ 1800 MB/s |
+| W4 | Walker + reader migration + sonic-rs + lightningcss parity harnesses | 3 parallel | parity harnesses green |
+| W5 | reduce_column<C,R> visitor API + SIMD 4-lane column pack + bench parity confirmation | 3 parallel | **every entry EXCEEDS post-AU**; parity harness green |
+| W6 | FINAL + close | 1 serial | post-AW-IV.json composed; geomean > 1.0× post-AU |
 
 ## Phases
 
@@ -321,126 +319,14 @@ pass bit-identically on fractional inputs up to 17 digits.
 
 ### W3 — Codegen-specialised per-grammar walkers + direct-to-struct expansion [3 parallel] — **LOAD-BEARING FOR EXCEEDING RD**
 
-**Why this wave is new.** AW-III's SYNTHESIS.md flagged sheets' 8-9×
-residual after full minimum-viable lever activation — the `dispatch_one`
-tagged-union match floor (~24% self-time) is not addressed by any
-amortisation lever. The *only* way to eliminate it is to specialise
-the walker per grammar so LLVM inlines the state arms on the hot
-path, recovering recursive descent's inlining advantage while
-preserving DTA's uniform tape substrate + O(1) backtracking +
-table-based replay.
+**Moved to AW-III.W5.6–W5.8** per 2026-04-17 fold-in directive. Codegen-
+specialised per-grammar walkers + direct-to-struct expansion (JSON +
+BBNF) + per-grammar Pratt const-fold are STRUCTURAL items that prove
+viability and belong in the correctness + viability tranche, not the
+granular-optimisation tranche. AW-III.W5 now delivers the 2× envelope
+on ALL 19 entries; AW-IV adds granular optimisations atop.
 
-The original AW-IV.W3 (document-parallel fork + bloom + Pratt +
-cost-model grid) shifts to AW-IV.W4.
-
-#### W3.1 Codegen-specialised walker emitter
-
-Owner: `crates/core/src/backend/rust/emitter/walker.rs` (new),
-`crates/core/src/backend/rust/emitter/grammar.rs` (wire-up).
-
-Per-grammar emitter pass produces a monomorphised walker:
-
-```rust
-// For JsonGrammar, emitted into generated.rs:
-pub fn dta_run_json(
-    table: &'static DtaTable,
-    input: &[u8],
-    columns: &mut Columns,
-    frame_depth: &mut Vec<u8>,
-    stack: &mut FrameStack,
-) -> Result<(), DtaError> {
-    let mut pos: u32 = 0;
-    let mut state = table.start;
-    loop {
-        match state {
-            // Per-grammar: only the states this grammar actually uses,
-            // inlined. `dispatch_one`'s tagged-union match is gone.
-            DtaState::Regex { pattern_dfa, payload } => {
-                // Inline body of Regex arm, with per-grammar PayloadKind
-                // const-folded (JSON: Span, BBNF: Span, CSS: Color/...).
-                let end = pattern_dfa.find_at(input, pos as usize)?;
-                columns.push_structural_leaf(TapeKind::Regex, pos, end);
-                match payload {
-                    PayloadKind::Span => { /* inlined span emit */ }
-                    // Other PayloadKind arms const-folded to unreachable
-                    // since JSON grammar only ever emits Span from Regex
-                }
-                pos = end as u32;
-                state = /* next state from transition table */;
-            }
-            DtaState::ByteDispatch { table, fallback } => { /* inlined */ }
-            DtaState::AltLinear { branches } => { /* inlined */ }
-            // All 20+ arms inlined, but per-grammar pruning eliminates
-            // states the grammar doesn't reference. JSON: ~8 live arms.
-            // CSS: ~14. BBNF: ~17.
-            _ => unreachable!(),
-        }
-    }
-}
-```
-
-The generic `dta_run` stays as a fallback for grammars the emitter
-can't specialise (small grammars below a threshold, or grammars with
-compile-time-unknown state sets). Every primary grammar (JSON, CSS L4,
-BBNF, Sheets, EBNF) gets a specialised walker.
-
-**Why this works**: LLVM sees `dta_run_json` as a single function with
-constant-propagated state transitions. The tagged-union match compiles
-to a direct goto chain when the state transitions are compile-time-
-known, eliminating the 20+ variant dispatch at every byte. Per-grammar
-`PayloadKind` const-folding eliminates the per-leaf payload switch on
-grammars where payload kind is uniform (JSON → all Span; CSS → mixed
-Color/WideScalar/InlineScalar).
-
-**Integration with AW-III**: AW-III.W1 landed `payload: PayloadKind`
-on `DtaState::Regex`/`Literal` (Hole #2). Per-grammar specialisation
-const-propagates these at emit time.
-
-Hard gate: `cargo expand -p bbnf-bootstrap --lib | grep 'fn dta_run_'`
-returns ≥ 1 specialised walker per primary grammar. `dispatch_one` does
-NOT appear in specialised walker hot paths (verified via samply
-comparison vs AW-III baseline). Sheets `parse_stress` post-W3.1 shows
-≤ 2× regression vs post-AU (closing the 8-9× floor SYNTHESIS flagged).
-
-#### W3.2 Direct-to-struct expansion (JSON + BBNF)
-
-Owner: `crates/core/src/backend/rust/view/direct_to_struct.rs` (new,
-expanding the current CSS-Color-only path at
-`crates/core/src/backend/rust/view/named_types.rs:52-80`),
-`crates/core/src/backend/rust/emitter/view.rs`.
-
-Extend the direct-to-struct fast path from CSS Color to:
-- **JSON `Value` tree**: `Value::Null | Bool | Number | String(Span) |
-  Array(Vec<Value>) | Object(Vec<(Span, Value)>)` emits as a direct
-  struct projection from the tape, skipping the intermediate tagged-
-  union enum view.
-- **BBNF AST struct**: `RuleEntry { lhs: Span, rhs: RhsNode, ... }`
-  projects similarly.
-
-Current state (A1 audit): only CSS Color uses direct-to-struct
-(`Color::decode` @ 40-byte tuple projection). JSON has no such path
-"by design" per the previous audit, but the design oversight is
-identifiable — every JSON `Value` struct tape shape is statically
-known at grammar-compile time; the projection is just a single
-function per variant.
-
-Hard gate: JSON twitter's `walk_cursor` self-time drops from 7-8% to
-≤ 2%. BBNF's `extract_grammar` + directive decoders drop similarly.
-
-#### W3.3 Per-grammar Pratt calibration + const-fold
-
-Owner: `crates/ir/src/passes/recognizers/dta.rs` +
-`crates/core/src/backend/rust/emitter/grammar.rs`.
-
-AW-III.W1.7 landed `IrNode::Next` peel in `strip_transparent_owned`,
-enabling Pratt on CSS. W3.3 completes the calibration: per-grammar
-`PRECEDENCE_LUT` population (148 CSS operators + BBNF value_expr tower
-+ Sheets arithmetic), const-fold precedence levels into the specialised
-walker's ShuntingYard arm.
-
-Hard gate: CSS L4 `calc()`/`min()`/`max()`/`clamp()` round-trip through
-Pratt (not AltLinear tower). State count for CSS L4 drops from 2892 to
-≤ 2200 (floor analysis at AW-I.W4 close projected 2200 post-Pratt).
+See docs/tranches/AW/AW-III.md §W5 for the specification.
 
 ### W4 — Document-level parallel parse + bloom dedup + cost-model grid [4 parallel]
 

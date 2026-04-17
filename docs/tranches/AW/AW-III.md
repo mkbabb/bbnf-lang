@@ -190,28 +190,34 @@ Owner: serial orchestrator + samply (re-measurement post-W1/W2 to confirm or ref
 
 Hard gate: decision document exists citing post-W1/W2 samply numbers; user escalation on sheets documented with explicit options.
 
-### W5 — Minimum-viable specialisation (pre-staged by SYNTHESIS.md)
+### W5 — Structural specialisation (expanded 2026-04-17 — folds in key AW-IV items)
 
-Owner: 3 parallel agents; scope per SYNTHESIS.md matrix.
+Owner: 3 parallel agents; scope expanded per the "structural, not granular" fold-in directive.
 
-**Primary levers** (the 2× envelope is reached with these active):
-- **ShapeRef runtime dispatch** — walker-side `push_shape_ref` consumer for the already-emitted `SHAPE_DICT` (13 CSS L4 entries; plus BBNF + JSON entries to be emitted by this wave). Collapses same-shape Seq compounds.
+**Primary structural levers** (the 2× envelope reached):
+- **ShapeRef runtime dispatch** — walker-side `push_shape_ref` consumer for the already-emitted `SHAPE_DICT` (13 CSS L4 entries + new JSON + new BBNF dicts emitted by this wave).
 - **PHF keyword tables** — per-grammar emitter pass populating `keyword_tables`. CSS (163-branch namedColor + 72-branch keywords + 92-branch properties); BBNF keywords; JSON (`true`/`false`/`null`).
-- **Fused `push_compound` write** — replace `reserve_compound`'s 7-vector row with a single struct-write. 6% global.
-
-**Secondary levers** (per-grammar):
+- **Fused `push_compound` write** — replace `reserve_compound`'s 7-vector row with a single struct-write.
 - **Selector classifier** — CSS-only. `DtaState::ClassifyByte` LUT for the 5-way `compoundSelector` Alt.
-- **PSI rayon stage-B calibration** — populate `parallel_break_even_bytes` per grammar. No code; only calibration constants.
+- **PSI rayon stage-B CALIBRATION** (folded in from AW-IV.W1.1) — populate `parallel_break_even_bytes` per grammar. No code; only constants from viability samply on canada/data_xl/bootstrap. Folded in because it's literally a handful of constants — not a granular optimisation but a calibration.
 
-**Deferred to AW-IV**:
-- Bloom + GADT dedup (W3 in old plan).
+**Structural specialisation (folded in from AW-IV.W3, without which viability is not definitively proven)**:
+
+- **W5.6 Codegen-specialised per-grammar walkers** — emit `dta_run_json`, `dta_run_css`, `dta_run_bbnf`, `dta_run_sheets`, `dta_run_ebnf` with inlined `DtaState` arms. **This closes the `dispatch_one` tagged-union floor (~24% self-time) that SYNTHESIS.md flagged as unaddressable by amortisation levers alone.** Without this in AW-III, the Sheets viability question escalates; with it, AW-III definitively answers "yes, DTA is viable."
+- **W5.7 Direct-to-struct expansion** — extend beyond CSS Color (current sole consumer) to JSON `Value` tree + BBNF AST struct. A1 audit confirmed the pattern is a named-type-resolver extension, not new codegen architecture. Structural, not granular.
+- **W5.8 Per-grammar Pratt const-fold** — W1.7 landed the `IrNode::Next` peel; W5.8 completes the calibration: per-grammar `PRECEDENCE_LUT` population (CSS 148 operators + BBNF value_expr tower + Sheets arithmetic), const-fold precedence levels into the specialised walker's ShuntingYard arm. Depends on W5.6 specialisation being active; natural extension.
+
+**Kept in AW-IV (genuinely granular — micro-optimisation, arch-specific, or consumer-side)**:
+- SIMD u8x32 AVX2 widening (arch-gated x86_64 tuning).
+- Scanner PaddedView migration (arch/perf-specific).
+- Bloom + GADT dedup (modest benefit; optimisation layer).
+- Document-parallel fork (complex, benefit only on large inputs — separate tranche).
 - `reduce_column<C,R>` visitor API (consumer-side, not parse hot path).
-- Document-level parallel parse (forkable list rules).
-- sonic-rs / lightningcss full parity harnesses.
+- SIMD 4-lane pack (micro-optimisation).
+- sonic-rs + lightningcss parity harnesses (verification).
+- Full PHF frequency-ordering + length-bucket tail (PHF stays in III; the frequency + bucket refinement is IV granular).
 
-Note: Pratt generalisation + scanner closure are in **W1** of this plan, not W5 (surfaced by SYNTHESIS.md as structurally-required one-fix items).
-
-Hard gate: `cargo bench` on the 14 + 5 unblocked = 19 measured entries shows geomean within 2× of post-AU on **18 of 19** entries; Sheets explicitly tradeoff-documented at 8-9× if user accepts the viability call. If any non-Sheets entry exceeds 2×, escalate.
+Hard gate (revised): `cargo bench` on the full 19-entry matrix (5 AW-II-blocked entries unblocked at W2) shows **geomean within 2× of post-AU on ALL 19 entries** (no Sheets escalation — W5.6 codegen-specialisation closes the floor). AW-III proves DTA viability definitively; AW-IV delivers the exceed-RD surplus.
 
 ### W6 — FINAL + full bench matrix + close
 

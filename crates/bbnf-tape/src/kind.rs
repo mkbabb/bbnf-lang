@@ -131,6 +131,19 @@ pub enum TapeKind {
     /// in the range 64..=255 without colliding with the shared
     /// vocabulary above.
     Reserved = 15,
+
+    /// AW-IV.W3.5b — Leaf Scanned — a span record emitted by the CTNS
+    /// (ConsumeToNextStructural) walker arm, carrying the start and
+    /// end byte offsets of a region collapsed via a cursor jump over
+    /// the stage-1 structural index.
+    ///
+    /// Semantically identical to `TapeKind::Span` for the view layer
+    /// (`span_lo` / `span_hi` carry the scanned bytes' byte range), but
+    /// distinguishes the CTNS emission path from the regex / byte-by-
+    /// byte match path so downstream consumers can identify records
+    /// produced by the structural-index cursor jump rather than a DFA
+    /// scan. Leaf — no children.
+    Scanned = 16,
 }
 
 impl TapeKind {
@@ -158,6 +171,7 @@ impl TapeKind {
             13 => TapeKind::ShapeRef,
             14 => TapeKind::KvPair,
             15 => TapeKind::Reserved,
+            16 => TapeKind::Scanned,
             _ => TapeKind::None,
         }
     }
@@ -172,7 +186,8 @@ impl TapeKind {
                 | TapeKind::Literal
                 | TapeKind::Regex
                 | TapeKind::KvPair
-                | TapeKind::ShapeRef,
+                | TapeKind::ShapeRef
+                | TapeKind::Scanned,
         )
     }
 
@@ -208,6 +223,7 @@ impl TapeKind {
             TapeKind::ShapeRef => "shape_ref",
             TapeKind::KvPair => "kv_pair",
             TapeKind::Reserved => "reserved",
+            TapeKind::Scanned => "scanned",
         }
     }
 

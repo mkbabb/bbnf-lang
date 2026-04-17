@@ -150,43 +150,22 @@ fn named_color_variant_idx() -> u8 {
 fn find_named_color_payload(input: &str, variant_idx: u8) -> Option<u32> {
     let parsed = CssL4Parser::parse(input).ok()?;
     let tape = parsed.tape();
-    let target_high_byte_set = (variant_idx, ); // suppress unused-warning lint
-    let _ = target_high_byte_set;
-    // AW-III.W1: post-W1 the unified arena emission shares
-    // `child_off` byte-offset semantics across U8 / U32 / F64
-    // payloads, and the legacy `(rule.id & 0x3F)`-stamped
-    // variant_idx aliases distinct rules whose ids share their
-    // low 6 bits (CSS L4's `colorProps` and `namedColor` collide
-    // here). Discriminate by payload width — only `payload_scalar
-    // ::<u32>` returns a meaningful 4-byte read for the
-    // `namedColor` leaf, so the iteration filters on the typed
-    // reader returning a value distinct from the U8 collision
-    // tier.
+    // AW-III.W1.A: variant_idx widened from 6 to 8 bits; CSS L4's
+    // `colorProps` and `namedColor` no longer collide at `id & 0x3F`,
+    // so direct match on `variant_idx == namedColor.id & 0xFF` finds
+    // exactly the namedColor leaf. The pre-W1.A heuristic that
+    // filtered out 0-valued payloads (a workaround for the collision
+    // with `colorProps "color" -> 0u8`) is gone — `transparent`
+    // (`0x00000000`) materialises like every other named color.
     for rec in tape.iter() {
         if rec.kind() == TapeKind::Span
             && rec.variant_idx() == variant_idx
             && rec.has_payload()
             && !rec.has_children()
         {
-            // AW-III.W1: read 4 bytes specifically — the namedColor
-            // U32 width. A U8-payload-bearing record at the same
-            // arena offset only fills 1 byte; the bytes_4 read below
-            // would either be `None` (arena too short) or run past
-            // into following records' bytes (giving an unrelated
-            // value the test would discard via the assertion miss).
             if let Some(bytes) = tape.payload_bytes(rec, 4) {
                 let arr: [u8; 4] = bytes.try_into().ok()?;
-                let v = u32::from_le_bytes(arr);
-                // Skip records where the first byte is 0 AND the
-                // following 3 bytes are part of an unrelated
-                // payload — this is the `colorProps "color" -> 0u8`
-                // leak that arena-shares with the namedColor leaf.
-                // The U32 colors all use 0xFF in the alpha byte, so
-                // the high nibble of `v` is non-zero whenever this
-                // is a real namedColor read.
-                if v != 0 {
-                    return Some(v);
-                }
+                return Some(u32::from_le_bytes(arr));
             }
         }
     }

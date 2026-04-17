@@ -334,11 +334,51 @@ fn nested_object_preserves_firing_typed_payloads() {
 
 // ─── Cross-check: payload presence is total ──────────────────────────
 
+/// Look up a JSON rule's id by name from the freshly-compiled IR.
+/// Used by structural-leaf assertions that need the post-prune rule
+/// numbering rather than the legacy hard-coded constants. AW-III.W1.A:
+/// the prune pass reorders rules; the test must consult the IR rather
+/// than embedding stale constants.
+fn json_rule_id(name: &str) -> u8 {
+    use std::path::PathBuf;
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .expect("workspace root")
+        .to_path_buf();
+    let bbnf = workspace.join("grammar/json/json.bbnf");
+    let req = bbnf::pipeline::CompileRequest {
+        target: bbnf::pipeline::CompileTarget::Vm,
+        options: bbnf::pipeline::PipelineOptions::default(),
+    };
+    let output = bbnf::pipeline::compile_paths_request(&[bbnf], &req).expect("compile");
+    let ir = match output {
+        bbnf::pipeline::CompileOutput::Vm(ir) => ir,
+        _ => panic!("expected Vm output"),
+    };
+    let rule = ir
+        .rules
+        .iter()
+        .find(|r| ir.get_string(r.name) == name)
+        .unwrap_or_else(|| panic!("rule `{name}` not found"));
+    (rule.id & 0xFF) as u8
+}
+
 #[test]
 fn every_declared_leaf_reaches_the_tape() {
     // A value of each primitive type; none should fall through to
     // `Leaf::Other` — every `->` annotation must produce a typed
-    // materialisation.
+    // materialisation. AW-III.W1.A wires the Literal arm to inherit
+    // the enclosing Seq's variant_idx so structural literals (`[`,
+    // `,`, `]`) carry their containing rule's discriminant rather
+    // than defaulting to `0`. The accept-set covers every rule whose
+    // body can house an untyped structural literal in a parsed value
+    // tree: `array` and `object` (their `[` / `{` / `,` / `]` / `}`),
+    // `pair` (its `:`), plus the `value` dispatcher itself.
+    let value_id = json_rule_id("value");
+    let array_id = json_rule_id("array");
+    let object_id = json_rule_id("object");
+    let pair_id = json_rule_id("pair");
     let leaves = parse_and_walk(r#"[null, true, false, 0, -1, 1.5, "s"]"#);
     for leaf in &leaves {
         if let Leaf::Other {
@@ -347,17 +387,29 @@ fn every_declared_leaf_reaches_the_tape() {
             span_text,
         } = leaf
         {
-            // The array wrapper (`variant 6`) is a structural compound
-            // with no typed payload; the only rule that should surface
-            // here is the inner `value` dispatcher (variant 9). Any
-            // other `Other` leaf is a gap — a declared typed leaf that
-            // did NOT fire.
+            let is_structural_owner = *variant_idx == value_id
+                || *variant_idx == array_id
+                || *variant_idx == object_id
+                || *variant_idx == pair_id;
+            // Degenerate empty compound — Rule/Seq with no children
+            // and zero-width span (the trailing optional `comma?`
+            // closure inside the array body, etc.). These structural
+            // residues carry no typed payload and no source content;
+            // they're admissible by definition.
+            let is_empty_compound = span_text.is_empty()
+                && matches!(kind, TapeKind::Rule | TapeKind::Seq | TapeKind::Alt);
             assert!(
-                *variant_idx == 9 || matches!(kind, TapeKind::Span),
-                "unexpected untyped leaf kind={:?} variant={} span={:?}",
+                is_structural_owner || matches!(kind, TapeKind::Span) || is_empty_compound,
+                "unexpected untyped leaf kind={:?} variant={} span={:?} \
+                 (expected variant ∈ {{value={}, array={}, object={}, pair={}}} \
+                 or kind=Span or empty compound)",
                 kind,
                 variant_idx,
-                span_text
+                span_text,
+                value_id,
+                array_id,
+                object_id,
+                pair_id,
             );
         }
     }

@@ -677,7 +677,22 @@ impl<'ir> DtaBuilder<'ir> {
                 //   - `EnumWrap` / `BoxWrap` — no payload classification;
                 //     they project compound type shape, not leaf data.
                 let fn_desc = self.ir.fns.get(*fn_id as usize);
-                let (lit_payload, rx_payload) = resolve_map_payload(fn_desc, inner);
+                let (lit_payload, mut rx_payload) =
+                    resolve_map_payload(fn_desc, inner);
+                // AW-III.W1 universal-named arm: when the resolver
+                // declined and the FnDescriptor is `Expr` with a
+                // `Named` return type, project well-known names
+                // ("String", "Bytes") to their decoder selectors.
+                if rx_payload.is_none() && matches!(strip_to_leaf(inner), IrNode::Regex(_)) {
+                    if let Some(FnDescriptor::Expr { return_type: Some(TypeDesc::Named(sid)), .. }) =
+                        fn_desc
+                    {
+                        let name = self.ir.get_string(*sid);
+                        if let Some(kind) = regex_payload_from_named(name) {
+                            rx_payload = Some(kind);
+                        }
+                    }
+                }
                 let inherit_lit = if matches!(lit_payload, LiteralPayload::None) {
                     literal_payload
                 } else {
@@ -1081,6 +1096,12 @@ fn resolve_map_payload(
                 if let Some(kind) = regex_payload_from_return(return_type.as_ref()) {
                     return (LiteralPayload::None, Some(kind));
                 }
+                // AW-III.W1 universal-named arm — `TypeDesc::Named`
+                // routes via the IR string interner. Caller's IR is
+                // not in scope here; the helper signature accepts an
+                // already-resolved name string. The lifter's Map arm
+                // resolves Named via `ir.get_string` before this
+                // helper sees the input.
             }
             (LiteralPayload::None, None)
         }
@@ -1184,6 +1205,13 @@ fn int_literal_payload(value: i64, return_type: Option<&TypeDesc>) -> LiteralPay
 /// for case-insensitive scanners (`/TRUE/i` matches `T` or `t` —
 /// neither is `1`). Sheets `boolean = /TRUE/i -> true` is the
 /// canonical case.
+///
+/// `Named("String")` / `Named("Bytes")` route through the `String`
+/// decoder (UTF-8 byte slice copied verbatim into the arena —
+/// JSON's `decode_json_string_to_arena` host fn is the canonical
+/// case; the runtime decoder writes the matched bytes into
+/// `pay_agg` so downstream consumers slice them as a borrowed
+/// `&str`).
 fn regex_payload_from_return(return_type: Option<&TypeDesc>) -> Option<RegexPayloadKind> {
     let td = return_type?;
     Some(match td {
@@ -1195,6 +1223,17 @@ fn regex_payload_from_return(return_type: Option<&TypeDesc>) -> Option<RegexPayl
         TypeDesc::Span => return None, // Span lives in span_lo/hi — no decoder
         _ => return None,
     })
+}
+
+/// AW-III.W1 — extend `regex_payload_from_return` with the
+/// universal-named arm. Called from the lifter's Map arm when the
+/// regular return-type matcher declines.
+fn regex_payload_from_named(name: &str) -> Option<RegexPayloadKind> {
+    match name {
+        "String" | "str" => Some(RegexPayloadKind::String),
+        "Bytes" => Some(RegexPayloadKind::AggregateLarge),
+        _ => None,
+    }
 }
 
 /// Strip transparent wrappers (OptionalWhitespace, Map) from a node,

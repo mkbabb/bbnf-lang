@@ -135,45 +135,47 @@ fn collect_typed_leaves<'t>(
 /// branch under the current alt-lit codegen — the remaining branches
 /// silently drop the `__has_payload = true` assignment. See
 /// `docs/tranches/AU/typed-parity-audit.md` for the audit trail.
-#[ignore = "AU.6.8 Bug 2b: single-scalar u8 payload does not materialise \
-            through percentage Seq composition post-W6 layering. \
-            Route: follow-up emitter patch scoped to AV."]
 #[test]
 fn percentage_fires_255u8_discriminant() {
-    // `%` -> 255u8 is the single-branch percentageUnit (no alt-loss
-    // gap). Parsing `50%` MUST materialise 255u8. Post-W6.D single-
-    // scalar u8 payloads pack inline into child_off; read via
-    // `payload_u8`, not the arena-based `payload_bytes`.
+    // `%` -> 255u8 is the single-branch percentageUnit. Parsing `50%`
+    // materialises the parent `percentage = number, percentageUnit`
+    // rule (KvPair-shape `Tuple([Span, U8])`) — AW-III.W1.6 collapses
+    // its Seq to a flat `TapeKind::KvPair` leaf carrying both the
+    // numeric span and the unit's `255u8` byte. Pre-W1 the per-unit
+    // U8 was either dropped (Bug 2b) or stayed as a structural Seq
+    // child requiring deep cursor walking; post-W1 the byte rides on
+    // the rule's own KvPair leaf and `payload_u8(rec)` returns it
+    // via the unified arena reader.
     let input = "a { width: 50%; }";
     let parsed = CssL4Parser::parse(input).expect("parse");
     let tape = parsed.tape();
-    let found_255 = tape
-        .iter()
-        .any(|rec| rec.kind() == TapeKind::Span && tape.payload_u8(rec) == Some(255u8));
+    let found_255 = tape.iter().any(|rec| {
+        matches!(rec.kind(), TapeKind::Span | TapeKind::KvPair)
+            && tape.payload_u8(rec) == Some(255u8)
+    });
     assert!(
         found_255,
         "percentageUnit '%' -> 255u8 must materialise exactly"
     );
 }
 
-#[ignore = "AU.6.8 Bug 2b: see percentage_fires_255u8_discriminant — \
-            same scanner→payload wiring gap."]
 #[test]
 fn percentage_parses_through_width_and_height() {
     // `%` via the `width` / `height` property dispatch — both route
     // through the typed percentageUnit rule and MUST fire 255u8.
-    // Other property dispatches (e.g. `padding`) may route through
-    // a generic value body that bypasses percentageUnit; those cases
-    // are covered by the parse-reach tests below.
+    // The W1.6 KvPair promotion lands the byte on the parent
+    // `percentage` rule's leaf (`Tuple([Span, U8])`); the reader
+    // accepts both `Span` and `KvPair` shapes.
     for input in [
         "a { width: 50%; }",
         "a { height: 100%; }",
     ] {
         let parsed = CssL4Parser::parse(input).expect("parse");
         let tape = parsed.tape();
-        let has_pct = tape
-            .iter()
-            .any(|rec| rec.kind() == TapeKind::Span && tape.payload_u8(rec) == Some(255u8));
+        let has_pct = tape.iter().any(|rec| {
+            matches!(rec.kind(), TapeKind::Span | TapeKind::KvPair)
+                && tape.payload_u8(rec) == Some(255u8)
+        });
         assert!(
             has_pct,
             "percentageUnit 255u8 must fire for width/height input {:?}",
@@ -462,22 +464,20 @@ fn keyframes_parses() {
 
 // ─── Cross-dimension dispatch test ───────────────────────────────────
 
-#[ignore = "AU.6.8 Bug 2b: see percentage_fires_255u8_discriminant — \
-            same scanner→payload wiring gap."]
 #[test]
 fn percentage_alongside_non_percentage_properties_materialises() {
     // A declaration block with multiple unit-bearing properties must
     // still materialise the percentageUnit 255u8 payload (single-branch
-    // rule; alt-payload gap does not apply). The per-unit alt gap means
-    // other units like `em`, `px`, `fr` may or may not surface their
-    // tag; only `%` is reliable.
+    // rule; alt-payload gap does not apply). Post-W1 the byte rides on
+    // the parent `percentage` rule's KvPair leaf — accept either Span
+    // or KvPair record shapes for the U8 carrier.
     let input = "a { margin: 10px; padding: 1.5em; width: 100%; }";
     let parsed = CssL4Parser::parse(input).expect("parse");
     let tape = parsed.tape();
     let u8_payloads: Vec<u8> = tape
         .iter()
         .filter_map(|r| {
-            if r.kind() == TapeKind::Span {
+            if matches!(r.kind(), TapeKind::Span | TapeKind::KvPair) {
                 tape.payload_u8(r)
             } else {
                 None

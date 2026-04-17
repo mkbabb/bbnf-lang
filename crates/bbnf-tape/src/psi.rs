@@ -603,9 +603,11 @@ unsafe fn write_decoded(job: &PayloadJob, input: &[u8], cells: &ColumnCells) {
     }
 }
 
-/// Parse a hex colour byte slice (`#rrggbb` / `#rrggbbaa` / `rrggbb`)
-/// into a `u32`. Missing alpha defaults to `0xFF`. Used by the
-/// `PayloadKind::HexU32` decode path.
+/// Parse a hex colour byte slice (`#rgb` / `#rgba` / `#rrggbb` /
+/// `#rrggbbaa`) into a `u32` per CSS Color Level 4. The 3-digit and
+/// 4-digit forms expand each nibble: `#abc` → `0xAABBCCFF`,
+/// `#abcd` → `0xAABBCCDD`. Missing alpha defaults to `0xFF`.
+/// Used by the `PayloadKind::HexU32` decode path.
 #[inline]
 fn parse_hex_u32(slice: &[u8]) -> u32 {
     let bytes = if slice.first() == Some(&b'#') {
@@ -613,19 +615,58 @@ fn parse_hex_u32(slice: &[u8]) -> u32 {
     } else {
         slice
     };
-    let mut value: u32 = 0;
-    for &b in bytes.iter() {
-        let nibble = match b {
-            b'0'..=b'9' => b - b'0',
-            b'a'..=b'f' => b - b'a' + 10,
-            b'A'..=b'F' => b - b'A' + 10,
-            _ => return 0,
-        };
-        value = (value << 4) | nibble as u32;
+    fn nibble(b: u8) -> Option<u32> {
+        Some(match b {
+            b'0'..=b'9' => (b - b'0') as u32,
+            b'a'..=b'f' => (b - b'a' + 10) as u32,
+            b'A'..=b'F' => (b - b'A' + 10) as u32,
+            _ => return None,
+        })
     }
-    if bytes.len() == 6 {
-        (value << 8) | 0xFF
-    } else {
-        value
+    let mut nibbles = [0u32; 8];
+    let n = bytes.len().min(8);
+    for (i, &b) in bytes.iter().take(n).enumerate() {
+        match nibble(b) {
+            Some(v) => nibbles[i] = v,
+            None => return 0,
+        }
+    }
+    match n {
+        // #rgb → #rrggbbff
+        3 => {
+            ((nibbles[0] * 0x11) << 24)
+                | ((nibbles[1] * 0x11) << 16)
+                | ((nibbles[2] * 0x11) << 8)
+                | 0xFF
+        }
+        // #rgba → #rrggbbaa
+        4 => {
+            ((nibbles[0] * 0x11) << 24)
+                | ((nibbles[1] * 0x11) << 16)
+                | ((nibbles[2] * 0x11) << 8)
+                | (nibbles[3] * 0x11)
+        }
+        // #rrggbb → #rrggbbff
+        6 => {
+            (nibbles[0] << 28)
+                | (nibbles[1] << 24)
+                | (nibbles[2] << 20)
+                | (nibbles[3] << 16)
+                | (nibbles[4] << 12)
+                | (nibbles[5] << 8)
+                | 0xFF
+        }
+        // #rrggbbaa → verbatim
+        8 => {
+            (nibbles[0] << 28)
+                | (nibbles[1] << 24)
+                | (nibbles[2] << 20)
+                | (nibbles[3] << 16)
+                | (nibbles[4] << 12)
+                | (nibbles[5] << 8)
+                | (nibbles[6] << 4)
+                | nibbles[7]
+        }
+        _ => 0,
     }
 }

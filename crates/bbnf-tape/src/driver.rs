@@ -205,6 +205,11 @@ pub struct IterSavepoint {
     pub fd_len: u32,
     /// `psi.len()` at iteration start.
     pub psi_len: u32,
+    /// AW-III.W1 — `columns.pay_agg.len()` at iteration start.
+    /// Failed iterations that staged typed-leaf constants into the
+    /// arena must roll back so subsequent iterations' arena offsets
+    /// stay aligned with the surviving record stream.
+    pub pay_agg_len: u32,
     /// Byte position at iteration start.
     pub pos: u32,
     /// `FrameStack` length state at iteration start — restored with
@@ -702,6 +707,8 @@ fn handle_repeat_failure(
                 columns.truncate(sp.cols_len as usize);
                 frame_depth.truncate(sp.fd_len as usize);
                 psi.truncate(sp.psi_len as usize);
+                // AW-III.W1: roll back staged arena bytes alongside.
+                columns.pay_agg.truncate(sp.pay_agg_len as usize);
                 stack.restore(sp.stack);
                 // AW-I.W4ζ — clear pending rule-entry stamp from the
                 // failed iteration body's Refs so it doesn't leak to
@@ -749,6 +756,8 @@ fn handle_repeat_failure_bounded(
                 columns.truncate(sp.cols_len as usize);
                 frame_depth.truncate(sp.fd_len as usize);
                 psi.truncate(sp.psi_len as usize);
+                // AW-III.W1: roll back staged arena bytes alongside.
+                columns.pay_agg.truncate(sp.pay_agg_len as usize);
                 stack.restore(sp.stack);
                 // AW-I.W4ζ — clear pending rule-entry stamp from the
                 // failed iteration body's Refs so it doesn't leak to
@@ -1144,6 +1153,15 @@ fn dispatch_one(
             let cols_len_after_push = columns.len();
             let fd_len_after_push = frame_depth.len();
             let psi_len_after_push = psi.len();
+            // AW-III.W1: arena snapshot. Failed branches that wrote
+            // typed-leaf constants into `pay_agg` (via
+            // `stage_literal_payload_in_arena`) must not leak those
+            // bytes forward — subsequent successful branches' arena
+            // offsets would shift past the orphaned bytes and the
+            // record `child_off` ↔ arena byte alignment would
+            // desynchronise. Truncating `pay_agg` to the pre-attempt
+            // length restores the arena cursor.
+            let pay_agg_len_after_push = columns.pay_agg.len();
             // AW-I.W4ζ — snapshot pending_variant_idx so a failed
             // branch's Ref dispatch (which sets pending) does not
             // leak into the next branch. The Alt frame has already
@@ -1184,6 +1202,11 @@ fn dispatch_one(
                         columns.truncate(cols_len_after_push);
                         frame_depth.truncate(fd_len_after_push);
                         psi.truncate(psi_len_after_push);
+                        // AW-III.W1: drop arena bytes the failed
+                        // branch staged. Restoring `pay_agg` to its
+                        // pre-attempt length keeps arena offsets in
+                        // sync with the surviving record stream.
+                        columns.pay_agg.truncate(pay_agg_len_after_push);
                         stack.restore(sp_after_push);
                         stack.pending_variant_idx = pending_after_push;
                         last_err = Some(e);
@@ -1195,8 +1218,11 @@ fn dispatch_one(
             // All branches exhausted — propagate the last syntax error.
             // Pop the Alt frame (it never successfully closed) and
             // restore columns/psi past its parent-row reservation.
+            // AW-III.W1: also drop staged arena bytes so the next
+            // outer-Alt branch sees a clean arena cursor.
             columns.truncate(parent_rec as usize);
             frame_depth.truncate(parent_rec as usize);
+            columns.pay_agg.truncate(pay_agg_len_after_push);
             // Stack already restored to post-push; pop the Alt frame.
             pop_and_release(stack);
             Err(last_err.unwrap_or(DtaError::Syntax {
@@ -1242,6 +1268,7 @@ fn dispatch_one(
                 cols_len: columns.len() as u32,
                 fd_len: frame_depth.len() as u32,
                 psi_len: psi.len() as u32,
+                pay_agg_len: columns.pay_agg.len() as u32,
                 pos: *pos,
                 stack: FrameStackSavepoint {
                     inline_len: 0,
@@ -1331,6 +1358,7 @@ fn dispatch_one(
             let cols_len = columns.len();
             let fd_len = frame_depth.len();
             let psi_len = psi.len();
+            let pay_agg_len = columns.pay_agg.len();
             let pending_before = stack.pending_variant_idx;
 
             let probe = try_branch(
@@ -1347,10 +1375,15 @@ fn dispatch_one(
             );
 
             // Restore state unconditionally — the probe's work is a
-            // lookahead, never consumed into the tape.
+            // lookahead, never consumed into the tape. AW-III.W1
+            // adds arena restoration alongside the structural
+            // truncation to prevent staged constants from a probe-
+            // matched sub-Literal leaking into the post-restore
+            // record stream.
             columns.truncate(cols_len);
             frame_depth.truncate(fd_len);
             psi.truncate(psi_len);
+            columns.pay_agg.truncate(pay_agg_len);
             stack.restore(sp);
             stack.pending_variant_idx = pending_before;
             *pos = start_pos;
@@ -1794,12 +1827,14 @@ fn advance_or_pop_with(
                     let new_sp_cols = columns.len() as u32;
                     let new_sp_fd = frame_depth.len() as u32;
                     let new_sp_psi = psi.len() as u32;
+                    let new_sp_pay_agg = columns.pay_agg.len() as u32;
                     let pos_val = *pos;
                     let new_stack_sp = stack.savepoint();
                     stack.iter_savepoints[counter_idx] = IterSavepoint {
                         cols_len: new_sp_cols,
                         fd_len: new_sp_fd,
                         psi_len: new_sp_psi,
+                        pay_agg_len: new_sp_pay_agg,
                         pos: pos_val,
                         stack: new_stack_sp,
                     };

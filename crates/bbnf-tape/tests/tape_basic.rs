@@ -1307,25 +1307,27 @@ const _COLUMNS_DEFAULT_WITNESS: fn() -> Columns = Columns::new;
 #[test]
 fn payload_job_size_and_alignment() {
     use bbnf_tape::PayloadJob;
-    // 16 bytes = 4 jobs per 64 B cache line. Drives the rayon chunk
-    // stride (`PayloadStream::CHUNK_RECS`).
-    assert_eq!(std::mem::size_of::<PayloadJob>(), 16);
+    // AW-III.W1 widened `column_idx: u8` to `arena_offset: u32` so
+    // every job lands at a unique byte offset in `pay_agg`. Total
+    // size is 20 bytes; each cache line holds 3 jobs.
+    assert_eq!(std::mem::size_of::<PayloadJob>(), 20);
     assert_eq!(std::mem::align_of::<PayloadJob>(), 4);
 }
 
 #[test]
-fn payload_kind_routing_helpers() {
+fn payload_kind_arena_widths() {
     use bbnf_tape::PayloadKind;
-    assert!(PayloadKind::U8.is_narrow());
-    assert!(PayloadKind::Bool.is_narrow());
-    assert!(PayloadKind::HexU32.is_narrow());
-    assert!(PayloadKind::F64.is_wide());
-    assert!(PayloadKind::I64.is_wide());
-    assert!(PayloadKind::String.is_arena());
-    assert!(PayloadKind::AggregateLarge.is_arena());
-    assert!(!PayloadKind::F64.is_narrow());
-    assert!(!PayloadKind::U8.is_wide());
-    assert!(!PayloadKind::Bool.is_arena());
+    // AW-III.W1: every kind serialises into `pay_agg` at the
+    // documented little-endian width. String / AggregateLarge are
+    // variable-width (driven by the matched input slice), reported
+    // as `0`.
+    assert_eq!(PayloadKind::U8.arena_byte_width(), 1);
+    assert_eq!(PayloadKind::Bool.arena_byte_width(), 1);
+    assert_eq!(PayloadKind::HexU32.arena_byte_width(), 4);
+    assert_eq!(PayloadKind::F64.arena_byte_width(), 8);
+    assert_eq!(PayloadKind::I64.arena_byte_width(), 8);
+    assert_eq!(PayloadKind::String.arena_byte_width(), 0);
+    assert_eq!(PayloadKind::AggregateLarge.arena_byte_width(), 0);
     assert_eq!(PayloadKind::COUNT, 7);
     assert_eq!(PayloadKind::from_u8(0), Some(PayloadKind::F64));
     assert_eq!(PayloadKind::from_u8(6), Some(PayloadKind::AggregateLarge));
@@ -1352,7 +1354,7 @@ fn payload_stream_capacity_from_profile() {
             i,
             i + 1,
             bbnf_tape::PayloadKind::U8,
-            i as u8,
+            i,
         ));
     }
     assert_eq!(stream.len(), 500);
@@ -1361,25 +1363,27 @@ fn payload_stream_capacity_from_profile() {
 #[test]
 fn payload_stream_sequential_fill_round_trip() {
     use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
-    // Stage-A round-trip: build a PSI with two narrow scalars and
-    // one wide scalar, drain into a fresh Columns, verify the slots.
+    // AW-III.W1 unified arena emission: every payload kind serialises
+    // to `pay_agg` little-endian bytes. The Stage-A allocator hands
+    // out unique byte offsets per job; the Stage-B drain writes the
+    // decoded value at its allocated offset.
     let input = b"42 17 3.14";
     let mut psi = PayloadStream::new();
     psi.push(PayloadJob::new(0, 0, 2, PayloadKind::U8, 0));
     psi.push(PayloadJob::new(1, 3, 5, PayloadKind::U8, 1));
-    psi.push(PayloadJob::new(2, 6, 10, PayloadKind::F64, 0));
+    psi.push(PayloadJob::new(2, 6, 10, PayloadKind::F64, 8));
 
     let mut columns = Columns::new();
     let profile = GrammarProfile::EMPTY; // parallel_break_even_bytes = 0 → sequential
     let count = psi.fill_columns(input, &mut columns, &profile);
     assert_eq!(count, 3);
-    // U8 takes the first byte of each slice.
-    assert_eq!(columns.pay_narrow.len(), 2);
-    assert_eq!(columns.pay_narrow[0], b'4' as u32);
-    assert_eq!(columns.pay_narrow[1], b'1' as u32);
-    // F64 round-trips bit-equivalent.
-    assert_eq!(columns.pay_wide.len(), 1);
-    assert!((f64::from_bits(columns.pay_wide[0]) - 3.14).abs() < f64::EPSILON);
+    // U8s land at arena offsets 0 and 1 (the first byte of each slice).
+    assert_eq!(columns.pay_agg[0], b'4');
+    assert_eq!(columns.pay_agg[1], b'1');
+    // F64 lands at arena offset 8, 8 bytes wide; bit-identical to the
+    // input's parsed value.
+    let f64_bytes: [u8; 8] = columns.pay_agg[8..16].try_into().unwrap();
+    assert!((f64::from_le_bytes(f64_bytes) - 3.14).abs() < f64::EPSILON);
 }
 
 #[test]
@@ -1387,7 +1391,8 @@ fn payload_stream_parallel_fill_matches_sequential() {
     use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
     // Build a stream large enough to clear the rayon chunk threshold
     // and exercise both paths. Sequential and parallel must produce
-    // bit-identical column state — that's the AV.4.2 invariant.
+    // bit-identical column state — that's the AV.4.2 invariant
+    // (now over the unified `pay_agg` arena per AW-III.W1).
     let input: Vec<u8> = (0..1024u32)
         .flat_map(|i| {
             let s = format!("{:04} ", i % 10000);
@@ -1395,6 +1400,7 @@ fn payload_stream_parallel_fill_matches_sequential() {
         })
         .collect();
     let mut psi = PayloadStream::new();
+    let mut arena_cursor = 0u32;
     for i in 0..1024u32 {
         let lo = i * 5;
         let hi = lo + 4;
@@ -1404,8 +1410,12 @@ fn payload_stream_parallel_fill_matches_sequential() {
             2 => PayloadKind::HexU32,
             _ => PayloadKind::I64,
         };
-        let column_idx = (i / 4) as u8; // unique per kind
-        psi.push(PayloadJob::new(i, lo, hi, kind, column_idx));
+        let width = match kind.arena_byte_width() {
+            0 => (hi - lo) as usize,
+            w => w,
+        };
+        psi.push(PayloadJob::new(i, lo, hi, kind, arena_cursor));
+        arena_cursor += width as u32;
     }
 
     // Sequential — break-even = 0 → forced sequential.
@@ -1420,8 +1430,6 @@ fn payload_stream_parallel_fill_matches_sequential() {
     assert!(psi.should_parallelise(&par_profile, input.len()));
     psi.fill_columns(&input, &mut par_columns, &par_profile);
 
-    assert_eq!(seq_columns.pay_narrow, par_columns.pay_narrow);
-    assert_eq!(seq_columns.pay_wide, par_columns.pay_wide);
     assert_eq!(seq_columns.pay_agg, par_columns.pay_agg);
 }
 
@@ -1430,7 +1438,7 @@ fn payload_stream_parallel_threshold_gates() {
     use bbnf_tape::{GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
     let mut psi = PayloadStream::new();
     for i in 0..16u32 {
-        psi.push(PayloadJob::new(i, i, i + 1, PayloadKind::U8, i as u8));
+        psi.push(PayloadJob::new(i, i, i + 1, PayloadKind::U8, i));
     }
     // (1) `parallel_break_even_bytes == 0` always falls to sequential.
     let mut p = GrammarProfile::EMPTY;
@@ -1477,22 +1485,27 @@ fn payload_stream_arena_payload_round_trip() {
 #[test]
 fn payload_stream_hex_color_round_trip() {
     use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    // AW-III.W1 unified arena emission: HexU32 lands as 4 little-
+    // endian bytes per slot.
     let input = b"#ff0080 #abcdef12";
     let mut psi = PayloadStream::new();
     psi.push(PayloadJob::new(0, 0, 7, PayloadKind::HexU32, 0));
-    psi.push(PayloadJob::new(1, 8, 17, PayloadKind::HexU32, 1));
+    psi.push(PayloadJob::new(1, 8, 17, PayloadKind::HexU32, 4));
     let mut columns = Columns::new();
     let profile = GrammarProfile::EMPTY;
     psi.fill_columns(input, &mut columns, &profile);
+    let v0 = u32::from_le_bytes(columns.pay_agg[0..4].try_into().unwrap());
+    let v1 = u32::from_le_bytes(columns.pay_agg[4..8].try_into().unwrap());
     // #ff0080 → 0xff0080ff (alpha defaulted)
-    assert_eq!(columns.pay_narrow[0], 0xff_00_80_ff);
+    assert_eq!(v0, 0xff_00_80_ff);
     // #abcdef12 → 0xabcdef12 (alpha given)
-    assert_eq!(columns.pay_narrow[1], 0xab_cd_ef_12);
+    assert_eq!(v1, 0xab_cd_ef_12);
 }
 
 #[test]
 fn payload_stream_bool_round_trip() {
     use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    // AW-III.W1 unified arena emission: Bool lands as 1 byte per slot.
     let input = b"true false";
     let mut psi = PayloadStream::new();
     psi.push(PayloadJob::new(0, 0, 4, PayloadKind::Bool, 0));
@@ -1500,22 +1513,26 @@ fn payload_stream_bool_round_trip() {
     let mut columns = Columns::new();
     let profile = GrammarProfile::EMPTY;
     psi.fill_columns(input, &mut columns, &profile);
-    assert_eq!(columns.pay_narrow[0], 1);
-    assert_eq!(columns.pay_narrow[1], 0);
+    assert_eq!(columns.pay_agg[0], 1);
+    assert_eq!(columns.pay_agg[1], 0);
 }
 
 #[test]
 fn payload_stream_i64_round_trip() {
     use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    // AW-III.W1 unified arena emission: I64 lands as 8 little-endian
+    // bytes per slot.
     let input = b"-9223372036854775808 9223372036854775807";
     let mut psi = PayloadStream::new();
     psi.push(PayloadJob::new(0, 0, 20, PayloadKind::I64, 0));
-    psi.push(PayloadJob::new(1, 21, 40, PayloadKind::I64, 1));
+    psi.push(PayloadJob::new(1, 21, 40, PayloadKind::I64, 8));
     let mut columns = Columns::new();
     let profile = GrammarProfile::EMPTY;
     psi.fill_columns(input, &mut columns, &profile);
-    assert_eq!(columns.pay_wide[0] as i64, i64::MIN);
-    assert_eq!(columns.pay_wide[1] as i64, i64::MAX);
+    let v0 = i64::from_le_bytes(columns.pay_agg[0..8].try_into().unwrap());
+    let v1 = i64::from_le_bytes(columns.pay_agg[8..16].try_into().unwrap());
+    assert_eq!(v0, i64::MIN);
+    assert_eq!(v1, i64::MAX);
 }
 
 #[test]
@@ -1524,19 +1541,21 @@ fn payload_job_input_len_helper() {
     let job = PayloadJob::new(0, 100, 110, PayloadKind::F64, 0);
     assert_eq!(job.input_len(), 10);
     assert_eq!(job.kind, PayloadKind::F64);
-    assert_eq!(job._pad, [0, 0]);
+    assert_eq!(job._pad, [0, 0, 0]);
 }
 
 #[test]
 fn payload_stream_chunk_recs_matches_cache_line() {
     use bbnf_tape::{PayloadJob, PayloadStream};
-    // 4 jobs per 64 B cache line — the stride drives the rayon chunk
-    // size so each worker owns a cache-coherent run on the read side.
+    // AW-III.W1: PayloadJob widened to 20 bytes — three jobs per
+    // 64 B cache line. The CHUNK_RECS stride drives the rayon worker
+    // partitioning so each chunk owns a cache-coherent run on the
+    // read side.
     assert_eq!(
         PayloadStream::CHUNK_RECS,
         64 / std::mem::size_of::<PayloadJob>(),
     );
-    assert_eq!(PayloadStream::CHUNK_RECS, 4);
+    assert_eq!(PayloadStream::CHUNK_RECS, 3);
 }
 
 // ── Tranche AV.4.4 — Stage-C finaliser bit-equality regression ─────
@@ -2119,10 +2138,11 @@ fn cursor_child_zero_is_o1_under_preorder() {
         DtaState::Seq {
             children: &SEQ_CHILDREN,
             frame: DtaFrameKind::Seq,
+            promote: bbnf_tape::SeqPromote::Default,
         },
-        DtaState::Literal { text: LIT_A },
-        DtaState::Literal { text: LIT_B },
-        DtaState::Literal { text: LIT_C },
+        DtaState::Literal { text: LIT_A, payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: LIT_B, payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: LIT_C, payload: bbnf_tape::LiteralPayload::None },
     ];
     static RULE_ENTRIES: [DtaRuleEntry; 1] = [DtaRuleEntry {
         rule: DtaRuleId(0),

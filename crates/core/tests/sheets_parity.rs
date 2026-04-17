@@ -413,21 +413,23 @@ fn pinned_mul_op_div_branch_drops_payload() {
 
 #[test]
 fn pinned_number_drops_f64_payload() {
-    // `number -> f64` does NOT fire — the regex match scans the
-    // digits but the conversion to f64 is not threaded into a
-    // PayloadData::WideScalar push. The `_records` walk surfaces
-    // every Span leaf; none of them carry an 8-byte arena slot
-    // that decodes to the input value.
+    // AW-III.W1 close-out: `number = /regex/ -> f64` now fires. The
+    // lifter resolves `Map { Regex, Expr { return_type: F64 } }` to
+    // `RegexPayloadKind::F64`, which the walker enqueues into the
+    // PSI; Stage-B writes the parsed `f64` little-endian into
+    // `pay_agg`, and `payload_bytes(rec, 8)` reads it back via
+    // `f64::from_le_bytes`. Pre-W1 the assertion was
+    // `f64_count == 0` (pinned to fail until the wiring landed);
+    // the inverted assertion confirms the fix.
     let payloads = typed_f64_payloads("=42");
     let f64_count = payloads
         .iter()
         .filter(|(_, v)| (*v - 42.0).abs() < 1e-9)
         .count();
-    assert_eq!(
-        f64_count, 0,
-        "AU.6.8 gap pinned: number `-> f64` payload not reached for \
-         input `=42`. If non-zero, the codegen fix landed. \
-         Observed = {payloads:?}"
+    assert!(
+        f64_count >= 1,
+        "AW-III.W1: number `-> f64` payload must reach the tape \
+         for input `=42`. Observed = {payloads:?}"
     );
 }
 

@@ -473,6 +473,29 @@ fn empty_grammar_produces_no_alphabet() {
 }
 
 #[test]
+fn probe_per_grammar_mining() {
+    use bbnf_ir::passes::recognizers::kernel_shape::select_kernel_strategy;
+    fn report(name: &str, mut ir: GrammarIR) {
+        compute_structural_alphabet(&mut ir);
+        let alphabet = ir.structural_alphabet.unwrap_or_default();
+        let strategy = select_kernel_strategy(&alphabet);
+        eprintln!(
+            "{name}: |singletons|={} |digraph_pairs|={} |quote_classes|={} | shape={:?} digraphs={} quote_parity={}",
+            alphabet.single_bytes.len(),
+            alphabet.digraphs.len(),
+            alphabet.quote_classes.len(),
+            strategy.singleton_kernel,
+            strategy.has_digraphs,
+            strategy.has_quote_parity,
+        );
+    }
+    report("JSON  ", json_fixture());
+    report("CSS L4", css_l4_fixture());
+    report("BBNF  ", bbnf_fixture());
+    report("Sheets", sheets_fixture());
+}
+
+#[test]
 fn digraph_first_byte_is_in_singletons() {
     // Invariant: every digraph's first byte must also be in the
     // singleton set (the alphabet pass adds it explicitly so the

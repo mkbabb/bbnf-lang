@@ -3234,10 +3234,9 @@ mod __bbnfbootstrap_emit_impl {
         use super::*;
         #[cold]
         #[inline(never)]
-        fn __cold_state_51(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_51<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3247,6 +3246,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[51] {
@@ -3276,23 +3276,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_52(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_52<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3302,6 +3307,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[52] {
@@ -3331,23 +3337,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_53(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_53<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3357,6 +3368,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[53] {
@@ -3386,23 +3398,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_54(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_54<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3412,6 +3429,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[54] {
@@ -3527,10 +3545,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_55(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_55<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3540,6 +3557,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[55] {
@@ -3569,23 +3587,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_56(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_56<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3595,6 +3618,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[56] {
@@ -3624,23 +3648,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_57(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_57<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3650,6 +3679,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[57] {
@@ -3765,10 +3795,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_72(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_72<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3778,6 +3807,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[72] {
@@ -3805,10 +3835,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_73(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_73<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3818,6 +3847,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[73] {
@@ -3845,10 +3875,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_74(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_74<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3858,6 +3887,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[74] {
@@ -3866,23 +3896,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_75(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_75<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3892,6 +3927,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[75] {
@@ -3900,23 +3936,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_76(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_76<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3926,6 +3967,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[76] {
@@ -3966,15 +4008,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -3982,10 +4030,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_77(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_77<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -3995,6 +4042,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[77] {
@@ -4022,10 +4070,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_78(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_78<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4035,6 +4082,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[78] {
@@ -4075,15 +4123,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -4091,10 +4145,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_79(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_79<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4104,6 +4157,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[79] {
@@ -4177,15 +4231,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -4193,10 +4253,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_80(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_80<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4206,6 +4265,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[80] {
@@ -4246,15 +4306,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -4262,10 +4328,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_101(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_101<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4275,6 +4340,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[101] {
@@ -4302,10 +4368,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_108(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_108<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4315,6 +4380,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[108] {
@@ -4388,15 +4454,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -4404,10 +4476,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_109(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_109<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4417,6 +4488,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[109] {
@@ -4457,15 +4529,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -4473,10 +4551,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_110(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_110<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4486,6 +4563,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[110] {
@@ -4515,23 +4593,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_111(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_111<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4541,6 +4624,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[111] {
@@ -4568,10 +4652,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_118(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_118<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4581,6 +4664,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[118] {
@@ -4654,15 +4738,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -4670,10 +4760,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_119(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_119<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4683,6 +4772,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[119] {
@@ -4712,23 +4802,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_120(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_120<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4738,6 +4833,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[120] {
@@ -4765,10 +4861,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_121(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_121<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4778,6 +4873,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[121] {
@@ -4818,15 +4914,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -4834,10 +4936,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_122(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_122<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4847,6 +4948,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[122] {
@@ -4874,10 +4976,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_123(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_123<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4887,6 +4988,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[123] {
@@ -4914,10 +5016,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_124(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_124<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -4927,6 +5028,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[124] {
@@ -5042,10 +5144,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_125(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_125<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5055,6 +5156,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[125] {
@@ -5084,23 +5186,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_126(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_126<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5110,6 +5217,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[126] {
@@ -5118,23 +5226,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_127(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_127<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5144,6 +5257,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[127] {
@@ -5152,23 +5266,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_128(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_128<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5178,6 +5297,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[128] {
@@ -5218,15 +5338,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -5234,10 +5360,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_129(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_129<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5247,6 +5372,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[129] {
@@ -5274,10 +5400,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_130(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_130<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5287,6 +5412,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[130] {
@@ -5327,15 +5453,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -5343,10 +5475,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_131(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_131<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5356,6 +5487,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[131] {
@@ -5385,23 +5517,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_132(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_132<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5411,6 +5548,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[132] {
@@ -5440,23 +5578,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_133(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_133<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5466,6 +5609,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[133] {
@@ -5495,23 +5639,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_134(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_134<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5521,6 +5670,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[134] {
@@ -5550,23 +5700,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_135(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_135<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5576,6 +5731,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[135] {
@@ -5605,23 +5761,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_136(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_136<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5631,6 +5792,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[136] {
@@ -5660,23 +5822,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_137(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_137<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5686,6 +5853,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[137] {
@@ -5715,23 +5883,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_138(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_138<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5741,6 +5914,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[138] {
@@ -5770,23 +5944,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_139(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_139<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5796,6 +5975,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[139] {
@@ -5825,23 +6005,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_140(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_140<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5851,6 +6036,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[140] {
@@ -5880,23 +6066,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_141(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_141<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5906,6 +6097,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "regex";
                 let (pattern, payload) = match table.states[141] {
@@ -5937,23 +6129,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_142(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_142<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -5963,6 +6160,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[142] {
@@ -6078,10 +6276,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_143(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_143<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6091,6 +6288,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "regex";
                 let (pattern, payload) = match table.states[143] {
@@ -6122,23 +6320,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_147(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_147<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6148,6 +6351,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[147] {
@@ -6188,15 +6392,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -6204,10 +6414,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_151(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_151<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6217,6 +6426,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[151] {
@@ -6257,15 +6467,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -6273,10 +6489,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_154(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_154<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6286,6 +6501,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[154] {
@@ -6315,23 +6531,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_155(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_155<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6341,6 +6562,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[155] {
@@ -6381,15 +6603,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -6397,10 +6625,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_156(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_156<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6410,6 +6637,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[156] {
@@ -6525,10 +6753,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_157(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_157<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6538,6 +6765,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[157] {
@@ -6567,23 +6795,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_158(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_158<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6593,6 +6826,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "regex";
                 let (pattern, payload) = match table.states[158] {
@@ -6624,23 +6858,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_159(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_159<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6650,6 +6889,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[159] {
@@ -6679,23 +6919,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_160(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_160<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6705,6 +6950,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[160] {
@@ -6745,15 +6991,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -6761,10 +7013,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_164(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_164<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6774,6 +7025,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[164] {
@@ -6814,6 +7066,54 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
+                } else {
+                    ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
+                }
+            }
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_165<__S: ::bbnf::runtime::tape::RegexScanner>(
+            input: &[u8],
+            scanner: &__S,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            stack: &mut ::bbnf::runtime::tape::FrameStack,
+            pos: &mut u32,
+        ) -> ::core::result::Result<
+            ::bbnf::runtime::tape::StepResult,
+            ::bbnf::runtime::tape::DtaError,
+        > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
+            'step: {
+                let _ = "ws_trim";
+                let pattern = match table.states[165] {
+                    ::bbnf::runtime::tape::DtaState::WsTrim { pattern } => pattern,
+                    _ => unsafe { ::core::hint::unreachable_unchecked() },
+                };
+                let _ = pattern;
+                ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
                     ::bbnf::runtime::tape::advance_or_pop_with(
                         ::core::option::Option::Some(table),
                         ::core::option::Option::Some(input),
@@ -6823,17 +7123,14 @@ mod __bbnfbootstrap_emit_impl {
                         stack,
                         pos,
                     )
-                } else {
-                    ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_165(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_166<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6843,40 +7140,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
-            'step: {
-                let _ = "ws_trim";
-                let pattern = match table.states[165] {
-                    ::bbnf::runtime::tape::DtaState::WsTrim { pattern } => pattern,
-                    _ => unsafe { ::core::hint::unreachable_unchecked() },
-                };
-                let _ = pattern;
-                ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
-            }
-        }
-        #[cold]
-        #[inline(never)]
-        fn __cold_state_166(
-            table: &::bbnf::runtime::tape::DtaTable,
-            input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
-            columns: &mut ::bbnf::runtime::tape::Columns,
-            psi: &mut ::bbnf::runtime::tape::PayloadStream,
-            frame_depth: &mut ::std::vec::Vec<u8>,
-            stack: &mut ::bbnf::runtime::tape::FrameStack,
-            pos: &mut u32,
-        ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::StepResult,
-            ::bbnf::runtime::tape::DtaError,
-        > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[166] {
@@ -6885,23 +7149,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_167(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_167<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6911,6 +7180,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[167] {
@@ -6951,15 +7221,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -6967,10 +7243,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_168(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_168<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -6980,6 +7255,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[168] {
@@ -7009,23 +7285,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_169(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_169<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7035,6 +7316,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "regex";
                 let (pattern, payload) = match table.states[169] {
@@ -7066,23 +7348,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_170(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_170<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7092,6 +7379,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[170] {
@@ -7132,6 +7420,54 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
+                } else {
+                    ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
+                }
+            }
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_171<__S: ::bbnf::runtime::tape::RegexScanner>(
+            input: &[u8],
+            scanner: &__S,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            stack: &mut ::bbnf::runtime::tape::FrameStack,
+            pos: &mut u32,
+        ) -> ::core::result::Result<
+            ::bbnf::runtime::tape::StepResult,
+            ::bbnf::runtime::tape::DtaError,
+        > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
+            'step: {
+                let _ = "ws_trim";
+                let pattern = match table.states[171] {
+                    ::bbnf::runtime::tape::DtaState::WsTrim { pattern } => pattern,
+                    _ => unsafe { ::core::hint::unreachable_unchecked() },
+                };
+                let _ = pattern;
+                ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
                     ::bbnf::runtime::tape::advance_or_pop_with(
                         ::core::option::Option::Some(table),
                         ::core::option::Option::Some(input),
@@ -7141,17 +7477,14 @@ mod __bbnfbootstrap_emit_impl {
                         stack,
                         pos,
                     )
-                } else {
-                    ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_171(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_172<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7161,40 +7494,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
-            'step: {
-                let _ = "ws_trim";
-                let pattern = match table.states[171] {
-                    ::bbnf::runtime::tape::DtaState::WsTrim { pattern } => pattern,
-                    _ => unsafe { ::core::hint::unreachable_unchecked() },
-                };
-                let _ = pattern;
-                ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
-            }
-        }
-        #[cold]
-        #[inline(never)]
-        fn __cold_state_172(
-            table: &::bbnf::runtime::tape::DtaTable,
-            input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
-            columns: &mut ::bbnf::runtime::tape::Columns,
-            psi: &mut ::bbnf::runtime::tape::PayloadStream,
-            frame_depth: &mut ::std::vec::Vec<u8>,
-            stack: &mut ::bbnf::runtime::tape::FrameStack,
-            pos: &mut u32,
-        ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::StepResult,
-            ::bbnf::runtime::tape::DtaError,
-        > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[172] {
@@ -7203,23 +7503,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_173(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_173<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7229,6 +7534,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[173] {
@@ -7269,15 +7575,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -7285,10 +7597,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_174(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_174<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7298,6 +7609,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[174] {
@@ -7325,10 +7637,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_183(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_183<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7338,6 +7649,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[183] {
@@ -7367,23 +7679,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_184(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_184<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7393,6 +7710,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[184] {
@@ -7422,23 +7740,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_185(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_185<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7448,6 +7771,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[185] {
@@ -7475,10 +7799,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_186(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_186<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7488,6 +7811,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[186] {
@@ -7517,23 +7841,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_190(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_190<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7543,6 +7872,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[190] {
@@ -7583,15 +7913,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -7599,10 +7935,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_200(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_200<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7612,6 +7947,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[200] {
@@ -7685,15 +8021,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -7701,10 +8043,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_201(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_201<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7714,6 +8055,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[201] {
@@ -7743,23 +8085,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_202(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_202<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7769,6 +8116,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[202] {
@@ -7809,15 +8157,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -7825,10 +8179,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_203(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_203<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7838,6 +8191,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[203] {
@@ -7911,15 +8265,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -7927,10 +8287,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_204(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_204<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -7940,6 +8299,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[204] {
@@ -7980,15 +8340,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -7996,10 +8362,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_205(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_205<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8009,6 +8374,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[205] {
@@ -8036,10 +8402,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_206(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_206<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8049,6 +8414,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[206] {
@@ -8076,10 +8442,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_207(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_207<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8089,6 +8454,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[207] {
@@ -8118,23 +8484,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_208(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_208<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8144,6 +8515,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[208] {
@@ -8171,10 +8543,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_209(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_209<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8184,6 +8555,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[209] {
@@ -8192,23 +8564,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_210(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_210<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8218,6 +8595,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[210] {
@@ -8226,23 +8604,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_211(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_211<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8252,6 +8635,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[211] {
@@ -8292,15 +8676,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -8308,10 +8698,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_212(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_212<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8321,6 +8710,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[212] {
@@ -8350,23 +8740,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_213(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_213<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8376,6 +8771,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[213] {
@@ -8416,15 +8812,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -8432,10 +8834,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_214(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_214<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8445,6 +8846,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[214] {
@@ -8474,23 +8876,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_215(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_215<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8500,6 +8907,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[215] {
@@ -8527,10 +8935,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_216(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_216<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8540,6 +8947,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[216] {
@@ -8548,23 +8956,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_217(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_217<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8574,6 +8987,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[217] {
@@ -8582,23 +8996,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_218(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_218<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8608,6 +9027,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[218] {
@@ -8648,15 +9068,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -8664,10 +9090,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_219(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_219<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8677,6 +9102,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[219] {
@@ -8706,23 +9132,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_220(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_220<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8732,6 +9163,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[220] {
@@ -8772,15 +9204,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -8788,10 +9226,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_221(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_221<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8801,6 +9238,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[221] {
@@ -8830,23 +9268,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_222(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_222<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8856,6 +9299,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[222] {
@@ -8883,10 +9327,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_223(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_223<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8896,6 +9339,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[223] {
@@ -8904,23 +9348,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_224(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_224<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8930,6 +9379,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[224] {
@@ -8938,23 +9388,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_225(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_225<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -8964,6 +9419,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[225] {
@@ -9004,15 +9460,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -9020,10 +9482,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_226(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_226<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9033,6 +9494,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[226] {
@@ -9062,23 +9524,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_227(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_227<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9088,6 +9555,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[227] {
@@ -9128,15 +9596,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -9144,10 +9618,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_228(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_228<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9157,6 +9630,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[228] {
@@ -9186,23 +9660,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_229(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_229<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9212,6 +9691,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[229] {
@@ -9239,10 +9719,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_230(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_230<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9252,6 +9731,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[230] {
@@ -9260,23 +9740,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_231(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_231<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9286,6 +9771,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[231] {
@@ -9294,23 +9780,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_232(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_232<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9320,6 +9811,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[232] {
@@ -9360,15 +9852,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -9376,10 +9874,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_233(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_233<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9389,6 +9886,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[233] {
@@ -9418,23 +9916,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_234(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_234<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9444,6 +9947,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[234] {
@@ -9484,15 +9988,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -9500,10 +10010,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_235(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_235<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9513,6 +10022,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[235] {
@@ -9628,10 +10138,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_236(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_236<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9641,6 +10150,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[236] {
@@ -9670,23 +10180,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_237(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_237<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9696,6 +10211,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[237] {
@@ -9725,23 +10241,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_238(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_238<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9751,6 +10272,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[238] {
@@ -9780,23 +10302,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_239(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_239<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9806,6 +10333,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[239] {
@@ -9835,23 +10363,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_240(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_240<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9861,6 +10394,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[240] {
@@ -9976,10 +10510,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_241(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_241<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -9989,6 +10522,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[241] {
@@ -10016,10 +10550,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_242(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_242<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10029,6 +10562,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[242] {
@@ -10102,15 +10636,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -10118,10 +10658,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_243(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_243<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10131,6 +10670,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[243] {
@@ -10158,10 +10698,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_244(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_244<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10171,6 +10710,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[244] {
@@ -10179,23 +10719,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_245(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_245<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10205,6 +10750,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[245] {
@@ -10213,23 +10759,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_246(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_246<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10239,6 +10790,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[246] {
@@ -10279,15 +10831,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -10295,10 +10853,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_247(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_247<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10308,6 +10865,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[247] {
@@ -10335,10 +10893,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_248(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_248<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10348,6 +10905,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[248] {
@@ -10421,15 +10979,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -10437,10 +11001,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_249(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_249<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10450,6 +11013,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[249] {
@@ -10477,10 +11041,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_250(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_250<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10490,6 +11053,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[250] {
@@ -10563,15 +11127,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -10579,10 +11149,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_251(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_251<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10592,6 +11161,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[251] {
@@ -10632,15 +11202,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -10648,10 +11224,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_252(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_252<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10661,6 +11236,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[252] {
@@ -10688,10 +11264,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_253(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_253<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10701,6 +11276,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[253] {
@@ -10730,23 +11306,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_254(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_254<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10756,6 +11337,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[254] {
@@ -10764,23 +11346,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_255(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_255<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10790,6 +11377,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[255] {
@@ -10798,23 +11386,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_256(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_256<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10824,6 +11417,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[256] {
@@ -10864,15 +11458,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -10880,10 +11480,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_257(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_257<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10893,6 +11492,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[257] {
@@ -10920,10 +11520,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_258(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_258<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10933,6 +11532,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[258] {
@@ -10960,10 +11560,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_259(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_259<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -10973,6 +11572,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[259] {
@@ -11046,15 +11646,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -11062,10 +11668,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_260(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_260<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11075,6 +11680,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[260] {
@@ -11115,15 +11721,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -11131,10 +11743,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_261(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_261<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11144,6 +11755,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[261] {
@@ -11184,15 +11796,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -11200,10 +11818,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_262(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_262<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11213,6 +11830,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[262] {
@@ -11286,15 +11904,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -11302,10 +11926,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_263(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_263<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11315,6 +11938,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[263] {
@@ -11355,15 +11979,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -11371,10 +12001,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_264(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_264<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11384,6 +12013,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[264] {
@@ -11413,23 +12043,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_265(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_265<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11439,6 +12074,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[265] {
@@ -11468,23 +12104,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_266(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_266<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11494,6 +12135,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[266] {
@@ -11523,23 +12165,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_267(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_267<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11549,6 +12196,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[267] {
@@ -11664,10 +12312,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_268(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_268<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11677,6 +12324,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[268] {
@@ -11704,10 +12352,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_269(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_269<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11717,6 +12364,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[269] {
@@ -11744,10 +12392,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_270(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_270<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11757,6 +12404,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[270] {
@@ -11765,23 +12413,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_271(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_271<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11791,6 +12444,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[271] {
@@ -11799,23 +12453,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_272(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_272<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11825,6 +12484,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[272] {
@@ -11865,15 +12525,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -11881,10 +12547,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_273(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_273<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11894,6 +12559,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[273] {
@@ -11921,10 +12587,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_274(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_274<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -11934,6 +12599,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[274] {
@@ -11974,15 +12640,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -11990,10 +12662,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_275(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_275<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12003,6 +12674,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[275] {
@@ -12076,15 +12748,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -12092,10 +12770,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_276(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_276<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12105,6 +12782,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[276] {
@@ -12145,15 +12823,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -12161,10 +12845,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_277(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_277<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12174,6 +12857,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[277] {
@@ -12201,10 +12885,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_278(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_278<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12214,6 +12897,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[278] {
@@ -12222,23 +12906,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_279(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_279<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12248,6 +12937,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[279] {
@@ -12256,23 +12946,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_280(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_280<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12282,6 +12977,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[280] {
@@ -12322,15 +13018,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -12338,10 +13040,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_281(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_281<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12351,6 +13052,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[281] {
@@ -12380,23 +13082,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_282(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_282<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12406,6 +13113,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[282] {
@@ -12479,15 +13187,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -12495,10 +13209,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_283(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_283<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12508,6 +13221,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[283] {
@@ -12548,15 +13262,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -12564,10 +13284,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_284(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_284<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12577,6 +13296,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[284] {
@@ -12650,15 +13370,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -12666,10 +13392,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_285(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_285<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12679,6 +13404,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[285] {
@@ -12706,10 +13432,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_286(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_286<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12719,6 +13444,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[286] {
@@ -12727,23 +13453,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_287(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_287<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12753,6 +13484,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[287] {
@@ -12761,23 +13493,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_288(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_288<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12787,6 +13524,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[288] {
@@ -12827,15 +13565,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -12843,10 +13587,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_289(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_289<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12856,6 +13599,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[289] {
@@ -12885,23 +13629,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_290(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_290<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -12911,6 +13660,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[290] {
@@ -12984,15 +13734,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -13000,10 +13756,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_291(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_291<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13013,6 +13768,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[291] {
@@ -13053,15 +13809,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -13069,10 +13831,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_292(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_292<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13082,6 +13843,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[292] {
@@ -13155,15 +13917,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -13171,10 +13939,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_293(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_293<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13184,6 +13951,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[293] {
@@ -13213,23 +13981,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_294(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_294<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13239,6 +14012,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[294] {
@@ -13266,10 +14040,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_295(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_295<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13279,6 +14052,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[295] {
@@ -13308,23 +14082,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_296(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_296<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13334,6 +14113,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[296] {
@@ -13342,23 +14122,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_297(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_297<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13368,6 +14153,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[297] {
@@ -13376,23 +14162,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_298(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_298<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13402,6 +14193,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[298] {
@@ -13442,15 +14234,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -13458,10 +14256,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_299(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_299<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13471,6 +14268,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[299] {
@@ -13498,10 +14296,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_300(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_300<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13511,6 +14308,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[300] {
@@ -13551,15 +14349,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -13567,10 +14371,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_301(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_301<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13580,6 +14383,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[301] {
@@ -13653,15 +14457,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -13669,10 +14479,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_302(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_302<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13682,6 +14491,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[302] {
@@ -13711,23 +14521,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_303(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_303<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13737,6 +14552,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[303] {
@@ -13745,23 +14561,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_304(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_304<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13771,6 +14592,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[304] {
@@ -13779,23 +14601,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_305(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_305<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13805,6 +14632,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[305] {
@@ -13845,15 +14673,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -13861,10 +14695,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_306(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_306<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13874,6 +14707,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[306] {
@@ -13901,10 +14735,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_307(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_307<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13914,6 +14747,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[307] {
@@ -13954,15 +14788,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -13970,10 +14810,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_308(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_308<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -13983,6 +14822,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[308] {
@@ -14010,10 +14850,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_309(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_309<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14023,6 +14862,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[309] {
@@ -14050,10 +14890,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_310(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_310<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14063,6 +14902,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[310] {
@@ -14178,10 +15018,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_311(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_311<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14191,6 +15030,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[311] {
@@ -14218,10 +15058,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_312(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_312<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14231,6 +15070,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[312] {
@@ -14260,23 +15100,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_313(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_313<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14286,6 +15131,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[313] {
@@ -14294,23 +15140,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_314(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_314<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14320,6 +15171,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[314] {
@@ -14328,23 +15180,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_315(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_315<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14354,6 +15211,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[315] {
@@ -14394,15 +15252,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -14410,10 +15274,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_316(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_316<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14423,6 +15286,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[316] {
@@ -14450,10 +15314,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_317(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_317<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14463,6 +15326,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[317] {
@@ -14471,23 +15335,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_318(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_318<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14497,6 +15366,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[318] {
@@ -14505,23 +15375,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_319(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_319<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14531,6 +15406,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[319] {
@@ -14571,15 +15447,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -14587,10 +15469,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_320(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_320<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14600,6 +15481,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[320] {
@@ -14629,23 +15511,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_321(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_321<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14655,6 +15542,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[321] {
@@ -14684,23 +15572,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_322(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_322<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14710,6 +15603,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[322] {
@@ -14825,10 +15719,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_323(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_323<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14838,6 +15731,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[323] {
@@ -14878,15 +15772,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -14894,10 +15794,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_324(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_324<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14907,6 +15806,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[324] {
@@ -14936,23 +15836,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_325(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_325<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -14962,6 +15867,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "regex";
                 let (pattern, payload) = match table.states[325] {
@@ -14993,23 +15899,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_326(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_326<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15019,6 +15930,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[326] {
@@ -15048,23 +15960,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_327(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_327<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15074,6 +15991,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[327] {
@@ -15114,15 +16032,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -15130,10 +16054,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_328(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_328<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15143,6 +16066,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[328] {
@@ -15172,23 +16096,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_329(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_329<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15198,6 +16127,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[329] {
@@ -15206,23 +16136,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_330(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_330<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15232,6 +16167,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[330] {
@@ -15240,23 +16176,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_331(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_331<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15266,6 +16207,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[331] {
@@ -15306,15 +16248,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -15322,10 +16270,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_332(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_332<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15335,6 +16282,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[332] {
@@ -15362,10 +16310,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_333(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_333<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15375,6 +16322,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[333] {
@@ -15404,23 +16352,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_334(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_334<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15430,6 +16383,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[334] {
@@ -15438,23 +16392,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_335(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_335<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15464,6 +16423,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[335] {
@@ -15472,23 +16432,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_336(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_336<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15498,6 +16463,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[336] {
@@ -15538,15 +16504,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -15554,10 +16526,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_337(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_337<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15567,6 +16538,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[337] {
@@ -15594,10 +16566,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_338(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_338<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15607,6 +16578,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[338] {
@@ -15647,15 +16619,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -15663,10 +16641,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_339(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_339<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15676,6 +16653,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[339] {
@@ -15749,15 +16727,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -15765,10 +16749,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_340(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_340<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15778,6 +16761,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[340] {
@@ -15818,6 +16802,54 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
+                } else {
+                    ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
+                }
+            }
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_341<__S: ::bbnf::runtime::tape::RegexScanner>(
+            input: &[u8],
+            scanner: &__S,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            stack: &mut ::bbnf::runtime::tape::FrameStack,
+            pos: &mut u32,
+        ) -> ::core::result::Result<
+            ::bbnf::runtime::tape::StepResult,
+            ::bbnf::runtime::tape::DtaError,
+        > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
+            'step: {
+                let _ = "ws_trim";
+                let pattern = match table.states[341] {
+                    ::bbnf::runtime::tape::DtaState::WsTrim { pattern } => pattern,
+                    _ => unsafe { ::core::hint::unreachable_unchecked() },
+                };
+                let _ = pattern;
+                ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
                     ::bbnf::runtime::tape::advance_or_pop_with(
                         ::core::option::Option::Some(table),
                         ::core::option::Option::Some(input),
@@ -15827,17 +16859,14 @@ mod __bbnfbootstrap_emit_impl {
                         stack,
                         pos,
                     )
-                } else {
-                    ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_341(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_342<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15847,40 +16876,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
-            'step: {
-                let _ = "ws_trim";
-                let pattern = match table.states[341] {
-                    ::bbnf::runtime::tape::DtaState::WsTrim { pattern } => pattern,
-                    _ => unsafe { ::core::hint::unreachable_unchecked() },
-                };
-                let _ = pattern;
-                ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
-            }
-        }
-        #[cold]
-        #[inline(never)]
-        fn __cold_state_342(
-            table: &::bbnf::runtime::tape::DtaTable,
-            input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
-            columns: &mut ::bbnf::runtime::tape::Columns,
-            psi: &mut ::bbnf::runtime::tape::PayloadStream,
-            frame_depth: &mut ::std::vec::Vec<u8>,
-            stack: &mut ::bbnf::runtime::tape::FrameStack,
-            pos: &mut u32,
-        ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::StepResult,
-            ::bbnf::runtime::tape::DtaError,
-        > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[342] {
@@ -15889,23 +16885,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_343(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_343<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15915,6 +16916,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[343] {
@@ -15955,15 +16957,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -15971,10 +16979,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_344(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_344<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -15984,6 +16991,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[344] {
@@ -16013,23 +17021,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_345(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_345<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16039,6 +17052,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[345] {
@@ -16079,15 +17093,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -16095,10 +17115,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_346(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_346<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16108,6 +17127,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[346] {
@@ -16137,23 +17157,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_347(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_347<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16163,6 +17188,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[347] {
@@ -16171,23 +17197,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_348(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_348<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16197,6 +17228,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[348] {
@@ -16205,23 +17237,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_349(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_349<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16231,6 +17268,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[349] {
@@ -16271,15 +17309,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -16287,10 +17331,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_350(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_350<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16300,6 +17343,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[350] {
@@ -16327,10 +17371,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_351(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_351<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16340,6 +17383,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[351] {
@@ -16348,23 +17392,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_352(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_352<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16374,6 +17423,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[352] {
@@ -16382,23 +17432,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_353(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_353<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16408,6 +17463,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[353] {
@@ -16448,15 +17504,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -16464,10 +17526,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_354(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_354<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16477,6 +17538,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[354] {
@@ -16506,23 +17568,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_355(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_355<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16532,6 +17599,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[355] {
@@ -16540,23 +17608,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_356(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_356<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16566,6 +17639,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[356] {
@@ -16574,23 +17648,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_357(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_357<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16600,6 +17679,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[357] {
@@ -16640,15 +17720,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -16656,10 +17742,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_358(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_358<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16669,6 +17754,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[358] {
@@ -16696,10 +17782,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_359(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_359<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16709,6 +17794,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[359] {
@@ -16749,15 +17835,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -16765,10 +17857,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_360(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_360<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16778,6 +17869,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[360] {
@@ -16805,10 +17897,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_361(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_361<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16818,6 +17909,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[361] {
@@ -16933,10 +18025,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_362(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_362<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16946,6 +18037,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[362] {
@@ -16954,23 +18046,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_363(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_363<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -16980,6 +18077,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[363] {
@@ -16988,23 +18086,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_364(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_364<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17014,6 +18117,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[364] {
@@ -17054,15 +18158,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -17070,10 +18180,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_365(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_365<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17083,6 +18192,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[365] {
@@ -17112,23 +18222,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_366(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_366<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17138,6 +18253,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[366] {
@@ -17167,23 +18283,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_367(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_367<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17193,6 +18314,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[367] {
@@ -17308,10 +18430,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_368(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_368<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17321,6 +18442,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[368] {
@@ -17394,15 +18516,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -17410,10 +18538,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_369(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_369<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17423,6 +18550,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[369] {
@@ -17463,15 +18591,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -17479,10 +18613,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_370(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_370<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17492,6 +18625,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[370] {
@@ -17521,23 +18655,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_371(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_371<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17547,6 +18686,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[371] {
@@ -17555,23 +18695,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_372(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_372<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17581,6 +18726,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[372] {
@@ -17589,23 +18735,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_373(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_373<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17615,6 +18766,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[373] {
@@ -17655,15 +18807,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -17671,10 +18829,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_374(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_374<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17684,6 +18841,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[374] {
@@ -17711,10 +18869,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_375(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_375<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17724,6 +18881,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[375] {
@@ -17732,23 +18890,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_376(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_376<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17758,6 +18921,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[376] {
@@ -17766,23 +18930,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_377(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_377<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17792,6 +18961,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[377] {
@@ -17832,15 +19002,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -17848,10 +19024,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_378(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_378<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17861,6 +19036,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[378] {
@@ -17888,10 +19064,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_379(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_379<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17901,6 +19076,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[379] {
@@ -17909,23 +19085,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_380(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_380<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17935,6 +19116,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[380] {
@@ -17943,23 +19125,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_381(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_381<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -17969,6 +19156,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[381] {
@@ -18009,15 +19197,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -18025,10 +19219,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_382(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_382<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18038,6 +19231,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[382] {
@@ -18067,23 +19261,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_383(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_383<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18093,6 +19292,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[383] {
@@ -18122,23 +19322,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_384(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_384<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18148,6 +19353,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[384] {
@@ -18263,10 +19469,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_385(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_385<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18276,6 +19481,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[385] {
@@ -18349,15 +19555,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -18365,10 +19577,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_386(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_386<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18378,6 +19589,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[386] {
@@ -18418,15 +19630,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -18434,10 +19652,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_387(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_387<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18447,6 +19664,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[387] {
@@ -18474,10 +19692,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_388(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_388<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18487,6 +19704,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[388] {
@@ -18516,23 +19734,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_389(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_389<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18542,6 +19765,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "regex";
                 let (pattern, payload) = match table.states[389] {
@@ -18573,23 +19797,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_390(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_390<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18599,6 +19828,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[390] {
@@ -18628,23 +19858,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_391(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_391<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18654,6 +19889,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[391] {
@@ -18694,15 +19930,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -18710,10 +19952,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_392(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_392<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18723,6 +19964,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[392] {
@@ -18796,15 +20038,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -18812,10 +20060,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_393(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_393<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18825,6 +20072,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[393] {
@@ -18865,15 +20113,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -18881,10 +20135,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_394(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_394<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18894,6 +20147,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[394] {
@@ -18923,23 +20177,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_395(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_395<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18949,6 +20208,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[395] {
@@ -18957,23 +20217,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_396(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_396<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -18983,6 +20248,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[396] {
@@ -18991,23 +20257,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_397(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_397<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19017,6 +20288,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[397] {
@@ -19057,15 +20329,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -19073,10 +20351,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_398(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_398<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19086,6 +20363,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[398] {
@@ -19115,23 +20393,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_399(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_399<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19141,6 +20424,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[399] {
@@ -19168,10 +20452,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_400(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_400<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19181,6 +20464,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[400] {
@@ -19296,10 +20580,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_401(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_401<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19309,6 +20592,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[401] {
@@ -19317,23 +20601,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_402(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_402<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19343,6 +20632,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[402] {
@@ -19351,23 +20641,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_403(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_403<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19377,6 +20672,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[403] {
@@ -19417,15 +20713,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -19433,10 +20735,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_404(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_404<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19446,6 +20747,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[404] {
@@ -19473,10 +20775,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_405(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_405<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19486,6 +20787,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[405] {
@@ -19494,23 +20796,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_406(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_406<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19520,6 +20827,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[406] {
@@ -19528,23 +20836,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_407(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_407<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19554,6 +20867,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[407] {
@@ -19594,15 +20908,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -19610,10 +20930,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_408(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_408<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19623,6 +20942,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[408] {
@@ -19696,15 +21016,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -19712,10 +21038,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_409(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_409<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19725,6 +21050,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[409] {
@@ -19754,23 +21080,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_410(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_410<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19780,6 +21111,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[410] {
@@ -19809,23 +21141,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_411(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_411<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19835,6 +21172,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[411] {
@@ -19950,10 +21288,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_412(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_412<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -19963,6 +21300,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[412] {
@@ -20036,15 +21374,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -20052,10 +21396,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_413(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_413<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20065,6 +21408,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[413] {
@@ -20105,15 +21449,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -20121,10 +21471,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_414(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_414<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20134,6 +21483,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[414] {
@@ -20163,23 +21513,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_415(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_415<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20189,6 +21544,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[415] {
@@ -20197,23 +21553,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_416(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_416<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20223,6 +21584,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[416] {
@@ -20231,23 +21593,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_417(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_417<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20257,6 +21624,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[417] {
@@ -20297,15 +21665,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -20313,10 +21687,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_418(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_418<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20326,6 +21699,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[418] {
@@ -20353,10 +21727,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_419(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_419<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20366,6 +21739,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[419] {
@@ -20374,23 +21748,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_420(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_420<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20400,6 +21779,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[420] {
@@ -20408,23 +21788,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_421(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_421<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20434,6 +21819,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[421] {
@@ -20474,15 +21860,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -20490,10 +21882,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_422(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_422<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20503,6 +21894,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[422] {
@@ -20532,23 +21924,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_423(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_423<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20558,6 +21955,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[423] {
@@ -20587,23 +21985,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_424(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_424<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20613,6 +22016,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[424] {
@@ -20728,10 +22132,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_425(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_425<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20741,6 +22144,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[425] {
@@ -20814,15 +22218,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -20830,10 +22240,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_426(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_426<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20843,6 +22252,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[426] {
@@ -20883,15 +22293,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -20899,10 +22315,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_427(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_427<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20912,6 +22327,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[427] {
@@ -20941,23 +22357,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_428(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_428<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -20967,6 +22388,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[428] {
@@ -20975,23 +22397,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_429(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_429<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21001,6 +22428,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[429] {
@@ -21009,23 +22437,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_430(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_430<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21035,6 +22468,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[430] {
@@ -21075,15 +22509,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -21091,10 +22531,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_431(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_431<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21104,6 +22543,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[431] {
@@ -21131,10 +22571,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_432(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_432<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21144,6 +22583,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[432] {
@@ -21152,23 +22592,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_433(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_433<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21178,6 +22623,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[433] {
@@ -21186,23 +22632,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_434(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_434<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21212,6 +22663,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[434] {
@@ -21252,15 +22704,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -21268,10 +22726,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_435(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_435<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21281,6 +22738,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[435] {
@@ -21310,23 +22768,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_436(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_436<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21336,6 +22799,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[436] {
@@ -21365,23 +22829,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_437(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_437<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21391,6 +22860,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[437] {
@@ -21506,10 +22976,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_438(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_438<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21519,6 +22988,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[438] {
@@ -21592,15 +23062,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -21608,10 +23084,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_439(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_439<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21621,6 +23096,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[439] {
@@ -21661,15 +23137,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -21677,10 +23159,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_440(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_440<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21690,6 +23171,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[440] {
@@ -21719,23 +23201,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_441(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_441<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21745,6 +23232,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[441] {
@@ -21753,23 +23241,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_442(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_442<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21779,6 +23272,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[442] {
@@ -21787,23 +23281,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_443(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_443<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21813,6 +23312,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[443] {
@@ -21853,15 +23353,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -21869,10 +23375,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_444(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_444<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21882,6 +23387,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[444] {
@@ -21911,23 +23417,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_445(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_445<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21937,6 +23448,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[445] {
@@ -21964,10 +23476,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_446(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_446<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -21977,6 +23488,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[446] {
@@ -22092,10 +23604,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_447(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_447<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22105,6 +23616,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[447] {
@@ -22113,23 +23625,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_448(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_448<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22139,6 +23656,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[448] {
@@ -22147,23 +23665,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_449(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_449<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22173,6 +23696,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[449] {
@@ -22213,15 +23737,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -22229,10 +23759,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_450(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_450<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22242,6 +23771,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[450] {
@@ -22271,23 +23801,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_451(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_451<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22297,6 +23832,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[451] {
@@ -22326,23 +23862,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_452(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_452<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22352,6 +23893,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[452] {
@@ -22467,10 +24009,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_453(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_453<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22480,6 +24021,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[453] {
@@ -22553,15 +24095,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -22569,10 +24117,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_454(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_454<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22582,6 +24129,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[454] {
@@ -22622,15 +24170,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -22638,10 +24192,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_455(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_455<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22651,6 +24204,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[455] {
@@ -22680,23 +24234,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_456(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_456<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22706,6 +24265,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[456] {
@@ -22714,23 +24274,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_457(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_457<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22740,6 +24305,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[457] {
@@ -22748,23 +24314,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_458(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_458<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22774,6 +24345,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[458] {
@@ -22814,15 +24386,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -22830,10 +24408,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_459(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_459<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22843,6 +24420,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[459] {
@@ -22870,10 +24448,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_460(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_460<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22883,6 +24460,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[460] {
@@ -22891,23 +24469,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_461(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_461<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22917,6 +24500,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[461] {
@@ -22925,23 +24509,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_462(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_462<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -22951,6 +24540,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[462] {
@@ -22991,15 +24581,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -23007,10 +24603,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_463(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_463<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23020,6 +24615,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[463] {
@@ -23049,23 +24645,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_464(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_464<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23075,6 +24676,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[464] {
@@ -23083,23 +24685,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_465(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_465<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23109,6 +24716,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[465] {
@@ -23117,23 +24725,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_466(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_466<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23143,6 +24756,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[466] {
@@ -23183,15 +24797,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -23199,10 +24819,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_467(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_467<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23212,6 +24831,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[467] {
@@ -23239,10 +24859,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_468(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_468<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23252,6 +24871,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[468] {
@@ -23260,23 +24880,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_469(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_469<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23286,6 +24911,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[469] {
@@ -23294,23 +24920,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_470(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_470<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23320,6 +24951,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[470] {
@@ -23360,15 +24992,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -23376,10 +25014,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_471(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_471<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23389,6 +25026,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[471] {
@@ -23429,15 +25067,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -23445,10 +25089,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_472(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_472<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23458,6 +25101,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[472] {
@@ -23531,15 +25175,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -23547,10 +25197,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_473(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_473<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23560,6 +25209,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[473] {
@@ -23589,23 +25239,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_474(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_474<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23615,6 +25270,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "literal";
                 let (text, payload) = match table.states[474] {
@@ -23644,23 +25300,28 @@ mod __bbnfbootstrap_emit_impl {
                     *pos,
                 );
                 stack.pending_variant_idx = u8::MAX;
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_475(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_475<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23670,6 +25331,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[475] {
@@ -23785,10 +25447,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_476(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_476<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23798,6 +25459,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[476] {
@@ -23871,15 +25533,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -23887,10 +25555,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_477(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_477<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23900,6 +25567,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[477] {
@@ -23940,15 +25608,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -23956,10 +25630,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_478(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_478<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -23969,6 +25642,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[478] {
@@ -23996,10 +25670,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_479(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_479<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24009,6 +25682,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[479] {
@@ -24036,10 +25710,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_480(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_480<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24049,6 +25722,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[480] {
@@ -24076,10 +25750,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_481(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_481<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24089,6 +25762,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[481] {
@@ -24116,10 +25790,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_482(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_482<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24129,6 +25802,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[482] {
@@ -24156,10 +25830,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_483(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_483<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24169,6 +25842,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[483] {
@@ -24196,10 +25870,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_484(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_484<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24209,6 +25882,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[484] {
@@ -24236,10 +25910,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_485(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_485<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24249,6 +25922,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[485] {
@@ -24364,10 +26038,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_486(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_486<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24377,6 +26050,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[486] {
@@ -24404,10 +26078,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_487(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_487<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24417,6 +26090,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[487] {
@@ -24444,10 +26118,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_488(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_488<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24457,6 +26130,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[488] {
@@ -24484,10 +26158,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_489(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_489<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24497,6 +26170,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[489] {
@@ -24524,10 +26198,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_490(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_490<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24537,6 +26210,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "alt_linear";
                 let branches = match table.states[490] {
@@ -24652,10 +26326,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_491(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_491<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24665,6 +26338,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ref_target";
                 let (rule, target) = match table.states[491] {
@@ -24692,10 +26366,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_492(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_492<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24705,6 +26378,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[492] {
@@ -24713,23 +26387,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_493(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_493<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24739,6 +26418,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "ws_trim";
                 let pattern = match table.states[493] {
@@ -24747,23 +26427,28 @@ mod __bbnfbootstrap_emit_impl {
                 };
                 let _ = pattern;
                 ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                ::bbnf::runtime::tape::advance_or_pop_with(
-                    ::core::option::Option::Some(table),
-                    ::core::option::Option::Some(input),
-                    columns,
-                    frame_depth,
-                    psi,
-                    stack,
-                    pos,
-                )
+                if let ::core::option::Option::Some(next) =
+                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                {
+                    ::core::result::Result::Ok(next)
+                } else {
+                    ::bbnf::runtime::tape::advance_or_pop_with(
+                        ::core::option::Option::Some(table),
+                        ::core::option::Option::Some(input),
+                        columns,
+                        frame_depth,
+                        psi,
+                        stack,
+                        pos,
+                    )
+                }
             }
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_494(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_494<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24773,6 +26458,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "seq";
                 let (children, frame, promote) = match table.states[494] {
@@ -24813,15 +26499,21 @@ mod __bbnfbootstrap_emit_impl {
                 });
                 if children.is_empty() {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(children[0]))
                 }
@@ -24829,10 +26521,9 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
-        fn __cold_state_495(
-            table: &::bbnf::runtime::tape::DtaTable,
+        fn __cold_state_495<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24842,6 +26533,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
                 let _ = "repeat";
                 let inner = match table.states[495] {
@@ -24915,15 +26607,21 @@ mod __bbnfbootstrap_emit_impl {
                 stack.iter_savepoints[counter_idx].stack = stack.savepoint();
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-                    ::bbnf::runtime::tape::advance_or_pop_with(
-                        ::core::option::Option::Some(table),
-                        ::core::option::Option::Some(input),
-                        columns,
-                        frame_depth,
-                        psi,
-                        stack,
-                        pos,
-                    )
+                    if let ::core::option::Option::Some(next) =
+                        ::bbnf::runtime::tape::advance_seq_fast(stack)
+                    {
+                        ::core::result::Result::Ok(next)
+                    } else {
+                        ::bbnf::runtime::tape::advance_or_pop_with(
+                            ::core::option::Option::Some(table),
+                            ::core::option::Option::Some(input),
+                            columns,
+                            frame_depth,
+                            psi,
+                            stack,
+                            pos,
+                        )
+                    }
                 } else {
                     ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(inner))
                 }
@@ -24945,11 +26643,17 @@ mod __bbnfbootstrap_emit_impl {
         /// the hot path never calls it. Repeat-failure absorption
         /// happens at the outer loop's error handler via
         /// `handle_repeat_failure`.
+        ///
+        /// `DTA_TABLE` is referenced as a `pub const` from the
+        /// surrounding module so LLVM can constant-fold every
+        /// `DTA_TABLE.states[N]` destructure inside an arm body —
+        /// the runtime variant + its slice references resolve at
+        /// compile time, not via a `&'static [DtaState]` indirect
+        /// load each visit.
         #[allow(dead_code)]
-        pub fn run(
-            table: &::bbnf::runtime::tape::DtaTable,
+        pub fn run<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -24957,6 +26661,7 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
         > {
+            let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             let root_rec = ::bbnf::runtime::tape::TapeOffset(columns.len() as u32);
             let mut stack_owned = ::bbnf::runtime::tape::FrameStack::new();
             let stack: &mut ::bbnf::runtime::tape::FrameStack = &mut stack_owned;
@@ -25043,15 +26748,21 @@ mod __bbnfbootstrap_emit_impl {
                                 );
                             }
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         1 => {
                             let _ = "regex";
@@ -25113,15 +26824,21 @@ mod __bbnfbootstrap_emit_impl {
                                 );
                             }
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         2 => {
                             let _ = "literal";
@@ -25154,15 +26871,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         3 => {
                             let _ = "literal";
@@ -25195,15 +26918,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         4 => {
                             let _ = "alt_linear";
@@ -25350,15 +27079,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         6 => {
                             let _ = "regex";
@@ -25395,15 +27130,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         7 => {
                             let _ = "literal";
@@ -25436,15 +27177,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         8 => {
                             let _ = "seq";
@@ -25491,15 +27238,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -25541,15 +27294,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         10 => {
                             let _ = "ref_target";
@@ -25610,15 +27369,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         12 => {
                             let _ = "ref_target";
@@ -25693,15 +27458,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -25787,15 +27558,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     inner,
@@ -25847,15 +27624,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -25893,15 +27676,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         17 => {
                             let _ = "literal";
@@ -25934,15 +27723,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         18 => {
                             let _ = "ref_target";
@@ -26017,15 +27812,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -26111,15 +27912,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     inner,
@@ -26171,15 +27978,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -26245,15 +28058,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         24 => {
                             let _ = "ref_target";
@@ -26314,15 +28133,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         26 => {
                             let _ = "ws_trim";
@@ -26332,15 +28157,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         27 => {
                             let _ = "ws_trim";
@@ -26350,15 +28181,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         28 => {
                             let _ = "seq";
@@ -26405,15 +28242,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -26493,15 +28336,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -26587,15 +28436,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     inner,
@@ -26647,15 +28502,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -26741,15 +28602,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     inner,
@@ -26787,15 +28654,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         35 => {
                             let _ = "seq";
@@ -26842,15 +28715,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -27084,15 +28963,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         44 => {
                             let _ = "ref_target";
@@ -27130,15 +29015,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         46 => {
                             let _ = "ws_trim";
@@ -27148,15 +29039,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         47 => {
                             let _ = "seq";
@@ -27203,15 +29100,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -27249,15 +29152,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         49 => {
                             let _ = "seq";
@@ -27304,15 +29213,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -27433,8 +29348,7 @@ mod __bbnfbootstrap_emit_impl {
                                 ))
                             }
                         }
-                        51 => __cold_state_51(
-                            table,
+                        51 => __cold_state_51::<__S>(
                             input,
                             scanner,
                             columns,
@@ -27443,8 +29357,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        52 => __cold_state_52(
-                            table,
+                        52 => __cold_state_52::<__S>(
                             input,
                             scanner,
                             columns,
@@ -27453,8 +29366,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        53 => __cold_state_53(
-                            table,
+                        53 => __cold_state_53::<__S>(
                             input,
                             scanner,
                             columns,
@@ -27463,8 +29375,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        54 => __cold_state_54(
-                            table,
+                        54 => __cold_state_54::<__S>(
                             input,
                             scanner,
                             columns,
@@ -27473,8 +29384,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        55 => __cold_state_55(
-                            table,
+                        55 => __cold_state_55::<__S>(
                             input,
                             scanner,
                             columns,
@@ -27483,8 +29393,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        56 => __cold_state_56(
-                            table,
+                        56 => __cold_state_56::<__S>(
                             input,
                             scanner,
                             columns,
@@ -27493,8 +29402,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        57 => __cold_state_57(
-                            table,
+                        57 => __cold_state_57::<__S>(
                             input,
                             scanner,
                             columns,
@@ -27534,15 +29442,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         59 => {
                             let _ = "literal";
@@ -27575,15 +29489,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         60 => {
                             let _ = "literal";
@@ -27616,15 +29536,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         61 => {
                             let _ = "literal";
@@ -27657,15 +29583,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         62 => {
                             let _ = "literal";
@@ -27698,15 +29630,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         63 => {
                             let _ = "literal";
@@ -27739,15 +29677,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         64 => {
                             let _ = "alt_linear";
@@ -27894,15 +29838,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         66 => {
                             let _ = "literal";
@@ -27935,15 +29885,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         67 => {
                             let _ = "alt_linear";
@@ -28132,15 +30088,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -28289,8 +30251,7 @@ mod __bbnfbootstrap_emit_impl {
                                 ))
                             }
                         }
-                        72 => __cold_state_72(
-                            table,
+                        72 => __cold_state_72::<__S>(
                             input,
                             scanner,
                             columns,
@@ -28299,8 +30260,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        73 => __cold_state_73(
-                            table,
+                        73 => __cold_state_73::<__S>(
                             input,
                             scanner,
                             columns,
@@ -28309,8 +30269,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        74 => __cold_state_74(
-                            table,
+                        74 => __cold_state_74::<__S>(
                             input,
                             scanner,
                             columns,
@@ -28319,8 +30278,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        75 => __cold_state_75(
-                            table,
+                        75 => __cold_state_75::<__S>(
                             input,
                             scanner,
                             columns,
@@ -28329,8 +30287,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        76 => __cold_state_76(
-                            table,
+                        76 => __cold_state_76::<__S>(
                             input,
                             scanner,
                             columns,
@@ -28339,8 +30296,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        77 => __cold_state_77(
-                            table,
+                        77 => __cold_state_77::<__S>(
                             input,
                             scanner,
                             columns,
@@ -28349,8 +30305,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        78 => __cold_state_78(
-                            table,
+                        78 => __cold_state_78::<__S>(
                             input,
                             scanner,
                             columns,
@@ -28359,8 +30314,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        79 => __cold_state_79(
-                            table,
+                        79 => __cold_state_79::<__S>(
                             input,
                             scanner,
                             columns,
@@ -28369,8 +30323,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        80 => __cold_state_80(
-                            table,
+                        80 => __cold_state_80::<__S>(
                             input,
                             scanner,
                             columns,
@@ -28508,15 +30461,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         86 => {
                             let _ = "ws_trim";
@@ -28526,15 +30485,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         87 => {
                             let _ = "seq";
@@ -28581,15 +30546,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -28669,15 +30640,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -28763,15 +30740,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     inner,
@@ -28823,15 +30806,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -28897,15 +30886,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         94 => {
                             let _ = "ws_trim";
@@ -28915,15 +30910,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         95 => {
                             let _ = "ws_trim";
@@ -28933,15 +30934,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         96 => {
                             let _ = "seq";
@@ -28988,15 +30995,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -29076,15 +31089,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -29170,15 +31189,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     inner,
@@ -29230,23 +31255,28 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
                                 ))
                             }
                         }
-                        101 => __cold_state_101(
-                            table,
+                        101 => __cold_state_101::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29288,15 +31318,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         103 => {
                             let _ = "ws_trim";
@@ -29306,15 +31342,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         104 => {
                             let _ = "ws_trim";
@@ -29324,15 +31366,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         105 => {
                             let _ = "seq";
@@ -29379,15 +31427,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -29469,23 +31523,28 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
                                 ))
                             }
                         }
-                        108 => __cold_state_108(
-                            table,
+                        108 => __cold_state_108::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29494,8 +31553,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        109 => __cold_state_109(
-                            table,
+                        109 => __cold_state_109::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29504,8 +31562,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        110 => __cold_state_110(
-                            table,
+                        110 => __cold_state_110::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29514,8 +31571,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        111 => __cold_state_111(
-                            table,
+                        111 => __cold_state_111::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29557,15 +31613,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         113 => {
                             let _ = "ws_trim";
@@ -29575,15 +31637,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         114 => {
                             let _ = "ws_trim";
@@ -29593,15 +31661,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         115 => {
                             let _ = "seq";
@@ -29648,15 +31722,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -29738,23 +31818,28 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
                                 ))
                             }
                         }
-                        118 => __cold_state_118(
-                            table,
+                        118 => __cold_state_118::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29763,8 +31848,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        119 => __cold_state_119(
-                            table,
+                        119 => __cold_state_119::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29773,8 +31857,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        120 => __cold_state_120(
-                            table,
+                        120 => __cold_state_120::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29783,8 +31866,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        121 => __cold_state_121(
-                            table,
+                        121 => __cold_state_121::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29793,8 +31875,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        122 => __cold_state_122(
-                            table,
+                        122 => __cold_state_122::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29803,8 +31884,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        123 => __cold_state_123(
-                            table,
+                        123 => __cold_state_123::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29813,8 +31893,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        124 => __cold_state_124(
-                            table,
+                        124 => __cold_state_124::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29823,8 +31902,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        125 => __cold_state_125(
-                            table,
+                        125 => __cold_state_125::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29833,8 +31911,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        126 => __cold_state_126(
-                            table,
+                        126 => __cold_state_126::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29843,8 +31920,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        127 => __cold_state_127(
-                            table,
+                        127 => __cold_state_127::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29853,8 +31929,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        128 => __cold_state_128(
-                            table,
+                        128 => __cold_state_128::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29863,8 +31938,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        129 => __cold_state_129(
-                            table,
+                        129 => __cold_state_129::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29873,8 +31947,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        130 => __cold_state_130(
-                            table,
+                        130 => __cold_state_130::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29883,8 +31956,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        131 => __cold_state_131(
-                            table,
+                        131 => __cold_state_131::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29893,8 +31965,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        132 => __cold_state_132(
-                            table,
+                        132 => __cold_state_132::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29903,8 +31974,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        133 => __cold_state_133(
-                            table,
+                        133 => __cold_state_133::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29913,8 +31983,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        134 => __cold_state_134(
-                            table,
+                        134 => __cold_state_134::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29923,8 +31992,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        135 => __cold_state_135(
-                            table,
+                        135 => __cold_state_135::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29933,8 +32001,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        136 => __cold_state_136(
-                            table,
+                        136 => __cold_state_136::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29943,8 +32010,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        137 => __cold_state_137(
-                            table,
+                        137 => __cold_state_137::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29953,8 +32019,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        138 => __cold_state_138(
-                            table,
+                        138 => __cold_state_138::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29963,8 +32028,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        139 => __cold_state_139(
-                            table,
+                        139 => __cold_state_139::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29973,8 +32037,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        140 => __cold_state_140(
-                            table,
+                        140 => __cold_state_140::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29983,8 +32046,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        141 => __cold_state_141(
-                            table,
+                        141 => __cold_state_141::<__S>(
                             input,
                             scanner,
                             columns,
@@ -29993,8 +32055,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        142 => __cold_state_142(
-                            table,
+                        142 => __cold_state_142::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30003,8 +32064,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        143 => __cold_state_143(
-                            table,
+                        143 => __cold_state_143::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30046,15 +32106,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         145 => {
                             let _ = "regex";
@@ -30091,15 +32157,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         146 => {
                             let _ = "literal";
@@ -30134,18 +32206,23 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
-                        147 => __cold_state_147(
-                            table,
+                        147 => __cold_state_147::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30187,15 +32264,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         149 => {
                             let _ = "regex";
@@ -30232,15 +32315,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         150 => {
                             let _ = "literal";
@@ -30275,18 +32364,23 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
-                        151 => __cold_state_151(
-                            table,
+                        151 => __cold_state_151::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30328,15 +32422,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         153 => {
                             let _ = "regex";
@@ -30373,18 +32473,23 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
-                        154 => __cold_state_154(
-                            table,
+                        154 => __cold_state_154::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30393,8 +32498,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        155 => __cold_state_155(
-                            table,
+                        155 => __cold_state_155::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30403,8 +32507,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        156 => __cold_state_156(
-                            table,
+                        156 => __cold_state_156::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30413,8 +32516,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        157 => __cold_state_157(
-                            table,
+                        157 => __cold_state_157::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30423,8 +32525,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        158 => __cold_state_158(
-                            table,
+                        158 => __cold_state_158::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30433,8 +32534,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        159 => __cold_state_159(
-                            table,
+                        159 => __cold_state_159::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30443,8 +32543,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        160 => __cold_state_160(
-                            table,
+                        160 => __cold_state_160::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30486,15 +32585,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         162 => {
                             let _ = "regex";
@@ -30531,15 +32636,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         163 => {
                             let _ = "literal";
@@ -30574,18 +32685,23 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
-                        164 => __cold_state_164(
-                            table,
+                        164 => __cold_state_164::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30594,8 +32710,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        165 => __cold_state_165(
-                            table,
+                        165 => __cold_state_165::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30604,8 +32719,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        166 => __cold_state_166(
-                            table,
+                        166 => __cold_state_166::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30614,8 +32728,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        167 => __cold_state_167(
-                            table,
+                        167 => __cold_state_167::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30624,8 +32737,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        168 => __cold_state_168(
-                            table,
+                        168 => __cold_state_168::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30634,8 +32746,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        169 => __cold_state_169(
-                            table,
+                        169 => __cold_state_169::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30644,8 +32755,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        170 => __cold_state_170(
-                            table,
+                        170 => __cold_state_170::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30654,8 +32764,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        171 => __cold_state_171(
-                            table,
+                        171 => __cold_state_171::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30664,8 +32773,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        172 => __cold_state_172(
-                            table,
+                        172 => __cold_state_172::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30674,8 +32782,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        173 => __cold_state_173(
-                            table,
+                        173 => __cold_state_173::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30684,8 +32791,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        174 => __cold_state_174(
-                            table,
+                        174 => __cold_state_174::<__S>(
                             input,
                             scanner,
                             columns,
@@ -30732,15 +32838,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         177 => {
                             let _ = "ws_trim";
@@ -30750,15 +32862,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         178 => {
                             let _ = "seq";
@@ -30805,15 +32923,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -30853,15 +32977,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         180 => {
                             let _ = "repeat";
@@ -30942,15 +33072,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     inner,
@@ -31002,15 +33138,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -31096,23 +33238,28 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     inner,
                                 ))
                             }
                         }
-                        183 => __cold_state_183(
-                            table,
+                        183 => __cold_state_183::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31121,8 +33268,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        184 => __cold_state_184(
-                            table,
+                        184 => __cold_state_184::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31131,8 +33277,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        185 => __cold_state_185(
-                            table,
+                        185 => __cold_state_185::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31141,8 +33286,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        186 => __cold_state_186(
-                            table,
+                        186 => __cold_state_186::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31189,15 +33333,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         189 => {
                             let _ = "ws_trim";
@@ -31207,18 +33357,23 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
-                        190 => __cold_state_190(
-                            table,
+                        190 => __cold_state_190::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31260,15 +33415,21 @@ mod __bbnfbootstrap_emit_impl {
                                 *pos,
                             );
                             stack.pending_variant_idx = u8::MAX;
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         192 => {
                             let _ = "ws_trim";
@@ -31278,15 +33439,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         193 => {
                             let _ = "ws_trim";
@@ -31296,15 +33463,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         194 => {
                             let _ = "seq";
@@ -31351,15 +33524,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -31404,15 +33583,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         197 => {
                             let _ = "ws_trim";
@@ -31422,15 +33607,21 @@ mod __bbnfbootstrap_emit_impl {
                             };
                             let _ = pattern;
                             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                            ::bbnf::runtime::tape::advance_or_pop_with(
-                                ::core::option::Option::Some(table),
-                                ::core::option::Option::Some(input),
-                                columns,
-                                frame_depth,
-                                psi,
-                                stack,
-                                pos,
-                            )
+                            if let ::core::option::Option::Some(next) =
+                                ::bbnf::runtime::tape::advance_seq_fast(stack)
+                            {
+                                ::core::result::Result::Ok(next)
+                            } else {
+                                ::bbnf::runtime::tape::advance_or_pop_with(
+                                    ::core::option::Option::Some(table),
+                                    ::core::option::Option::Some(input),
+                                    columns,
+                                    frame_depth,
+                                    psi,
+                                    stack,
+                                    pos,
+                                )
+                            }
                         }
                         198 => {
                             let _ = "seq";
@@ -31477,15 +33668,21 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
@@ -31537,23 +33734,28 @@ mod __bbnfbootstrap_emit_impl {
                                     stack,
                                     *pos,
                                 );
-                                ::bbnf::runtime::tape::advance_or_pop_with(
-                                    ::core::option::Option::Some(table),
-                                    ::core::option::Option::Some(input),
-                                    columns,
-                                    frame_depth,
-                                    psi,
-                                    stack,
-                                    pos,
-                                )
+                                if let ::core::option::Option::Some(next) =
+                                    ::bbnf::runtime::tape::advance_seq_fast(stack)
+                                {
+                                    ::core::result::Result::Ok(next)
+                                } else {
+                                    ::bbnf::runtime::tape::advance_or_pop_with(
+                                        ::core::option::Option::Some(table),
+                                        ::core::option::Option::Some(input),
+                                        columns,
+                                        frame_depth,
+                                        psi,
+                                        stack,
+                                        pos,
+                                    )
+                                }
                             } else {
                                 ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
                                     children[0],
                                 ))
                             }
                         }
-                        200 => __cold_state_200(
-                            table,
+                        200 => __cold_state_200::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31562,8 +33764,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        201 => __cold_state_201(
-                            table,
+                        201 => __cold_state_201::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31572,8 +33773,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        202 => __cold_state_202(
-                            table,
+                        202 => __cold_state_202::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31582,8 +33782,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        203 => __cold_state_203(
-                            table,
+                        203 => __cold_state_203::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31592,8 +33791,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        204 => __cold_state_204(
-                            table,
+                        204 => __cold_state_204::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31602,8 +33800,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        205 => __cold_state_205(
-                            table,
+                        205 => __cold_state_205::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31612,8 +33809,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        206 => __cold_state_206(
-                            table,
+                        206 => __cold_state_206::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31622,8 +33818,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        207 => __cold_state_207(
-                            table,
+                        207 => __cold_state_207::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31632,8 +33827,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        208 => __cold_state_208(
-                            table,
+                        208 => __cold_state_208::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31642,8 +33836,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        209 => __cold_state_209(
-                            table,
+                        209 => __cold_state_209::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31652,8 +33845,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        210 => __cold_state_210(
-                            table,
+                        210 => __cold_state_210::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31662,8 +33854,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        211 => __cold_state_211(
-                            table,
+                        211 => __cold_state_211::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31672,8 +33863,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        212 => __cold_state_212(
-                            table,
+                        212 => __cold_state_212::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31682,8 +33872,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        213 => __cold_state_213(
-                            table,
+                        213 => __cold_state_213::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31692,8 +33881,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        214 => __cold_state_214(
-                            table,
+                        214 => __cold_state_214::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31702,8 +33890,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        215 => __cold_state_215(
-                            table,
+                        215 => __cold_state_215::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31712,8 +33899,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        216 => __cold_state_216(
-                            table,
+                        216 => __cold_state_216::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31722,8 +33908,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        217 => __cold_state_217(
-                            table,
+                        217 => __cold_state_217::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31732,8 +33917,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        218 => __cold_state_218(
-                            table,
+                        218 => __cold_state_218::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31742,8 +33926,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        219 => __cold_state_219(
-                            table,
+                        219 => __cold_state_219::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31752,8 +33935,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        220 => __cold_state_220(
-                            table,
+                        220 => __cold_state_220::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31762,8 +33944,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        221 => __cold_state_221(
-                            table,
+                        221 => __cold_state_221::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31772,8 +33953,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        222 => __cold_state_222(
-                            table,
+                        222 => __cold_state_222::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31782,8 +33962,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        223 => __cold_state_223(
-                            table,
+                        223 => __cold_state_223::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31792,8 +33971,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        224 => __cold_state_224(
-                            table,
+                        224 => __cold_state_224::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31802,8 +33980,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        225 => __cold_state_225(
-                            table,
+                        225 => __cold_state_225::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31812,8 +33989,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        226 => __cold_state_226(
-                            table,
+                        226 => __cold_state_226::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31822,8 +33998,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        227 => __cold_state_227(
-                            table,
+                        227 => __cold_state_227::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31832,8 +34007,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        228 => __cold_state_228(
-                            table,
+                        228 => __cold_state_228::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31842,8 +34016,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        229 => __cold_state_229(
-                            table,
+                        229 => __cold_state_229::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31852,8 +34025,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        230 => __cold_state_230(
-                            table,
+                        230 => __cold_state_230::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31862,8 +34034,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        231 => __cold_state_231(
-                            table,
+                        231 => __cold_state_231::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31872,8 +34043,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        232 => __cold_state_232(
-                            table,
+                        232 => __cold_state_232::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31882,8 +34052,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        233 => __cold_state_233(
-                            table,
+                        233 => __cold_state_233::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31892,8 +34061,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        234 => __cold_state_234(
-                            table,
+                        234 => __cold_state_234::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31902,8 +34070,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        235 => __cold_state_235(
-                            table,
+                        235 => __cold_state_235::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31912,8 +34079,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        236 => __cold_state_236(
-                            table,
+                        236 => __cold_state_236::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31922,8 +34088,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        237 => __cold_state_237(
-                            table,
+                        237 => __cold_state_237::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31932,8 +34097,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        238 => __cold_state_238(
-                            table,
+                        238 => __cold_state_238::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31942,8 +34106,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        239 => __cold_state_239(
-                            table,
+                        239 => __cold_state_239::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31952,8 +34115,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        240 => __cold_state_240(
-                            table,
+                        240 => __cold_state_240::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31962,8 +34124,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        241 => __cold_state_241(
-                            table,
+                        241 => __cold_state_241::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31972,8 +34133,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        242 => __cold_state_242(
-                            table,
+                        242 => __cold_state_242::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31982,8 +34142,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        243 => __cold_state_243(
-                            table,
+                        243 => __cold_state_243::<__S>(
                             input,
                             scanner,
                             columns,
@@ -31992,8 +34151,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        244 => __cold_state_244(
-                            table,
+                        244 => __cold_state_244::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32002,8 +34160,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        245 => __cold_state_245(
-                            table,
+                        245 => __cold_state_245::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32012,8 +34169,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        246 => __cold_state_246(
-                            table,
+                        246 => __cold_state_246::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32022,8 +34178,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        247 => __cold_state_247(
-                            table,
+                        247 => __cold_state_247::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32032,8 +34187,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        248 => __cold_state_248(
-                            table,
+                        248 => __cold_state_248::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32042,8 +34196,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        249 => __cold_state_249(
-                            table,
+                        249 => __cold_state_249::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32052,8 +34205,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        250 => __cold_state_250(
-                            table,
+                        250 => __cold_state_250::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32062,8 +34214,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        251 => __cold_state_251(
-                            table,
+                        251 => __cold_state_251::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32072,8 +34223,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        252 => __cold_state_252(
-                            table,
+                        252 => __cold_state_252::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32082,8 +34232,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        253 => __cold_state_253(
-                            table,
+                        253 => __cold_state_253::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32092,8 +34241,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        254 => __cold_state_254(
-                            table,
+                        254 => __cold_state_254::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32102,8 +34250,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        255 => __cold_state_255(
-                            table,
+                        255 => __cold_state_255::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32112,8 +34259,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        256 => __cold_state_256(
-                            table,
+                        256 => __cold_state_256::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32122,8 +34268,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        257 => __cold_state_257(
-                            table,
+                        257 => __cold_state_257::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32132,8 +34277,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        258 => __cold_state_258(
-                            table,
+                        258 => __cold_state_258::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32142,8 +34286,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        259 => __cold_state_259(
-                            table,
+                        259 => __cold_state_259::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32152,8 +34295,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        260 => __cold_state_260(
-                            table,
+                        260 => __cold_state_260::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32162,8 +34304,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        261 => __cold_state_261(
-                            table,
+                        261 => __cold_state_261::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32172,8 +34313,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        262 => __cold_state_262(
-                            table,
+                        262 => __cold_state_262::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32182,8 +34322,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        263 => __cold_state_263(
-                            table,
+                        263 => __cold_state_263::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32192,8 +34331,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        264 => __cold_state_264(
-                            table,
+                        264 => __cold_state_264::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32202,8 +34340,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        265 => __cold_state_265(
-                            table,
+                        265 => __cold_state_265::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32212,8 +34349,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        266 => __cold_state_266(
-                            table,
+                        266 => __cold_state_266::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32222,8 +34358,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        267 => __cold_state_267(
-                            table,
+                        267 => __cold_state_267::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32232,8 +34367,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        268 => __cold_state_268(
-                            table,
+                        268 => __cold_state_268::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32242,8 +34376,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        269 => __cold_state_269(
-                            table,
+                        269 => __cold_state_269::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32252,8 +34385,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        270 => __cold_state_270(
-                            table,
+                        270 => __cold_state_270::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32262,8 +34394,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        271 => __cold_state_271(
-                            table,
+                        271 => __cold_state_271::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32272,8 +34403,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        272 => __cold_state_272(
-                            table,
+                        272 => __cold_state_272::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32282,8 +34412,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        273 => __cold_state_273(
-                            table,
+                        273 => __cold_state_273::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32292,8 +34421,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        274 => __cold_state_274(
-                            table,
+                        274 => __cold_state_274::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32302,8 +34430,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        275 => __cold_state_275(
-                            table,
+                        275 => __cold_state_275::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32312,8 +34439,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        276 => __cold_state_276(
-                            table,
+                        276 => __cold_state_276::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32322,8 +34448,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        277 => __cold_state_277(
-                            table,
+                        277 => __cold_state_277::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32332,8 +34457,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        278 => __cold_state_278(
-                            table,
+                        278 => __cold_state_278::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32342,8 +34466,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        279 => __cold_state_279(
-                            table,
+                        279 => __cold_state_279::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32352,8 +34475,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        280 => __cold_state_280(
-                            table,
+                        280 => __cold_state_280::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32362,8 +34484,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        281 => __cold_state_281(
-                            table,
+                        281 => __cold_state_281::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32372,8 +34493,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        282 => __cold_state_282(
-                            table,
+                        282 => __cold_state_282::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32382,8 +34502,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        283 => __cold_state_283(
-                            table,
+                        283 => __cold_state_283::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32392,8 +34511,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        284 => __cold_state_284(
-                            table,
+                        284 => __cold_state_284::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32402,8 +34520,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        285 => __cold_state_285(
-                            table,
+                        285 => __cold_state_285::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32412,8 +34529,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        286 => __cold_state_286(
-                            table,
+                        286 => __cold_state_286::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32422,8 +34538,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        287 => __cold_state_287(
-                            table,
+                        287 => __cold_state_287::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32432,8 +34547,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        288 => __cold_state_288(
-                            table,
+                        288 => __cold_state_288::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32442,8 +34556,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        289 => __cold_state_289(
-                            table,
+                        289 => __cold_state_289::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32452,8 +34565,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        290 => __cold_state_290(
-                            table,
+                        290 => __cold_state_290::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32462,8 +34574,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        291 => __cold_state_291(
-                            table,
+                        291 => __cold_state_291::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32472,8 +34583,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        292 => __cold_state_292(
-                            table,
+                        292 => __cold_state_292::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32482,8 +34592,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        293 => __cold_state_293(
-                            table,
+                        293 => __cold_state_293::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32492,8 +34601,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        294 => __cold_state_294(
-                            table,
+                        294 => __cold_state_294::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32502,8 +34610,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        295 => __cold_state_295(
-                            table,
+                        295 => __cold_state_295::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32512,8 +34619,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        296 => __cold_state_296(
-                            table,
+                        296 => __cold_state_296::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32522,8 +34628,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        297 => __cold_state_297(
-                            table,
+                        297 => __cold_state_297::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32532,8 +34637,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        298 => __cold_state_298(
-                            table,
+                        298 => __cold_state_298::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32542,8 +34646,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        299 => __cold_state_299(
-                            table,
+                        299 => __cold_state_299::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32552,8 +34655,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        300 => __cold_state_300(
-                            table,
+                        300 => __cold_state_300::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32562,8 +34664,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        301 => __cold_state_301(
-                            table,
+                        301 => __cold_state_301::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32572,8 +34673,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        302 => __cold_state_302(
-                            table,
+                        302 => __cold_state_302::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32582,8 +34682,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        303 => __cold_state_303(
-                            table,
+                        303 => __cold_state_303::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32592,8 +34691,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        304 => __cold_state_304(
-                            table,
+                        304 => __cold_state_304::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32602,8 +34700,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        305 => __cold_state_305(
-                            table,
+                        305 => __cold_state_305::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32612,8 +34709,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        306 => __cold_state_306(
-                            table,
+                        306 => __cold_state_306::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32622,8 +34718,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        307 => __cold_state_307(
-                            table,
+                        307 => __cold_state_307::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32632,8 +34727,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        308 => __cold_state_308(
-                            table,
+                        308 => __cold_state_308::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32642,8 +34736,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        309 => __cold_state_309(
-                            table,
+                        309 => __cold_state_309::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32652,8 +34745,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        310 => __cold_state_310(
-                            table,
+                        310 => __cold_state_310::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32662,8 +34754,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        311 => __cold_state_311(
-                            table,
+                        311 => __cold_state_311::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32672,8 +34763,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        312 => __cold_state_312(
-                            table,
+                        312 => __cold_state_312::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32682,8 +34772,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        313 => __cold_state_313(
-                            table,
+                        313 => __cold_state_313::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32692,8 +34781,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        314 => __cold_state_314(
-                            table,
+                        314 => __cold_state_314::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32702,8 +34790,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        315 => __cold_state_315(
-                            table,
+                        315 => __cold_state_315::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32712,8 +34799,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        316 => __cold_state_316(
-                            table,
+                        316 => __cold_state_316::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32722,8 +34808,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        317 => __cold_state_317(
-                            table,
+                        317 => __cold_state_317::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32732,8 +34817,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        318 => __cold_state_318(
-                            table,
+                        318 => __cold_state_318::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32742,8 +34826,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        319 => __cold_state_319(
-                            table,
+                        319 => __cold_state_319::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32752,8 +34835,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        320 => __cold_state_320(
-                            table,
+                        320 => __cold_state_320::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32762,8 +34844,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        321 => __cold_state_321(
-                            table,
+                        321 => __cold_state_321::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32772,8 +34853,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        322 => __cold_state_322(
-                            table,
+                        322 => __cold_state_322::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32782,8 +34862,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        323 => __cold_state_323(
-                            table,
+                        323 => __cold_state_323::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32792,8 +34871,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        324 => __cold_state_324(
-                            table,
+                        324 => __cold_state_324::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32802,8 +34880,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        325 => __cold_state_325(
-                            table,
+                        325 => __cold_state_325::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32812,8 +34889,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        326 => __cold_state_326(
-                            table,
+                        326 => __cold_state_326::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32822,8 +34898,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        327 => __cold_state_327(
-                            table,
+                        327 => __cold_state_327::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32832,8 +34907,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        328 => __cold_state_328(
-                            table,
+                        328 => __cold_state_328::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32842,8 +34916,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        329 => __cold_state_329(
-                            table,
+                        329 => __cold_state_329::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32852,8 +34925,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        330 => __cold_state_330(
-                            table,
+                        330 => __cold_state_330::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32862,8 +34934,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        331 => __cold_state_331(
-                            table,
+                        331 => __cold_state_331::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32872,8 +34943,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        332 => __cold_state_332(
-                            table,
+                        332 => __cold_state_332::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32882,8 +34952,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        333 => __cold_state_333(
-                            table,
+                        333 => __cold_state_333::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32892,8 +34961,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        334 => __cold_state_334(
-                            table,
+                        334 => __cold_state_334::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32902,8 +34970,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        335 => __cold_state_335(
-                            table,
+                        335 => __cold_state_335::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32912,8 +34979,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        336 => __cold_state_336(
-                            table,
+                        336 => __cold_state_336::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32922,8 +34988,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        337 => __cold_state_337(
-                            table,
+                        337 => __cold_state_337::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32932,8 +34997,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        338 => __cold_state_338(
-                            table,
+                        338 => __cold_state_338::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32942,8 +35006,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        339 => __cold_state_339(
-                            table,
+                        339 => __cold_state_339::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32952,8 +35015,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        340 => __cold_state_340(
-                            table,
+                        340 => __cold_state_340::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32962,8 +35024,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        341 => __cold_state_341(
-                            table,
+                        341 => __cold_state_341::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32972,8 +35033,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        342 => __cold_state_342(
-                            table,
+                        342 => __cold_state_342::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32982,8 +35042,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        343 => __cold_state_343(
-                            table,
+                        343 => __cold_state_343::<__S>(
                             input,
                             scanner,
                             columns,
@@ -32992,8 +35051,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        344 => __cold_state_344(
-                            table,
+                        344 => __cold_state_344::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33002,8 +35060,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        345 => __cold_state_345(
-                            table,
+                        345 => __cold_state_345::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33012,8 +35069,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        346 => __cold_state_346(
-                            table,
+                        346 => __cold_state_346::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33022,8 +35078,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        347 => __cold_state_347(
-                            table,
+                        347 => __cold_state_347::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33032,8 +35087,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        348 => __cold_state_348(
-                            table,
+                        348 => __cold_state_348::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33042,8 +35096,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        349 => __cold_state_349(
-                            table,
+                        349 => __cold_state_349::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33052,8 +35105,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        350 => __cold_state_350(
-                            table,
+                        350 => __cold_state_350::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33062,8 +35114,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        351 => __cold_state_351(
-                            table,
+                        351 => __cold_state_351::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33072,8 +35123,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        352 => __cold_state_352(
-                            table,
+                        352 => __cold_state_352::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33082,8 +35132,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        353 => __cold_state_353(
-                            table,
+                        353 => __cold_state_353::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33092,8 +35141,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        354 => __cold_state_354(
-                            table,
+                        354 => __cold_state_354::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33102,8 +35150,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        355 => __cold_state_355(
-                            table,
+                        355 => __cold_state_355::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33112,8 +35159,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        356 => __cold_state_356(
-                            table,
+                        356 => __cold_state_356::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33122,8 +35168,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        357 => __cold_state_357(
-                            table,
+                        357 => __cold_state_357::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33132,8 +35177,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        358 => __cold_state_358(
-                            table,
+                        358 => __cold_state_358::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33142,8 +35186,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        359 => __cold_state_359(
-                            table,
+                        359 => __cold_state_359::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33152,8 +35195,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        360 => __cold_state_360(
-                            table,
+                        360 => __cold_state_360::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33162,8 +35204,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        361 => __cold_state_361(
-                            table,
+                        361 => __cold_state_361::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33172,8 +35213,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        362 => __cold_state_362(
-                            table,
+                        362 => __cold_state_362::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33182,8 +35222,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        363 => __cold_state_363(
-                            table,
+                        363 => __cold_state_363::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33192,8 +35231,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        364 => __cold_state_364(
-                            table,
+                        364 => __cold_state_364::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33202,8 +35240,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        365 => __cold_state_365(
-                            table,
+                        365 => __cold_state_365::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33212,8 +35249,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        366 => __cold_state_366(
-                            table,
+                        366 => __cold_state_366::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33222,8 +35258,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        367 => __cold_state_367(
-                            table,
+                        367 => __cold_state_367::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33232,8 +35267,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        368 => __cold_state_368(
-                            table,
+                        368 => __cold_state_368::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33242,8 +35276,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        369 => __cold_state_369(
-                            table,
+                        369 => __cold_state_369::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33252,8 +35285,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        370 => __cold_state_370(
-                            table,
+                        370 => __cold_state_370::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33262,8 +35294,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        371 => __cold_state_371(
-                            table,
+                        371 => __cold_state_371::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33272,8 +35303,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        372 => __cold_state_372(
-                            table,
+                        372 => __cold_state_372::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33282,8 +35312,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        373 => __cold_state_373(
-                            table,
+                        373 => __cold_state_373::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33292,8 +35321,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        374 => __cold_state_374(
-                            table,
+                        374 => __cold_state_374::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33302,8 +35330,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        375 => __cold_state_375(
-                            table,
+                        375 => __cold_state_375::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33312,8 +35339,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        376 => __cold_state_376(
-                            table,
+                        376 => __cold_state_376::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33322,8 +35348,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        377 => __cold_state_377(
-                            table,
+                        377 => __cold_state_377::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33332,8 +35357,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        378 => __cold_state_378(
-                            table,
+                        378 => __cold_state_378::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33342,8 +35366,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        379 => __cold_state_379(
-                            table,
+                        379 => __cold_state_379::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33352,8 +35375,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        380 => __cold_state_380(
-                            table,
+                        380 => __cold_state_380::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33362,8 +35384,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        381 => __cold_state_381(
-                            table,
+                        381 => __cold_state_381::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33372,8 +35393,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        382 => __cold_state_382(
-                            table,
+                        382 => __cold_state_382::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33382,8 +35402,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        383 => __cold_state_383(
-                            table,
+                        383 => __cold_state_383::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33392,8 +35411,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        384 => __cold_state_384(
-                            table,
+                        384 => __cold_state_384::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33402,8 +35420,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        385 => __cold_state_385(
-                            table,
+                        385 => __cold_state_385::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33412,8 +35429,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        386 => __cold_state_386(
-                            table,
+                        386 => __cold_state_386::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33422,8 +35438,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        387 => __cold_state_387(
-                            table,
+                        387 => __cold_state_387::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33432,8 +35447,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        388 => __cold_state_388(
-                            table,
+                        388 => __cold_state_388::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33442,8 +35456,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        389 => __cold_state_389(
-                            table,
+                        389 => __cold_state_389::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33452,8 +35465,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        390 => __cold_state_390(
-                            table,
+                        390 => __cold_state_390::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33462,8 +35474,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        391 => __cold_state_391(
-                            table,
+                        391 => __cold_state_391::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33472,8 +35483,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        392 => __cold_state_392(
-                            table,
+                        392 => __cold_state_392::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33482,8 +35492,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        393 => __cold_state_393(
-                            table,
+                        393 => __cold_state_393::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33492,8 +35501,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        394 => __cold_state_394(
-                            table,
+                        394 => __cold_state_394::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33502,8 +35510,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        395 => __cold_state_395(
-                            table,
+                        395 => __cold_state_395::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33512,8 +35519,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        396 => __cold_state_396(
-                            table,
+                        396 => __cold_state_396::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33522,8 +35528,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        397 => __cold_state_397(
-                            table,
+                        397 => __cold_state_397::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33532,8 +35537,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        398 => __cold_state_398(
-                            table,
+                        398 => __cold_state_398::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33542,8 +35546,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        399 => __cold_state_399(
-                            table,
+                        399 => __cold_state_399::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33552,8 +35555,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        400 => __cold_state_400(
-                            table,
+                        400 => __cold_state_400::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33562,8 +35564,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        401 => __cold_state_401(
-                            table,
+                        401 => __cold_state_401::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33572,8 +35573,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        402 => __cold_state_402(
-                            table,
+                        402 => __cold_state_402::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33582,8 +35582,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        403 => __cold_state_403(
-                            table,
+                        403 => __cold_state_403::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33592,8 +35591,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        404 => __cold_state_404(
-                            table,
+                        404 => __cold_state_404::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33602,8 +35600,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        405 => __cold_state_405(
-                            table,
+                        405 => __cold_state_405::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33612,8 +35609,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        406 => __cold_state_406(
-                            table,
+                        406 => __cold_state_406::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33622,8 +35618,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        407 => __cold_state_407(
-                            table,
+                        407 => __cold_state_407::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33632,8 +35627,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        408 => __cold_state_408(
-                            table,
+                        408 => __cold_state_408::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33642,8 +35636,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        409 => __cold_state_409(
-                            table,
+                        409 => __cold_state_409::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33652,8 +35645,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        410 => __cold_state_410(
-                            table,
+                        410 => __cold_state_410::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33662,8 +35654,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        411 => __cold_state_411(
-                            table,
+                        411 => __cold_state_411::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33672,8 +35663,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        412 => __cold_state_412(
-                            table,
+                        412 => __cold_state_412::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33682,8 +35672,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        413 => __cold_state_413(
-                            table,
+                        413 => __cold_state_413::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33692,8 +35681,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        414 => __cold_state_414(
-                            table,
+                        414 => __cold_state_414::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33702,8 +35690,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        415 => __cold_state_415(
-                            table,
+                        415 => __cold_state_415::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33712,8 +35699,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        416 => __cold_state_416(
-                            table,
+                        416 => __cold_state_416::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33722,8 +35708,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        417 => __cold_state_417(
-                            table,
+                        417 => __cold_state_417::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33732,8 +35717,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        418 => __cold_state_418(
-                            table,
+                        418 => __cold_state_418::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33742,8 +35726,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        419 => __cold_state_419(
-                            table,
+                        419 => __cold_state_419::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33752,8 +35735,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        420 => __cold_state_420(
-                            table,
+                        420 => __cold_state_420::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33762,8 +35744,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        421 => __cold_state_421(
-                            table,
+                        421 => __cold_state_421::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33772,8 +35753,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        422 => __cold_state_422(
-                            table,
+                        422 => __cold_state_422::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33782,8 +35762,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        423 => __cold_state_423(
-                            table,
+                        423 => __cold_state_423::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33792,8 +35771,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        424 => __cold_state_424(
-                            table,
+                        424 => __cold_state_424::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33802,8 +35780,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        425 => __cold_state_425(
-                            table,
+                        425 => __cold_state_425::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33812,8 +35789,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        426 => __cold_state_426(
-                            table,
+                        426 => __cold_state_426::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33822,8 +35798,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        427 => __cold_state_427(
-                            table,
+                        427 => __cold_state_427::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33832,8 +35807,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        428 => __cold_state_428(
-                            table,
+                        428 => __cold_state_428::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33842,8 +35816,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        429 => __cold_state_429(
-                            table,
+                        429 => __cold_state_429::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33852,8 +35825,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        430 => __cold_state_430(
-                            table,
+                        430 => __cold_state_430::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33862,8 +35834,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        431 => __cold_state_431(
-                            table,
+                        431 => __cold_state_431::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33872,8 +35843,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        432 => __cold_state_432(
-                            table,
+                        432 => __cold_state_432::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33882,8 +35852,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        433 => __cold_state_433(
-                            table,
+                        433 => __cold_state_433::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33892,8 +35861,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        434 => __cold_state_434(
-                            table,
+                        434 => __cold_state_434::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33902,8 +35870,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        435 => __cold_state_435(
-                            table,
+                        435 => __cold_state_435::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33912,8 +35879,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        436 => __cold_state_436(
-                            table,
+                        436 => __cold_state_436::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33922,8 +35888,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        437 => __cold_state_437(
-                            table,
+                        437 => __cold_state_437::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33932,8 +35897,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        438 => __cold_state_438(
-                            table,
+                        438 => __cold_state_438::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33942,8 +35906,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        439 => __cold_state_439(
-                            table,
+                        439 => __cold_state_439::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33952,8 +35915,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        440 => __cold_state_440(
-                            table,
+                        440 => __cold_state_440::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33962,8 +35924,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        441 => __cold_state_441(
-                            table,
+                        441 => __cold_state_441::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33972,8 +35933,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        442 => __cold_state_442(
-                            table,
+                        442 => __cold_state_442::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33982,8 +35942,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        443 => __cold_state_443(
-                            table,
+                        443 => __cold_state_443::<__S>(
                             input,
                             scanner,
                             columns,
@@ -33992,8 +35951,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        444 => __cold_state_444(
-                            table,
+                        444 => __cold_state_444::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34002,8 +35960,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        445 => __cold_state_445(
-                            table,
+                        445 => __cold_state_445::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34012,8 +35969,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        446 => __cold_state_446(
-                            table,
+                        446 => __cold_state_446::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34022,8 +35978,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        447 => __cold_state_447(
-                            table,
+                        447 => __cold_state_447::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34032,8 +35987,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        448 => __cold_state_448(
-                            table,
+                        448 => __cold_state_448::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34042,8 +35996,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        449 => __cold_state_449(
-                            table,
+                        449 => __cold_state_449::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34052,8 +36005,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        450 => __cold_state_450(
-                            table,
+                        450 => __cold_state_450::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34062,8 +36014,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        451 => __cold_state_451(
-                            table,
+                        451 => __cold_state_451::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34072,8 +36023,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        452 => __cold_state_452(
-                            table,
+                        452 => __cold_state_452::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34082,8 +36032,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        453 => __cold_state_453(
-                            table,
+                        453 => __cold_state_453::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34092,8 +36041,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        454 => __cold_state_454(
-                            table,
+                        454 => __cold_state_454::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34102,8 +36050,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        455 => __cold_state_455(
-                            table,
+                        455 => __cold_state_455::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34112,8 +36059,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        456 => __cold_state_456(
-                            table,
+                        456 => __cold_state_456::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34122,8 +36068,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        457 => __cold_state_457(
-                            table,
+                        457 => __cold_state_457::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34132,8 +36077,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        458 => __cold_state_458(
-                            table,
+                        458 => __cold_state_458::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34142,8 +36086,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        459 => __cold_state_459(
-                            table,
+                        459 => __cold_state_459::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34152,8 +36095,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        460 => __cold_state_460(
-                            table,
+                        460 => __cold_state_460::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34162,8 +36104,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        461 => __cold_state_461(
-                            table,
+                        461 => __cold_state_461::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34172,8 +36113,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        462 => __cold_state_462(
-                            table,
+                        462 => __cold_state_462::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34182,8 +36122,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        463 => __cold_state_463(
-                            table,
+                        463 => __cold_state_463::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34192,8 +36131,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        464 => __cold_state_464(
-                            table,
+                        464 => __cold_state_464::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34202,8 +36140,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        465 => __cold_state_465(
-                            table,
+                        465 => __cold_state_465::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34212,8 +36149,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        466 => __cold_state_466(
-                            table,
+                        466 => __cold_state_466::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34222,8 +36158,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        467 => __cold_state_467(
-                            table,
+                        467 => __cold_state_467::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34232,8 +36167,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        468 => __cold_state_468(
-                            table,
+                        468 => __cold_state_468::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34242,8 +36176,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        469 => __cold_state_469(
-                            table,
+                        469 => __cold_state_469::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34252,8 +36185,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        470 => __cold_state_470(
-                            table,
+                        470 => __cold_state_470::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34262,8 +36194,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        471 => __cold_state_471(
-                            table,
+                        471 => __cold_state_471::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34272,8 +36203,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        472 => __cold_state_472(
-                            table,
+                        472 => __cold_state_472::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34282,8 +36212,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        473 => __cold_state_473(
-                            table,
+                        473 => __cold_state_473::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34292,8 +36221,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        474 => __cold_state_474(
-                            table,
+                        474 => __cold_state_474::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34302,8 +36230,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        475 => __cold_state_475(
-                            table,
+                        475 => __cold_state_475::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34312,8 +36239,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        476 => __cold_state_476(
-                            table,
+                        476 => __cold_state_476::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34322,8 +36248,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        477 => __cold_state_477(
-                            table,
+                        477 => __cold_state_477::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34332,8 +36257,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        478 => __cold_state_478(
-                            table,
+                        478 => __cold_state_478::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34342,8 +36266,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        479 => __cold_state_479(
-                            table,
+                        479 => __cold_state_479::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34352,8 +36275,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        480 => __cold_state_480(
-                            table,
+                        480 => __cold_state_480::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34362,8 +36284,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        481 => __cold_state_481(
-                            table,
+                        481 => __cold_state_481::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34372,8 +36293,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        482 => __cold_state_482(
-                            table,
+                        482 => __cold_state_482::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34382,8 +36302,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        483 => __cold_state_483(
-                            table,
+                        483 => __cold_state_483::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34392,8 +36311,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        484 => __cold_state_484(
-                            table,
+                        484 => __cold_state_484::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34402,8 +36320,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        485 => __cold_state_485(
-                            table,
+                        485 => __cold_state_485::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34412,8 +36329,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        486 => __cold_state_486(
-                            table,
+                        486 => __cold_state_486::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34422,8 +36338,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        487 => __cold_state_487(
-                            table,
+                        487 => __cold_state_487::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34432,8 +36347,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        488 => __cold_state_488(
-                            table,
+                        488 => __cold_state_488::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34442,8 +36356,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        489 => __cold_state_489(
-                            table,
+                        489 => __cold_state_489::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34452,8 +36365,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        490 => __cold_state_490(
-                            table,
+                        490 => __cold_state_490::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34462,8 +36374,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        491 => __cold_state_491(
-                            table,
+                        491 => __cold_state_491::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34472,8 +36383,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        492 => __cold_state_492(
-                            table,
+                        492 => __cold_state_492::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34482,8 +36392,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        493 => __cold_state_493(
-                            table,
+                        493 => __cold_state_493::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34492,8 +36401,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        494 => __cold_state_494(
-                            table,
+                        494 => __cold_state_494::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34502,8 +36410,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                         ),
-                        495 => __cold_state_495(
-                            table,
+                        495 => __cold_state_495::<__S>(
                             input,
                             scanner,
                             columns,
@@ -34575,18 +36482,26 @@ mod __bbnfbootstrap_emit_impl {
     /// module. The inner module exists to scope the per-state
     /// helper functions away from the surrounding `generated.rs`
     /// namespace.
+    ///
+    /// AW-III.W4.d — `DTA_TABLE` is referenced internally as
+    /// `&super::DTA_TABLE` (a `pub const`) so LLVM constant-folds
+    /// every per-arm `DTA_TABLE.states[N]` destructure at compile
+    /// time. The `table` parameter is gone: the walker is
+    /// per-grammar, the table is per-grammar, the binding is
+    /// static. Removing the parameter eliminates the dynamic
+    /// indirect load that gated `match table.states[N]`
+    /// const-folding.
     #[allow(dead_code)]
     #[inline]
-    pub fn dta_run_BbnfBootstrap(
-        table: &::bbnf::runtime::tape::DtaTable,
+    pub fn dta_run_BbnfBootstrap<__S: ::bbnf::runtime::tape::RegexScanner>(
         input: &[u8],
-        scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+        scanner: &__S,
         columns: &mut ::bbnf::runtime::tape::Columns,
         psi: &mut ::bbnf::runtime::tape::PayloadStream,
         frame_depth: &mut ::std::vec::Vec<u8>,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
-        __dta_walker_inline::run(table, input, scanner, columns, psi, frame_depth)
+        __dta_walker_inline::run::<__S>(input, scanner, columns, psi, frame_depth)
     }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
@@ -52494,7 +54409,6 @@ mod __bbnfbootstrap_emit_impl {
             let root_off = {
                 let (columns, frame_depth) = builder.columns_and_frame_depth_mut();
                 dta_run_BbnfBootstrap(
-                    &DTA_TABLE,
                     input.as_bytes(),
                     &DTA_SCANNER,
                     columns,

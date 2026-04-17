@@ -71,7 +71,7 @@ use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 
 use super::super::dfa_codegen;
-use super::decoders::emit_eisel_lemire_inline_body;
+use super::decoders::{emit_eisel_lemire_inline_body, emit_neon_string_scan_inline_body};
 use super::helpers::{
     emit_advance_or_pop_inline, emit_close_compound_inline, emit_emit_leaf_inline,
     emit_emit_leaf_with_payload_inline, emit_psi_push_inline,
@@ -679,12 +679,54 @@ fn emit_regex_scan_body(
     idx: usize,
     pattern: StringId,
 ) -> TokenStream {
-    // AW-IV.W2.3.a (intermediate) — QuotedString dispatch lands in the
-    // follow-on commit that wires `emit_neon_string_scan_inline_body`.
-    // This intermediate hop accepts the `pattern: StringId` argument
-    // so the walker's Regex arm can pivot on classification without
-    // the QuotedString branch firing yet.
-    let _ = (ir, pattern);
+    if let Some(info) = ir.regex_info.get(&pattern) {
+        if let parse_that::regex::classify::RegexClass::QuotedString { quote_char, .. } =
+            info.classification
+        {
+            // AW-IV.W2.3.a — QuotedString splice. Consume the opening
+            // quote byte (the pattern starts with the quote), run the
+            // NEON scan for the closing quote, and project the result
+            // as the match length.
+            let neon_body = emit_neon_string_scan_inline_body(quote_char);
+            let quote_lit = Literal::u8_unsuffixed(quote_char);
+            return quote! {
+                '__sscan: {
+                    // Opening-quote check: the pattern demands the
+                    // matched range start with the quote byte. If the
+                    // input at `pos` is not the quote, the match fails
+                    // (Option::None) — uniform with the DFA path's
+                    // no-match case.
+                    let __open = match input.get(pos) {
+                        ::core::option::Option::Some(&b) => b,
+                        ::core::option::Option::None => {
+                            break '__sscan ::core::option::Option::None;
+                        }
+                    };
+                    if __open != #quote_lit {
+                        break '__sscan ::core::option::Option::None;
+                    }
+                    // NEON scan over the content starting after the
+                    // opening quote. `start` is the first body byte;
+                    // `__sstring` (the block's value) is the closing-
+                    // quote offset.
+                    let start: usize = pos + 1;
+                    #neon_body
+                    match __sstring {
+                        ::core::option::Option::Some(__close) => {
+                            // Matched bytes: [pos, __close + 1).
+                            // match_len = (__close + 1) - pos.
+                            ::core::option::Option::Some(
+                                ((__close + 1) - pos) as u32,
+                            )
+                        }
+                        ::core::option::Option::None => {
+                            ::core::option::Option::None
+                        }
+                    }
+                }
+            };
+        }
+    }
     dfa_codegen::emit_dfa_inline_body(grammar, ir, table, idx)
 }
 

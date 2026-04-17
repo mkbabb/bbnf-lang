@@ -9,38 +9,87 @@
 //! can emit a grammar-wide bitmap kernel that every scan site routes
 //! through.
 //!
-//! ## Archaeology (AO.0.1 / AU.2.7 v2)
+//! ## Archaeology (AO.0.1 / AU.2.7 v2 / AW-III.W5.a)
 //!
-//! This pass revives the data-flow shape of `compute_structural_bytes`
-//! (commit `4114695`, deleted at commit `2f7c1bd`). What failed in v1
-//! was integration — a `structural_cursor` on `ParserState`, a scalar
-//! `filter_quote_parity`, hybrid dispatch in `alt.rs`. v2 keeps the
-//! derivation strategy and discards all of that: the alphabet is read
-//! by the codegen-time emitter, not by a runtime cursor. The set is
-//! grammar-parameterised; the bitmap is scanner-local.
+//! AW-III.W5.a (this file) extends the AU.2.7 v2 derivation with three
+//! new fields the stage-1 SIMD pre-pass kernel consumes per the
+//! `bbnf-simd-scan` crate's alphabet contract:
 //!
-//! ## Digraph set
+//! - `digraph_mask: [u64; 4]` — 256-bit bitmap of digraph **first**
+//!   bytes. Lets the kernel cheaply ask "is this byte a potential
+//!   digraph opener" without scanning a `Vec`.
+//! - `digraph_pairs: Vec<(u8, u8)>` — full mined digraph pair list.
+//!   Generalised from the AU.2.7 candidate-table approach: the v2
+//!   pass hardcoded a 5-pair candidate list and asked which were
+//!   "observed"; v3 walks every `IrNode::Literal` and harvests the
+//!   first two bytes of any 2+ byte literal whose first byte appears
+//!   in the structural set. No grammar-name conditionals; the data is
+//!   the data.
+//! - `quote_classes: BTreeSet<u8>` — bytes that toggle string mode.
+//!   Sourced from `IrNode::Regex` nodes whose `regex_info`
+//!   classification is `RegexClass::QuotedString { quote_char, .. }`.
+//!   The CLMUL/PMULL parity path in the kernel needs this set so it
+//!   can mask off bytes inside string literals before compaction.
 //!
-//! Known digraphs across the four grammar families:
+//! ## Digraph derivation
 //!
-//! | digraph | grammar | role |
-//! |---------|---------|------|
-//! | `/\*`   | CSS, BBNF | block comment opener |
-//! | `\*/`   | CSS, BBNF | block comment closer |
-//! | `->`    | BBNF | type-annotation arrow |
-//! | `(\*`   | BBNF (optional) | EBNF-style opener |
-//! | `\*)`   | BBNF (optional) | EBNF-style closer |
-//!
-//! The digraph table is statically small; we enumerate the known
-//! forms and filter by which first-byte appears in `S`.
+//! Pre-W5.a the digraph table was a hardcoded candidate list filtered
+//! by literal occurrence. W5.a removes the candidate list entirely:
+//! every 2+ byte literal in the grammar contributes its first two
+//! bytes as a candidate digraph; the pair survives if its first byte
+//! is also in the structural single-byte set. This is fully general
+//! across grammar families — no list maintenance, no per-grammar
+//! special cases.
 
-use crate::{GrammarIR, IrNode};
+use crate::{GrammarIR, IrNode, StringId};
 
 use serde::{Deserialize, Serialize};
 
 use std::collections::BTreeSet;
 
-/// Structural alphabet `(S, D)` for a grammar.
+/// Width of the [`StructuralAlphabet`] bitmap fields, in `u64` words.
+/// Four 64-bit words cover the full 256-byte universe (`u8` value
+/// space) — the same shape `bbnf-simd-scan` consumes.
+pub const STRUCTURAL_BITMAP_WORDS: usize = 4;
+
+/// 256-bit bitmap of `u8` values, packed as four 64-bit words. Word
+/// `i` covers bytes `64*i .. 64*(i+1)`. Stable wire shape; the SIMD
+/// kernel reads it directly.
+pub type StructuralBitmap = [u64; STRUCTURAL_BITMAP_WORDS];
+
+/// Construct a [`StructuralBitmap`] from an iterator of `u8` values.
+/// Idempotent under repeated bytes.
+pub fn build_byte_bitmap<I: IntoIterator<Item = u8>>(bytes: I) -> StructuralBitmap {
+    let mut bitmap = [0u64; STRUCTURAL_BITMAP_WORDS];
+    for byte in bytes {
+        let word = (byte >> 6) as usize;
+        let bit = byte & 0x3F;
+        bitmap[word] |= 1u64 << bit;
+    }
+    bitmap
+}
+
+/// Test whether a byte is set in a [`StructuralBitmap`].
+#[inline]
+pub fn bitmap_contains(bitmap: &StructuralBitmap, byte: u8) -> bool {
+    let word = (byte >> 6) as usize;
+    let bit = byte & 0x3F;
+    (bitmap[word] >> bit) & 1 == 1
+}
+
+/// Total set bits in a [`StructuralBitmap`].
+#[inline]
+pub fn bitmap_popcount(bitmap: &StructuralBitmap) -> u32 {
+    bitmap.iter().map(|w| w.count_ones()).sum()
+}
+
+/// Structural alphabet `(S, D, Q)` for a grammar.
+///
+/// `S` is `single_bytes` — bytes a scanner inner-loop may legally
+/// terminate on. `D` is the digraph set (`digraph_pairs` plus the
+/// `digraph_mask` first-byte bitmap). `Q` is `quote_classes` — bytes
+/// that toggle string mode and therefore demand a parity correction
+/// pass before the kernel emits its compacted index.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct StructuralAlphabet {
     /// Single-byte structural set. Bytes that can terminate a
@@ -50,6 +99,19 @@ pub struct StructuralAlphabet {
     /// Two-byte digraphs observable at scanner boundaries. First
     /// byte is always in `single_bytes`.
     pub digraphs: Vec<(u8, u8)>,
+
+    /// Bitmap of digraph first-bytes. Equivalent to
+    /// `digraphs.iter().map(|(a, _)| *a).collect()` packed into a
+    /// 256-bit bitmap; pre-computed so the SIMD kernel can mask
+    /// candidate-opener lanes in one ANDS without a derefenced loop.
+    #[serde(default)]
+    pub digraph_mask: StructuralBitmap,
+
+    /// String-toggle byte set. Mined from `IrNode::Regex` nodes
+    /// classified as `RegexClass::QuotedString`. Drives the CLMUL /
+    /// PMULL / shift-XOR quote-parity path in `bbnf-simd-scan`.
+    #[serde(default)]
+    pub quote_classes: BTreeSet<u8>,
 }
 
 impl StructuralAlphabet {
@@ -65,12 +127,31 @@ impl StructuralAlphabet {
     pub fn covers(&self, bytes: &[u8]) -> bool {
         bytes.iter().all(|b| self.single_bytes.contains(b))
     }
+
+    /// Return the quote-class set as a sorted `Vec<u8>`. Convenience
+    /// for the kernel-shape selector and the wire emitter.
+    pub fn quote_classes_vec(&self) -> Vec<u8> {
+        self.quote_classes.iter().copied().collect()
+    }
+
+    /// 256-bit bitmap of `single_bytes`, packed for SIMD consumption.
+    /// Computed on demand from the BTreeSet; no field cache.
+    pub fn singletons_mask(&self) -> StructuralBitmap {
+        build_byte_bitmap(self.single_bytes.iter().copied())
+    }
+
+    /// 256-bit bitmap of `quote_classes`, packed for SIMD consumption.
+    pub fn quote_classes_mask(&self) -> StructuralBitmap {
+        build_byte_bitmap(self.quote_classes.iter().copied())
+    }
 }
 
 /// Walk every rule body, collect dispatch-table bytes, literal
-/// first-bytes, and digraph first-bytes. Store the result as
-/// `ir.structural_alphabet` whenever the set size is within the
-/// nibble-LUT window (2..=8 unique bytes).
+/// first-bytes, digraph first-bytes, and string-toggle bytes. Store
+/// the result on `ir.structural_alphabet` whenever the singleton set
+/// is within the nibble-LUT window (2..=8 unique bytes); larger
+/// alphabets still surface, with the kernel-shape selector picking
+/// `WideLut` or `MultipassCmpEq` per cardinality.
 pub fn compute_structural_alphabet(ir: &mut GrammarIR) {
     let mut byte_set: BTreeSet<u8> = BTreeSet::new();
 
@@ -78,52 +159,111 @@ pub fn compute_structural_alphabet(ir: &mut GrammarIR) {
         collect_bytes(&rule.body, ir, &mut byte_set);
     }
 
-    // Digraph enumeration: produce all pairs whose first byte is
-    // structural. Callers filter down to the ones actually observed
-    // in the grammar by checking rule literals. For v2 we keep the
-    // table small — CSS+BBNF care about `/*`, `*/`, `->`, `(*`,
-    // `*)`. The first byte of every digraph must be in `S`; if it
-    // is not, the digraph is irrelevant (no scanner path will check
-    // for it).
-    let mut digraphs: Vec<(u8, u8)> = Vec::new();
-    let candidate_digraphs: [(u8, u8); 5] = [
-        (b'/', b'*'),
-        (b'*', b'/'),
-        (b'-', b'>'),
-        (b'(', b'*'),
-        (b'*', b')'),
-    ];
-    for (first, second) in candidate_digraphs {
-        if byte_set.contains(&first) && observes_digraph(ir, first, second) {
-            digraphs.push((first, second));
-            // A digraph whose first byte isn't already in S could
-            // still widen the alphabet — e.g. `->` in BBNF adds `-`
-            // if the grammar never uses `-` as a single-byte
-            // terminator. Add the first byte so the bitmap kernel
-            // sees every digraph opener.
-            byte_set.insert(first);
+    // Digraph mining: harvest every 2+ byte literal in the grammar.
+    // No hardcoded candidate list — the data is the data. A digraph
+    // pair `(a, b)` is admitted iff `a` is in the structural set
+    // (otherwise no scanner path will ever check for it). Mining is
+    // deduplicated and sorted for determinism.
+    let mut digraph_set: BTreeSet<(u8, u8)> = BTreeSet::new();
+    for sid in 0..ir.strings.len() {
+        let bytes = ir.strings[sid].as_bytes();
+        if bytes.len() < 2 {
+            continue;
+        }
+        // Walk every 2-byte window in the literal — a 3-byte literal
+        // like `==!` has digraph candidates `==` and `=!`. Each
+        // contributes if its first byte is structural.
+        for window in bytes.windows(2) {
+            let first = window[0];
+            let second = window[1];
+            if byte_set.contains(&first) {
+                digraph_set.insert((first, second));
+            }
         }
     }
 
-    // Gate: store only when the set is within the nibble-LUT window.
-    // A grammar with 9+ unique structural bytes falls back to the
-    // per-site emitter path (which still uses the same
-    // find_next_structural_from helper but with a smaller per-site
-    // LUT).
-    if byte_set.len() >= 2 && byte_set.len() <= 8 {
+    // Add digraph first-bytes to the structural set so the bitmap
+    // kernel sees every digraph opener even if the byte was not
+    // already a single-byte terminator (e.g. `-` in BBNF's `->` arrow
+    // when no rule uses `-` as a leaf alone).
+    for (first, _) in &digraph_set {
+        byte_set.insert(*first);
+    }
+
+    let digraphs: Vec<(u8, u8)> = digraph_set.iter().copied().collect();
+    let digraph_mask = build_byte_bitmap(digraphs.iter().map(|(a, _)| *a));
+
+    // Quote-class mining: walk `IrNode::Regex` nodes; for each, look
+    // up `regex_info` and admit the `quote_char` of any pattern
+    // classified as `RegexClass::QuotedString`. The classifier is the
+    // single source of truth; no string-pattern matching here.
+    let mut quote_classes: BTreeSet<u8> = BTreeSet::new();
+    let mut regex_sids: BTreeSet<StringId> = BTreeSet::new();
+    for rule in &ir.rules {
+        collect_regex_sids(&rule.body, &mut regex_sids);
+    }
+    for sid in regex_sids {
+        if let Some(info) = ir.regex_info.get(&sid) {
+            if let bbnf_regex::RegexClass::QuotedString { quote_char, .. } = info.classification {
+                quote_classes.insert(quote_char);
+            }
+        }
+    }
+
+    // Always store the alphabet — the kernel-shape selector picks the
+    // appropriate codegen per cardinality. Pre-W5.a only the
+    // ≤8-singleton window stored; W5.a relaxes that gate so wide
+    // alphabets and quote-only grammars also flow through the bitmap
+    // kernel pipeline.
+    if !byte_set.is_empty() || !quote_classes.is_empty() {
         ir.structural_alphabet = Some(StructuralAlphabet {
             single_bytes: byte_set,
             digraphs,
+            digraph_mask,
+            quote_classes,
         });
     }
 }
 
-fn observes_digraph(ir: &GrammarIR, first: u8, second: u8) -> bool {
-    // A digraph is "observed" iff any interned string contains it
-    // as a literal. This is a proxy for the grammar actually caring
-    // about the two-byte sequence.
-    let pat: [u8; 2] = [first, second];
-    ir.strings.iter().any(|s| s.as_bytes().windows(2).any(|w| w == pat))
+/// Recursively collect every interned regex `StringId` referenced from
+/// a node tree. Used to look up `RegexInfo::classification` without
+/// re-walking the IR per-node.
+fn collect_regex_sids(node: &IrNode, sids: &mut BTreeSet<StringId>) {
+    match node {
+        IrNode::Regex(sid) => {
+            sids.insert(*sid);
+        }
+        IrNode::Alt(branches, _) => {
+            for b in branches {
+                collect_regex_sids(&b.node, sids);
+            }
+        }
+        IrNode::Seq(children) => {
+            for c in children {
+                collect_regex_sids(c, sids);
+            }
+        }
+        IrNode::Repeat { inner, .. }
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Negate(inner)
+        | IrNode::Map { inner, .. } => collect_regex_sids(inner, sids),
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            collect_regex_sids(a, sids);
+            collect_regex_sids(b, sids);
+        }
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            collect_regex_sids(token, sids);
+            for arm in arms {
+                collect_regex_sids(&arm.continuation, sids);
+            }
+            collect_regex_sids(fallback, sids);
+        }
+        IrNode::Literal(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
+    }
 }
 
 fn collect_bytes(node: &IrNode, ir: &GrammarIR, bytes: &mut BTreeSet<u8>) {
@@ -173,4 +313,4 @@ fn collect_bytes(node: &IrNode, ir: &GrammarIR, bytes: &mut BTreeSet<u8>) {
     }
 }
 
-// Tests live in tests/structural_alphabet.rs (crate-level).
+// Tests live in tests/structural_alphabet_extended.rs (crate-level).

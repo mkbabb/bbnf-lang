@@ -22,4 +22,7 @@ pub use first_sets::compute_first_sets;
 pub use follow::compute_follow_sets;
 pub use scc::compute_scc;
 pub use sort::sort_alt_branches;
-pub use structural_alphabet::{StructuralAlphabet, compute_structural_alphabet};
+pub use structural_alphabet::{
+    STRUCTURAL_BITMAP_WORDS, StructuralAlphabet, StructuralBitmap, bitmap_contains,
+    bitmap_popcount, build_byte_bitmap, compute_structural_alphabet,
+};

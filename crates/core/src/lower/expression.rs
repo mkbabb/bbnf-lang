@@ -31,7 +31,8 @@ use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 
 use super::LowerCtx;
 use super::tape_walk::{
-    find_child_by_kind, find_descendant_by_kind, iter_rep_children, peel_transparent,
+    collect_descendants_by_kind, find_descendant_by_kind, iter_rep_children,
+    peel_transparent,
 };
 use super::value_expr::{
     deep_unwrap_value, extract_value_func_name, is_type_name, lower_value_expr,
@@ -815,7 +816,7 @@ fn find_type_annotation_child<'a>(
 /// structural mode (optional comment / modifier slots push zero-
 /// width placeholders that shift later indices). Dispatch by role:
 ///
-/// 1. Find the term child via `find_child_by_kind(term)` — the
+/// 1. Find the term child via `find_descendant_by_kind(term)` — the
 ///    canonical clean-regen shape.
 /// 2. Fall back to the first non-metadata, non-placeholder child
 ///    under HEAD's hand-patched schema where the term may surface
@@ -1409,9 +1410,13 @@ fn lower_identifier_with_optional_call<'a>(
     node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,
 ) -> IrNode {
-    // Prefer an explicit `identifier` child (clean-regen shape); fall
-    // back to the first substantive child otherwise.
-    let ident = find_child_by_kind(node, BbnfBootstrapRuleKind::identifier)
+    // Under DTA the term's identifier branch wraps everything inside a
+    // Seq compound; the `identifier` record sits one level deeper than
+    // the term compound. Descend to find it. If no identifier-kinded
+    // descendant exists (optimizer fully inlined the leaf), fall back
+    // to the first substantive direct child — that first-child carries
+    // the identifier's span text in the inlined shape.
+    let ident = find_descendant_by_kind(node, BbnfBootstrapRuleKind::identifier)
         .or_else(|| {
             node.children().find(|c| {
                 let (lo, hi) = c.span();
@@ -1426,13 +1431,16 @@ fn lower_identifier_with_optional_call<'a>(
         });
     let name = ident.span_text();
     // The call argument list, if present, surfaces as zero or more
-    // direct `call_arg`-kinded children. Each `call_arg` is itself a
-    // rule (= alternation of binary_factors), so collecting them yields
-    // the flat argument list without further peeling.
-    let call_args: Vec<BbnfBootstrapNodeView<'a>> = node
-        .children()
-        .filter(|c| c.rule_kind() == BbnfBootstrapRuleKind::call_arg)
-        .collect();
+    // `call_arg`-kinded descendants. Under DTA each `call_arg` is
+    // wrapped one Seq deeper than the term compound (the term body
+    // `identifier , ( "(" , call_arg ?w , ( "," ?w , call_arg ?w ) * , ")" ) ?`
+    // is emitted as a Seq), so a direct-child filter misses every
+    // call_arg. Collect descendants with stop-at-hit semantics so
+    // each positional argument surfaces as a disjoint subtree, not as
+    // a flattened list of every nested call_arg inside an argument's
+    // body.
+    let mut call_args: Vec<BbnfBootstrapNodeView<'a>> = Vec::new();
+    collect_descendants_by_kind(node, BbnfBootstrapRuleKind::call_arg, &mut call_args);
     if call_args.is_empty() {
         resolve_name(name, ctx)
     } else {

@@ -811,40 +811,68 @@ fn find_type_annotation_child<'a>(
 
 /// Lower a `factor = big_comment? term ?w modifier? big_comment?` view.
 ///
-/// Children are positionally `[big_comment?, term, modifier?,
-/// big_comment?]`, but positional reads are unreliable under
-/// structural mode (optional comment / modifier slots push zero-
-/// width placeholders that shift later indices). Dispatch by role:
+/// Children occupy fixed positional slots `[big_comment?, term-wrapper,
+/// modifier-wrapper, big_comment?]` — each a Rule / Seq compound
+/// whose `rule_kind` often maps to the `int_lit` sentinel under DTA
+/// (the walker stamps `variant_idx = 0` on anonymous wrappers emitted
+/// for absent-optional slots and for the term / modifier body Seqs).
+/// Dispatch by role from the direct-child sequence:
 ///
-/// 1. Find the term child via `find_descendant_by_kind(term)` — the
-///    canonical clean-regen shape.
-/// 2. Fall back to the first non-metadata, non-placeholder child
-///    under HEAD's hand-patched schema where the term may surface
-///    under a dedupe-dropped rule_kind or inline directly as a
-///    `literal` / `regex` / `identifier` child.
-/// 3. Collect the optional `modifier` and apply its quantifier to the
-///    base term. Two shapes are handled:
+/// 1. Walk direct children once, classifying each by its trimmed
+///    SPAN text:
+///    - empty trimmed span → placeholder, skip
+///    - `rule_kind ∈ {big_comment, comment}` → metadata, skip
+///    - trimmed span ∈ `{?w, ?, *, +}` → modifier
+///    - otherwise → first such child is the term wrapper
+/// 2. Fall back to `find_sibling_by_kind(term)` +
+///    `find_term_child_by_elimination` if the classifier produced
+///    no term candidate (defensive under tape-shape variants the
+///    direct-child loop may not cover).
+/// 3. Apply the modifier's quantifier to the base term.
 ///
-///    a) Direct modifier child with `rule_kind() == modifier` (when
-///       the modifier's tape record carries its own variant_idx).
-///    b) Modifier wrapped in an optional `Repeat(vi=0)` placeholder
-///       (the common case under clean-regen: the `?` optional wrapper
-///       pushes a `TapeKind::Repeat` compound with `variant_idx = 0`
-///       which maps to `int_lit` in the RuleKind enum, masking the
-///       inner modifier's identity). Detected by span-text
-///       classification: a non-empty child whose trimmed text is one
-///       of `?w`, `?`, `*`, `+`.
+/// The classifier deliberately avoids descending into the term
+/// wrapper's subtree: a bare `?` / `*` / `+` is never a well-formed
+/// term, so the modifier token can't come from inside the term, and
+/// nested factors inside grouped terms carry their own modifiers that
+/// must NOT bubble up.
 fn lower_factor<'a>(node: BbnfBootstrapNodeView<'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
-    // Under DTA the factor body `big_comment? , term ?w , modifier? ,
-    // big_comment?` is emitted inside one or more anonymous Seq /
-    // Alt / Repeat wrappers by the lifter's tape-shape requirement;
-    // `term` and `modifier` surface as sibling body components one or
-    // two anonymous-wrapper levels deeper than the factor compound
-    // itself. `find_sibling_by_kind` descends only through those
-    // anonymous wrappers — crucially NOT into the sibling `term`'s
-    // own subtree — so the modifier returned belongs to THIS factor,
-    // not to some nested expression inside the term.
-    let term = find_sibling_by_kind(node, BbnfBootstrapRuleKind::term)
+    // Under DTA a factor compound's direct children occupy fixed
+    // positional slots `[big_comment?, term-wrapper, modifier-wrapper,
+    // big_comment?]` — each a Rule / Seq compound whose `rule_kind`
+    // often maps to the `int_lit` sentinel (walker stamps `variant_idx
+    // = 0` on anonymous wrappers emitted for absent-optional slots and
+    // for the term / modifier body Seqs). The wrapper's SPAN
+    // disambiguates: the modifier wrapper's trimmed span is exactly
+    // one of `?w` / `?` / `*` / `+`; the term wrapper's span is the
+    // term expression text (never one of those four tokens because a
+    // bare `?` / `*` / `+` isn't a well-formed term). Classify by
+    // role across the direct children — not by a descent that would
+    // walk into the term's own nested expressions and return a
+    // modifier belonging to some deeper factor inside the term.
+    let mut term_node: Option<BbnfBootstrapNodeView<'a>> = None;
+    let mut modifier_text: Option<&'a str> = None;
+    for child in node.children() {
+        let span = child.span_text();
+        let trimmed = span.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        if matches!(
+            child.rule_kind(),
+            BbnfBootstrapRuleKind::big_comment | BbnfBootstrapRuleKind::comment,
+        ) {
+            continue;
+        }
+        if matches!(trimmed, "?w" | "?" | "*" | "+") {
+            modifier_text = Some(trimmed);
+            continue;
+        }
+        if term_node.is_none() {
+            term_node = Some(child);
+        }
+    }
+    let term = term_node
+        .or_else(|| find_sibling_by_kind(node, BbnfBootstrapRuleKind::term))
         .or_else(|| find_term_child_by_elimination(node))
         .unwrap_or_else(|| {
             panic!(
@@ -854,22 +882,8 @@ fn lower_factor<'a>(node: BbnfBootstrapNodeView<'a>, ctx: &mut LowerCtx<'a>) -> 
         });
     let base = lower_term(term, ctx);
 
-    // Modifier detection: first try rule_kind-based lookup (works when
-    // the modifier compound carries its own variant_idx). Fall back to
-    // span-text classification for the clean-regen shape where the
-    // modifier sits inside a Repeat(vi=0) optional wrapper whose
-    // rule_kind maps to `int_lit` instead of `modifier`.
-    if let Some(mod_node) = find_sibling_by_kind(node, BbnfBootstrapRuleKind::modifier)
-        && mod_node.span().1 > mod_node.span().0
-    {
-        return apply_modifier(base, mod_node.span_text());
-    }
-    // Span-text fallback: scan children for a modifier token.
-    for child in node.children() {
-        let trimmed = child.span_text().trim();
-        if matches!(trimmed, "?w" | "?" | "*" | "+") {
-            return apply_modifier(base, trimmed);
-        }
+    if let Some(text) = modifier_text {
+        return apply_modifier(base, text);
     }
     base
 }

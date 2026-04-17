@@ -279,6 +279,41 @@ pub struct FrameStackSavepoint {
     pub iter_savepoints_len: u32,
 }
 
+/// Deep probe-snapshot — captures the live in-place contents of
+/// counters / iter_savepoints / inline frames in addition to the
+/// length state recorded by [`FrameStackSavepoint`].
+///
+/// AW-III.W2 — required by the Minus arm and any zero-width probe
+/// (lookahead) whose nested dispatch may walk back up the stack and
+/// mutate the enclosing Repeat's counter / iter-savepoint slot. The
+/// length-only `FrameStackSavepoint` truncates new pushes but cannot
+/// rewind in-place mutations to slots that remain live across the
+/// probe boundary; the deep snapshot captures those values verbatim
+/// so the probe is side-effect-free regardless of the dispatch chain
+/// it triggers internally.
+///
+/// Cost is bounded by `inline_len + overflow_len + counters_len +
+/// iter_savepoints_len + op_stack_len` words at probe entry — small
+/// in practice (max nesting in the corpus is ≤ 12 frames; counters
+/// rarely exceed 8).
+#[derive(Clone, Debug)]
+pub struct FrameStackProbeSnapshot {
+    /// Length-state portion (mirror of `FrameStackSavepoint`).
+    base: FrameStackSavepoint,
+    /// In-place inline frame contents at indices `[0..base.inline_len)`.
+    inline_snapshot: Vec<Frame>,
+    /// In-place overflow frame contents at indices `[0..base.overflow_len)`.
+    overflow_snapshot: Vec<Frame>,
+    /// In-place counter values at indices `[0..base.counters_len)`.
+    counters_snapshot: Vec<u32>,
+    /// In-place iter-savepoint contents at indices `[0..base.iter_savepoints_len)`.
+    iter_savepoints_snapshot: Vec<IterSavepoint>,
+    /// In-place op-stack contents at indices `[0..base.op_stack_len)`.
+    op_stack_snapshot: Vec<OpStackEntry>,
+    /// `pending_variant_idx` at probe entry.
+    pending_variant_idx: u8,
+}
+
 impl FrameStack {
     /// Construct an empty frame stack.
     ///
@@ -420,6 +455,69 @@ impl FrameStack {
         self.counters.truncate(sp.counters_len as usize);
         self.op_stack.truncate(sp.op_stack_len as usize);
         self.iter_savepoints.truncate(sp.iter_savepoints_len as usize);
+    }
+
+    /// AW-III.W2 — capture a deep snapshot for a probe boundary
+    /// (Minus excluded probe; zero-width lookahead). Records both
+    /// the length state and the in-place contents of every live
+    /// slot so a subsequent [`Self::restore_probe`] reverts every
+    /// side effect — including mutations to counters/iter_savepoints/
+    /// inline frame fields that the probe's nested dispatch may
+    /// trigger via [`advance_or_pop_with`] walking up the stack.
+    pub fn snapshot_probe(&self) -> FrameStackProbeSnapshot {
+        let inline_len = self.inline_len as usize;
+        let overflow_len = self.overflow.len();
+        let counters_len = self.counters.len();
+        let iter_savepoints_len = self.iter_savepoints.len();
+        let op_stack_len = self.op_stack.len();
+        FrameStackProbeSnapshot {
+            base: FrameStackSavepoint {
+                inline_len: self.inline_len,
+                overflow_len: overflow_len as u32,
+                counters_len: counters_len as u32,
+                op_stack_len: op_stack_len as u32,
+                iter_savepoints_len: iter_savepoints_len as u32,
+            },
+            inline_snapshot: self.inline[..inline_len].to_vec(),
+            overflow_snapshot: self.overflow.clone(),
+            counters_snapshot: self.counters.clone(),
+            iter_savepoints_snapshot: self.iter_savepoints.clone(),
+            op_stack_snapshot: self.op_stack.clone(),
+            pending_variant_idx: self.pending_variant_idx,
+        }
+    }
+
+    /// AW-III.W2 — restore from a probe snapshot. Reverts both
+    /// the length state and the in-place contents of every slot
+    /// that was live at probe entry.
+    pub fn restore_probe(&mut self, snapshot: FrameStackProbeSnapshot) {
+        // Length truncation first — drop pushes that occurred
+        // entirely inside the probe.
+        self.inline_len = snapshot.base.inline_len;
+        self.overflow.truncate(snapshot.base.overflow_len as usize);
+        self.counters.truncate(snapshot.base.counters_len as usize);
+        self.op_stack.truncate(snapshot.base.op_stack_len as usize);
+        self.iter_savepoints.truncate(snapshot.base.iter_savepoints_len as usize);
+        // In-place restore — paste the captured contents back over
+        // any mutations the probe's nested dispatch made to live
+        // slots.
+        let inline_len = snapshot.base.inline_len as usize;
+        self.inline[..inline_len].copy_from_slice(&snapshot.inline_snapshot);
+        // overflow / counters / iter_savepoints / op_stack: the
+        // truncate above set the length; now overwrite contents.
+        for (i, frame) in snapshot.overflow_snapshot.iter().enumerate() {
+            self.overflow[i] = *frame;
+        }
+        for (i, &v) in snapshot.counters_snapshot.iter().enumerate() {
+            self.counters[i] = v;
+        }
+        for (i, &v) in snapshot.iter_savepoints_snapshot.iter().enumerate() {
+            self.iter_savepoints[i] = v;
+        }
+        for (i, &v) in snapshot.op_stack_snapshot.iter().enumerate() {
+            self.op_stack[i] = v;
+        }
+        self.pending_variant_idx = snapshot.pending_variant_idx;
     }
 }
 
@@ -619,34 +717,22 @@ fn dta_run_core(
         s
     };
 
-    // AW-I.W4ε: bootstrap ws-trim fallback.
-    //
-    // The W3.2 DTA lifter silently stripped `IrNode::OptionalWhitespace`
-    // from the IR — the W4γ.2 lifter fixed this by emitting explicit
-    // `DtaState::WsTrim` states, but the checked-in `generated.rs` was
-    // emitted under the pre-W4γ.2 lifter. Until the next regen produces
-    // explicit WsTrim states the driver implicitly trims ASCII
-    // whitespace at rule-entry dispatch boundaries (grammar-semantic
-    // token gaps). Post-regen generated.rs that has explicit WsTrim
-    // states is unaffected — the implicit trim is idempotent at
-    // positions where ws has already been consumed.
-    let ws_fallback = table.states.iter().all(|s| !matches!(s, DtaState::WsTrim { .. }));
 
-    if ws_fallback {
-        trim_ascii_ws(input, &mut pos);
-    }
+    // AW-III.W2: ws_fallback removed.
+    //
+    // The pre-W4γ.2 ws_fallback hack trimmed ASCII whitespace before
+    // every dispatch when the table contained no explicit
+    // `DtaState::WsTrim` state — covering the gap when stale
+    // `generated.rs` was emitted by the pre-W4γ.2 lifter. Post-W4γ.2
+    // every `?w` site lifts to an explicit `WsTrim`, so the fallback
+    // is dead weight for grammars that DO use `?w` and actively
+    // wrong for grammars that don't (CSV's `\n` separator gets eaten
+    // before its `\r?\n` regex can match it). Removing it lets
+    // grammars that handle whitespace explicitly via regex (CSV,
+    // JSON, EBNF) parse correctly while leaving `?w`-using grammars
+    // (BBNF, CSS, Sheets) intact via their lifted WsTrim states.
 
     loop {
-        if ws_fallback {
-            // Idempotent fallback: trim ASCII ws before every
-            // dispatch so the stale generated.rs (without explicit
-            // `WsTrim` states) still handles the bbnf grammar's
-            // `?w` gaps between atoms. Safe for post-regen
-            // generated.rs — `WsTrim` semantics are idempotent,
-            // so dispatching `WsTrim` at an already-trimmed
-            // position is a no-op.
-            trim_ascii_ws(input, &mut pos);
-        }
         match dispatch_one(
             table, input, scanner, columns, psi, frame_depth, &mut stack,
             state, &mut pos,
@@ -664,9 +750,6 @@ fn dta_run_core(
             }
             Err(e) => return Err(e),
         }
-    }
-    if ws_fallback {
-        trim_ascii_ws(input, &mut pos);
     }
     if (pos as usize) < input.len() {
         return Err(DtaError::UnexpectedEnd { offset: pos });
@@ -1390,14 +1473,28 @@ fn dispatch_one(
             // should have been excluded). If it fails, restore the
             // savepoint (so any partial side effects the probe left
             // are discarded) and dispatch `primary` as the next state.
-            let start_depth = stack.depth();
+            //
+            // AW-III.W2 — the probe must use the deep
+            // [`FrameStack::snapshot_probe`] / [`restore_probe`]
+            // mechanism, not the length-only `savepoint` /`restore`
+            // pair: the nested dispatch a probe triggers may walk
+            // back up the stack via [`advance_or_pop_with`] and
+            // mutate the enclosing Repeat's counter / iter-savepoint
+            // slot in-place. Length-only restore truncates new
+            // pushes but cannot rewind those in-place mutations,
+            // leaving the enclosing Repeat with a counter of 1
+            // (instead of 0) and an iter-savepoint pos advanced past
+            // the probe match — which causes `handle_repeat_failure`
+            // to absorb the wrong byte position. The deep snapshot
+            // captures the active slot contents verbatim so the
+            // probe is fully side-effect-free.
             let start_pos = *pos;
-            let sp = stack.savepoint();
+            let probe_snapshot = stack.snapshot_probe();
             let cols_len = columns.len();
             let fd_len = frame_depth.len();
             let psi_len = psi.len();
             let pay_agg_len = columns.pay_agg.len();
-            let pending_before = stack.pending_variant_idx;
+            let start_depth = stack.depth();
 
             let probe = try_branch(
                 table,
@@ -1417,13 +1514,13 @@ fn dispatch_one(
             // adds arena restoration alongside the structural
             // truncation to prevent staged constants from a probe-
             // matched sub-Literal leaking into the post-restore
-            // record stream.
+            // record stream. AW-III.W2 promotes the stack restore
+            // to a deep snapshot restore (see snapshot above).
             columns.truncate(cols_len);
             frame_depth.truncate(fd_len);
             psi.truncate(psi_len);
             columns.pay_agg.truncate(pay_agg_len);
-            stack.restore(sp);
-            stack.pending_variant_idx = pending_before;
+            stack.restore_probe(probe_snapshot);
             *pos = start_pos;
 
             match probe {

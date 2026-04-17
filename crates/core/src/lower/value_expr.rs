@@ -35,6 +35,7 @@ use std::collections::HashMap;
 use bbnf_ir::{MapBinOp, MapExpr, MapUnaryOp};
 
 use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
+use crate::lower::tape_walk::find_descendant_by_kind;
 
 use super::LowerCtx;
 
@@ -98,10 +99,22 @@ fn dispatch_value_expr<'a>(
 ) -> MapExpr {
     match node.rule_kind() {
         // Top-level value_expr wrapper (= value_closure | value_or).
-        // Peel by re-dispatching on the single child.
+        // Peel by re-dispatching on the inner head.
+        //
+        // Under DTA, the value_expr rule body is wrapped in a Seq
+        // compound — `node.child(0)` picks the anonymous wrapper, not
+        // the semantic head. Descend through anonymous wrappers to the
+        // first value-layer compound (`value_closure` or `value_or`);
+        // if the optimizer inlined even those, descend to any
+        // downstream value-precedence-chain head.
         BbnfBootstrapRuleKind::value_expr => {
-            let child = node.child(0).unwrap_or(node);
-            dispatch_value_expr(child, ctx)
+            let inner = value_expr_head(node).unwrap_or(node);
+            if inner.cursor().offset() == node.cursor().offset() {
+                // Defensive — avoid recursion if descent returned the
+                // same node. Fall through to the atom path.
+                return lower_value_atom(node, ctx);
+            }
+            dispatch_value_expr(inner, ctx)
         }
 
         // Top of the value sub-grammar — alt of closure / value_or chain.
@@ -152,6 +165,54 @@ fn dispatch_value_expr<'a>(
             node.span_text(),
         ),
     }
+}
+
+// ─── DTA descent helpers ─────────────────────────────────────────────────────
+
+/// Outermost-first ordering of value-layer rule kinds used to find
+/// the inner head of a `value_expr` compound under DTA.
+///
+/// The DTA walker wraps rule bodies in Seq compounds; `node.child(0)`
+/// picks the anonymous wrapper, not the semantic head. A descendant
+/// search against this ordered list returns the outermost semantic
+/// rule in document order. `value_closure` and `value_or` alternate
+/// at the `value_expr` body layer; the remaining precedence-chain
+/// kinds + atom handle optimizer-collapsed shapes where the outer
+/// wrapper was inlined away.
+const VALUE_HEAD_KINDS: &[BbnfBootstrapRuleKind] = &[
+    BbnfBootstrapRuleKind::value_closure,
+    BbnfBootstrapRuleKind::value_or,
+    BbnfBootstrapRuleKind::value_and,
+    BbnfBootstrapRuleKind::value_cmp,
+    BbnfBootstrapRuleKind::value_add,
+    BbnfBootstrapRuleKind::value_mul,
+    BbnfBootstrapRuleKind::value_unary,
+    BbnfBootstrapRuleKind::value_atom,
+];
+
+/// Find the semantic head of a `value_expr` compound under DTA.
+///
+/// `find_descendant_by_kind` is called against each value-layer rule
+/// kind in outermost-first priority order. First hit wins; returns
+/// `None` only if none of the value-layer rule kinds surface as
+/// descendants (pathological input — every `value_expr` body must
+/// resolve to at least a `value_atom`).
+fn value_expr_head<'a>(
+    node: BbnfBootstrapNodeView<'a>,
+) -> Option<BbnfBootstrapNodeView<'a>> {
+    for &kind in VALUE_HEAD_KINDS {
+        if let Some(v) = find_descendant_by_kind(node, kind) {
+            // Skip `node` itself — if `node.rule_kind() == value_expr`
+            // and `find_descendant_by_kind` matches the root (it won't
+            // here because value_expr is not in VALUE_HEAD_KINDS), we
+            // still want to descend. Defensive: only return distinct
+            // views.
+            if v.cursor().offset() != node.cursor().offset() {
+                return Some(v);
+            }
+        }
+    }
+    None
 }
 
 // ─── value_expr: closure / or-chain ──────────────────────────────────────────

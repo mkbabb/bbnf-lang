@@ -12,7 +12,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
-use crate::lower::tape_walk::{find_child_by_kind, peel_transparent};
+use crate::lower::tape_walk::{find_descendant_by_kind, peel_transparent};
 use crate::types::AST;
 
 /// Find rules whose RHS is simply a reference to another nonterminal.
@@ -80,14 +80,18 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
             }
             // Bare term: `identifier (call_args)?` / `literal` / `regex` / `ε`.
             // Alias only when the sole substantive child is an identifier.
-            let ident = find_child_by_kind(node, BbnfBootstrapRuleKind::identifier)?;
-            let has_call_args = node.children().any(|c| {
-                let k = c.rule_kind();
-                k != BbnfBootstrapRuleKind::identifier
-                    && k != BbnfBootstrapRuleKind::comment
-                    && k != BbnfBootstrapRuleKind::big_comment
-                    && c.span().1 > c.span().0
-            });
+            //
+            // Under DTA the identifier and any call_args compound
+            // sit inside a Seq wrapper on the term compound, so a
+            // direct-child scan misses them. Descend to the first
+            // identifier descendant; call-args detection uses the
+            // `call_arg` rule_kind directly, which is semantically
+            // tighter than "any non-identifier substantive child"
+            // and immune to the Seq-wrapper false positive.
+            let ident =
+                find_descendant_by_kind(node, BbnfBootstrapRuleKind::identifier)?;
+            let has_call_args =
+                find_descendant_by_kind(node, BbnfBootstrapRuleKind::call_arg).is_some();
             if has_call_args {
                 None
             } else {
@@ -97,8 +101,12 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
 
         // factor = (comment_before?, term, modifier?, comment_after?)
         // — unwrap when all three optional slots are absent.
+        //
+        // Under DTA the factor body is wrapped in a Seq compound, so
+        // the modifier and term may sit one compound deeper than the
+        // direct children. Descend to them by rule_kind.
         BbnfBootstrapRuleKind::factor => {
-            let modifier = find_child_by_kind(node, BbnfBootstrapRuleKind::modifier);
+            let modifier = find_descendant_by_kind(node, BbnfBootstrapRuleKind::modifier);
             let has_modifier = modifier
                 .map(|m| m.span().1 > m.span().0)
                 .unwrap_or(false);
@@ -108,7 +116,7 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
             // Under tape-first, the `term` child may not exist as a
             // separate Rule record. Check for it explicitly, then fall
             // back to the factor's span text for a bare identifier.
-            if let Some(term) = find_child_by_kind(node, BbnfBootstrapRuleKind::term) {
+            if let Some(term) = find_descendant_by_kind(node, BbnfBootstrapRuleKind::term) {
                 extract_alias_target(term)
             } else {
                 let text = node.span_text().trim();

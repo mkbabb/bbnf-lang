@@ -1,5 +1,8 @@
 use gorgeous::PrinterConfig;
-use gorgeous::google_sheets::{GoogleSheetsParser, parse_formula, prettify_formula};
+use gorgeous::google_sheets::{
+    GoogleSheetsParser, GoogleSheetsParserNodeView, GoogleSheetsParserRuleKind,
+    parse_formula, prettify_formula,
+};
 
 #[test]
 fn test_parse_simple() {
@@ -24,14 +27,45 @@ fn test_parse_pathological() {
 }
 
 #[test]
-#[ignore = "AV.0.11 Category A: google-sheets dispatch drift (LET not surfacing as let_call). Forward-ticketed to AV.3.3 Pratt lowering + shunting-yard DTA, where the grammar dispatch surface will naturally be touched."]
 fn test_let_parses_as_let_call() {
+    // AW-III.W6.5: the test's original `format!("{:?}", parsed)`
+    // shape carried rule names in the pre-AC.2 AST-based parser;
+    // post-AC.2 `Parsed<Grammar>` wraps a `Tape` whose Debug output
+    // contains only numeric variant_idx values. W6.5 un-ignores the
+    // test and rewrites the assertion against the view-layer
+    // introspection substrate: walk the tape via `NodeView` /
+    // `rule_kind()` and verify at least one record surfaces with
+    // `GoogleSheetsParserRuleKind::let_call`. If the dispatch
+    // regressed to `func_call`, no `let_call` record ever appears.
     let input = "=LET(a, 1, b)";
     let parsed = GoogleSheetsParser::parse(input).expect("parse failed");
-    let ast_debug = format!("{:?}", parsed);
+    let node =
+        GoogleSheetsParserNodeView::new(parsed.tape(), input, parsed.root_offset());
+
+    // Walk the tape and collect every distinct rule_kind value.
+    let mut found_let_call = false;
+    let mut found_func_call = false;
+    fn walk<'p>(
+        v: GoogleSheetsParserNodeView<'p>,
+        let_call: &mut bool,
+        func_call: &mut bool,
+    ) {
+        match v.rule_kind() {
+            GoogleSheetsParserRuleKind::let_call => *let_call = true,
+            GoogleSheetsParserRuleKind::func_call => *func_call = true,
+            _ => {}
+        }
+        for child in v.children() {
+            walk(child, let_call, func_call);
+        }
+    }
+    walk(node, &mut found_let_call, &mut found_func_call);
+
     assert!(
-        ast_debug.contains("let_call"),
-        "=LET(a,1,b) should parse as let_call, not func_call"
+        found_let_call,
+        "=LET(a,1,b) must dispatch to let_call; tape walk did not \
+         surface a let_call record (func_call seen: {})",
+        found_func_call,
     );
 }
 

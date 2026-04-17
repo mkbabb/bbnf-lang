@@ -121,6 +121,41 @@ pub(crate) fn find_descendant_by_kind<'tape>(
     None
 }
 
+/// Collect every descendant of `view` (inclusive) whose `rule_kind()`
+/// matches `target` into `out`, stopping descent along any branch at
+/// the first hit.
+///
+/// Complements [`find_descendant_by_kind`] when multiple occurrences
+/// of the same rule_kind are expected as siblings under the caller's
+/// view (e.g. the flat list of `call_arg` rules produced by the
+/// `identifier , ( "(" , call_arg ?w , ( "," ?w , call_arg ?w ) * , ")" ) ?`
+/// term branch — under DTA each `call_arg` is wrapped one Seq deeper
+/// but they still surface as disjoint subtrees).
+///
+/// Stop-at-hit semantics match the grammar's structural intent:
+/// nested targets within a target's own subtree are typically
+/// grammar-level compositions (a `call_arg`'s body may reference
+/// another rule that itself contains a `call_arg`), not genuine
+/// siblings. Descending past the first hit would conflate positional
+/// arguments with nested call-argument expressions.
+///
+/// Mirrors `grammar::host::collect_pretty_hint_descendants` exactly;
+/// generalised here because every DTA-shape consumer of a "collect
+/// all occurrences of kind X" pattern needs the same walk.
+pub(crate) fn collect_descendants_by_kind<'tape>(
+    view: BbnfBootstrapNodeView<'tape>,
+    target: BbnfBootstrapRuleKind,
+    out: &mut Vec<BbnfBootstrapNodeView<'tape>>,
+) {
+    if view.rule_kind() == target {
+        out.push(view);
+        return;
+    }
+    for child in view.children() {
+        collect_descendants_by_kind(child, target, out);
+    }
+}
+
 /// Peel a closed whitelist of single-child transparent wrapper
 /// rules. Returns the innermost non-wrapper view.
 ///

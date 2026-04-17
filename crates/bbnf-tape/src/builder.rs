@@ -711,14 +711,14 @@ impl TapeBuilder {
 
     /// Mutable handle on the in-progress columns.
     ///
-    /// The DTA driver ([`crate::driver::dta_run`]) writes directly
-    /// into the builder's column substrate instead of threading
-    /// through [`Self::push_leaf`] / [`Self::push_compound`]. The
-    /// generated `parse()` entry point post-AW.1.2 constructs a
-    /// `TapeBuilder`, calls [`Self::enable_inline_frame_depth`] to
-    /// opt into the Stage-C activation the DTA presupposes, then
-    /// hands the mutable column reference returned here to the
-    /// driver.
+    /// The DTA driver (post-AW-III.W4: per-grammar emitted walker;
+    /// pre-W4: [`crate::driver::dta_run_cold`]) writes directly into
+    /// the builder's column substrate instead of threading through
+    /// [`Self::push_leaf`] / [`Self::push_compound`]. The generated
+    /// `parse()` entry point post-AW.1.2 constructs a `TapeBuilder`,
+    /// calls [`Self::enable_inline_frame_depth`] to opt into the
+    /// Stage-C activation the DTA presupposes, then hands the mutable
+    /// column reference returned here to the driver.
     #[inline]
     pub fn columns_mut(&mut self) -> &mut Columns {
         &mut self.columns
@@ -743,8 +743,17 @@ impl TapeBuilder {
     /// The DTA walker needs simultaneous `&mut` access to the
     /// builder's [`Columns`] and per-record `frame_depth` stream.
     /// Exposing both accessors from the outside costs the caller a
-    /// split-borrow dance; this method takes them internally and
-    /// forwards them to [`crate::driver::dta_run`] in one call.
+    /// split-borrow dance; this method takes them internally.
+    ///
+    /// # AW-III.W4 — hot/cold split
+    ///
+    /// **This helper invokes the cold-path dispatch loop**
+    /// ([`crate::driver::dta_run_cold`]) and exists as the canonical
+    /// fallback for tests + replay code that don't have access to a
+    /// per-grammar specialised walker. The post-W4 hot path bypasses
+    /// this helper entirely: every grammar's `parse()` calls its
+    /// emitted `dta_run_<grammar>` directly via the W4.b
+    /// `emit_specialised_walker` pass output.
     ///
     /// On success, the builder's columns and `frame_depth` are
     /// populated and a subsequent [`Self::finish`] closes the
@@ -757,7 +766,7 @@ impl TapeBuilder {
         scanner: &'t dyn crate::driver::RegexScanner,
         psi: &mut crate::psi::PayloadStream,
     ) -> Result<crate::tape::TapeOffset, crate::driver::DtaError> {
-        crate::driver::dta_run(
+        crate::driver::dta_run_cold(
             table,
             input,
             scanner,

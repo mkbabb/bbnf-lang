@@ -395,8 +395,10 @@ pub struct DtaTable {
     pub max_nesting_depth: u16,
     /// AW-I.W4γ — grammar entry rule.
     ///
-    /// `dta_run` dispatches the entry state by looking up this
-    /// rule id in `rule_entries`. The pre-W4γ driver read
+    /// The walker (post-AW-III.W4: per-grammar emitted
+    /// `dta_run_<grammar>`; cold path: `dta_run_cold`) dispatches
+    /// the entry state by looking up this rule id in `rule_entries`.
+    /// The pre-W4γ driver read
     /// `rule_entries.first()` which returned the first-indexed
     /// rule — incorrect when the grammar entry isn't lowered as
     /// `RuleId(0)` (bbnf's entry is `grammar`, lifted last).

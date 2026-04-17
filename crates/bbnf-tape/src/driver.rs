@@ -16,14 +16,30 @@
 //!          input bytes
 //!               │
 //!               ▼
-//!    ┌────────────────────┐
-//!    │      dta_run       │
-//!    │  ─────────────────  │
-//!    │   FrameStack walk   │   ─► Columns (structural skeleton)
-//!    │   Forward byte scan │   ─► Vec<u8> frame_depth (per-row stamp)
-//!    │   PSI job enqueues  │   ─► PayloadStream (typed leaves)
-//!    └────────────────────┘
+//!    ┌─────────────────────────┐
+//!    │  dta_run_<grammar>      │   per-grammar specialised walker
+//!    │  ─────────────────────  │   (emitted by W4.b — labels per
+//!    │   FrameStack walk       │    DtaState, no enum match in the
+//!    │   Forward byte scan     │    output)
+//!    │   PSI job enqueues      │   ─► Columns (structural skeleton)
+//!    └─────────────────────────┘   ─► Vec<u8> frame_depth (per-row stamp)
+//!               ▲                   ─► PayloadStream (typed leaves)
+//!               │
+//!    ┌─────────────────────────┐
+//!    │  dta_run_cold           │   replay-only dispatch loop
+//!    │  ─────────────────────  │   (cold path; consults dispatch_one
+//!    │   loop { dispatch_one } │    over the DtaState enum match)
+//!    └─────────────────────────┘
 //! ```
+//!
+//! # AW-III.W4 — hot/cold split
+//!
+//! The hot path is the W4.b-emitted per-grammar walker. The cold path
+//! is [`dta_run_cold`] — preserved verbatim for the AX replay
+//! subsystem, which re-derives a parse's decision trace by single-
+//! stepping with the same dispatch loop the original parse would have
+//! taken pre-W4. [`dispatch_one`] is the canonical state-machine
+//! semantic; the emitted walker is its mechanical lowering.
 //!
 //! # Pre-order tape layout (R01 §7 recommendation, orchestrator
 //! accept)
@@ -530,8 +546,10 @@ impl Default for FrameStack {
 
 // ── Driver errors ───────────────────────────────────────────────────
 
-/// Error surface for [`dta_run`]. Kept flat — the generated `parse()`
-/// converts to its own `ParseErr` shape at the crate boundary.
+/// Error surface for [`dta_run_cold`] and the per-grammar specialised
+/// walker emitted by W4.b's `emit_specialised_walker` pass. Kept flat
+/// — the generated `parse()` converts to its own `ParseErr` shape at
+/// the crate boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DtaError {
     /// The driver could not match the current state against the input
@@ -580,8 +598,45 @@ pub trait RegexScanner {
 
 // ── Driver entry point ──────────────────────────────────────────────
 
-/// Run the DTA against `input`, populating `columns`, `psi`, and
-/// `frame_depth`.
+/// Cold-path DTA dispatch loop — replay surface only.
+///
+/// Runs the DTA against `input`, populating `columns`, `psi`, and
+/// `frame_depth` by walking [`DtaTable::states`] one state at a time
+/// through [`dispatch_one`]. The 14-arm enum match in `dispatch_one`
+/// is the canonical state-machine semantics; this function preserves
+/// it verbatim so the replay subsystem (AX) can re-derive any parse's
+/// decision trace by single-stepping with the same dispatch path the
+/// original parse took.
+///
+/// # AW-III.W4 — hot/cold split (R3 §1.b transposition)
+///
+/// Pre-W4, every grammar's `parse()` routed through this loop. The
+/// 14-arm enum match floored at ~24% self-time (R01 §3, R03 §1
+/// per-byte cycle attribution) — log₂(14) ≈ 4 cmp/jmp dispatch +
+/// ~15 cyc branch-miss every state visit, multiplied by 3–8 visits
+/// per input byte. This was the canonical state-machine-as-tagged-
+/// union interpreter overhead.
+///
+/// Post-W4, every `parse()` routes through a per-grammar
+/// `dta_run_<grammar>` function emitted by
+/// [`emit_specialised_walker`](crates/core/src/backend/rust/emitter/dta_walker.rs).
+/// The emitted walker lowers each [`DtaState`] variant to inlined
+/// Rust labels; the enum match disappears at the *output* call site
+/// (the table still carries `DtaState` so this cold loop remains
+/// semantically authoritative). Helpers
+/// ([`emit_leaf`], [`emit_leaf_with_payload`], [`reserve_compound`],
+/// [`close_compound`], [`advance_or_pop_with`], [`frame_to_tape_kind`],
+/// [`stage_literal_payload_in_arena`], [`pop_and_release`],
+/// [`stack_top`], [`saturating_u16`], [`emit_reducer_compound`],
+/// [`lookup_precedence`], [`first_ws_pattern`], [`trim_with_pattern`],
+/// [`trim_ascii_ws`], [`handle_repeat_failure`],
+/// [`handle_repeat_failure_bounded`], [`try_branch`], [`frame_at`],
+/// [`dispatch_one`]) are all exposed `pub` so the emitted walker
+/// can call them directly.
+///
+/// This function is **never** called from the parse hot path; only
+/// the replay subsystem (`dta_run_with_replay`) and the walker-arm
+/// regression tests in `tests/walker_arms.rs` consume it.
 ///
 /// Returns the tape offset of the root record (index 0 in a
 /// well-formed parse) on success. On syntax failure every output
@@ -592,7 +647,7 @@ pub trait RegexScanner {
 ///
 /// Debug builds panic when the DTA table references state ids outside
 /// its bounds; release builds surface an [`DtaError::InvalidState`].
-pub fn dta_run(
+pub fn dta_run_cold(
     table: &DtaTable,
     input: &[u8],
     scanner: &dyn RegexScanner,
@@ -603,9 +658,10 @@ pub fn dta_run(
     dta_run_inner(table, input, scanner, columns, psi, frame_depth)
 }
 
-/// Replay-enabled variant — feature-gated behind `dta-replay`. When
-/// the feature is off, only [`dta_run`] is emitted so LLVM has no
-/// `Option` to hoist on the hot path (R01 §5).
+/// Replay-enabled variant of the cold-path dispatch loop —
+/// feature-gated behind `dta-replay`. When the feature is off, only
+/// [`dta_run_cold`] is emitted so LLVM has no `Option` to hoist on
+/// the cold path (R01 §5).
 #[cfg(feature = "dta-replay")]
 pub fn dta_run_with_replay(
     table: &DtaTable,
@@ -781,8 +837,10 @@ fn dta_run_core(
 /// `Some(None)` when the grammar uses `?w` without `@ws` (default
 /// ASCII whitespace fallback), and `None` when the grammar has no
 /// `?w` sites at all (CSV / similar).
+///
+/// AW-III.W4.c — `pub` for consumption by W4.b's emitted walker.
 #[inline]
-fn first_ws_pattern(table: &DtaTable) -> Option<Option<&'static str>> {
+pub fn first_ws_pattern(table: &DtaTable) -> Option<Option<&'static str>> {
     for state in table.states.iter() {
         if let DtaState::WsTrim { pattern } = state {
             return Some(*pattern);
@@ -796,8 +854,10 @@ fn first_ws_pattern(table: &DtaTable) -> Option<Option<&'static str>> {
 /// carries a regex pattern, scan with the supplied scanner;
 /// otherwise fall back to ASCII whitespace (matches `?w` default
 /// semantics).
+///
+/// AW-III.W4.c — `pub` for consumption by W4.b's emitted walker.
 #[inline]
-fn trim_with_pattern(
+pub fn trim_with_pattern(
     scanner: &dyn RegexScanner,
     pattern: Option<&'static str>,
     input: &[u8],
@@ -814,8 +874,10 @@ fn trim_with_pattern(
 
 /// AW-I.W4ε bootstrap fallback: trim ASCII whitespace in-place at
 /// `*pos`. Mirrors `DtaState::WsTrim { pattern: None }` semantics.
+///
+/// AW-III.W4.c — `pub` for consumption by W4.b's emitted walker.
 #[inline]
-fn trim_ascii_ws(input: &[u8], pos: &mut u32) {
+pub fn trim_ascii_ws(input: &[u8], pos: &mut u32) {
     let mut p = *pos as usize;
     while let Some(&b) = input.get(p) {
         match b {
@@ -827,13 +889,24 @@ fn trim_ascii_ws(input: &[u8], pos: &mut u32) {
 }
 
 /// One step of the walker's main loop.
-enum StepResult {
+///
+/// AW-III.W4.c — `pub` so W4.b's emitted walker, which inlines each
+/// state's transition logic, can return the same `Next(state)` /
+/// `Done` shape from helper invocations like [`advance_or_pop_with`].
+#[derive(Clone, Copy, Debug)]
+pub enum StepResult {
+    /// The walker should dispatch the wrapped state next.
     Next(DtaStateId),
+    /// The frame stack has fully drained; parse is complete.
     Done,
 }
 
 /// Result of a Repeat-failure absorption attempt.
-enum RepeatAbsorbResult {
+///
+/// AW-III.W4.c — `pub` so W4.b's emitted walker can route absorbed
+/// failures through the same control flow the cold loop uses.
+#[derive(Clone, Copy, Debug)]
+pub enum RepeatAbsorbResult {
     /// Absorption fired; the walker should continue with this state.
     Continue(DtaStateId),
     /// Absorption fired AND the stack fully drained — parse is done.
@@ -852,7 +925,10 @@ enum RepeatAbsorbResult {
 /// [`RepeatAbsorbResult::Continue`] with the next state the main loop
 /// should dispatch, or [`RepeatAbsorbResult::Done`] if the absorbing
 /// close drained the stack.
-fn handle_repeat_failure(
+///
+/// AW-III.W4.c — `pub` so W4.b's emitted walker can route Syntax
+/// failures through the same absorption logic the cold loop uses.
+pub fn handle_repeat_failure(
     table: &DtaTable,
     input: &[u8],
     columns: &mut Columns,
@@ -898,9 +974,13 @@ fn handle_repeat_failure(
 }
 
 /// Repeat-failure handler constrained to frames above `bound_depth`
-/// — used by `try_branch` so a Repeat inside the branch can absorb
+/// — used by [`try_branch`] so a Repeat inside the branch can absorb
 /// its own failures without leaking into the Alt's outer context.
-fn handle_repeat_failure_bounded(
+///
+/// AW-III.W4.c — `pub` for W4.b's emitted walker. Same absorption
+/// invariants as [`handle_repeat_failure`] but bounded to a stack
+/// region above the AltLinear frame.
+pub fn handle_repeat_failure_bounded(
     table: &DtaTable,
     input: &[u8],
     columns: &mut Columns,
@@ -952,8 +1032,11 @@ fn handle_repeat_failure_bounded(
 /// popped frame is a Repeat — absent the release, long parses
 /// (bbnf.bbnf's ~250-Repeat traversal) exhaust the `u8` counter
 /// index space.
-#[inline]
-fn pop_and_release(stack: &mut FrameStack) -> Option<Frame> {
+///
+/// AW-III.W4.c — `pub` + `#[inline(always)]` so W4.b's emitted
+/// walker inlines the counter-release at every Repeat-frame pop site.
+#[inline(always)]
+pub fn pop_and_release(stack: &mut FrameStack) -> Option<Frame> {
     let popped = stack.pop();
     if let Some(f) = popped {
         if matches!(f.kind, DtaFrameKind::Repeat) {
@@ -968,8 +1051,12 @@ fn pop_and_release(stack: &mut FrameStack) -> Option<Frame> {
 }
 
 /// Peek at the frame at the given stack depth index (0 = bottom).
+///
+/// AW-III.W4.c — `pub` so W4.b's emitted walker can introspect frames
+/// during its own absorption logic (the absorber walks the stack
+/// looking for the innermost Repeat frame).
 #[inline]
-fn frame_at(stack: &FrameStack, idx: usize) -> Frame {
+pub fn frame_at(stack: &FrameStack, idx: usize) -> Frame {
     let inline_len = stack.inline_len as usize;
     if idx < inline_len {
         stack.inline[idx]
@@ -986,11 +1073,17 @@ fn frame_at(stack: &FrameStack, idx: usize) -> Frame {
 /// and try the next branch.
 ///
 /// Repeat-body failures inside a branch are absorbed by
-/// `handle_repeat_failure_bounded` if an enclosing Repeat has
+/// [`handle_repeat_failure_bounded`] if an enclosing Repeat has
 /// `counter >= lo` — the branch continues past the Repeat's
 /// successful close. Failures that cannot be absorbed propagate to
 /// the AltLinear caller.
-fn try_branch(
+///
+/// AW-III.W4.c — `pub` for W4.b's emitted walker. The emitted walker's
+/// AltLinear arm uses `try_branch` directly to attempt each branch
+/// with savepoint backtracking; the helper preserves the cold-path
+/// dispatch_one route so probes nested inside branches retain
+/// identical semantics.
+pub fn try_branch(
     table: &DtaTable,
     input: &[u8],
     scanner: &dyn RegexScanner,
@@ -1033,7 +1126,23 @@ fn try_branch(
     }
 }
 
-fn dispatch_one(
+/// One step of the cold-path dispatch loop — the canonical
+/// state-machine semantic for every [`DtaState`] variant.
+///
+/// AW-III.W4.c — `pub` so:
+/// 1. The replay subsystem (AX) can re-derive a parse's decision
+///    trace by single-stepping with the same dispatch path the
+///    original parse took.
+/// 2. W4.b's emitted walker can fall back to `dispatch_one` for any
+///    state-shape that doesn't gain from inlining (rare per the R3
+///    cycle audit; the typical state inlines profitably).
+///
+/// **The post-W4 hot path does NOT call `dispatch_one`.** The W4 hard
+/// gate verifies via `cargo asm` that the per-grammar `dta_run_<grammar>`
+/// function body is `dispatch_one`-symbol-free — every state's logic
+/// is inlined directly. `dispatch_one` survives in the binary as the
+/// cold-path replay surface, never invoked from the parse hot path.
+pub fn dispatch_one(
     table: &DtaTable,
     input: &[u8],
     scanner: &dyn RegexScanner,
@@ -1644,8 +1753,14 @@ fn dispatch_one(
     }
 }
 
+/// Saturate a `u32` to `u16`. Used by the Repeat arm to fold `lo`/
+/// `hi` bounds into the [`Frame`] struct's u16 fields.
+///
+/// AW-III.W4.c — `pub` so W4.b's emitted walker can fold Repeat
+/// bounds at frame-push time without re-deriving the saturation
+/// logic.
 #[inline]
-fn saturating_u16(v: u32) -> u16 {
+pub fn saturating_u16(v: u32) -> u16 {
     if v >= u16::MAX as u32 {
         u16::MAX
     } else {
@@ -1658,8 +1773,12 @@ fn saturating_u16(v: u32) -> u16 {
 /// Emit a structural leaf record. `frame_depth` stamp happens inline
 /// (the AW.1.4 Stage-C elision: `derive_frame_depth` no longer runs
 /// because this store is the authoritative depth column).
-#[inline]
-fn emit_leaf(
+///
+/// AW-III.W4.c — `pub` + `#[inline(always)]` so W4.b's emitted walker
+/// fuses the leaf emission directly into each Literal/Regex state's
+/// inlined arm.
+#[inline(always)]
+pub fn emit_leaf(
     columns: &mut Columns,
     frame_depth: &mut Vec<u8>,
     stack: &FrameStack,
@@ -1685,12 +1804,19 @@ fn emit_leaf(
 /// `child_off` slot carries the arena byte offset where the typed
 /// payload bytes live (written by [`stage_literal_payload_in_arena`]
 /// or the PSI stage-B drain). The record's
-/// [`TapeRec::PAYLOAD_IN_ARENA_BIT`] is set when `child_off !=
-/// NONE`, signalling to scalar readers (`payload_u8`,
-/// `payload_scalar::<T>`) that they should slice `pay_agg` directly
-/// instead of indirecting through `pay_narrow` / `pay_wide`.
-#[inline]
-fn emit_leaf_with_payload(
+/// [`TapeRec::PAYLOAD_IN_ARENA_BIT`](crate::tape::TapeRec::PAYLOAD_IN_ARENA_BIT)
+/// is set when `child_off != NONE`, signalling to scalar readers
+/// (`payload_u8`, `payload_scalar::<T>`) that they should slice
+/// `pay_agg` directly instead of indirecting through `pay_narrow` /
+/// `pay_wide`.
+///
+/// AW-III.W4.c — `pub` + `#[inline(always)]` so W4.b's emitted walker
+/// inlines the column writes directly into every payload-emitting
+/// state's arm. The 8 column stores fold into the surrounding state
+/// body so LLVM's vector-of-stores optimisation can fuse them with
+/// the state's other writes.
+#[inline(always)]
+pub fn emit_leaf_with_payload(
     columns: &mut Columns,
     frame_depth: &mut Vec<u8>,
     stack: &FrameStack,
@@ -1750,8 +1876,12 @@ fn emit_leaf_with_payload(
 /// the arena post-match so downstream readers find a single source
 /// of truth at `arena[child_off..child_off + width]`. PSI is reserved
 /// for value-from-input decoders (regex-driven scalar conversion).
-#[inline]
-fn stage_literal_payload_in_arena(columns: &mut Columns, payload: LiteralPayload) -> TapeOffset {
+///
+/// AW-III.W4.c — `pub` + `#[inline(always)]` for the emitted walker;
+/// the 1- to 8-byte store folds into the Literal arm with no call
+/// overhead.
+#[inline(always)]
+pub fn stage_literal_payload_in_arena(columns: &mut Columns, payload: LiteralPayload) -> TapeOffset {
     let mut buf = [0u8; 8];
     let width = payload.write_le(&mut buf);
     if width == 0 {
@@ -1765,8 +1895,13 @@ fn stage_literal_payload_in_arena(columns: &mut Columns, payload: LiteralPayload
 
 /// Reserve a compound row with `span_lo` only; `span_hi` / `child_off`
 /// are stamped at frame-pop time.
-#[inline]
-fn reserve_compound(
+///
+/// AW-III.W4.c — `pub` + `#[inline(always)]` so W4.b's emitted walker
+/// fuses the 7 column writes into each Seq/Alt/Repeat/ShuntingYard
+/// frame-push site. The hot-path target — fused SoA write API —
+/// lands at W5; this in-place inlining is W4's intermediate step.
+#[inline(always)]
+pub fn reserve_compound(
     columns: &mut Columns,
     frame_depth: &mut Vec<u8>,
     depth: u8,
@@ -1792,8 +1927,11 @@ fn reserve_compound(
 /// back at the LHS operand's tape row. Post-order layout for
 /// reducer-produced compounds; the cursor's bounded backward-walk
 /// fallback resolves the first-child lookup at read time.
+///
+/// AW-III.W4.c — `pub` so W4.b's emitted ShuntingYard arm can fold
+/// the reducer compound writes inline.
 #[inline]
-fn emit_reducer_compound(
+pub fn emit_reducer_compound(
     columns: &mut Columns,
     frame_depth: &mut Vec<u8>,
     depth: u8,
@@ -1825,8 +1963,14 @@ fn emit_reducer_compound(
 /// a single-byte op entry matches regardless of the second byte.
 /// Prefers two-byte matches when available; falls back to single-
 /// byte.
+///
+/// AW-III.W4.c — `pub` so W4.b's emitted walker's ShuntingYard arm
+/// resolves operators against the per-grammar precedence slice
+/// without re-implementing the lookup. The W6.5 emitted
+/// `PRECEDENCE_LUT` will replace this linear scan with a packed
+/// 256-entry indexed lookup.
 #[inline]
-fn lookup_precedence(
+pub fn lookup_precedence(
     precedence: &'static [crate::dta::DtaPrecedenceEntry],
     b: u8,
     b2: Option<u8>,
@@ -1854,13 +1998,20 @@ fn lookup_precedence(
 /// flat `TapeKind::KvPair` leaf at the parent's slot. The parent's
 /// `child_off` is rewritten to the scalar payload's arena offset
 /// (mined from the last child whose
-/// [`TapeRec::PAYLOAD_IN_ARENA_BIT`] is set), the kind byte is
-/// repacked from `Seq` → `KvPair`, the `has_children` bit is left
-/// clear, and the trailing child records are truncated. Tape size
-/// shrinks by `(children_count - 0)` records per KvPair-promoted
-/// rule body — the structural saving the layout pass paid for.
-#[inline]
-fn close_compound(
+/// [`TapeRec::PAYLOAD_IN_ARENA_BIT`](crate::tape::TapeRec::PAYLOAD_IN_ARENA_BIT)
+/// is set), the kind byte is repacked from `Seq` → `KvPair`, the
+/// `has_children` bit is left clear, and the trailing child records
+/// are truncated. Tape size shrinks by `(children_count - 0)` records
+/// per KvPair-promoted rule body — the structural saving the layout
+/// pass paid for.
+///
+/// AW-III.W4.c — `pub` + `#[inline(always)]` so W4.b's emitted walker
+/// inlines the close logic at every frame-pop site. The KvPair-
+/// promotion mining loop is bounded by the frame's children count
+/// (typically ≤ 4 for KvPair shapes); LLVM should specialise the
+/// loop bound when the call site has a fixed promote variant.
+#[inline(always)]
+pub fn close_compound(
     columns: &mut Columns,
     frame_depth: &mut Vec<u8>,
     stack: &FrameStack,
@@ -1941,10 +2092,14 @@ fn close_compound(
     }
 }
 
-/// Peek at the topmost frame without popping. `FrameStack::top_mut`
+/// Peek at the topmost frame without popping. [`FrameStack::top_mut`]
 /// requires `&mut`; for read-only probing we inline the logic.
-#[inline]
-fn stack_top(stack: &FrameStack) -> Option<&Frame> {
+///
+/// AW-III.W4.c — `pub` + `#[inline(always)]` so W4.b's emitted walker
+/// can read the top frame's metadata at close-compound time without
+/// re-acquiring a mutable borrow.
+#[inline(always)]
+pub fn stack_top(stack: &FrameStack) -> Option<&Frame> {
     if let Some(f) = stack.overflow.last() {
         return Some(f);
     }
@@ -1969,7 +2124,16 @@ fn stack_top(stack: &FrameStack) -> Option<&Frame> {
 /// (emitting reduced compounds for higher-precedence top-of-stack
 /// ops first), or reduces the remaining op stack to completion and
 /// closes.
-fn advance_or_pop_with(
+///
+/// AW-III.W4.c — `pub` for W4.b's emitted walker; the per-state
+/// arms call this at every leaf-emit site to drive the next
+/// dispatch. The function is large (the SY arm + Repeat arm carry
+/// non-trivial logic), so it is NOT marked `#[inline(always)]` —
+/// LLVM's cost model decides per call site. Hot leaf-emitting arms
+/// (Literal, Regex) hit a tight Seq-cursor advance path that
+/// specialises well; the larger Repeat/SY arms branch to the cold
+/// case body via the loop.
+pub fn advance_or_pop_with(
     _table: Option<&DtaTable>,
     _input: Option<&[u8]>,
     columns: &mut Columns,
@@ -2222,8 +2386,19 @@ pub struct DtaSnapshot {
 
 // ── Kind resolution helper ─────────────────────────────────────────
 
-#[inline]
-fn frame_to_tape_kind(frame: DtaFrameKind) -> TapeKind {
+/// Project a [`DtaFrameKind`] to its tape [`TapeKind`] discriminant.
+///
+/// Used at frame-push time so the reserved compound row's `kind` byte
+/// is set before any children land. The Seq / Alt / Repeat / SY
+/// triage is a 4-arm enum match — folds to a single byte indexed
+/// load at codegen time.
+///
+/// AW-III.W4.c — `pub` + `#[inline(always)]` so W4.b's emitted walker
+/// folds the projection into each frame-push site (Seq → 0, Alt → 1,
+/// Repeat → 5, ShuntingYard → 5; the constant projections collapse
+/// at LLVM peephole time).
+#[inline(always)]
+pub fn frame_to_tape_kind(frame: DtaFrameKind) -> TapeKind {
     match frame {
         DtaFrameKind::Seq => TapeKind::Seq,
         DtaFrameKind::Alt => TapeKind::Alt,

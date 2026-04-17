@@ -1,0 +1,29 @@
+[package]
+name = "bbnf-simd-scan"
+version = "0.1.0"
+edition = "2024"
+description = "Architecture-neutral SIMD structural-bitmap kernel for the bbnf-lang DTA driver. Builds a StructuralIndex (positions + kinds) once per parse via per-arch (NEON / AVX2 / AVX-512 / WASM SIMD / portable scalar) kernels selected by runtime feature detection."
+
+[lib]
+crate-type = ["lib"]
+
+[dependencies]
+bbnf-tape = { path = "../bbnf-tape", default-features = false }
+
+[dev-dependencies]
+proptest = "1"
+
+[[bench]]
+name = "stage1_throughput"
+harness = false
+
+[features]
+default = []
+# Opt-in to AVX-512 VBMI2 codegen. Off by default because most CI hosts
+# don't have AVX-512; toggle when running on Sapphire Rapids / Zen 4 /
+# similar. The compile-time `#[cfg(target_feature = "avx512vbmi2")]`
+# on `src/avx512.rs` still gates the body, so enabling this feature
+# without the matching `RUSTFLAGS="-C target-feature=+avx512vbmi2"`
+# is a no-op (the module body remains empty per the
+# published-rationale comment in src/avx512.rs).
+avx512 = []

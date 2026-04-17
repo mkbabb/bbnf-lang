@@ -476,14 +476,6 @@ fn pipeline_google_sheets_formula() {
     }
 }
 
-// AV.0.11 Category A — google-sheets grammar rule-name drift. The sub-
-// expression diagnostics array hard-codes rule names (`expression`, etc.)
-// that no longer exist after the grammar was refactored into the
-// Pratt/shunting-yard decomposition (arithmetic_expr / compare_expr /
-// unary_expr / …). The test panics on `expression not found`. Pre-AV;
-// the fix is to rewrite the diagnostic table against the current rule
-// layout, which is scope for the Sheets Pratt follow-up (AV.3.3).
-#[ignore = "AV.0.11 Category A: google-sheets rule-name drift (expression -> arithmetic_expr); forward to AV.3.3 Pratt lowering"]
 #[test]
 fn pipeline_google_sheets_multiline_let() {
     let grammar = std::fs::read_to_string("../../grammar/google-sheets/google-sheets.bbnf")
@@ -518,11 +510,11 @@ fn pipeline_google_sheets_multiline_let() {
         ("cell_or_range", "H2:O2"),
         ("cell_or_range", "H3:O"),
         ("cell_or_range", "A:A"),
-        ("expression", r#"B3:B <> """#),
+        ("comparison_expr", r#"B3:B <> """#),
         ("func_call", r#"FILTER(B3:B, B3:B <> "")"#),
         ("lambda_call", "LAMBDA(x, LOWER(TRIM(TO_TEXT(x))))"),
         (
-            "expression",
+            "comparison_expr",
             "(sheet1Psus = psu) * (sheet1Providers = provider)",
         ),
         (
@@ -534,7 +526,7 @@ fn pipeline_google_sheets_multiline_let() {
             "func_call",
             "IFERROR(INDEX(oneTimeCosts, MATCH(1, (sheet1Psus = psu) * (sheet1Providers = provider), 0)), 0)",
         ),
-        ("expression", "monthlyValue * scale + N(oneTimeCost)"),
+        ("comparison_expr", "monthlyValue * scale + N(oneTimeCost)"),
         (
             "func_call",
             "IF(monthlyValue > 0, monthlyValue * scale + N(oneTimeCost), 0)",

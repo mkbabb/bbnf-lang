@@ -363,6 +363,34 @@ impl FrameStack {
         Some(&mut self.inline[idx])
     }
 
+    /// Walk the stack from the topmost frame downward and return the
+    /// first frame whose `variant_idx != u8::MAX`.
+    ///
+    /// AW-III.W1.A — used by [`emit_leaf_with_payload`] to stamp
+    /// structural literals (`,` / `]` / `}`) with the nearest
+    /// enclosing rule's variant_idx. Pre-W1.A the inheritance
+    /// short-circuited on the immediate top frame, so structural
+    /// literals nested beneath a transparent-rule body Seq fell back
+    /// to `0` (unintentionally aliasing the first-indexed rule);
+    /// walking the stack recovers the first non-anonymous frame.
+    #[inline]
+    pub fn nearest_variant_frame(&self) -> Option<&Frame> {
+        // Walk overflow from top down.
+        for f in self.overflow.iter().rev() {
+            if f.variant_idx != u8::MAX {
+                return Some(f);
+            }
+        }
+        // Then walk inline from top down.
+        for i in (0..self.inline_len as usize).rev() {
+            let f = &self.inline[i];
+            if f.variant_idx != u8::MAX {
+                return Some(f);
+            }
+        }
+        None
+    }
+
     /// Capture a savepoint — the full stack's length state so a
     /// caller can restore it after a failed branch probe.
     ///
@@ -1074,7 +1102,13 @@ fn dispatch_one(
             // variant_idx. Without this, rule_kind() would decode
             // every record as the first-indexed rule. See Frame's
             // `variant_idx` field + close_compound's stamping logic.
-            stack.pending_variant_idx = (rule.0 & 0x3F) as u8;
+            //
+            // AW-III.W1.A — stamp the full 8-bit discriminant. The
+            // previous `& 0x3F` mask collided distinct rules whose
+            // ids shared their low six bits (CSS L4's `colorProps`
+            // and `namedColor`); the wire contract now reserves a
+            // full byte for `variant_idx`.
+            stack.pending_variant_idx = (rule.0 & 0xFF) as u8;
             Ok(StepResult::Next(chosen))
         }
         DtaState::ByteDispatch { table: disp, fallback } => {
@@ -1522,20 +1556,21 @@ fn emit_leaf_with_payload(
     // must survive onto the tape so `rule_kind()` can decode it.
     //
     // AW-III.W1: when no pending stamp is set, fall back to the
-    // topmost compound frame's `variant_idx` so structural literals
-    // ("]" / "}" closing-bracket markers, etc.) inherit their
-    // enclosing rule's discriminant rather than defaulting to `0`.
-    // The legacy default-zero stamp left structural Literals
-    // indistinguishable from the first-indexed rule, breaking
-    // `rule_kind()` decoding for tests that walk every leaf.
+    // nearest enclosing compound frame whose `variant_idx` is set so
+    // structural literals (`,` / `]` / `}`) inherit their containing
+    // rule's discriminant rather than defaulting to `0`. The
+    // pre-W1.A short-circuit on the IMMEDIATE top frame missed
+    // anonymous body-Seq frames between the literal and its true
+    // owner (transparent rules' inlined bodies); walking the stack
+    // (`nearest_variant_frame`) recovers the first non-anonymous
+    // ancestor.
+    //
+    // AW-III.W1.A — full-byte variant; the prior `& 0x3F` truncation
+    // is gone alongside the wire-format widening.
     let variant = if stack.pending_variant_idx != u8::MAX {
-        stack.pending_variant_idx & 0x3F
-    } else if let Some(top) = stack_top(stack) {
-        if top.variant_idx != u8::MAX {
-            top.variant_idx & 0x3F
-        } else {
-            0
-        }
+        stack.pending_variant_idx
+    } else if let Some(owner) = stack.nearest_variant_frame() {
+        owner.variant_idx
     } else {
         0
     };
@@ -1618,11 +1653,11 @@ fn emit_reducer_compound(
     let idx = columns.len() as u32;
     let kind_meta = TapeKind::Rule as u8 & 0x0F;
     columns.kinds.push(kind_meta);
-    // Pack the op_discriminant into the variant_idx bits (low 6) +
-    // stamp the has_children bit (0x40) eagerly — the reducer always
-    // has two operand subtrees.
-    columns.flags.push((op_discriminant & 0x3F) | 0x40);
-    columns.extra.push(0);
+    // AW-III.W1.A — full-byte variant slot for the op_discriminant;
+    // `has_children` migrates to `extra`'s HAS_CHILDREN_BIT (the
+    // reducer always has two operand subtrees).
+    columns.flags.push(op_discriminant);
+    columns.extra.push(crate::tape::TapeRec::HAS_CHILDREN_BIT);
     columns.span_lo.push(span_lo);
     columns.span_hi.push(span_hi);
     columns.sib_skip.push(0);
@@ -1705,20 +1740,20 @@ fn close_compound(
                 let meta_hi = columns.kinds[parent] & 0xF0;
                 columns.kinds[parent] = meta_hi | (TapeKind::KvPair as u8 & 0x0F);
                 columns.child_off[parent] = off;
-                columns.extra[parent] = parent_extra;
+                // AW-III.W1.A — the KvPair record is a leaf; preserve
+                // the META_IDX_HI_BIT but drop HAS_CHILDREN_BIT, then
+                // mark PAYLOAD_IN_ARENA_BIT.
+                let preserved = columns.extra[parent] & crate::tape::TapeRec::META_IDX_HI_BIT;
+                columns.extra[parent] = preserved | parent_extra;
                 // Variant_idx stamping for the KvPair flat record:
                 // the rule's variant_idx wins (frame.variant_idx);
                 // fall through to the legacy Alt-cursor stamp when
                 // no rule context.
                 if frame.variant_idx != u8::MAX {
-                    let variant = frame.variant_idx & 0x3F;
-                    columns.flags[parent] = (columns.flags[parent] & 0xC0) | variant;
+                    columns.flags[parent] = frame.variant_idx;
                 } else if matches!(frame.kind, DtaFrameKind::Alt) {
-                    let variant = (frame.cursor as u8) & 0x3F;
-                    columns.flags[parent] = (columns.flags[parent] & 0xC0) | variant;
+                    columns.flags[parent] = frame.cursor as u8;
                 }
-                // Drop has_children — KvPair is a leaf.
-                columns.flags[parent] &= !0x40;
                 // Truncate the children — the parent is now a self-
                 // contained leaf record. Both the structural columns
                 // and the parallel `frame_depth` stream shrink to the
@@ -1734,9 +1769,10 @@ fn close_compound(
             // Pre-order: first child sits at `parent + 1` — the
             // O(1) `idx + 1` lookup AW.1.10 relies on.
             columns.child_off[parent] = TapeOffset(frame.child_mark);
-            columns.flags[parent] |= 0x40;
+            columns.extra[parent] |= crate::tape::TapeRec::HAS_CHILDREN_BIT;
         }
-        // Stamp variant_idx (low 6 bits). Precedence:
+        // AW-III.W1.A — stamp the full 8-bit variant_idx into flags.
+        // Precedence:
         //   1. `frame.variant_idx` — rule-entry stamp captured from
         //      `FrameStack::pending_variant_idx` at push time. This
         //      encodes the OWNING rule's discriminant so the view
@@ -1746,11 +1782,9 @@ fn close_compound(
         // The u8::MAX sentinel indicates "no rule stamp"; fall through
         // to the Alt-cursor path to preserve sub-variant dispatch.
         if frame.variant_idx != u8::MAX {
-            let variant = frame.variant_idx & 0x3F;
-            columns.flags[parent] = (columns.flags[parent] & 0xC0) | variant;
+            columns.flags[parent] = frame.variant_idx;
         } else if matches!(frame.kind, DtaFrameKind::Alt) {
-            let variant = (frame.cursor as u8) & 0x3F;
-            columns.flags[parent] = (columns.flags[parent] & 0xC0) | variant;
+            columns.flags[parent] = frame.cursor as u8;
         }
     }
 }
@@ -1995,7 +2029,7 @@ fn advance_or_pop_with(
                     // default to the frame's `child_mark`.
                     let sy_parent = sy_parent_rec as usize;
                     columns.child_off[sy_parent] = TapeOffset(this_operand_root);
-                    columns.flags[sy_parent] |= 0x40;
+                    columns.extra[sy_parent] |= crate::tape::TapeRec::HAS_CHILDREN_BIT;
                     columns.span_hi[sy_parent] = *pos;
                     // Suppress the default close_compound path for
                     // this frame by popping manually and continuing

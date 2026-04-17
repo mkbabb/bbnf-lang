@@ -130,29 +130,40 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
 
         // mapped_factor = (inner, mapping?) — unwrap when the
         // mapping slot is absent.
+        //
+        // Under DTA the mapped_factor body is wrapped in a Seq
+        // compound; the positional child(0) / child(1) reads picked
+        // up stale slots. The mapping's semantic leading rule is
+        // `value_expr` — absence of a value_expr descendant is the
+        // DTA-shape-stable test for "no mapping". The inner
+        // expression is resolved via find_descendant_by_kind
+        // against the inner layer (factor / term).
         BbnfBootstrapRuleKind::mapped_factor => {
-            let mapping = node.child(1);
-            let no_mapping = mapping
-                .map(|m| m.span().1 == m.span().0)
-                .unwrap_or(true);
-            if !no_mapping {
+            let has_mapping = find_descendant_by_kind(
+                node,
+                BbnfBootstrapRuleKind::value_expr,
+            )
+            .is_some();
+            if has_mapping {
                 return None;
             }
-            // Under the tape-first parser, child(0) may be an empty
-            // wrapper when the term body was consumed span-only.
-            // Fall back to the mapped_factor's own span text.
-            let inner = node.child(0)?;
-            let (ilo, ihi) = inner.span();
-            if ihi > ilo {
-                extract_alias_target(inner)
+            // Look for the inner expression (factor / term /
+            // identifier). `find_descendant_by_kind` hits the first
+            // semantic rule in document order — factor precedes the
+            // mapping slot. Fall back to a bare-ident span check.
+            if let Some(inner) = find_descendant_by_kind(
+                node,
+                BbnfBootstrapRuleKind::factor,
+            )
+            .or_else(|| find_descendant_by_kind(node, BbnfBootstrapRuleKind::term))
+            {
+                return extract_alias_target(inner);
+            }
+            let text = node.span_text().trim();
+            if !text.is_empty() && super::deps::is_ident(text.as_bytes()) {
+                Some(text)
             } else {
-                // Empty wrapper — check the parent's span for a bare ident.
-                let text = node.span_text().trim();
-                if !text.is_empty() && super::deps::is_ident(text.as_bytes()) {
-                    Some(text)
-                } else {
-                    None
-                }
+                None
             }
         }
 

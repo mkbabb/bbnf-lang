@@ -61,6 +61,7 @@ use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+mod decoders;
 mod helpers;
 mod hot_cold;
 mod lower_state;

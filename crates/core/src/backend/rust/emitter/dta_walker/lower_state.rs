@@ -28,8 +28,10 @@
 //! - `Epsilon` — clear pending stamp + `advance_or_pop_with`.
 //! - `Literal { text, payload }` — byte cmp inline; emit_leaf with
 //!   `TapeKind::Span`/`Literal` keyed by payload presence; advance.
-//! - `Regex { pattern, payload }` — scanner.scan + emit_leaf_with_payload
-//!   when payload is Some; PSI push; advance.
+//! - `Regex { pattern, payload }` — hoisted pattern binding + scanner.scan
+//!   (to be replaced with direct `__dfa_match_<grammar>_<idx>` call in
+//!   the second AW-IV.W1.α landing); emit_leaf_with_payload when
+//!   payload is Some; PSI push; advance.
 //! - `Seq { children, frame, promote }` — reserve compound, push frame,
 //!   transition to `children[0]`.
 //! - `ByteDispatch { table, fallback }` — 256-entry LUT inlined as
@@ -189,6 +191,11 @@ fn cold_sibling_ident(id: u16) -> proc_macro2::Ident {
 /// Emit the inlined body of one state's dispatch arm. The body
 /// produces a `Result<StepResult, DtaError>` value the outer
 /// dispatch loop consumes to set the next `cur` or terminate.
+///
+/// AW-IV.W1.α — every arm body opens with literal `let` bindings
+/// computed from the codegen-time `DtaState` value; the runtime
+/// `match table.states[N] { Variant { fields } => (fields), _ =>
+/// unreachable_unchecked() }` unpack is abrogated.
 fn emit_state_arm_body(idx: usize, state: &IrState) -> TokenStream {
     let kind_tag = state_kind_tag(state);
     let body = match state {
@@ -328,10 +335,21 @@ fn emit_epsilon_arm(_idx: usize) -> TokenStream {
     }
 }
 
-/// `Literal { text, payload }` — destructure from the table at the
-/// known state-id, byte-compare inline, emit_leaf, advance.
+/// `Literal { text, payload }` — hoist the runtime destructure into
+/// literal `let` bindings that reference the `__DTA_LITERAL_<idx>`
+/// static (emitted by `dta.rs`) and the payload's codegen-time value.
+///
+/// AW-IV.W1.α — the
+/// `match table.states[N] { Literal { text, payload } => (text,
+/// payload), _ => unreachable_unchecked() }` indirection is replaced
+/// with literal bindings. The emitter knows at codegen time that
+/// state `idx` IS a `Literal` with the given payload; LLVM sees the
+/// payload variant directly in the arm body and elides every branch
+/// whose payload class is known never to take.
 fn emit_literal_arm(idx: usize, payload: LiteralPayload) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
+    let text_ident = format_ident!("__DTA_LITERAL_{}", idx);
+    let payload_tok = literal_payload_token(payload);
     let advance = emit_advance_or_pop_call();
     let payload_arm = if matches!(payload, LiteralPayload::None) {
         quote! {
@@ -354,10 +372,8 @@ fn emit_literal_arm(idx: usize, payload: LiteralPayload) -> TokenStream {
         }
     };
     quote! {
-        let (text, payload) = match table.states[#idx_lit] {
-            ::bbnf::runtime::tape::DtaState::Literal { text, payload } => (text, payload),
-            _ => unsafe { ::core::hint::unreachable_unchecked() },
-        };
+        let text: &'static str = #text_ident;
+        let payload: ::bbnf::runtime::tape::LiteralPayload = #payload_tok;
         let bytes = text.as_bytes();
         let start = *pos as usize;
         let end = start.saturating_add(bytes.len());
@@ -380,8 +396,17 @@ fn emit_literal_arm(idx: usize, payload: LiteralPayload) -> TokenStream {
 
 /// `Regex { pattern, payload }` — scanner.scan inline; emit_leaf with
 /// `TapeKind::Span`; PSI push when payload is Some.
+///
+/// AW-IV.W1.α — the `match table.states[N]` destructure is hoisted
+/// into literal bindings that reference the `__DTA_REGEX_<idx>`
+/// static (emitted by `dta.rs`) + the payload's codegen-time value.
+/// The scanner.scan indirection stays in this wave; AW-IV.W1.α's
+/// second landing replaces it with a direct
+/// `__dfa_match_<grammar>_<idx>` call.
 fn emit_regex_arm(idx: usize, payload: Option<RegexPayloadKind>) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
+    let pat_ident = format_ident!("__DTA_REGEX_{}", idx);
+    let payload_tok = regex_payload_token(payload);
     let advance = emit_advance_or_pop_call();
     let emit_payload = if payload.is_none() {
         quote! {
@@ -422,10 +447,8 @@ fn emit_regex_arm(idx: usize, payload: Option<RegexPayloadKind>) -> TokenStream 
         }
     };
     quote! {
-        let (pattern, payload) = match table.states[#idx_lit] {
-            ::bbnf::runtime::tape::DtaState::Regex { pattern, payload } => (pattern, payload),
-            _ => unsafe { ::core::hint::unreachable_unchecked() },
-        };
+        let pattern: &'static str = #pat_ident;
+        let payload: ::core::option::Option<::bbnf::runtime::tape::PayloadKind> = #payload_tok;
         let match_len = match scanner.scan(pattern, input, *pos as usize) {
             ::core::option::Option::Some(n) => n,
             ::core::option::Option::None => {
@@ -446,25 +469,32 @@ fn emit_regex_arm(idx: usize, payload: Option<RegexPayloadKind>) -> TokenStream 
     }
 }
 
-/// `Seq { children, frame, promote }` — reserve the parent row, push
-/// the Seq/Alt/Repeat frame with the rule's variant_idx, and dispatch
-/// to `children[0]` (or close immediately if the body is empty).
+/// `Seq { children, frame, promote }` — hoist the destructure to
+/// literal bindings referencing the emitted `__DTA_SEQ_<idx>_CHILDREN`
+/// static array + the codegen-time frame + promote variants. Reserve
+/// the parent row, push the Seq/Alt/Repeat frame with the rule's
+/// variant_idx, and dispatch to `children[0]` (or close immediately
+/// if the body is empty).
+///
+/// AW-IV.W1.α — `match table.states[#idx_lit] { Seq { … } =>
+/// (children, frame, promote), _ => unreachable_unchecked() }`
+/// replaced with three literal bindings computed at codegen time.
 fn emit_seq_arm(
     idx: usize,
     children: &[StateId],
     frame: FrameKind,
     promote: SeqPromote,
 ) -> TokenStream {
-    let idx_lit = Literal::usize_unsuffixed(idx);
+    let _ = idx; // retained for parity with other arms' idx-derived symbols
+    let children_ident = format_ident!("__DTA_SEQ_{}_CHILDREN", idx);
+    let frame_tok = frame_kind_token(frame);
+    let promote_tok = seq_promote_token(promote);
     let advance = emit_advance_or_pop_call();
-    let _ = (children, frame, promote); // captured via destructure below
+    let _ = children; // referenced via the emitted static array
     quote! {
-        let (children, frame, promote) = match table.states[#idx_lit] {
-            ::bbnf::runtime::tape::DtaState::Seq { children, frame, promote } => {
-                (children, frame, promote)
-            }
-            _ => unsafe { ::core::hint::unreachable_unchecked() },
-        };
+        let children: &'static [::bbnf::runtime::tape::DtaStateId] = &#children_ident;
+        let frame: ::bbnf::runtime::tape::DtaFrameKind = #frame_tok;
+        let promote: ::bbnf::runtime::tape::SeqPromote = #promote_tok;
         let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
         // AW-III.W5.c — fused compound write replaces reserve_compound's
         // 7-Vec::push tax with one bounds-check + 7 unchecked stores.
@@ -570,14 +600,17 @@ fn emit_byte_dispatch_arm(
 /// `AltLinear { branches }` — push an Alt frame, savepoint, and try
 /// each branch via `try_branch`. Restore-and-retry on Syntax; surface
 /// first success or final failure.
+///
+/// AW-IV.W1.α — `branches` binds to the emitted
+/// `__DTA_ALT_LIN_<idx>` static array (the same symbol `dta.rs`
+/// declares at module scope); the runtime `match table.states[N]`
+/// destructure is abrogated.
 fn emit_alt_linear_arm(idx: usize, branches: &[StateId]) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
-    let _ = branches;
+    let branches_ident = format_ident!("__DTA_ALT_LIN_{}", idx);
+    let _ = branches; // referenced via the emitted static array
     quote! {
-        let branches = match table.states[#idx_lit] {
-            ::bbnf::runtime::tape::DtaState::AltLinear { branches } => branches,
-            _ => unsafe { ::core::hint::unreachable_unchecked() },
-        };
+        let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &#branches_ident;
         if branches.is_empty() {
             break 'step ::core::result::Result::Err(
                 ::bbnf::runtime::tape::DtaError::Syntax {
@@ -688,30 +721,27 @@ fn emit_alt_linear_arm(idx: usize, branches: &[StateId]) -> TokenStream {
 /// slot + iter savepoint slot, push Repeat frame, transition to inner.
 /// Body-failure absorption happens at the outer-loop boundary via
 /// `handle_repeat_failure`.
+///
+/// AW-IV.W1.α — `match table.states[N]` for the `inner` state +
+/// `counter_optional` presence flag are abrogated; the emitter emits
+/// both as literal bindings computed from the codegen-time IR node.
 fn emit_repeat_arm(
     idx: usize,
-    _inner: StateId,
+    inner: StateId,
     lo: u32,
     hi: u32,
-    _counter_optional: ::core::option::Option<CounterOptional>,
+    counter_optional: ::core::option::Option<CounterOptional>,
 ) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
+    let inner_lit = Literal::u16_unsuffixed(inner.0);
     let lo_lit = Literal::u32_unsuffixed(lo);
     let hi_lit = Literal::u32_unsuffixed(hi);
+    let counter_optional_flag_u8 = if counter_optional.is_some() { 1u8 } else { 0u8 };
+    let counter_optional_flag_lit = Literal::u8_unsuffixed(counter_optional_flag_u8);
     let advance = emit_advance_or_pop_call();
-    let counter_optional_flag_expr = quote! {
-        match table.states[#idx_lit] {
-            ::bbnf::runtime::tape::DtaState::Repeat { counter_optional, .. } => {
-                if counter_optional.is_some() { 1u8 } else { 0u8 }
-            }
-            _ => unsafe { ::core::hint::unreachable_unchecked() },
-        }
-    };
     quote! {
-        let inner = match table.states[#idx_lit] {
-            ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
-            _ => unsafe { ::core::hint::unreachable_unchecked() },
-        };
+        let inner: ::bbnf::runtime::tape::DtaStateId =
+            ::bbnf::runtime::tape::DtaStateId(#inner_lit);
         // AW-III.W5.c — fused compound write.
         let parent_rec = columns.push_compound_fused(
             ::bbnf::runtime::tape::TapeKind::Rule, *pos,
@@ -727,7 +757,7 @@ fn emit_repeat_arm(
             );
         }
         stack.counters.push(0);
-        let counter_optional_flag: u8 = #counter_optional_flag_expr;
+        let counter_optional_flag: u8 = #counter_optional_flag_lit;
         stack.iter_savepoints.push(::bbnf::runtime::tape::IterSavepoint {
             cols_len: columns.len() as u32,
             fd_len: frame_depth.len() as u32,
@@ -786,12 +816,12 @@ fn emit_ref_arm(
 ) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
     let rule_lit = Literal::u32_unsuffixed(rule);
-    let _ = target;
+    let target_lit = Literal::u16_unsuffixed(target.0);
     quote! {
-        let (rule, target) = match table.states[#idx_lit] {
-            ::bbnf::runtime::tape::DtaState::Ref { rule, target } => (rule, target),
-            _ => unsafe { ::core::hint::unreachable_unchecked() },
-        };
+        let rule: ::bbnf::runtime::tape::DtaRuleId =
+            ::bbnf::runtime::tape::DtaRuleId(#rule_lit);
+        let target: ::bbnf::runtime::tape::DtaStateId =
+            ::bbnf::runtime::tape::DtaStateId(#target_lit);
         let chosen = if target == ::bbnf::runtime::tape::DtaStateId::NONE {
             table.rule_entry_for(rule)
         } else {
@@ -810,7 +840,6 @@ fn emit_ref_arm(
         // path's AW-III.W1.A wire-format: the next compound push
         // captures this into `frame.variant_idx`, then close_compound
         // stamps the tape record.
-        let _ = #rule_lit; // visible in cargo asm for grammar-agnostic proof.
         stack.pending_variant_idx = (rule.0 & 0xFF) as u8;
         ::core::result::Result::Ok(
             ::bbnf::runtime::tape::StepResult::Next(chosen),
@@ -820,32 +849,43 @@ fn emit_ref_arm(
 
 /// `WsTrim { pattern }` — scanner.scan with the grammar's `@ws`
 /// pattern when set, else `trim_ascii_ws` fallback.
+///
+/// AW-IV.W1.α — the runtime `match table.states[N]` destructure for
+/// the pattern field is abrogated. When `has_pattern` is true the
+/// emitter emits a literal binding referencing the `__DTA_WS_<idx>`
+/// static (the same static `dta.rs` emits for pattern-bearing WsTrim
+/// states); when false the emitter emits no pattern binding.
 fn emit_ws_trim_arm(idx: usize, has_pattern: bool) -> TokenStream {
-    let idx_lit = Literal::usize_unsuffixed(idx);
     let advance = emit_advance_or_pop_call();
-    let scan_path = if has_pattern {
-        quote! {
-            if let ::core::option::Option::Some(pat) = pattern {
-                if let ::core::option::Option::Some(len) =
-                    scanner.scan(pat, input, *pos as usize)
-                {
-                    *pos += len;
+    let (pattern_binding, scan_path) = if has_pattern {
+        let pat_ident = format_ident!("__DTA_WS_{}", idx);
+        (
+            quote! {
+                let pattern: ::core::option::Option<&'static str> =
+                    ::core::option::Option::Some(#pat_ident);
+            },
+            quote! {
+                if let ::core::option::Option::Some(pat) = pattern {
+                    if let ::core::option::Option::Some(len) =
+                        scanner.scan(pat, input, *pos as usize)
+                    {
+                        *pos += len;
+                    }
+                } else {
+                    ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
                 }
-            } else {
-                ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-            }
-        }
+            },
+        )
     } else {
-        quote! {
-            let _ = pattern;
-            ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-        }
+        (
+            TokenStream::new(),
+            quote! {
+                ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
+            },
+        )
     };
     quote! {
-        let pattern = match table.states[#idx_lit] {
-            ::bbnf::runtime::tape::DtaState::WsTrim { pattern } => pattern,
-            _ => unsafe { ::core::hint::unreachable_unchecked() },
-        };
+        #pattern_binding
         #scan_path
         #advance
     }
@@ -854,19 +894,22 @@ fn emit_ws_trim_arm(idx: usize, has_pattern: bool) -> TokenStream {
 /// `Minus { primary, excluded }` — deep-snapshot probe of `excluded`.
 /// On success → Syntax (the matched bytes were excluded). On failure
 /// → restore and dispatch `primary`.
+///
+/// AW-IV.W1.α — `primary` / `excluded` hoisted to literal bindings
+/// computed from the codegen-time IR node.
 fn emit_minus_arm(
     idx: usize,
-    _primary: StateId,
-    _excluded: StateId,
+    primary: StateId,
+    excluded: StateId,
 ) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
+    let primary_lit = Literal::u16_unsuffixed(primary.0);
+    let excluded_lit = Literal::u16_unsuffixed(excluded.0);
     quote! {
-        let (primary, excluded) = match table.states[#idx_lit] {
-            ::bbnf::runtime::tape::DtaState::Minus { primary, excluded } => {
-                (primary, excluded)
-            }
-            _ => unsafe { ::core::hint::unreachable_unchecked() },
-        };
+        let primary: ::bbnf::runtime::tape::DtaStateId =
+            ::bbnf::runtime::tape::DtaStateId(#primary_lit);
+        let excluded: ::bbnf::runtime::tape::DtaStateId =
+            ::bbnf::runtime::tape::DtaStateId(#excluded_lit);
         let start_pos = *pos;
         // AW-III.W5.c — capture dual-cursor slot for probe restore.
         let probe_snapshot = stack.snapshot_probe(*slot);
@@ -922,14 +965,13 @@ fn emit_minus_arm(
 /// number of bytes per parse (≤ chain length × operands).
 fn emit_shunting_yard_arm(
     idx: usize,
-    _head: StateId,
+    head: StateId,
 ) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
+    let head_lit = Literal::u16_unsuffixed(head.0);
     quote! {
-        let head = match table.states[#idx_lit] {
-            ::bbnf::runtime::tape::DtaState::ShuntingYard { head, .. } => head,
-            _ => unsafe { ::core::hint::unreachable_unchecked() },
-        };
+        let head: ::bbnf::runtime::tape::DtaStateId =
+            ::bbnf::runtime::tape::DtaStateId(#head_lit);
         // AW-III.W5.c — fused compound write.
         let parent_rec = columns.push_compound_fused(
             ::bbnf::runtime::tape::TapeKind::Rule, *pos,
@@ -957,5 +999,109 @@ fn emit_shunting_yard_arm(
         ::core::result::Result::Ok(
             ::bbnf::runtime::tape::StepResult::Next(head),
         )
+    }
+}
+
+// ── Literal-binding tokenisers ──────────────────────────────────────
+//
+// AW-IV.W1.α — the per-arm hoisting emits literal `let` bindings
+// computed from the codegen-time `DtaState` value. These free
+// functions project the IR variants onto tape-side constant
+// expressions — the same projection the dta.rs emitter performs for
+// the `DTA_TABLE` literal, reproduced here to avoid cross-emitter
+// coupling (lower_state owns the walker-local projection; dta.rs
+// owns the const-table projection; both consume the same IR
+// variants).
+
+/// Emit the tape-side `LiteralPayload` constructor expression for
+/// the given IR payload variant.
+fn literal_payload_token(p: LiteralPayload) -> TokenStream {
+    match p {
+        LiteralPayload::None => {
+            quote! { ::bbnf::runtime::tape::LiteralPayload::None }
+        }
+        LiteralPayload::U8(v) => {
+            let lit = Literal::u8_unsuffixed(v);
+            quote! { ::bbnf::runtime::tape::LiteralPayload::U8(#lit) }
+        }
+        LiteralPayload::Bool(b) => {
+            let lit = if b { quote!(true) } else { quote!(false) };
+            quote! { ::bbnf::runtime::tape::LiteralPayload::Bool(#lit) }
+        }
+        LiteralPayload::U32(v) => {
+            let lit = Literal::u32_unsuffixed(v);
+            quote! { ::bbnf::runtime::tape::LiteralPayload::U32(#lit) }
+        }
+        LiteralPayload::U64(v) => {
+            let lit = Literal::u64_unsuffixed(v);
+            quote! { ::bbnf::runtime::tape::LiteralPayload::U64(#lit) }
+        }
+        LiteralPayload::F64(v) => {
+            // Mirror dta.rs: finite floats round-trip via
+            // `Literal::f64_unsuffixed`; non-finite (NaN, ±Inf)
+            // reconstitute via `f64::from_bits` so bit identity is
+            // preserved across the codegen boundary.
+            if v.is_finite() {
+                let lit = Literal::f64_unsuffixed(v);
+                quote! { ::bbnf::runtime::tape::LiteralPayload::F64(#lit) }
+            } else {
+                let bits = Literal::u64_unsuffixed(v.to_bits());
+                quote! {
+                    ::bbnf::runtime::tape::LiteralPayload::F64(
+                        f64::from_bits(#bits),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/// Emit the tape-side `Option<PayloadKind>` constructor expression
+/// for the IR-side `Option<RegexPayloadKind>` selector.
+fn regex_payload_token(p: Option<RegexPayloadKind>) -> TokenStream {
+    let Some(kind) = p else {
+        return quote! { ::core::option::Option::None };
+    };
+    let variant = match kind {
+        RegexPayloadKind::F64 => quote! { ::bbnf::runtime::tape::PayloadKind::F64 },
+        RegexPayloadKind::U8 => quote! { ::bbnf::runtime::tape::PayloadKind::U8 },
+        RegexPayloadKind::Bool => quote! { ::bbnf::runtime::tape::PayloadKind::Bool },
+        RegexPayloadKind::HexU32 => {
+            quote! { ::bbnf::runtime::tape::PayloadKind::HexU32 }
+        }
+        RegexPayloadKind::I64 => quote! { ::bbnf::runtime::tape::PayloadKind::I64 },
+        RegexPayloadKind::String => {
+            quote! { ::bbnf::runtime::tape::PayloadKind::String }
+        }
+        RegexPayloadKind::AggregateLarge => {
+            quote! { ::bbnf::runtime::tape::PayloadKind::AggregateLarge }
+        }
+    };
+    quote! { ::core::option::Option::Some(#variant) }
+}
+
+/// Emit the tape-side `DtaFrameKind` variant expression for the IR
+/// `FrameKind`.
+fn frame_kind_token(f: FrameKind) -> TokenStream {
+    match f {
+        FrameKind::Seq => quote! { ::bbnf::runtime::tape::DtaFrameKind::Seq },
+        FrameKind::Alt => quote! { ::bbnf::runtime::tape::DtaFrameKind::Alt },
+        FrameKind::Repeat => quote! { ::bbnf::runtime::tape::DtaFrameKind::Repeat },
+        FrameKind::ShuntingYard => {
+            quote! { ::bbnf::runtime::tape::DtaFrameKind::ShuntingYard }
+        }
+    }
+}
+
+/// Emit the tape-side `SeqPromote` variant expression for the IR
+/// `SeqPromote`.
+fn seq_promote_token(p: SeqPromote) -> TokenStream {
+    match p {
+        SeqPromote::Default => {
+            quote! { ::bbnf::runtime::tape::SeqPromote::Default }
+        }
+        SeqPromote::KvPair => {
+            quote! { ::bbnf::runtime::tape::SeqPromote::KvPair }
+        }
     }
 }

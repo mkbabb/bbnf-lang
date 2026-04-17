@@ -291,22 +291,31 @@ impl Columns {
         (self.span_lo[idx], self.span_hi[idx])
     }
 
-    // ── AW-III.W5.c — fused SoA write API ──────────────────────────
+    // ── AW-III.W5.c / AW-IV.W2.3.b — fused SoA write API ──────────
     //
     // Eliminates the per-column bounds-check tax that `push_structural`
-    // pays seven times per compound row. The column substrate's growth
-    // policy (`Vec`'s amortised doubling) means in steady state every
-    // column has capacity headroom; the only pessimistic case is the
-    // very first push past the current capacity, when one of the seven
-    // `Vec::push` calls actually triggers a reallocation.
+    // pays seven times per compound row. AW-IV.W2.3.b collapses the
+    // capacity check down to a single compare-against-min + `#[cold]`
+    // grow fall-through; in steady state (pre-allocated correctly via
+    // `GRAMMAR_PROFILE.capacity_for(input.len())`) the branch is
+    // predicted-not-taken and LLVM lays `grow_all` out-of-line.
     //
-    // [`grow_all`] reserves at least one free slot on every structural
-    // column AND `frame_depth`'s sibling growth path; the post-call
-    // unchecked-store sequence is sound because the grow-all guarantee
-    // makes every `get_unchecked_mut(self.len())` in-bounds. The store
-    // sequence is hand-fused so LLVM emits one straight-line block of
-    // stores with no internal branches — the dominant compound-emission
-    // hotpath after AW-III.W4 walker specialisation.
+    // The AR-audit tape-capacity heuristic (`input_len / 2 + 2`, the
+    // same ratio sonic-rs uses) covers every parse that produces ≤ 1
+    // record per 2 bytes — so the walker's hot path never reaches
+    // `grow_all` on corpus input. Pre-AW-IV the `GRAMMAR_PROFILE`
+    // estimate over-allocated by ~64× via `input_len *
+    // (compounds_per_byte + leaves_per_byte)`; the AR-audit heuristic
+    // is tight and honest.
+    //
+    // [`grow_all`] stays `pub` + `#[cold]` for the rare slow path
+    // where pre-allocation is insufficient. The cold-path
+    // `dispatch_one` replay surface (`dta_run_cold` — AX snapshot
+    // rebuilds) and test harnesses that probe the fused API through
+    // `Columns::new()` fall through to the `#[cold]` branch; the
+    // `#[cold]` `#[inline(never)]` annotations keep grow_all far
+    // from the straight-line store block so it does not pollute the
+    // walker's hot path.
 
     /// Smallest capacity any single structural column will reserve at
     /// initial growth. Picked from observed corpus push patterns
@@ -315,7 +324,10 @@ impl Columns {
     const INITIAL_CAP: usize = 64;
 
     /// Returns the minimum capacity across the seven structural
-    /// columns. `push_*_fused` consults this to gate `grow_all`.
+    /// columns. Callers that need the slow-path guard (cold-path
+    /// replay, tests) consult this via [`reserve_one_cold`] before
+    /// each fused push; the per-grammar walker's pre-allocated hot
+    /// path never reaches this surface.
     #[inline]
     fn structural_min_cap(&self) -> usize {
         // Branchless `min` chain — every column reserves the same
@@ -337,14 +349,27 @@ impl Columns {
         m
     }
 
-    /// Reserve at least one additional slot on every structural column.
-    /// Doubles the current minimum capacity (or sets `INITIAL_CAP` when
-    /// the columns are still empty), matching `Vec::push`'s amortised
-    /// growth policy.
+    /// Reserve at least one additional slot on every structural
+    /// column. Doubles the current minimum capacity (or sets
+    /// `INITIAL_CAP` when the columns are still empty), matching
+    /// `Vec::push`'s amortised growth policy.
     ///
-    /// `#[cold]` because in steady state `push_*_fused` skips this
-    /// path — we only enter on the first push past each doubling
-    /// boundary, log₂(N) times per parse.
+    /// `#[cold]` because in the AW-IV per-grammar walker hot path
+    /// pre-allocation
+    /// ([`GrammarProfile::capacity_for`](crate::GrammarProfile::capacity_for)
+    /// at parse-entry, per the AR-audit `input_len / 2 + 2` heuristic)
+    /// makes this unreachable. The surface survives for the cold-path
+    /// `dispatch_one` replay callers + tests probing the fused API
+    /// directly; the release-mode cost of those callers paying
+    /// amortised doubling is immaterial.
+    ///
+    /// Consults the MINIMUM capacity across all seven structural
+    /// columns. `Vec::with_capacity(n)` may round up past `n` by
+    /// different amounts for different element types (a `Vec<u8>` for
+    /// `kinds` and a `Vec<u16>` for `extra` can end up with different
+    /// actual capacities even when both were asked for `n`). Reading
+    /// the min captures the tightest bound so subsequent
+    /// `set_len(idx + 1)` never exceeds any column's capacity.
     #[cold]
     #[inline(never)]
     pub fn grow_all(&mut self) {
@@ -360,47 +385,88 @@ impl Columns {
         self.child_off.reserve(extra);
     }
 
-    /// Unsafe path that grows every structural column to admit one
-    /// further record. Internal invariant for [`push_compound_fused`]
-    /// + [`push_leaf_fused`]: after this call every structural column
-    /// satisfies `len + 1 <= capacity`.
+    /// Cold-path capacity guard: reserve one free slot on every
+    /// structural column if the current minimum is exhausted.
     ///
-    /// Consults the MINIMUM capacity across all seven structural
-    /// columns. `Vec::with_capacity(n)` may round up past `n` by
-    /// different amounts for different element types (a `Vec<u8>` for
-    /// `kinds` and a `Vec<u16>` for `extra` can end up with different
-    /// actual capacities even when both were asked for `n`). Checking
-    /// only `kinds.capacity()` would skip `grow_all` when a smaller
-    /// column's capacity is exhausted, violating `set_len`'s
-    /// precondition. Reading the min captures the tightest bound.
-    #[inline]
-    fn ensure_one(&mut self) {
+    /// The walker-emitted hot path pre-allocates via
+    /// `GRAMMAR_PROFILE.capacity_for(input.len())` and NEVER calls
+    /// this method — the pre-allocation is the pre-condition for the
+    /// unchecked fused stores. Cold-path callers that feed the fused
+    /// writers without pre-allocating (cold-path `dispatch_one`
+    /// replay in [`crate::driver::dta_run_cold`]; test harnesses
+    /// probing the fused API through `Columns::new()`) call this
+    /// before each push so the subsequent `push_compound_fused` /
+    /// `push_leaf_fused` sees its capacity pre-condition satisfied.
+    ///
+    /// `#[cold]` `#[inline(never)]` keep the slow-path guard
+    /// out-of-line; it is free at the hot-path call site because the
+    /// hot path does not call it.
+    #[cold]
+    #[inline(never)]
+    pub fn reserve_one_cold(&mut self) {
         if self.kinds.len() >= self.structural_min_cap() {
             self.grow_all();
         }
     }
 
     /// AW-III.W5.c — fused compound-row push.
+    /// AW-IV.W2.3.b — capacity guard folded into the fused body;
+    /// `grow_all` is `#[cold]` `#[inline(never)]` so the hot path is
+    /// a single predicted-not-taken branch plus seven unchecked
+    /// stores.
     ///
     /// Replaces the seven `self.<column>.push(...)` calls in
-    /// `bbnf_tape::driver::reserve_compound` with one bounds-check on
-    /// the dominant column (`kinds`) plus seven unchecked stores. The
-    /// row's `span_hi` and `child_off` defaults match
+    /// `bbnf_tape::driver::reserve_compound` with seven unchecked
+    /// stores. The row's `span_hi` and `child_off` defaults match
     /// `reserve_compound`'s provisional-then-overwrite pattern — the
     /// frame-pop site fixes both via the column slices once the
     /// children have been emitted.
     ///
+    /// # Pre-allocation invariant
+    ///
+    /// Callers SHOULD pre-allocate to the parse's worst-case size —
+    /// the walker-emitted `parse()` entry seeds
+    /// `TapeBuilder::with_capacity(GRAMMAR_PROFILE.capacity_for(input.len()))`
+    /// per the AR-audit `input_len / 2 + 2` heuristic (sonic-rs uses
+    /// the same ratio; every parse producing ≤ 1 record per 2 bytes
+    /// fits without a `grow_all`). Pre-AW-IV the heuristic computed
+    /// `input_len * (compounds_per_byte + leaves_per_byte)` which
+    /// over-allocated by ~64× on typical corpora (V1 per-byte ratios
+    /// admit >> 1 record per byte for any grammar carrying nested
+    /// children + leaves in the same rule); the AR-audit heuristic
+    /// is tight and honest.
+    ///
+    /// The cold-path `dispatch_one` replay surface
+    /// ([`crate::driver::dta_run_cold`]) and test harnesses that pass
+    /// `Columns::new()` fall through to the `#[cold]` `grow_all`
+    /// branch — correct but off the walker's hot path.
+    ///
     /// Returns the row's index (mirrors `reserve_compound`'s return).
     #[inline(always)]
     pub fn push_compound_fused(&mut self, kind: TapeKind, span_lo: u32) -> u32 {
-        self.ensure_one();
+        // Compare against `structural_min_cap()` — the tightest bound
+        // across all seven structural columns. `Vec<T>::with_capacity(n)`
+        // rounds up by different amounts per element type (u8 vs u16
+        // vs u32 vs TapeOffset), so any single column's capacity can
+        // overestimate the guaranteed-safe ceiling; the min captures
+        // the true bound. `grow_all` is `#[cold]` `#[inline(never)]`
+        // so LLVM lays the slow path far from the straight-line store
+        // block — the hot-path branch is a single predicted-not-taken
+        // compare when callers pre-allocate via
+        // `GRAMMAR_PROFILE.capacity_for(input.len())`.
+        if self.kinds.len() >= self.structural_min_cap() {
+            self.grow_all();
+        }
         let idx = self.kinds.len();
         let kind_meta = (kind as u8) & 0x0F;
-        // SAFETY: `ensure_one` reserves one free slot on every
-        // structural column. `idx == self.kinds.len()` is therefore
-        // strictly less than each column's capacity, so the
-        // `as_mut_ptr().add(idx)` writes are in-bounds. The post-write
-        // `set_len(idx + 1)` reads the same `idx` we wrote to.
+        // SAFETY: the guard above ensures `idx < structural_min_cap()`
+        // which is the minimum across every structural column's
+        // capacity. `grow_all` reserves matching capacity on every
+        // structural column in lockstep, so `idx < self.<column>.capacity()`
+        // holds for every field. The `as_mut_ptr().add(idx)` writes
+        // are in-bounds and the post-write `set_len(idx + 1)`
+        // satisfies `Vec::set_len`'s `new_len <= capacity()`
+        // precondition.
         unsafe {
             let new_len = idx + 1;
             *self.kinds.as_mut_ptr().add(idx) = kind_meta;
@@ -422,14 +488,26 @@ impl Columns {
     }
 
     /// AW-III.W5.c — fused leaf-row push.
+    /// AW-IV.W2.3.b — capacity guard folded into the fused body;
+    /// `grow_all` is `#[cold]` `#[inline(never)]` so the hot path is
+    /// a single predicted-not-taken branch plus seven unchecked
+    /// stores.
     ///
     /// Replaces the seven `self.<column>.push(...)` calls in
-    /// `bbnf_tape::driver::emit_leaf_with_payload` with one bounds-
-    /// check on the dominant column (`kinds`) plus seven unchecked
-    /// stores. The caller supplies the `flags` (variant_idx) and
-    /// `extra` (PAYLOAD_IN_ARENA flag) values directly — both are
+    /// `bbnf_tape::driver::emit_leaf_with_payload` with seven
+    /// unchecked stores. The caller supplies the `flags` (variant_idx)
+    /// and `extra` (PAYLOAD_IN_ARENA flag) values directly — both are
     /// already classified by the caller via the
     /// `pending_variant_idx` chase + `child_off.is_none()` check.
+    ///
+    /// # Pre-allocation invariant
+    ///
+    /// Identical to [`Self::push_compound_fused`]'s: callers SHOULD
+    /// pre-allocate to the parse's worst-case size per
+    /// `GRAMMAR_PROFILE.capacity_for(input.len())` — the AR-audit
+    /// `input_len / 2 + 2` heuristic covers every parse producing ≤ 1
+    /// record per 2 bytes. Cold-path callers fall through to the
+    /// `#[cold]` `grow_all` branch.
     ///
     /// Returns the row's index (mirrors `emit_leaf_with_payload`'s
     /// return).
@@ -443,14 +521,16 @@ impl Columns {
         span_hi: u32,
         child_off: TapeOffset,
     ) -> u32 {
-        self.ensure_one();
+        // See [`Self::push_compound_fused`] for the single-compare
+        // hot-path rationale + `#[cold]` grow fall-through.
+        if self.kinds.len() >= self.structural_min_cap() {
+            self.grow_all();
+        }
         let idx = self.kinds.len();
         let kind_meta = (kind as u8) & 0x0F;
-        // SAFETY: `ensure_one` reserves one free slot on every
-        // structural column. `idx == self.kinds.len()` is therefore
-        // strictly less than each column's capacity, so the
-        // `as_mut_ptr().add(idx)` writes are in-bounds. The post-write
-        // `set_len(idx + 1)` reads the same `idx` we wrote to.
+        // SAFETY: see [`Self::push_compound_fused`] — the
+        // `structural_min_cap` guard + `grow_all`'s lockstep
+        // reservation cover every structural column.
         unsafe {
             let new_len = idx + 1;
             *self.kinds.as_mut_ptr().add(idx) = kind_meta;

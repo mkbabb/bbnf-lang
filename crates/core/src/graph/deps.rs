@@ -14,6 +14,7 @@
 use indexmap::{IndexMap, IndexSet};
 
 use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
+use crate::lower::tape_walk::find_descendant_by_kind;
 use crate::types::AST;
 
 /// Rule name → set of referenced rule names.
@@ -111,8 +112,18 @@ pub fn collect_nonterminal_refs<'a>(
         }
 
         // Grouped: "(" rhs ")" / "[" rhs "]" / "{" rhs "}" / "@{" rhs "}"
+        //
+        // Under DTA, the inner `rhs` compound may sit inside a Seq
+        // wrapper alongside the `(` / `)` delimiter leaves — a direct
+        // `child(1)` read can land on the Seq wrapper (rule_kind =
+        // Unknown) instead of the semantic `rhs`. Descend to the
+        // first `rhs` descendant to see through the wrapper. Mirrors
+        // AW-II.W1.1's `lower_grouped_term` fix and
+        // `grammar/host.rs::absorb_item`.
         BbnfBootstrapRuleKind::term_2 | BbnfBootstrapRuleKind::value_atom_0 => {
-            if let Some(inner) = node.child(1) {
+            if let Some(inner) = find_descendant_by_kind(node, BbnfBootstrapRuleKind::rhs) {
+                collect_nonterminal_refs(inner, refs);
+            } else if let Some(inner) = node.child(1) {
                 collect_nonterminal_refs(inner, refs);
             }
         }

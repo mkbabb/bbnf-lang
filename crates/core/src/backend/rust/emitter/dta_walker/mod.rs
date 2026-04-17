@@ -71,9 +71,9 @@ pub use hot_cold::{HotColdPartition, HOT_BUDGET};
 ///
 /// Non-alphanumeric / non-underscore characters map to `_`. Used
 /// consistently by every emitter-emitted symbol that embeds the
-/// grammar name (`dta_run_<grammar>`, `__dfa_match_<grammar>_<idx>`,
-/// `__regex_scan_<grammar>`) so cross-emitter ident compositions are
-/// guaranteed to agree byte-for-byte.
+/// grammar name (`dta_run_<grammar>`, `__regex_scan_<grammar>`) so
+/// cross-emitter ident compositions are guaranteed to agree
+/// byte-for-byte.
 fn sanitise_grammar(grammar: &str) -> String {
     let mut s = String::with_capacity(grammar.len());
     for ch in grammar.chars() {
@@ -86,24 +86,20 @@ fn sanitise_grammar(grammar: &str) -> String {
     s
 }
 
-/// Compose the per-state DFA match function ident emitted by W1.β —
-/// `__dfa_match_<grammar>_<idx>`. The hot-path Regex arm calls this
-/// directly (no scanner, no trait dispatch, no function-pointer
-/// field). W1.β emits the function body alongside the walker module
-/// via `dfa_codegen`; `use super::*;` brings it into the
-/// `__dta_walker_inline` scope.
-pub(crate) fn dfa_match_fn_ident(grammar: &str, idx: usize) -> proc_macro2::Ident {
-    format_ident!("__dfa_match_{}_{}", sanitise_grammar(grammar), idx)
-}
-
 /// Compose the per-grammar regex-scan adapter ident —
 /// `__regex_scan_<grammar>`. The adapter's signature is
-/// `fn(&str, &[u8], usize) -> Option<u32>`; the body dispatches on
-/// the pattern string to the matching per-state DFA match function.
-/// Used by the cold sibling's `try_branch` / `handle_repeat_failure`
-/// call sites (helpers whose signatures W1.β rewrites to take
-/// `regex_scan: fn(...)`). The hot path does NOT use this adapter —
-/// its Regex arms call `dfa_match_fn_ident(grammar, idx)` directly.
+/// `fn(&str, &[u8], usize) -> Option<u32>`; its body dispatches on
+/// pointer-equality of the interned pattern `&'static str` statics
+/// and splices the inline DFA body for each matched pattern. Used by
+/// the cold-path replay surface helpers (`try_branch`,
+/// `handle_repeat_failure_bounded`) the cold siblings call.
+///
+/// AW-IV.W1.4-aggro — the hot path does NOT consult this adapter.
+/// Every Regex / WsTrim / boundary-ws site splices the DFA body
+/// inline at the source level; the adapter exists only as the SOLE
+/// out-of-line per-grammar fn for cold-path callers that dispatch by
+/// pattern string. The adapter's own dispatch arms also splice inline
+/// DFA bodies so no chain of `__dfa_match_*` fn calls exists anywhere.
 pub(crate) fn regex_scan_adapter_ident(grammar: &str) -> proc_macro2::Ident {
     format_ident!("__regex_scan_{}", sanitise_grammar(grammar))
 }
@@ -131,6 +127,7 @@ pub(crate) fn regex_scan_adapter_ident(grammar: &str) -> proc_macro2::Ident {
 /// without conditional dispatch in the hot path.
 pub fn emit_specialised_walker(
     grammar: &str,
+    ir: &GrammarIR,
     table: &DtaTable,
     alphabet: &StructuralAlphabet,
     profile: &GrammarProfile,
@@ -153,11 +150,11 @@ pub fn emit_specialised_walker(
             /// should route through the legacy fn-per-rule path until
             /// the lifter expands its coverage.
             ///
-            /// AW-IV.W1.α — signature drops the `scanner: &dyn
-            /// RegexScanner` parameter; the per-grammar walker no
-            /// longer depends on a trait-object scanner (direct
-            /// `__dfa_match_<grammar>_<idx>` calls supply the regex
-            /// semantics).
+            /// AW-IV.W1.4-aggro — signature drops the `scanner: &dyn
+            /// RegexScanner` parameter; the per-grammar walker splices
+            /// the DFA's loop body inline at every Regex / WsTrim site
+            /// (no trait-object scanner, no separately-emitted
+            /// `__dfa_match_*` fn).
             #[allow(dead_code)]
             pub fn #fn_ident(
                 _input: &[u8],
@@ -180,9 +177,9 @@ pub fn emit_specialised_walker(
 
     let partition = HotColdPartition::for_table(table);
     let helper_block = helpers::emit_inline_helpers();
-    let dispatch_arms = lower_state::emit_state_dispatch_arms(grammar, table, &partition);
-    let cold_siblings = lower_state::emit_cold_siblings(grammar, table, &partition);
-    let boundary_ws = emit_boundary_ws(grammar, table);
+    let dispatch_arms = lower_state::emit_state_dispatch_arms(grammar, ir, table, &partition);
+    let cold_siblings = lower_state::emit_cold_siblings(grammar, ir, table, &partition);
+    let boundary_ws = emit_boundary_ws(grammar, ir, table);
     let entry_state_lookup = quote! {
         let mut cur: u16 = {
             let s = table.rule_entry_for(table.entry);
@@ -240,13 +237,17 @@ pub fn emit_specialised_walker(
             /// compile time, not via a `&'static [DtaState]` indirect
             /// load each visit.
             ///
-            /// AW-IV.W1.α — the `<__S: RegexScanner>` generic + the
-            /// `scanner: &__S` parameter are abrogated. The hot path's
-            /// Regex / WsTrim arms call `__dfa_match_<grammar>_<idx>`
-            /// by literal name; the cold sibling's helper-bound
-            /// `try_branch` / `handle_repeat_failure` calls pass the
-            /// per-grammar `__regex_scan_<grammar>` adapter as a
-            /// concrete fn pointer. No trait-object dispatch survives.
+            /// AW-IV.W1.4-aggro — the `<__S: RegexScanner>` generic +
+            /// the `scanner: &__S` parameter are abrogated. The hot
+            /// path's Regex / WsTrim arms splice the DFA's `loop {
+            /// match state { ... } }` body inline as a labelled block;
+            /// the cold sibling's helper-bound `try_branch` /
+            /// `handle_repeat_failure` calls pass the per-grammar
+            /// `__regex_scan_<grammar>` adapter as a concrete fn
+            /// pointer (the adapter's own dispatch arms also splice
+            /// inline DFA bodies — no chain of `__dfa_match_*` fn
+            /// calls exists anywhere). No trait-object dispatch
+            /// survives.
             #[allow(dead_code)]
             pub fn run(
                 input: &[u8],
@@ -368,11 +369,11 @@ pub fn emit_specialised_walker(
         /// indirect load that gated `match table.states[N]`
         /// const-folding.
         ///
-        /// AW-IV.W1.α — the `<__S: RegexScanner>` generic + the
+        /// AW-IV.W1.4-aggro — the `<__S: RegexScanner>` generic + the
         /// `scanner: &__S` parameter are abrogated. Every regex
-        /// semantic on the hot path flows through direct
-        /// `__dfa_match_<grammar>_<idx>` calls emitted by W1.β; no
-        /// trait-object dispatch survives.
+        /// semantic on the hot path is an inline DFA body spliced
+        /// into the walker arm; no separately-emitted `__dfa_match_*`
+        /// fn exists, and no trait-object dispatch survives.
         #[allow(dead_code)]
         #[inline]
         pub fn #fn_ident(
@@ -392,25 +393,40 @@ pub fn emit_specialised_walker(
     }
 }
 
-/// AW-IV.W1.α — codegen-time boundary whitespace trim.
+/// AW-IV.W1.4-aggro — codegen-time boundary whitespace trim with
+/// inline DFA body splice.
 ///
 /// Walks `table.states` once at codegen time for the first
-/// `DtaState::WsTrim` variant. When found with a pattern, emit an
-/// inline loop calling the per-state DFA match function directly;
-/// when found with no pattern, emit an ASCII-whitespace trim; when
-/// no WsTrim state exists in the table, emit nothing. The runtime
-/// `first_ws_pattern(table)` + `trim_with_pattern(scanner, ...)`
-/// indirection is replaced by a compile-time decision whose output
-/// is the literal direct call — LLVM sees a concrete function ident
-/// (or a concrete ASCII scan) at every boundary trim site.
-fn emit_boundary_ws(grammar: &str, table: &DtaTable) -> TokenStream {
+/// `DtaState::WsTrim` variant. When found with a pattern, splice the
+/// DFA's `loop { match state { ... } }` body directly into a fixed-
+/// point driving loop — no separately-emitted `__dfa_match_*` function
+/// exists. When found with no pattern, emit an ASCII-whitespace trim.
+/// When no WsTrim state exists in the table, emit nothing.
+///
+/// The DFA body is spliced via [`super::dfa_codegen::emit_dfa_inline_body`];
+/// the splice introduces `__dfa_`-prefixed locals that don't collide
+/// with the walker's `pos` / `stack` / `idx` bindings. Each iteration
+/// shadows `pos` with the current `*pos as usize` inside an inner
+/// block so the DFA body's bindings see a concrete `usize`; the outer
+/// `*pos += len` mutation happens outside the shadowed scope, against
+/// the walker's `&mut u32`.
+fn emit_boundary_ws(
+    grammar: &str,
+    ir: &GrammarIR,
+    table: &DtaTable,
+) -> TokenStream {
     for (idx, state) in table.states.iter().enumerate() {
         match state {
             DtaState::WsTrim { pattern: Some(_) } => {
-                let dfa_ident = dfa_match_fn_ident(grammar, idx);
+                let dfa_inline_body =
+                    super::dfa_codegen::emit_dfa_inline_body(grammar, ir, table, idx);
                 return quote! {
                     loop {
-                        match #dfa_ident(input, *pos as usize) {
+                        let dfa_result: ::core::option::Option<u32> = {
+                            let pos: usize = *pos as usize;
+                            #dfa_inline_body
+                        };
+                        match dfa_result {
                             ::core::option::Option::Some(0)
                             | ::core::option::Option::None => break,
                             ::core::option::Option::Some(n) => {

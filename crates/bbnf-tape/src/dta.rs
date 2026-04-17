@@ -179,6 +179,26 @@ pub enum DtaState {
         /// Whitespace regex pattern. `None` => act as Epsilon.
         pattern: Option<&'static str>,
     },
+    /// AW-II.W5b — Set-difference state (IrNode::Minus semantic).
+    ///
+    /// Match `primary` only if `excluded` does NOT match at the same
+    /// start offset. Mirrors the VM's `compile_minus` semantic:
+    /// savepoint, probe excluded, restore on success → fail; on
+    /// failure → run primary.
+    ///
+    /// The pre-W5b lifter silently discarded `excluded` and lowered
+    /// `a - b` to `a` alone — every `character - "'"` site accepted
+    /// the excluded byte, breaking EBNF terminal parsing (and every
+    /// grammar that used `-` to carve a character class exclusion).
+    Minus {
+        /// The expression that must succeed and whose match is
+        /// consumed by the driver.
+        primary: DtaStateId,
+        /// The expression that must NOT match at the same start
+        /// offset. Probed with a savepoint; side effects are
+        /// discarded before `primary` runs.
+        excluded: DtaStateId,
+    },
 }
 
 /// One operator's shunting-yard profile.

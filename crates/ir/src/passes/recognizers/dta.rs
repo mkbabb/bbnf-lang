@@ -182,6 +182,22 @@ pub enum DtaState {
     WsTrim {
         pattern: Option<StringId>,
     },
+    /// AW-II.W5b — Set-difference (`IrNode::Minus` lowering).
+    ///
+    /// Matches `primary` only if `excluded` does NOT match at the
+    /// same starting offset. Mirrors the VM compiler's
+    /// `compile_minus` semantic — savepoint, probe `excluded`; on
+    /// success → fail; on failure → run `primary` and consume its
+    /// match.
+    ///
+    /// The prior lifter silently discarded `excluded` and routed the
+    /// left operand through unchanged. Every EBNF terminal
+    /// (`character - "'"`, `character - '"'`) therefore accepted the
+    /// quote byte it was meant to exclude, breaking the grammar.
+    Minus {
+        primary: StateId,
+        excluded: StateId,
+    },
 }
 
 /// Counter-optional marker for AV.3.2.
@@ -477,7 +493,23 @@ impl<'ir> DtaBuilder<'ir> {
                     frame: FrameKind::Seq,
                 })
             }
-            IrNode::Minus(a, _b) => self.lift_node(a),
+            IrNode::Minus(primary, excluded) => {
+                // AW-II.W5b — Set-difference: match `primary` only if
+                // `excluded` does NOT match at the same start offset.
+                // Mirrors the VM compiler's `compile_minus` (probe b;
+                // if b succeeds, overall fails; else run a).
+                //
+                // Pre-W5b the lifter silently discarded the right
+                // operand — `character - "'"` lowered to `character`
+                // alone, so every EBNF terminal accepted the quote
+                // byte it was meant to exclude.
+                let primary_state = self.lift_node(primary);
+                let excluded_state = self.lift_node(excluded);
+                self.alloc_state(DtaState::Minus {
+                    primary: primary_state,
+                    excluded: excluded_state,
+                })
+            }
             IrNode::Negate(inner) => {
                 // Zero-width lookahead: the runtime treats this as a
                 // probe that does not consume. Represented as the

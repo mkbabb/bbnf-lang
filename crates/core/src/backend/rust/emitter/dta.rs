@@ -455,6 +455,19 @@ fn emit_state_literal(
                 },
             }
         }
+        DtaState::Minus { primary, excluded } => {
+            // AW-II.W5b: IrNode::Minus → DtaState::Minus set-difference.
+            // The walker probes `excluded` with a savepoint; if it
+            // matches, the Minus fails; otherwise `primary` dispatches.
+            let primary_lit = state_id_literal(*primary);
+            let excluded_lit = state_id_literal(*excluded);
+            quote! {
+                ::bbnf::runtime::tape::DtaState::Minus {
+                    primary: #primary_lit,
+                    excluded: #excluded_lit,
+                }
+            }
+        }
     }
 }
 

@@ -1242,6 +1242,63 @@ fn dispatch_one(
             }
             advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
         }
+        DtaState::Minus { primary, excluded } => {
+            // AW-II.W5b — Set-difference: match `primary` only if
+            // `excluded` does NOT match at the same start offset.
+            // Mirrors the VM compiler's `compile_minus` semantic.
+            //
+            // Implementation: savepoint at current position, probe
+            // `excluded` via `try_branch`; if it succeeds, restore
+            // the savepoint and raise a Syntax error (a match that
+            // should have been excluded). If it fails, restore the
+            // savepoint (so any partial side effects the probe left
+            // are discarded) and dispatch `primary` as the next state.
+            let start_depth = stack.depth();
+            let start_pos = *pos;
+            let sp = stack.savepoint();
+            let cols_len = columns.len();
+            let fd_len = frame_depth.len();
+            let psi_len = psi.len();
+            let pending_before = stack.pending_variant_idx;
+
+            let probe = try_branch(
+                table,
+                input,
+                scanner,
+                columns,
+                psi,
+                frame_depth,
+                stack,
+                excluded,
+                pos,
+                start_depth,
+            );
+
+            // Restore state unconditionally — the probe's work is a
+            // lookahead, never consumed into the tape.
+            columns.truncate(cols_len);
+            frame_depth.truncate(fd_len);
+            psi.truncate(psi_len);
+            stack.restore(sp);
+            stack.pending_variant_idx = pending_before;
+            *pos = start_pos;
+
+            match probe {
+                Ok(_) => {
+                    // `excluded` matched → overall Minus fails.
+                    Err(DtaError::Syntax {
+                        offset: start_pos,
+                        failing_state: state,
+                        failing_rule: DtaRuleId(u32::MAX),
+                    })
+                }
+                Err(DtaError::Syntax { .. }) => {
+                    // `excluded` did not match → dispatch `primary`.
+                    Ok(StepResult::Next(primary))
+                }
+                Err(e) => Err(e),
+            }
+        }
         DtaState::ShuntingYard { head, .. } => {
             // Shunting-yard entry: reserve the outer compound, push a
             // ShuntingYard frame, and dispatch into `head` to parse

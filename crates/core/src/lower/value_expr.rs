@@ -300,8 +300,9 @@ fn fold_value_chain<'a>(
 /// structural mode is `[first, Repeat([rest...])]`; under flattened
 /// (non-structural) mode the optimizer may have inlined the Repeat
 /// wrapper, in which case the chain's children are already flat.
-/// `iter_rep_children` handles both cases — it peels a single
-/// trailing Repeat wrapper transparently.
+/// Under DTA the entire body may be wrapped in an anonymous Seq
+/// compound — descend through anonymous wrappers first to reach the
+/// true operand layout.
 ///
 /// Note: a single-operand chain compound (no operators) collapses
 /// to one element; the loop in `fold_value_chain` simply returns
@@ -310,7 +311,14 @@ fn collect_chain_operands<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Vec<BbnfBootstrapNodeView<'a>> {
     use ::bbnf::runtime::tape::TapeKind;
-    let mut children = node.children();
+
+    // Under DTA the chain body may sit inside one or more anonymous
+    // Seq wrappers. Descend through those wrappers to reach the
+    // compound whose direct children are the semantic operand
+    // layout `[first, iter_wrapper]`.
+    let body = descend_anonymous_wrappers(node);
+
+    let mut children = body.children();
     let Some(first) = children.next() else {
         return Vec::new();
     };
@@ -345,6 +353,55 @@ fn collect_chain_operands<'a>(
         }
     }
     operands
+}
+
+/// Descend through anonymous Seq/Alt/Repeat wrappers (those with
+/// `rule_kind ∈ {Unknown, int_lit}`, the walker's sentinel for
+/// compounds never stamped by a `DtaState::Ref`) until reaching a
+/// compound whose direct children are the caller's semantic body.
+///
+/// Returns the innermost anonymous-wrapper view whose direct-child
+/// count either exceeds one, or equals one but the sole child is
+/// itself a semantic-rule compound. Single-anonymous-child chains
+/// get collapsed; semantic content is preserved.
+///
+/// Intended for use by chain-operand / call-arg / body-content
+/// collectors that walk direct children but whose caller's compound
+/// is a DTA-wrapped rule body.
+fn descend_anonymous_wrappers<'a>(
+    mut view: BbnfBootstrapNodeView<'a>,
+) -> BbnfBootstrapNodeView<'a> {
+    loop {
+        let children: Vec<BbnfBootstrapNodeView<'a>> = view.children().collect();
+        if children.len() != 1 {
+            return view;
+        }
+        let only_child = children[0];
+        // Only descend if the child is itself an anonymous wrapper
+        // (no semantic rule identity); otherwise stop — the child is
+        // the semantic content the caller is after.
+        if !is_anonymous_wrapper(only_child) {
+            return view;
+        }
+        view = only_child;
+    }
+}
+
+/// Whether `view` is an anonymous structural wrapper under DTA. Kept
+/// in-file to avoid cross-module coupling; mirrors the helper in
+/// `lower/tape_walk.rs` that gates sibling descents.
+fn is_anonymous_wrapper(view: BbnfBootstrapNodeView<'_>) -> bool {
+    use ::bbnf::runtime::tape::TapeKind;
+    if !matches!(
+        view.kind(),
+        TapeKind::Rule | TapeKind::Seq | TapeKind::Alt | TapeKind::Repeat,
+    ) {
+        return false;
+    }
+    matches!(
+        view.rule_kind(),
+        BbnfBootstrapRuleKind::Unknown | BbnfBootstrapRuleKind::int_lit,
+    )
 }
 
 /// Recover the operator token from the byte gap between two

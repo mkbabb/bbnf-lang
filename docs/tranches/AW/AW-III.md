@@ -86,109 +86,132 @@ the minimum-viable specialisation. AW-III's W6 reads the verdict.
    truth anchor. No claim of "DTA viable" without a profile to cite.
 6. **Bootstrap idempotent at every wave boundary** — inherited.
 
-## Wave schedule
+## Wave schedule (refined 2026-04-17 from SYNTHESIS.md)
 
 | Wave | Scope | Agents | Workspace at close |
 |------|-------|--------|--------------------|
-| W1 | DTA payload wiring — `DtaState::Regex`/`Literal` carry `PayloadKind`; lifter threads from `IrNode::Map` context; walker consumes; Seq→KvPair promotion; bootstrap regen. Cluster C target (37 tests). | 1 serial (producer-deep) | green or nearly so — Cluster C drops from 37 to < 5 residual |
-| W2 | DTA parse completeness — offset-0 EBNF + CSS truncation + JSON large-file parse failures. Cluster A target (13 tests). | 1 serial | green — Cluster A closes |
-| W3 | Ignored-test audit + close — all 67 existing `#[ignore]` dispositioned. | 2 parallel (by grammar family) | green — ignored count ≤ 10, every remaining ignore has in-file rationale |
-| W4 | Viability profile — samply attribution on json_twitter, sheets_parse_stress, bbnf_ebnf. Decision document. | 1 serial | decision landed (viable / not-viable / conditional) |
-| W5 | Minimum-viable specialisation — activate the smallest coherent AW-IV lever set the W4 profile implicates. | 2–3 parallel | bench matrix within 2× of post-AU (or escalation to user) |
-| W6 | FINAL + full 19-entry bench matrix + close | 1 serial (orchestrator) | `post-AW-III.json` exists; `FINAL.md` exists; workspace 0 failed / 0 ignored |
+| W1 | **Six-point DTA payload wiring** + **two structural levers (Pratt `Next` peel + Scanner closure)** | 1 serial (producer-deep) | Cluster 1 + Groups A-ignores close; 47 tests pass-flip |
+| W2 | **Parse completeness** — single EOF/trailing-ws fix closes 4-5 tests; EBNF offset-0; CSV | 1 serial | workspace 0-failed or near-zero |
+| W3 | **Ignored audit + close** — 14 CLOSE lifted, 4 DELETE removed, Group A/B cascade from W1/W2, Groups C/D/E/F/G routed-or-closed per relaxed gate | 2 parallel | ignored count ≤ 27 (or ≤ 10 if scope expanded); every remaining has in-file rationale or successor-tranche reference |
+| W4 | **Viability profile** — samply on json_twitter, sheets_parse_stress, bbnf_ebnf. Decision document | 1 serial | viable / not-viable / conditional landed (pre-staged by SYNTHESIS.md) |
+| W5 | **Minimum-viable specialisation** — ShapeRef consumer + PHF keyword + fused push_compound + selector classifier (CSS) + PSI rayon calibration | 3 parallel | post-AW-III.json within 2× of post-AU on 18/19 entries; Sheets documented tradeoff |
+| W6 | FINAL + full 19-entry bench matrix + close | 1 serial (orchestrator) | `post-AW-III.json` exists; `FINAL.md` exists; green workspace |
 
 ## Phases
 
-### W1 — DTA payload wiring (Cluster C close)
+### W1 — DTA payload wiring + structural levers (refined 2026-04-17)
 
-Owner: `crates/bbnf-tape/src/dta.rs` (wire contract), `crates/ir/src/passes/recognizers/dta.rs` (lifter), `crates/bbnf-tape/src/driver.rs` (walker), `crates/core/src/backend/rust/emitter/dta.rs` (emitter), `crates/ir/src/passes/materialization/**` (IR materialisation).
+Owner: `crates/bbnf-tape/src/{dta,driver}.rs`, `crates/ir/src/passes/recognizers/dta.rs`, `crates/core/src/backend/rust/emitter/dta.rs`, `crates/ir/src/passes/materialization/**`.
 
-The W5c diagnostic named the architectural gap concretely: the DTA
-lifter strips `IrNode::Map { inner, .. }` wholesale
-(`crates/ir/src/passes/recognizers/dta.rs:525`); the walker's
-`DtaState::Regex` arm hardcodes `PayloadKind::F64` for every regex
-match (`crates/bbnf-tape/src/driver.rs:912`); `DtaState::Literal`
-arms never emit payload at all. Consequence: every `-> Span` / `-> u32`
-/ `-> Bool` annotation drops before reaching the tape.
+**SYNTHESIS.md refined W1 from a 6-point payload-only wave into an 8-point
+wave** that also closes two structural one-peel/one-field levers whose absence
+blocks Pratt firing on CSS + forces HashMap-lookup-per-scan everywhere. Both
+added fixes are < 100 LOC each and unlock W5 lever work that would otherwise
+be blocked on them.
 
-Fix:
+**Six payload-wiring points** (Cluster 1 target — 37 tests):
 
-1. Extend `DtaState::Regex` and `DtaState::Literal` with a `payload: PayloadKind` field (IR side + wire contract side).
-2. Lifter reads the enclosing `IrNode::Map`'s FnDescriptor → resolves to `PayloadKind` → threads into `DtaState::Regex`/`Literal` construction. Alt branches inherit per-branch payload from their FnDescriptor.
-3. Walker consumes `state.payload` and emits the correct payload bytes (replacing hardcoded F64; activating Literal payload writes).
-4. Seq → KvPair promotion: `frame_to_tape_kind` promotes a Seq compound to KvPair when the enclosing rule's layout is `KvPair`.
+1. Extend `DtaState::Regex` + `DtaState::Literal` with `payload: PayloadKind` field (IR + wire contract).
+2. Lifter reads enclosing `IrNode::Map`'s FnDescriptor → resolves to `PayloadKind` → threads into `DtaState::Regex`/`Literal` construction. Alt branches inherit per-branch payload from their FnDescriptor. Fixes A1's Hole #1 (`dta.rs:525` wholesale strip).
+3. Walker consumes `state.payload` and emits correct payload bytes — replaces hardcoded `PayloadKind::F64` at `driver.rs:912` (Hole #3); activates Literal payload writes at `driver.rs:875-891` (Hole #4).
+4. Emitter const-folds payload writes into the generated DTA table.
 5. Bootstrap regen under the extended schema. Verify idempotent.
+6. `frame_to_tape_kind` promotes Seq → KvPair when the enclosing rule's layout is `KvPair` (Hole #5).
 
-Hard gate: `cargo test --workspace --no-fail-fast` Cluster C count drops from 37 → ≤ 5. Any residual ≤ 5 must have a named upstream root cause (grammar-level, not lifter/walker).
+**Two structural one-fix levers** (surface per SYNTHESIS.md):
 
-### W2 — DTA parse completeness (Cluster A close)
+7. **Pratt `IrNode::Next` peel** — extend `strip_transparent_owned` at `crates/ir/src/passes/recognizers/dta.rs:885-890` to peel `IrNode::Next(a, b)` alongside `IrNode::Seq`. Unblocks `match_operator_chain_rule` on CSS `calc()` / `min()` / `max()` / `clamp()` — every grammar using `>>` as operator separator. CSS L4's mathExpr + mathProduct Pratt-lift immediately; state count drops; walker dispatch depth drops.
+8. **Scanner closure** — add `pattern_dfa: Arc<Dfa>` field to `DtaState::Regex`; populate at lift time from the compile-time pattern constant. Walker `dispatch_one` Regex arm uses the pre-bound `Arc<Dfa>` directly — no global HashMap lookup, no SipHash, no `Arc::clone` on the hot path. Eliminates 6-33% self-time depending on grammar per P1/P2/P4/P5 attribution.
+
+Hard gate: `cargo test --workspace --no-fail-fast` Cluster 1 count drops from 37 → ≤ 5. Scanner closure verifiable via samply comparison: `cached_dfa` / `HashMap::get` drops out of top-20. Pratt peel verifiable via summarise call on CSS L4 DTA — new ShuntingYard state count > 0.
+
+### W2 — Parse completeness (refined with P1/C1 EOF insight)
 
 Owner: diagnose per-test; fix likely spans `crates/bbnf-tape/src/driver.rs`, `crates/ir/src/passes/recognizers/dta.rs`, `crates/core/src/lower/**`.
 
-Cluster A at AW-II close (13 failures):
-- `ebnf_{minimal,recursive_list,expr_grammar}_tape_parity` (3) — offset-0 parse failure despite AW-II.W5b's Minus + double-Repeat fixes. Additional upstream issue in the ebnf lifting pipeline.
-- `ebnf_root_has_at_least_one_rule` (1)
-- `ebnf_prettify::parse_{single,multi}_rule` (2)
-- `css_{normalize,bootstrap,tailwind}_tape_parity` (3) — `bootstrap` emits 9 records for 92228-byte file (truncation); `tailwind` parses up to offset 3633741 then fails.
-- `json_{canada,data}_tape_parity` + `parse_{canada,data}_json` (4) — large-file parse failures.
+**SYNTHESIS.md's load-bearing refinement**: P1 found `json/data` fails at
+offset 35490 of 35491 bytes; `json/canada` fails at 2251050 of 2251051 —
+**both one byte from EOF**. Paired with `css_tailwind` offset 3633741 (near
+end of 3,749,612-byte input) and `css_bootstrap` / `css_normalize`
+truncation, this is **one shared EOF / trailing-whitespace handling gap**
+rather than 4-5 separate large-file bugs. Primary W2 sub-wave is therefore
+a single-fix EOF handling closure.
 
-Diagnosis sequence per test: minimal reproducer → trace → root cause → fix → regression test. Large-file failures (canada, data, tailwind) probably hit walker state limits (counter index overflow, frame-stack depth, PSI reserve size) — check the bounds in `crates/bbnf-tape/src/{driver,dta}.rs`.
+**Clusters** (13 failures + 1 CSV escalation):
 
-Hard gate: Cluster A closed; `parse_{canada,data}_json` and `css_tailwind_tape_parity` succeed; the 5 AW-II-blocked bench entries become measurable.
+- **Cluster 2 (shared EOF)**: `json_data`, `json_canada`, `parse_data_json`, `parse_canada_json`, `css_tailwind`, `css_bootstrap` truncation, `css_normalize` truncation (7 tests). Walker EOF / trailing-whitespace handling. **Single fix.**
+- **Cluster 3 (EBNF offset-0)**: `ebnf_minimal`, `ebnf_recursive_list`, `ebnf_expr_grammar`, `ebnf_root_has_at_least_one_rule`, `ebnf_prettify::parse_{single,multi}_rule` (6 tests). Every EBNF grammar fails at `Syntax { offset: 0, rule: None }`, including `digit = "0" | "1" ;`. AW-II.W5b's Minus + double-Repeat were necessary but insufficient; remaining upstream gap in `@ws` or first-literal dispatch for EBNF.
+- **Cluster 5 (CSV Repeat-of-Seq)**: `csv_multi` (1 test) — `csv = record, ( /\r?\n/ >> record ) *` Repeat walker regression at the record-separator boundary.
 
-### W3 — Ignored-test audit + close
+Hard gate: Cluster 2 + 3 + 5 closed; all 5 AW-II-blocked bench entries measurable (`data`, `canada`, `tailwind`).
 
-Owner: two parallel agents (audit by grammar family):
-- **W3.A** — `json`, `css`, `bbnf` ignored tests.
-- **W3.B** — `sheets`, `ebnf`, `structural`, misc ignored tests.
+### W3 — Ignored-test audit + close (refined gate)
 
-Each ignored test gets one of three dispositions:
+Owner: two parallel agents (C2 audit already produced `ignores-audit.md`).
 
-1. **CLOSE**: test is valid and now passes under HEAD state. Lift the `#[ignore]`. Commit: `test(<area>): close AW-III-lifted ignore — <test_name>`.
-2. **DELETE**: test is stale (tests a behaviour that's now architecturally different, or a behaviour that was removed). Delete the test with commit-message rationale. Commit: `test(<area>): delete stale ignore — <test_name> (rationale: ...)`.
-3. **INVESTIGATE-then-close**: root cause is real and tractable; fix the root cause in-wave, lift the `#[ignore]`, commit both.
+**Pre-staged dispositions from AW-III.C2** (58 unique source ignores):
+- **CLOSE — 14 tests**: already verified passing when `#[ignore]` lifted (7 in `structural.rs` + 7 in `serialize_roundtrip.rs` including the `css_simple` that AW-I.W2.5 marked Category A). Mechanical attribute lift.
+- **DELETE — 4 tests**: 3 `unreachable!()` stubs + 2 gorgeous visualisation dumps (non-checked-in fixtures). Mechanical test-function deletion with rationale.
+- **INVESTIGATE — 40 tests** across 7 root-cause groups:
+  - A (10): CSS percentage + JSON variant_idx — **cascades from W1 payload wiring**.
+  - B (1): `ebnf_rule` serialize — **cascades from W2 EBNF completeness**.
+  - C (6): structural-mode analysis pipeline — out of AW scope (analysis-mode rework tranche).
+  - D (5): closure-body lowering — grammar-closures project.
+  - E (6): CSP solver GAC alldiff — csc411 solver tranche.
+  - F (4): gorgeous prettify multi-rule + pprint-vm hint-semantics drift.
+  - G (7): miscellaneous producer-side + test-data.
 
-Artefact: `docs/tranches/AW/audit/ignore-audit.md` — table of every ignored test with disposition + commit hash.
+**Gate refinement** (from SYNTHESIS.md):
+- CLOSE (14) + DELETE (4) + Group A cascade (10) + Group B cascade (1) = **29 tests dispositioned at W3 close**.
+- Residual: **~27 tests** in Groups C/D/E/F/G.
+- The plan's original "ignored ≤ 10" gate is infeasible without expanding scope into Groups C/F/G. Revised gate: **every remaining ignored test has either (a) an in-file comment naming the successor tranche, or (b) a row in `docs/tranches/AW/audit/ignore-routing.md` declaring its destination**.
 
-Hard gate: ignored count ≤ 10 at wave close (ideally 0). Any remaining ignored test must have (a) an in-file comment with named rationale, (b) a tracking doc entry, (c) explicit orchestrator approval.
+Artefact inherits `docs/tranches/AW/research/ignores-audit.md` from C2; W3 produces `docs/tranches/AW/audit/ignore-routing.md` with successor-tranche mappings.
 
-### W4 — Viability profile
+Hard gate: CLOSE batch lifted + DELETE batch removed + routing document exists covering every remaining ignored test. No ignored test without either in-file rationale or routing entry.
 
-Owner: serial orchestrator + samply.
+### W4 — Viability profile (pre-staged by SYNTHESIS.md)
 
-Measurements (cold, per `docs/instructions/PROFILING.md`):
-1. `json_twitter` bench with samply attribution. Expected: state-dispatch hotspot, psi write hotspot, frame_depth update hotspot.
-2. `sheets_parse_stress` bench with samply. Expected: similar dispatch hotspot, perhaps more grammar-specific (e.g. Alt branch enumeration).
-3. `bbnf_ebnf` bench with samply. Expected: dispatch + recovery-path hotspots if any.
+Owner: serial orchestrator + samply (re-measurement post-W1/W2 to confirm or refute SYNTHESIS.md's pre-stage).
 
-Decision document: `docs/tranches/AW/audit/viability-profile.md`. Contents:
-- Per-benchmark hot functions by self-time.
-- Attributed cost: % dispatch, % PSI, % frame, % Alt-branch enumeration, % Ref-chase, % other.
-- Modelled best-case speedup from each AW-IV lever against the attribution. Table of lever × benchmark → expected MB/s lift.
-- Binary decision: viable / viable-with-levers / not-viable.
+**SYNTHESIS.md pre-stage** (from 8-agent research at HEAD `3c33bc35`):
+- **JSON / CSS / BBNF — VIABLE within 2-5× of post-AU**. Scanner closure + ShapeRef + fused push_compound recover the majority. Bench parity practical after W5.
+- **Sheets — NOT VIABLE within 2×**. Modelled ceiling 8-9× residual with full W5 scope. `dispatch_one` tagged-union floor isn't addressed by any AW-IV lever.
 
-Hard gate: decision document exists; "viable-with-levers" decision identifies the specific AW-IV levers → W5 activation.
+**W4 action**: after W1 + W2 close, re-run samply on `json_twitter`, `sheets_parse_stress`, `bbnf_ebnf`. Compare attribution shifts against SYNTHESIS.md's pre-stage. Commit `docs/tranches/AW/audit/viability-profile.md` as the authoritative decision document.
 
-If "not-viable": STOP. Escalate to user with the decision document. Options (user decision, not orchestrator decision):
-- Revert AW-I + AW-II (undoing DTA-primary parse path).
-- Accept regression as documented correctness tradeoff.
-- Research alternative specialisation approach (not in AW-IV's inventory).
+**If pre-stage holds** (W4 post-W1/W2 numbers match SYNTHESIS.md predictions):
+- Green-light W5 activation.
+- Sheets escalation for user: accept 8-9× as DTA-architecture tradeoff, OR open new tranche for codegen-specialised per-grammar walkers.
 
-### W5 — Minimum-viable specialisation
+**If pre-stage fails** (W1/W2 closures unlock better-than-expected amortisation, or uncover new bottlenecks):
+- W4 document re-draws the viability envelope.
+- W5 scope expands/contracts accordingly.
 
-Owner: 2–3 parallel agents; scope defined by W4's viability document.
+Hard gate: decision document exists citing post-W1/W2 samply numbers; user escalation on sheets documented with explicit options.
 
-Typical activations (informed by viability profile):
-- **PSI rayon stage-B** — parallel slab-buffer writes for large inputs. Biggest win on data_xl, canada.
-- **ShapeRef runtime dispatch** — collapses same-shape rules into const-hash lookup. Biggest win on CSS declaration compounds.
-- **PHF + SIMD keyword dispatch** — replaces walker's AltLinear for keyword sets. Biggest win on CSS / BBNF.
+### W5 — Minimum-viable specialisation (pre-staged by SYNTHESIS.md)
 
-Other levers (from old AW-III plan, now AW-IV):
-- selector classifier, scanner closure, document-parallel fork, bloom+GADT dedup, Pratt generalisation, reduce_column+SIMD-pack.
+Owner: 3 parallel agents; scope per SYNTHESIS.md matrix.
 
-W5 activates ONLY the subset W4's profile implicates for viability. The rest ship in AW-IV as part of the optimisation arc.
+**Primary levers** (the 2× envelope is reached with these active):
+- **ShapeRef runtime dispatch** — walker-side `push_shape_ref` consumer for the already-emitted `SHAPE_DICT` (13 CSS L4 entries; plus BBNF + JSON entries to be emitted by this wave). Collapses same-shape Seq compounds.
+- **PHF keyword tables** — per-grammar emitter pass populating `keyword_tables`. CSS (163-branch namedColor + 72-branch keywords + 92-branch properties); BBNF keywords; JSON (`true`/`false`/`null`).
+- **Fused `push_compound` write** — replace `reserve_compound`'s 7-vector row with a single struct-write. 6% global.
 
-Hard gate: `cargo bench` on the 14 measured entries shows geomean within 2× of post-AU. If not met, escalate.
+**Secondary levers** (per-grammar):
+- **Selector classifier** — CSS-only. `DtaState::ClassifyByte` LUT for the 5-way `compoundSelector` Alt.
+- **PSI rayon stage-B calibration** — populate `parallel_break_even_bytes` per grammar. No code; only calibration constants.
+
+**Deferred to AW-IV**:
+- Bloom + GADT dedup (W3 in old plan).
+- `reduce_column<C,R>` visitor API (consumer-side, not parse hot path).
+- Document-level parallel parse (forkable list rules).
+- sonic-rs / lightningcss full parity harnesses.
+
+Note: Pratt generalisation + scanner closure are in **W1** of this plan, not W5 (surfaced by SYNTHESIS.md as structurally-required one-fix items).
+
+Hard gate: `cargo bench` on the 14 + 5 unblocked = 19 measured entries shows geomean within 2× of post-AU on **18 of 19** entries; Sheets explicitly tradeoff-documented at 8-9× if user accepts the viability call. If any non-Sheets entry exceeds 2×, escalate.
 
 ### W6 — FINAL + full bench matrix + close
 
@@ -246,10 +269,21 @@ Specific notes:
 
 ## Research artefacts
 
-AW-III opens no research wave. AW-II's audits (`find-child-audit.md`,
-`w4-scope-reveal.md`, W5c's diagnostic commit `d635086f` payload trace)
-supply the diagnostic context. W4's viability profile IS the research
-artefact for the optimisation decision.
+AW-III opened with an 8-agent pre-plan research wave at 2026-04-17 producing:
+
+- `docs/tranches/AW/research/perf-01-json.md` — samply json_monolithic
+- `docs/tranches/AW/research/perf-02-css.md` — samply css_l4
+- `docs/tranches/AW/research/perf-03-sheets.md` — samply sheets (viability-critical)
+- `docs/tranches/AW/research/perf-04-bbnf.md` — samply bbnf_monolithic
+- `docs/tranches/AW/research/perf-05-json-value.md` — samply bbnf-vs-sonic twin pair
+- `docs/tranches/AW/research/perf-06-code-audit.md` — lever firing + precedence + dead code + direct-to-struct + type inference
+- `docs/tranches/AW/research/residuals-triage.md` — 50 failing tests per-test categorisation
+- `docs/tranches/AW/research/ignores-audit.md` — 58 ignored tests CLOSE/DELETE/INVESTIGATE
+- `docs/tranches/AW/research/SYNTHESIS.md` — cross-artefact synthesis + refined wave schedule
+
+These nine documents pre-stage AW-III's wave schedule above. Inherited AW-II
+context: `find-child-audit.md`, `w4-scope-reveal.md`, W5c's diagnostic commit
+`acd5d942` payload trace.
 
 ## Successor chain
 

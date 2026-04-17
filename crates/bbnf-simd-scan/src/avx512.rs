@@ -62,11 +62,11 @@ fn scan_compressstore(input: &[u8], alphabet: &StructuralAlphabet) -> Structural
 
     // SAFETY: AVX-512 module gated by `target_feature = "avx512vbmi2"`.
     unsafe {
-        let pos_v = _mm512_loadu_si512(positions_pattern.as_ptr() as *const i32);
+        let pos_v = _mm512_loadu_si512(positions_pattern.as_ptr() as *const __m512i);
 
         let mut i = 0usize;
         while i + STRIPE <= input.len() {
-            let chunk = _mm512_loadu_si512(input.as_ptr().add(i) as *const i32);
+            let chunk = _mm512_loadu_si512(input.as_ptr().add(i) as *const __m512i);
             let mut mask: u64 = 0;
             for &target in alphabet.singletons {
                 let cmp = _mm512_cmpeq_epi8_mask(chunk, _mm512_set1_epi8(target as i8));
@@ -76,7 +76,7 @@ fn scan_compressstore(input: &[u8], alphabet: &StructuralAlphabet) -> Structural
             if has_digraphs {
                 for &(first, second) in alphabet.digraph_pairs {
                     let f_eq = _mm512_cmpeq_epi8_mask(chunk, _mm512_set1_epi8(first as i8));
-                    let next = _mm512_loadu_si512(input.as_ptr().add(i + 1) as *const i32);
+                    let next = _mm512_loadu_si512(input.as_ptr().add(i + 1) as *const __m512i);
                     let s_eq = _mm512_cmpeq_epi8_mask(next, _mm512_set1_epi8(second as i8));
                     mask |= f_eq & s_eq;
                 }
@@ -103,10 +103,10 @@ fn scan_compressstore(input: &[u8], alphabet: &StructuralAlphabet) -> Structural
                 // Step 1: compress the byte-position pattern using mask.
                 let compressed_pos = _mm512_maskz_compress_epi8(mask, pos_v);
                 let mut pos_buf = [0u8; 64];
-                _mm512_storeu_si512(pos_buf.as_mut_ptr() as *mut i32, compressed_pos);
+                _mm512_storeu_si512(pos_buf.as_mut_ptr() as *mut __m512i, compressed_pos);
                 let compressed_kinds = _mm512_maskz_compress_epi8(mask, chunk);
                 let mut kind_buf = [0u8; 64];
-                _mm512_storeu_si512(kind_buf.as_mut_ptr() as *mut i32, compressed_kinds);
+                _mm512_storeu_si512(kind_buf.as_mut_ptr() as *mut __m512i, compressed_kinds);
 
                 for k in 0..count {
                     idx.positions.push(i as u32 + pos_buf[k] as u32);

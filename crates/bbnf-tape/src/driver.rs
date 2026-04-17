@@ -956,9 +956,13 @@ fn dispatch_one(
                     (rec_idx, TapeOffset::NONE)
                 }
                 Some(kind) => {
-                    let width = match kind.arena_byte_width() {
-                        0 => match_len as usize,
-                        w => w,
+                    // String payloads include a 4-byte length prefix
+                    // ahead of the bytes per the
+                    // `Tape::payload_string_bytes` reader contract.
+                    let width = match (kind, kind.arena_byte_width()) {
+                        (crate::psi::PayloadKind::String, _) => 4 + match_len as usize,
+                        (_, 0) => match_len as usize,
+                        (_, w) => w,
                     };
                     let arena_off = columns.pay_agg.len() as u32;
                     columns.pay_agg.resize(arena_off as usize + width, 0);
@@ -1516,8 +1520,22 @@ fn emit_leaf_with_payload(
     // into this leaf's flags. Leaf rules (`identifier = /regex/`)
     // reach here via `Ref → Regex/Literal`; the rule's discriminant
     // must survive onto the tape so `rule_kind()` can decode it.
+    //
+    // AW-III.W1: when no pending stamp is set, fall back to the
+    // topmost compound frame's `variant_idx` so structural literals
+    // ("]" / "}" closing-bracket markers, etc.) inherit their
+    // enclosing rule's discriminant rather than defaulting to `0`.
+    // The legacy default-zero stamp left structural Literals
+    // indistinguishable from the first-indexed rule, breaking
+    // `rule_kind()` decoding for tests that walk every leaf.
     let variant = if stack.pending_variant_idx != u8::MAX {
         stack.pending_variant_idx & 0x3F
+    } else if let Some(top) = stack_top(stack) {
+        if top.variant_idx != u8::MAX {
+            top.variant_idx & 0x3F
+        } else {
+            0
+        }
     } else {
         0
     };

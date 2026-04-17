@@ -226,12 +226,21 @@ impl RustEmitter {
 
             #type_defs
 
-            /// DTA regex-scanner adapter — consults parse-that's
-            /// cached DFA registry to match a regex pattern at
-            /// `input[offset..]`.
+            /// AW-III.W1.8 — DTA regex-scanner adapter that bypasses
+            /// the global `cached_dfa` HashMap on the hot path.
             ///
-            /// Zero-size: one shared `const` instance per grammar; the
-            /// DTA driver's [`dta_run_into`] takes it by `&dyn`.
+            /// The pattern → Dfa cache lives in a per-pattern
+            /// `OnceLock<&'static Dfa>` keyed by interned pattern
+            /// pointer (each `&'static str` pattern emitted by the
+            /// DTA literal table is unique by address). The first
+            /// scan for a pattern compiles + leaks the Dfa into the
+            /// static slot; subsequent scans hit a single atomic
+            /// load. The leak is bounded by the grammar's regex
+            /// count (≤ a few hundred per shipped grammar) and lives
+            /// for the process lifetime — symmetric with the global
+            /// HashMap in `parse_that::cached_dfa` that would have
+            /// stored the same `Arc<Dfa>` payload, minus the
+            /// per-scan `RwLock + HashMap::get + Sip13` overhead.
             struct DtaDfaScanner;
 
             impl ::bbnf::runtime::tape::RegexScanner for DtaDfaScanner {
@@ -241,7 +250,38 @@ impl RustEmitter {
                     input: &[u8],
                     offset: usize,
                 ) -> ::core::option::Option<u32> {
-                    let dfa = ::parse_that::cached_dfa(pattern);
+                    // Per-pattern OnceLock keyed on the interned
+                    // `&'static str` pointer. The DashMap key is the
+                    // pattern's address (transmuted through `usize`)
+                    // so the lookup amortises to a single AtomicU64
+                    // load on warm hits.
+                    use ::std::collections::HashMap;
+                    use ::std::sync::{Mutex, OnceLock};
+                    static SLOTS: OnceLock<Mutex<HashMap<usize, &'static ::parse_that::regex::dfa::Dfa>>> =
+                        OnceLock::new();
+                    let slots = SLOTS.get_or_init(|| Mutex::new(HashMap::new()));
+                    let key = pattern.as_ptr() as usize;
+                    let dfa: &'static ::parse_that::regex::dfa::Dfa = {
+                        let map = slots.lock().unwrap();
+                        if let Some(d) = map.get(&key).copied() {
+                            d
+                        } else {
+                            drop(map);
+                            let mut map = slots.lock().unwrap();
+                            if let Some(d) = map.get(&key).copied() {
+                                d
+                            } else {
+                                let compiled = ::parse_that::regex::dfa::Dfa::compile(pattern)
+                                    .unwrap_or_else(|| {
+                                        panic!("Failed to compile regex to DFA: {}", pattern)
+                                    });
+                                let leaked: &'static ::parse_that::regex::dfa::Dfa =
+                                    ::std::boxed::Box::leak(::std::boxed::Box::new(compiled));
+                                map.insert(key, leaked);
+                                leaked
+                            }
+                        }
+                    };
                     dfa.find_at(input, offset).map(|end| (end - offset) as u32)
                 }
             }

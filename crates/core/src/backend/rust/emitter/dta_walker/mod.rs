@@ -1,4 +1,4 @@
-//! AW-III.W4.b — Per-grammar specialised DTA walker emitter.
+//! AW-III.W4 — Per-grammar specialised DTA walker emitter.
 //!
 //! # Architectural role
 //!
@@ -32,15 +32,13 @@
 //!   cold states into `#[cold] #[inline(never)]` siblings.
 //! * [`lower_state`] — per-`DtaState` variant lowering. One free
 //!   function per variant lowers the IR fact to the matching arm of the
-//!   outer dispatch `match`. Every variant has a complete lowering
-//!   route — `ByteDispatch` inlines its 256-entry LUT verbatim
-//!   (LLVM lowers to a jump table); other variants currently route
-//!   through the cold-path bridge while preserving the per-state arm
-//!   structure for the W4.c collapse.
-//! * [`helpers`] — the `__StepOutcome` enum + `__dispatch_via_cold`
-//!   bridge function. Emitted once per grammar so the lowered code
-//!   links against the same name-space without crossing the cold
-//!   path's private helper boundary.
+//!   outer dispatch `match`. W4.d completes the lowering: every variant
+//!   inlines its dispatch_one semantic directly. The cold-path
+//!   `dispatch_one` survives in the runtime crate as the AX replay
+//!   surface; the hot path never calls it.
+//! * [`helpers`] — outcome-type re-exports + the SY placeholder bridge
+//!   surfaces. Emitted once per grammar so the lowered code shares
+//!   uniform return shapes with the runtime helpers.
 //!
 //! # Hot/cold contract
 //!
@@ -49,7 +47,7 @@
 //!   L1 i-cache (every grammar in the corpus other than CSS L4).
 //! - `state_count > HOT_BUDGET` → hot states inline in the outer loop;
 //!   cold states emit as `#[cold] #[inline(never)]` siblings. The
-//!   sibling's dispatch contract is the same `Result<__StepOutcome,
+//!   sibling's dispatch contract is the same `Result<StepResult,
 //!   DtaError>` shape so the outer loop dispatches uniformly.
 //!
 //! Both strategies are general; the choice is driven by IR cardinality,
@@ -101,7 +99,7 @@ pub fn emit_specialised_walker(
 
     if table.states.is_empty() {
         return quote! {
-            /// AW-III.W4.b — empty-table specialised walker.
+            /// AW-III.W4 — empty-table specialised walker.
             ///
             /// The lifter emitted no states for this grammar, so the
             /// callable surface is preserved but every invocation
@@ -158,7 +156,7 @@ pub fn emit_specialised_walker(
     };
 
     quote! {
-        #[allow(dead_code, unused_variables, unused_assignments, unused_mut)]
+        #[allow(dead_code, unused_variables, unused_assignments, unused_mut, clippy::needless_borrow)]
         mod __dta_walker_inline {
             use super::*;
 
@@ -166,7 +164,7 @@ pub fn emit_specialised_walker(
 
             #cold_siblings
 
-            /// AW-III.W4.b — specialised DTA walker for this grammar.
+            /// AW-III.W4.d — specialised DTA walker for this grammar.
             ///
             /// Mechanically lowered from `DTA_TABLE.states`. The outer
             /// `match cur` has one arm per state-id; the dispatch is
@@ -174,18 +172,14 @@ pub fn emit_specialised_walker(
             /// `match table.states[idx]` over the 14-variant enum
             /// that LLVM lowered to a 4-compare ladder.
             ///
-            /// `ByteDispatch` arms inline their 256-entry LUT
-            /// verbatim — LLVM lowers the inlined byte match to a
-            /// jump table indexed by `input[pos]`. Other variants
-            /// route through the cold-path bridge while preserving
-            /// the per-state arm structure; W4.c collapses the
-            /// bridge into per-arm inlined logic once the cold
-            /// helpers are exposed.
-            ///
-            /// Drop-in replacement contract for `dta_run` per the W4
-            /// hard gate; the cold-path `dispatch_one` survives in
-            /// `bbnf_tape::driver` for replay/recovery only (AX
-            /// substrate).
+            /// Every variant's body inlines its `dispatch_one`
+            /// semantic directly — `Literal` byte cmp, `Regex`
+            /// scanner.scan, `Seq` reserve_compound + push, etc. The
+            /// cold-path `dispatch_one` survives in
+            /// `bbnf_tape::driver` solely as the AX replay surface;
+            /// the hot path never calls it. Repeat-failure absorption
+            /// happens at the outer loop's error handler via
+            /// `handle_repeat_failure`.
             #[allow(dead_code)]
             pub fn run(
                 table: &::bbnf::runtime::tape::DtaTable,
@@ -200,44 +194,83 @@ pub fn emit_specialised_walker(
             > {
                 let root_rec =
                     ::bbnf::runtime::tape::TapeOffset(columns.len() as u32);
-                let pos: u32 = 0;
-                let _ = pos;
+                let mut stack_owned = ::bbnf::runtime::tape::FrameStack::new();
+                let stack: &mut ::bbnf::runtime::tape::FrameStack = &mut stack_owned;
+                let mut pos_owned: u32 = 0;
+                let pos: &mut u32 = &mut pos_owned;
+
+                // AW-III.W2 boundary trim — extract the grammar's
+                // declared `@ws` semantic so leading whitespace at the
+                // input boundary is honoured the same way the
+                // cold-path `dta_run_core` honours it.
+                let boundary_ws = ::bbnf::runtime::tape::first_ws_pattern(table);
+                if let ::core::option::Option::Some(pat) = boundary_ws {
+                    ::bbnf::runtime::tape::trim_with_pattern(
+                        scanner, pat, input, pos,
+                    );
+                }
 
                 #entry_state_lookup
 
-                // Outer dispatch loop — one match arm per state id.
-                // The `loop` runs until either a state arm surfaces
-                // `__StepOutcome::Done` (entry rule's root frame
-                // closed via the cold-path bridge) or a syntax error
-                // propagates outward.
                 'walk: loop {
-                    let outcome = match cur {
-                        #dispatch_arms
-                        #invalid_state_arm
+                    let step: ::core::result::Result<
+                        ::bbnf::runtime::tape::StepResult,
+                        ::bbnf::runtime::tape::DtaError,
+                    > = 'step: {
+                        match cur {
+                            #dispatch_arms
+                            #invalid_state_arm
+                        }
                     };
-                    match outcome {
-                        __StepOutcome::Next(next) => { cur = next; }
-                        __StepOutcome::Done => break 'walk,
-                        __StepOutcome::Syntax(state_id) => {
-                            return ::core::result::Result::Err(
-                                ::bbnf::runtime::tape::DtaError::Syntax {
-                                    offset: 0,
-                                    failing_state: state_id,
-                                    failing_rule:
-                                        ::bbnf::runtime::tape::DtaRuleId(
-                                            u32::MAX,
-                                        ),
-                                },
-                            );
+                    match step {
+                        ::core::result::Result::Ok(
+                            ::bbnf::runtime::tape::StepResult::Next(next),
+                        ) => { cur = next.0; }
+                        ::core::result::Result::Ok(
+                            ::bbnf::runtime::tape::StepResult::Done,
+                        ) => break 'walk,
+                        ::core::result::Result::Err(
+                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                        ) => {
+                            match ::bbnf::runtime::tape::handle_repeat_failure(
+                                table, input, columns, psi, frame_depth,
+                                stack, pos,
+                            )? {
+                                ::bbnf::runtime::tape::RepeatAbsorbResult::Continue(next) => {
+                                    cur = next.0;
+                                }
+                                ::bbnf::runtime::tape::RepeatAbsorbResult::Done => {
+                                    break 'walk;
+                                }
+                                ::bbnf::runtime::tape::RepeatAbsorbResult::NotAbsorbed => {
+                                    return ::core::result::Result::Err(e);
+                                }
+                            }
+                        }
+                        ::core::result::Result::Err(e) => {
+                            return ::core::result::Result::Err(e);
                         }
                     }
+                }
+
+                if let ::core::option::Option::Some(pat) = boundary_ws {
+                    ::bbnf::runtime::tape::trim_with_pattern(
+                        scanner, pat, input, pos,
+                    );
+                }
+                if (*pos as usize) < input.len() {
+                    return ::core::result::Result::Err(
+                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                            offset: *pos,
+                        },
+                    );
                 }
 
                 ::core::result::Result::Ok(root_rec)
             }
         }
 
-        /// AW-III.W4.b — public entry into the specialised DTA walker.
+        /// AW-III.W4 — public entry into the specialised DTA walker.
         ///
         /// Surfaces the per-grammar `__dta_walker_inline::run` under a
         /// stable name (`dta_run_<grammar>`) so the surrounding
@@ -246,6 +279,7 @@ pub fn emit_specialised_walker(
         /// helper functions away from the surrounding `generated.rs`
         /// namespace.
         #[allow(dead_code)]
+        #[inline]
         pub fn #fn_ident(
             table: &::bbnf::runtime::tape::DtaTable,
             input: &[u8],

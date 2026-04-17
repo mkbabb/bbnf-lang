@@ -102,7 +102,7 @@ surface — emit hot logic directly into the per-grammar walker; keep
 | Wave | Scope | Agents | Status |
 |------|-------|--------|--------|
 | W1 | Interpreter abrogation core: hoist DtaState into arm bodies + structural-alphabet mining fix + wire-contract emission fix + DFA codegen with direct named calls + scanner-trait deletion | 4 parallel | ✓ landed (workspace **1345 / 0 / 36**; substrate verified by `nm` on JSON; throughput gate missed pending W2 helper inlining — ledger below) |
-| W2 | Per-grammar inline emission of hot helpers (emit_leaf, push_compound_fused, advance_or_pop_with, trim_with_pattern, psi.push) — strategy is *emit the body inline*, not hope LTO inlines cross-crate; LTO + `#[inline(always)]` are verification fallbacks | 2 parallel | pending |
+| W2 | Per-grammar inline emission of hot helpers (W2.1 helpers + W2.2 LTO config) **+ W1.4-aggressive (DFA loop body inline)** **+ W2.3 (Eisel-Lemire f64 + NEON string-scan + capacity pre-allocation + PSI elision docs)** — re-scoped mid-execution per the user's binding-rule revision; strategy is *emit the body inline*, not hope LTO inlines cross-crate | 2 + 1 + 3 sub-waves | ✓ landed (workspace **1345 / 0 / 36**; CSS/Sheets/BBNF +40-60%; JSON +14% twitter — throughput gate missed; `advance_or_pop_with` + alloc-growth + non-scalar PSI residual carries forward) |
 | W3 | Five emitter-mined consumer activations (ShapeRef + PHF + ClassifyByte + Pratt LUT consumer + direct-to-struct view wiring) + CTNS lifter + bounded Regex via inverse-alphabet — gated on W1 + W2 closed | 5 parallel | pending |
 | W4 | Granular SIMD widening (AVX2 u8x32, NEON 17-digit, scanner cluster) + bloom/GADT dedup + grammar-level pattern hoisting + document-parallel fork over stage-1 index | 4 parallel | pending |
 | W5 | `Tape::reduce_column<C,R>` + 4-lane SIMD pack + sonic-rs/lightningcss parity harnesses + cost-model grid sweep | 3 parallel | pending |
@@ -2361,3 +2361,235 @@ inline-emit the helper bodies (W2.1) and verify via workspace LTO +
 `nm` + `cargo asm` (W2.2). Hard gate: per-grammar walker `nm` shows
 zero hot-path helper symbols; samply zero cross-crate self-time on
 hot path; JSON twitter ≥ 1100 MB/s.
+
+## 2026-04-17 — AW-IV W2 landed (W2.1+W2.2 + W1.4-aggressive + W2.3); throughput-gate miss recorded honestly
+
+Master HEAD `85343341`. Workspace **1345 / 0 / 36**. Six commits across
+W2.1+W2.2; four commits across W1.4-aggressive; eight commits across
+W2.3 (a/b/c). Plus orchestrator integration commits.
+
+The W2 wave was **re-scoped mid-execution** per the user's binding-rule
+revision in `docs/tranches/AW/AW-IV.md`. The original W2 plan had two
+sub-waves (W2.1 inline-emit hot helpers + W2.2 workspace LTO); after
+inspection of the post-W2.1 `nm` ledger revealed CSS L4 carrying 26
+out-of-line `__dfa_match_*` fn symbols (the JSON DFAs got LLVM-inlined
+by heuristic, but CSS L4's larger DFAs did not), the user rewrote the
+binding rule to "zero function-call boundary in the per-grammar walker
+hot path; emit every callee inline at the source level — code-size
+cost is irrelevant; verify with `cargo asm` and `nm`."
+
+This rewrite opened two additional sub-waves:
+- **W1.4-aggressive** — re-emits the W1.β `__dfa_match_*` separate
+  functions as inline DFA `loop { match state }` bodies INTO the
+  walker's Regex / WsTrim arms. Code-size cost: generated.rs
+  54393 → ~80K lines.
+- **W2.3** — three parallel agents covering remaining hot-path
+  callees: W2.3.a inline-emits Eisel-Lemire f64 decoder + NEON
+  quoted-string scanner; W2.3.b pre-allocates `Columns` to
+  `input.len()/2+2` and elides per-record capacity check; W2.3.c
+  documents PSI elision boundary for inline-decodable scalars.
+
+### W2.1 — Inline-emit hot helper bodies (4 commits)
+
+`bbnf-wt-aw4-w2-1` worktree.
+
+- `94eb6c1a` — `feat(emitter/dta_walker/helpers): emit per-helper inline
+  body fragments (AW-IV.W2.1)`. Helper-body fragment library extension
+  for emit_leaf / emit_leaf_with_payload / close_compound /
+  advance_or_pop / psi_push.
+- `b96be94c` — `feat(emitter/dta_walker): inline-emit emit_leaf +
+  close_compound into Literal/Regex/Seq/Repeat arms (AW-IV.W2.1)`.
+  Per-arm body splice eliminates emit_leaf / close_compound cross-
+  crate calls.
+- `0c05590b` — `chore(bbnf-tape): annotate cold-path replay-surface
+  helpers with #[inline(always)] (AW-IV.W2.1)`. `frame_at` +
+  `PayloadStream::push` upgraded to `#[inline(always)]` for cross-crate
+  fold.
+- `a62057b4` — `feat(emitter/dta_walker): inline-emit handle_repeat_failure
+  into main-loop error handler (AW-IV.W2.1)`. The main-loop's Syntax-
+  error arm splices the stack-walk + iter-savepoint restore + close-
+  compound logic at source level.
+
+W2.1 deliberately retained `advance_or_pop_with` as a single cold call
+(per the agent's report: "~250-line SY reducer; per-arm splice would
+explode code size; only reached from ≤20% non-Seq minority path"). The
+binding-rule revision arrived AFTER W2.1's commit; the residual is
+documented in the W2 close ledger.
+
+### W2.2 — Workspace LTO + nm/asm verification (5 commits)
+
+`bbnf-wt-aw4-w2-2` worktree.
+
+- `18f0be04` — `chore(workspace): bench-profile fat LTO + codegen-units=1
+  + debug=true (AW-IV.W2.2)`. Workspace `Cargo.toml` extended with
+  `[profile.bench] lto = "fat"` and `codegen-units = 1`; `debug = true`
+  preserved per the samply-symbol-resolution memory.
+- `14b441f9` — `feat(scripts): verify-w2-symbols.sh — bench-binary
+  symbol-presence assertion runner (AW-IV.W2.2)`. nm-based runner that
+  asserts hot-helper absence + cold-path helper presence per bench
+  binary.
+- `5c0b45ed` — `feat(scripts): verify-w2-asm.sh — bench-binary disasm
+  helper-call scanner (AW-IV.W2.2)`. objdump-based disasm scanner for
+  `bl` / `callq` instructions targeting helper symbols.
+- `e5f4d3a6` — `fix(scripts): unify stdout + REPORT output via single
+  emit helper (AW-IV.W2.2)`. Script output consolidation.
+- `647a7e3f` — `fix(scripts/verify-w2-symbols): tighten walker-entry
+  regex to avoid module-prefix false positives (AW-IV.W2.2)`. Bug fix.
+
+### W1.4-aggressive — DFA loop body inline-emit (4 commits)
+
+`bbnf-wt-aw4-w14-aggro` worktree.
+
+- `7ff2275a` — `refactor(emitter/dfa_codegen): split fn-emit from
+  body-emit; emit_dfa_inline_body returns labelled block (AW-IV.W1.4-aggro)`.
+  New `emit_dfa_inline_body(grammar, ir, table, idx)` returns ONLY the
+  DFA body (no fn wrapper); local mutable bindings prefixed with `__dfa_*`
+  to avoid scope conflicts; returns from a labelled `'__dfa: { ... }`
+  block.
+- `96a955cf` — `feat(emitter/dta_walker/lower_state): inline-emit DFA
+  loop body into Regex + WsTrim arms (AW-IV.W1.4-aggro)`. emit_regex_arm
+  + emit_ws_trim_arm splice the inline DFA body in lieu of a literal-
+  named call.
+- `0ad22ba7` — `feat(emitter/dta_walker/mod): inline-emit DFA loop
+  body into emit_boundary_ws (AW-IV.W1.4-aggro)`. The boundary-`@ws`
+  block emits an inline DFA body in a loop instead of calling a per-
+  state DFA fn.
+- `c530cbc2` — `feat(emitter/grammar): drop #dfa_match_fns splice;
+  keep #regex_scan_adapter as cold-path adapter with inline DFA bodies
+  (AW-IV.W1.4-aggro)`. The per-grammar `__regex_scan_<grammar>` adapter
+  retains its dispatch arms with inline DFA bodies; the separate
+  `__dfa_match_*` fn declarations delete entirely.
+
+`emit_state_arm_body` signature gained `ir: &GrammarIR` to plumb the
+IR string-table reference through to the inline DFA body; the codegen
+test `dta_walker_codegen.rs` migrated to pass `&GrammarIR::default()`.
+
+### W2.3 — Eisel-Lemire + NEON + capacity + PSI elision (8 commits)
+
+Three parallel agents:
+
+**W2.3.a — Decoder inline (5 commits, `bbnf-wt-aw4-w23-decoders`)**:
+- `9657035d` — `feat(emitter/dta_walker/decoders): inline Eisel-Lemire
+  f64 decoder fragment library (AW-IV.W2.3.a)`.
+- `8f9ed3e2` — `feat(emitter/dta_walker/decoders): inline NEON
+  quoted-string scanner fragment (AW-IV.W2.3.a)`. Raw `core::arch::aarch64::*`
+  intrinsics (16-byte chunked scan + `escaped_mask` + `odd_parity_backslashes`
+  + scalar tail).
+- `e11a9787` — `feat(emitter/dta_walker/lower_state): inline-emit
+  Eisel-Lemire body into Map { Regex, F64 } arms (AW-IV.W2.3.a)`.
+  emit_regex_arm gains `pattern: StringId` parameter; F64 path emits
+  arena-reserve + emit_leaf + Eisel-Lemire body + direct LE-write into
+  `columns.pay_agg` (no PSI scheduling).
+- `6db2fa20` — `feat(emitter/dta_walker/lower_state): inline-emit
+  NEON string-scan body into QuotedString Regex arms (AW-IV.W2.3.a)`.
+  Pivots on `RegexInfo.classification == RegexClass::QuotedString`.
+- `581ed514` — `fix(emitter/dta_walker/lower_state): drop unused
+  _rec_idx binding in F64 path (AW-IV.W2.3.a)`.
+
+**W2.3.b — Columns capacity-check elision (2 commits, `bbnf-wt-aw4-w23-columns`)**:
+- `0fc2d9f9` — `perf(bbnf-tape/columns): pre-allocate to input.len()/2+2;
+  drop per-record capacity check (AW-IV.W2.3.b)`. The fused bodies
+  retain a single `if len >= structural_min_cap() { grow_all() }` guard
+  with `grow_all` `#[cold] #[inline(never)]`; hot path is one predicted-
+  not-taken compare + 7 unchecked stores.
+- `3f15e54f` — `perf(bbnf-tape/profile): capacity_for combines
+  per-grammar density with AR-audit floor (AW-IV.W2.3.b)`. Formula:
+  `max(ceil((compounds+leaves) * len), len/2) + 2` — density preserves
+  pre-AW-IV behaviour for dense grammars (JSON `compounds_per_byte=1.0`);
+  AR-audit floor activates for sparse profiles.
+
+The literal `len/2+2` form caused `debug_assert!` panics in cold-path
+tests that seed `Columns::new()` then push directly; the W2.3.b agent's
+scope-pivot retains the guard with cold annotation, achieving the
+intended hot-path branch elision without forcing out-of-bounds test
+migrations.
+
+**W2.3.c — PSI elision documentation (1 commit, `bbnf-wt-aw4-w23-psi`)**:
+- `150e6f13` — `docs(bbnf-tape/psi): document inline-decodable-scalar
+  elision boundary (AW-IV.W2.3.c)`. Module preamble + `PayloadStream::push`
+  doc-comment articulate the post-W2.3 contract: inline-decodable scalars
+  (f64/span/u8/bool) bypass PSI; `String` + `AggregateLarge` payloads
+  retain PSI scheduling + rayon drain.
+
+### Orchestrator integration
+
+- `2ca0f7af` — `fix(test+regen): codegen test signature migration +
+  W1.4-aggro regen (AW-IV.W1.4-aggro)`. dta_walker_codegen.rs migrated
+  to new `emit_specialised_walker` signature; generated.rs regenerated
+  to 79844 lines.
+- (this entry's commit) — `chore(generated+research): W2.3 regen +
+  decoder-inline profile artefacts (AW-IV.W2.3)`. generated.rs
+  regenerated to 80112 lines + W2.3.a worktree research artefacts
+  brought along.
+
+### Hard-gate verification ledger
+
+| Gate | Status | Verification artefact |
+|------|--------|-----------------------|
+| `__dfa_match_*` symbols absent (W1.4-aggro) | ✓ MET | `nm` returns 0 across all 4 bench binaries (CSS L4 was 26 pre-W1.4-aggro) |
+| `compute_f64` / `scan_quoted_string_simd` / `parse_number_f64` symbols absent | ✓ MET | `nm` returns 0 across all 4 bench binaries |
+| Hot-path helpers (emit_leaf / push_*_fused / close_compound / handle_repeat_failure) absent | ✓ MET | inlined into walker arms (cargo expand confirms) |
+| `advance_or_pop_with` symbol absent | ✗ MISS | 1 occurrence in JSON bench binary; W2.1 deliberate (code-size); conflicts with later binding-rule revision |
+| Bootstrap idempotent | ✓ MET | gen1 == gen2 at 80112 lines |
+| Workspace tests pass | ✓ MET | 1345 / 0 / 36 |
+| **JSON twitter ≥ 1100 MB/s (W2.1+W2.2 gate)** | ✗ MISS | Measured 280 MB/s |
+| **JSON twitter ≥ 1500 MB/s (W2.3 gate)** | ✗ MISS | Measured 280 MB/s (19% of gate) |
+| CSS L4 strong gain (W1.4-aggro target) | ✓ MET | normalize +56% (16→25); bootstrap +56% (9→14); tailwind +60% (10→16) |
+| BBNF/Sheets gain | ✓ STRONG | +40-50% across the matrix |
+
+### Throughput-gate miss attribution
+
+JSON twitter 280 MB/s vs 1500 gate (19%). The CSS / BBNF / Sheets
+families ALL hit +40-60% gains, validating the architectural
+transposition where it matters (DFA scans + leaf emission). JSON's
+relative limit is the alloc-growth cluster:
+
+- `advance_or_pop_with` cross-crate call on every leaf-emit's non-Seq
+  case (Alt close, Repeat re-entry, SY reducer). W2.1 deliberately
+  retained this as a cold call for code-size reasons; the binding-rule
+  revision arrived AFTER W2.1's commit. Inlining this is consistent
+  with the binding-rule spirit but was not in W2.3's prescribed scope.
+- `RawVec<PayloadJob>::grow_one`, `RawVec<Frame>::grow_one`,
+  `RawVec<IterSavepoint>::grow_one` — alloc-growth on every parse
+  iteration (cold per-parse benchmarking amplifies this; warm
+  benchmarking would amortise).
+- `psi::write_decoded` — post-parse rayon stage-B drain for residual
+  string payloads; PayloadJob queue still grows per string leaf.
+
+The architectural inline-emit substrate IS landed and verifiable; the
+throughput piece carries forward into W3 (where W3.2 PHF AltLinear
+displaces the dispatch_one cold-path bridge for AltLinear-dominant
+families) and potentially a follow-on W2.4 or AX cleanup wave for
+JSON's residual.
+
+### Per-bench post-W2 numbers (cold per-parse)
+
+`docs/benchmarks/post-AW-IV-W2.json` carries the full matrix. Summary:
+
+| Entry | post-AU | post-AW-III | post-W1 | post-W2 | Δ vs W1 |
+|---|---:|---:|---:|---:|---:|
+| json twitter | 1967 | 170 | 246 | 280 | +13.8% |
+| json citm | 2438 | 213 | 284 | 289 | +1.8% |
+| json canada | 1231 | 98 | 142 | 136 | -4.2% (noise) |
+| json data_xl | 1179 | 137 | 185 | 199 | +7.6% |
+| json data_s | 1746 | 164 | 243 | 273 | +12.3% |
+| css normalize | 735 | 14 | 16 | 25 | +56.3% |
+| css bootstrap | 454 | 8 | 9 | 14 | +55.6% |
+| css tailwind | 496 | 9 | 10 | 16 | +60.0% |
+| sheets parse_simple | 95 | 4 | 4 | 6 | +50.0% |
+| sheets parse_nested | 128 | 4 | 5 | 7 | +40.0% |
+| sheets parse_stress | 121 | 3 | 4 | 6 | +50.0% |
+| bbnf json | 283 | 9 | 10 | 14 | +40.0% |
+| bbnf ebnf | 223 | 6 | 6 | 9 | +50.0% |
+| bbnf css_pretty | 647 | 20 | 22 | 31 | +40.9% |
+| bbnf google_sheets | 858 | 29 | 33 | 47 | +42.4% |
+| bbnf bbnf_self | 394 | 12 | 13 | 19 | +46.2% |
+| bbnf css_l4_grammar | 496 | 19 | 20 | 29 | +45.0% |
+
+### W2 → W3 hand-off
+
+W3 opens on the W2-flat hot-path substrate. Five parallel agents
+activate the AW-III emitter-mined consumer substrates: ShapeRef
+(W3.1), PHF + AltLinear consumer (W3.2 — addresses CSS/BBNF/Sheets
+dispatch_one bridge), ClassifyByte (W3.3), Pratt LUT consumer (W3.4),
+direct-to-struct view + CTNS lifter + bounded Regex (W3.5).

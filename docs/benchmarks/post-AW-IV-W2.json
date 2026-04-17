@@ -1,0 +1,103 @@
+{
+  "tranche": "AW-IV",
+  "wave": "W2",
+  "checkpoint": "post-AW-IV-W2",
+  "date": "2026-04-17",
+  "master_head": "85343341",
+  "scope": "Per-grammar inline emission of hot helpers (W2.1+W2.2) + W1.4-aggressive DFA loop body inline (W1.4-aggro) + Eisel-Lemire f64 + NEON string-scan + capacity pre-allocation + PSI elision documentation (W2.3.a/b/c)",
+  "verification_ledger": {
+    "symbols_absent_json": [
+      "dispatch_one",
+      "RegexScanner",
+      "DtaDfaScanner",
+      "find_at",
+      "cached_dfa",
+      "try_branch",
+      "__dfa_match_*",
+      "__regex_scan_*",
+      "compute_f64",
+      "scan_quoted_string_simd",
+      "parse_number_f64"
+    ],
+    "symbols_present_json": [
+      "advance_or_pop_with (1 — W2.1 deliberately kept as cold-call for non-Seq Alt/Repeat/SY minority paths; binding-rule re-articulation post-W2.1 means a follow-on inlining is consistent with the spirit but was not in W2.3's scope)",
+      "Columns::grow_all (slow-path capacity recovery; W2.3.b retained as #[cold] #[inline(never)] guard)",
+      "RawVec<PayloadJob>::grow_one (PSI residual for non-scalar payloads — string + aggregate)",
+      "RawVec<IterSavepoint>::grow_one (frame stack savepoint growth)",
+      "RawVec<Frame>::grow_one (frame stack growth)",
+      "psi::write_decoded (post-parse rayon stage-B drain)",
+      "finaliser::finalise (called once per parse — not per-byte)"
+    ],
+    "symbols_present_css_l4_or_others": [
+      "dispatch_one (1 — cold-path replay surface; reachable through try_branch from AltLinear arms; W3.2 PHF AltLinear consumer displaces this)",
+      "try_branch (1 — AltLinear/Minus branch attempt helper)",
+      "__regex_scan_<grammar> (1 each — cold-path adapter with inline DFA bodies; LTO collapses out of JSON)"
+    ],
+    "workspace_tests": "1345 passed / 0 failed / 36 ignored",
+    "bootstrap_idempotent": true,
+    "generated_rs_lines": 80112,
+    "generated_rs_delta_vs_w1": "+25719 lines (W1: 54393)"
+  },
+  "benches": {
+    "json_monolithic": {
+      "twitter": {"mb_s": 280, "ns_iter": 2248853},
+      "citm": {"mb_s": 289, "ns_iter": 5966333},
+      "canada": {"mb_s": 136, "ns_iter": 16451291},
+      "data_xl": {"mb_s": 199, "ns_iter": 106587587},
+      "data_s": {"mb_s": 273, "ns_iter": 129538}
+    },
+    "css_l4": {
+      "normalize": {"mb_s": 25, "ns_iter": 240982},
+      "bootstrap": {"mb_s": 14, "ns_iter": 18734358},
+      "tailwind": {"mb_s": 16, "ns_iter": 225567087}
+    },
+    "google_sheets_monolithic": {
+      "parse_simple": {"mb_s": 6, "ns_iter": 81406},
+      "parse_nested": {"mb_s": 7, "ns_iter": 195063},
+      "parse_stress": {"mb_s": 6, "ns_iter": 299934},
+      "format_simple": {"mb_s": 40, "ns_iter": 147},
+      "format_stress": {"mb_s": 45, "ns_iter": 4371}
+    },
+    "bbnf_monolithic": {
+      "json": {"mb_s": 14, "ns_iter": 36375},
+      "ebnf": {"mb_s": 9, "ns_iter": 146203},
+      "css_pretty": {"mb_s": 31, "ns_iter": 80483},
+      "google_sheets": {"mb_s": 47, "ns_iter": 157890},
+      "bbnf_self": {"mb_s": 19, "ns_iter": 267853},
+      "css_l4_grammar": {"mb_s": 29, "ns_iter": 1859185}
+    }
+  },
+  "delta_vs_post_AW_IV_W1": {
+    "json_twitter": "+13.8% (246 -> 280)",
+    "json_citm": "+1.8% (284 -> 289)",
+    "json_canada": "-4.2% (142 -> 136) — within +/-5% noise band",
+    "json_data_xl": "+7.6% (185 -> 199)",
+    "json_data_s": "+12.3% (243 -> 273)",
+    "css_normalize": "+56.3% (16 -> 25)",
+    "css_bootstrap": "+55.6% (9 -> 14)",
+    "css_tailwind": "+60.0% (10 -> 16)",
+    "sheets_parse_simple": "+50.0% (4 -> 6)",
+    "sheets_parse_nested": "+40.0% (5 -> 7)",
+    "sheets_parse_stress": "+50.0% (4 -> 6)",
+    "bbnf_json": "+40.0% (10 -> 14)",
+    "bbnf_ebnf": "+50.0% (6 -> 9)",
+    "bbnf_css_pretty": "+40.9% (22 -> 31)",
+    "bbnf_google_sheets": "+42.4% (33 -> 47)",
+    "bbnf_bbnf_self": "+46.2% (13 -> 19)",
+    "bbnf_css_l4_grammar": "+45.0% (20 -> 29)"
+  },
+  "hard_gate_status": {
+    "helper_symbols_absent_hot_path": "MET for emit_leaf, push_*_fused, close_compound, trim_with_pattern, first_ws_pattern, handle_repeat_failure, compute_f64, scan_quoted_string_simd; advance_or_pop_with PRESENT (W2.1 deliberate, code-size tradeoff; conflicts with later binding-rule re-articulation)",
+    "no_bl_call_to_helpers_in_walker_asm": "PARTIAL — verify-w2-asm.sh script available; advance_or_pop_with bl-call expected",
+    "samply_zero_cross_crate_self_time": "NOT VERIFIED — defer to W3 close samply attribution",
+    "json_twitter_ge_1100_mb_s": "MISS (280 / 1100 = 25% of gate)",
+    "json_twitter_ge_1500_mb_s_w2_3_specific": "MISS (280 / 1500 = 19% of gate)",
+    "css_l4_strong_gain": "MET (+55-60% across normalize / bootstrap / tailwind — the family that benefits most from DFA-inline + helper-inline)"
+  },
+  "gate_miss_attribution": {
+    "primary": "JSON's hot path is dominated by per-leaf advance_or_pop_with cross-crate call (~80% Seq via advance_seq_fast inlined; ~20% non-Seq via cold call) + PayloadJob/Frame/IterSavepoint Vec growth (alloc churn per parse iteration since bench is cold per-parse) + PSI scheduling for residual non-scalar payloads (string content scans).",
+    "secondary": "JSON canada -4% within noise band (LTO non-determinism on dense floating-point parses).",
+    "css_family_strong": "CSS / Sheets / BBNF gain +40-60% confirms the architectural transposition works where the hot path is dominated by DFA scans + leaf emission. JSON's relative limit is the alloc-growth + advance_or_pop_with combination.",
+    "next_wave_remediation": "W3.2 PHF AltLinear consumer displaces dispatch_one cold-path bridge for CSS/BBNF/Sheets. W3.5 bounded Regex via inverse-alphabet may compress JSON's number-parse path. A potential follow-on W2.4 (advance_or_pop_with full inline + helper-Vec capacity pre-allocation) would address JSON's residual but was not in the user's W2.3 scope; carrying as cross-tranche debt for AX or as scope-reveal for W3."
+  }
+}

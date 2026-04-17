@@ -68,46 +68,72 @@ fn agg_f64(tape: &Tape, rec: bbnf::runtime::tape::TapeRec) -> Option<f64> {
     tape.payload_f64(rec)
 }
 
-fn walk<'t>(tape: &'t Tape, cursor: TapeCursor<'t>, input: &str, out: &mut Vec<Leaf>) {
+/// IR-introspected variant_idx for each typed-leaf rule, cached once
+/// per process. AW-III.W1.A widened `variant_idx` from 6 to 8 bits,
+/// and the prune pass reorders rules; the legacy hard-coded
+/// `0=null, 1=bool, 2=number, 5=string` no longer holds. Resolve via
+/// `json_rule_id()` (defined below) instead.
+struct LeafIds {
+    null: u8,
+    bool_: u8,
+    number: u8,
+    string: u8,
+}
+
+fn leaf_ids() -> &'static LeafIds {
+    static IDS: std::sync::OnceLock<LeafIds> = std::sync::OnceLock::new();
+    IDS.get_or_init(|| LeafIds {
+        null: json_rule_id("null"),
+        bool_: json_rule_id("bool"),
+        number: json_rule_id("number"),
+        string: json_rule_id("string"),
+    })
+}
+
+fn walk<'t>(tape: &'t Tape, cursor: TapeCursor<'t>, source: &[u8], out: &mut Vec<Leaf>) {
     let rec = cursor.record();
     if !rec.has_children() {
         let (lo, hi) = cursor.span();
-        let span_text = input[lo as usize..hi as usize].to_string();
+        let span_text = std::str::from_utf8(&source[lo as usize..hi as usize])
+            .unwrap_or_default()
+            .to_string();
         let variant_idx = cursor.variant_idx();
+        let ids = leaf_ids();
 
-        // JSON rule variants: 0=null, 1=bool, 2=number, 5=string.
         // The emitter produces `push_leaf_with(TapeKind::Span, …)`
         // records for each typed leaf; we dispatch by the variant
         // index that identifies which grammar rule emitted the leaf.
-        match rec.kind() {
-            TapeKind::Span => match variant_idx {
-                0 => {
-                    if let Some(v) = agg_u8(tape, rec) {
-                        out.push(Leaf::Null(v));
-                        return;
-                    }
+        // Variant ids come from `json_rule_id()` (IR introspection)
+        // so the dispatch survives prune-reordering and the W1.A
+        // variant_idx widening.
+        if rec.kind() == TapeKind::Span {
+            if variant_idx == ids.null {
+                if let Some(v) = agg_u8(tape, rec) {
+                    out.push(Leaf::Null(v));
+                    return;
                 }
-                1 => {
-                    if let Some(v) = agg_u8(tape, rec) {
-                        out.push(Leaf::Bool(v != 0));
-                        return;
-                    }
+            } else if variant_idx == ids.bool_ {
+                if let Some(v) = agg_u8(tape, rec) {
+                    out.push(Leaf::Bool(v != 0));
+                    return;
                 }
-                2 => {
-                    if let Some(v) = agg_f64(tape, rec) {
-                        out.push(Leaf::Number(v));
-                        return;
-                    }
+            } else if variant_idx == ids.number {
+                if let Some(v) = agg_f64(tape, rec) {
+                    out.push(Leaf::Number(v));
+                    return;
                 }
-                5 => {
-                    if let Some(s) = tape.payload_string(rec) {
-                        out.push(Leaf::String(s.to_string(), lo, hi));
-                        return;
-                    }
+            } else if variant_idx == ids.string {
+                // Strings flow through the W1.A decoder kernel which
+                // pushes either borrowed (no arena write) or owned
+                // (arena slot). `payload_string_with_source` honours
+                // both: borrowed reads span [lo+1..hi-1] from source
+                // bytes, owned reads from the arena length-prefix
+                // frame.
+                if let Some(s) = tape.payload_string_with_source(rec, source) {
+                    out.push(Leaf::String(s.to_string(), lo, hi));
+                    return;
                 }
-                _ => {}
-            },
-            _ => {}
+            }
         }
         out.push(Leaf::Other {
             kind: rec.kind(),
@@ -116,13 +142,12 @@ fn walk<'t>(tape: &'t Tape, cursor: TapeCursor<'t>, input: &str, out: &mut Vec<L
         });
         return;
     }
-    // Compound — recurse in reverse-emission order via ChildIter
-    // (zero alloc) to honour AU.3.2. Collect, then reverse to restore
-    // source order.
-    let mut kids: Vec<TapeCursor<'t>> = cursor.children_zero_alloc().collect();
-    kids.reverse();
-    for child in kids {
-        walk(tape, child, input, out);
+    // Compound — recurse in source order. AV-onward, `children_zero_alloc`
+    // is forward-source-order zero-alloc (see `bbnf_tape::cursor`); the
+    // pre-AV reverse-then-restore dance collapsed when the substrate
+    // collapsed both methods into one.
+    for child in cursor.children_zero_alloc() {
+        walk(tape, child, source, out);
     }
 }
 
@@ -134,13 +159,12 @@ fn parse_and_walk(input: &str) -> Vec<Leaf> {
     let tape = parsed.tape();
     let cursor = TapeCursor::new(tape, root_off);
     let mut out = Vec::new();
-    walk(tape, cursor, input, &mut out);
+    walk(tape, cursor, input.as_bytes(), &mut out);
     out
 }
 
 // ─── Typed-payload activation tests ──────────────────────────────────
 
-#[ignore = "AU.6.8 parity: post-W6 tape-shape shift broke variant_idx dispatch in the walker. Route: audit-doc tracks; fix in follow-up."]
 #[test]
 fn null_materialises_u8_payload() {
     let leaves = parse_and_walk("null");
@@ -156,7 +180,6 @@ fn null_materialises_u8_payload() {
     assert_eq!(nulls, vec![0u8], "json null leaf must be Null(0u8)");
 }
 
-#[ignore = "AU.6.8 parity: post-W6 tape-shape shift broke variant_idx dispatch in the walker. Route: audit-doc tracks; fix in follow-up."]
 #[test]
 fn bool_materialises_false_payload() {
     // `false` branch materialises via PayloadData::InlineScalar(0u8 → false)
@@ -209,7 +232,6 @@ fn bool_true_branch_currently_drops_payload() {
     );
 }
 
-#[ignore = "AU.6.8 parity: post-W6 tape-shape shift broke variant_idx dispatch in the walker. Route: audit-doc tracks; fix in follow-up."]
 #[test]
 fn number_materialises_f64_payload() {
     // Mix integer, decimal, negative, and scientific to exercise the
@@ -230,7 +252,6 @@ fn number_materialises_f64_payload() {
     assert!((nums[4] - -1.5e-3).abs() < 1e-12);
 }
 
-#[ignore = "AU.6.8 parity: post-W6 tape-shape shift broke variant_idx dispatch in the walker. Route: audit-doc tracks; fix in follow-up."]
 #[test]
 fn string_materialises_decoded_bytes() {
     // Plain + escape + unicode escapes exercise all three decode paths.
@@ -248,7 +269,6 @@ fn string_materialises_decoded_bytes() {
     assert_eq!(decoded[2], "é");
 }
 
-#[ignore = "AU.6.8 parity: post-W6 tape-shape shift broke variant_idx dispatch in the walker. Route: audit-doc tracks; fix in follow-up."]
 #[test]
 fn object_keys_and_values_decode() {
     let input = r#"{"a\n": 1, "b": "v\u0041"}"#;
@@ -285,7 +305,6 @@ fn object_keys_and_values_decode() {
     assert_eq!(numbers, vec![1.0], "numeric object value must materialise");
 }
 
-#[ignore = "AU.6.8 parity: post-W6 tape-shape shift broke variant_idx dispatch in the walker. Route: audit-doc tracks; fix in follow-up."]
 #[test]
 fn nested_object_preserves_firing_typed_payloads() {
     // A realistic nested JSON object exercises every typed annotation
@@ -417,7 +436,6 @@ fn every_declared_leaf_reaches_the_tape() {
 
 // ─── ChildIter integration guard ─────────────────────────────────────
 
-#[ignore = "AU.6.8 parity: post-W6 tape-shape shift broke variant_idx dispatch in the walker. Route: audit-doc tracks; fix in follow-up."]
 #[test]
 fn children_zero_alloc_walks_typed_leaves() {
     // Full tape walk via ChildIter (zero-alloc) must surface every
@@ -429,7 +447,7 @@ fn children_zero_alloc_walks_typed_leaves() {
     let root = TapeCursor::new(tape, root_off);
 
     let mut out = Vec::new();
-    walk(tape, root, input, &mut out);
+    walk(tape, root, input.as_bytes(), &mut out);
     let nums: Vec<_> = out
         .iter()
         .filter_map(|l| match l {

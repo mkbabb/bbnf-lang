@@ -35,11 +35,13 @@
 //!
 //! Pre-W5.a the digraph table was a hardcoded candidate list filtered
 //! by literal occurrence. W5.a removes the candidate list entirely:
-//! every 2+ byte literal in the grammar contributes its first two
-//! bytes as a candidate digraph; the pair survives if its first byte
-//! is also in the structural single-byte set. This is fully general
-//! across grammar families — no list maintenance, no per-grammar
-//! special cases.
+//! every exactly-2-byte literal in the grammar is a candidate
+//! digraph; the pair survives if its first byte is also in the
+//! structural single-byte set. Multi-byte literals (`true`, `false`,
+//! `null`, identifiers, …) are NOT digraphs — those go through the
+//! keyword-dispatch path, not the structural-bitmap kernel. Mining
+//! is fully general across grammar families with no list maintenance
+//! and no per-grammar special cases.
 
 use crate::{GrammarIR, IrNode, StringId};
 
@@ -159,26 +161,38 @@ pub fn compute_structural_alphabet(ir: &mut GrammarIR) {
         collect_bytes(&rule.body, ir, &mut byte_set);
     }
 
-    // Digraph mining: harvest every 2+ byte literal in the grammar.
-    // No hardcoded candidate list — the data is the data. A digraph
-    // pair `(a, b)` is admitted iff `a` is in the structural set
-    // (otherwise no scanner path will ever check for it). Mining is
-    // deduplicated and sorted for determinism.
+    // Collect all literal-referenced StringIds and regex-referenced
+    // StringIds. The `strings` table is also populated by rule names,
+    // FnDescriptor pattern strings, and other interned data — we only
+    // mine digraphs from the subset that actually feeds an
+    // `IrNode::Literal`, and only mine quote classes from the subset
+    // that feeds an `IrNode::Regex` (with a classified `RegexInfo`).
+    let mut literal_sids: BTreeSet<StringId> = BTreeSet::new();
+    let mut regex_sids: BTreeSet<StringId> = BTreeSet::new();
+    for rule in &ir.rules {
+        collect_node_sids(&rule.body, &mut literal_sids, &mut regex_sids);
+    }
+
+    // Digraph mining: harvest exactly-2-byte *literals* in the
+    // grammar. Multi-byte literals (`true`, `false`, `null`,
+    // identifiers) are not digraphs — those go through the keyword
+    // dispatch table, not the structural-bitmap kernel. Regex
+    // patterns are also excluded (their bytes describe
+    // metacharacters, not delimiters). No hardcoded candidate list —
+    // the data is the data. A digraph pair `(a, b)` is admitted iff
+    // `a` is in the structural set (otherwise no scanner path will
+    // ever check for it). Mining is deduplicated and sorted for
+    // determinism.
     let mut digraph_set: BTreeSet<(u8, u8)> = BTreeSet::new();
-    for sid in 0..ir.strings.len() {
-        let bytes = ir.strings[sid].as_bytes();
-        if bytes.len() < 2 {
+    for sid in &literal_sids {
+        let bytes = ir.strings[*sid as usize].as_bytes();
+        if bytes.len() != 2 {
             continue;
         }
-        // Walk every 2-byte window in the literal — a 3-byte literal
-        // like `==!` has digraph candidates `==` and `=!`. Each
-        // contributes if its first byte is structural.
-        for window in bytes.windows(2) {
-            let first = window[0];
-            let second = window[1];
-            if byte_set.contains(&first) {
-                digraph_set.insert((first, second));
-            }
+        let first = bytes[0];
+        let second = bytes[1];
+        if byte_set.contains(&first) {
+            digraph_set.insert((first, second));
         }
     }
 
@@ -193,17 +207,19 @@ pub fn compute_structural_alphabet(ir: &mut GrammarIR) {
     let digraphs: Vec<(u8, u8)> = digraph_set.iter().copied().collect();
     let digraph_mask = build_byte_bitmap(digraphs.iter().map(|(a, _)| *a));
 
-    // Quote-class mining: walk `IrNode::Regex` nodes; for each, look
-    // up `regex_info` and admit the `quote_char` of any pattern
-    // classified as `RegexClass::QuotedString`. The classifier is the
-    // single source of truth; no string-pattern matching here.
+    // Quote-class mining: for each regex-referenced StringId, look up
+    // `regex_info` and admit the `quote_char` of any pattern classified
+    // as `RegexClass::QuotedString`. The classifier is the single
+    // source of truth; no string-pattern matching here.
+    //
+    // The classifier accepts only `"` and `'` as quote chars; other
+    // delimiter-toggles (e.g. BBNF's `/regex/` literal) are not
+    // surfaced today. The `bbnf-simd-scan` parity kernel still works
+    // for any byte set the IR exposes — the limit is purely the
+    // mining boundary.
     let mut quote_classes: BTreeSet<u8> = BTreeSet::new();
-    let mut regex_sids: BTreeSet<StringId> = BTreeSet::new();
-    for rule in &ir.rules {
-        collect_regex_sids(&rule.body, &mut regex_sids);
-    }
-    for sid in regex_sids {
-        if let Some(info) = ir.regex_info.get(&sid) {
+    for sid in &regex_sids {
+        if let Some(info) = ir.regex_info.get(sid) {
             if let bbnf_regex::RegexClass::QuotedString { quote_char, .. } = info.classification {
                 quote_classes.insert(quote_char);
             }
@@ -225,44 +241,52 @@ pub fn compute_structural_alphabet(ir: &mut GrammarIR) {
     }
 }
 
-/// Recursively collect every interned regex `StringId` referenced from
-/// a node tree. Used to look up `RegexInfo::classification` without
-/// re-walking the IR per-node.
-fn collect_regex_sids(node: &IrNode, sids: &mut BTreeSet<StringId>) {
+/// Recursively collect every interned `StringId` referenced from a
+/// node tree, partitioned by node-kind so the alphabet pass can mine
+/// digraphs (literal-only) and quote classes (regex-only) without
+/// re-walking the IR per concern.
+fn collect_node_sids(
+    node: &IrNode,
+    literals: &mut BTreeSet<StringId>,
+    regexes: &mut BTreeSet<StringId>,
+) {
     match node {
+        IrNode::Literal(sid) => {
+            literals.insert(*sid);
+        }
         IrNode::Regex(sid) => {
-            sids.insert(*sid);
+            regexes.insert(*sid);
         }
         IrNode::Alt(branches, _) => {
             for b in branches {
-                collect_regex_sids(&b.node, sids);
+                collect_node_sids(&b.node, literals, regexes);
             }
         }
         IrNode::Seq(children) => {
             for c in children {
-                collect_regex_sids(c, sids);
+                collect_node_sids(c, literals, regexes);
             }
         }
         IrNode::Repeat { inner, .. }
         | IrNode::OptionalWhitespace(inner)
         | IrNode::Negate(inner)
-        | IrNode::Map { inner, .. } => collect_regex_sids(inner, sids),
+        | IrNode::Map { inner, .. } => collect_node_sids(inner, literals, regexes),
         IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
-            collect_regex_sids(a, sids);
-            collect_regex_sids(b, sids);
+            collect_node_sids(a, literals, regexes);
+            collect_node_sids(b, literals, regexes);
         }
         IrNode::TokenDispatch {
             token,
             arms,
             fallback,
         } => {
-            collect_regex_sids(token, sids);
+            collect_node_sids(token, literals, regexes);
             for arm in arms {
-                collect_regex_sids(&arm.continuation, sids);
+                collect_node_sids(&arm.continuation, literals, regexes);
             }
-            collect_regex_sids(fallback, sids);
+            collect_node_sids(fallback, literals, regexes);
         }
-        IrNode::Literal(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
+        IrNode::Epsilon | IrNode::Ref(_) => {}
     }
 }
 

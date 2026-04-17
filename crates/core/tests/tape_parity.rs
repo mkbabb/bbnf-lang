@@ -198,6 +198,7 @@ fn kind_name(k: TapeKind) -> &'static str {
         TapeKind::KvPair => "KvPair",
         TapeKind::ShapeRef => "ShapeRef",
         TapeKind::Reserved => "Reserved",
+        TapeKind::Scanned => "Scanned",
     }
 }
 

@@ -320,8 +320,7 @@ fn state_kind_tag(state: &IrState) -> &'static str {
 
 /// AW-III.W5-carry / AW-IV.W3.5b — Emit the CTNS arm body. Collapses
 /// the regex scan to a single cursor jump via the stage-1 structural
-/// index (when populated) or degrades to ASCII-whitespace trim when
-/// the index is empty.
+/// index.
 ///
 /// AW-IV.W3.5b — the arm now emits a `TapeKind::Scanned` leaf carrying
 /// the scanned byte range so downstream grammar consumers that expect
@@ -329,7 +328,27 @@ fn state_kind_tag(state: &IrState) -> &'static str {
 /// `(span_lo, span_hi)` mirrors what the pre-lift Regex arm would have
 /// emitted as `TapeKind::Span`, but the distinct kind lets consumers
 /// distinguish CTNS-produced records from full-DFA scans.
-fn emit_consume_to_next_structural_arm(_idx: usize) -> TokenStream {
+///
+/// The cursor-jump logic mirrors `bbnf-tape::driver::dispatch_one`'s
+/// WsTrim arm: lazy slot resync (advance `*slot` past any stale
+/// entries whose position is at-or-before `*pos`) then jump `*pos`
+/// to `idx.positions[*slot]`. Literal / Regex arms don't currently
+/// update `slot` when they consume bytes, so stale entries must be
+/// skipped before reading the next structural position.
+///
+/// Empty-index fall-through: when the structural index has no
+/// entries ahead of `*pos` (inputs whose trailing bytes hold no
+/// structural marker, or grammars without stage-1 enrichment), the
+/// arm consumes to end of input — the CTNS admission invariant
+/// (`matchable ∩ structural = ∅`) guarantees every byte from `lo`
+/// to `input.len()` is matchable by the pattern.
+///
+/// Zero-width-match guard: the CTNS lifter only admits `+` /
+/// bounded-repetition patterns (no `*`), so a zero-width scan is a
+/// match failure. The arm raises Syntax in that case to preserve
+/// the source Regex arm's semantics.
+fn emit_consume_to_next_structural_arm(idx: usize) -> TokenStream {
+    let idx_lit = Literal::usize_unsuffixed(idx);
     let advance = emit_advance_or_pop_call();
     let rec_ident = format_ident!("_rec_scanned");
     let emit_leaf = emit_emit_leaf_inline(
@@ -340,16 +359,35 @@ fn emit_consume_to_next_structural_arm(_idx: usize) -> TokenStream {
     );
     quote! {
         let lo = *pos;
-        if !idx.positions.is_empty() {
-            let slot_idx = *slot as usize;
-            if slot_idx < idx.positions.len() {
-                *pos = idx.positions[slot_idx];
-                *slot = (slot_idx + 1) as u32;
-            } else {
-                *pos = input.len() as u32;
-            }
+        // Lazy slot resync — skip any index entries whose position
+        // lies at-or-before the current cursor. Literal / Regex arms
+        // don't maintain `slot` during their byte scans, so by the
+        // time the CTNS arm runs, `*slot` may still point at a stale
+        // entry strictly earlier than `*pos`.
+        while (*slot as usize) < idx.positions.len()
+            && idx.positions[*slot as usize] <= *pos
+        {
+            *slot += 1;
+        }
+        let slot_idx = *slot as usize;
+        if slot_idx < idx.positions.len() {
+            *pos = idx.positions[slot_idx];
+            *slot = (slot_idx + 1) as u32;
         } else {
-            ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
+            *pos = input.len() as u32;
+        }
+        // `+` quantifier requires at least one byte; a zero-width
+        // scan (cursor already at end-of-input, or structural byte
+        // at the current position) surfaces a Syntax error matching
+        // what the source Regex arm would emit.
+        if *pos == lo {
+            break 'step ::core::result::Result::Err(
+                ::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *pos,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId(#idx_lit as u16),
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                },
+            );
         }
         #emit_leaf
         stack.pending_variant_idx = u8::MAX;
@@ -512,40 +550,36 @@ fn emit_regex_arm(
     // runs the 16-byte SIMD backslash-parity scan over the body.
     let scan_body = emit_regex_scan_body(grammar, ir, table, idx, pattern);
 
-    // AW-IV.W3.5c — bounded-Regex admission. When the pattern's
-    // last-byte-set is disjoint from the grammar's structural alphabet,
-    // the DFA scan is guaranteed to terminate at-or-before the next
-    // structural byte. The walker shadows `input` with a slice capped
-    // at `idx.positions[slot]`, so the spliced DFA body's
-    // `input.get(__dfa_p)` naturally stops before the bound. LLVM lowers
-    // the reslicing to a single bounds-clamp; no runtime branch per
-    // byte.
+    // AW-IV.W3.5c — bounded-Regex admission scaffolding.
     //
-    // Admission check derives from the pattern text + structural
-    // alphabet (both are codegen-time data), so the bound is folded in
-    // statically. Payload-bearing arms retain unbounded scanning — the
-    // payload decoders (Eisel-Lemire, String-SIMD) expect the full
-    // matched range and reading a bounded slice could truncate the
-    // decode. The optimisation targets the non-payload Span emission
-    // path where the matched range is consumed only for span bounds.
-    let bounded_scan = payload.is_none()
+    // The `last_byte_set` mined at
+    // `crates/ir/src/passes/recognizers/pattern_alphabet.rs` captures
+    // the bytes that can terminate a pattern match. A naive
+    // "bounded-scan when `last_byte_set ∩ structural = ∅`" admission
+    // is UNSOUND: for patterns like CSS pretty's `ws =
+    // (?s)(?:\s|\/\*...\*\/)*` the last-byte set is disjoint from
+    // structural, but the pattern's INTERIOR (the comment body) can
+    // match structural bytes. Slicing the input at the next
+    // structural byte truncates mid-comment and the DFA returns a
+    // shorter match (or an empty match for `*` quantifiers), breaking
+    // semantics.
+    //
+    // The sound admission is the same as CTNS — `matchable ∩
+    // structural = ∅` — which the existing CTNS lifter already
+    // converts from a bounded scan into a pure cursor jump. A
+    // bounded-scan emission only adds value over CTNS when the
+    // pattern's full alphabet is NOT disjoint from structural but
+    // still yields a safe upper bound; the general case requires
+    // per-run DFA state analysis beyond the codegen-time budget.
+    //
+    // The admission helper is kept as a declaration so the
+    // `last_byte_set` field stays observably consumed; future work
+    // (AX or later) tightens the admission to a provably-sound
+    // condition. No bounded-scan emission happens today.
+    let _bounded_scan_admission = payload.is_none()
         && admits_bounded_regex_scan(ir, pattern);
-    let scan_body_wrapped = if bounded_scan {
-        quote! {
-            let __upper_bound = {
-                let slot_idx = *slot as usize;
-                if slot_idx < idx.positions.len() {
-                    (idx.positions[slot_idx] as usize).min(input.len())
-                } else {
-                    input.len()
-                }
-            };
-            let input: &[u8] = &input[..__upper_bound];
-            #scan_body
-        }
-    } else {
-        scan_body
-    };
+    let bound_prelude = TokenStream::new();
+    let scan_body_wrapped = scan_body;
 
     // AW-IV.W2.3.a — splice emit_leaf / emit_leaf_with_payload; for
     // F64 payload, inline Eisel-Lemire decode + direct column write
@@ -673,6 +707,10 @@ fn emit_regex_arm(
 
     quote! {
         let payload: ::core::option::Option<::bbnf::runtime::tape::PayloadKind> = #payload_tok;
+        // AW-IV.W3.5c — bounded-Regex prelude: compute the upper
+        // bound + resync `*slot` before the scan body shadows `pos`
+        // and `input`. Empty for unbounded scans.
+        #bound_prelude
         // AW-IV.W1.4-aggro / W2.3.a — splice the scan body inline. The
         // inner block shadows `pos` with a local `usize` so the scan
         // body's `pos: usize` initialisation binds against a concrete

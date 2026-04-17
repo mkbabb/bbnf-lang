@@ -70,8 +70,26 @@ impl RecognizerMiner for ConsumeToNextStructuralMiner {
         if !admits_ctns(pattern) {
             return;
         }
-        // Consult the mined pattern-alphabet + the grammar's
-        // structural alphabet. Admission requires disjointness.
+        // AW-IV.W3.5b — CTNS admission via matchable/structural
+        // disjointness.
+        //
+        // The walker's CTNS arm jumps `*pos = idx.positions[*slot]` —
+        // lands exactly on the pattern's match boundary iff every
+        // structural byte is a hard match boundary for the pattern.
+        // "Hard match boundary" = the pattern's DFA MUST fail when it
+        // reads a structural byte.
+        //
+        // Equivalently: no structural byte is matchable, i.e.
+        // `matchable ∩ structural = ∅`. If a structural byte WERE
+        // matchable, the pattern could accept past the stage-1 stop
+        // and the cursor jump would undershoot the actual match.
+        //
+        // This is the pre-W3.5b invariant; W3.5b reinstates it after
+        // the stricter `non_matchable ⊆ structural` condition over-
+        // admitted (admitted CTNS on patterns like `/[^;{}!,]+/` for
+        // CSS pretty whose structural included `:` — `:` was
+        // matchable AND structural, so the CTNS jump undershot the
+        // pattern's real match boundary).
         if let Some(alphabet) = outputs.pattern_alphabets.get(&node_id) {
             if !alphabet.is_tight {
                 return;
@@ -98,11 +116,15 @@ impl RecognizerMiner for ConsumeToNextStructuralMiner {
 /// exact matches, and lookaheads. Admit repetition shapes whose
 /// unbounded tail is what the CTNS jump collapses.
 ///
-/// Heuristic: the pattern string ends in one of `+`, `*`, or `}` to
-/// catch the canonical shapes (`[0-9]+`, `[^;}]*`, `[0-9]{3,}`); rejects
-/// patterns containing `$`, `^` (beyond character-class negation),
-/// `(?=`, or `(?!`. The heuristic favours false negatives (missed
-/// lifts) over false positives (incorrect substitution).
+/// Heuristic: the pattern string ends in `+` or `}` to catch the
+/// canonical one-or-more shapes (`[0-9]+`, `[0-9]{3,}`). Patterns
+/// ending in `*` are REJECTED: the zero-or-more quantifier matches
+/// the empty string, so the CTNS arm's unconditional cursor jump
+/// to the next structural byte would over-advance past positions
+/// where the pattern should have matched empty. Rejects patterns
+/// containing `$`, `^` (beyond character-class negation), `(?=`,
+/// or `(?!`. The heuristic favours false negatives (missed lifts)
+/// over false positives (incorrect substitution).
 fn admits_ctns(pattern: &str) -> bool {
     let bytes = pattern.as_bytes();
     if bytes.is_empty() {
@@ -112,7 +134,8 @@ fn admits_ctns(pattern: &str) -> bool {
     if pattern.contains("(?=") || pattern.contains("(?!") {
         return false;
     }
-    // Require repetition-terminated.
+    // Require one-or-more repetition. `*` rejected per the zero-
+    // width-match hazard explained in the miner's admission comment.
     let last = bytes[bytes.len() - 1];
-    matches!(last, b'+' | b'*' | b'}')
+    matches!(last, b'+' | b'}')
 }

@@ -55,6 +55,10 @@ fn prune_removes_unreachable() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     prune_unreachable(&mut ir);
@@ -102,6 +106,10 @@ fn prune_keeps_all_when_all_reachable() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     prune_unreachable(&mut ir);
@@ -169,6 +177,10 @@ fn prune_follows_alt_branches() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     prune_unreachable(&mut ir);

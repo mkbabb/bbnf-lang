@@ -45,6 +45,10 @@ fn literal_is_span_eligible() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -89,6 +93,10 @@ fn map_not_span_eligible() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -132,6 +140,10 @@ fn transitive_span_eligibility() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -180,6 +192,10 @@ fn cyclic_not_span_eligible() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -221,6 +237,10 @@ fn seq_of_literals_span_eligible() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     refine_span_eligibility(&mut ir);

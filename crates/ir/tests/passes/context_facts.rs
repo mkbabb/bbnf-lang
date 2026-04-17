@@ -47,6 +47,10 @@ fn base_ir() -> GrammarIR {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     }
 }
 

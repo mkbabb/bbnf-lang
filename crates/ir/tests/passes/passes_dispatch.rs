@@ -64,6 +64,10 @@ fn dispatch_for_disjoint_branches() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -135,6 +139,10 @@ fn no_dispatch_for_overlapping_branches() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -204,6 +212,10 @@ fn dispatch_for_nested_alt() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -281,6 +293,10 @@ fn dispatch_with_nullable_branch_via_follow() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -360,6 +376,10 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -449,6 +469,10 @@ fn fallback_dispatch_typed_plus_catchall() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -530,6 +554,10 @@ fn fallback_dispatch_not_superset() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -599,6 +627,10 @@ fn fallback_dispatch_too_few_branches() {
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);

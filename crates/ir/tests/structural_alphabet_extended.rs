@@ -75,6 +75,10 @@ fn empty_ir() -> GrammarIR {
         eclass_facts: HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
+        keyword_branches: HashMap::new(),
+        disjoint_first_tables: HashMap::new(),
+        pattern_alphabets: HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
     }
 }
 

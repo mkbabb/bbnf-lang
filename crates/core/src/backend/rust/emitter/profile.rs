@@ -181,11 +181,7 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
                 active_columns: &[],
                 list_rules: &[],
                 keyword_tables: &[],
-                // AW-III.W6.1 — Wire the SHAPE_DICT const emitted by
-                // emit_shape_dict_arrays. When the CSP selection is
-                // empty, SHAPE_DICT is still defined as &[] so this
-                // reference is always valid.
-                shape_dict: SHAPE_DICT,
+                shape_dict: &[],
                 branch_priors: &[],
                 dedup_eligible_rules: &[],
                 reorder_unroll_visitors: #visitors_ref,

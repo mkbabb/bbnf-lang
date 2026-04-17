@@ -294,18 +294,14 @@ impl RustEmitter {
 
             #grammar_arr
 
-            // AW-III.W6.1 — The DTA table must be emitted BEFORE
-            // GRAMMAR_PROFILE so the profile literal's `shape_dict:
-            // SHAPE_DICT` reference resolves at const-eval time.
-            // `emit_shape_dict_arrays` lives inside emit_dta_table and
-            // always declares a `pub const SHAPE_DICT` (either
-            // populated with the CSP-admitted entries, or `&[]` when
-            // selection is empty).
-            #dta_table
-
             #grammar_profile
 
+            #dta_table
+
             // AW-III.W6.2 — PHF keyword tables for literal-led Alts.
+            // Emitted at module scope per rule whose Alt body has
+            // literal-led branches ≥ PHF_MIN_BRANCHES; consulted by
+            // downstream AltLinear / ClassifyByte call sites.
             #keyword_phf_tables
 
             #dta_walker

@@ -103,12 +103,16 @@ pub fn emit_keyword_phf(
 
     let n = sorted.len();
 
-    // Keyword-bytes literals: one `&[u8]` per entry, written as byte
-    // string literals so the compiler folds them into `.rodata` with
-    // no heap traffic.
+    // Keyword-bytes literals: one `&[u8]` per entry. Use a byte-string
+    // literal (`b"..."`) rather than `&[b0, b1, b2][..]` — the latter
+    // triggers rustc's unstable `const_index` gate in static context
+    // (the `[..]` slice operator is conditionally-const). A byte
+    // string coerces to `&[u8]` via array-ref subtyping without
+    // invoking the Index trait, so it lowers cleanly in `static`
+    // initialisers.
     let kw_lits = sorted.iter().map(|b| {
-        let byte_lits = b.bytes.iter().map(|c| Literal::u8_unsuffixed(*c));
-        quote! { &[#(#byte_lits),*][..] }
+        let lit = Literal::byte_string(&b.bytes);
+        quote! { #lit }
     });
     let idx_lits = sorted.iter().map(|b| Literal::u8_unsuffixed(b.branch_idx));
 

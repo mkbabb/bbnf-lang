@@ -66,7 +66,7 @@ use quote::quote;
 /// }
 /// Ok(StepResult::Next(chosen))
 /// ```
-pub(crate) fn emit_classify_byte_arm(
+pub fn emit_classify_byte_arm(
     idx: usize,
     disp: &[StateId],
     fallback: Option<StateId>,

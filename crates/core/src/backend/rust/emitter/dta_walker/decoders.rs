@@ -410,13 +410,12 @@ pub(super) fn emit_eisel_lemire_inline_body() -> TokenStream {
     }
 }
 
-/// AW-IV.W2.3.a — Emit the NEON / portable-SIMD quoted-string scanner
-/// body inline.
+/// AW-IV.W2.3.a — Emit the NEON quoted-string scanner body inline.
 ///
 /// Mirrors `parse_that::parsers::scan::quoted_simd::scan_quoted_string_simd`
-/// — 16-byte `std::simd::u8x16` chunks, backslash-parity escape
-/// handling, scalar tail for the remaining `< 16` bytes. The fragment
-/// expects two bindings from the enclosing scope:
+/// — 16-byte chunks, backslash-parity escape handling, scalar tail
+/// for the remaining `< 16` bytes. The fragment expects two bindings
+/// from the enclosing scope:
 ///
 /// - `input: &[u8]` — the full input byte slice.
 /// - `start: usize` — the byte offset AFTER the opening quote (i.e.
@@ -435,26 +434,29 @@ pub(super) fn emit_eisel_lemire_inline_body() -> TokenStream {
 /// Helpers (`escaped_mask`, `odd_parity_backslashes`, `scalar_tail`)
 /// are inlined as labelled blocks so no fn-call boundary remains at
 /// the source level. The per-site `quote_byte` literal lets LLVM
-/// const-fold the quote-splat register setup; the per-site inline
-/// admits a per-grammar specialisation of the tail loop's quote
-/// branch.
+/// const-fold the quote-splat register setup.
 ///
-/// The splice uses `std::simd` (portable SIMD) which lowers to NEON
-/// on aarch64, AVX2 / SSE2 on x86_64, and scalar fallback on any
-/// other target. Separate raw-intrinsic paths are unnecessary — the
-/// portable-SIMD lowering matches the performance of hand-written NEON
-/// on Apple M-series and hand-written AVX2 on x86_64 per the
-/// `parse-that` quoted_simd benchmarks.
+/// The splice uses `core::arch::aarch64::*` raw NEON intrinsics on
+/// aarch64 (`vld1q_u8` + `vceqq_u8` + a shift-narrow movemask); on
+/// other architectures it falls back to a scalar byte-by-byte tail
+/// loop (the same correctness reference as the `scalar_tail` helper
+/// in `parse_that::parsers::scan::quoted_simd`). The raw-intrinsic
+/// path avoids the `#![feature(portable_simd)]` nightly gate that
+/// `parse_that`'s `std::simd::u8x16` version requires.
+///
+/// The `#[cfg(target_arch = "aarch64")]` gate sits at the emission
+/// site (not here) because the generated module carries its own
+/// per-target dispatch; the fallback scalar arm is the same code on
+/// both paths.
 pub(super) fn emit_neon_string_scan_inline_body(quote_byte: u8) -> TokenStream {
     let quote_lit = proc_macro2::Literal::u8_unsuffixed(quote_byte);
     quote! {
-        // AW-IV.W2.3.a inline-decode — SIMD quoted-string scanner body
+        // AW-IV.W2.3.a inline-decode — NEON quoted-string scanner body
         // spliced verbatim. Mirrors
         // `parse_that::parsers::scan::quoted_simd::scan_quoted_string_simd`
         // with `escaped_mask` + `odd_parity_backslashes` + scalar tail
         // inlined as labelled blocks; no fn-call boundary remains.
         let __sstring: ::core::option::Option<usize> = '__sstring: {
-            use ::core::simd::prelude::*;
             const __QUOTE: u8 = #quote_lit;
             const __CHUNK: usize = 16;
             const __MASK16: u32 = 0xFFFF;
@@ -463,93 +465,123 @@ pub(super) fn emit_neon_string_scan_inline_body(quote_byte: u8) -> TokenStream {
             let mut __pos: usize = start;
             let __end: usize = input.len();
             let mut __carry: u32 = 0;
-            let __quote_splat = ::core::simd::u8x16::splat(__QUOTE);
-            let __bs_splat = ::core::simd::u8x16::splat(b'\\');
 
-            while __pos + __CHUNK <= __end {
-                let __chunk = ::core::simd::u8x16::from_slice(
-                    unsafe { input.get_unchecked(__pos..__pos + __CHUNK) },
-                );
-                let __quote_bits = __chunk
-                    .simd_eq(__quote_splat)
-                    .to_bitmask() as u32;
-                let __bs_bits = __chunk
-                    .simd_eq(__bs_splat)
-                    .to_bitmask() as u32;
+            #[cfg(target_arch = "aarch64")]
+            {
+                // SAFETY: NEON is baseline aarch64; the `#[cfg]` gate
+                // admits the intrinsics only when the target supports
+                // them. Every `vld1q_u8(ptr)` below is bounded by the
+                // `__pos + __CHUNK <= __end` loop guard.
+                use ::core::arch::aarch64::*;
+                unsafe {
+                    let __quote_splat = vdupq_n_u8(__QUOTE);
+                    let __bs_splat = vdupq_n_u8(b'\\');
+                    // Bit-pattern LUT for movemask: maps bits 0..7 to
+                    // 1, 2, 4, ..., 128 across the low half of the
+                    // 16-byte vector, repeated across the high half.
+                    // After `vandq_u8` with the vceqq result, the low
+                    // half's horizontal add produces bits 0..7 of the
+                    // 16-bit mask, the high half's produces bits 8..15.
+                    let __movemask_pat: [u8; 16] = [
+                        1, 2, 4, 8, 16, 32, 64, 128,
+                        1, 2, 4, 8, 16, 32, 64, 128,
+                    ];
+                    let __pat_v = vld1q_u8(__movemask_pat.as_ptr());
+                    while __pos + __CHUNK <= __end {
+                        let __chunk_v = vld1q_u8(input.as_ptr().add(__pos));
+                        // Per-byte equality against the quote splat +
+                        // backslash splat. `vceqq_u8` outputs 0xFF /
+                        // 0x00 per byte; the movemask below collapses
+                        // to 16 bits.
+                        let __quote_eq = vceqq_u8(__chunk_v, __quote_splat);
+                        let __bs_eq = vceqq_u8(__chunk_v, __bs_splat);
+                        let __quote_bits_v = vandq_u8(__quote_eq, __pat_v);
+                        let __bs_bits_v = vandq_u8(__bs_eq, __pat_v);
+                        let __quote_bits = (vaddv_u8(vget_low_u8(__quote_bits_v)) as u32)
+                            | ((vaddv_u8(vget_high_u8(__quote_bits_v)) as u32) << 8);
+                        let __bs_bits = (vaddv_u8(vget_low_u8(__bs_bits_v)) as u32)
+                            | ((vaddv_u8(vget_high_u8(__bs_bits_v)) as u32) << 8);
 
-                // Fast path: no backslashes, no carry.
-                if __bs_bits == 0 && __carry == 0 {
-                    if __quote_bits != 0 {
-                        break '__sstring ::core::option::Option::Some(
-                            __pos + __quote_bits.trailing_zeros() as usize,
-                        );
-                    }
-                    __pos += __CHUNK;
-                    continue;
-                }
-
-                // escaped_mask inline — compute which bit positions are
-                // escaped by an odd-parity backslash run.
-                let __escaped: u32 = '__esc: {
-                    if __bs_bits == 0 {
-                        let __e = __carry;
-                        __carry = 0;
-                        break '__esc __e;
-                    }
-                    let __carry_in = __carry;
-
-                    // odd_parity_backslashes inline — mark odd-parity
-                    // positions within each backslash run, threading
-                    // the carry from the previous chunk.
-                    let __odd: u32 = '__odd: {
-                        let mut __odd_acc: u32 = 0;
-                        let mut __i_bit: u32 = 0;
-                        if __carry_in == 1 && (__bs_bits & 1) != 0 {
-                            let __run_len =
-                                (!__bs_bits).trailing_zeros().min(16);
-                            let __run_mask = if __run_len >= 16 {
-                                __MASK16
-                            } else {
-                                (1u32 << __run_len) - 1
-                            };
-                            __odd_acc |= __run_mask & __ODD_BITS;
-                            __i_bit = __run_len;
-                        }
-                        while __i_bit < 16 {
-                            if (__bs_bits >> __i_bit) & 1 == 0 {
-                                __i_bit += 1;
-                                continue;
+                        // Fast path: no backslashes, no carry.
+                        if __bs_bits == 0 && __carry == 0 {
+                            if __quote_bits != 0 {
+                                break '__sstring ::core::option::Option::Some(
+                                    __pos + __quote_bits.trailing_zeros() as usize,
+                                );
                             }
-                            let __shifted = __bs_bits >> __i_bit;
-                            let __run_len = (!__shifted)
-                                .trailing_zeros()
-                                .min(16 - __i_bit);
-                            let __run_mask = if __run_len >= 32 {
-                                u32::MAX
-                            } else {
-                                (1u32 << __run_len) - 1
-                            };
-                            __odd_acc |= (__run_mask & 0x5555) << __i_bit;
-                            __i_bit += __run_len;
+                            __pos += __CHUNK;
+                            continue;
                         }
-                        break '__odd __odd_acc & __MASK16;
-                    };
 
-                    let __e = ((__odd << 1) | __carry_in) & __MASK16;
-                    __carry = (__odd >> 15) & 1;
-                    break '__esc __e;
-                };
+                        // escaped_mask inline — compute which bit
+                        // positions are escaped by an odd-parity
+                        // backslash run.
+                        let __escaped: u32 = '__esc: {
+                            if __bs_bits == 0 {
+                                let __e = __carry;
+                                __carry = 0;
+                                break '__esc __e;
+                            }
+                            let __carry_in = __carry;
 
-                let __real_quotes = __quote_bits & !__escaped;
-                if __real_quotes != 0 {
-                    break '__sstring ::core::option::Option::Some(
-                        __pos + __real_quotes.trailing_zeros() as usize,
-                    );
+                            // odd_parity_backslashes inline — mark
+                            // odd-parity positions within each
+                            // backslash run, threading the carry from
+                            // the previous chunk.
+                            let __odd: u32 = '__odd: {
+                                let mut __odd_acc: u32 = 0;
+                                let mut __i_bit: u32 = 0;
+                                if __carry_in == 1 && (__bs_bits & 1) != 0 {
+                                    let __run_len =
+                                        (!__bs_bits).trailing_zeros().min(16);
+                                    let __run_mask = if __run_len >= 16 {
+                                        __MASK16
+                                    } else {
+                                        (1u32 << __run_len) - 1
+                                    };
+                                    __odd_acc |= __run_mask & __ODD_BITS;
+                                    __i_bit = __run_len;
+                                }
+                                while __i_bit < 16 {
+                                    if (__bs_bits >> __i_bit) & 1 == 0 {
+                                        __i_bit += 1;
+                                        continue;
+                                    }
+                                    let __shifted = __bs_bits >> __i_bit;
+                                    let __run_len = (!__shifted)
+                                        .trailing_zeros()
+                                        .min(16 - __i_bit);
+                                    let __run_mask = if __run_len >= 32 {
+                                        u32::MAX
+                                    } else {
+                                        (1u32 << __run_len) - 1
+                                    };
+                                    __odd_acc |= (__run_mask & 0x5555) << __i_bit;
+                                    __i_bit += __run_len;
+                                }
+                                break '__odd __odd_acc & __MASK16;
+                            };
+
+                            let __e = ((__odd << 1) | __carry_in) & __MASK16;
+                            __carry = (__odd >> 15) & 1;
+                            break '__esc __e;
+                        };
+
+                        let __real_quotes = __quote_bits & !__escaped;
+                        if __real_quotes != 0 {
+                            break '__sstring ::core::option::Option::Some(
+                                __pos + __real_quotes.trailing_zeros() as usize,
+                            );
+                        }
+                        __pos += __CHUNK;
+                    }
                 }
-                __pos += __CHUNK;
             }
 
-            // scalar_tail inline — for the last < 16 bytes.
+            // scalar_tail — for the last < 16 bytes on aarch64, and
+            // for the entire input on non-aarch64 targets. Same
+            // correctness reference as `scalar_tail` in
+            // `parse_that::parsers::scan::quoted_simd`.
             let mut __tail_pos: usize = __pos;
             let __byte0_escaped = __carry != 0;
             if __byte0_escaped && __tail_pos < __end {

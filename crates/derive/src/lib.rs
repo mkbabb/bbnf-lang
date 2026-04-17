@@ -48,7 +48,11 @@ use parse_that::utils::get_cargo_root_path;
 // AW-II.W5b: bumped from 9 — DtaState::Minus variant added to the
 // wire contract + emitter; cached codegen from pre-W5b versions
 // references an enum without the Minus arm.
-const BBNF_SCHEMA_VERSION: u64 = 10;
+// AW-III.W1: bumped from 10 — `DtaState::Literal { payload: LiteralPayload }`
+// + `DtaState::Regex { payload: Option<PayloadKind> }` add typed-leaf
+// payload threading. Cached codegen from pre-W1 versions references the
+// pre-payload variant shapes; tape-side wire contract changed.
+const BBNF_SCHEMA_VERSION: u64 = 11;
 
 /// Recursively collect all grammar file contents for hashing.
 ///

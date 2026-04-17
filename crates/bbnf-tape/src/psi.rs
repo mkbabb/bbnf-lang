@@ -131,55 +131,59 @@ impl PayloadKind {
         }
     }
 
-    /// Whether this kind writes into [`Columns::pay_narrow`].
+    /// Total byte width of this kind's encoded payload in `pay_agg`.
+    /// `String` / `AggregateLarge` are variable-width (dictated by
+    /// the matched input slice); the helper returns `0` for those so
+    /// the capacity-reservation pass keys off the matched length.
+    ///
+    /// AW-III.W1 unified arena emission: every non-variable scalar
+    /// payload lands in [`Columns::pay_agg`] as fixed-width little-
+    /// endian bytes. The single-arena path means downstream readers
+    /// (`payload_bytes`, `payload_scalar`) see one source of truth;
+    /// the legacy `pay_narrow` / `pay_wide` columns survive only for
+    /// pre-AW unit-test plumbing and the AW-IV bulk-typed visitors.
     #[inline]
-    pub const fn is_narrow(self) -> bool {
-        matches!(self, Self::U8 | Self::Bool | Self::HexU32)
-    }
-
-    /// Whether this kind writes into [`Columns::pay_wide`].
-    #[inline]
-    pub const fn is_wide(self) -> bool {
-        matches!(self, Self::F64 | Self::I64)
-    }
-
-    /// Whether this kind writes into the [`Columns::pay_agg`] arena.
-    #[inline]
-    pub const fn is_arena(self) -> bool {
-        matches!(self, Self::String | Self::AggregateLarge)
+    pub const fn arena_byte_width(self) -> usize {
+        match self {
+            Self::U8 | Self::Bool => 1,
+            Self::HexU32 => 4,
+            Self::F64 | Self::I64 => 8,
+            Self::String | Self::AggregateLarge => 0,
+        }
     }
 }
 
 /// One decode unit produced by Stage A and consumed by Stage B.
 ///
 /// Layout is `#[repr(C)]` so the in-memory shape matches the codegen-
-/// time literal the emitter produces. Total size is 16 bytes — 4
-/// records per 64 B cache line, matching [`crate::tape::TapeRec`].
+/// time literal the emitter produces. AW-III.W1 widened the
+/// `column_idx: u8` slot to a `u32` `arena_offset` because the
+/// unified arena emission path needs byte offsets that range over
+/// the entire `pay_agg` length (megabytes); the prior 8-bit slot
+/// only sufficed under the narrow / wide column-rank scheme. Total
+/// size is 20 bytes; chunks of 3 jobs occupy each cache line.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PayloadJob {
     /// Structural record index in [`Columns`]. The Stage-B worker
     /// updates the matching record's `child_off` slot to point at
-    /// the column rank or arena offset where the decoded payload
-    /// lands.
+    /// the arena offset where the decoded payload lands.
     pub rec_idx: u32,
     /// Source byte range start — inclusive. The Stage-B scanner reads
     /// `input[input_lo..input_hi]`.
     pub input_lo: u32,
     /// Source byte range end — exclusive.
     pub input_hi: u32,
+    /// Pre-allocated arena byte offset in [`Columns::pay_agg`].
+    /// Stage A monotonically advances the arena cursor per job so
+    /// every offset is unique and bounds-disjoint from its peers; the
+    /// Stage-B writer stamps the decoded value at this offset.
+    pub arena_offset: u32,
     /// Terminal scanner selector.
     pub kind: PayloadKind,
-    /// Pre-allocated column slot index. For [`PayloadKind::is_narrow`]
-    /// kinds, the rank into [`Columns::pay_narrow`]; for
-    /// [`PayloadKind::is_wide`] kinds, the rank into
-    /// [`Columns::pay_wide`]; for [`PayloadKind::is_arena`] kinds, the
-    /// byte offset into [`Columns::pay_agg`].
-    pub column_idx: u8,
-    /// Padding to match the documented 16-byte size and align the
-    /// struct on a natural 4-byte boundary; the bytes are
-    /// zero-initialised at construction.
-    pub _pad: [u8; 2],
+    /// Padding to align the struct on a natural 4-byte boundary; the
+    /// bytes are zero-initialised at construction.
+    pub _pad: [u8; 3],
 }
 
 impl PayloadJob {
@@ -192,15 +196,15 @@ impl PayloadJob {
         input_lo: u32,
         input_hi: u32,
         kind: PayloadKind,
-        column_idx: u8,
+        arena_offset: u32,
     ) -> Self {
         Self {
             rec_idx,
             input_lo,
             input_hi,
+            arena_offset,
             kind,
-            column_idx,
-            _pad: [0; 2],
+            _pad: [0; 3],
         }
     }
 
@@ -215,7 +219,7 @@ impl PayloadJob {
 
 // Compile-time guarantees the layout the emitter relies on.
 const _PAYLOAD_JOB_SIZE: () = {
-    assert!(std::mem::size_of::<PayloadJob>() == 16);
+    assert!(std::mem::size_of::<PayloadJob>() == 20);
 };
 const _PAYLOAD_JOB_ALIGN: () = {
     assert!(std::mem::align_of::<PayloadJob>() == 4);
@@ -431,78 +435,71 @@ impl PayloadStream {
         self.fill_sequential(input, columns)
     }
 
-    /// Compute the column capacities required to host every job's
-    /// pre-allocated slot. Stage A assigns `column_idx` monotonically
-    /// per kind, so the maximum index per kind plus one is the
-    /// required column length.
+    /// Compute the arena capacity required to host every job's
+    /// pre-allocated slot.
+    ///
+    /// AW-III.W1 unified arena emission: every job's decoded payload
+    /// lands in [`Columns::pay_agg`] at the byte offset Stage A
+    /// allocated via the arena cursor. The offset+width per job is
+    /// the upper-bound on `pay_agg.len()`. Variable-width payloads
+    /// (`String`, `AggregateLarge`) reserve `input_len` bytes; fixed-
+    /// width scalars reserve [`PayloadKind::arena_byte_width`].
     fn required_column_capacities(&self) -> ColumnCapacities {
         let mut caps = ColumnCapacities::default();
         for job in &self.jobs {
-            match job.kind {
-                k if k.is_narrow() => {
-                    caps.narrow = caps.narrow.max(job.column_idx as usize + 1);
-                }
-                k if k.is_wide() => {
-                    caps.wide = caps.wide.max(job.column_idx as usize + 1);
-                }
-                k if k.is_arena() => {
-                    caps.arena = caps
-                        .arena
-                        .max(job.column_idx as usize + job.input_len() as usize);
-                }
-                _ => {}
-            }
+            let width = match job.kind.arena_byte_width() {
+                0 => job.input_len() as usize,
+                w => w,
+            };
+            caps.arena = caps.arena.max(job.arena_offset as usize + width);
         }
         caps
     }
 }
 
-/// Per-column capacity hints derived from the PSI stream.
+/// Arena capacity hint derived from the PSI stream.
 ///
-/// Stage B reserves enough space in every column to land every job's
-/// decoded payload at its `column_idx` slot before any decode runs.
-/// The reservation is `resize`-with-zero so subsequent slot writes
-/// land in pre-existing memory — no growth during the Stage-B walk.
+/// Stage B reserves enough space in [`Columns::pay_agg`] to land
+/// every job's decoded payload at its allocated byte offset before
+/// any decode runs. The reservation is `resize`-with-zero so
+/// subsequent slot writes land in pre-existing memory — no growth
+/// during the Stage-B walk.
+///
+/// AW-III.W1: every payload kind serialises to `pay_agg`; the prior
+/// `narrow` / `wide` capacity slots are gone alongside the column
+/// emission paths.
 #[derive(Debug, Default)]
 struct ColumnCapacities {
-    narrow: usize,
-    wide: usize,
     arena: usize,
 }
 
 impl ColumnCapacities {
     fn reserve(&self, columns: &mut Columns) {
-        if self.narrow > columns.pay_narrow.len() {
-            columns.pay_narrow.resize(self.narrow, 0);
-        }
-        if self.wide > columns.pay_wide.len() {
-            columns.pay_wide.resize(self.wide, 0);
-        }
         if self.arena > columns.pay_agg.len() {
             columns.pay_agg.resize(self.arena, 0);
         }
     }
 }
 
-/// Raw cell pointers + lengths into a [`Columns`] substrate.
+/// Raw cell pointers + lengths into a [`Columns::pay_agg`] arena.
 ///
 /// Captured by [`PayloadStream::fill_sequential`] /
 /// [`PayloadStream::fill_parallel`] before the walk so workers can
-/// write into disjoint slots without holding a `&mut Vec<_>` across
-/// thread boundaries. The disjointness invariant — every job's
-/// `(kind, column_idx)` pair is unique — comes from Stage A's
-/// monotonic per-kind allocation, so two writes never target the
+/// write into disjoint byte ranges without holding a `&mut Vec<_>`
+/// across thread boundaries. The disjointness invariant — every
+/// job's `(arena_offset, width)` pair is unique — comes from Stage
+/// A's monotonic per-job allocation, so two writes never target the
 /// same byte.
 ///
 /// The struct is `Send + Sync` because raw pointers carry no `Send`
 /// inheritance constraint; the safety contract lives at the
 /// `unsafe` write site.
+///
+/// AW-III.W1: the unified arena emission path collapsed the prior
+/// per-kind cell trio (narrow / wide / agg) to a single agg pointer —
+/// every payload kind serialises into `pay_agg`.
 #[derive(Clone, Copy)]
 struct ColumnCells {
-    pay_narrow: *mut u32,
-    pay_narrow_len: usize,
-    pay_wide: *mut u64,
-    pay_wide_len: usize,
     pay_agg: *mut u8,
     pay_agg_len: usize,
 }
@@ -518,18 +515,20 @@ unsafe impl Sync for ColumnCells {}
 impl From<&mut Columns> for ColumnCells {
     fn from(columns: &mut Columns) -> Self {
         Self {
-            pay_narrow: columns.pay_narrow.as_mut_ptr(),
-            pay_narrow_len: columns.pay_narrow.len(),
-            pay_wide: columns.pay_wide.as_mut_ptr(),
-            pay_wide_len: columns.pay_wide.len(),
             pay_agg: columns.pay_agg.as_mut_ptr(),
             pay_agg_len: columns.pay_agg.len(),
         }
     }
 }
 
-/// Decode `job`'s source slice and write the result into the
-/// matching column slot at `job.column_idx`.
+/// Decode `job`'s source slice and write the result into the arena
+/// (`pay_agg`) slot at `job.column_idx`.
+///
+/// AW-III.W1 unified arena emission: every payload kind serialises
+/// to little-endian bytes in [`Columns::pay_agg`]. Downstream
+/// consumers read via `payload_bytes(rec, width)` /
+/// `payload_scalar::<T>` keyed by the record's `child_off` (set to
+/// `job.column_idx` at Stage A by the walker).
 ///
 /// # Safety
 ///
@@ -542,58 +541,61 @@ impl From<&mut Columns> for ColumnCells {
 ///   monotonic `column_idx` allocation.
 /// - `column_idx` must address a pre-allocated slot — established by
 ///   [`PayloadStream::required_column_capacities`] +
-///   [`ColumnCapacities::reserve`] sizing the columns to admit every
+///   [`ColumnCapacities::reserve`] sizing the arena to admit every
 ///   job before the walk begins.
 #[inline]
 unsafe fn write_decoded(job: &PayloadJob, input: &[u8], cells: &ColumnCells) {
     let lo = job.input_lo as usize;
     let hi = job.input_hi as usize;
     let slice = &input[lo..hi];
+    let dst_off = job.arena_offset as usize;
     match job.kind {
         PayloadKind::F64 => {
             let s = std::str::from_utf8(slice).unwrap_or("0");
             let bits = s.parse::<f64>().unwrap_or(0.0).to_bits();
-            debug_assert!((job.column_idx as usize) < cells.pay_wide_len);
+            let bytes = bits.to_le_bytes();
+            debug_assert!(dst_off + 8 <= cells.pay_agg_len);
             unsafe {
-                *cells.pay_wide.add(job.column_idx as usize) = bits;
+                std::ptr::copy_nonoverlapping(bytes.as_ptr(), cells.pay_agg.add(dst_off), 8);
             }
         }
         PayloadKind::I64 => {
             let s = std::str::from_utf8(slice).unwrap_or("0");
             let bits = s.parse::<i64>().unwrap_or(0) as u64;
-            debug_assert!((job.column_idx as usize) < cells.pay_wide_len);
+            let bytes = bits.to_le_bytes();
+            debug_assert!(dst_off + 8 <= cells.pay_agg_len);
             unsafe {
-                *cells.pay_wide.add(job.column_idx as usize) = bits;
+                std::ptr::copy_nonoverlapping(bytes.as_ptr(), cells.pay_agg.add(dst_off), 8);
             }
         }
         PayloadKind::U8 => {
-            let value = slice.first().copied().unwrap_or(0) as u32;
-            debug_assert!((job.column_idx as usize) < cells.pay_narrow_len);
+            let value = slice.first().copied().unwrap_or(0);
+            debug_assert!(dst_off + 1 <= cells.pay_agg_len);
             unsafe {
-                *cells.pay_narrow.add(job.column_idx as usize) = value;
+                *cells.pay_agg.add(dst_off) = value;
             }
         }
         PayloadKind::Bool => {
-            let value: u32 = if slice == b"true" { 1 } else { 0 };
-            debug_assert!((job.column_idx as usize) < cells.pay_narrow_len);
+            let value: u8 = if slice.eq_ignore_ascii_case(b"true") { 1 } else { 0 };
+            debug_assert!(dst_off + 1 <= cells.pay_agg_len);
             unsafe {
-                *cells.pay_narrow.add(job.column_idx as usize) = value;
+                *cells.pay_agg.add(dst_off) = value;
             }
         }
         PayloadKind::HexU32 => {
             let value = parse_hex_u32(slice);
-            debug_assert!((job.column_idx as usize) < cells.pay_narrow_len);
+            let bytes = value.to_le_bytes();
+            debug_assert!(dst_off + 4 <= cells.pay_agg_len);
             unsafe {
-                *cells.pay_narrow.add(job.column_idx as usize) = value;
+                std::ptr::copy_nonoverlapping(bytes.as_ptr(), cells.pay_agg.add(dst_off), 4);
             }
         }
         PayloadKind::String | PayloadKind::AggregateLarge => {
-            let start = job.column_idx as usize;
-            debug_assert!(start + slice.len() <= cells.pay_agg_len);
+            debug_assert!(dst_off + slice.len() <= cells.pay_agg_len);
             unsafe {
                 std::ptr::copy_nonoverlapping(
                     slice.as_ptr(),
-                    cells.pay_agg.add(start),
+                    cells.pay_agg.add(dst_off),
                     slice.len(),
                 );
             }

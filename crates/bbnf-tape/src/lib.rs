@@ -65,7 +65,7 @@ pub use driver::{dta_run, DtaError, Frame, FrameStack, RegexScanner, STACK_INLIN
 pub use driver::{dta_run_with_replay, DtaSnapshot};
 pub use dta::{
     DtaAssociativity, DtaCounterOptional, DtaDiagnostic, DtaFrameKind, DtaPrecedenceEntry,
-    DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable,
+    DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable, LiteralPayload,
 };
 pub use finaliser::{derive_frame_depth, finalise, STACK_DEPTH_HINT};
 pub use kind::TapeKind;

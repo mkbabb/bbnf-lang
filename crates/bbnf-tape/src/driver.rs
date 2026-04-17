@@ -68,10 +68,10 @@
 
 use crate::columns::Columns;
 use crate::dta::{
-    DtaFrameKind, DtaRuleId, DtaState, DtaStateId, DtaTable,
+    DtaFrameKind, DtaRuleId, DtaState, DtaStateId, DtaTable, LiteralPayload,
 };
 use crate::kind::TapeKind;
-use crate::psi::{PayloadJob, PayloadKind, PayloadStream};
+use crate::psi::{PayloadJob, PayloadStream};
 use crate::tape::TapeOffset;
 
 /// Inline frame-stack depth budget.
@@ -872,7 +872,7 @@ fn dispatch_one(
             stack.pending_variant_idx = u8::MAX;
             advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
         }
-        DtaState::Literal { text } => {
+        DtaState::Literal { text, payload } => {
             let bytes = text.as_bytes();
             let start = *pos as usize;
             let end = start.saturating_add(bytes.len());
@@ -885,12 +885,33 @@ fn dispatch_one(
             }
             let lo = *pos;
             *pos = end as u32;
-            emit_leaf(columns, frame_depth, stack, TapeKind::Literal, lo, *pos);
+            // AW-III.W1: when the lifter resolved an enclosing `Map {
+            // Literal, IntLit/BoolLit/FloatLit }`, the const-folded
+            // value lives in `payload`. Promote `TapeKind::Literal` →
+            // `TapeKind::Span` so downstream `payload_bytes` /
+            // `payload_scalar` readers recognise the leaf as
+            // payload-bearing, then write the lifted constant into the
+            // arena and stamp `child_off` to the arena offset. With no
+            // payload the legacy structural-only emission survives.
+            if payload.is_some() {
+                let arena_off = stage_literal_payload_in_arena(columns, payload);
+                emit_leaf_with_payload(
+                    columns,
+                    frame_depth,
+                    stack,
+                    TapeKind::Span,
+                    lo,
+                    *pos,
+                    arena_off,
+                );
+            } else {
+                emit_leaf(columns, frame_depth, stack, TapeKind::Literal, lo, *pos);
+            }
             // AW-I.W4ζ — consume the pending rule-entry stamp.
             stack.pending_variant_idx = u8::MAX;
             advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
         }
-        DtaState::Regex { pattern } => {
+        DtaState::Regex { pattern, payload } => {
             let match_len = scanner
                 .scan(pattern, input, *pos as usize)
                 .ok_or(DtaError::Syntax {
@@ -900,16 +921,44 @@ fn dispatch_one(
                 })?;
             let lo = *pos;
             *pos = lo + match_len;
-            let rec_idx = columns.len() as u32;
-            emit_leaf(columns, frame_depth, stack, TapeKind::Span, lo, *pos);
+            // AW-III.W1: when the lifter attached a decoder selector,
+            // pre-allocate the arena slot here so the leaf's
+            // `child_off` carries the offset Stage B will write into.
+            // The arena reserves the worst-case width up front so the
+            // PSI worker performs only the decode + store, no growth.
+            // Fixed-width payloads use [`PayloadKind::arena_byte_width`];
+            // variable-width payloads (`String`/`AggregateLarge`) reserve
+            // the matched byte run.
+            let (rec_idx, child_off) = match payload {
+                None => {
+                    let rec_idx = columns.len() as u32;
+                    emit_leaf(columns, frame_depth, stack, TapeKind::Span, lo, *pos);
+                    (rec_idx, TapeOffset::NONE)
+                }
+                Some(kind) => {
+                    let width = match kind.arena_byte_width() {
+                        0 => match_len as usize,
+                        w => w,
+                    };
+                    let arena_off = columns.pay_agg.len() as u32;
+                    columns.pay_agg.resize(arena_off as usize + width, 0);
+                    let rec_idx = columns.len() as u32;
+                    emit_leaf_with_payload(
+                        columns,
+                        frame_depth,
+                        stack,
+                        TapeKind::Span,
+                        lo,
+                        *pos,
+                        TapeOffset(arena_off),
+                    );
+                    psi.push(PayloadJob::new(rec_idx, lo, *pos, kind, arena_off));
+                    (rec_idx, TapeOffset(arena_off))
+                }
+            };
+            let _ = (rec_idx, child_off);
             // AW-I.W4ζ — consume the pending rule-entry stamp.
             stack.pending_variant_idx = u8::MAX;
-            // Enqueue a PSI job — the PayloadKind classification is
-            // the emitter's responsibility; without a per-state kind
-            // annotation on the table we default to F64 as the most
-            // common numeric payload. The emitter-driven lowering in
-            // AW.1.2 threads the right kind through.
-            psi.push(PayloadJob::new(rec_idx, lo, *pos, PayloadKind::F64, 0));
             advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
         }
         DtaState::Seq { children, frame } => {
@@ -1371,6 +1420,35 @@ fn emit_leaf(
     span_lo: u32,
     span_hi: u32,
 ) -> u32 {
+    emit_leaf_with_payload(
+        columns,
+        frame_depth,
+        stack,
+        kind,
+        span_lo,
+        span_hi,
+        TapeOffset::NONE,
+    )
+}
+
+/// AW-III.W1 — emit a leaf record with `child_off` stamped to a
+/// payload-bearing arena offset.
+///
+/// Same column-write shape as [`emit_leaf`] except the polymorphic
+/// `child_off` slot carries the arena byte offset where the typed
+/// payload bytes live (written by [`stage_literal_payload_in_arena`]
+/// or the PSI stage-B drain). Downstream readers (`payload_bytes`,
+/// `payload_scalar`) consult `child_off` to recover the slot.
+#[inline]
+fn emit_leaf_with_payload(
+    columns: &mut Columns,
+    frame_depth: &mut Vec<u8>,
+    stack: &FrameStack,
+    kind: TapeKind,
+    span_lo: u32,
+    span_hi: u32,
+    child_off: TapeOffset,
+) -> u32 {
     let idx = columns.len() as u32;
     let kind_meta = kind as u8 & 0x0F;
     columns.kinds.push(kind_meta);
@@ -1388,9 +1466,31 @@ fn emit_leaf(
     columns.span_lo.push(span_lo);
     columns.span_hi.push(span_hi);
     columns.sib_skip.push(0);
-    columns.child_off.push(TapeOffset::NONE);
+    columns.child_off.push(child_off);
     frame_depth.push(stack.depth());
     idx
+}
+
+/// AW-III.W1 — write a `LiteralPayload` constant into the tape's
+/// arena (`pay_agg`) and return its byte offset.
+///
+/// Constants from `Map { Literal, MapExpr::IntLit/BoolLit/FloatLit }`
+/// are grammar-fixed; the lifter computes the value at compile time
+/// (see [`crate::dta::LiteralPayload`]). The walker stages it into
+/// the arena post-match so downstream readers find a single source
+/// of truth at `arena[child_off..child_off + width]`. PSI is reserved
+/// for value-from-input decoders (regex-driven scalar conversion).
+#[inline]
+fn stage_literal_payload_in_arena(columns: &mut Columns, payload: LiteralPayload) -> TapeOffset {
+    let mut buf = [0u8; 8];
+    let width = payload.write_le(&mut buf);
+    if width == 0 {
+        return TapeOffset::NONE;
+    }
+    let arena = &mut columns.pay_agg;
+    let offset = arena.len() as u32;
+    arena.extend_from_slice(&buf[..width]);
+    TapeOffset(offset)
 }
 
 /// Reserve a compound row with `span_lo` only; `span_hi` / `child_off`

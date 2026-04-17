@@ -31,6 +31,8 @@
 //! lifted table ships in this wave; the driver that consumes it
 //! ships in V4's PSI pipeline.
 
+use crate::psi::PayloadKind;
+
 /// Opaque state identifier in [`DtaTable::states`]. Stable for the
 /// lifetime of one grammar compilation.
 #[repr(transparent)]
@@ -73,6 +75,98 @@ pub enum DtaCounterOptional {
     Lookahead = 2,
 }
 
+/// AW-III.W1 — Literal-leaf payload classification + lifted constant.
+///
+/// The lifter resolves the enclosing `Map { Literal, MapExpr::IntLit }`
+/// (Sheets `add_op = "+" -> 0u8`, CSS `dirKeyword = "ltr" -> 0u8`,
+/// CSS `percentageUnit = "%" -> 255u8`, JSON `null = "null" -> 0u8`,
+/// etc.) into one of these variants. The walker writes the lifted
+/// constant directly into the tape's arena at emit-leaf time — no
+/// PSI round-trip is needed because the value is grammar-constant.
+///
+/// `None` is the absence sentinel — keeps the legacy structural-only
+/// emission for grammar literals that carry no `->` annotation.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum LiteralPayload {
+    /// No `->` annotation — emit the legacy `TapeKind::Literal` row
+    /// without payload bytes.
+    None,
+    /// `Map { Literal, IntLit(value) }` projecting to `u8`. The lifter
+    /// truncates `IntLit(i64)` to `u8` during admission. Walker writes
+    /// one byte at the arena offset; reader uses `payload_bytes(rec, 1)`.
+    U8(u8),
+    /// `Map { Literal, BoolLit(value) }`. Walker writes one byte
+    /// (`0` / `1`). Reader uses `payload_bytes(rec, 1)`.
+    Bool(bool),
+    /// `Map { Literal, IntLit(value) }` projecting to `u32`. Walker
+    /// writes 4 little-endian bytes. Reader uses
+    /// `payload_bytes(rec, 4)` (or `payload_scalar::<u32>` over the
+    /// arena view).
+    U32(u32),
+    /// `Map { Literal, IntLit(value) }` projecting to `i64`/`u64`.
+    /// Walker writes 8 little-endian bytes. Reader uses
+    /// `payload_bytes(rec, 8)`.
+    U64(u64),
+    /// `Map { Literal, FloatLit(value) }` projecting to `f64`. Walker
+    /// writes 8 little-endian bytes from `value.to_bits()`. Reader
+    /// uses `payload_bytes(rec, 8)`.
+    F64(f64),
+}
+
+impl LiteralPayload {
+    /// Number of bytes the walker writes into the arena for this
+    /// variant. `0` for `None`.
+    #[inline]
+    pub const fn arena_byte_width(self) -> usize {
+        match self {
+            LiteralPayload::None => 0,
+            LiteralPayload::U8(_) | LiteralPayload::Bool(_) => 1,
+            LiteralPayload::U32(_) => 4,
+            LiteralPayload::U64(_) | LiteralPayload::F64(_) => 8,
+        }
+    }
+
+    /// Encode this payload's value as little-endian bytes into the
+    /// caller-supplied 8-byte buffer; returns the number of bytes
+    /// written. Used by the walker to stage the constant into the
+    /// arena.
+    #[inline]
+    pub fn write_le(self, dst: &mut [u8; 8]) -> usize {
+        match self {
+            LiteralPayload::None => 0,
+            LiteralPayload::U8(v) => {
+                dst[0] = v;
+                1
+            }
+            LiteralPayload::Bool(b) => {
+                dst[0] = if b { 1 } else { 0 };
+                1
+            }
+            LiteralPayload::U32(v) => {
+                let bytes = v.to_le_bytes();
+                dst[..4].copy_from_slice(&bytes);
+                4
+            }
+            LiteralPayload::U64(v) => {
+                let bytes = v.to_le_bytes();
+                dst[..8].copy_from_slice(&bytes);
+                8
+            }
+            LiteralPayload::F64(v) => {
+                let bytes = v.to_bits().to_le_bytes();
+                dst[..8].copy_from_slice(&bytes);
+                8
+            }
+        }
+    }
+
+    /// `true` iff this variant carries a payload.
+    #[inline]
+    pub const fn is_some(self) -> bool {
+        !matches!(self, LiteralPayload::None)
+    }
+}
+
 /// Operator associativity for the shunting-yard loop.
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -93,14 +187,37 @@ pub enum DtaAssociativity {
 pub enum DtaState {
     /// Literal byte sequence — the driver calls into the scanner at
     /// the referenced pattern.
+    ///
+    /// AW-III.W1: `payload` carries the typed-leaf classification
+    /// (e.g. `Map { Literal "+", IntLit(0) }` lifts as `Literal {
+    /// text: "+", payload: U8WithConst(0) }`). When `payload` is
+    /// non-`None`, the walker's Literal arm writes the lifted constant
+    /// bytes into the tape's arena (`pay_agg`) post-match and emits
+    /// the leaf as `TapeKind::Span` with `child_off = arena offset`.
+    /// `None` keeps the structural-only emission (`TapeKind::Literal`,
+    /// no payload write).
     Literal {
         /// Byte sequence to match verbatim.
         text: &'static str,
+        /// Per-state payload classification + lifted constant value.
+        payload: LiteralPayload,
     },
     /// Regex pattern — routes through the existing regex subsystem.
+    ///
+    /// AW-III.W1: `payload` carries the runtime decoder selector. When
+    /// non-`None`, the walker's Regex arm enqueues a `PayloadJob` into
+    /// the PSI stream so the matched bytes decode into the arena at
+    /// stage-B time (`PayloadKind::F64` for `number -> f64`,
+    /// `HexU32` for hex-color regexes, etc.). `None` keeps the bare
+    /// `TapeKind::Span` emission with no decoder dispatch.
     Regex {
         /// Pattern string (static interned).
         pattern: &'static str,
+        /// Per-state decoder selector for the matched byte slice.
+        /// `PayloadKind::None`-equivalent is the absence variant —
+        /// represented here by an `Option` so the emitted const tables
+        /// pay no enum-discriminant cost when the payload is absent.
+        payload: Option<PayloadKind>,
     },
     /// Matches the empty string, consumes nothing.
     Epsilon,

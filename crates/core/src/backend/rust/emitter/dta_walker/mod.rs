@@ -267,7 +267,7 @@ pub fn emit_specialised_walker(
 /// Emit the symbol identifier for the per-grammar walker function. The
 /// `grammar` argument is sanitised so identifiers like `bbnf-bootstrap`
 /// or `css/l4` produce valid Rust idents.
-pub(crate) fn walker_fn_ident(grammar: &str) -> proc_macro2::Ident {
+pub fn walker_fn_ident(grammar: &str) -> proc_macro2::Ident {
     let mut sanitised = String::with_capacity(grammar.len() + 8);
     sanitised.push_str("dta_run_");
     for ch in grammar.chars() {

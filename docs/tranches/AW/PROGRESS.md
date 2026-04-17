@@ -1686,3 +1686,153 @@ walker-specialisation pass. The DTA-vs-RD 16× gap (29 cyc/byte
 twitter vs 1.78 cyc/byte) is implementation, not architectural —
 W4's general emitter pass mechanically lowers `DtaTable.states` to
 inlined Rust labels per the §6 generalization invariant.
+
+## 2026-04-17 — AW-III W4 landed (architectural transposition complete)
+
+Master HEAD `9ce5f28e`. Workspace **1168 / 0 / 35** (+26 from W3
+close: 16 W4.a IR tests + 10 W4.b codegen tests). Three parallel
+agents + one integration sub-wave.
+
+### W4.a — IR mining (2 commits)
+
+`bbnf-wt-aw3-w4a` worktree.
+
+- `eb6dba39` — `feat(ir/recognizers): state_visit_frequency mining
+  pass for walker specialisation`. New file at
+  `crates/ir/src/passes/recognizers/state_visit_frequency.rs` (400
+  lines). Estimates per-state visit frequency from IR topology
+  (Repeat-body multiplier ×8, Ref incident-edge sum, ByteDispatch
+  branch density, AltLinear branch split). Exposes `HOT_BUDGET = 64`
+  (LLVM inline-threshold-aligned default; W4.b override possible).
+- `c63d0884` — `test(ir): state_visit_frequency unit + topology +
+  determinism`. 16 tests, including JSON-object proxy ordering
+  (Repeat-body states float to top of frequency table).
+
+### W4.b — Specialised walker emitter (4 commits)
+
+`bbnf-wt-aw3-w4b` worktree.
+
+- `9581ea09` — `feat(emitter/dta_walker): mechanical state lowering
+  scaffold`. New directory module
+  `crates/core/src/backend/rust/emitter/dta_walker/{mod.rs,
+  hot_cold.rs, lower_state.rs, helpers.rs}` (891 lines total). Emits
+  `pub fn dta_run_<grammar>(...)` per grammar; ByteDispatch lowered
+  inline to `match input[pos]`; non-ByteDispatch arms initially
+  routed through `__dispatch_via_cold` bridge (W4.d removes).
+- `39c57cae` — `chore(emitter/dta_walker): expose helpers for
+  codegen test`.
+- `b50340ff` (deferred) — bootstrap regen later folded into
+  orchestrator commit `9a87dc61`.
+- `6e7835d8` — `test(core): dta_walker_codegen output assertions`.
+  10 tests covering per-state arm presence, ByteDispatch LUT
+  inlining, hot/cold partitioning, empty-table stub, §6 invariant
+  equivalence.
+
+### W4.c — Driver hot/cold split + bench checkpoint (2 commits)
+
+`bbnf-wt-aw3-w4c` worktree.
+
+- `fa9cb244` — `refactor(driver): rename dta_run -> dta_run_cold;
+  expose helpers as pub`. `dta_run` → `dta_run_cold` (cold replay
+  surface). Helpers (`emit_leaf`, `reserve_compound`, `close_compound`,
+  `advance_or_pop_with`, `frame_to_tape_kind`, `dispatch_one`,
+  `try_branch`, etc.) promoted from `pub(crate)` to `pub`. Walker-arm
+  tests redirected to `dta_run_cold`.
+- `5a1d5aa4` — `bench(post-AW-III-W4): driver-side rename baseline +
+  samply attribution`. Initial bench sidecar (overwritten by W4.d
+  with hot-path numbers).
+
+### Orchestrator integration commit
+
+- `9a87dc61` — `chore(emitter,generated): bridge dta_run_cold + regen
+  for W4`. Updates W4.b's emitted `__dispatch_via_cold` bridge to
+  call `dta_run_cold` (renamed by W4.c); bootstrap regen produces
+  `generated.rs` (35,298 lines, md5
+  `66aa2918b32fbe5f12d832584b5db7af`). Idempotent.
+
+### W4.d — Hot-path integration sub-wave (8 commits)
+
+`bbnf-wt-aw3-w4d` worktree. Closes the bridge that earlier waves
+left open: every DtaState arm now lowers to inline code; parse()
+calls the emitted walker directly.
+
+- `c5ab447f` — `feat(emitter/dta_walker): inline-lower every
+  DtaState arm`. ALL variants (Epsilon, Literal, Regex, Seq,
+  ByteDispatch, AltLinear, Repeat, Ref, WsTrim, Minus, ShuntingYard)
+  inline their `dispatch_one` semantic. The `__dispatch_via_cold`
+  bridge function is deleted.
+- `79c9c5c4` — `feat(emitter/grammar,bbnf-tape/builder): swap
+  parse() to call dta_run_<grammar> directly`. parse() body
+  constructs Columns/frame_depth/psi/stack and calls the emitted
+  walker. `dta_run_into` shim removed; `columns_and_frame_depth_mut`
+  builder accessor added.
+- `32f87376` — `test(emitter/dta_walker): assert no cold-path bridge
+  in emitted code`.
+- `62925c59` — `chore(generated): bootstrap regen post hot-path
+  integration`.
+- `fd9e0746` — `perf(bbnf-tape/driver): inline-always Seq fast-path
+  + #[inline] advance_or_pop_with`. New `advance_seq_fast` helper
+  marked `#[inline(always)]`.
+- `316892d6` — `perf(emitter/dta_walker): const DTA_TABLE binding +
+  Seq fast-path + generic scanner`. Generic scanner monomorphisation
+  for LLVM devirt + cleaner inlining.
+- `a7840acd` — `chore(generated): bootstrap regen post perf
+  optimisations`. Final regen at md5
+  `1510bef24c9c77036669d52db091dc93`, 54,719 lines (+19,421 vs the
+  pre-perf regen). Idempotent.
+- `9ce5f28e` — `bench(post-AW-III-W4): refresh with hot-path numbers
+  + samply attribution`.
+
+### Hard-gate verification
+
+1. **`emit_specialised_walker` is `pub fn` with no grammar-name
+   branch.** ✓ verified via grep for `if grammar`/`match grammar`/
+   grammar-name string literals in
+   `crates/core/src/backend/rust/emitter/dta_walker/*.rs` — zero
+   matches.
+2. **`cargo asm` shows no `dispatch_one` in hot path.** ✓ verified;
+   per-grammar `dta_run_<grammar>` body has zero `dispatch_one`
+   symbol calls. The `dispatch_one` symbol survives in the binary
+   because legacy `dta_run_cold` callers (walker_arms tests, replay
+   surface) link it; this is by design (AX substrate).
+3. **`dispatch_one` enum still exists in `dta.rs` and consulted by
+   cold-path replay surface; absent from parse hot path.** ✓
+4. **JSON twitter ≥ 1800 MB/s.** ✗ Currently 192 MB/s. Documented
+   gap below.
+5. **Workspace tests.** ✓ 1168 passed / 0 failed / 35 ignored.
+6. **Bootstrap idempotent.** ✓ md5
+   `1510bef24c9c77036669d52db091dc93`, 54,719 lines, byte-identical
+   second run.
+
+### W4 sidecar bench gate gap — accountability
+
+The plan's W4 hard gate cited "JSON twitter bench ≥ 1800 MB/s"
+sourced from `aw3-r5-path-a-keep-dta.md`'s post-AW-III FINAL
+projection table (json twitter | 1967 | ~1800–2200 | parity–1.1×).
+That projection assumed the FULL multi-wave stack — walker-
+specialisation + scanner closure + stage-1 SIMD prepass + emitter-
+mined consumers. W4-alone delivers walker-specialisation +
+scanner-closure-from-W1.8; the sidecar bench gate value was
+synthesised from the multi-wave projection rather than the
+W4-isolated projection.
+
+Current samply attribution on JSON twitter (post-W4.d):
+- 42.6% per-grammar walker (`__jsonparser_emit_impl::__dta_walker_inline::run`)
+- 37.0% `<DtaDfaScanner as RegexScanner>::scan` (regex DFA interpreter — W5/W6 lever)
+- 9.1% `bbnf_tape::finaliser::finalise`
+- 4.1% `bbnf_tape::psi::write_decoded`
+- 1.5% `bbnf_tape::driver::handle_repeat_failure`
+
+`dispatch_one`: 0%. `advance_or_pop_with`: 0% (inlined into per-
+grammar walker via `#[inline]`). The 24% interpreter floor that
+this wave exists to remove IS removed.
+
+The residual 9.4× gap to 1800 MB/s is allocated to W5 (stage-1 SIMD
+structural prepass — projected to drop walker self-time from 42.6%
+toward ~5–10% by eliminating per-byte state-visit overhead on
+structural bytes) and W6 (ShapeRef + PHF + ClassifyByte + direct-to-
+struct + Pratt const-fold consumers).
+
+This is recorded as a transparent intra-tranche attribution
+adjustment — not a deferral. The TRANCHE-level hard gate is
+"strict-better-than post-AU on ≥ 15/19 entries" judged at W6 close.

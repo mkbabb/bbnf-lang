@@ -204,6 +204,12 @@ impl RustEmitter {
                 &profile,
             )
         };
+        // AW-III.W4.d — emit the walker fn ident parse() calls into
+        // directly. The ident is the same one the
+        // `emit_specialised_walker` pass produces above; sharing the
+        // sanitiser keeps both call sites in sync.
+        let walker_fn_ident =
+            super::dta_walker::walker_fn_ident(ident.to_string().as_str());
 
         // Tranche AV Phase 2 — AV.2.5 reordered-unrolling kernels for
         // typed-payload visitors. One free-function per descriptor
@@ -340,15 +346,22 @@ impl RustEmitter {
                 /// Parse an input string and return a zero-copy
                 /// `Parsed<'_, Self>` that borrows the input directly.
                 ///
-                /// AW-I.W3: `parse()` dispatches through the DTA driver
-                /// wholesale. The per-rule fn-per-rule path retired at
-                /// W3.1; the DTA walker (AW-I.W2.1) owns Seq / Literal /
-                /// Regex / Ref / AltLinear-with-savepoint / Repeat with
-                /// `lo..=hi` bounds / ShuntingYard. `dta_run_into`
-                /// drives `DTA_TABLE` over the input bytes, writing
-                /// records into the builder's columns and stamping
-                /// `frame_depth` inline so `finish()` skips the
-                /// `derive_frame_depth` reconstruction pass.
+                /// AW-III.W4.d: `parse()` dispatches through the
+                /// per-grammar specialised walker emitted by W4.b. The
+                /// inlined arms cover every `DtaState` variant; the
+                /// cold-path `dispatch_one` survives in `bbnf-tape`
+                /// only for the AX replay subsystem and walker-arm
+                /// regression tests. The hot path here:
+                ///
+                /// 1. Allocate a sized `TapeBuilder` + `PayloadStream`.
+                /// 2. Call the emitted `dta_run_<grammar>` directly,
+                ///    handing it the builder's `columns_mut` /
+                ///    `frame_depth_mut` references so the inlined arms
+                ///    write structurally + frame-depth inline.
+                /// 3. Drain the PSI stream into typed payload columns.
+                /// 4. Finalise via `TapeBuilder::finish` — the
+                ///    inline-frame-depth path skips
+                ///    `derive_frame_depth` reconstruction.
                 pub fn parse(
                     input: &str,
                 ) -> ::core::result::Result<
@@ -361,8 +374,18 @@ impl RustEmitter {
                         );
                     builder.enable_inline_frame_depth();
                     let mut psi = psi_with_capacity(input.len());
-                    let root_off = builder
-                        .dta_run_into(&DTA_TABLE, input.as_bytes(), &DTA_SCANNER, &mut psi)
+                    let root_off = {
+                        let (columns, frame_depth) =
+                            builder.columns_and_frame_depth_mut();
+                        #walker_fn_ident(
+                            &DTA_TABLE,
+                            input.as_bytes(),
+                            &DTA_SCANNER,
+                            columns,
+                            &mut psi,
+                            frame_depth,
+                        )
+                    }
                         .map_err(|e| match e {
                             ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
                                 ::bbnf::runtime::ParseErr::Syntax {

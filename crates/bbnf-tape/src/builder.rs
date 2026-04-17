@@ -737,6 +737,23 @@ impl TapeBuilder {
         &mut self.frame_depth
     }
 
+    /// AW-III.W4.d — split-borrow accessor for the parallel-column
+    /// pair the per-grammar specialised walker writes into.
+    ///
+    /// Returns a tuple of `(&mut Columns, &mut Vec<u8>)` borrowing
+    /// the `columns` and `frame_depth` fields disjointly so the
+    /// emitted `dta_run_<grammar>` can pass them as adjacent
+    /// arguments without the caller dancing around the borrow
+    /// checker. Both references live for the same scope; the runtime
+    /// walker treats them as a single SoA pair (every leaf emit /
+    /// compound reservation pushes to both in lockstep).
+    #[inline]
+    pub fn columns_and_frame_depth_mut(
+        &mut self,
+    ) -> (&mut Columns, &mut Vec<u8>) {
+        (&mut self.columns, &mut self.frame_depth)
+    }
+
     /// Run the DTA driver against `input` and write its output
     /// directly into this builder.
     ///

@@ -95,8 +95,8 @@ pub(super) fn emit_state_dispatch_arms(
                 let cold_ident = cold_sibling_ident(id);
                 quote! {
                     #id_lit => {
-                        #cold_ident(
-                            table, input, scanner, columns, psi, frame_depth,
+                        #cold_ident::<__S>(
+                            input, scanner, columns, psi, frame_depth,
                             stack, pos,
                         )
                     }
@@ -137,10 +137,9 @@ pub(super) fn emit_cold_siblings(
             Some(quote! {
                 #[cold]
                 #[inline(never)]
-                fn #cold_ident(
-                    table: &::bbnf::runtime::tape::DtaTable,
+                fn #cold_ident<__S: ::bbnf::runtime::tape::RegexScanner>(
                     input: &[u8],
-                    scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+                    scanner: &__S,
                     columns: &mut ::bbnf::runtime::tape::Columns,
                     psi: &mut ::bbnf::runtime::tape::PayloadStream,
                     frame_depth: &mut ::std::vec::Vec<u8>,
@@ -154,6 +153,14 @@ pub(super) fn emit_cold_siblings(
                     // `break 'step <value>` exits here with `<value>`
                     // as the return, keeping the emitted bodies
                     // identical to the hot path's structure.
+                    //
+                    // The cold sibling lives in the same inner module
+                    // as `run`; the bare `DTA_TABLE` resolves through
+                    // the module's `use super::*;` glob to the single
+                    // `__<grammar>parser_emit_impl::DTA_TABLE` const,
+                    // avoiding ambiguity when multiple parsers
+                    // co-exist in the same parent scope (test files).
+                    let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
                     'step: {
                         #body
                     }
@@ -233,17 +240,40 @@ fn state_kind_tag(state: &IrState) -> &'static str {
 
 // ── Per-variant lowering routines ───────────────────────────────────
 
+/// AW-III.W4.d — emit the post-leaf advance pattern: try the
+/// inline-always Seq-fast-path first, fall through to the full
+/// `advance_or_pop_with` body when the fast path doesn't apply.
+///
+/// JSON twitter visits a Seq frame for ~80% of leaf emit sites; the
+/// fast path inlines an in-place cursor++ and a child-state read,
+/// folding the dominant case directly into the calling arm. The
+/// non-Seq fall-through (Alt close, Repeat re-entry, SY reducer,
+/// stack drain) goes through the full helper which LLVM keeps
+/// out-of-line.
+fn emit_advance_or_pop_call() -> TokenStream {
+    quote! {
+        if let ::core::option::Option::Some(next) =
+            ::bbnf::runtime::tape::advance_seq_fast(stack)
+        {
+            ::core::result::Result::Ok(next)
+        } else {
+            ::bbnf::runtime::tape::advance_or_pop_with(
+                ::core::option::Option::Some(table),
+                ::core::option::Option::Some(input),
+                columns, frame_depth, psi, stack, pos,
+            )
+        }
+    }
+}
+
 /// `Epsilon` — no column emission, no byte advance. Drop pending
 /// rule-entry stamp and let `advance_or_pop_with` route to the next
 /// dispatch.
 fn emit_epsilon_arm(_idx: usize) -> TokenStream {
+    let advance = emit_advance_or_pop_call();
     quote! {
         stack.pending_variant_idx = u8::MAX;
-        ::bbnf::runtime::tape::advance_or_pop_with(
-            ::core::option::Option::Some(table),
-            ::core::option::Option::Some(input),
-            columns, frame_depth, psi, stack, pos,
-        )
+        #advance
     }
 }
 
@@ -251,6 +281,7 @@ fn emit_epsilon_arm(_idx: usize) -> TokenStream {
 /// known state-id, byte-compare inline, emit_leaf, advance.
 fn emit_literal_arm(idx: usize, payload: LiteralPayload) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
+    let advance = emit_advance_or_pop_call();
     let payload_arm = if matches!(payload, LiteralPayload::None) {
         quote! {
             ::bbnf::runtime::tape::emit_leaf(
@@ -292,11 +323,7 @@ fn emit_literal_arm(idx: usize, payload: LiteralPayload) -> TokenStream {
         *pos = end as u32;
         #payload_arm
         stack.pending_variant_idx = u8::MAX;
-        ::bbnf::runtime::tape::advance_or_pop_with(
-            ::core::option::Option::Some(table),
-            ::core::option::Option::Some(input),
-            columns, frame_depth, psi, stack, pos,
-        )
+        #advance
     }
 }
 
@@ -304,6 +331,7 @@ fn emit_literal_arm(idx: usize, payload: LiteralPayload) -> TokenStream {
 /// `TapeKind::Span`; PSI push when payload is Some.
 fn emit_regex_arm(idx: usize, payload: Option<RegexPayloadKind>) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
+    let advance = emit_advance_or_pop_call();
     let emit_payload = if payload.is_none() {
         quote! {
             ::bbnf::runtime::tape::emit_leaf(
@@ -363,11 +391,7 @@ fn emit_regex_arm(idx: usize, payload: Option<RegexPayloadKind>) -> TokenStream 
         *pos = lo + match_len;
         #emit_payload
         stack.pending_variant_idx = u8::MAX;
-        ::bbnf::runtime::tape::advance_or_pop_with(
-            ::core::option::Option::Some(table),
-            ::core::option::Option::Some(input),
-            columns, frame_depth, psi, stack, pos,
-        )
+        #advance
     }
 }
 
@@ -381,6 +405,7 @@ fn emit_seq_arm(
     promote: SeqPromote,
 ) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
+    let advance = emit_advance_or_pop_call();
     let _ = (children, frame, promote); // captured via destructure below
     quote! {
         let (children, frame, promote) = match table.states[#idx_lit] {
@@ -415,11 +440,7 @@ fn emit_seq_arm(
         });
         if children.is_empty() {
             ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-            ::bbnf::runtime::tape::advance_or_pop_with(
-                ::core::option::Option::Some(table),
-                ::core::option::Option::Some(input),
-                columns, frame_depth, psi, stack, pos,
-            )
+            #advance
         } else {
             ::core::result::Result::Ok(
                 ::bbnf::runtime::tape::StepResult::Next(children[0]),
@@ -619,6 +640,7 @@ fn emit_repeat_arm(
     let idx_lit = Literal::usize_unsuffixed(idx);
     let lo_lit = Literal::u32_unsuffixed(lo);
     let hi_lit = Literal::u32_unsuffixed(hi);
+    let advance = emit_advance_or_pop_call();
     let counter_optional_flag_expr = quote! {
         match table.states[#idx_lit] {
             ::bbnf::runtime::tape::DtaState::Repeat { counter_optional, .. } => {
@@ -683,11 +705,7 @@ fn emit_repeat_arm(
         stack.iter_savepoints[counter_idx].stack = stack.savepoint();
         if #hi_lit == 0u32 {
             ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
-            ::bbnf::runtime::tape::advance_or_pop_with(
-                ::core::option::Option::Some(table),
-                ::core::option::Option::Some(input),
-                columns, frame_depth, psi, stack, pos,
-            )
+            #advance
         } else {
             ::core::result::Result::Ok(
                 ::bbnf::runtime::tape::StepResult::Next(inner),
@@ -742,6 +760,7 @@ fn emit_ref_arm(
 /// pattern when set, else `trim_ascii_ws` fallback.
 fn emit_ws_trim_arm(idx: usize, has_pattern: bool) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
+    let advance = emit_advance_or_pop_call();
     let scan_path = if has_pattern {
         quote! {
             if let ::core::option::Option::Some(pat) = pattern {
@@ -766,11 +785,7 @@ fn emit_ws_trim_arm(idx: usize, has_pattern: bool) -> TokenStream {
             _ => unsafe { ::core::hint::unreachable_unchecked() },
         };
         #scan_path
-        ::bbnf::runtime::tape::advance_or_pop_with(
-            ::core::option::Option::Some(table),
-            ::core::option::Option::Some(input),
-            columns, frame_depth, psi, stack, pos,
-        )
+        #advance
     }
 }
 

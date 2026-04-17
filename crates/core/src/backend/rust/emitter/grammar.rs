@@ -378,7 +378,6 @@ impl RustEmitter {
                         let (columns, frame_depth) =
                             builder.columns_and_frame_depth_mut();
                         #walker_fn_ident(
-                            &DTA_TABLE,
                             input.as_bytes(),
                             &DTA_SCANNER,
                             columns,

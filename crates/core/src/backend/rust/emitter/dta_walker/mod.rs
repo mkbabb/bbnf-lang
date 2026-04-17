@@ -180,11 +180,17 @@ pub fn emit_specialised_walker(
             /// the hot path never calls it. Repeat-failure absorption
             /// happens at the outer loop's error handler via
             /// `handle_repeat_failure`.
+            ///
+            /// `DTA_TABLE` is referenced as a `pub const` from the
+            /// surrounding module so LLVM can constant-fold every
+            /// `DTA_TABLE.states[N]` destructure inside an arm body —
+            /// the runtime variant + its slice references resolve at
+            /// compile time, not via a `&'static [DtaState]` indirect
+            /// load each visit.
             #[allow(dead_code)]
-            pub fn run(
-                table: &::bbnf::runtime::tape::DtaTable,
+            pub fn run<__S: ::bbnf::runtime::tape::RegexScanner>(
                 input: &[u8],
-                scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+                scanner: &__S,
                 columns: &mut ::bbnf::runtime::tape::Columns,
                 psi: &mut ::bbnf::runtime::tape::PayloadStream,
                 frame_depth: &mut ::std::vec::Vec<u8>,
@@ -192,6 +198,14 @@ pub fn emit_specialised_walker(
                 ::bbnf::runtime::tape::TapeOffset,
                 ::bbnf::runtime::tape::DtaError,
             > {
+                // Reference the per-grammar `DTA_TABLE` const through
+                // the inner module's `use super::*;` glob — `super` is
+                // ambiguous when multiple `#[derive(Parser)]` invocations
+                // re-export their `DTA_TABLE` into a shared parent scope
+                // (test files commonly do this). The bare ident
+                // resolves unambiguously because `use super::*;` brings
+                // exactly one `DTA_TABLE` into this module's scope.
+                let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
                 let root_rec =
                     ::bbnf::runtime::tape::TapeOffset(columns.len() as u32);
                 let mut stack_owned = ::bbnf::runtime::tape::FrameStack::new();
@@ -278,12 +292,20 @@ pub fn emit_specialised_walker(
         /// module. The inner module exists to scope the per-state
         /// helper functions away from the surrounding `generated.rs`
         /// namespace.
+        ///
+        /// AW-III.W4.d — `DTA_TABLE` is referenced internally as
+        /// `&super::DTA_TABLE` (a `pub const`) so LLVM constant-folds
+        /// every per-arm `DTA_TABLE.states[N]` destructure at compile
+        /// time. The `table` parameter is gone: the walker is
+        /// per-grammar, the table is per-grammar, the binding is
+        /// static. Removing the parameter eliminates the dynamic
+        /// indirect load that gated `match table.states[N]`
+        /// const-folding.
         #[allow(dead_code)]
         #[inline]
-        pub fn #fn_ident(
-            table: &::bbnf::runtime::tape::DtaTable,
+        pub fn #fn_ident<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
-            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            scanner: &__S,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
@@ -291,8 +313,8 @@ pub fn emit_specialised_walker(
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
         > {
-            __dta_walker_inline::run(
-                table, input, scanner, columns, psi, frame_depth,
+            __dta_walker_inline::run::<__S>(
+                input, scanner, columns, psi, frame_depth,
             )
         }
     }

@@ -332,16 +332,27 @@ fn iter_iteration_pairs<'a>(
 
 /// Lower a `binary_factor = mapped_factor , ( binary_operators ?w , mapped_factor ) *` view.
 ///
-/// Tape shape under structural mode:
+/// Tape shape under DTA:
 ///
-///   `node.children() == [mapped_factor_1, Repeat([mapped_factor_2, mapped_factor_3, ...])]`
+/// ```text
+/// Seq (binary_factor)
+///   [0]: Seq (mapped_factor)                  -- first operand
+///   [1]: Rule (iteration-pair wrapper)
+///     [0]: Seq (int_lit)                      -- iteration pair 1
+///       [0]: Seq (int_lit)                    -- operator wrapper
+///         [0]: Alt (binary_operators)         -- operator itself
+///       [1]: Seq (mapped_factor)              -- pair operand
+///     [1]: Seq (int_lit)                      -- iteration pair 2
+///       ... (same shape)
+/// ```
 ///
-/// The `binary_operators` rule is inlined (its body is just an
-/// alternation of literal punctuation tokens), so the operator
-/// bytes are consumed but never push a tape compound. To recover
-/// each operator, inspect the source slice between
-/// `operands[i].span().1` and `operands[i+1].span().0` and match
-/// against the fixed `<<` / `>>` / `-` set (longest-first).
+/// [`collect_binary_operands`] flattens the iteration-pair wrapping so
+/// the partition loop sees a linear `[operand, operator, operand,
+/// operator, operand, ...]` sequence with operator compounds surfaced
+/// as `rule_kind=binary_operators` Alts (emitted by the walker's
+/// variant_idx stamping) — or, as a belt-and-braces fallback, any
+/// compound whose trimmed span matches the fixed `<<` / `>>` / `-`
+/// set.
 ///
 /// Single-operand chains (no operators) collapse to the bare
 /// operand without wrapping.
@@ -356,22 +367,27 @@ fn lower_binary_factor<'a>(
         node.span_text(),
     );
 
-    // Partition children by rule_kind: `binary_operators` children
-    // carry the operator token; everything else is an operand.
+    // Partition children into (operators, operands). An operator child
+    // is recognized by any of:
     //
-    // When the optimizer inlines `binary_operators` (structural mode),
-    // no operator children appear — the operator bytes are consumed
-    // during parsing and live only in the source gap between operand
-    // spans, recovered via `recover_binary_op`.
+    //  1. `rule_kind() == binary_operators` — the walker stamped the
+    //     Alt compound with the binary_operators rule id. This is the
+    //     structurally-rich signal under DTA when the walker's
+    //     variant_idx stamping reaches the Alt.
+    //  2. Trimmed span text matches one of `<<` / `>>` / `-` —
+    //     lightweight belt-and-braces recognition that catches the
+    //     case where the operator compound was lifted/inlined to a
+    //     bare Seq whose only meaningful content is the literal
+    //     punctuation. The fixed alphabet is safe: the surrounding
+    //     grammar rules out operand compounds whose full trimmed span
+    //     is exactly one of these three tokens.
     //
-    // When NOT inlined (prettify mode), operator children have
-    // `rule_kind() == BbnfBootstrapRuleKind::binary_operators` and
-    // their span text carries the actual operator token.
+    // Every other child is an operand.
     let mut operands: Vec<BbnfBootstrapNodeView<'a>> = Vec::new();
     let mut inline_ops: Vec<&'a str> = Vec::new();
     for child in &all_children {
-        if child.rule_kind() == BbnfBootstrapRuleKind::binary_operators {
-            inline_ops.push(child.span_text().trim());
+        if let Some(op) = recognize_binary_operator(*child) {
+            inline_ops.push(op);
         } else {
             operands.push(*child);
         }
@@ -394,7 +410,8 @@ fn lower_binary_factor<'a>(
 
     for operand in iter {
         // Prefer structurally-identified operator children; fall back
-        // to source-gap recovery when the rule was inlined away.
+        // to source-gap recovery when the operator compound was fully
+        // span-elided (no record to recognize).
         let op_text = op_iter.next().or_else(|| {
             recover_binary_op(input, prev_end, operand.span().0)
         }).unwrap_or_else(|| {
@@ -412,14 +429,52 @@ fn lower_binary_factor<'a>(
     result
 }
 
-/// Collect operand views from a `binary_factor` compound. The
-/// shape under structural mode is `[first, Repeat([rest...])]`;
-/// under non-structural (legacy) mode the optimizer may have
-/// flattened the Repeat wrapper, in which case the operands appear
-/// as direct children. The same `iter_rep_children`-style handling
-/// applies as for `iter_iteration_pairs`, but we need the first
-/// (non-wrapped) operand alongside the rest, so it's spelled out
-/// here.
+/// Recognize a `binary_factor` operator child. Returns the operator
+/// token (`"<<"` / `">>"` / `"-"`) if the child represents an operator
+/// compound, `None` if it is an operand.
+///
+/// Matches either:
+///  * `child.rule_kind() == binary_operators` — the walker's
+///    variant_idx stamping reached the Alt compound; its trimmed
+///    span carries the operator literal directly.
+///  * A compound whose trimmed span is exactly one of the fixed
+///    operator tokens — the DTA lifter may wrap the Alt in an
+///    anonymous `Seq` whose own `rule_kind` is not `binary_operators`
+///    but whose full text is still just the operator punctuation.
+///
+/// The fixed-alphabet span check is safe because operand compounds
+/// are never literal `<<` / `>>` / `-` — the grammar's
+/// `mapped_factor` layer produces quoted literals, identifiers,
+/// regex atoms, or bracket-grouped sub-expressions, none of which
+/// trim down to one of these three tokens.
+fn recognize_binary_operator<'a>(
+    child: BbnfBootstrapNodeView<'a>,
+) -> Option<&'a str> {
+    if child.rule_kind() == BbnfBootstrapRuleKind::binary_operators {
+        return Some(child.span_text().trim());
+    }
+    let trimmed = child.span_text().trim();
+    if matches!(trimmed, "<<" | ">>" | "-") {
+        return Some(trimmed);
+    }
+    None
+}
+
+/// Collect the flattened child sequence of a `binary_factor`
+/// compound as `[first_operand, op, operand, op, operand, ...]`.
+///
+/// The DTA tape wraps the iteration body
+/// `( binary_operators ?w , mapped_factor )` in two layers:
+///   1. An outer Rule/Repeat compound that holds every iteration.
+///   2. Per iteration, a `Seq` whose children include the
+///      `binary_operators` Alt and the `mapped_factor` operand.
+///
+/// This function peels both layers so the partition loop in
+/// [`lower_binary_factor`] sees a flat sequence. Under the legacy
+/// fn-per-rule emission (pre-DTA) the Repeat wrapper held operand
+/// compounds directly; the flattening degrades gracefully — a child
+/// that is already `mapped_factor` / `binary_operators` / an
+/// operator-shaped compound passes through unchanged.
 fn collect_binary_operands<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Vec<BbnfBootstrapNodeView<'a>> {
@@ -430,18 +485,91 @@ fn collect_binary_operands<'a>(
     };
     let mut operands = vec![first];
     let rest: Vec<BbnfBootstrapNodeView<'a>> = children.collect();
-    // The Repeat wrapper is `TapeKind::Repeat` under the legacy
-    // fn-per-rule emission and `TapeKind::Rule` under DTA (the lifter
-    // collapses Repeat frames into Rule records). Both forms need
-    // flattening to reveal the operand siblings.
-    if rest.len() == 1
-        && matches!(rest[0].kind(), TapeKind::Repeat | TapeKind::Rule)
-    {
-        operands.extend(rest[0].children());
-    } else {
-        operands.extend(rest);
+
+    // Collect iteration-pair compounds. Under DTA there is always a
+    // single Rule/Repeat wrapper; under the legacy fn-per-rule tape
+    // the wrapper may be absent and operands sit directly after the
+    // first mapped_factor.
+    let pairs: Vec<BbnfBootstrapNodeView<'a>> =
+        if rest.len() == 1 && matches!(rest[0].kind(), TapeKind::Repeat | TapeKind::Rule) {
+            rest[0].children().collect()
+        } else {
+            rest
+        };
+
+    for pair in pairs {
+        // Each pair is either a direct operand (legacy shape) or a
+        // Seq compound wrapping `(operator, optional_ws, operand)`.
+        // Descend one level and flatten when the pair is a wrapper;
+        // keep it whole otherwise.
+        if is_iteration_pair_wrapper(pair) {
+            for grandchild in iter_pair_children(pair) {
+                operands.push(grandchild);
+            }
+        } else {
+            operands.push(pair);
+        }
     }
+
     operands
+}
+
+/// Whether `view` is an iteration-pair wrapper compound — a `Seq`
+/// whose own `rule_kind` is neither `mapped_factor` nor
+/// `binary_operators` and whose trimmed span is not itself an
+/// operator token. Such wrappers hold the `(operator, operand)`
+/// pair emitted by the walker for each iteration of the
+/// `( binary_operators ?w , mapped_factor ) *` body.
+fn is_iteration_pair_wrapper<'a>(view: BbnfBootstrapNodeView<'a>) -> bool {
+    use ::bbnf::runtime::tape::TapeKind;
+    if view.rule_kind() == BbnfBootstrapRuleKind::mapped_factor
+        || view.rule_kind() == BbnfBootstrapRuleKind::binary_operators
+    {
+        return false;
+    }
+    let trimmed = view.span_text().trim();
+    if matches!(trimmed, "<<" | ">>" | "-") {
+        return false;
+    }
+    matches!(view.kind(), TapeKind::Seq | TapeKind::Rule)
+}
+
+/// Iterate the substantive children of an iteration-pair wrapper:
+/// skip empty-span placeholders and whitespace-only artefacts, and
+/// peel any intermediate anonymous `Seq` wrapper around the
+/// operator Alt so the operator compound surfaces at the top level.
+fn iter_pair_children<'a>(
+    view: BbnfBootstrapNodeView<'a>,
+) -> Vec<BbnfBootstrapNodeView<'a>> {
+    use ::bbnf::runtime::tape::TapeKind;
+    let mut out: Vec<BbnfBootstrapNodeView<'a>> = Vec::new();
+    for child in view.children() {
+        let span = child.span_text();
+        let trimmed = span.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        // Peel an anonymous Seq wrapper whose own `rule_kind` is
+        // `int_lit` (the DTA sentinel for non-rule structural
+        // compounds) and whose trimmed span IS the operator token.
+        // The walker stamps `binary_operators` on the inner Alt;
+        // descending one level surfaces it.
+        if child.rule_kind() == BbnfBootstrapRuleKind::int_lit
+            && matches!(trimmed, "<<" | ">>" | "-")
+            && matches!(child.kind(), TapeKind::Seq)
+        {
+            if let Some(inner) = child.children().find(|c| {
+                c.rule_kind() == BbnfBootstrapRuleKind::binary_operators
+            }) {
+                out.push(inner);
+                continue;
+            }
+            // Fall back to the wrapper itself — `recognize_binary_operator`
+            // matches by span text.
+        }
+        out.push(child);
+    }
+    out
 }
 
 /// Recover a binary-factor operator (`<<` / `>>` / `-`) from the

@@ -1,523 +1,840 @@
-# Tranche AW-IV — Granular Exceed & Parity Harnesses
+# Tranche AW-IV — Interpreter Abrogation
 
-AW-IV refines the architectural transposition AW-III shipped: arch-gated SIMD
-widening, scanner PaddedView migration + cluster consolidation, NEON 17-digit
-float scan, bloom + GADT runtime dedup + grammar-level pattern hoisting,
-document-parallel fork over the stage-1 structural index, `Tape::reduce_column<C, R>`
-visitor + 4-lane SIMD pack, cost-model grid sweep, sonic-rs + lightningcss
-parity harnesses, and walker/reader migration carry-overs from AU.
+AW-III delivered the *scaffold* for a flattened tape automaton: walker
+specialised per grammar, stage-1 SIMD crate shipped, dual cursor
+populated, fused SoA writes, the five emitter-mined consumer substrates,
+the universal named-type binding, the Pratt LUT emission. Every gate met
+except the throughput gate: 0 of 17 parse entries beat post-AU.
 
-AW-III delivered the DTA-as-flattened-tape-automaton via three general
-emitter passes (walker specialisation + stage-1 SIMD bitmap + fused SoA
-write) plus five emitter-mined consumer activations (ShapeRef, PHF,
-ClassifyByte, direct-to-struct, Pratt const-fold). AW-III's hard gate was
-**strict-better-than post-AU on ≥ 15/19 entries**. AW-IV's mandate is
-**every entry exceeds post-AU; parity harnesses CI-gated**.
+The reason: the scaffold is interpreted. The walker's per-state arms make
+3–7 cross-crate calls per byte; each `match table.states[N]` arm body
+re-loads the variant's data at runtime; the regex DFA is itself a flat-
+transition interpreter at 32% self-time; the wire-contract pipeline
+silently drops mined data on the way to `GRAMMAR_PROFILE` (every
+consumer slot is `&[]` despite the IR mining the data correctly); seven
+of the eight consumer activations landed as substrate without consumer.
+
+AW-IV abrogates the interpreter. Six waves; one tranche; no deferrals.
+Hard gate: every parse entry exceeds post-AU at AW-IV close. The five
+levers compound multiplicatively (R3 §5; SYNTHESIS-2 §7; the post-AW-III
+samply attribution); JSON projects to 2200–4200 MB/s on twitter, CSS to
+1500–2500 MB/s on bootstrap, the corpus geomean above post-AU.
 
 ## Architectural thesis
 
-Every AW-IV item layers over the AW-III substrate. The walker-specialisation
-pass (AW-III W4) is the integration point for parity harnesses. The stage-1
-SIMD index (AW-III W5) is the substrate for document-parallel fork.
-ShapeRef + PHF + ClassifyByte (AW-III W6) are the substrate for bloom
-runtime dedup + grammar-level pattern hoisting. `reduce_column<C, R>` lives
-on the SoA Columns substrate AW-III preserved.
+The post-AW-III samply on JSON twitter, sample count 4173:
 
-Parity harnesses run the AW-III-emitted parsers end-to-end against sonic-rs
-and lightningcss; per-grammar-emitted typed-AST projections compare node-for-
-node against the upstream typed-AST. The harnesses are CI-gated.
+| Self % | Symbol | Category |
+|-------:|--------|----------|
+| 36.64 | `__dta_walker_inline::run::<DtaDfaScanner>` | per-grammar specialised walker |
+| 31.92 | `<DtaDfaScanner as RegexScanner>::scan` | runtime DFA interpreter |
+| 12.13 | `bbnf_simd_scan::neon::scan` | stage-1 SIMD pre-pass |
+|  7.79 | `bbnf_tape::finaliser::finalise` | tape close |
+|  4.46 | `bbnf_tape::psi::write_decoded` | PSI stage-B writes |
+
+The walker symbol IS the new dispatcher. Its 36.64% covers per-arm
+runtime-`match`-against-`unreachable_unchecked` data unpacking + 3–7
+cross-crate calls per arm. Removing `dispatch_one`'s match shifted the
+dispatch cost into the per-arm body and the helper-call boundaries; it
+did not eliminate it.
+
+The 31.92% scanner self-time IS the runtime DFA interpreter. The W1.8
+"scanner closure" replaced the global HashMap-with-string-key with a
+HashMap-with-pointer-key — saved the SipHash, kept the RwLock, and never
+addressed the interpreter loop inside `Dfa::find_at`. Per-pattern
+straight-line specialised match functions never shipped.
+
+The 12.13% bbnf_simd_scan self-time IS being paid on a degenerate-output
+index. The CSS L4 mining produces `[0..127]` as the structural alphabet
+(every printable byte structural), so the structural index has ~one entry
+per input byte. JSON's mining produces 5 singletons + 1 quote class — but
+those values never reach `GRAMMAR_PROFILE`; the wire-contract pipeline
+silently drops them and the runtime const stores `&[]`. Stage-1 runs;
+stage-1 has nothing to amortise against.
+
+These three failures compound. Fixing any one in isolation moves
+throughput marginally. Fixing all three (W1) plus wiring the seven dead
+consumer activations (W3) plus the layered work (W4–W5) compounds
+multiplicatively to the projected ceiling.
+
+**The binding rule of this tranche: no new runtime indirections.** The
+fix for AW-III's interpreter shape is *not* to add more indirection
+surfaces (function-pointer fields on `DtaState`, trait objects, runtime
+table dispatch, lazy initialisation cells). Each AW-III consumer that
+landed as substrate-without-consumer did so because it was wired
+*through* an indirection — `lookup_precedence(...)` instead of a direct
+`PRECEDENCE_LUT[byte]` load; `scanner.scan(pattern, ...)` instead of a
+direct `__dfa_match_<grammar>_<state_idx>(...)` call. AW-IV emits hot
+logic *directly* into the per-grammar walker. The runtime tape (`bbnf-
+tape::driver`) survives only as the cold-path replay surface for AX —
+correctness ground truth, not the parse hot path. Every wave's hard
+gate enforces this rule via `nm` symbol-presence assertions.
 
 ## Invariants
 
-1. **One path** — inherited from AW-III. AW-IV does not introduce parallel
-   parse surfaces, feature flags, or dual-path builds. Document-level parallel
-   parse (W4) is orthogonal — multiple specialised walkers run the same
-   entry, not different entries.
-2. **Every substrate AW-III emitted has an active consumer at AW-IV close.**
-   The cost model (AW-IV W3) consumes egraph weights; bloom dedup (W3) consumes
-   `dedup_eligible_rules`; document-parallel fork (W4) consumes
-   `parallel_break_even_bytes` + the stage-1 index; reduce_column (W5)
-   consumes `active_columns`.
-3. **Typed-AST parity is total.** sonic-rs harness on canada / twitter / citm /
-   data / data_xl: zero divergences. lightningcss harness on bootstrap /
-   tailwind / normalize: zero divergences. Color view field-for-field
-   equivalence under W5 parity harness.
-4. **Bench-between-waves structural.** Each wave closes with a bench
-   checkpoint (`post-AW-IV-W{N}.json`); W6 composes the multi-wave aggregator
-   `post-AW-IV.json`. A wave whose checkpoint regresses against the prior
-   without a written rationale reopens.
-5. **Workspace green at every wave boundary.**
-6. **Full generalization** — inherited from AW-III. Every emitter pass and
-   every IR-mining pass triggered by IR-structural properties (architecture
-   capability, alphabet cardinality, state count, payload column count). No
-   per-grammar hand-written branches.
-7. **No deferrals, regardless of newfound scope.** Inherited from
-   `docs/instructions/README.md` and AW-III. Scope-reveal under contact
-   triggers re-plan-with-more-agents, never silent forward-routing.
+1. **No deferrals, regardless of newfound scope.** Inherited from
+   `docs/instructions/README.md` and AW-III. Reiterated here as the
+   binding constraint that AW-III was held to *with qualification* and
+   AW-IV is held to without. Every wave's hard gate is verifiable
+   (symbol present/absent under `nm`, samply attribution, wire-contract
+   end-to-end test); a wave does not close on agent-claim, only on the
+   ledger. Scope-reveal under contact triggers re-plan-with-more-agents
+   per the parallel-orchestration contract; never silent forward-routing.
+2. **Substrate-with-consumer is one unit of work.** Every emitter pass,
+   IR field, const slot, or runtime variant introduced in this tranche
+   has a runtime consumer in the hot path — verified by samply
+   attribution or a wire-contract test that asserts data flow from
+   mining through emit to runtime use. Per `docs/instructions/README.md`
+   §Code-discipline.
+3. **Cross-crate inlining is verified, not assumed.** Per
+   `docs/instructions/README.md` §Performance-claims. `nm
+   target/release/deps/<bench>` confirms hot-path helper symbols are
+   absent from the per-grammar walker symbol; the function-call boundary
+   does not become the new dispatcher. Workspace LTO + `#[inline(always)]`
+   on hot helpers, OR per-grammar inline emission, are the two
+   approaches; pick one and verify.
+4. **Wire-contract pipelines have end-to-end tests.** Per
+   `docs/instructions/README.md` §Architecture-invariants. Every
+   *IR mining → emitter pass → `pub const` literal → runtime consumer*
+   pipeline carries one test asserting the entire path: fixture grammar
+   with known mineable data, runtime const asserted to contain the mined
+   values, runtime invocation asserted to consume non-trivially.
+5. **§6 generalisation invariant** — inherited from AW-III. Every
+   emitter pass triggered by IR-structural properties; per-grammar
+   OUTPUT comes from per-grammar IR; per-grammar MECHANISM does not
+   exist.
+6. **Hoist emitter-known data into emitted code.** Per
+   `docs/instructions/README.md` §Architecture-invariants. The emitter
+   carries literals into emitted bodies, not runtime indirections
+   through the source array.
+7. **Bench between every wave.** Sidecar per wave; W6 aggregates.
+   Samply attribution per wave cited from `.profiles/samply/aw4-wN/`.
+   Cross-crate symbol verification via `nm` per wave.
 
 ## Wave schedule
 
-| Wave | Scope | Agents | Bench gate |
-|------|-------|--------|------------|
-| W1 | AVX2 u8x32 widening + AArch64 NEON + WASM simd128 + PHF frequency ordering + length-bucket tail + small-Alt SIMD compare | 4 parallel | AVX2 scan ≥ 15% drop vs AW-III; Sheets `__function_name` ≥ 30% drop from frequency + bucket combined; small-Alt SIMD intrinsics visible under `cargo expand` per primary grammar |
-| W2 | Scanner PaddedView migration + scanner cluster consolidation + NEON 17-digit fractional scan + skip_ws bitmap caching + trim-call elision | 3 parallel | parse-that scanners LOC drops ≥ 600; canada f64-fraction parses bit-identical to scalar; `skip_ws` self-time drops ≥ 30% |
-| W3 | Bloom + GADT runtime dedup + grammar-level pattern hoisting + cost-model grid sweep | 3 parallel | bootstrap record count drops ≥ 30% vs AW-III; cost-model sweep produces calibrated weights or null-result close |
-| W4 | Document-parallel fork over stage-1 index + GrammarProfile calibration + AU walker/reader migration | 3 parallel | tailwind 4c sub-linear-to-linear scaling; canada 4c ≥ 1800 MB/s; AU's 7 variant-dispatch tests un-ignored |
-| W5 | `reduce_column<C, R>` + 4-lane SIMD pack + sonic-rs parity + lightningcss parity | 3 parallel | reducer ≥ 6× scalar baseline OR per-arch rationale; both parity harnesses zero-divergence + CI-gated |
-| W6 | FINAL + close + multi-wave bench aggregator | 1 serial | every entry exceeds post-AU; `post-AW-IV.json` exists; `FINAL-IV.md` exists |
+Strict sequencing: each wave opens only after the prior wave closes
+per its hard gate. The dependency is not administrative — it is
+substantive: a downstream wave that fires onto an indirected hot path
+verifies nothing.
+
+| Wave | Scope | Agents | Opens after | Hard gate |
+|------|-------|--------|-------------|-----------|
+| W1 | Interpreter abrogation core: hoist DtaState into arm bodies + fix structural-alphabet mining + fix wire-contract emission path + DFA codegen with **direct named calls** + scanner-trait elimination | 4 parallel | (open) | `dispatch_one` AND `<DtaDfaScanner as RegexScanner>::scan` AND `Dfa::find_at` symbols absent from `nm`; per-grammar `__dfa_match_<grammar>_<state_idx>` symbols present; structural index non-trivial on every grammar (mined data reaches `GRAMMAR_PROFILE` const); wire-contract end-to-end tests pass; JSON twitter ≥ 600 MB/s |
+| W2 | Per-grammar inline emission of hot helpers (helper bodies emitted directly into walker arms; LTO is verification cover, not strategy) | 2 parallel | W1 closed | `emit_leaf`, `push_compound_fused`, `push_leaf_fused`, `advance_or_pop_with`, `close_compound`, `trim_with_pattern`, `psi*push` symbols absent from per-grammar walker `nm`; `cargo asm` confirms no `bl`/`call` to helper symbols in walker disassembly; samply confirms zero cross-crate self-time on hot path; JSON twitter ≥ 1100 MB/s |
+| W3 | Five emitter-mined consumer activations + CTNS lifter + bounded Regex via `pattern.last_byte_set ⊆ structural_alphabet` | 5 parallel | W2 closed (consumers wire into a flat hot path; firing them onto indirected substrate defeats them) | every `GRAMMAR_PROFILE` slot non-empty for grammars where the IR has mineable data; samply confirms each consumer symbol present (or its prior dispatcher absent); wire-contract end-to-end tests pass for every slot; JSON twitter ≥ 2000 MB/s |
+| W4 | Granular SIMD widening + scanner cluster + bloom + GADT dedup + grammar-level pattern hoisting + document-parallel fork over stage-1 index | 4 parallel | W3 closed (multipliers stack onto consumer-active flat path; on indirected substrate they produce no measurable gain) | AVX2 scan ≥ 15% drop on x86_64; tailwind 4c sub-linear-to-linear scaling; `GRAMMAR_PROFILE.list_rules` non-empty for CSS L4 |
+| W5 | `reduce_column<C, R>` + 4-lane SIMD pack + sonic-rs + lightningcss parity harnesses + cost-model grid sweep | 3 parallel | W4 closed | reducer ≥ 6× scalar baseline OR per-arch rationale; both parity harnesses zero-divergence + CI-gated |
+| W6 | FINAL + 19-entry bench matrix + multi-wave aggregator | 1 serial | W5 closed | **every parse entry exceeds post-AU**; `post-AW-IV.json` exists; `FINAL-IV.md` exists; verification ledger complete per wave |
 
 ## Phases
 
-### W1 — Arch-gated SIMD widening + PHF refinements
+### W1 — Interpreter abrogation core
 
-#### W1.1 AVX2 u8x32 widening (AN.5 chronic)
+Four parallel agents, file-disjoint. The load-bearing wave; without it
+no subsequent wave matters because the helper-call boundary remains the
+dispatcher.
 
-Owner: `crates/core/src/generate/regex/emit/simd.rs`; integration into
-`bbnf-simd-scan` kernels emitted by AW-III W5.
+#### W1.1 — Hoist `DtaState` data into arm bodies
 
-Every SIMD call site today uses `u8x16`. On x86_64 AVX2, widen to `u8x32` for
-scanner structural-byte passes. The walker's structural-bitmap producer
-(inherited from AU.2.7 + AW-III W5) and the DFA scanner dispatch both
-consume. Arch-gate via `#[cfg(target_feature = "avx2")]`; NEON path
-unchanged.
+Owner: `crates/core/src/backend/rust/emitter/dta_walker/lower_state.rs`.
 
-**Hard gate**: `cargo expand` shows the AVX2 intrinsic on x86_64. Samply on
-canada.json (x86_64 AVX2) shows ≥ 15% reduction in structural-scan self-time
-vs the AW-III u8x16 baseline.
+Today every per-state arm in the W4-emitted walker begins with:
+```rust
+let (pattern, payload) = match table.states[N] {
+    DtaState::Regex { pattern, payload } => (pattern, payload),
+    _ => unsafe { ::core::hint::unreachable_unchecked() },
+};
+```
+The emitter knows at codegen time that state N is `DtaState::Regex {
+pattern: __DTA_REGEX_K, payload: PayloadKind::I64 }` (the lifter writes
+those exact values into `DTA_TABLE.states[N]`). Replace with literal
+binding:
+```rust
+let pattern = __DTA_REGEX_K;
+let payload = ::core::option::Option::Some(::bbnf::runtime::tape::PayloadKind::I64);
+```
+Same shape for `Literal`, `ByteDispatch` (table reference becomes the
+emitted `[DtaStateId; 256]` literal), `Seq`, `AltLinear`, `Repeat`,
+`ShuntingYard`, `WsTrim`, `ConsumeToNextStructural`, `ClassifyByte`.
+Per-variant lowering function emits a literal binding for every field
+the source `DtaState` variant carries; the runtime `match
+table.states[N]` and the `_ => unreachable_unchecked()` arm both delete.
 
-#### W1.2 WASM simd128 + AArch64 NEON polish
+The pass mechanically reads `table.states[N]` at codegen time and
+formats each field's literal token. No grammar branch.
 
-Owner: `crates/core/src/generate/regex/emit/simd.rs`; `bbnf-simd-scan/src/`.
+**Hard gate**: `grep -n 'match table.states\[' crates/core/src/grammar/generated.rs` returns zero matches inside `__dta_walker_inline`. `cargo expand` confirms each arm body opens with literal `let` bindings.
 
-Verify `bbnf-simd-scan`'s NEON path lowers cleanly on AArch64 (no scalar
-fallback creeping in via portable-simd pessimisation). Add WASM simd128
-variant for browser-side parsing parity.
+#### W1.2 — Fix structural-alphabet mining definition
 
-**Hard gate**: `cargo asm` confirms NEON intrinsics on AArch64; WASM simd128
-intrinsics on `wasm32-unknown-unknown` with `-C target-feature=+simd128`.
+Owner: `crates/ir/src/passes/sets/structural_alphabet.rs`.
 
-#### W1.3 PHF frequency ordering (AO.5.3 chronic)
+Today the mining over-flags. CSS L4 mines `[0..127]` (every printable
+byte structural) because the pass appears to flag every byte appearing
+in any rule's FIRST set. The right definition is the simdjson
+definition: bytes that *delineate parse-tree structure*, not bytes that
+*appear in any rule*. Concretely:
+
+- Single-byte `Literal` terminators (`{`, `}`, `;`, `:`, etc.).
+- `Repeat` separator bytes (`,` in CSV-style lists).
+- `Alt` discriminator bytes when the Alt's branches' FIRST sets are
+  single-byte literals.
+- The first byte of each `digraph` pair (`/` for `/* */`, etc.).
+- **EXCLUDED**: bytes inside character classes / regex content / string
+  content / inside any rule whose body is a `Regex` or `Literal` of
+  length > 1.
+
+Apply the corrected definition; CSS L4 mines ~20 bytes (the actual
+delimiters) instead of 128. Bootstrap.css structural density drops to
+the measured ~7%; stage-1 amortises across the other 93%.
+
+**Hard gate**: per-grammar `STRUCTURAL_ALPHABET.singletons.len()` ∈ a
+sane range — JSON ≤ 8, CSS L4 ≤ 25, BBNF ≤ 15, Sheets ≤ 12. The
+`crates/ir/tests/structural_alphabet_extended.rs` test suite extends
+with per-grammar assertions on cardinality.
+
+#### W1.3 — Fix wire-contract emission path
+
+Owner: `crates/ir/src/passes/profile.rs`,
+`crates/core/src/backend/rust/emitter/profile.rs`,
+`crates/core/src/grammar/generated.rs` (regen).
+
+Today the IR mining produces `5 singletons + 1 quote class` for
+BbnfBootstrap (per `crates/ir/tests/structural_alphabet_extended.rs`),
+but the runtime `pub const GRAMMAR_PROFILE` at `generated.rs:31` shows
+`structural_alphabet: &[]`, `structural_quote_classes: &[]`, etc. The
+projection from IR to emitter to const literal silently drops data on
+the way through.
+
+Trace the failure: `crates/ir/src/passes/profile.rs::emit_grammar_profile`
+or its sibling at `crates/core/src/backend/rust/emitter/profile.rs`
+constructs the `GRAMMAR_PROFILE` literal — find where the mined
+`StructuralAlphabet` reaches that function (or doesn't). Wire it
+through. Same for `shape_dict`, `keyword_tables`, `branch_priors`,
+`active_columns`, `dedup_eligible_rules`, `list_rules`, `digraph_mask`,
+`quote_classes`.
+
+Add `crates/core/tests/grammar_profile_wire_contract.rs` per the
+*Wire-contract pipelines have end-to-end tests* invariant: a fixture
+grammar with known mineable values; assert
+`<Grammar>::GRAMMAR_PROFILE.structural_alphabet` contains those values;
+assert `<Grammar>::GRAMMAR_PROFILE.shape_dict.len() > 0` for grammars
+whose IR has shape repetitions; etc. One test per slot per grammar.
+
+**Hard gate**: every `GRAMMAR_PROFILE` slot is non-empty for any
+grammar whose IR has mineable data for that slot. The wire-contract
+test asserts the literal at `generated.rs` matches the IR's mined value
+byte-for-byte for every slot.
+
+#### W1.4 — DFA codegen with direct named calls + scanner-trait elimination
+
+Owner: `crates/core/src/backend/rust/emitter/dfa_codegen.rs` (new),
+`crates/core/src/backend/rust/emitter/dta_walker/lower_state.rs` (Regex
+arm rewrite to direct named call),
+`crates/bbnf-tape/src/driver.rs` (trait deletion),
+`crates/core/src/backend/rust/emitter/grammar.rs` (scanner-impl
+deletion).
+
+**Direct emitted calls — no function pointers, no trait dispatch, no
+`DtaState` field for the match function.** A function-pointer field on
+`DtaState::Regex` would preserve a runtime indirect-call boundary even
+after W1.1 hoists the field load out of the runtime `match
+table.states[N]`. The hot path must call the emitted DFA function
+*directly by name* — only then does LLVM inline the body at the call
+site without depending on cross-function pointer-chasing analysis.
+
+For every `&'static str` pattern reachable from `DTA_TABLE.states`,
+lift the NFA via `parse-that::regex::nfa`, determinise via
+`parse-that::regex::dfa::Dfa::compile`, then **emit** the DFA's
+transition table as inline Rust:
+```rust
+#[inline]
+fn __dfa_match_<grammar>_<state_idx>(input: &[u8], pos: usize) -> Option<u32> {
+    let mut state: u32 = 0;
+    let mut pos = pos;
+    let mut last_match: Option<u32> = None;
+    loop {
+        let b = match input.get(pos) {
+            Some(&b) => b,
+            None => break,
+        };
+        match state {
+            0 => match b {
+                <byte_class_0_arm> => state = <next_0_0>,
+                <byte_class_1_arm> => state = <next_0_1>,
+                _ => break,
+            },
+            1 => match b { /* ... */ },
+            /* ... */
+            _ => unsafe { ::core::hint::unreachable_unchecked() },
+        }
+        pos += 1;
+        if <state_is_accepting> {
+            last_match = Some(pos as u32);
+        }
+    }
+    last_match
+}
+```
+
+The walker's Regex arm — emitted by `dta_walker/lower_state.rs::emit_regex_arm`
+— becomes a direct named call to the W1.4-emitted function for *that
+specific state index*:
+```rust
+let match_len = match __dfa_match_<grammar>_<state_idx>(input, *pos as usize) {
+    ::core::option::Option::Some(n) => n,
+    ::core::option::Option::None => break 'step ::core::result::Result::Err(/* ... */),
+};
+```
+The emitter knows at codegen time that arm-for-state-N matches pattern
+K's DFA, so it emits the literal name `__dfa_match_<grammar>_<state_idx>`.
+No field load, no function pointer, no trait dispatch. The Regex pattern
+literal (`&'static str`) stays in `DtaState::Regex.pattern` for replay/
+debug only — the cold-path `dispatch_one` consults it; the hot path
+never reads it.
+
+`RegexScanner` trait deletes from `bbnf-tape/src/driver.rs`. The `__S:
+RegexScanner` generic on the emitted walker disappears (the walker
+function signature loses the `scanner: &__S` parameter). The HashMap +
+`OnceLock<RwLock<...>>` + `Box::leak` triplet at `grammar.rs:373-401`
+deletes entirely. `DtaDfaScanner` ZST + its impl + the `DTA_SCANNER`
+const all delete. `parse_that::regex::dfa::Dfa::find_at` is no longer
+referenced from any per-grammar walker — it survives only as the
+algorithm-source for the W1.4 emitter pass and as the cold-path
+`dispatch_one` Regex arm's fallback (replay surface).
+
+**Hard gate**: `nm target/release/deps/json_monolithic-* | grep -E
+'(DtaDfaScanner|RegexScanner|find_at|cached_dfa)'` returns empty.
+Per-grammar `__dfa_match_<grammar>_<state_idx>` symbols present for every
+regex pattern in `DTA_TABLE`. `cargo expand` confirms the walker's
+Regex arms emit literal-named direct calls (no `state.match_fn` field
+access, no trait method dispatch). JSON twitter samply: scanner self-
+time drops from 31.92% to ≤ 5%.
+
+### W2 — Per-grammar inline emission of hot helpers
+
+Two parallel agents. **Wave-sequencing constraint: W2 opens only after
+W1 closes.** W2 verifies absence of cross-crate dispatch in the
+*post-W1* hot path; if W1's hoisting and direct DFA calls are not
+landed, W2's verification has nothing meaningful to assert.
+
+**The strategy is to emit the helper bodies inline into the walker's
+per-state arms — not to rely on LLVM cross-crate inlining via LTO.**
+LTO + `#[inline(always)]` are verification fallbacks (and a useful
+belt-and-suspenders for any helper that genuinely should remain
+shared), not the primary mechanism. The hot path becomes structurally
+flat at the source level; LLVM's job is downstream optimisation, not
+proving inlinability across crate boundaries through opaque
+function-call indirection.
+
+#### W2.1 — Inline-emit hot helper bodies into walker arms
+
+Owner: `crates/core/src/backend/rust/emitter/dta_walker/lower_state.rs`
+(per-arm helper inline emission);
+`crates/core/src/backend/rust/emitter/dta_walker/helpers.rs` (helper-body
+emit fragments);
+`crates/bbnf-tape/src/driver.rs` (cold-path replay-surface helpers
+retained; hot-path helper bodies migrated into the emitter as inline
+fragments).
+
+Every helper currently called from the per-state arms gets *its body
+emitted directly into the calling arm* by the walker emitter. The
+helper functions in `bbnf-tape/src/driver.rs` survive ONLY as the
+cold-path `dispatch_one` replay surface — they are not reached from
+any per-grammar walker. The helpers to inline-emit:
+
+- `push_compound_fused` → 1 capacity check + 7 unchecked column stores
+  + length increment, emitted inline.
+- `push_leaf_fused` → 1 capacity check + N unchecked column stores +
+  length increment, emitted inline.
+- `emit_leaf` → `push_leaf_fused` body + frame_depth bump, emitted
+  inline.
+- `emit_leaf_with_payload` → `push_leaf_fused` body + frame_depth bump
+  + payload arena reserve, emitted inline.
+- `advance_or_pop_with` → frame stack peek + counter advance OR pop +
+  next-state lookup, emitted inline. The W1.1 hoisting collaborates: at
+  codegen time the emitter knows which Frame layout the current arm
+  unwinds into, so the inlined body specialises per arm.
+- `advance_seq_fast` → already `#[inline(always)]`; bodies migrate into
+  the calling arms verbatim.
+- `close_compound` → frame_depth peek + sib_skip patch + length
+  increment, emitted inline.
+- `trim_with_pattern` → direct call to the W1.4-emitted DFA match
+  function for the `@ws` pattern (per-grammar), inlined; no
+  `scanner.scan` indirection survives.
+- `psi.push` → `PayloadJob` construction + `payload_jobs` push,
+  emitted inline.
+- `handle_repeat_failure` → emitted inline at the outer-loop error
+  handler; the emitter knows at codegen time which Repeat states the
+  walker contains and emits the match arms directly without dispatch
+  through a runtime-known state id.
+
+The emitter's `dta_walker/helpers.rs` becomes a library of TokenStream
+fragments — `emit_push_compound_fused_inline()`,
+`emit_advance_or_pop_inline(frame_kind: ...)`, etc. — that the
+per-arm lowering at `lower_state.rs` splices into each arm's body
+verbatim. No fn-call boundary remains in the hot path.
+
+#### W2.2 — Verification: workspace LTO + `nm` + `cargo asm`
+
+Owner: `Cargo.toml` (workspace bench-profile LTO config);
+verification scripts.
+
+Add `[profile.bench] lto = "fat"` and `codegen-units = 1` to the
+workspace `Cargo.toml` as **belt-and-suspenders verification cover**
+— if any helper body slipped through the W2.1 inline-emit migration
+and remained as a cross-crate call, LTO collapses it and `nm`
+confirms its absence. LTO is not the strategy; it is the safety net
+that catches what the inline-emit migration missed.
+
+Annotate any helper that genuinely *must* remain shared (replay-surface
+helpers used by AX) with `#[inline(always)]` so that the cold path's
+shape doesn't degrade either.
+
+**Hard gate**: `nm target/release/deps/json_monolithic-* | grep -E
+'(emit_leaf|reserve_compound|push_compound_fused|push_leaf_fused|advance_or_pop_with|advance_seq_fast|close_compound|trim_with_pattern|first_ws_pattern|handle_repeat_failure|psi[0-9a-f]*push)'`
+returns empty for the hot-path symbols (cold-path `dispatch_one`
+references may remain — that's the AX replay surface). `cargo expand`
+confirms the per-grammar walker arm bodies contain the helper logic
+inline (struct stores, length increments, frame stack operations
+visible in the source TokenStream output). `cargo asm` on the
+walker symbol confirms no `bl` / `call` instructions targeting the
+helper symbols. JSON twitter samply: zero cross-crate self-time on the
+hot path; throughput ≥ 1100 MB/s.
+
+### W3 — Consumer activation completion
+
+Five parallel agents, file-disjoint. Every consumer the AW-III W6
+substrate emits gets wired in this wave.
+
+#### W3.1 — ShapeRef walker compound-emit consumer
+
+Owner: `crates/ir/src/passes/recognizers/shape_dict.rs` (mining
+recalibration); `crates/core/src/backend/rust/emitter/dta_walker/lower_state.rs`
+(walker compound-emit branch).
+
+Today `SHAPE_DICT` emits empty for every grammar — the mining pass does
+not recognise shape repetitions in the post-W4 walker shape. Recalibrate:
+mine on the pre-walker IR (compounds the lifter would emit), not
+post-walker artefacts. CSS L4 should produce ≥ 13 entries (per AW-IV-as-
+originally-planned), JSON should produce ≥ 4, BBNF rule-shape entries.
+
+Walker compound-emit branch consults `SHAPE_DICT.lookup(shape_hash)`
+inside the W4-emitted specialised walker arm:
+```rust
+if let Some(ref_idx) = SHAPE_DICT.lookup(shape_hash) {
+    push_shape_ref(columns, frame_depth, stack, span_lo, span_hi, ref_idx, packed_payload);
+} else {
+    let rec_idx = push_compound_fused(columns, frame_depth, stack, kind, span_lo);
+    /* children */
+    close_compound(columns, frame_depth, stack, rec_idx, span_hi);
+}
+```
+
+W2 inlining applies — the `push_shape_ref` body inlines into the arm.
+
+**Hard gate**: `SHAPE_DICT` non-empty for at least CSS L4, JSON, BBNF;
+samply on `bootstrap.css` confirms `push_shape_ref` symbol present (or
+inline body visible via `cargo asm`); bootstrap declaration record count
+drops ≥ 30%.
+
+#### W3.2 — PHF threshold lowering + AltLinear consumer
 
 Owner: `crates/core/src/backend/rust/emitter/keyword_dispatch.rs`
-(extends AW-III W6.2); `crates/ir/src/passes/recognizers/keyword_stats.rs`
-(extends mining pass with frequency facts).
+(threshold + emission); `crates/core/src/backend/rust/emitter/dta_walker/lower_state.rs`
+(AltLinear consumer).
 
-Five-tranche chronic. Emitter mines per-keyword visit frequency from a
-representative-corpus profile (samply attribution over canonical inputs per
-grammar), emits `FREQUENCY_ORDER: &[u32]` alongside the AW-III PHF table.
-Walker's byte-dispatched miss path consults frequency order before PHF
-lookup for the top-N hot keywords (N tunable; default 8).
+`PHF_MIN_BRANCHES` drops to 3 (catches JSON's `true|false|null`, BBNF's
+8 directives, CSS's 9-branch `colorType`, every reasonable Alt). The
+`emit_keyword_phf` pass now produces non-empty `KEYWORD_PHF` tables on
+every primary grammar.
 
-The mining is general — any keyword appearing more than `frequency_threshold`
-times in the representative corpus enters the fast-path. `frequency_threshold`
-is a `pub const` in the egraph cost model (pluggable, not hardcoded per
-grammar).
+Walker's `AltLinear` arm consults the PHF inline:
+```rust
+if let Some(state_id) = KEYWORD_PHF.get(input.get(*pos as usize..*pos as usize + max_len).unwrap_or(b"")) {
+    cur = state_id;
+    /* fall through to that state's arm next iteration */
+} else {
+    /* fallback: linear branch attempt */
+    /* ... existing AltLinear body ... */
+}
+```
 
-**Hard gate**: samply delta on `Sheets::__function_name` self-time ≥ 30% from
-frequency ordering vs AW-III W6.2 baseline. At least one grammar (Sheets is
-the canonical case) shows the frequency-ordered top-8 covering ≥ 50% of
-function-name dispatches.
+W2 inlining applies.
 
-#### W1.4 PHF length-bucket tail (AQ.7.3 chronic)
+**Hard gate**: `KEYWORD_PHF` non-empty for at least JSON, BBNF, CSS L4,
+Sheets; samply confirms PHF lookup symbol present on hot path; samply on
+canada confirms `__value` AltLinear self-time drops.
 
-Owner: `crates/core/src/backend/rust/emitter/keyword_dispatch.rs`
-(extends W1.3).
+#### W3.3 — ClassifyByte un-gating + walker arm activation
 
-Four-tranche chronic. The PHF for variable-length dense keywords subdivides
-by byte length before hashing. CSS `NAMED_COLOR_PHF` stays one table (single
-byte length ranges fit cleanly); Sheets function names add a length-bucket
-prefix — `[bucket_6, bucket_7, bucket_8, …]: &[Phf]` indexed by
-`[input_length.saturating_sub(MIN).min(MAX - MIN)]`. Dense tail for short
-names; sparse tail for long.
+Owner: `crates/ir/src/passes/recognizers/disjoint_first.rs` (gate
+removal); `crates/core/src/backend/rust/emitter/dta_walker/lower_state.rs`
+(ClassifyByte arm).
 
-White-colour `0xFFFFFFFFu32` collision routed to WideScalar in AW-I.W0.8 —
-PHF stays homogeneous. Mechanism is general — grammar's keyword set + length
-distribution drives the bucket structure; no per-grammar branch.
+Today `disjoint_first` is gated on missing dispatch — `compute_dispatch`
+admits every disjoint-FIRST candidate first as `ByteDispatch`, so the
+new mining sees nothing left. **Reverse the gate**: `disjoint_first`
+runs FIRST; if it produces a `ClassifyByte` table (the precomputed
+`[DtaStateId; 256]` LUT), that REPLACES `ByteDispatch` for that rule.
+`ByteDispatch` becomes a less-optimised fallback for cases where the
+precomputed LUT can't be emitted.
 
-**Hard gate**: bucket structure emitted for every grammar where keyword
-length variance exceeds threshold; samply on `Sheets::__function_name` shows
-incremental improvement over W1.3 frequency ordering.
+Walker arm becomes one indexed load + branch:
+```rust
+let next = CLASSIFY_TABLE_<idx>[input[*pos as usize] as usize];
+if next == DtaStateId::NONE {
+    /* fallback handling */
+} else {
+    cur = next.0;
+}
+```
 
-#### W1.5 SIMD keyword compare (small-Alt specialisation)
+The `CLASSIFY_TABLE_<idx>` const is emitted per ClassifyByte state;
+W1.1 hoists the table reference at codegen time.
 
-Owner: `crates/core/src/backend/rust/emitter/keyword_dispatch.rs` (extends);
-`crates/bbnf-tape/src/driver.rs` (walker arm integration);
-`crates/core/src/generate/regex/emit/simd.rs` (small-Alt SIMD emit).
+**Hard gate**: at least one ClassifyByte table emitted per primary
+grammar where the IR predicate fires; samply on bootstrap confirms
+`__compoundSelector` self-time drops to ≤ 15%.
 
-When an Alt is `≤ 16 keywords ∧ length-bounded ∧ FIRST-set mutually-disjoint`
-(all general IR facts), emit a SIMD compare instead of a PHF lookup. CSS
-`colorType` (9 entries) packs into one 128-bit NEON register (9 × 8-byte
-lanes, padded). One parallel 8-byte-lane compare emits a match bitmask;
-`trailing_zeros` picks branch index. Same pattern for BBNF `__directive`
-(8 entries). Typed u8 discriminant flows through per-branch payload emission.
+#### W3.4 — Pratt LUT consumer
 
-The trigger is a general IR-fact predicate, not a per-grammar branch. Same
-mechanism, different workload density per invariant 6.
+Owner: `crates/core/src/backend/rust/emitter/dta_walker/lower_state.rs`
+(ShuntingYard arm).
 
-**Hard gate**: `cargo expand` shows the NEON intrinsic on AArch64 and the
-AVX2 intrinsic on x86_64 for every Alt meeting the predicate. At least one
-small-Alt SIMD compare per primary grammar where the IR predicate fires.
+`PRECEDENCE_LUT[256]` is emitted at AW-III W6.5; the walker's
+ShuntingYard arm still calls `lookup_precedence` which does a linear
+scan over `PRECEDENCE_ENTRIES`. Replace with:
+```rust
+let entry_byte = PRECEDENCE_LUT[input[*pos as usize] as usize];
+let prec = (entry_byte >> 4) & 0xF;
+let assoc = (entry_byte >> 3) & 0x1;
+let arity = (entry_byte >> 1) & 0x3;
+let two_byte = entry_byte & 0x1;
+```
+Two-byte operators consult `PRECEDENCE_ENTRIES` only when `two_byte ==
+1`; one-byte operators get a single LUT load.
 
-### W2 — Scanner consolidation + float-parse polish
+**Hard gate**: `lookup_precedence` symbol absent from `nm`; samply on
+sheets parse_stress confirms no `lookup_precedence` self-time.
 
-#### W2.1 Scanner PaddedView paired migration (CO-E2 chronic)
+#### W3.5 — Direct-to-struct view-layer consumer wiring + CTNS lifter + bounded Regex
+
+Owner: `crates/core/src/backend/rust/emitter/grammar.rs::emit_view_impl`;
+`crates/ir/src/passes/recognizers/consume_to_next_structural.rs` (gate
+removal); `crates/bbnf-tape/src/kind.rs` (new `TapeKind::Scanned`);
+`crates/ir/src/passes/recognizers/pattern_alphabet.rs` (invariant fix).
+
+Three sub-items, all consumer-wiring-shaped:
+
+**a) Direct-to-struct `emit_view_impl` consumer wiring.** `resolve_named_type`
++ binding table land at AW-III W6.4 with passing parity tests but
+`emit_view_impl` doesn't call the resolver in the per-grammar hot-path
+projection. Wire it: `emit_view_impl` calls `resolve_named_type(top_level_type)`
+and emits the per-grammar inline projection. Universal mechanism — JSON
+Value, BBNF AST, Sheets formula, CSS Color all enter the fast path.
+
+**b) CTNS lifter enablement + tape-side Span-emitting record path.** Add
+`TapeKind::Scanned` (Span record carrying the scanned bytes' end
+offset). `consume_to_next_structural` lifter at
+`crates/ir/src/passes/recognizers/consume_to_next_structural.rs:cf691347`
+un-gates; emits `DtaState::ConsumeToNextStructural`. Walker arm jumps
+`cursor.pos = idx.positions[cursor.slot]` in O(1).
+
+**c) Bounded Regex via `pattern.last_byte_set ⊆ structural_alphabet`.**
+The dense-alphabet pathology defeats the current `pattern_alphabet ⊆
+structural_alphabet` invariant because patterns naturally match many
+bytes. The right invariant: a pattern's *last possible byte set* (computed
+from the NFA's accept states' incoming transitions) must be disjoint
+from the structural alphabet — meaning the pattern always terminates
+before a structural byte. Re-mine; CSS L4 + Sheets pass. Walker's Regex
+arm becomes a bounded scan: `(state.match_fn)(input, pos, idx.positions[slot])?`
+with the upper bound from the structural index.
+
+**Hard gate**: at least one CTNS state lifted per grammar; bounded
+Regex active on CSS L4 declarations + Sheets formulas; direct-to-struct
+emitted projection visible per grammar via `cargo expand`.
+
+### W4 — Granular SIMD widening + scanner cluster + bloom + document-parallel
+
+Four parallel agents. With W1+W2+W3 complete, granular work amortises.
+
+#### W4.1 — AVX2 u8x32 widening (AN.5 chronic) + WASM simd128 polish
+
+Owner: `crates/core/src/generate/regex/emit/simd.rs`;
+`crates/bbnf-simd-scan/src/{avx2,wasm}.rs`.
+
+Every SIMD call site today uses `u8x16`. On x86_64 AVX2, widen to
+`u8x32` for scanner structural-byte passes. Arch-gate via `#[cfg(target_feature
+= "avx2")]`; NEON path unchanged. WASM simd128 polish for browser-side
+parsing parity.
+
+**Hard gate**: `cargo expand` shows AVX2 intrinsic on x86_64. Samply on
+canada.json (x86_64 AVX2) shows ≥ 15% reduction in structural-scan
+self-time vs the AW-IV W1 u8x16 baseline.
+
+#### W4.2 — Scanner PaddedView migration + cluster consolidation + NEON 17-digit
 
 Owner: `crates/core/src/backend/rust/emitter/string_decode.rs`;
-`crates/core/src/generate/regex/emit/simd.rs`.
-
-CO-E2's deferred migration: 7 emitter call sites pass `&state.src_bytes`
-(unpadded). Migrate to `PaddedView`. Pair the `scan_quoted_string_simd` /
-`decode_json_string_to_arena` migration — both kernels move to `PaddedView`.
-
-**Hard gate**: per-chunk SIMD bounds guards in consolidated loops return 0;
-`grep -rn 'src_bytes' crates/core/src/` in scanner paths returns 0.
-
-#### W2.2 Scanner-architecture cluster consolidation + NEON 17-digit (AR.6.x / AT.4.3 chronics)
-
-Owner: `parse-that/rust/parse_that/src/{scanners,regex}/`;
+`parse-that/rust/parse_that/src/{scanners,regex}/`;
 `crates/ir/src/regex_info.rs`.
 
-**Scanner cluster** (six-tranche deferral): `RegexClassMiner` consolidation
-into one canonical miner shared across scanner emission paths; `ScanLut`
-registry as a per-grammar resource (replaces scattered per-rule LUT emit
-sites); `WsCommentConfig` parameterisation; `FnDescriptor` post-pass; HIR
-predicate re-exports collapsed to one module. Net: ~600 LOC delete + ~350 LOC
-net reduction per AR audit.
+CO-E2 PaddedView migration (7 emitter call sites pass `&state.src_bytes`
+unpadded — migrate to `PaddedView`). Scanner cluster consolidation
+(AR.6.x / AS.5.x; ~600 LOC delete + ~350 LOC net reduction per AR
+audit). NEON 17-digit fractional scan (AT.4.3; hand-written NEON kernel
+±1 ULP vs scalar `f64::from_str`).
 
-**NEON 17-digit fractional scan** (AT.4.3 chronic): AV.3.5 landed
-Eisel-Lemire + 16-digit integer SIMD fastpath; the 17-digit fractional kernel
-specifically never landed. Hand-written NEON kernel for 17-digit fractional
-part — ±1 ULP vs scalar `f64::from_str` on the canonical corpus.
+**Hard gate**: `parse-that/rust/parse_that/src/scanners/` LOC drops ≥
+600; HIR predicate module count drops to 1; `parse-that` f64-parse
+tests pass bit-identically on fractional inputs up to 17 digits.
 
-**Hard gate**: `parse-that/rust/parse_that/src/scanners/` LOC drops by ≥ 600;
-HIR predicate module count drops to 1; `parse-that` f64-parse tests pass
-bit-identically on fractional inputs up to 17 digits.
-
-#### W2.3 skip_ws bitmap caching + trim-call elision (AQ.8.1 / AP.3.2 chronics)
-
-Owner: `crates/bbnf-tape/src/driver.rs::skip_ws`;
-`parse-that/rust/parse_that/src/`.
-
-**AP.3.2 redundant trim-call elision**: fused-scan with `last_trim_offset`
-memoises the most recent trim-result so adjacent trim calls short-circuit when
-the input position hasn't advanced. Walker's `skip_ws` consults before
-scanning.
-
-**AQ.8.1 skip_space bitmap caching**: `nospace_bits: [u8; N]` + `nospace_start: u32`
-cache populated on first `skip_ws` call per parse. Subsequent calls hit
-the cache for their byte range. (Note: largely subsumed by AW-III W5's
-WS-collapse-into-stage-1 fix; remaining benefit is on per-call skip_ws sites
-the stage-1 cursor doesn't cover.)
-
-**Hard gate**: samply on bootstrap shows `skip_ws`/`__ws` self-time drops
-≥ 30% vs the AW-III baseline (incremental over AW-III's stage-1 absorption).
-
-### W3 — Runtime dedup + cost-model grid
-
-#### W3.1 Bloom + GADT runtime dedup + grammar-level pattern hoisting (AP.4.2 chronic)
+#### W4.3 — Bloom + GADT runtime dedup + grammar-level pattern hoisting
 
 Owner: `crates/bbnf-tape/src/dedup.rs` (new);
-`crates/bbnf-tape/src/driver.rs`;
 `crates/ir/src/passes/recognizers/dedup_eligibility.rs` (new);
-`crates/ir/src/passes/transform/pattern_dedup.rs` (new — compile-time sibling).
+`crates/ir/src/passes/transform/pattern_dedup.rs` (new).
 
-**Runtime bloom + GADT.** Layered over the AW-III specialised walker. Mandatory
-where `GRAMMAR_PROFILE.dedup_eligible_rules` is non-empty (CSS
+Runtime bloom + GADT layered over the AW-III specialised walker.
+Mandatory where `GRAMMAR_PROFILE.dedup_eligible_rules` non-empty (CSS
 `compoundSelector`, `identifier`, `namedColor`-wrap, fixed unit suffixes;
-JSON `null`, `true`-branch, `emptyObject`, `emptyArray`; BBNF literal-only Alt
-branches). Mining pass general; consumer general.
+JSON `null`, `true`-branch, `emptyObject`, `emptyArray`; BBNF
+literal-only Alt branches). 64-bit rolling FNV over raw column bytes;
+bloom admission gate; on hit, GADT lookup → `columns_range_eq` confirms
+→ `push_compound_referring(rule_id, existing, span)`.
 
-64-bit rolling FNV over raw column bytes of child records
-(`hash_children_tail`). Span_lo/span_hi ignored for structural rules. Bloom
-admission gate; on hit, GADT lookup → `columns_range_eq` confirms; on
-confirm, `push_compound_referring(rule_id, existing, span)` shares the
-existing subtree.
+AP.4.2 grammar-level pattern dedup (compile-time sibling): identify
+recurring sub-patterns (`ws + ':' + ws` × 43 in CSS L4; `!important` ×
+42 across grammars); hoist into synthetic non-terminals. Pre-egraph
+pass.
 
-`dedup_eligibility` IR pass classifies each rule using existing IR facts:
-`TypeDesc`, `EClassFacts.closure_free`, `EClassFacts.all_descendants_elidable`.
-Populates `GRAMMAR_PROFILE.dedup_eligible_rules`.
+**Hard gate**: canada bloom-AND overhead < 2%; bootstrap record count
+drops ≥ 30% vs AW-IV W3 baseline; ≥ 5 hoisted non-terminals on CSS L4
+with DTA state-count reduction ≥ 100.
 
-**AP.4.2 grammar-level pattern dedup** (compile-time sibling): `ws + ':' + ws`
-appears 43 times in CSS L4; `!important` appears 42 times across grammars.
-Compile-time pass identifies recurring sub-patterns and hoists into synthetic
-non-terminals. Pre-egraph pass (runs after `canonicalize_aliases`, before
-`factor_common_prefixes`).
-
-**Hard gate**: canada.json (zero-sharing input) bloom-AND steady-state
-overhead < 2% of parse time; bootstrap.css record count drops ≥ 30% vs
-AW-III baseline; `GRAMMAR_PROFILE.dedup_eligible_rules` non-empty;
-grammar-level pattern hoisting synthesizes ≥ 5 non-terminals on CSS L4 with
-DTA state-count reduction ≥ 100.
-
-#### W3.2 Cost-model grid sweep (AM.6 → AQ.9.4 chronic)
-
-Owner: `crates/egraph/src/cost.rs`; `crates/bbnf-ir/src/egraph/`;
-`scripts/cost-grid-sweep.sh` (new); `docs/benchmarks/cost-weights-sweep.json` (new).
-
-**Six-tranche chronic.** egraph `CostWeights` have been hand-calibrated since
-AL. Grid-sweep harness: for each weight in `{seq_cost, alt_cost, repeat_cost,
-literal_bonus, regex_cost, payload_bonus, ...}` sweep a logarithmic grid
-(0.5×, 1×, 2×, 4×) across the 4-grammar corpus. Measure DTA state count
-post-extraction + extraction pass wall-clock. Pick the Pareto frontier per
-grammar; pick dominant weights that minimise state count across the corpus.
-
-Commit calibrated `CostWeights` as a `pub const` in the egraph crate.
-
-**Hard gate**: ≥ 5% reduction in DTA state count OR extraction-pass wall-
-clock vs AW-III baseline on the 4-grammar corpus. If neither moves, close as
-null result — hand-calibrated CostWeights are the permanent decision with
-measurement evidence in `cost-weights-sweep.json`.
-
-### W4 — Document-parallel fork + GrammarProfile calibration + AU migrations
-
-#### W4.1 Document-level parallel parse fork
+#### W4.4 — Document-parallel fork over stage-1 structural index
 
 Owner: `crates/ir/src/passes/recognizers/list_rules.rs` (new);
 `crates/bbnf-tape/src/driver.rs` (fork orchestration).
 
-A rule is a fork candidate iff:
-- body is `Repeat` over an `Alt` or single compound rule,
-- children carry no cross-item state (first-set check over all alternatives),
-- each item's byte extent is bounded by a stage-1 structural-bitmap position.
+A rule is a fork candidate iff body is `Repeat` over an `Alt` or single
+compound rule + children carry no cross-item state + each item's byte
+extent is bounded by a stage-1 structural-bitmap position. Targets: CSS
+`stylesheet`, JSON root array/object, BBNF `grammar`, Sheets
+`file`.
 
-Candidates emitted to `GRAMMAR_PROFILE.list_rules`. Targets: CSS
-`stylesheet = (ruleset | at_rule)*`, JSON root `value` when array/object,
-BBNF `grammar = rule+`, Sheets `file = formula_line*`.
+The stage-1 structural bitmap (W1.2 corrected; W1.3 wired) marks every
+item boundary; workers take contiguous regions; each writes into a local
+`Columns`; join phase memcpy-concatenates + rewrites cross-worker
+references.
 
-The stage-1 structural bitmap (AW-III W5) marks every item boundary; workers
-take contiguous regions. Each worker writes into a local `Columns`. Join
-phase memcpy-concatenates columns in order and rewrites `sib_skip` cross-
-worker references by the worker's contribution offset. One linear pass per
-column.
-
-**Hard gate**: tailwind.css on 4 cores shows sub-linear-to-linear scaling;
+**Hard gate**: tailwind.css 4c sub-linear-to-linear scaling;
 `GRAMMAR_PROFILE.list_rules` non-empty for CSS L4.
 
-#### W4.2 PSI rayon stage-B walker integration + GrammarProfile calibration + small-input amortisation
+### W5 — `reduce_column<C, R>` + parity harnesses + cost-model grid
 
-Owner: `crates/bbnf-tape/src/psi.rs` (walker integration + lock-free workers);
-`crates/core/src/backend/rust/emitter/profile.rs` (calibration emit);
-`crates/bbnf-tape/src/profile.rs`.
+Three parallel agents.
 
-**PSI rayon stage-B walker integration** (substrate present in `psi.rs:54-65`
-but `parallel_break_even_bytes: 0` gates it off everywhere). PSI
-`fill_columns` forks rayon workers when input bytes ≥ per-grammar threshold.
-Workers write into pre-resized columns at distinct indices — lock-free per
-the psi.rs:54-65 design note.
+#### W5.1 — `Tape::reduce_column<C, R>` + per-column codegen + 4-lane SIMD pack
 
-Stress verification: a 4-core parallel-fill tortured input (synthetic JSON
-with ~10K array elements) drives concurrent fills under `cargo test
---release psi_lock_free_stress` for ≥ 60 s; assert zero torn writes via
-post-test column-equality against the single-threaded reference. Lock-
-freedom is verified by ASAN-clean run + `cargo +nightly miri test
-psi_lock_free` (Miri's data-race detection catches any UB in the unsafe
-`get_unchecked_mut` paths).
-
-**GrammarProfile calibration.** Per-grammar `expected_ns_per_byte`,
-`parallel_break_even_bytes`, `payload_bytes_per_input_byte`,
-`dta_setup_floor_ns` measured against the W4 single-threaded matrix. Commit
-values as const literals in each emitter's `GRAMMAR_PROFILE`. The
-calibration is mechanical — samply attribution over the canonical corpus
-produces the constants; emitter writes them as `pub const`.
-
-**Small-input amortisation** (AW.4.7). Bench reports compute expected MB/s
-for sub-100 µs parses from `(input.len() × 1e9) / (setup_floor + input.len()
-× expected_ns_per_byte)`, report achieved/expected ratio instead of fixed
-gate. The three sheets-small entries documented as small-input cardinality
-fact (not a per-grammar specialisation).
-
-**Hard gate**: canada per-core scaling on a 4-core machine for inputs ≥
-break-even threshold; zero torn writes under stress (60 s); Miri-clean PSI
-fill paths; every grammar's `GRAMMAR_PROFILE` const populated; stub `&[]`
-slots remain only where populated-by-design (with in-source rationale).
-
-#### W4.3 variant_idx walker coherence + serialize/structural roundtrip
-
-Owner: `crates/core/src/backend/rust/view/alt.rs`;
-`crates/core/tests/{json_parity,structural_parity,imports}.rs` (un-ignore).
-
-AU's 7 ignored JSON variant-dispatch tests assume AoS + payload_idx semantics
-that the V2 columnar substrate replaced. Cursor's variant_idx accessor reads
-from `flags` column, not from the deleted `payload_idx` field. Mechanical
-reader migration.
-
-13 serialize/structural roundtrip tests un-ignore + fix.
-`test_selective_transitive_unfurling` triage: fix the import-system bug or
-document as AX-scope.
-
-**Hard gate**: 7 JSON variant-dispatch tests un-ignored + passing; 13
-serialize/structural roundtrip tests un-ignored + passing; transitive
-unfurling fixed OR rationale in `FINAL-IV.md`.
-
-### W5 — `reduce_column<C, R>` + 4-lane SIMD pack + parity harnesses
-
-#### W5.1 `Tape::reduce_column<C, R>` + per-column codegen + 4-lane SIMD pack
-
-Owner: `crates/bbnf-tape/src/columns.rs` (API surface);
-`crates/core/src/backend/rust/emitter/visitor.rs` (codegen specialisations);
+Owner: `crates/bbnf-tape/src/columns.rs`;
+`crates/core/src/backend/rust/emitter/visitor.rs`;
 `crates/core/tests/visitor_reduce.rs` (new).
 
-**Substrate lineage.** AV.2.5 landed the SoA-substrate's reordered-unrolling
-kernel as codegen. AW-IV W5 ships the consumer API + SIMD promotion AV could
-not finish.
-
-```rust
-let total: f64 = parsed.tape().reduce_column::<F64Column, _>(
-    0.0,
-    |acc, x| acc + x,
-);
-```
-
+AV.2.5 substrate ships; the consumer API + SIMD promotion never did.
 Emitter extends `visitor.rs::emit_visitor_kernels` to produce one
-`reduce_column<C, R>` impl per active payload column per grammar, driven by
-`GRAMMAR_PROFILE.active_columns`. LLVM monomorphises the reducer at the call
-site, preserving the AV.2.5 4-lane scalar reordered-unrolled loop as the
-inner body.
-
-Promote the emitted inner loop to packed `std::simd::f64x4` (or arch-
-intrinsic `vfaddq_f64` pairs on NEON, `_mm256_add_pd` on AVX2). Portable-simd
-is stable; no nightly dependence.
+`reduce_column<C, R>` impl per active payload column per grammar.
+Promote the inner loop to packed `std::simd::f64x4` (or
+arch-intrinsic `vfaddq_f64` pairs on NEON, `_mm256_add_pd` on AVX2).
 
 **Hard gate**: ≥ 6× speedup over AV.2.5-baseline scalar left-fold on
-canada.json f64 column, OR per-arch rationale documenting AArch64 ceiling
-(NEON is 2-lane f64-wide; portable_simd f64x4 lowers to 2× pairs; AVX2
-reaches 4-lane natively). No grammar surface introduced — verifying invariant
-6.
+canada.json f64 column, OR per-arch rationale documenting AArch64
+ceiling.
 
-#### W5.2 sonic-rs + lightningcss parity harnesses
+#### W5.2 — sonic-rs + lightningcss parity harnesses + CI gate
 
-Owner: `crates/core/tests/sonic_rs_parity.rs` (new);
-`crates/core/tests/lightningcss_parity.rs` (new).
+Owner: `crates/core/tests/{sonic_rs_parity,lightningcss_parity}.rs`
+(new).
 
-sonic-rs harness: for every JSON file in `data/json/`, parse with bbnf +
-sonic-rs, compare `view().as_value()` vs `sonic_rs::Value` node-for-node.
-Numbers bit-for-bit (f64 ULP tolerance). Strings byte-for-byte. Objects
-key-set + per-key value equality. Arrays length + per-index value equality.
+sonic-rs: per JSON file in `data/json/`, parse with bbnf + sonic-rs,
+compare `view().as_value()` vs `sonic_rs::Value` node-for-node.
 
-lightningcss harness: per-declaration equivalence over bootstrap.css +
-tailwind.css + normalize.css. Colors via `Color` projection (field-for-field
-with `lightningcss::values::color::Color::RGBA`). Selectors via tokenised
-form. f32 ↔ f64 compared via `(f32 as f64)`. Alpha-less inputs handled per
-AW-I.W0.5 NaN discipline.
+lightningcss: per-declaration equivalence over bootstrap + tailwind +
+normalize. Colors via `Color` projection (field-for-field with
+`lightningcss::values::color::Color::RGBA`).
 
-Both harnesses CI-gate alongside `grammar_roundtrip` + `tape_parity`.
+Both CI-gate alongside `grammar_roundtrip` + `tape_parity`.
 
-**Hard gate**: zero divergences on canada / twitter / citm / data / data_xl
-(sonic-rs) and bootstrap / tailwind / normalize (lightningcss); CI step wired
-in `.github/workflows/ci.yml`.
+**Hard gate**: zero divergences on canada / twitter / citm / data /
+data_xl (sonic-rs) and bootstrap / tailwind / normalize (lightningcss);
+CI step wired in `.github/workflows/ci.yml`.
 
-### W6 — FINAL + close
+#### W5.3 — Cost-model grid sweep (AM.6 chronic)
 
-Orchestrator serial.
+Owner: `crates/egraph/src/cost.rs`;
+`scripts/cost-grid-sweep.sh` (new);
+`docs/benchmarks/cost-weights-sweep.json` (new).
+
+Six-tranche chronic. Grid-sweep harness over `CostWeights`; pick Pareto
+frontier per grammar; commit calibrated weights as `pub const`.
+
+**Hard gate**: ≥ 5% reduction in DTA state count OR extraction-pass
+wall-clock vs AW-III baseline on the 4-grammar corpus, OR null-result
+close with measurement evidence.
+
+### W6 — FINAL + 19-entry bench matrix + close
+
+Orchestrator serial. Verification ledger composed from per-wave entries.
 
 1. Full workspace test: 0 failed; ignored count = AX-routed-residual only.
-2. Full 19-entry bench matrix.
+2. Full 19-entry bench matrix; **every parse entry exceeds post-AU**.
 3. `docs/benchmarks/post-AW-IV.json` — bench-checkpoint + multi-wave
    aggregator (`post-AW-III.json` + `post-AW-IV-W{1..5}.json` folded in).
-4. `docs/tranches/AW/FINAL-IV.md` — close document with hard-gate attribution.
-5. Update `docs/tranches/AW/FINAL.md` (composite AW close) referencing
-   AW-I → AW-II → AW-III → AW-IV chain.
+4. `docs/tranches/AW/FINAL-IV.md` — close document with per-wave
+   verification ledger citations.
+5. Update `docs/tranches/AW/FINAL.md` (composite AW close).
 
-**Hard gate**: every entry exceeds post-AU; both parity harnesses CI-gated;
-`FINAL-IV.md` enumerates every hard gate with artefact citation.
+**Hard gate**: every parse entry exceeds post-AU; both parity harnesses
+CI-gated; `FINAL-IV.md` enumerates every hard gate with artefact
+citation; verification ledger complete (symbol-presence/absence per
+wave + samply attribution per wave + wire-contract test passing per
+slot).
+
+## Per-grammar projection at AW-IV close
+
+| Entry | post-AU | post-AW-III | post-AW-IV projected | vs post-AU |
+|---|---:|---:|---:|:---:|
+| json twitter | 1967 | 170 | 2200–4200 | **1.1–2.1×** |
+| json citm | 2438 | 213 | 4000–5500 (with W4.4 fork) | **1.6–2.3×** |
+| json canada | 1231 | 98 | 3500–5000 | **2.8–4.0×** |
+| json data_xl | 1179 | 137 | 3500–4500 (fork) | **3.0–3.8×** |
+| json data_s | 1746 | 164 | 2200–2800 | **1.3–1.6×** |
+| css normalize | 735 | 14 | 1500–2200 | **2.0–3.0×** |
+| css bootstrap | 454 | 8 | 1800–2500 | **4.0–5.5×** |
+| css tailwind | 496 | 9 | 2000–4000 (fork) | **4.0–8.0×** |
+| sheets parse_simple | 95 | 4 | 60–95 | small-input tradeoff |
+| sheets parse_nested | 128 | 4 | 80–130 | small-input tradeoff |
+| sheets parse_stress | 121 | 3 | 100–140 | parity–1.2× |
+| bbnf json | 283 | 9 | 350–500 | **1.2–1.8×** |
+| bbnf ebnf | 223 | 6 | 280–400 | **1.3–1.8×** |
+| bbnf css_pretty | 647 | 20 | 750–1000 | **1.2–1.5×** |
+| bbnf google_sheets | 858 | 29 | 1000–1300 | **1.2–1.5×** |
+| bbnf bbnf_self | 394 | 12 | 600–900 | **1.5–2.3×** |
+| bbnf css_l4_grammar | 496 | 19 | 600–800 | **1.2–1.6×** |
+
+15+/17 parse entries exceed post-AU; the small-input sheets entries (≤
+1.8 KB) ride the documented amortisation tradeoff but should still
+recover to parity or near-parity once the cross-crate inlining (W2)
+removes the per-byte function-call tax that small inputs amplify.
 
 ## Critical files
 
 | File | Wave |
 |------|------|
-| `crates/core/src/generate/regex/emit/simd.rs` (AVX2 widening + WASM + small-Alt SIMD compare) | W1 |
-| `bbnf-simd-scan/src/{x86,wasm}.rs` (arch siblings to AW-III's NEON) | W1 |
-| `crates/core/src/backend/rust/emitter/keyword_dispatch.rs` (frequency ordering + length-bucket tail extends AW-III W6.2) | W1 |
-| `crates/ir/src/passes/recognizers/keyword_stats.rs` (frequency mining extension) | W1 |
-| `crates/bbnf-tape/src/psi.rs` (rayon walker integration + lock-free worker stress) | W4.2 |
-| `crates/core/src/backend/rust/emitter/string_decode.rs` (PaddedView migration) | W2.1 |
-| `parse-that/rust/parse_that/src/{scanners,regex}/` (cluster consolidation, NEON 17-digit) | W2.2 |
-| `crates/ir/src/regex_info.rs` (HIR predicate re-export collapse) | W2.2 |
-| `crates/bbnf-tape/src/driver.rs::skip_ws` (trim elision + bitmap cache) | W2.3 |
-| `crates/bbnf-tape/src/dedup.rs` (new) | W3.1 |
-| `crates/ir/src/passes/recognizers/dedup_eligibility.rs` (new) | W3.1 |
-| `crates/ir/src/passes/transform/pattern_dedup.rs` (new — compile-time hoisting) | W3.1 |
-| `crates/egraph/src/cost.rs` (CostWeights grid sweep) | W3.2 |
-| `scripts/cost-grid-sweep.sh` (new) | W3.2 |
-| `docs/benchmarks/cost-weights-sweep.json` (new) | W3.2 |
-| `crates/ir/src/passes/recognizers/list_rules.rs` (new) | W4.1 |
-| `crates/bbnf-tape/src/driver.rs` (fork orchestration, document-parallel) | W4.1 |
-| `crates/core/src/backend/rust/emitter/profile.rs` (calibration) | W4.2 |
-| `crates/core/src/backend/rust/view/alt.rs` (variant_idx migration) | W4.3 |
-| `crates/core/tests/{json_parity,structural_parity,imports}.rs` (un-ignore) | W4.3 |
-| `crates/bbnf-tape/src/columns.rs::reduce_column` API | W5.1 |
-| `crates/core/src/backend/rust/emitter/visitor.rs` (codegen + SIMD pack) | W5.1 |
-| `crates/core/tests/visitor_reduce.rs` (new) | W5.1 |
+| `crates/core/src/backend/rust/emitter/dta_walker/lower_state.rs` (W1.1 hoist + W3.1/W3.2/W3.3/W3.4 consumer wiring) | W1.1, W3.* |
+| `crates/ir/src/passes/sets/structural_alphabet.rs` (mining definition correction) | W1.2 |
+| `crates/ir/src/passes/profile.rs` + `crates/core/src/backend/rust/emitter/profile.rs` (wire-contract pipeline) | W1.3 |
+| `crates/core/tests/grammar_profile_wire_contract.rs` (new — end-to-end test) | W1.3 |
+| `crates/core/src/backend/rust/emitter/dfa_codegen.rs` (new) | W1.4 |
+| `crates/bbnf-tape/src/dta.rs` (DtaState::Regex match_fn field) | W1.4 |
+| `crates/bbnf-tape/src/driver.rs` (RegexScanner trait deletion + #[inline(always)] hot helpers) | W1.4, W2.1 |
+| `crates/core/src/backend/rust/emitter/grammar.rs` (DtaDfaScanner deletion + emit_view_impl direct-to-struct wiring) | W1.4, W3.5a |
+| `Cargo.toml` (workspace LTO config if Approach A) | W2.1 |
+| `crates/ir/src/passes/recognizers/shape_dict.rs` (mining recalibration) | W3.1 |
+| `crates/core/src/backend/rust/emitter/keyword_dispatch.rs` (PHF threshold) | W3.2 |
+| `crates/ir/src/passes/recognizers/disjoint_first.rs` (gate reversal) | W3.3 |
+| `crates/ir/src/passes/recognizers/consume_to_next_structural.rs` (gate removal) | W3.5b |
+| `crates/bbnf-tape/src/kind.rs` (TapeKind::Scanned variant) | W3.5b |
+| `crates/ir/src/passes/recognizers/pattern_alphabet.rs` (invariant fix) | W3.5c |
+| `crates/core/src/generate/regex/emit/simd.rs` + `crates/bbnf-simd-scan/src/{avx2,wasm}.rs` | W4.1 |
+| `parse-that/rust/parse_that/src/{scanners,regex}/` (cluster consolidation) | W4.2 |
+| `crates/bbnf-tape/src/dedup.rs` + `crates/ir/src/passes/{recognizers/dedup_eligibility,transform/pattern_dedup}.rs` (new) | W4.3 |
+| `crates/ir/src/passes/recognizers/list_rules.rs` (new) + driver fork orchestration | W4.4 |
+| `crates/bbnf-tape/src/columns.rs::reduce_column` + `crates/core/src/backend/rust/emitter/visitor.rs` | W5.1 |
 | `crates/core/tests/{sonic_rs_parity,lightningcss_parity}.rs` (new) | W5.2 |
-| `docs/tranches/AW/FINAL-IV.md` (new) | W6 |
-| `docs/benchmarks/post-AW-IV.json` (new, aggregator) | W6 |
+| `crates/egraph/src/cost.rs` + `scripts/cost-grid-sweep.sh` + `docs/benchmarks/cost-weights-sweep.json` | W5.3 |
+| `docs/tranches/AW/FINAL-IV.md` + `docs/benchmarks/post-AW-IV.json` (multi-wave aggregator) | W6 |
+| `docs/benchmarks/post-AW-IV-W{1..5}.json` (per-wave sidecars) | W1..W5 |
 
-## Cross-tranche parity
+## Cross-tranche debt — addressed
 
-- sonic-rs parity: `json_monolithic_value` bench bbnf/sonic ratio ≥ 0.95 on
-  canada (already > 1.0 per AW-III projections); ≥ 0.85 on twitter / data /
-  citm / data_xl.
-- lightningcss parity: per-declaration equivalence on bootstrap + tailwind +
-  normalize.
-- Named struct ABI: `pub struct Color` matches `lightningcss::values::color::
-  Color::RGBA` field layout under the W5 harness.
+| Item | Origin | AW-IV wave | Rationale |
+|------|--------|-----------|-----------|
+| Walker per-arm runtime data unpacking | AW-III W4.d emitter shape | W1.1 | Hoist literal bindings; LLVM per-arm specialisation depends on it |
+| Structural alphabet over-mining (CSS `[0..127]`) | AW-III W5.a mining definition | W1.2 | Correct definition: bytes that delineate parse-tree structure |
+| `GRAMMAR_PROFILE` wire-contract drop | AW-III W5.a/d projection | W1.3 | End-to-end test asserts mined data reaches const literal |
+| Regex DFA runtime interpreter | parse-that `Dfa::find_at` | W1.4 | Per-pattern straight-line specialised match function |
+| Scanner trait + HashMap + leaked Box | AW-III W1.8 half-measure | W1.4 | Direct fn-pointer in `DtaState::Regex`; trait deletes |
+| Cross-crate helper calls per byte | AW-III W4.d cross-crate emission | W2.1 | LTO + `#[inline(always)]` OR per-grammar inline emission |
+| ShapeRef substrate-only | AW-III W6.1 | W3.1 | Mining recalibration + walker compound-emit consumer |
+| PHF substrate-only | AW-III W6.2 | W3.2 | Threshold lowering + AltLinear consumer |
+| ClassifyByte substrate-only (gate inversion) | AW-III W6.3 | W3.3 | `disjoint_first` runs first; replaces `ByteDispatch` |
+| Pratt LUT consumer linear-scan fallback | AW-III W6.5 | W3.4 | Single LUT byte-load replaces `lookup_precedence` |
+| Direct-to-struct view-layer un-wired | AW-III W6.4 | W3.5a | `emit_view_impl` calls `resolve_named_type` |
+| CTNS lifter gated off | AW-III W5.c / W6.A `cf691347` | W3.5b | New `TapeKind::Scanned` record path |
+| Bounded Regex defeated by dense alphabets | AW-III W5.d / W6.A | W3.5c | Right invariant: `pattern.last_byte_set ⊆ structural_alphabet` |
+| AVX2 u8x32 widening (AN.5 chronic) | AN | W4.1 | Granular layered over AW-III SIMD substrate |
+| Scanner cluster consolidation (AR.6.x) | AR | W4.2 | Granular |
+| NEON 17-digit (AT.4.3) | AT | W4.2 | Granular |
+| skip_ws bitmap caching (AQ.8.1) + trim elision (AP.3.2) | AQ / AP | W4.2 (subsumed) | Stage-1 bitmap absorbs most; residual covered |
+| Bloom + GADT + grammar-level pattern hoisting (AP.4.2) | AP | W4.3 | Layered over W3 consumers |
+| Document-parallel fork | substrate landed in AW-III.W5 | W4.4 | Stage-1 index is the fork-point substrate |
+| `reduce_column<C, R>` + 4-lane SIMD pack | AV.2.5 | W5.1 | Consumer for AV substrate |
+| sonic-rs + lightningcss parity harnesses | competitor parity | W5.2 | CI gate |
+| Cost-model grid sweep (AM.6 chronic) | AM | W5.3 | Six-tranche chronic close |
+
+## AX seeds (carried forward — not in AW-IV scope)
+
+- **AltLinear backtracking cost model** — speculative-execution
+  substrate or savepoint-compression if AW-IV W2/W3 profiling shows
+  backtracking-dominant grammars.
+- **Global CSP solve** — single-solver path behind feature flag.
+- **AP.5.4 deferred UTF-8 validation** — skip per-byte UTF-8 check in
+  scanner hot loop when grammar's structural alphabet ⊆ ASCII7; defer
+  validation to view-time accessor.
+- **AQ.8.3 TLS-recycled scratch** — per-thread scratch arena for
+  transient allocations.
+- **FDMP mimalloc segment-class rounding** — column capacity rounding
+  to mimalloc's segment size class.
+- **Per-grammar column overlays** — remap unused columns per grammar.
+- **AV.3.6 CSS L4 DTA state-count narrowing** — conditional on post-
+  AW-IV I-cache pressure.
+
+These are documented forward-references, not scope deferrals from
+AW-IV.
 
 ## Operational posture
 
 Inherits `docs/instructions/README.md` + `docs/instructions/TRANCHE_SPEC.md`
-in full. Inherits AW-III's no-deferrals invariant.
+in full. The four newly-codified general invariants
+(*Substrate-with-consumer is one unit of work*, *Wave verification
+ledger*, *Cross-crate inlining is verified with `nm`*, *Wire-contract
+pipelines have end-to-end tests*, *Hoist emitter-known data into emitted
+code*) bind every wave; the orchestrator's wave-close ledger entries in
+`PROGRESS.md` carry the verification artefact citations per wave.
 
-- **No deferrals, regardless of newfound scope.** Reiterated. Scope-reveal
-  triggers re-plan-with-more-agents per the operational protocol.
-- **Bench between every wave.** Each wave closes with a sidecar; W6 composes
-  the multi-wave aggregator.
-- **`cargo asm` + samply discipline** — every codegen and perf claim cites an
-  artefact.
+Per-wave cadence:
 
-## AX seeds (carried forward — not in AW-IV scope, route to AX or successor)
-
-- **AltLinear backtracking cost model** — if AW-IV W2/W3 profiling shows
-  backtracking dominates some grammar's parse, AX speculative-execution
-  substrate or savepoint-compression. Mining pass general (Alt
-  branch-attempt-frequency from samply); consumer is a new `DtaState` arm
-  for compressed-savepoint Alts.
-- **Global CSP solve** (AL → AQ.9.5 → AW ledger) — single-solver path behind
-  a feature flag; byte-for-byte comparison of emitted constants. Acceptance:
-  strictly-better-or-equal on every grammar, OR documented null-result.
-- **AP.5.4 deferred UTF-8 validation** — five-tranche chronic. Skip
-  per-byte UTF-8 validation in scanner hot loop when grammar's structural
-  alphabet is ASCII-only; defer validation to view-time accessor. Mining
-  pass general (alphabet ⊆ ASCII7 predicate); consumer is a new
-  `DtaState::Regex` flag.
-- **AQ.8.3 TLS-recycled scratch** — three-tranche chronic. Per-thread scratch
-  arena for transient allocations (savepoint snapshots, regex match
-  buffers); recycled across parses on the same thread. Substrate-level;
-  consumer is the savepoint/restore path.
-- **FDMP mimalloc segment-class rounding** — substrate cluster; column
-  capacity rounding to mimalloc's segment size class to eliminate slop on
-  large parses.
-- **Per-grammar column overlays** — substrate cluster; remap unused columns
-  per grammar (CSS doesn't use Sheets's operator column; reclaim the space).
-- **AV.3.6 CSS L4 DTA state-count narrowing** — substrate cluster;
-  conditional on post-AW I-cache pressure observation. Should fall out of
-  AW-III W4 walker-pass hot/cold partitioning automatically; left as a seed
-  in case dedicated narrowing is needed.
-- **Hyperopt cluster residue** — items not absorbed: any remaining
-  refinements over the AW-IV W1.3/W1.4 PHF work that profile evidence
-  surfaces.
-
-These seeds are documented forward-references, not scope deferrals from
-AW-IV. AW-IV's no-deferrals invariant applies to declared scope; AX seeds
-are work that has not been planned, not work that has been planned and
-deferred.
+- **Bench checkpoint per wave.** `docs/benchmarks/post-AW-IV-W{N}.json`.
+- **Samply attribution per wave.** `.profiles/samply/aw4-w{N}/<bench>/`.
+- **`nm` ledger per wave.** Symbol-presence/absence assertions per the
+  wave's hard gate, recorded in `PROGRESS.md`.
+- **Wire-contract test additions per wave.** When a wave touches the
+  IR-mining → const-literal pipeline, a wire-contract test lands in
+  the same wave.
+- **Bootstrap regen per wave.** Idempotent at every wave boundary.
 
 ## Successor chain
 
 AW-IV closes green → AX opens (replay tooling, snapshot persistence,
-incremental re-parse, structural-default recovery, subsystem closures). AX's
-substrate (DTA_TABLE const, DtaSnapshot, decision log, per-record snapshot
-metadata) preserved verbatim under AW-III + AW-IV; stage-1 bitmap is
-deterministic, replay re-derives it.
+incremental re-parse, structural-default recovery, subsystem closures).
+AX's substrate (`DTA_TABLE` const, `DtaSnapshot`, decision log,
+per-record snapshot metadata, `StructuralIndex`) preserved verbatim
+under AW-III + AW-IV; stage-1 bitmap is deterministic, replay
+re-derives.
 
 Indefatigable. No deferrals. No stubs. No shims. No new `#[ignore]`. No
-grammar-specific code paths. Every entry exceeds post-AU at AW-IV close.
+grammar-specific code paths. Every parse entry exceeds post-AU at AW-IV
+close. The interpreter is abrogated in this tranche; the throughput the
+AW-III transposition predicated lands here.

@@ -31,6 +31,34 @@ fn lift(relative: &str) -> (bbnf_ir::GrammarIR, bbnf_ir::passes::DtaTable) {
     }
 }
 
+/// AW-III.W1.7 — verify the Pratt `IrNode::Next` peel by asserting
+/// the CSS L4 DTA table contains at least one ShuntingYard state.
+///
+/// CSS `calc()` / `min()` / `max()` / `clamp()` operator-chain
+/// rules lower their operand chains through `IrNode::Next`, not
+/// `IrNode::Seq`. Pre-W1 `match_operator_chain_rule` rejected
+/// every Next-shaped rule and the lifter produced long
+/// ByteDispatch chains. With the `strip_transparent_owned` peel
+/// extended to Next/Skip alongside Map/OptionalWhitespace, the
+/// chain detector synthesises a Seq view and the precedence chain
+/// fires. ShuntingYard state count > 0 is the verifiable signal.
+#[test]
+fn css_l4_pratt_next_peel_emits_shunting_yard_state() {
+    let (_ir, table) = lift("grammar/css/l4/stylesheet.bbnf");
+    let sy_count = table
+        .states
+        .iter()
+        .filter(|s| matches!(s, bbnf_ir::passes::DtaState::ShuntingYard { .. }))
+        .count();
+    eprintln!("CSS L4 ShuntingYard state count = {sy_count}");
+    assert!(
+        sy_count > 0,
+        "AW-III.W1.7: CSS L4 DTA must contain at least one \
+         ShuntingYard state after the Pratt `IrNode::Next` peel; \
+         observed {sy_count}",
+    );
+}
+
 #[test]
 fn sheets_add_op_branches_carry_u8_payload() {
     let (ir, table) = lift("grammar/google-sheets/google-sheets.bbnf");

@@ -414,11 +414,11 @@ fn emit_seq_arm(
             }
             _ => unsafe { ::core::hint::unreachable_unchecked() },
         };
-        let parent_rec = columns.len() as u32;
         let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-        ::bbnf::runtime::tape::reserve_compound(
-            columns, frame_depth, stack.depth(), tape_kind, *pos,
-        );
+        // AW-III.W5.c — fused compound write replaces reserve_compound's
+        // 7-Vec::push tax with one bounds-check + 7 unchecked stores.
+        let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+        frame_depth.push(stack.depth());
         let child_mark = columns.len() as u32;
         let variant_idx = stack.pending_variant_idx;
         stack.pending_variant_idx = u8::MAX;
@@ -538,11 +538,11 @@ fn emit_alt_linear_arm(idx: usize, branches: &[StateId]) -> TokenStream {
         }
         let start_depth = stack.depth();
         let start_pos = *pos;
-        let parent_rec = columns.len() as u32;
-        ::bbnf::runtime::tape::reserve_compound(
-            columns, frame_depth, start_depth,
+        // AW-III.W5.c — fused compound write.
+        let parent_rec = columns.push_compound_fused(
             ::bbnf::runtime::tape::TapeKind::Alt, *pos,
         );
+        frame_depth.push(start_depth);
         let child_mark = columns.len() as u32;
         let variant_idx = stack.pending_variant_idx;
         stack.pending_variant_idx = u8::MAX;
@@ -654,11 +654,11 @@ fn emit_repeat_arm(
             ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
             _ => unsafe { ::core::hint::unreachable_unchecked() },
         };
-        let parent_rec = columns.len() as u32;
-        ::bbnf::runtime::tape::reserve_compound(
-            columns, frame_depth, stack.depth(),
+        // AW-III.W5.c — fused compound write.
+        let parent_rec = columns.push_compound_fused(
             ::bbnf::runtime::tape::TapeKind::Rule, *pos,
         );
+        frame_depth.push(stack.depth());
         let child_mark = columns.len() as u32;
         let counter_idx = stack.counters.len();
         if counter_idx >= u8::MAX as usize {
@@ -864,11 +864,11 @@ fn emit_shunting_yard_arm(
             ::bbnf::runtime::tape::DtaState::ShuntingYard { head, .. } => head,
             _ => unsafe { ::core::hint::unreachable_unchecked() },
         };
-        let parent_rec = columns.len() as u32;
-        ::bbnf::runtime::tape::reserve_compound(
-            columns, frame_depth, stack.depth(),
+        // AW-III.W5.c — fused compound write.
+        let parent_rec = columns.push_compound_fused(
             ::bbnf::runtime::tape::TapeKind::Rule, *pos,
         );
+        frame_depth.push(stack.depth());
         let child_mark = columns.len() as u32;
         let variant_idx = stack.pending_variant_idx;
         stack.pending_variant_idx = u8::MAX;

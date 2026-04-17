@@ -79,7 +79,7 @@ pub use driver::{
     dta_run_cold, emit_leaf, emit_leaf_with_payload, emit_reducer_compound,
     first_ws_pattern, frame_at, frame_to_tape_kind, handle_repeat_failure,
     handle_repeat_failure_bounded, lookup_precedence, pop_and_release,
-    reserve_compound, saturating_u16, stack_top, stage_literal_payload_in_arena,
+    saturating_u16, stack_top, stage_literal_payload_in_arena,
     trim_ascii_ws, trim_with_pattern, try_branch, DtaError, Frame, FrameStack,
     FrameStackProbeSnapshot, FrameStackSavepoint, IterSavepoint, OpStackEntry,
     RegexScanner, RepeatAbsorbResult, StepResult, COUNTER_INLINE_SLOTS,

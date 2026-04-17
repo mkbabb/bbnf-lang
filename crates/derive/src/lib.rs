@@ -52,7 +52,12 @@ use parse_that::utils::get_cargo_root_path;
 // + `DtaState::Regex { payload: Option<PayloadKind> }` add typed-leaf
 // payload threading. Cached codegen from pre-W1 versions references the
 // pre-payload variant shapes; tape-side wire contract changed.
-const BBNF_SCHEMA_VERSION: u64 = 11;
+// AW-III.W5.c: bumped from 11 — `DtaState::ConsumeToNextStructural` variant
+// adds dual-cursor structural-jump dispatch; `FrameStackSavepoint.slot:
+// u32` field adds the cursor-aware savepoint snapshot. `reserve_compound`
+// helper deleted in favour of `Columns::push_compound_fused` direct calls;
+// every cached emitter output references the deleted helper.
+const BBNF_SCHEMA_VERSION: u64 = 12;
 
 /// Recursively collect all grammar file contents for hashing.
 ///

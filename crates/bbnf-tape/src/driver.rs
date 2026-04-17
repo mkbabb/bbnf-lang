@@ -624,7 +624,7 @@ pub trait RegexScanner {
 /// Rust labels; the enum match disappears at the *output* call site
 /// (the table still carries `DtaState` so this cold loop remains
 /// semantically authoritative). Helpers
-/// ([`emit_leaf`], [`emit_leaf_with_payload`], [`reserve_compound`],
+/// ([`emit_leaf`], [`emit_leaf_with_payload`],
 /// [`close_compound`], [`advance_or_pop_with`], [`frame_to_tape_kind`],
 /// [`stage_literal_payload_in_arena`], [`pop_and_release`],
 /// [`stack_top`], [`saturating_u16`], [`emit_reducer_compound`],
@@ -1278,9 +1278,12 @@ pub fn dispatch_one(
             // same `Seq` placeholder pre-W1 used so `child_mark`
             // arithmetic stays uniform; the `promote` field on the
             // frame is what triggers the close-time collapse.
-            let parent_rec = columns.len() as u32;
             let tape_kind = frame_to_tape_kind(frame);
-            reserve_compound(columns, frame_depth, stack.depth(), tape_kind, *pos);
+            // AW-III.W5.c — fused compound push. `push_compound_fused`
+            // returns the row index it wrote at; `frame_depth` carries
+            // the per-row depth stamp on a parallel column.
+            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+            frame_depth.push(stack.depth());
             let child_mark = columns.len() as u32;
             // AW-I.W4ζ — consume pending rule-entry stamp. The Ref
             // arm set this to `rule.0 as u8` before dispatching here;
@@ -1403,9 +1406,9 @@ pub fn dispatch_one(
             // Reserve an Alt compound frame. The branch's subtree is
             // emitted into the compound's child run; on successful
             // branch close, the Alt frame's cursor carries the branch
-            // index (the variant_idx).
-            let parent_rec = columns.len() as u32;
-            reserve_compound(columns, frame_depth, start_depth, TapeKind::Alt, *pos);
+            // index (the variant_idx). AW-III.W5.c — fused write.
+            let parent_rec = columns.push_compound_fused(TapeKind::Alt, *pos);
+            frame_depth.push(start_depth);
             let child_mark = columns.len() as u32;
             // AW-I.W4ζ — consume pending rule-entry stamp. For an Alt
             // reached directly through a Ref (rule body IS an Alt),
@@ -1530,9 +1533,9 @@ pub fn dispatch_one(
             // Body failure with `counter >= lo` is caught by
             // `handle_repeat_failure` at the walker-loop boundary;
             // the iteration savepoint captured below is the restore
-            // target.
-            let parent_rec = columns.len() as u32;
-            reserve_compound(columns, frame_depth, stack.depth(), TapeKind::Rule, *pos);
+            // target. AW-III.W5.c — fused compound write.
+            let parent_rec = columns.push_compound_fused(TapeKind::Rule, *pos);
+            frame_depth.push(stack.depth());
             let child_mark = columns.len() as u32;
 
             // Allocate a counter slot + matching iter-savepoint slot.
@@ -1720,9 +1723,9 @@ pub fn dispatch_one(
             // operand's tape row. The cursor's bounded backward-walk
             // fallback handles this layout; the outer SY compound's
             // `child_off` still satisfies the pre-order fast path
-            // (it points at `parent + 1`).
-            let parent_rec = columns.len() as u32;
-            reserve_compound(columns, frame_depth, stack.depth(), TapeKind::Rule, *pos);
+            // (it points at `parent + 1`). AW-III.W5.c — fused write.
+            let parent_rec = columns.push_compound_fused(TapeKind::Rule, *pos);
+            frame_depth.push(stack.depth());
             let child_mark = columns.len() as u32;
             // `repeat_inner` on a ShuntingYard frame stores the SY
             // state id itself, so `advance_or_pop_with`'s reducer can
@@ -1825,9 +1828,6 @@ pub fn emit_leaf_with_payload(
     span_hi: u32,
     child_off: TapeOffset,
 ) -> u32 {
-    let idx = columns.len() as u32;
-    let kind_meta = kind as u8 & 0x0F;
-    columns.kinds.push(kind_meta);
     // AW-I.W4ζ — consume the pending rule-entry variant_idx stamp
     // into this leaf's flags. Leaf rules (`identifier = /regex/`)
     // reach here via `Ref → Regex/Literal`; the rule's discriminant
@@ -1852,17 +1852,15 @@ pub fn emit_leaf_with_payload(
     } else {
         0
     };
-    columns.flags.push(variant);
     let extra: u16 = if child_off.is_none() {
         0
     } else {
         crate::tape::TapeRec::PAYLOAD_IN_ARENA_BIT
     };
-    columns.extra.push(extra);
-    columns.span_lo.push(span_lo);
-    columns.span_hi.push(span_hi);
-    columns.sib_skip.push(0);
-    columns.child_off.push(child_off);
+    // AW-III.W5.c — fused SoA write. One bounds-check on the dominant
+    // column + 7 unchecked stores. Replaces the seven `Vec::push` calls
+    // pre-W5.c paid per leaf record.
+    let idx = columns.push_leaf_fused(kind, variant, extra, span_lo, span_hi, child_off);
     frame_depth.push(stack.depth());
     idx
 }
@@ -1893,34 +1891,6 @@ pub fn stage_literal_payload_in_arena(columns: &mut Columns, payload: LiteralPay
     TapeOffset(offset)
 }
 
-/// Reserve a compound row with `span_lo` only; `span_hi` / `child_off`
-/// are stamped at frame-pop time.
-///
-/// AW-III.W4.c — `pub` + `#[inline(always)]` so W4.b's emitted walker
-/// fuses the 7 column writes into each Seq/Alt/Repeat/ShuntingYard
-/// frame-push site. The hot-path target — fused SoA write API —
-/// lands at W5; this in-place inlining is W4's intermediate step.
-#[inline(always)]
-pub fn reserve_compound(
-    columns: &mut Columns,
-    frame_depth: &mut Vec<u8>,
-    depth: u8,
-    kind: TapeKind,
-    span_lo: u32,
-) -> u32 {
-    let idx = columns.len() as u32;
-    let kind_meta = kind as u8 & 0x0F;
-    columns.kinds.push(kind_meta);
-    columns.flags.push(0);
-    columns.extra.push(0);
-    columns.span_lo.push(span_lo);
-    columns.span_hi.push(span_lo); // provisional — overwritten on close
-    columns.sib_skip.push(0);
-    columns.child_off.push(TapeOffset::NONE);
-    frame_depth.push(depth);
-    idx
-}
-
 /// Emit a binary-operator compound for the ShuntingYard reducer.
 ///
 /// The compound sits AFTER the RHS operand with `child_off` pointing
@@ -1940,18 +1910,18 @@ pub fn emit_reducer_compound(
     span_lo: u32,
     span_hi: u32,
 ) -> u32 {
-    let idx = columns.len() as u32;
-    let kind_meta = TapeKind::Rule as u8 & 0x0F;
-    columns.kinds.push(kind_meta);
-    // AW-III.W1.A — full-byte variant slot for the op_discriminant;
-    // `has_children` migrates to `extra`'s HAS_CHILDREN_BIT (the
-    // reducer always has two operand subtrees).
-    columns.flags.push(op_discriminant);
-    columns.extra.push(crate::tape::TapeRec::HAS_CHILDREN_BIT);
-    columns.span_lo.push(span_lo);
-    columns.span_hi.push(span_hi);
-    columns.sib_skip.push(0);
-    columns.child_off.push(TapeOffset(lhs_idx));
+    // AW-III.W5.c — fused SoA write. The reducer compound is a
+    // single-row leaf-shape (`HAS_CHILDREN_BIT` set, `child_off`
+    // points back at the LHS operand row); reuses `push_leaf_fused`'s
+    // store sequence with the SY-specific flags + extra values.
+    let idx = columns.push_leaf_fused(
+        TapeKind::Rule,
+        op_discriminant,
+        crate::tape::TapeRec::HAS_CHILDREN_BIT,
+        span_lo,
+        span_hi,
+        TapeOffset(lhs_idx),
+    );
     frame_depth.push(depth);
     idx
 }

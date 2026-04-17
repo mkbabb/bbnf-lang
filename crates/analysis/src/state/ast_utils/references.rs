@@ -30,17 +30,21 @@ fn collect_refs_from_compound(
     node: BbnfBootstrapNodeView<'_>,
     refs: &mut Vec<ReferenceInfo>,
 ) {
-    use ::bbnf::runtime::tape::TapeKind;
-
-    // First pass: recurse into any Rule children.
+    // First pass: recurse into every child. Composite rule bodies
+    // (`array = "[" , [ value , { "," , value } ] , "]"`) wrap the
+    // inner content in `Seq`/`Repeat`/`Alt`-kind compounds rather
+    // than `Rule` records, so gating descent on `c.kind() ==
+    // TapeKind::Rule` (the pre-W2 behaviour) misses every
+    // nonterminal nested inside a quantified group. AW-III.W2 walks
+    // every child indiscriminately — `collect_references` itself
+    // already filters by rule_kind so non-substantive nodes
+    // contribute nothing.
     let initial_count = refs.len();
     for c in node.children() {
-        if c.kind() == TapeKind::Rule {
-            collect_references(c, refs);
-        }
+        collect_references(c, refs);
     }
 
-    // If Rule children produced references, we're done.
+    // If any descent produced references, we're done.
     if refs.len() > initial_count {
         return;
     }
@@ -206,29 +210,40 @@ pub fn collect_references(node: BbnfBootstrapNodeView<'_>, refs: &mut Vec<Refere
         }
 
         // Anonymous wrapper compounds (variant_idx=0 collides with
-        // `int_lit`): peel to substantive Rule children and recurse.
-        // When no Rule children exist, check if the span text is a
-        // bare identifier — the tape-first generator may have fused
-        // the identifier into a span-only scan without pushing a
-        // separate Rule record.
-        // Mirrors the lowering's dispatch_expression fallback +
-        // is_single_token_span / lower_leaf_by_span_text path.
+        // `int_lit`): the tape-first generator wraps optional /
+        // grouped sub-expressions in compounds whose variant_idx
+        // collides with `int_lit`. Two recovery paths:
+        //
+        //   - Recurse into every child (Rule + Seq + Alt + Repeat
+        //     compounds the wrapper may contain) — composite rule
+        //     bodies like `array = "[" , [ value , { "," , value } ] ,
+        //     "]"` lower their `[ … ]` optional as a Seq-kind
+        //     compound nested under an `int_lit`-shaped wrapper, so
+        //     gating descent on `c.kind() == TapeKind::Rule` (the
+        //     pre-W2 behaviour) skipped the inner refs entirely and
+        //     left `array.references` empty even though `value` is
+        //     mentioned twice. Recursing into every child recovers
+        //     the references so downstream consumers (inlay-hint
+        //     suppression, "find references", goto-definition) see
+        //     the true ref count.
+        //   - When no children carried refs, check if the wrapper's
+        //     span text itself is a bare identifier — the tape-first
+        //     generator may have fused the identifier into a
+        //     span-only scan without pushing a separate Rule
+        //     record. Mirrors the lowering's dispatch_expression
+        //     fallback + is_single_token_span / lower_leaf_by_span_text
+        //     path.
         BbnfBootstrapRuleKind::int_lit | BbnfBootstrapRuleKind::Unknown => {
-            use ::bbnf::runtime::tape::TapeKind;
-            let mut found_rule = false;
+            let refs_before = refs.len();
             for c in node.children() {
-                if c.kind() == TapeKind::Rule {
-                    collect_references(c, refs);
-                    found_rule = true;
-                }
+                collect_references(c, refs);
             }
-            if !found_rule {
-                // No Rule children — check if this wrapper's span
-                // text is a bare identifier token.
+            if refs.len() == refs_before {
+                // No nested refs found — check if this wrapper's
+                // span text is a bare identifier token.
                 let text = node.span_text().trim();
                 if !text.is_empty() && is_ident(text) {
                     let (lo, hi) = node.span();
-                    // Compute trimmed span offsets.
                     let lead_ws = node.span_text().len() - node.span_text().trim_start().len();
                     let trail_ws = node.span_text().len() - node.span_text().trim_end().len();
                     let ident_lo = lo as usize + lead_ws;

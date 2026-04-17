@@ -2,11 +2,24 @@ use ls_types::*;
 
 use crate::state::DocumentState;
 
+/// True when `rhs_text` is the bare reference `ref_name` with no
+/// structural decoration. Used by [`inlay_hints`] to distinguish
+/// genuine alias rules from composite rules whose body happens to
+/// contain a single nonterminal reference. The check is purely
+/// textual — `RuleInfo::rhs_text` already comes from
+/// `format_expression_short`, so leading / trailing whitespace is
+/// the only nuisance to strip.
+fn is_bare_ref_alias(rhs_text: &str, ref_name: &str) -> bool {
+    rhs_text.trim() == ref_name
+}
+
 /// Produce inlay hints showing FIRST set and nullability info at rule definitions.
 ///
 /// Suppresses trivial hints where the FIRST set is obvious:
 /// - Rules with no nonterminal references and a single FIRST element (e.g., `div = "/"`)
-/// - Rules that are a single nonterminal alias (e.g., `colorPercentage = percentage`)
+/// - Rules that are a true single-nonterminal alias (e.g.,
+///   `colorPercentage = percentage`) — the RHS is a bare reference
+///   with no structural decoration (Seq / Repeat / Alt / literals).
 pub fn inlay_hints(state: &DocumentState, range: Range) -> Vec<InlayHint> {
     let mut hints = Vec::new();
 
@@ -28,14 +41,20 @@ pub fn inlay_hints(state: &DocumentState, range: Range) -> Vec<InlayHint> {
             // Suppress trivial hints where FIRST is obvious from reading the rule:
             // - Pure terminal rules (no nonterminal refs): FIRST is just the first
             //   char of each literal/regex, which you can see directly
-            // - Single nonterminal alias with ≤1 FIRST element: just look at the ref
+            // - True single-nonterminal alias (bare Ref RHS): the rule reads
+            //   like `name = otherName ;` — FIRST is the same as the ref's
+            //   FIRST. Composite rules with structural decoration around a
+            //   single ref (e.g. `array = "[" , [ value , { "," , value } ] , "]"`,
+            //   `object = "{" , [ pair , { "," , pair } ] , "}"`) carry
+            //   load-bearing literal anchors that change the FIRST set;
+            //   their hints stay so the developer can see the bracket /
+            //   brace anchors at a glance.
             if !nullable {
                 if ref_count == 0 {
                     continue; // pure terminal/regex rule — FIRST is obvious
                 }
-                let first_count = first_label.matches('\'').count() / 2;
-                if first_count <= 1 && ref_count == 1 {
-                    continue; // single alias
+                if ref_count == 1 && is_bare_ref_alias(&rule.rhs_text, &rule.references[0].name) {
+                    continue; // bare-ref alias
                 }
             }
 

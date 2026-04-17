@@ -178,14 +178,32 @@ pub fn compute_payload_layouts_with_resolver<R: NamedTypeResolver>(
             // `PayloadData::LargeAggregate`. Per AU.4.2's stated
             // path — no central `StructRegistry`; the resolver
             // lives in the backend crate.
-            TypeDesc::Named(sid) => match resolver.resolve_named(*sid) {
-                Some(TypeDesc::Tuple(fields)) => {
-                    plan_layout_with_cap(&fields, LARGE_PAYLOAD_MAX)
+            //
+            // AW-II.W5c.1: universal-name fallback for `"String"` /
+            // `"Bytes"` — backend-agnostic owned-UTF-8 / byte-vec
+            // projections whose semantics match at every backend
+            // (arena-backed `(u32 offset, u32 length)` pair). The
+            // resolver path still wins when it returns a concrete
+            // shape; only when it declines (NullResolver always, or
+            // RustNamedTypes for names outside its specific table)
+            // does the universal fallback project these as
+            // `(U32, U32)`. Keeps the VM compile path (NullResolver)
+            // and TS / WASM backends (also NullResolver pending their
+            // AW.0.5 parity) in step with the Rust backend's owned-
+            // string admission without a central name registry.
+            TypeDesc::Named(sid) => {
+                let shape = resolver
+                    .resolve_named(*sid)
+                    .or_else(|| universal_named_shape(ir.get_string(*sid)));
+                match shape {
+                    Some(TypeDesc::Tuple(fields)) => {
+                        plan_layout_with_cap(&fields, LARGE_PAYLOAD_MAX)
+                    }
+                    // Resolved to something other than a scalar
+                    // tuple (or not at all) — no admission. Skip.
+                    _ => continue,
                 }
-                // Named resolved to something other than a scalar
-                // tuple (or not at all) — no admission. Skip.
-                _ => continue,
-            },
+            }
             // Non-Alt-bodied scalar rules (e.g. `number = /regex/
             // -> f64`) live on the scalar
             // `PayloadData::InlineScalar` / `WideScalar` path —
@@ -400,6 +418,28 @@ fn rule_head_materialization(ir: &GrammarIR, rule_id: RuleId) -> Option<Material
     let dag = ir.dag.as_ref()?;
     let node_id = dag.node_for(&rule.body)?;
     ir.materialization.get(&node_id).copied()
+}
+
+/// AW-II.W5c.1 — project a universal type name to its structural
+/// scalar-tuple shape.
+///
+/// These names have the same runtime semantics at every backend:
+/// - `"String"` / `"str"` — owned UTF-8, arena-backed. The runtime
+///   scanner writes the decoded bytes into the tape's arena frame
+///   and keeps a `(u32 offset, u32 length)` handle on the record.
+/// - `"Bytes"` — raw byte slice, arena-backed. Same `(offset, length)`
+///   projection; no decode.
+///
+/// Consulted by [`compute_payload_layouts_with_resolver`] only when
+/// the backend resolver declines — backend-specific projections
+/// (CSS L4 `"Color"` / `"ColorMix"`) still take priority.
+fn universal_named_shape(name: &str) -> Option<TypeDesc> {
+    match name {
+        "String" | "str" | "Bytes" => {
+            Some(TypeDesc::Tuple(vec![TypeDesc::U32, TypeDesc::U32]))
+        }
+        _ => None,
+    }
 }
 
 /// Recognize the KV-pair shape: exactly two fields where the first

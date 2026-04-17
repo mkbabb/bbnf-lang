@@ -2308,12 +2308,30 @@ pub fn emit_reducer_compound(
 /// Prefers two-byte matches when available; falls back to single-
 /// byte.
 ///
-/// AW-III.W4.c — `pub` so W4.b's emitted walker's ShuntingYard arm
-/// resolves operators against the per-grammar precedence slice
-/// without re-implementing the lookup. The W6.5 emitted
-/// `PRECEDENCE_LUT` will replace this linear scan with a packed
-/// 256-entry indexed lookup.
-#[inline]
+/// # Cold-path replay surface only
+///
+/// AW-IV.W3.4 migrated the hot-path SY reducer into
+/// `emitter/dta_walker/lower_state.rs::emit_shunting_yard_arm`, which
+/// consumes the packed `PRECEDENCE_LUT: [u8; 256]` constant emitted
+/// per grammar at AW-III.W6.5 — one indexed byte load + three shifts
+/// for the one-byte fast path, with a short linear walk over
+/// `PRECEDENCE_ENTRIES` only when the LUT byte's two-byte flag bit
+/// is set. The walker's SY arm handles both entry and reducer modes
+/// inline; `advance_or_pop_with`'s `ShuntingYard` arm is never
+/// reached from the per-grammar hot path because the walker pushes
+/// a `Seq`-kind marker frame rather than a `ShuntingYard`-kind one.
+///
+/// This function survives as the cold-path replay surface —
+/// `dispatch_one`'s `DtaState::ShuntingYard` arm (the happy-path
+/// reference implementation the AX subsystem re-walks) and
+/// `advance_or_pop_with`'s `ShuntingYard` arm (unreachable from the
+/// emitted walker, retained for the cold `dta_run_cold` pipeline +
+/// diagnostic replay). The `#[cold] #[inline(never)]` annotation
+/// stops LLVM from speculatively inlining this body into either
+/// cold caller and lets workspace LTO drop the symbol entirely from
+/// bench binaries where the walker never references it.
+#[cold]
+#[inline(never)]
 pub fn lookup_precedence(
     precedence: &'static [crate::dta::DtaPrecedenceEntry],
     b: u8,

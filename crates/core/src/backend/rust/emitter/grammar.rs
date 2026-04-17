@@ -176,6 +176,35 @@ impl RustEmitter {
         // legacy fn-per-rule path.
         let dta_table = super::dta::emit_dta_table(ir);
 
+        // AW-III.W4.b — specialised DTA walker. Mechanically lowers
+        // every `DtaState` variant in the lifted table to inlined
+        // Rust dispatch arms; the `DtaState` enum match disappears in
+        // the output. The cold-path `dispatch_one` survives in
+        // `bbnf_tape::driver` for replay (AX substrate); the hot path
+        // is the `dta_run_<grammar>` function emitted here.
+        //
+        // The walker function exists alongside the live cold-path
+        // `dta_run` (which `parse()` still drives below) so W4.c can
+        // swap the `parse()` call site without touching this file
+        // again. Both the hot-emitted and cold-private paths read
+        // the same `DTA_TABLE` and produce structurally-identical
+        // tapes for the same input.
+        let dta_walker = {
+            let table = super::dta_walker::lift_for_walker(ir);
+            let alphabet = ir
+                .structural_alphabet
+                .as_ref()
+                .cloned()
+                .unwrap_or_default();
+            let profile = ir.profile();
+            super::dta_walker::emit_specialised_walker(
+                ident.to_string().as_str(),
+                &table,
+                &alphabet,
+                &profile,
+            )
+        };
+
         // Tranche AV Phase 2 — AV.2.5 reordered-unrolling kernels for
         // typed-payload visitors. One free-function per descriptor
         // with a 4-lane reordered accumulator (Sum) or lane-wise
@@ -223,6 +252,8 @@ impl RustEmitter {
             #grammar_profile
 
             #dta_table
+
+            #dta_walker
 
             #type_defs
 

@@ -11,6 +11,7 @@
 //! sub-dir (separate emission channel).
 
 pub(crate) mod dta;
+pub(crate) mod dta_walker;
 mod grammar;
 mod prettify;
 pub(crate) mod profile;

@@ -11,6 +11,15 @@ strip = false
 split-debuginfo = "packed"
 
 [profile.bench]
+# AW-IV.W2.2 — belt-and-suspenders verification cover for W2.1's
+# inline-emit migration. The hot-path strategy is source-level flat
+# emission (helper bodies spliced into walker arms at codegen); LTO +
+# codegen-units=1 catch any helper that slipped through and remained as
+# a cross-crate call boundary, collapsing it at link time so `nm` shows
+# zero hot-path helper symbols in the bench binary. `debug = true`
+# preserved for samply symbol resolution (see feedback_samply_symbols).
+lto = "fat"
+codegen-units = 1
 debug = true
 
 [profile.dev]

@@ -137,10 +137,8 @@ for bench_name in 'json_monolithic' 'css_l4' 'google_sheets_monolithic' 'bbnf_mo
             emit "       hits ($n):"
             while IFS= read -r hit; do
                 [[ -z "$hit" ]] && continue
-                # Truncate long mangled callee names to keep report readable.
-                printf '         %s\n' "$(echo "$hit" | sed -E 's/^[[:space:]]+//')" \
-                    | tee -a "${REPORT:-/dev/null}" >/dev/null
-                [[ -z "$REPORT" ]] && printf '         %s\n' "$(echo "$hit" | sed -E 's/^[[:space:]]+//')"
+                # Normalise leading whitespace for a compact ledger line.
+                emit "         $(echo "$hit" | sed -E 's/^[[:space:]]+//')"
             done <<<"$hits"
         fi
     done <<<"$walkers"

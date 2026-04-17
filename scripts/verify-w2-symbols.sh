@@ -73,10 +73,17 @@ WALKER_ENTRIES=(
 
 emit() {
     if [[ -n "$REPORT" ]]; then
+        # tee writes to both stdout and $REPORT; -a keeps append mode
         printf '%s\n' "$*" | tee -a "$REPORT"
     else
         printf '%s\n' "$*"
     fi
+}
+
+emit_line() {
+    # Formatted emit used inside the per-binary loop — pass the
+    # already-formatted line; unifies stdout + REPORT output.
+    emit "$1"
 }
 
 [[ -n "$REPORT" ]] && : > "$REPORT"
@@ -113,8 +120,7 @@ for bench_name in 'json_monolithic' 'css_l4' 'google_sheets_monolithic' 'bbnf_mo
             status='PRESENT (hot-path helper — wave invariant failure)'
             [[ "$STRICT" == "1" ]] && overall_fail=1
         fi
-        printf '   hot   %-28s %4d  %s\n' "$sym" "$n" "$status" | tee -a "${REPORT:-/dev/null}" >/dev/null
-        [[ -z "$REPORT" ]] && printf '   hot   %-28s %4d  %s\n' "$sym" "$n" "$status"
+        emit_line "$(printf '   hot   %-28s %4d  %s' "$sym" "$n" "$status")"
     done
 
     # Hot-path regex helpers.
@@ -126,8 +132,7 @@ for bench_name in 'json_monolithic' 'css_l4' 'google_sheets_monolithic' 'bbnf_mo
             status='PRESENT (hot-path helper — wave invariant failure)'
             [[ "$STRICT" == "1" ]] && overall_fail=1
         fi
-        printf '   hot   %-28s %4d  %s\n' "$pat" "$n" "$status" | tee -a "${REPORT:-/dev/null}" >/dev/null
-        [[ -z "$REPORT" ]] && printf '   hot   %-28s %4d  %s\n' "$pat" "$n" "$status"
+        emit_line "$(printf '   hot   %-28s %4d  %s' "$pat" "$n" "$status")"
     done
 
     # Cold-path replay-surface (PRESENT is fine; ABSENT means AX replay
@@ -140,8 +145,7 @@ for bench_name in 'json_monolithic' 'css_l4' 'google_sheets_monolithic' 'bbnf_mo
             status='ABSENT (cold-path replay helper gone — AX replay broken?)'
             [[ "$STRICT" == "1" ]] && overall_fail=1
         fi
-        printf '   cold  %-28s %4d  %s\n' "$sym" "$n" "$status" | tee -a "${REPORT:-/dev/null}" >/dev/null
-        [[ -z "$REPORT" ]] && printf '   cold  %-28s %4d  %s\n' "$sym" "$n" "$status"
+        emit_line "$(printf '   cold  %-28s %4d  %s' "$sym" "$n" "$status")"
     done
 
     # Walker entries (at least one must be PRESENT).
@@ -153,8 +157,7 @@ for bench_name in 'json_monolithic' 'css_l4' 'google_sheets_monolithic' 'bbnf_mo
             status='ABSENT (per-grammar walker missing — tranche invariant failure)'
             [[ "$STRICT" == "1" ]] && overall_fail=1
         fi
-        printf '   entry %-28s %4d  %s\n' "$pat" "$n" "$status" | tee -a "${REPORT:-/dev/null}" >/dev/null
-        [[ -z "$REPORT" ]] && printf '   entry %-28s %4d  %s\n' "$pat" "$n" "$status"
+        emit_line "$(printf '   entry %-28s %4d  %s' "$pat" "$n" "$status")"
     done
 
     emit ""

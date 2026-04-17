@@ -630,10 +630,21 @@ fn lower_mapped_factor<'a>(
     // span is one of `?` / `?w` / `*` / `+`; the mapping group is
     // the child whose trimmed span starts with `->` / `=>`; the
     // term is the first remaining substantive child.
+    //
+    // Under DTA the mapped_factor body is wrapped in one or more
+    // anonymous Seq compounds (walker sentinel rule_kind ∈
+    // {Unknown, int_lit}). A direct `node.children()` iteration
+    // enumerates `[Seq]` rather than the semantic [term, modifier,
+    // mapping] layout; every span starts from the factor's leading
+    // byte, so the `trimmed.starts_with("->")` mapping-detection
+    // check never fires and the `->` annotation silently drops.
+    // Descend through anonymous wrappers to the true body whose
+    // direct children carry the semantic slots.
+    let body = peel_mapped_factor_body(node);
     let mut term_node: Option<BbnfBootstrapNodeView<'a>> = None;
     let mut modifier_text: Option<String> = None;
     let mut mapping_node: Option<BbnfBootstrapNodeView<'a>> = None;
-    for c in node.children() {
+    for c in body.children() {
         let span_text = c.span_text();
         let trimmed = span_text.trim();
         if trimmed.is_empty() {
@@ -807,6 +818,43 @@ fn find_type_annotation_child<'a>(
     // `mapping_node` and the inner `type_annotation`). A descendant
     // search handles both fn-per-rule and DTA shapes uniformly.
     find_descendant_by_kind(node, BbnfBootstrapRuleKind::type_annotation)
+}
+
+/// Peel a `mapped_factor`'s anonymous-wrapper body.
+///
+/// Under DTA, the mapped_factor rule body is often wrapped in one
+/// or more anonymous Seq compounds emitted by the walker (stamped
+/// with the sentinel rule_kind `int_lit` or `Unknown` because no
+/// `DtaState::Ref` captured a semantic rule identity). The caller
+/// wants to iterate the semantic `[term, modifier?, mapping?]`
+/// slots — direct `node.children()` would return the wrapper.
+///
+/// Collapse single-anonymous-child chains until the view's direct
+/// children are the semantic slots. If there's no descent to do
+/// (the direct children are already the semantic slots, or the
+/// lone child isn't anonymous), return `node` unchanged.
+fn peel_mapped_factor_body<'a>(
+    mut view: BbnfBootstrapNodeView<'a>,
+) -> BbnfBootstrapNodeView<'a> {
+    use ::bbnf::runtime::tape::TapeKind;
+    loop {
+        let children: Vec<BbnfBootstrapNodeView<'a>> = view.children().collect();
+        if children.len() != 1 {
+            return view;
+        }
+        let only_child = children[0];
+        let is_anon_wrapper = matches!(
+            only_child.kind(),
+            TapeKind::Rule | TapeKind::Seq | TapeKind::Alt | TapeKind::Repeat,
+        ) && matches!(
+            only_child.rule_kind(),
+            BbnfBootstrapRuleKind::Unknown | BbnfBootstrapRuleKind::int_lit,
+        );
+        if !is_anon_wrapper {
+            return view;
+        }
+        view = only_child;
+    }
 }
 
 /// Lower a `factor = big_comment? term ?w modifier? big_comment?` view.

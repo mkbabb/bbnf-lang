@@ -269,7 +269,7 @@ fn emit_state_arm_body(
             super::super::classify_byte::emit_classify_byte_arm(idx, disp, *fallback)
         }
         IrState::AltLinear { branches } => {
-            emit_alt_linear_arm(grammar, idx, branches)
+            emit_alt_linear_arm(grammar, ir, table, idx, branches)
         }
         IrState::Repeat { inner, lo, hi, counter_optional } => {
             emit_repeat_arm(idx, *inner, *lo, *hi, *counter_optional)
@@ -1113,8 +1113,24 @@ fn emit_byte_dispatch_arm(
 /// destructure is abrogated. The `try_branch` helper gains the
 /// per-grammar `__regex_scan_<grammar>` adapter as its regex-scan
 /// argument instead of the removed `scanner: &dyn RegexScanner`.
+///
+/// AW-IV.W3.2 — when the enclosing rule's body Alt has a mined PHF
+/// keyword table (≥ [`PHF_MIN_BRANCHES`] literal-led branches), the
+/// arm emits an inline keyword probe BEFORE the try_branch loop.
+/// On a probe hit the arm dispatches directly to the matching
+/// branch's entry state — the Alt frame is already pushed, so the
+/// branch's sub-automaton runs via the walker's main loop and closes
+/// the Alt naturally via `advance_or_pop_with`. On a probe miss the
+/// arm falls through to the standard N-branch linear loop for
+/// branches not covered by the PHF (non-literal-led: regex, compound,
+/// ref, etc.). The shape mirrors ByteDispatch's single-byte discriminant
+/// check one level up the lexeme scale: keywords are N-byte
+/// discriminants whose PHF lookup collapses into a sorted binary
+/// search + length-probe loop at codegen time.
 fn emit_alt_linear_arm(
     grammar: &str,
+    ir: &GrammarIR,
+    table: &DtaTable,
     idx: usize,
     branches: &[StateId],
 ) -> TokenStream {
@@ -1122,17 +1138,14 @@ fn emit_alt_linear_arm(
     let branches_ident = format_ident!("__DTA_ALT_LIN_{}", idx);
     let regex_scan_ident = regex_scan_adapter_ident(grammar);
     let _ = branches; // referenced via the emitted static array
-    quote! {
-        let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &#branches_ident;
-        if branches.is_empty() {
-            break 'step ::core::result::Result::Err(
-                ::bbnf::runtime::tape::DtaError::Syntax {
-                    offset: *pos,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId(#idx_lit as u16),
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                },
-            );
-        }
+
+    // AW-IV.W3.2 — emit the PHF probe wrapper if the enclosing rule
+    // has a mined keyword table. `None` when the AltLinear is not a
+    // rule body Alt, not mined, or below the threshold — in which
+    // case the arm body collapses to the pre-W3.2 shape.
+    let phf_probe = emit_phf_probe(grammar, ir, table, idx);
+
+    let linear_body = quote! {
         let start_depth = stack.depth();
         let start_pos = *pos;
         // AW-III.W5.c — capture dual-cursor's structural slot at Alt
@@ -1178,37 +1191,92 @@ fn emit_alt_linear_arm(
                 ::bbnf::runtime::tape::DtaError,
             >,
         > = ::core::option::Option::None;
-        for (branch_idx, &branch) in branches.iter().enumerate() {
-            *pos = start_pos;
-            // AW-III.W5.c — restore slot to pre-Alt-entry so each
-            // branch attempt starts with a clean dual cursor.
-            *slot = start_slot;
-            if let ::core::option::Option::Some(top) = stack.top_mut() {
-                top.cursor = branch_idx as u16;
+        // AW-IV.W3.2 — PHF fast path. On a keyword hit, try the
+        // matching branch FIRST via `try_branch` (same savepoint /
+        // restore semantics as the linear fallback). On success we
+        // exit. On Syntax we fall through to the standard N-branch
+        // linear loop; factored / prefix-overlapping keywords can
+        // direct the PHF into a branch that the grammar's ordering
+        // would have deferred, so the loop below must not skip the
+        // remaining branches on a PHF miss.
+        let __phf_hit_branch: ::core::option::Option<u8> = { #phf_probe };
+        let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+            ::core::option::Option::Some(branch_idx)
+                if (branch_idx as usize) < branches.len() =>
+            {
+                *pos = start_pos;
+                *slot = start_slot;
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    top.cursor = branch_idx as u16;
+                }
+                match ::bbnf::runtime::tape::try_branch(
+                    table, input, #regex_scan_ident, idx, columns, psi, frame_depth, stack,
+                    branches[branch_idx as usize], pos, slot, start_depth,
+                ) {
+                    ::core::result::Result::Ok(next) => {
+                        chosen_outcome = ::core::option::Option::Some(
+                            ::core::result::Result::Ok(next),
+                        );
+                        ::core::option::Option::None
+                    }
+                    ::core::result::Result::Err(
+                        e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                    ) => {
+                        columns.truncate(cols_len_after_push);
+                        frame_depth.truncate(fd_len_after_push);
+                        psi.truncate(psi_len_after_push);
+                        columns.pay_agg.truncate(pay_agg_len_after_push);
+                        stack.restore(sp_after_push);
+                        stack.pending_variant_idx = pending_after_push;
+                        last_err = ::core::option::Option::Some(e);
+                        ::core::option::Option::Some(branch_idx)
+                    }
+                    ::core::result::Result::Err(e) => {
+                        break 'step ::core::result::Result::Err(e);
+                    }
+                }
             }
-            match ::bbnf::runtime::tape::try_branch(
-                table, input, #regex_scan_ident, idx, columns, psi, frame_depth, stack,
-                branch, pos, slot, start_depth,
-            ) {
-                ::core::result::Result::Ok(next) => {
-                    chosen_outcome = ::core::option::Option::Some(
-                        ::core::result::Result::Ok(next),
-                    );
-                    break;
+            _ => ::core::option::Option::None,
+        };
+        if chosen_outcome.is_none() {
+            for (branch_idx, &branch) in branches.iter().enumerate() {
+                // Skip the branch already attempted via the PHF fast path.
+                if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                    if skipped as usize == branch_idx {
+                        continue;
+                    }
                 }
-                ::core::result::Result::Err(
-                    e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                ) => {
-                    columns.truncate(cols_len_after_push);
-                    frame_depth.truncate(fd_len_after_push);
-                    psi.truncate(psi_len_after_push);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    stack.restore(sp_after_push);
-                    stack.pending_variant_idx = pending_after_push;
-                    last_err = ::core::option::Option::Some(e);
+                *pos = start_pos;
+                // AW-III.W5.c — restore slot to pre-Alt-entry so each
+                // branch attempt starts with a clean dual cursor.
+                *slot = start_slot;
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    top.cursor = branch_idx as u16;
                 }
-                ::core::result::Result::Err(e) => {
-                    break 'step ::core::result::Result::Err(e);
+                match ::bbnf::runtime::tape::try_branch(
+                    table, input, #regex_scan_ident, idx, columns, psi, frame_depth, stack,
+                    branch, pos, slot, start_depth,
+                ) {
+                    ::core::result::Result::Ok(next) => {
+                        chosen_outcome = ::core::option::Option::Some(
+                            ::core::result::Result::Ok(next),
+                        );
+                        break;
+                    }
+                    ::core::result::Result::Err(
+                        e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                    ) => {
+                        columns.truncate(cols_len_after_push);
+                        frame_depth.truncate(fd_len_after_push);
+                        psi.truncate(psi_len_after_push);
+                        columns.pay_agg.truncate(pay_agg_len_after_push);
+                        stack.restore(sp_after_push);
+                        stack.pending_variant_idx = pending_after_push;
+                        last_err = ::core::option::Option::Some(e);
+                    }
+                    ::core::result::Result::Err(e) => {
+                        break 'step ::core::result::Result::Err(e);
+                    }
                 }
             }
         }
@@ -1227,6 +1295,99 @@ fn emit_alt_linear_arm(
                 },
             ))
         }
+    };
+
+    quote! {
+        let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &#branches_ident;
+        if branches.is_empty() {
+            break 'step ::core::result::Result::Err(
+                ::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *pos,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId(#idx_lit as u16),
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                },
+            );
+        }
+        #linear_body
+    }
+}
+
+/// AW-IV.W3.2 — Emit the PHF probe body for an AltLinear state.
+///
+/// Returns a [`TokenStream`] that evaluates to `Option<u8>` — the
+/// branch_idx on a keyword hit, or `None` on miss / when no PHF table
+/// is emitted for this AltLinear's enclosing rule. The body is
+/// inlined at the call site (no fn-call boundary); LLVM lowers the
+/// binary-search + length-probe loop to a small jump table on the
+/// input's first byte, collapsing a sorted binary search + constant-
+/// length byte-cmp at each admitted keyword length.
+///
+/// A probe emits only when the AltLinear is the direct entry state of
+/// a rule whose body Alt was mined by
+/// [`bbnf_ir::passes::recognizers::keyword_stats`] with branch count
+/// ≥ [`crate::backend::rust::emitter::keyword_dispatch::PHF_MIN_BRANCHES`].
+/// Nested Alts (not at rule body) emit no probe; the existing linear
+/// loop handles them unchanged.
+fn emit_phf_probe(
+    grammar: &str,
+    ir: &GrammarIR,
+    table: &DtaTable,
+    alt_linear_idx: usize,
+) -> TokenStream {
+    use super::super::keyword_dispatch::{phf_dispatch_fn_ident, PHF_MIN_BRANCHES};
+    let dag = match ir.dag.as_ref() {
+        ::core::option::Option::Some(d) => d,
+        ::core::option::Option::None => return quote! { ::core::option::Option::None },
+    };
+    let state_id = StateId(alt_linear_idx as u16);
+    // Find the rule whose entry state is this AltLinear and whose body
+    // Alt has mined keyword branches ≥ threshold.
+    let mut rule_id: ::core::option::Option<u32> = ::core::option::Option::None;
+    let mut lens: Vec<usize> = Vec::new();
+    for rule in &ir.rules {
+        if rule.meta.is_transparent {
+            continue;
+        }
+        if table.rule_entries.get(&rule.id).copied() != Some(state_id) {
+            continue;
+        }
+        let Some(body_id) = dag.node_for(&rule.body) else { continue };
+        let Some(mined) = ir.keyword_branches.get(&body_id) else { continue };
+        if mined.len() < PHF_MIN_BRANCHES {
+            continue;
+        }
+        // Distinct keyword byte lengths, descending so the longest
+        // prefix matches first (`falsely` does not short-circuit to
+        // `false`'s branch when both share a keyword prefix).
+        let mut kw_lens: Vec<usize> =
+            mined.iter().map(|b| b.bytes.len()).collect();
+        kw_lens.sort_unstable_by(|a, b| b.cmp(a));
+        kw_lens.dedup();
+        rule_id = ::core::option::Option::Some(rule.id);
+        lens = kw_lens;
+        break;
+    }
+    let Some(rid) = rule_id else {
+        return quote! { ::core::option::Option::None };
+    };
+    let dispatch_ident = phf_dispatch_fn_ident(grammar, rid);
+    let probe_arms = lens.iter().map(|&len| {
+        let len_lit = Literal::usize_unsuffixed(len);
+        quote! {
+            if __phf_hit.is_none() && __phf_rest_len >= #len_lit {
+                __phf_hit = #dispatch_ident(unsafe {
+                    input.get_unchecked(__phf_pos..__phf_pos + #len_lit)
+                });
+            }
+        }
+    });
+    quote! {
+        let __phf_pos = *pos as usize;
+        let __phf_rest_len = input.len().saturating_sub(__phf_pos);
+        let mut __phf_hit: ::core::option::Option<u8> =
+            ::core::option::Option::None;
+        #(#probe_arms)*
+        __phf_hit
     }
 }
 

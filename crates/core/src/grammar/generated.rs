@@ -4536,44 +4536,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -4868,44 +4923,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -7169,44 +7279,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -9097,44 +9262,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -10024,44 +10244,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -16420,44 +16695,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -16958,44 +17288,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -20141,44 +20526,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -25017,44 +25457,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -26130,44 +26625,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -30459,44 +31009,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -31090,44 +31695,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -32892,44 +33552,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -34927,44 +35642,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -36104,44 +36874,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -37567,44 +38392,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -39030,44 +39910,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -40091,44 +41026,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -40722,44 +41712,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -43316,44 +44361,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -44112,44 +45212,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -44398,44 +45553,99 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                for (branch_idx, &branch) in branches.iter().enumerate() {
-                    *pos = start_pos;
-                    *slot = start_slot;
-                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                        top.cursor = branch_idx as u16;
+                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
+                    ::core::option::Option::Some(branch_idx)
+                        if (branch_idx as usize) < branches.len() =>
+                    {
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
+                        }
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branches[branch_idx as usize],
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                ::core::option::Option::None
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                                ::core::option::Option::Some(branch_idx)
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
+                        }
                     }
-                    match ::bbnf::runtime::tape::try_branch(
-                        table,
-                        input,
-                        __regex_scan_BbnfBootstrap,
-                        idx,
-                        columns,
-                        psi,
-                        frame_depth,
-                        stack,
-                        branch,
-                        pos,
-                        slot,
-                        start_depth,
-                    ) {
-                        ::core::result::Result::Ok(next) => {
-                            chosen_outcome =
-                                ::core::option::Option::Some(::core::result::Result::Ok(next));
-                            break;
+                    _ => ::core::option::Option::None,
+                };
+                if chosen_outcome.is_none() {
+                    for (branch_idx, &branch) in branches.iter().enumerate() {
+                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                            if skipped as usize == branch_idx {
+                                continue;
+                            }
                         }
-                        ::core::result::Result::Err(
-                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                        ) => {
-                            columns.truncate(cols_len_after_push);
-                            frame_depth.truncate(fd_len_after_push);
-                            psi.truncate(psi_len_after_push);
-                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                            stack.restore(sp_after_push);
-                            stack.pending_variant_idx = pending_after_push;
-                            last_err = ::core::option::Option::Some(e);
+                        *pos = start_pos;
+                        *slot = start_slot;
+                        if let ::core::option::Option::Some(top) = stack.top_mut() {
+                            top.cursor = branch_idx as u16;
                         }
-                        ::core::result::Result::Err(e) => {
-                            break 'step ::core::result::Result::Err(e);
+                        match ::bbnf::runtime::tape::try_branch(
+                            table,
+                            input,
+                            __regex_scan_BbnfBootstrap,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            branch,
+                            pos,
+                            slot,
+                            start_depth,
+                        ) {
+                            ::core::result::Result::Ok(next) => {
+                                chosen_outcome =
+                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
+                                break;
+                            }
+                            ::core::result::Result::Err(
+                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                            ) => {
+                                columns.truncate(cols_len_after_push);
+                                frame_depth.truncate(fd_len_after_push);
+                                psi.truncate(psi_len_after_push);
+                                columns.pay_agg.truncate(pay_agg_len_after_push);
+                                stack.restore(sp_after_push);
+                                stack.pending_variant_idx = pending_after_push;
+                                last_err = ::core::option::Option::Some(e);
+                            }
+                            ::core::result::Result::Err(e) => {
+                                break 'step ::core::result::Result::Err(e);
+                            }
                         }
                     }
                 }
@@ -45971,45 +47181,103 @@ mod __bbnfbootstrap_emit_impl {
                                     ::bbnf::runtime::tape::DtaError,
                                 >,
                             > = ::core::option::Option::None;
-                            for (branch_idx, &branch) in branches.iter().enumerate() {
-                                *pos = start_pos;
-                                *slot = start_slot;
-                                if let ::core::option::Option::Some(top) = stack.top_mut() {
-                                    top.cursor = branch_idx as u16;
+                            let __phf_hit_branch: ::core::option::Option<u8> =
+                                { ::core::option::Option::None };
+                            let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch
+                            {
+                                ::core::option::Option::Some(branch_idx)
+                                    if (branch_idx as usize) < branches.len() =>
+                                {
+                                    *pos = start_pos;
+                                    *slot = start_slot;
+                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
+                                        top.cursor = branch_idx as u16;
+                                    }
+                                    match ::bbnf::runtime::tape::try_branch(
+                                        table,
+                                        input,
+                                        __regex_scan_BbnfBootstrap,
+                                        idx,
+                                        columns,
+                                        psi,
+                                        frame_depth,
+                                        stack,
+                                        branches[branch_idx as usize],
+                                        pos,
+                                        slot,
+                                        start_depth,
+                                    ) {
+                                        ::core::result::Result::Ok(next) => {
+                                            chosen_outcome = ::core::option::Option::Some(
+                                                ::core::result::Result::Ok(next),
+                                            );
+                                            ::core::option::Option::None
+                                        }
+                                        ::core::result::Result::Err(
+                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                                        ) => {
+                                            columns.truncate(cols_len_after_push);
+                                            frame_depth.truncate(fd_len_after_push);
+                                            psi.truncate(psi_len_after_push);
+                                            columns.pay_agg.truncate(pay_agg_len_after_push);
+                                            stack.restore(sp_after_push);
+                                            stack.pending_variant_idx = pending_after_push;
+                                            last_err = ::core::option::Option::Some(e);
+                                            ::core::option::Option::Some(branch_idx)
+                                        }
+                                        ::core::result::Result::Err(e) => {
+                                            break 'step ::core::result::Result::Err(e);
+                                        }
+                                    }
                                 }
-                                match ::bbnf::runtime::tape::try_branch(
-                                    table,
-                                    input,
-                                    __regex_scan_BbnfBootstrap,
-                                    idx,
-                                    columns,
-                                    psi,
-                                    frame_depth,
-                                    stack,
-                                    branch,
-                                    pos,
-                                    slot,
-                                    start_depth,
-                                ) {
-                                    ::core::result::Result::Ok(next) => {
-                                        chosen_outcome = ::core::option::Option::Some(
-                                            ::core::result::Result::Ok(next),
-                                        );
-                                        break;
+                                _ => ::core::option::Option::None,
+                            };
+                            if chosen_outcome.is_none() {
+                                for (branch_idx, &branch) in branches.iter().enumerate() {
+                                    if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                                        if skipped as usize == branch_idx {
+                                            continue;
+                                        }
                                     }
-                                    ::core::result::Result::Err(
-                                        e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                                    ) => {
-                                        columns.truncate(cols_len_after_push);
-                                        frame_depth.truncate(fd_len_after_push);
-                                        psi.truncate(psi_len_after_push);
-                                        columns.pay_agg.truncate(pay_agg_len_after_push);
-                                        stack.restore(sp_after_push);
-                                        stack.pending_variant_idx = pending_after_push;
-                                        last_err = ::core::option::Option::Some(e);
+                                    *pos = start_pos;
+                                    *slot = start_slot;
+                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
+                                        top.cursor = branch_idx as u16;
                                     }
-                                    ::core::result::Result::Err(e) => {
-                                        break 'step ::core::result::Result::Err(e);
+                                    match ::bbnf::runtime::tape::try_branch(
+                                        table,
+                                        input,
+                                        __regex_scan_BbnfBootstrap,
+                                        idx,
+                                        columns,
+                                        psi,
+                                        frame_depth,
+                                        stack,
+                                        branch,
+                                        pos,
+                                        slot,
+                                        start_depth,
+                                    ) {
+                                        ::core::result::Result::Ok(next) => {
+                                            chosen_outcome = ::core::option::Option::Some(
+                                                ::core::result::Result::Ok(next),
+                                            );
+                                            break;
+                                        }
+                                        ::core::result::Result::Err(
+                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                                        ) => {
+                                            columns.truncate(cols_len_after_push);
+                                            frame_depth.truncate(fd_len_after_push);
+                                            psi.truncate(psi_len_after_push);
+                                            columns.pay_agg.truncate(pay_agg_len_after_push);
+                                            stack.restore(sp_after_push);
+                                            stack.pending_variant_idx = pending_after_push;
+                                            last_err = ::core::option::Option::Some(e);
+                                        }
+                                        ::core::result::Result::Err(e) => {
+                                            break 'step ::core::result::Result::Err(e);
+                                        }
                                     }
                                 }
                             }
@@ -50562,45 +51830,103 @@ mod __bbnfbootstrap_emit_impl {
                                     ::bbnf::runtime::tape::DtaError,
                                 >,
                             > = ::core::option::Option::None;
-                            for (branch_idx, &branch) in branches.iter().enumerate() {
-                                *pos = start_pos;
-                                *slot = start_slot;
-                                if let ::core::option::Option::Some(top) = stack.top_mut() {
-                                    top.cursor = branch_idx as u16;
+                            let __phf_hit_branch: ::core::option::Option<u8> =
+                                { ::core::option::Option::None };
+                            let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch
+                            {
+                                ::core::option::Option::Some(branch_idx)
+                                    if (branch_idx as usize) < branches.len() =>
+                                {
+                                    *pos = start_pos;
+                                    *slot = start_slot;
+                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
+                                        top.cursor = branch_idx as u16;
+                                    }
+                                    match ::bbnf::runtime::tape::try_branch(
+                                        table,
+                                        input,
+                                        __regex_scan_BbnfBootstrap,
+                                        idx,
+                                        columns,
+                                        psi,
+                                        frame_depth,
+                                        stack,
+                                        branches[branch_idx as usize],
+                                        pos,
+                                        slot,
+                                        start_depth,
+                                    ) {
+                                        ::core::result::Result::Ok(next) => {
+                                            chosen_outcome = ::core::option::Option::Some(
+                                                ::core::result::Result::Ok(next),
+                                            );
+                                            ::core::option::Option::None
+                                        }
+                                        ::core::result::Result::Err(
+                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                                        ) => {
+                                            columns.truncate(cols_len_after_push);
+                                            frame_depth.truncate(fd_len_after_push);
+                                            psi.truncate(psi_len_after_push);
+                                            columns.pay_agg.truncate(pay_agg_len_after_push);
+                                            stack.restore(sp_after_push);
+                                            stack.pending_variant_idx = pending_after_push;
+                                            last_err = ::core::option::Option::Some(e);
+                                            ::core::option::Option::Some(branch_idx)
+                                        }
+                                        ::core::result::Result::Err(e) => {
+                                            break 'step ::core::result::Result::Err(e);
+                                        }
+                                    }
                                 }
-                                match ::bbnf::runtime::tape::try_branch(
-                                    table,
-                                    input,
-                                    __regex_scan_BbnfBootstrap,
-                                    idx,
-                                    columns,
-                                    psi,
-                                    frame_depth,
-                                    stack,
-                                    branch,
-                                    pos,
-                                    slot,
-                                    start_depth,
-                                ) {
-                                    ::core::result::Result::Ok(next) => {
-                                        chosen_outcome = ::core::option::Option::Some(
-                                            ::core::result::Result::Ok(next),
-                                        );
-                                        break;
+                                _ => ::core::option::Option::None,
+                            };
+                            if chosen_outcome.is_none() {
+                                for (branch_idx, &branch) in branches.iter().enumerate() {
+                                    if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                                        if skipped as usize == branch_idx {
+                                            continue;
+                                        }
                                     }
-                                    ::core::result::Result::Err(
-                                        e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                                    ) => {
-                                        columns.truncate(cols_len_after_push);
-                                        frame_depth.truncate(fd_len_after_push);
-                                        psi.truncate(psi_len_after_push);
-                                        columns.pay_agg.truncate(pay_agg_len_after_push);
-                                        stack.restore(sp_after_push);
-                                        stack.pending_variant_idx = pending_after_push;
-                                        last_err = ::core::option::Option::Some(e);
+                                    *pos = start_pos;
+                                    *slot = start_slot;
+                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
+                                        top.cursor = branch_idx as u16;
                                     }
-                                    ::core::result::Result::Err(e) => {
-                                        break 'step ::core::result::Result::Err(e);
+                                    match ::bbnf::runtime::tape::try_branch(
+                                        table,
+                                        input,
+                                        __regex_scan_BbnfBootstrap,
+                                        idx,
+                                        columns,
+                                        psi,
+                                        frame_depth,
+                                        stack,
+                                        branch,
+                                        pos,
+                                        slot,
+                                        start_depth,
+                                    ) {
+                                        ::core::result::Result::Ok(next) => {
+                                            chosen_outcome = ::core::option::Option::Some(
+                                                ::core::result::Result::Ok(next),
+                                            );
+                                            break;
+                                        }
+                                        ::core::result::Result::Err(
+                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                                        ) => {
+                                            columns.truncate(cols_len_after_push);
+                                            frame_depth.truncate(fd_len_after_push);
+                                            psi.truncate(psi_len_after_push);
+                                            columns.pay_agg.truncate(pay_agg_len_after_push);
+                                            stack.restore(sp_after_push);
+                                            stack.pending_variant_idx = pending_after_push;
+                                            last_err = ::core::option::Option::Some(e);
+                                        }
+                                        ::core::result::Result::Err(e) => {
+                                            break 'step ::core::result::Result::Err(e);
+                                        }
                                     }
                                 }
                             }
@@ -51216,45 +52542,103 @@ mod __bbnfbootstrap_emit_impl {
                                     ::bbnf::runtime::tape::DtaError,
                                 >,
                             > = ::core::option::Option::None;
-                            for (branch_idx, &branch) in branches.iter().enumerate() {
-                                *pos = start_pos;
-                                *slot = start_slot;
-                                if let ::core::option::Option::Some(top) = stack.top_mut() {
-                                    top.cursor = branch_idx as u16;
+                            let __phf_hit_branch: ::core::option::Option<u8> =
+                                { ::core::option::Option::None };
+                            let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch
+                            {
+                                ::core::option::Option::Some(branch_idx)
+                                    if (branch_idx as usize) < branches.len() =>
+                                {
+                                    *pos = start_pos;
+                                    *slot = start_slot;
+                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
+                                        top.cursor = branch_idx as u16;
+                                    }
+                                    match ::bbnf::runtime::tape::try_branch(
+                                        table,
+                                        input,
+                                        __regex_scan_BbnfBootstrap,
+                                        idx,
+                                        columns,
+                                        psi,
+                                        frame_depth,
+                                        stack,
+                                        branches[branch_idx as usize],
+                                        pos,
+                                        slot,
+                                        start_depth,
+                                    ) {
+                                        ::core::result::Result::Ok(next) => {
+                                            chosen_outcome = ::core::option::Option::Some(
+                                                ::core::result::Result::Ok(next),
+                                            );
+                                            ::core::option::Option::None
+                                        }
+                                        ::core::result::Result::Err(
+                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                                        ) => {
+                                            columns.truncate(cols_len_after_push);
+                                            frame_depth.truncate(fd_len_after_push);
+                                            psi.truncate(psi_len_after_push);
+                                            columns.pay_agg.truncate(pay_agg_len_after_push);
+                                            stack.restore(sp_after_push);
+                                            stack.pending_variant_idx = pending_after_push;
+                                            last_err = ::core::option::Option::Some(e);
+                                            ::core::option::Option::Some(branch_idx)
+                                        }
+                                        ::core::result::Result::Err(e) => {
+                                            break 'step ::core::result::Result::Err(e);
+                                        }
+                                    }
                                 }
-                                match ::bbnf::runtime::tape::try_branch(
-                                    table,
-                                    input,
-                                    __regex_scan_BbnfBootstrap,
-                                    idx,
-                                    columns,
-                                    psi,
-                                    frame_depth,
-                                    stack,
-                                    branch,
-                                    pos,
-                                    slot,
-                                    start_depth,
-                                ) {
-                                    ::core::result::Result::Ok(next) => {
-                                        chosen_outcome = ::core::option::Option::Some(
-                                            ::core::result::Result::Ok(next),
-                                        );
-                                        break;
+                                _ => ::core::option::Option::None,
+                            };
+                            if chosen_outcome.is_none() {
+                                for (branch_idx, &branch) in branches.iter().enumerate() {
+                                    if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                                        if skipped as usize == branch_idx {
+                                            continue;
+                                        }
                                     }
-                                    ::core::result::Result::Err(
-                                        e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                                    ) => {
-                                        columns.truncate(cols_len_after_push);
-                                        frame_depth.truncate(fd_len_after_push);
-                                        psi.truncate(psi_len_after_push);
-                                        columns.pay_agg.truncate(pay_agg_len_after_push);
-                                        stack.restore(sp_after_push);
-                                        stack.pending_variant_idx = pending_after_push;
-                                        last_err = ::core::option::Option::Some(e);
+                                    *pos = start_pos;
+                                    *slot = start_slot;
+                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
+                                        top.cursor = branch_idx as u16;
                                     }
-                                    ::core::result::Result::Err(e) => {
-                                        break 'step ::core::result::Result::Err(e);
+                                    match ::bbnf::runtime::tape::try_branch(
+                                        table,
+                                        input,
+                                        __regex_scan_BbnfBootstrap,
+                                        idx,
+                                        columns,
+                                        psi,
+                                        frame_depth,
+                                        stack,
+                                        branch,
+                                        pos,
+                                        slot,
+                                        start_depth,
+                                    ) {
+                                        ::core::result::Result::Ok(next) => {
+                                            chosen_outcome = ::core::option::Option::Some(
+                                                ::core::result::Result::Ok(next),
+                                            );
+                                            break;
+                                        }
+                                        ::core::result::Result::Err(
+                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                                        ) => {
+                                            columns.truncate(cols_len_after_push);
+                                            frame_depth.truncate(fd_len_after_push);
+                                            psi.truncate(psi_len_after_push);
+                                            columns.pay_agg.truncate(pay_agg_len_after_push);
+                                            stack.restore(sp_after_push);
+                                            stack.pending_variant_idx = pending_after_push;
+                                            last_err = ::core::option::Option::Some(e);
+                                        }
+                                        ::core::result::Result::Err(e) => {
+                                            break 'step ::core::result::Result::Err(e);
+                                        }
                                     }
                                 }
                             }
@@ -51501,45 +52885,103 @@ mod __bbnfbootstrap_emit_impl {
                                     ::bbnf::runtime::tape::DtaError,
                                 >,
                             > = ::core::option::Option::None;
-                            for (branch_idx, &branch) in branches.iter().enumerate() {
-                                *pos = start_pos;
-                                *slot = start_slot;
-                                if let ::core::option::Option::Some(top) = stack.top_mut() {
-                                    top.cursor = branch_idx as u16;
+                            let __phf_hit_branch: ::core::option::Option<u8> =
+                                { ::core::option::Option::None };
+                            let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch
+                            {
+                                ::core::option::Option::Some(branch_idx)
+                                    if (branch_idx as usize) < branches.len() =>
+                                {
+                                    *pos = start_pos;
+                                    *slot = start_slot;
+                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
+                                        top.cursor = branch_idx as u16;
+                                    }
+                                    match ::bbnf::runtime::tape::try_branch(
+                                        table,
+                                        input,
+                                        __regex_scan_BbnfBootstrap,
+                                        idx,
+                                        columns,
+                                        psi,
+                                        frame_depth,
+                                        stack,
+                                        branches[branch_idx as usize],
+                                        pos,
+                                        slot,
+                                        start_depth,
+                                    ) {
+                                        ::core::result::Result::Ok(next) => {
+                                            chosen_outcome = ::core::option::Option::Some(
+                                                ::core::result::Result::Ok(next),
+                                            );
+                                            ::core::option::Option::None
+                                        }
+                                        ::core::result::Result::Err(
+                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                                        ) => {
+                                            columns.truncate(cols_len_after_push);
+                                            frame_depth.truncate(fd_len_after_push);
+                                            psi.truncate(psi_len_after_push);
+                                            columns.pay_agg.truncate(pay_agg_len_after_push);
+                                            stack.restore(sp_after_push);
+                                            stack.pending_variant_idx = pending_after_push;
+                                            last_err = ::core::option::Option::Some(e);
+                                            ::core::option::Option::Some(branch_idx)
+                                        }
+                                        ::core::result::Result::Err(e) => {
+                                            break 'step ::core::result::Result::Err(e);
+                                        }
+                                    }
                                 }
-                                match ::bbnf::runtime::tape::try_branch(
-                                    table,
-                                    input,
-                                    __regex_scan_BbnfBootstrap,
-                                    idx,
-                                    columns,
-                                    psi,
-                                    frame_depth,
-                                    stack,
-                                    branch,
-                                    pos,
-                                    slot,
-                                    start_depth,
-                                ) {
-                                    ::core::result::Result::Ok(next) => {
-                                        chosen_outcome = ::core::option::Option::Some(
-                                            ::core::result::Result::Ok(next),
-                                        );
-                                        break;
+                                _ => ::core::option::Option::None,
+                            };
+                            if chosen_outcome.is_none() {
+                                for (branch_idx, &branch) in branches.iter().enumerate() {
+                                    if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                                        if skipped as usize == branch_idx {
+                                            continue;
+                                        }
                                     }
-                                    ::core::result::Result::Err(
-                                        e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                                    ) => {
-                                        columns.truncate(cols_len_after_push);
-                                        frame_depth.truncate(fd_len_after_push);
-                                        psi.truncate(psi_len_after_push);
-                                        columns.pay_agg.truncate(pay_agg_len_after_push);
-                                        stack.restore(sp_after_push);
-                                        stack.pending_variant_idx = pending_after_push;
-                                        last_err = ::core::option::Option::Some(e);
+                                    *pos = start_pos;
+                                    *slot = start_slot;
+                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
+                                        top.cursor = branch_idx as u16;
                                     }
-                                    ::core::result::Result::Err(e) => {
-                                        break 'step ::core::result::Result::Err(e);
+                                    match ::bbnf::runtime::tape::try_branch(
+                                        table,
+                                        input,
+                                        __regex_scan_BbnfBootstrap,
+                                        idx,
+                                        columns,
+                                        psi,
+                                        frame_depth,
+                                        stack,
+                                        branch,
+                                        pos,
+                                        slot,
+                                        start_depth,
+                                    ) {
+                                        ::core::result::Result::Ok(next) => {
+                                            chosen_outcome = ::core::option::Option::Some(
+                                                ::core::result::Result::Ok(next),
+                                            );
+                                            break;
+                                        }
+                                        ::core::result::Result::Err(
+                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                                        ) => {
+                                            columns.truncate(cols_len_after_push);
+                                            frame_depth.truncate(fd_len_after_push);
+                                            psi.truncate(psi_len_after_push);
+                                            columns.pay_agg.truncate(pay_agg_len_after_push);
+                                            stack.restore(sp_after_push);
+                                            stack.pending_variant_idx = pending_after_push;
+                                            last_err = ::core::option::Option::Some(e);
+                                        }
+                                        ::core::result::Result::Err(e) => {
+                                            break 'step ::core::result::Result::Err(e);
+                                        }
                                     }
                                 }
                             }
@@ -51840,45 +53282,103 @@ mod __bbnfbootstrap_emit_impl {
                                     ::bbnf::runtime::tape::DtaError,
                                 >,
                             > = ::core::option::Option::None;
-                            for (branch_idx, &branch) in branches.iter().enumerate() {
-                                *pos = start_pos;
-                                *slot = start_slot;
-                                if let ::core::option::Option::Some(top) = stack.top_mut() {
-                                    top.cursor = branch_idx as u16;
+                            let __phf_hit_branch: ::core::option::Option<u8> =
+                                { ::core::option::Option::None };
+                            let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch
+                            {
+                                ::core::option::Option::Some(branch_idx)
+                                    if (branch_idx as usize) < branches.len() =>
+                                {
+                                    *pos = start_pos;
+                                    *slot = start_slot;
+                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
+                                        top.cursor = branch_idx as u16;
+                                    }
+                                    match ::bbnf::runtime::tape::try_branch(
+                                        table,
+                                        input,
+                                        __regex_scan_BbnfBootstrap,
+                                        idx,
+                                        columns,
+                                        psi,
+                                        frame_depth,
+                                        stack,
+                                        branches[branch_idx as usize],
+                                        pos,
+                                        slot,
+                                        start_depth,
+                                    ) {
+                                        ::core::result::Result::Ok(next) => {
+                                            chosen_outcome = ::core::option::Option::Some(
+                                                ::core::result::Result::Ok(next),
+                                            );
+                                            ::core::option::Option::None
+                                        }
+                                        ::core::result::Result::Err(
+                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                                        ) => {
+                                            columns.truncate(cols_len_after_push);
+                                            frame_depth.truncate(fd_len_after_push);
+                                            psi.truncate(psi_len_after_push);
+                                            columns.pay_agg.truncate(pay_agg_len_after_push);
+                                            stack.restore(sp_after_push);
+                                            stack.pending_variant_idx = pending_after_push;
+                                            last_err = ::core::option::Option::Some(e);
+                                            ::core::option::Option::Some(branch_idx)
+                                        }
+                                        ::core::result::Result::Err(e) => {
+                                            break 'step ::core::result::Result::Err(e);
+                                        }
+                                    }
                                 }
-                                match ::bbnf::runtime::tape::try_branch(
-                                    table,
-                                    input,
-                                    __regex_scan_BbnfBootstrap,
-                                    idx,
-                                    columns,
-                                    psi,
-                                    frame_depth,
-                                    stack,
-                                    branch,
-                                    pos,
-                                    slot,
-                                    start_depth,
-                                ) {
-                                    ::core::result::Result::Ok(next) => {
-                                        chosen_outcome = ::core::option::Option::Some(
-                                            ::core::result::Result::Ok(next),
-                                        );
-                                        break;
+                                _ => ::core::option::Option::None,
+                            };
+                            if chosen_outcome.is_none() {
+                                for (branch_idx, &branch) in branches.iter().enumerate() {
+                                    if let ::core::option::Option::Some(skipped) = __phf_attempted {
+                                        if skipped as usize == branch_idx {
+                                            continue;
+                                        }
                                     }
-                                    ::core::result::Result::Err(
-                                        e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                                    ) => {
-                                        columns.truncate(cols_len_after_push);
-                                        frame_depth.truncate(fd_len_after_push);
-                                        psi.truncate(psi_len_after_push);
-                                        columns.pay_agg.truncate(pay_agg_len_after_push);
-                                        stack.restore(sp_after_push);
-                                        stack.pending_variant_idx = pending_after_push;
-                                        last_err = ::core::option::Option::Some(e);
+                                    *pos = start_pos;
+                                    *slot = start_slot;
+                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
+                                        top.cursor = branch_idx as u16;
                                     }
-                                    ::core::result::Result::Err(e) => {
-                                        break 'step ::core::result::Result::Err(e);
+                                    match ::bbnf::runtime::tape::try_branch(
+                                        table,
+                                        input,
+                                        __regex_scan_BbnfBootstrap,
+                                        idx,
+                                        columns,
+                                        psi,
+                                        frame_depth,
+                                        stack,
+                                        branch,
+                                        pos,
+                                        slot,
+                                        start_depth,
+                                    ) {
+                                        ::core::result::Result::Ok(next) => {
+                                            chosen_outcome = ::core::option::Option::Some(
+                                                ::core::result::Result::Ok(next),
+                                            );
+                                            break;
+                                        }
+                                        ::core::result::Result::Err(
+                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
+                                        ) => {
+                                            columns.truncate(cols_len_after_push);
+                                            frame_depth.truncate(fd_len_after_push);
+                                            psi.truncate(psi_len_after_push);
+                                            columns.pay_agg.truncate(pay_agg_len_after_push);
+                                            stack.restore(sp_after_push);
+                                            stack.pending_variant_idx = pending_after_push;
+                                            last_err = ::core::option::Option::Some(e);
+                                        }
+                                        ::core::result::Result::Err(e) => {
+                                            break 'step ::core::result::Result::Err(e);
+                                        }
                                     }
                                 }
                             }

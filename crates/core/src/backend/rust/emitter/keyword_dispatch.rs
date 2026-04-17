@@ -187,3 +187,26 @@ fn sanitise_ident(name: &str) -> String {
     }
     out
 }
+
+/// AW-IV.W3.2 — compose the PHF dispatcher ident the walker's
+/// AltLinear consumer calls into.
+///
+/// Returns `__phf_<grammar_tag>_dispatch_<rule_id>` — the same symbol
+/// [`emit_keyword_phf`] declares at module scope. Keeping the
+/// composition here (rather than hard-coding the ident in each call
+/// site) ensures the emitted symbol and the consuming call agree
+/// byte-for-byte under any grammar-name transposition.
+pub fn phf_dispatch_fn_ident(grammar: &str, rule_id: u32) -> proc_macro2::Ident {
+    let grammar_tag = sanitise_ident(grammar);
+    format_ident!("__phf_{}_dispatch_{}", grammar_tag, rule_id)
+}
+
+/// AW-IV.W3.2 — compose the PHF keyword-bytes table ident.
+///
+/// Returns `__PHF_<grammar_tag>_<rule_id>_KW`. Emitter-internal
+/// consumers that inline keyword-length probes directly (bypassing the
+/// [`phf_dispatch_fn_ident`] fn boundary) index this static.
+pub fn phf_kw_table_ident(grammar: &str, rule_id: u32) -> proc_macro2::Ident {
+    let grammar_tag = sanitise_ident(grammar);
+    format_ident!("__PHF_{}_{}_KW", grammar_tag, rule_id)
+}

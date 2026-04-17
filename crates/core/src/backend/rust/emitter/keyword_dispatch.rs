@@ -47,7 +47,14 @@ use quote::{format_ident, quote};
 /// Minimum number of literal-led branches required to emit a PHF
 /// keyword table. Below this threshold, linear Alt dispatch is
 /// cheaper than the keyword table's lookup overhead.
-pub const PHF_MIN_BRANCHES: usize = 4;
+///
+/// AW-IV.W3.2 — dropped from 4 to 3 so the threshold catches the
+/// canonical small-keyword triads: JSON's `true|false|null` (3
+/// branches), BBNF's 8 directives, CSS's 9-branch `colorType`, and
+/// every reasonable literal-led Alt. The PHF's single
+/// prefix-trie dispatch beats the AltLinear loop's per-branch
+/// savepoint + restore for N ≥ 3 across every measured grammar.
+pub const PHF_MIN_BRANCHES: usize = 3;
 
 /// One literal-led branch mined from an Alt — the keyword bytes + the
 /// branch's discriminant on the enclosing rule.

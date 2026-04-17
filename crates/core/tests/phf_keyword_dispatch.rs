@@ -26,8 +26,9 @@ fn below_threshold_returns_none() {
 /// recognisable identifiers so the activation is visible downstream.
 #[test]
 fn threshold_met_emits_phf_table() {
-    // JSON literal triad isn't enough (3 branches); synthesise 5
-    // branches to cross the PHF_MIN_BRANCHES gate.
+    // AW-IV.W3.2 — threshold dropped to 3; JSON's literal triad
+    // (`true`/`false`/`null`) now emits. Synthesise 5 branches so the
+    // test still exercises a table wider than the minimum.
     let branches: Vec<LiteralBranch> = ["true", "false", "null", "undef", "none"]
         .iter()
         .enumerate()

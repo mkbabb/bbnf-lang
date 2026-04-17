@@ -199,11 +199,93 @@ W4 gate is **passed ≥ 1055** (target 1070+) with **failed ≤ 25**
 Any subcategory entirely unmoved after W4 signals a structural layer
 the migration missed — investigate before closing the wave.
 
+## W4.6 root-cause addendum — sentinel int_lit dispatch
+
+Contact revealed that the initial 8-site enumeration missed the
+critical pathology: under DTA, the walker stamps `int_lit` as the
+sentinel `rule_kind` for compounds emitted without a
+`DtaState::Ref` dispatch. When the optimizer fully inlines the
+`value_unary` + `value_atom` layers, the value-expression body
+surfaces as a sentinel-tagged compound carrying the atom's span
+text (e.g. `"decode_json_string_to_arena(input)"`, `"0u8"`,
+`"Span"`, `"i64"`).
+
+The `int_lit` arm of `dispatch_value_expr` and the inner
+`unwrap_value_ident_str` chain previously routed the sentinel
+through `parse_int_literal(span_text)` unconditionally — returning
+`IntLit(0)` for every non-numeric span, silently corrupting every
+fn-call / type-shorthand / bare-ident value expression under DTA.
+
+**W4.6 fix**: distinguish real int_lit leaf (span leading byte is
+digit/`.`) from the sentinel (identifier-shaped or other span) via
+leading-byte inspection. Real numeric → `parse_int_literal`;
+everything else → `lower_value_atom` for classification by span
+text. Mirror fix in `unwrap_value_ident_str` (new `int_lit` /
+`Unknown` arm that treats identifier-shaped spans as atoms).
+
+## W4.7 root-cause addendum — lower_mapped_factor body peel
+
+Further contact revealed that the mapped_factor body itself is
+wrapped in anonymous Seq compounds under DTA, so the direct-child
+classifier in `lower_mapped_factor` never sees the semantic
+`[term, modifier?, mapping?]` layout — it sees a single anonymous
+Seq child whose span covers the whole factor + mapping, and the
+`trimmed.starts_with("->")` mapping-detection check never fires,
+silently dropping the `->` annotation.
+
+**W4.7 fix**: `peel_mapped_factor_body(node)` collapses single-
+anonymous-child chains until the view's direct children are the
+semantic slots. Added to `lower/expression.rs`; touches that file
+under the W4 "absolute necessity" exception — without it, the
+`-> decode_json_string_to_arena(input) : String` on JSON `string`,
+`-> parse_hex_color(input) : u32` on CSS `hex`, and every other
+`->` with a host-fn RHS drops to `IrNode::Regex` under any DTA-
+shaped tape, breaking `collect_string_decode_patterns` and every
+payload-layout activation downstream.
+
 ## Summary
 
-**10 migration sites** across `value_expr.rs` (8 DESCENDANT,
-2 DESCENDANT-SIBLING). Two additional DESCENDANT migrations in
-`graph/metadata.rs` under the W3.2-deferred mapped_factor arm.
+**12 migration sites** total across `value_expr.rs`, `expression.rs`,
+and `graph/metadata.rs`:
+- `value_expr.rs`: 8 DESCENDANT + 2 DESCENDANT-SIBLING (W4.1-W4.4)
+- `value_expr.rs`: sentinel int_lit dispatch (W4.6)
+- `expression.rs`: mapped_factor body peel (W4.7)
+- `graph/metadata.rs`: 2 DESCENDANT (W4.5)
+
 Zero producer-side changes. Zero new substrate primitives required
 — all use `find_descendant_by_kind` / `find_sibling_by_kind` from
-`lower/tape_walk.rs` at their current signatures.
+`lower/tape_walk.rs`, or colocated anonymous-wrapper descent
+helpers (`descend_anonymous_wrappers` in value_expr.rs,
+`peel_mapped_factor_body` in expression.rs).
+
+## HEAD test outcomes
+
+At HEAD's committed `generated.rs` (`49656fd4`, 21198-line DTA
+regen), these migrations are preventive rather than unblocking:
+the HEAD tape shape surfaces mapped_factor direct children as
+`[factor, mapping]` without the intervening Seq wrapper on typical
+rules, so the pre-migration code classifies correctly and the
+FnDescriptor flows through to the emitter. The W5 one-shot regen
+under the post-W4 emitter/walker/lifter pipeline is where these
+migrations become load-bearing: the regen produces Seq-wrapped
+shapes universally, activating the paths the migrations protect.
+
+Post-W4 workspace test state: **passed=1035, failed=62, ignored=67**.
+No regression from the W3 close baseline (identical failure set).
+The 62 residuals split:
+- **~17 tape_parity goldens** — W5 regen scope
+- **~35 `->` payload activation** — root-cause is upstream of the
+  lowering pipeline (`compute_payload_layouts` + emitter payload-
+  emission paths). The lowering now produces correct IR; the
+  emitter doesn't emit payload-write code for `TypeDesc::Named`
+  returns. Out of W4 scope; deferred to a successor wave or W5's
+  close audit.
+- **~10 integration / environment** — `parse_{canada,data}_json`
+  (data-file access, resolved via `scripts/seed-worktree.sh`),
+  `test_large_grammar`, `ebnf_root_has_at_least_one_rule`,
+  `csv_multi`, `pipeline_css_dfa_fidelity`.
+
+The 1055 / ≤ 25 W4 gate target is not met at HEAD; the migrations
+are correct but the failure lever sits in the emitter/payload-
+layout path that this wave does not own. Escalation note in
+W4.7's commit message + PROGRESS ledger.

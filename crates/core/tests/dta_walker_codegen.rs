@@ -23,6 +23,7 @@ use bbnf_ir::passes::recognizers::dta::{
     DtaState, DtaTable, FrameKind, LiteralPayload, SeqPromote, StateId,
 };
 use bbnf_ir::passes::sets::StructuralAlphabet;
+use bbnf_ir::GrammarIR;
 // `RuleId` / `StringId` are u32 aliases — used inline below for clarity.
 
 /// Construct a small synthetic table covering Literal + ByteDispatch.
@@ -113,7 +114,7 @@ fn emits_pub_fn_dta_run_per_grammar() {
     let table = synth_byte_dispatch_table();
     let alphabet = StructuralAlphabet::default();
     let profile = GrammarProfile::default();
-    let tokens = emit_specialised_walker("synth", &table, &alphabet, &profile);
+    let tokens = emit_specialised_walker("synth", &GrammarIR::default(), &table, &alphabet, &profile);
     let s = tokens.to_string();
     assert!(
         s.contains("pub fn dta_run_synth"),
@@ -134,7 +135,7 @@ fn outer_match_has_arm_per_state() {
     let table = synth_byte_dispatch_table();
     let alphabet = StructuralAlphabet::default();
     let profile = GrammarProfile::default();
-    let tokens = emit_specialised_walker("synth", &table, &alphabet, &profile);
+    let tokens = emit_specialised_walker("synth", &GrammarIR::default(), &table, &alphabet, &profile);
     let s = tokens.to_string();
     // Every state id (0..table.states.len()) appears as a match arm
     // ahead of the wildcard. Searching for "X => " is a structural
@@ -161,7 +162,7 @@ fn byte_dispatch_inlined_as_match_arms() {
     let table = synth_byte_dispatch_table();
     let alphabet = StructuralAlphabet::default();
     let profile = GrammarProfile::default();
-    let tokens = emit_specialised_walker("synth", &table, &alphabet, &profile);
+    let tokens = emit_specialised_walker("synth", &GrammarIR::default(), &table, &alphabet, &profile);
     let s = tokens.to_string();
     // The inlined ByteDispatch arm reads `input[pos]` and matches on
     // the byte. Every dispatch byte the test seeded ('n', 't', 'f')
@@ -222,7 +223,7 @@ fn hot_cold_partition_emits_cold_siblings_above_budget() {
     );
     let alphabet = StructuralAlphabet::default();
     let profile = GrammarProfile::default();
-    let tokens = emit_specialised_walker("oversized", &table, &alphabet, &profile);
+    let tokens = emit_specialised_walker("oversized", &GrammarIR::default(), &table, &alphabet, &profile);
     let s = tokens.to_string();
     assert!(
         s.contains("# [cold]") || s.contains("#[cold]"),
@@ -253,7 +254,7 @@ fn empty_table_emits_callable_stub() {
     };
     let alphabet = StructuralAlphabet::default();
     let profile = GrammarProfile::default();
-    let tokens = emit_specialised_walker("empty", &table, &alphabet, &profile);
+    let tokens = emit_specialised_walker("empty", &GrammarIR::default(), &table, &alphabet, &profile);
     let s = tokens.to_string();
     assert!(
         s.contains("pub fn dta_run_empty"),
@@ -277,8 +278,8 @@ fn emit_is_grammar_name_agnostic() {
     let table = synth_byte_dispatch_table();
     let alphabet = StructuralAlphabet::default();
     let profile = GrammarProfile::default();
-    let tokens_a = emit_specialised_walker("alpha", &table, &alphabet, &profile);
-    let tokens_b = emit_specialised_walker("beta", &table, &alphabet, &profile);
+    let tokens_a = emit_specialised_walker("alpha", &GrammarIR::default(), &table, &alphabet, &profile);
+    let tokens_b = emit_specialised_walker("beta", &GrammarIR::default(), &table, &alphabet, &profile);
     let s_a = tokens_a.to_string();
     let s_b = tokens_b.to_string();
     // Every difference between the two outputs must be a substitution
@@ -317,7 +318,7 @@ fn no_cold_path_bridge_in_emitted_code() {
     let table = synth_byte_dispatch_table();
     let alphabet = StructuralAlphabet::default();
     let profile = GrammarProfile::default();
-    let tokens = emit_specialised_walker("synth", &table, &alphabet, &profile);
+    let tokens = emit_specialised_walker("synth", &GrammarIR::default(), &table, &alphabet, &profile);
     let s = tokens.to_string();
     let stripped = strip_doc_comments(&s);
     assert!(

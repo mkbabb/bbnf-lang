@@ -75,3 +75,52 @@ fn ebnf_minus_sites_lift_to_dta_minus() {
         ir_minus, dta_minus
     );
 }
+
+/// Count nested Repeat(Repeat(..)) patterns in the IR — these are
+/// the double-wrap bug signature.
+fn count_nested_repeat(node: &IrNode) -> usize {
+    match node {
+        IrNode::Repeat { inner, .. } => {
+            let this = if matches!(inner.as_ref(), IrNode::Repeat { .. }) {
+                1
+            } else {
+                0
+            };
+            this + count_nested_repeat(inner)
+        }
+        IrNode::Seq(children) => children.iter().map(count_nested_repeat).sum(),
+        IrNode::Alt(branches, _) => branches.iter().map(|b| count_nested_repeat(&b.node)).sum(),
+        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+            count_nested_repeat(inner)
+        }
+        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
+            count_nested_repeat(a) + count_nested_repeat(b)
+        }
+        _ => 0,
+    }
+}
+
+#[test]
+fn ebnf_no_double_repeat() {
+    let path = locate_ebnf();
+    let request = CompileRequest {
+        options: Default::default(),
+        target: CompileTarget::Vm,
+    };
+    let out = compile_paths_request(&[path], &request).expect("compile ebnf.bbnf");
+    let ir = match out {
+        CompileOutput::Vm(ir) => ir,
+        _ => panic!("expected CompileOutput::Vm"),
+    };
+    // Count Repeat(Repeat(...)) occurrences across all rule bodies.
+    let nested: usize = ir.rules.iter().map(|r| count_nested_repeat(&r.body)).sum();
+    // Double-Repeat is a bug — every `{ x }` grammar construct must
+    // lower to exactly one IrNode::Repeat, not two.
+    assert_eq!(
+        nested, 0,
+        "ebnf: {} nested Repeat(Repeat(...)) patterns — double-wrap bug",
+        nested
+    );
+
+}
+

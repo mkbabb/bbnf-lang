@@ -1555,3 +1555,64 @@ Residual 16 failures are pure W2 cluster:
 `css_test_import_tape_parity` is a new entry surfaced by W1's
 schema/payload changes — coupled to W2's CSS truncation work
 (Cluster 2 cascade).
+
+## 2026-04-17 — AW-III W2 landed
+
+Master HEAD `88baa56f`. Workspace **1119 / 0 / 64** (+16 / −16 / 0
+vs W1.A close). All 16 named parse-completeness failures closed.
+Three coupled commits, single serial agent in `bbnf-wt-aw3-w2`.
+
+- `38e6a970` — `fix(driver): probe-snapshot deep restore + drop ws_fallback`.
+  Closes Cluster 3 EBNF (6) + Cluster 5 csv_multi. Root cause:
+  `Minus` arm's `try_branch` over `excluded` ran `dispatch_one` on
+  the probe; the inner walker mutated the enclosing Repeat's counter
+  + `iter_savepoint.pos` in-place, and the length-only
+  `FrameStackSavepoint` could not undo those edits. New
+  `FrameStackProbeSnapshot` captures `inline[..inline_len]`,
+  `overflow`, `counters`, `iter_savepoints`, `op_stack`, and
+  `pending_variant_idx` at probe entry. Coupled with removal of the
+  per-dispatch `ws_fallback` trim — architecturally wrong for
+  grammars without `@ws` (CSV's `\n` is structurally significant).
+- `65766a08` — `fix(driver,grammar): boundary-ws + DFA-friendly @ws +
+  var-fallback comments`. Closes Cluster 2 (8 tests). Three coupled
+  fixes: (a) boundary whitespace trim restored as leading+trailing
+  trim using grammar's first `WsTrim` pattern (or ASCII fallback when
+  `@ws` undeclared); (b) CSS L4 `@ws` regex rewritten to
+  `(?s)(?:\s|\/\*[^*]*(?:\*+[^\/][^*]*)*\*+\/)*` because parse-that's
+  DFA discards NFA lazy ε-priority — the original `(?s)\/\*.*?\*\/`
+  compiled greedy and swallowed 280K bytes between the first `/*` and
+  last `*/` in bootstrap.css; (c) `customPropertyDecl` value regex
+  rewritten to admit balanced comments containing `!` (tailwind's
+  `var(--tw-empty,/*!*/ /*!*/)`). CSS L4 + JSON tape goldens
+  regenerated (pre-W2 goldens captured truncated parses).
+- `88baa56f` — `fix(analysis): refs descend non-Rule kinds + bare-ref
+  alias check`. Closes test_large_grammar escalation. Two compounding
+  bugs: (a) `collect_references` gated descent on `c.kind() ==
+  TapeKind::Rule`, missing every nonterminal nested in a quantified
+  group (lifts to `Seq`-kind compound); (b) inlay-hint heuristic
+  suppressed any rule with `ref_count == 1 && first_count <= 1`,
+  conflating composite-bodied rules with true `colorPercentage =
+  percentage` aliases. Tightened to `is_bare_ref_alias(rhs_text,
+  ref_name)` — only suppress when trimmed RHS is exactly the ref
+  name. Positive knock-on for find-references / goto-def / any
+  consumer reading `RuleInfo.references`.
+
+### Hard-gate verification (orchestrator-independent)
+
+- `cargo test --workspace --no-fail-fast` → **1119 / 0 / 64** ✓
+- bootstrap idempotent — md5 `362a01ada2edae4018ca7348fbd5cb03`
+  (unchanged from W1; W2 fixes did not bump schema) ✓
+- 0 FAILED entries in test output ✓
+
+### W2 → W3 hand-off
+
+Workspace correctness is closed. 64 ignored tests inherit the W3
+disposition surface per `research/ignores-audit.md`:
+- CLOSE batch: 14 tests already verified passing when lifted
+  (json/structural/bbnf/css_simple serialize-roundtrips).
+- DELETE batch: 4 stub/dump tests.
+- Cascades: Group A (10 payload activation) closed by W1; Group B
+  (1 ebnf_rule) closed by W2 — these can mechanically lift in W3.
+- Routed residuals: Groups C (analysis-mode), D (closure lowering),
+  E (CSP GAC alldiff), F (pprint/prettify), G (miscellaneous) —
+  documented in audit + routed to successor tranches.

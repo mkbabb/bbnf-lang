@@ -67,6 +67,35 @@ mod lower_state;
 
 pub use hot_cold::{HotColdPartition, HOT_BUDGET};
 
+/// Sanitise a grammar identifier for use as a Rust ident fragment.
+///
+/// Non-alphanumeric / non-underscore characters map to `_`. Used
+/// consistently by every emitter-emitted symbol that embeds the
+/// grammar name (`dta_run_<grammar>`, `__dfa_match_<grammar>_<idx>`,
+/// `__regex_scan_<grammar>`) so cross-emitter ident compositions are
+/// guaranteed to agree byte-for-byte.
+fn sanitise_grammar(grammar: &str) -> String {
+    let mut s = String::with_capacity(grammar.len());
+    for ch in grammar.chars() {
+        if ch.is_ascii_alphanumeric() || ch == '_' {
+            s.push(ch);
+        } else {
+            s.push('_');
+        }
+    }
+    s
+}
+
+/// Compose the per-state DFA match function ident emitted by W1.β —
+/// `__dfa_match_<grammar>_<idx>`. The hot-path Regex arm calls this
+/// directly (no scanner, no trait dispatch, no function-pointer
+/// field). W1.β emits the function body alongside the walker module
+/// via `dfa_codegen`; `use super::*;` brings it into the
+/// `__dta_walker_inline` scope.
+pub(crate) fn dfa_match_fn_ident(grammar: &str, idx: usize) -> proc_macro2::Ident {
+    format_ident!("__dfa_match_{}_{}", sanitise_grammar(grammar), idx)
+}
+
 /// AW-III.W4 — the central emitter pass.
 ///
 /// Mechanically lowers `DtaTable.states` to inlined Rust. Returns one
@@ -130,8 +159,8 @@ pub fn emit_specialised_walker(
 
     let partition = HotColdPartition::for_table(table);
     let helper_block = helpers::emit_inline_helpers();
-    let dispatch_arms = lower_state::emit_state_dispatch_arms(table, &partition);
-    let cold_siblings = lower_state::emit_cold_siblings(table, &partition);
+    let dispatch_arms = lower_state::emit_state_dispatch_arms(grammar, table, &partition);
+    let cold_siblings = lower_state::emit_cold_siblings(grammar, table, &partition);
     let entry_state_lookup = quote! {
         let mut cur: u16 = {
             let s = table.rule_entry_for(table.entry);
@@ -334,16 +363,7 @@ pub fn emit_specialised_walker(
 /// `grammar` argument is sanitised so identifiers like `bbnf-bootstrap`
 /// or `css/l4` produce valid Rust idents.
 pub fn walker_fn_ident(grammar: &str) -> proc_macro2::Ident {
-    let mut sanitised = String::with_capacity(grammar.len() + 8);
-    sanitised.push_str("dta_run_");
-    for ch in grammar.chars() {
-        if ch.is_ascii_alphanumeric() || ch == '_' {
-            sanitised.push(ch);
-        } else {
-            sanitised.push('_');
-        }
-    }
-    format_ident!("{}", sanitised)
+    format_ident!("dta_run_{}", sanitise_grammar(grammar))
 }
 
 /// Lift the IR's DTA table for the grammar — single source of truth.

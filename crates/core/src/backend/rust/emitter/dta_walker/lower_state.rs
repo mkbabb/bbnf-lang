@@ -28,10 +28,9 @@
 //! - `Epsilon` — clear pending stamp + `advance_or_pop_with`.
 //! - `Literal { text, payload }` — byte cmp inline; emit_leaf with
 //!   `TapeKind::Span`/`Literal` keyed by payload presence; advance.
-//! - `Regex { pattern, payload }` — hoisted pattern binding + scanner.scan
-//!   (to be replaced with direct `__dfa_match_<grammar>_<idx>` call in
-//!   the second AW-IV.W1.α landing); emit_leaf_with_payload when
-//!   payload is Some; PSI push; advance.
+//! - `Regex { pattern, payload }` — direct `__dfa_match_<grammar>_<idx>`
+//!   call + emit_leaf_with_payload when payload is Some; PSI push;
+//!   advance.
 //! - `Seq { children, frame, promote }` — reserve compound, push frame,
 //!   transition to `children[0]`.
 //! - `ByteDispatch { table, fallback }` — 256-entry LUT inlined as
@@ -43,7 +42,8 @@
 //!   transition to inner.
 //! - `Ref { rule, target }` — set `pending_variant_idx`, transition to
 //!   target (or `rule_entry_for(rule)` when target is NONE).
-//! - `WsTrim { pattern }` — scanner.scan or `trim_ascii_ws`; advance.
+//! - `WsTrim { pattern }` — codegen-time direct `__dfa_match_<grammar>_<idx>`
+//!   call when pattern is Some; `trim_ascii_ws` otherwise; advance.
 //! - `Minus { primary, excluded }` — probe excluded with deep snapshot;
 //!   on success → Syntax error; on failure → transition to primary.
 //! - `ShuntingYard { head, precedence }` — reserve compound, push SY
@@ -70,6 +70,7 @@ use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 
 use super::hot_cold::HotColdPartition;
+use super::dfa_match_fn_ident;
 
 /// Emit the body of the outer `match cur { ... }` dispatch.
 ///
@@ -77,7 +78,15 @@ use super::hot_cold::HotColdPartition;
 /// states emit as forwarders to their `#[cold]` sibling — the outer
 /// dispatch sees a single uniform `Result<StepResult, DtaError>`
 /// return shape.
+///
+/// AW-IV.W1.α — the `grammar` argument threads through to the
+/// per-state Regex arm so it can compose the direct-named DFA match
+/// function identifier (`__dfa_match_<grammar>_<state_idx>`). The
+/// interpreter-shaped `scanner.scan(pattern, ...)` indirection
+/// disappears; the hot path emits a literal function call the compiler
+/// can inline at the call site.
 pub(super) fn emit_state_dispatch_arms(
+    grammar: &str,
     table: &DtaTable,
     partition: &HotColdPartition,
 ) -> TokenStream {
@@ -89,7 +98,7 @@ pub(super) fn emit_state_dispatch_arms(
             let id = idx as u16;
             let id_lit = Literal::u16_unsuffixed(id);
             if partition.is_hot(id) {
-                let body = emit_state_arm_body(idx, state);
+                let body = emit_state_arm_body(grammar, idx, state);
                 quote! {
                     #id_lit => { #body }
                 }
@@ -119,6 +128,7 @@ pub(super) fn emit_state_dispatch_arms(
 /// supplies them from its own enclosing scope; the cold sibling
 /// receives them through the function signature.
 pub(super) fn emit_cold_siblings(
+    grammar: &str,
     table: &DtaTable,
     partition: &HotColdPartition,
 ) -> TokenStream {
@@ -135,7 +145,7 @@ pub(super) fn emit_cold_siblings(
                 return None;
             }
             let cold_ident = cold_sibling_ident(id);
-            let body = emit_state_arm_body(idx, state);
+            let body = emit_state_arm_body(grammar, idx, state);
             Some(quote! {
                 #[cold]
                 #[inline(never)]
@@ -195,8 +205,11 @@ fn cold_sibling_ident(id: u16) -> proc_macro2::Ident {
 /// AW-IV.W1.α — every arm body opens with literal `let` bindings
 /// computed from the codegen-time `DtaState` value; the runtime
 /// `match table.states[N] { Variant { fields } => (fields), _ =>
-/// unreachable_unchecked() }` unpack is abrogated.
-fn emit_state_arm_body(idx: usize, state: &IrState) -> TokenStream {
+/// unreachable_unchecked() }` unpack is abrogated. `grammar` threads
+/// through so the Regex arm can compose the
+/// `__dfa_match_<grammar>_<idx>` ident for the direct DFA call that
+/// replaces the `scanner.scan` indirection.
+fn emit_state_arm_body(grammar: &str, idx: usize, state: &IrState) -> TokenStream {
     let kind_tag = state_kind_tag(state);
     let body = match state {
         IrState::Epsilon => emit_epsilon_arm(idx),
@@ -204,7 +217,7 @@ fn emit_state_arm_body(idx: usize, state: &IrState) -> TokenStream {
             emit_literal_arm(idx, *payload)
         }
         IrState::Regex { pattern: _, payload } => {
-            emit_regex_arm(idx, *payload)
+            emit_regex_arm(grammar, idx, *payload)
         }
         IrState::Seq { children, frame, promote } => {
             emit_seq_arm(idx, children, *frame, *promote)
@@ -231,7 +244,7 @@ fn emit_state_arm_body(idx: usize, state: &IrState) -> TokenStream {
         IrState::Ref { rule, target } => {
             emit_ref_arm(idx, *rule, *target)
         }
-        IrState::WsTrim { pattern } => emit_ws_trim_arm(idx, pattern.is_some()),
+        IrState::WsTrim { pattern } => emit_ws_trim_arm(grammar, idx, pattern.is_some()),
         IrState::Minus { primary, excluded } => {
             emit_minus_arm(idx, *primary, *excluded)
         }
@@ -398,14 +411,20 @@ fn emit_literal_arm(idx: usize, payload: LiteralPayload) -> TokenStream {
 /// `TapeKind::Span`; PSI push when payload is Some.
 ///
 /// AW-IV.W1.α — the `match table.states[N]` destructure is hoisted
-/// into literal bindings that reference the `__DTA_REGEX_<idx>`
-/// static (emitted by `dta.rs`) + the payload's codegen-time value.
-/// The scanner.scan indirection stays in this wave; AW-IV.W1.α's
-/// second landing replaces it with a direct
-/// `__dfa_match_<grammar>_<idx>` call.
-fn emit_regex_arm(idx: usize, payload: Option<RegexPayloadKind>) -> TokenStream {
+/// into a literal `payload` binding; the `pattern` field is encoded
+/// into the per-state DFA match function emitted by W1.β
+/// (`__dfa_match_<grammar>_<idx>`). The `scanner.scan(pattern, …)`
+/// indirection is replaced with a direct function call the compiler
+/// sees as a concrete ident at codegen time — LLVM inlines the DFA
+/// body at the call site without cross-function pointer-chasing
+/// analysis.
+fn emit_regex_arm(
+    grammar: &str,
+    idx: usize,
+    payload: Option<RegexPayloadKind>,
+) -> TokenStream {
     let idx_lit = Literal::usize_unsuffixed(idx);
-    let pat_ident = format_ident!("__DTA_REGEX_{}", idx);
+    let dfa_ident = dfa_match_fn_ident(grammar, idx);
     let payload_tok = regex_payload_token(payload);
     let advance = emit_advance_or_pop_call();
     let emit_payload = if payload.is_none() {
@@ -447,9 +466,8 @@ fn emit_regex_arm(idx: usize, payload: Option<RegexPayloadKind>) -> TokenStream 
         }
     };
     quote! {
-        let pattern: &'static str = #pat_ident;
         let payload: ::core::option::Option<::bbnf::runtime::tape::PayloadKind> = #payload_tok;
-        let match_len = match scanner.scan(pattern, input, *pos as usize) {
+        let match_len = match #dfa_ident(input, *pos as usize) {
             ::core::option::Option::Some(n) => n,
             ::core::option::Option::None => {
                 break 'step ::core::result::Result::Err(
@@ -847,45 +865,32 @@ fn emit_ref_arm(
     }
 }
 
-/// `WsTrim { pattern }` — scanner.scan with the grammar's `@ws`
-/// pattern when set, else `trim_ascii_ws` fallback.
+/// `WsTrim { pattern }` — codegen-time direct DFA call when the
+/// state carries a pattern, `trim_ascii_ws` otherwise.
 ///
-/// AW-IV.W1.α — the runtime `match table.states[N]` destructure for
-/// the pattern field is abrogated. When `has_pattern` is true the
-/// emitter emits a literal binding referencing the `__DTA_WS_<idx>`
-/// static (the same static `dta.rs` emits for pattern-bearing WsTrim
-/// states); when false the emitter emits no pattern binding.
-fn emit_ws_trim_arm(idx: usize, has_pattern: bool) -> TokenStream {
+/// AW-IV.W1.α — the pattern's presence is known at codegen time;
+/// emit the direct `__dfa_match_<grammar>_<idx>` call for
+/// pattern-bearing WsTrim states (the DFA function is emitted by
+/// W1.β), and `trim_ascii_ws` for pattern-less states. The runtime
+/// `match table.states[N]` against the pattern field is abrogated,
+/// as is the `scanner.scan(pat, …)` indirection.
+fn emit_ws_trim_arm(grammar: &str, idx: usize, has_pattern: bool) -> TokenStream {
     let advance = emit_advance_or_pop_call();
-    let (pattern_binding, scan_path) = if has_pattern {
-        let pat_ident = format_ident!("__DTA_WS_{}", idx);
-        (
-            quote! {
-                let pattern: ::core::option::Option<&'static str> =
-                    ::core::option::Option::Some(#pat_ident);
-            },
-            quote! {
-                if let ::core::option::Option::Some(pat) = pattern {
-                    if let ::core::option::Option::Some(len) =
-                        scanner.scan(pat, input, *pos as usize)
-                    {
-                        *pos += len;
-                    }
-                } else {
-                    ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-                }
-            },
-        )
+    let scan_path = if has_pattern {
+        let dfa_ident = dfa_match_fn_ident(grammar, idx);
+        quote! {
+            if let ::core::option::Option::Some(len) =
+                #dfa_ident(input, *pos as usize)
+            {
+                *pos += len;
+            }
+        }
     } else {
-        (
-            TokenStream::new(),
-            quote! {
-                ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
-            },
-        )
+        quote! {
+            ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
+        }
     };
     quote! {
-        #pattern_binding
         #scan_path
         #advance
     }

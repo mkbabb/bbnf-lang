@@ -3236,14 +3236,17 @@ mod __bbnfbootstrap_emit_impl {
         use super::*;
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_51<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -3291,20 +3294,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_52<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -3352,20 +3359,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_53<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -3413,20 +3424,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_54<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -3449,14 +3464,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -3476,7 +3487,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -3492,6 +3503,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -3499,12 +3511,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -3547,14 +3561,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_55<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -3602,20 +3619,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_56<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -3663,20 +3684,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_57<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -3699,14 +3724,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -3726,7 +3747,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -3742,6 +3763,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -3749,12 +3771,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -3797,14 +3821,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_72<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -3837,14 +3864,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_73<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -3877,14 +3907,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_74<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -3911,20 +3944,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_75<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -3951,20 +3988,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_76<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -3980,15 +4021,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -4023,6 +4058,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -4032,14 +4068,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_77<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4072,14 +4111,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_78<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4095,15 +4137,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -4138,6 +4174,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -4147,14 +4184,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_79<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4166,14 +4206,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -4210,6 +4245,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -4230,7 +4266,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -4246,6 +4282,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -4255,14 +4292,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_80<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4278,15 +4318,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -4321,6 +4355,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -4330,14 +4365,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_101<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4370,14 +4408,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_108<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4389,14 +4430,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -4433,6 +4469,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -4453,7 +4490,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -4469,6 +4506,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -4478,14 +4516,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_109<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4501,15 +4542,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -4544,6 +4579,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -4553,14 +4589,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_110<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4608,20 +4647,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_111<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4654,14 +4697,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_118<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4673,14 +4719,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -4717,6 +4758,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -4737,7 +4779,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -4753,6 +4795,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -4762,14 +4805,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_119<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4817,20 +4863,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_120<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4863,14 +4913,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_121<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4886,15 +4939,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -4929,6 +4976,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -4938,14 +4986,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_122<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4978,14 +5029,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_123<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5018,14 +5072,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_124<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5048,14 +5105,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -5075,7 +5128,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -5091,6 +5144,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -5098,12 +5152,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -5146,14 +5202,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_125<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5201,20 +5260,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_126<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5241,20 +5304,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_127<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5281,20 +5348,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_128<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5310,15 +5381,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -5353,6 +5418,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -5362,14 +5428,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_129<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5402,14 +5471,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_130<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5425,15 +5497,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -5468,6 +5534,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -5477,14 +5544,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_131<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5532,20 +5602,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_132<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5593,20 +5667,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_133<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5654,20 +5732,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_134<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5715,20 +5797,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_135<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5776,20 +5862,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_136<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5837,20 +5927,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_137<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5898,20 +5992,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_138<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5959,20 +6057,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_139<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6020,20 +6122,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_140<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6081,20 +6187,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_141<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6144,20 +6254,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_142<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6180,14 +6294,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -6207,7 +6317,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -6223,6 +6333,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -6230,12 +6341,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -6278,14 +6391,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_143<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6335,20 +6451,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_147<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6364,15 +6484,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -6407,6 +6521,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -6416,14 +6531,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_151<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6439,15 +6557,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -6482,6 +6594,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -6491,14 +6604,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_154<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6546,20 +6662,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_155<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6575,15 +6695,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -6618,6 +6732,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -6627,14 +6742,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_156<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6657,14 +6775,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -6684,7 +6798,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -6700,6 +6814,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -6707,12 +6822,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -6755,14 +6872,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_157<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6810,20 +6930,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_158<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6873,20 +6997,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_159<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6934,20 +7062,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_160<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6963,15 +7095,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -7006,6 +7132,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -7015,14 +7142,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_164<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7038,15 +7168,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -7081,6 +7205,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -7090,14 +7215,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_165<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7124,20 +7252,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_166<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7164,20 +7296,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_167<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7193,15 +7329,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -7236,6 +7366,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -7245,14 +7376,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_168<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7300,20 +7434,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_169<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7363,20 +7501,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_170<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7392,15 +7534,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -7435,6 +7571,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -7444,14 +7581,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_171<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7478,20 +7618,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_172<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7518,20 +7662,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_173<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7547,15 +7695,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -7590,6 +7732,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -7599,14 +7742,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_174<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7639,14 +7785,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_183<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7694,20 +7843,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_184<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7755,20 +7908,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_185<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7801,14 +7958,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_186<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7856,20 +8016,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_190<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7885,15 +8049,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -7928,6 +8086,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -7937,14 +8096,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_200<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7956,14 +8118,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -8000,6 +8157,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -8020,7 +8178,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -8036,6 +8194,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -8045,14 +8204,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_201<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8100,20 +8262,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_202<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8129,15 +8295,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -8172,6 +8332,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -8181,14 +8342,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_203<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8200,14 +8364,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -8244,6 +8403,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -8264,7 +8424,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -8280,6 +8440,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -8289,14 +8450,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_204<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8312,15 +8476,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -8355,6 +8513,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -8364,14 +8523,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_205<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8404,14 +8566,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_206<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8444,14 +8609,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_207<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8499,20 +8667,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_208<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8545,14 +8717,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_209<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8579,20 +8754,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_210<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8619,20 +8798,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_211<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8648,15 +8831,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -8691,6 +8868,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -8700,14 +8878,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_212<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8755,20 +8936,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_213<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8784,15 +8969,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -8827,6 +9006,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -8836,14 +9016,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_214<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8891,20 +9074,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_215<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8937,14 +9124,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_216<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8971,20 +9161,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_217<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9011,20 +9205,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_218<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9040,15 +9238,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -9083,6 +9275,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -9092,14 +9285,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_219<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9147,20 +9343,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_220<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9176,15 +9376,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -9219,6 +9413,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -9228,14 +9423,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_221<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9283,20 +9481,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_222<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9329,14 +9531,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_223<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9363,20 +9568,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_224<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9403,20 +9612,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_225<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9432,15 +9645,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -9475,6 +9682,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -9484,14 +9692,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_226<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9539,20 +9750,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_227<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9568,15 +9783,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -9611,6 +9820,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -9620,14 +9830,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_228<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9675,20 +9888,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_229<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9721,14 +9938,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_230<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9755,20 +9975,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_231<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9795,20 +10019,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_232<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9824,15 +10052,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -9867,6 +10089,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -9876,14 +10099,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_233<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9931,20 +10157,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_234<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9960,15 +10190,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -10003,6 +10227,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -10012,14 +10237,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_235<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10042,14 +10270,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -10069,7 +10293,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -10085,6 +10309,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -10092,12 +10317,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -10140,14 +10367,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_236<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10195,20 +10425,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_237<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10256,20 +10490,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_238<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10317,20 +10555,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_239<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10378,20 +10620,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_240<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10414,14 +10660,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -10441,7 +10683,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -10457,6 +10699,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -10464,12 +10707,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -10512,14 +10757,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_241<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10552,14 +10800,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_242<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10571,14 +10822,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -10615,6 +10861,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -10635,7 +10882,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -10651,6 +10898,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -10660,14 +10908,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_243<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10700,14 +10951,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_244<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10734,20 +10988,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_245<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10774,20 +11032,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_246<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10803,15 +11065,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -10846,6 +11102,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -10855,14 +11112,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_247<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10895,14 +11155,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_248<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10914,14 +11177,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -10958,6 +11216,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -10978,7 +11237,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -10994,6 +11253,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -11003,14 +11263,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_249<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11043,14 +11306,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_250<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11062,14 +11328,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -11106,6 +11367,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -11126,7 +11388,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -11142,6 +11404,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -11151,14 +11414,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_251<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11174,15 +11440,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -11217,6 +11477,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -11226,14 +11487,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_252<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11266,14 +11530,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_253<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11321,20 +11588,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_254<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11361,20 +11632,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_255<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11401,20 +11676,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_256<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11430,15 +11709,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -11473,6 +11746,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -11482,14 +11756,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_257<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11522,14 +11799,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_258<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11562,14 +11842,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_259<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11581,14 +11864,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -11625,6 +11903,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -11645,7 +11924,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -11661,6 +11940,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -11670,14 +11950,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_260<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11693,15 +11976,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -11736,6 +12013,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -11745,14 +12023,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_261<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11768,15 +12049,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -11811,6 +12086,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -11820,14 +12096,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_262<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11839,14 +12118,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -11883,6 +12157,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -11903,7 +12178,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -11919,6 +12194,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -11928,14 +12204,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_263<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11951,15 +12230,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -11994,6 +12267,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -12003,14 +12277,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_264<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12058,20 +12335,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_265<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12119,20 +12400,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_266<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12180,20 +12465,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_267<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12216,14 +12505,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -12243,7 +12528,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -12259,6 +12544,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -12266,12 +12552,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -12314,14 +12602,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_268<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12354,14 +12645,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_269<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12394,14 +12688,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_270<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12428,20 +12725,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_271<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12468,20 +12769,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_272<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12497,15 +12802,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -12540,6 +12839,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -12549,14 +12849,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_273<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12589,14 +12892,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_274<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12612,15 +12918,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -12655,6 +12955,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -12664,14 +12965,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_275<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12683,14 +12987,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -12727,6 +13026,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -12747,7 +13047,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -12763,6 +13063,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -12772,14 +13073,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_276<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12795,15 +13099,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -12838,6 +13136,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -12847,14 +13146,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_277<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12887,14 +13189,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_278<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12921,20 +13226,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_279<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12961,20 +13270,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_280<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12990,15 +13303,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -13033,6 +13340,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -13042,14 +13350,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_281<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13097,20 +13408,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_282<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13122,14 +13437,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -13166,6 +13476,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -13186,7 +13497,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -13202,6 +13513,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -13211,14 +13523,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_283<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13234,15 +13549,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -13277,6 +13586,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -13286,14 +13596,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_284<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13305,14 +13618,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -13349,6 +13657,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -13369,7 +13678,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -13385,6 +13694,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -13394,14 +13704,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_285<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13434,14 +13747,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_286<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13468,20 +13784,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_287<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13508,20 +13828,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_288<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13537,15 +13861,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -13580,6 +13898,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -13589,14 +13908,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_289<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13644,20 +13966,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_290<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13669,14 +13995,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -13713,6 +14034,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -13733,7 +14055,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -13749,6 +14071,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -13758,14 +14081,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_291<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13781,15 +14107,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -13824,6 +14144,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -13833,14 +14154,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_292<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13852,14 +14176,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -13896,6 +14215,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -13916,7 +14236,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -13932,6 +14252,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -13941,14 +14262,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_293<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13996,20 +14320,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_294<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14042,14 +14370,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_295<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14097,20 +14428,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_296<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14137,20 +14472,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_297<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14177,20 +14516,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_298<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14206,15 +14549,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -14249,6 +14586,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -14258,14 +14596,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_299<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14298,14 +14639,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_300<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14321,15 +14665,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -14364,6 +14702,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -14373,14 +14712,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_301<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14392,14 +14734,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -14436,6 +14773,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -14456,7 +14794,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -14472,6 +14810,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -14481,14 +14820,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_302<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14536,20 +14878,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_303<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14576,20 +14922,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_304<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14616,20 +14966,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_305<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14645,15 +14999,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -14688,6 +15036,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -14697,14 +15046,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_306<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14737,14 +15089,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_307<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14760,15 +15115,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -14803,6 +15152,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -14812,14 +15162,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_308<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14852,14 +15205,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_309<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14892,14 +15248,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_310<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14922,14 +15281,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -14949,7 +15304,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -14965,6 +15320,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -14972,12 +15328,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -15020,14 +15378,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_311<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15060,14 +15421,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_312<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15115,20 +15479,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_313<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15155,20 +15523,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_314<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15195,20 +15567,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_315<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15224,15 +15600,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -15267,6 +15637,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -15276,14 +15647,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_316<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15316,14 +15690,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_317<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15350,20 +15727,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_318<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15390,20 +15771,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_319<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15419,15 +15804,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -15462,6 +15841,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -15471,14 +15851,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_320<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15526,20 +15909,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_321<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15587,20 +15974,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_322<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15623,14 +16014,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -15650,7 +16037,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -15666,6 +16053,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -15673,12 +16061,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -15721,14 +16111,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_323<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15744,15 +16137,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -15787,6 +16174,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -15796,14 +16184,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_324<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15851,20 +16242,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_325<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15914,20 +16309,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_326<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15975,20 +16374,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_327<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16004,15 +16407,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -16047,6 +16444,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -16056,14 +16454,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_328<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16111,20 +16512,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_329<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16151,20 +16556,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_330<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16191,20 +16600,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_331<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16220,15 +16633,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -16263,6 +16670,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -16272,14 +16680,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_332<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16312,14 +16723,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_333<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16367,20 +16781,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_334<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16407,20 +16825,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_335<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16447,20 +16869,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_336<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16476,15 +16902,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -16519,6 +16939,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -16528,14 +16949,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_337<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16568,14 +16992,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_338<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16591,15 +17018,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -16634,6 +17055,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -16643,14 +17065,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_339<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16662,14 +17087,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -16706,6 +17126,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -16726,7 +17147,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -16742,6 +17163,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -16751,14 +17173,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_340<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16774,15 +17199,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -16817,6 +17236,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -16826,14 +17246,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_341<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16860,20 +17283,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_342<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16900,20 +17327,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_343<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16929,15 +17360,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -16972,6 +17397,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -16981,14 +17407,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_344<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17036,20 +17465,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_345<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17065,15 +17498,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -17108,6 +17535,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -17117,14 +17545,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_346<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17172,20 +17603,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_347<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17212,20 +17647,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_348<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17252,20 +17691,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_349<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17281,15 +17724,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -17324,6 +17761,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -17333,14 +17771,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_350<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17373,14 +17814,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_351<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17407,20 +17851,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_352<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17447,20 +17895,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_353<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17476,15 +17928,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -17519,6 +17965,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -17528,14 +17975,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_354<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17583,20 +18033,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_355<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17623,20 +18077,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_356<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17663,20 +18121,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_357<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17692,15 +18154,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -17735,6 +18191,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -17744,14 +18201,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_358<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17784,14 +18244,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_359<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17807,15 +18270,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -17850,6 +18307,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -17859,14 +18317,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_360<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17899,14 +18360,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_361<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17929,14 +18393,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -17956,7 +18416,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -17972,6 +18432,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -17979,12 +18440,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -18027,14 +18490,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_362<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18061,20 +18527,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_363<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18101,20 +18571,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_364<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18130,15 +18604,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -18173,6 +18641,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -18182,14 +18651,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_365<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18237,20 +18709,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_366<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18298,20 +18774,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_367<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18334,14 +18814,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -18361,7 +18837,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -18377,6 +18853,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -18384,12 +18861,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -18432,14 +18911,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_368<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18451,14 +18933,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -18495,6 +18972,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -18515,7 +18993,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -18531,6 +19009,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -18540,14 +19019,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_369<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18563,15 +19045,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -18606,6 +19082,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -18615,14 +19092,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_370<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18670,20 +19150,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_371<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18710,20 +19194,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_372<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18750,20 +19238,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_373<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18779,15 +19271,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -18822,6 +19308,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -18831,14 +19318,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_374<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18871,14 +19361,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_375<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18905,20 +19398,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_376<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18945,20 +19442,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_377<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18974,15 +19475,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -19017,6 +19512,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -19026,14 +19522,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_378<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19066,14 +19565,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_379<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19100,20 +19602,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_380<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19140,20 +19646,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_381<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19169,15 +19679,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -19212,6 +19716,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -19221,14 +19726,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_382<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19276,20 +19784,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_383<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19337,20 +19849,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_384<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19373,14 +19889,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -19400,7 +19912,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -19416,6 +19928,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -19423,12 +19936,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -19471,14 +19986,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_385<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19490,14 +20008,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -19534,6 +20047,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -19554,7 +20068,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -19570,6 +20084,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -19579,14 +20094,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_386<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19602,15 +20120,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -19645,6 +20157,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -19654,14 +20167,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_387<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19694,14 +20210,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_388<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19749,20 +20268,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_389<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19812,20 +20335,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_390<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19873,20 +20400,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_391<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19902,15 +20433,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -19945,6 +20470,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -19954,14 +20480,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_392<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19973,14 +20502,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -20017,6 +20541,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -20037,7 +20562,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -20053,6 +20578,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -20062,14 +20588,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_393<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20085,15 +20614,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -20128,6 +20651,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -20137,14 +20661,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_394<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20192,20 +20719,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_395<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20232,20 +20763,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_396<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20272,20 +20807,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_397<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20301,15 +20840,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -20344,6 +20877,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -20353,14 +20887,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_398<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20408,20 +20945,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_399<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20454,14 +20995,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_400<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20484,14 +21028,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -20511,7 +21051,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -20527,6 +21067,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -20534,12 +21075,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -20582,14 +21125,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_401<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20616,20 +21162,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_402<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20656,20 +21206,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_403<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20685,15 +21239,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -20728,6 +21276,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -20737,14 +21286,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_404<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20777,14 +21329,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_405<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20811,20 +21366,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_406<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20851,20 +21410,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_407<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20880,15 +21443,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -20923,6 +21480,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -20932,14 +21490,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_408<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20951,14 +21512,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -20995,6 +21551,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -21015,7 +21572,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -21031,6 +21588,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -21040,14 +21598,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_409<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21095,20 +21656,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_410<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21156,20 +21721,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_411<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21192,14 +21761,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -21219,7 +21784,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -21235,6 +21800,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -21242,12 +21808,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -21290,14 +21858,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_412<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21309,14 +21880,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -21353,6 +21919,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -21373,7 +21940,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -21389,6 +21956,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -21398,14 +21966,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_413<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21421,15 +21992,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -21464,6 +22029,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -21473,14 +22039,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_414<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21528,20 +22097,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_415<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21568,20 +22141,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_416<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21608,20 +22185,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_417<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21637,15 +22218,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -21680,6 +22255,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -21689,14 +22265,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_418<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21729,14 +22308,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_419<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21763,20 +22345,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_420<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21803,20 +22389,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_421<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21832,15 +22422,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -21875,6 +22459,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -21884,14 +22469,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_422<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21939,20 +22527,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_423<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22000,20 +22592,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_424<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22036,14 +22632,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -22063,7 +22655,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -22079,6 +22671,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -22086,12 +22679,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -22134,14 +22729,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_425<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22153,14 +22751,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -22197,6 +22790,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -22217,7 +22811,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -22233,6 +22827,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -22242,14 +22837,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_426<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22265,15 +22863,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -22308,6 +22900,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -22317,14 +22910,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_427<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22372,20 +22968,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_428<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22412,20 +23012,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_429<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22452,20 +23056,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_430<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22481,15 +23089,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -22524,6 +23126,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -22533,14 +23136,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_431<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22573,14 +23179,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_432<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22607,20 +23216,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_433<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22647,20 +23260,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_434<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22676,15 +23293,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -22719,6 +23330,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -22728,14 +23340,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_435<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22783,20 +23398,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_436<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22844,20 +23463,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_437<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22880,14 +23503,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -22907,7 +23526,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -22923,6 +23542,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -22930,12 +23550,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -22978,14 +23600,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_438<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22997,14 +23622,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -23041,6 +23661,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -23061,7 +23682,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -23077,6 +23698,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -23086,14 +23708,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_439<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23109,15 +23734,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -23152,6 +23771,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -23161,14 +23781,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_440<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23216,20 +23839,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_441<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23256,20 +23883,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_442<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23296,20 +23927,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_443<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23325,15 +23960,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -23368,6 +23997,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -23377,14 +24007,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_444<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23432,20 +24065,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_445<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23478,14 +24115,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_446<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23508,14 +24148,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -23535,7 +24171,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -23551,6 +24187,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -23558,12 +24195,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -23606,14 +24245,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_447<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23640,20 +24282,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_448<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23680,20 +24326,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_449<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23709,15 +24359,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -23752,6 +24396,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -23761,14 +24406,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_450<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23816,20 +24464,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_451<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23877,20 +24529,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_452<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23913,14 +24569,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -23940,7 +24592,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -23956,6 +24608,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -23963,12 +24616,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -24011,14 +24666,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_453<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24030,14 +24688,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -24074,6 +24727,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -24094,7 +24748,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -24110,6 +24764,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -24119,14 +24774,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_454<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24142,15 +24800,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -24185,6 +24837,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -24194,14 +24847,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_455<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24249,20 +24905,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_456<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24289,20 +24949,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_457<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24329,20 +24993,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_458<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24358,15 +25026,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -24401,6 +25063,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -24410,14 +25073,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_459<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24450,14 +25116,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_460<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24484,20 +25153,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_461<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24524,20 +25197,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_462<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24553,15 +25230,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -24596,6 +25267,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -24605,14 +25277,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_463<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24660,20 +25335,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_464<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24700,20 +25379,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_465<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24740,20 +25423,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_466<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24769,15 +25456,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -24812,6 +25493,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -24821,14 +25503,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_467<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24861,14 +25546,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_468<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24895,20 +25583,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_469<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24935,20 +25627,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_470<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24964,15 +25660,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -25007,6 +25697,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -25016,14 +25707,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_471<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25039,15 +25733,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -25082,6 +25770,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -25091,14 +25780,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_472<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25110,14 +25802,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -25154,6 +25841,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -25174,7 +25862,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -25190,6 +25878,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -25199,14 +25888,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_473<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25254,20 +25946,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_474<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25315,20 +26011,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_475<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25351,14 +26051,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -25378,7 +26074,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -25394,6 +26090,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -25401,12 +26098,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -25449,14 +26148,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_476<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25468,14 +26170,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -25512,6 +26209,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -25532,7 +26230,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 1 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -25548,6 +26246,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -25557,14 +26256,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_477<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25580,15 +26282,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -25623,6 +26319,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -25632,14 +26329,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_478<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25672,14 +26372,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_479<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25712,14 +26415,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_480<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25752,14 +26458,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_481<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25792,14 +26501,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_482<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25832,14 +26544,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_483<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25872,14 +26587,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_484<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25912,14 +26630,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_485<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25942,14 +26663,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -25969,7 +26686,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -25985,6 +26702,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -25992,12 +26710,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -26040,14 +26760,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_486<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26080,14 +26803,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_487<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26120,14 +26846,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_488<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26160,14 +26889,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_489<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26200,14 +26932,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_490<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26230,14 +26965,10 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 let start_depth = stack.depth();
                 let start_pos = *pos;
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    start_depth,
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    *pos,
-                );
+                let start_slot = *slot;
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                frame_depth.push(start_depth);
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -26257,7 +26988,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                let sp_after_push = stack.savepoint();
+                let sp_after_push = stack.savepoint(*slot);
                 let cols_len_after_push = columns.len();
                 let fd_len_after_push = frame_depth.len();
                 let psi_len_after_push = psi.len();
@@ -26273,6 +27004,7 @@ mod __bbnfbootstrap_emit_impl {
                 > = ::core::option::Option::None;
                 for (branch_idx, &branch) in branches.iter().enumerate() {
                     *pos = start_pos;
+                    *slot = start_slot;
                     if let ::core::option::Option::Some(top) = stack.top_mut() {
                         top.cursor = branch_idx as u16;
                     }
@@ -26280,12 +27012,14 @@ mod __bbnfbootstrap_emit_impl {
                         table,
                         input,
                         scanner,
+                        idx,
                         columns,
                         psi,
                         frame_depth,
                         stack,
                         branch,
                         pos,
+                        slot,
                         start_depth,
                     ) {
                         ::core::result::Result::Ok(next) => {
@@ -26328,14 +27062,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_491<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26368,14 +27105,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_492<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26402,20 +27142,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_493<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26442,20 +27186,24 @@ mod __bbnfbootstrap_emit_impl {
                         psi,
                         stack,
                         pos,
+                        slot,
                     )
                 }
             }
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_494<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26471,15 +27219,9 @@ mod __bbnfbootstrap_emit_impl {
                     } => (children, frame, promote),
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    tape_kind,
-                    *pos,
-                );
+                let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let variant_idx = stack.pending_variant_idx;
                 stack.pending_variant_idx = u8::MAX;
@@ -26514,6 +27256,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -26523,14 +27266,17 @@ mod __bbnfbootstrap_emit_impl {
         }
         #[cold]
         #[inline(never)]
+        #[allow(clippy::too_many_arguments)]
         fn __cold_state_495<__S: ::bbnf::runtime::tape::RegexScanner>(
             input: &[u8],
             scanner: &__S,
+            idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
             columns: &mut ::bbnf::runtime::tape::Columns,
             psi: &mut ::bbnf::runtime::tape::PayloadStream,
             frame_depth: &mut ::std::vec::Vec<u8>,
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
+            slot: &mut u32,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26542,14 +27288,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                     _ => unsafe { ::core::hint::unreachable_unchecked() },
                 };
-                let parent_rec = columns.len() as u32;
-                ::bbnf::runtime::tape::reserve_compound(
-                    columns,
-                    frame_depth,
-                    stack.depth(),
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    *pos,
-                );
+                let parent_rec =
+                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
                 let counter_idx = stack.counters.len();
                 if counter_idx >= u8::MAX as usize {
@@ -26586,6 +27327,7 @@ mod __bbnfbootstrap_emit_impl {
                             counters_len: 0,
                             op_stack_len: 0,
                             iter_savepoints_len: 0,
+                            slot: 0,
                         },
                     });
                 let variant_idx = stack.pending_variant_idx;
@@ -26606,7 +27348,7 @@ mod __bbnfbootstrap_emit_impl {
                     variant_idx,
                     promote: ::bbnf::runtime::tape::SeqPromote::Default,
                 });
-                stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                 if 4294967295 == 0u32 {
                     ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
                     if let ::core::option::Option::Some(next) =
@@ -26622,6 +27364,7 @@ mod __bbnfbootstrap_emit_impl {
                             psi,
                             stack,
                             pos,
+                            slot,
                         )
                     }
                 } else {
@@ -26669,6 +27412,10 @@ mod __bbnfbootstrap_emit_impl {
             let stack: &mut ::bbnf::runtime::tape::FrameStack = &mut stack_owned;
             let mut pos_owned: u32 = 0;
             let pos: &mut u32 = &mut pos_owned;
+            let mut slot_owned: u32 = 0;
+            let slot: &mut u32 = &mut slot_owned;
+            let idx_owned = ::bbnf::runtime::tape::stage1::StructuralIndex::new();
+            let idx: &::bbnf::runtime::tape::stage1::StructuralIndex = &idx_owned;
             let boundary_ws = ::bbnf::runtime::tape::first_ws_pattern(table);
             if let ::core::option::Option::Some(pat) = boundary_ws {
                 ::bbnf::runtime::tape::trim_with_pattern(scanner, pat, input, pos);
@@ -26763,6 +27510,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -26839,6 +27587,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -26886,6 +27635,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -26933,6 +27683,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -26953,14 +27704,10 @@ mod __bbnfbootstrap_emit_impl {
                             }
                             let start_depth = stack.depth();
                             let start_pos = *pos;
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                start_depth,
-                                ::bbnf::runtime::tape::TapeKind::Alt,
-                                *pos,
-                            );
+                            let start_slot = *slot;
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                            frame_depth.push(start_depth);
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -26980,7 +27727,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            let sp_after_push = stack.savepoint();
+                            let sp_after_push = stack.savepoint(*slot);
                             let cols_len_after_push = columns.len();
                             let fd_len_after_push = frame_depth.len();
                             let psi_len_after_push = psi.len();
@@ -26997,6 +27744,7 @@ mod __bbnfbootstrap_emit_impl {
                             > = ::core::option::Option::None;
                             for (branch_idx, &branch) in branches.iter().enumerate() {
                                 *pos = start_pos;
+                                *slot = start_slot;
                                 if let ::core::option::Option::Some(top) = stack.top_mut() {
                                     top.cursor = branch_idx as u16;
                                 }
@@ -27004,12 +27752,14 @@ mod __bbnfbootstrap_emit_impl {
                                     table,
                                     input,
                                     scanner,
+                                    idx,
                                     columns,
                                     psi,
                                     frame_depth,
                                     stack,
                                     branch,
                                     pos,
+                                    slot,
                                     start_depth,
                                 ) {
                                     ::core::result::Result::Ok(next) => {
@@ -27094,6 +27844,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -27145,6 +27896,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -27192,6 +27944,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -27205,15 +27958,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -27253,6 +28000,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -27309,6 +28057,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -27384,6 +28133,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -27425,15 +28175,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -27473,6 +28217,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -27487,14 +28232,9 @@ mod __bbnfbootstrap_emit_impl {
                                 ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                *pos,
-                            );
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let counter_idx = stack.counters.len();
                             if counter_idx >= u8::MAX as usize {
@@ -27532,6 +28272,7 @@ mod __bbnfbootstrap_emit_impl {
                                         counters_len: 0,
                                         op_stack_len: 0,
                                         iter_savepoints_len: 0,
+                                        slot: 0,
                                     },
                                 });
                             let variant_idx = stack.pending_variant_idx;
@@ -27552,7 +28293,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                            stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                             if 4294967295 == 0u32 {
                                 ::bbnf::runtime::tape::close_compound(
                                     columns,
@@ -27573,6 +28314,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -27591,15 +28333,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -27639,6 +28375,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -27691,6 +28428,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -27738,6 +28476,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -27779,15 +28518,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -27827,6 +28560,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -27841,14 +28575,9 @@ mod __bbnfbootstrap_emit_impl {
                                 ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                *pos,
-                            );
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let counter_idx = stack.counters.len();
                             if counter_idx >= u8::MAX as usize {
@@ -27886,6 +28615,7 @@ mod __bbnfbootstrap_emit_impl {
                                         counters_len: 0,
                                         op_stack_len: 0,
                                         iter_savepoints_len: 0,
+                                        slot: 0,
                                     },
                                 });
                             let variant_idx = stack.pending_variant_idx;
@@ -27906,7 +28636,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                            stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                             if 4294967295 == 0u32 {
                                 ::bbnf::runtime::tape::close_compound(
                                     columns,
@@ -27927,6 +28657,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -27945,15 +28676,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -27993,6 +28718,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -28073,6 +28799,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -28148,6 +28875,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -28172,6 +28900,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -28196,6 +28925,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -28209,15 +28939,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -28257,6 +28981,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -28303,15 +29028,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -28351,6 +29070,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -28365,14 +29085,9 @@ mod __bbnfbootstrap_emit_impl {
                                 ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                *pos,
-                            );
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let counter_idx = stack.counters.len();
                             if counter_idx >= u8::MAX as usize {
@@ -28410,6 +29125,7 @@ mod __bbnfbootstrap_emit_impl {
                                         counters_len: 0,
                                         op_stack_len: 0,
                                         iter_savepoints_len: 0,
+                                        slot: 0,
                                     },
                                 });
                             let variant_idx = stack.pending_variant_idx;
@@ -28430,7 +29146,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                            stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                             if 4294967295 == 0u32 {
                                 ::bbnf::runtime::tape::close_compound(
                                     columns,
@@ -28451,6 +29167,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -28469,15 +29186,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -28517,6 +29228,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -28531,14 +29243,9 @@ mod __bbnfbootstrap_emit_impl {
                                 ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                *pos,
-                            );
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let counter_idx = stack.counters.len();
                             if counter_idx >= u8::MAX as usize {
@@ -28576,6 +29283,7 @@ mod __bbnfbootstrap_emit_impl {
                                         counters_len: 0,
                                         op_stack_len: 0,
                                         iter_savepoints_len: 0,
+                                        slot: 0,
                                     },
                                 });
                             let variant_idx = stack.pending_variant_idx;
@@ -28596,7 +29304,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                            stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                             if 1 == 0u32 {
                                 ::bbnf::runtime::tape::close_compound(
                                     columns,
@@ -28617,6 +29325,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -28669,6 +29378,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -28682,15 +29392,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -28730,6 +29434,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -28978,6 +29683,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -29030,6 +29736,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -29054,6 +29761,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -29067,15 +29775,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -29115,6 +29817,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -29167,6 +29870,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -29180,15 +29884,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -29228,6 +29926,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -29253,14 +29952,10 @@ mod __bbnfbootstrap_emit_impl {
                             }
                             let start_depth = stack.depth();
                             let start_pos = *pos;
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                start_depth,
-                                ::bbnf::runtime::tape::TapeKind::Alt,
-                                *pos,
-                            );
+                            let start_slot = *slot;
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                            frame_depth.push(start_depth);
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -29280,7 +29975,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            let sp_after_push = stack.savepoint();
+                            let sp_after_push = stack.savepoint(*slot);
                             let cols_len_after_push = columns.len();
                             let fd_len_after_push = frame_depth.len();
                             let psi_len_after_push = psi.len();
@@ -29297,6 +29992,7 @@ mod __bbnfbootstrap_emit_impl {
                             > = ::core::option::Option::None;
                             for (branch_idx, &branch) in branches.iter().enumerate() {
                                 *pos = start_pos;
+                                *slot = start_slot;
                                 if let ::core::option::Option::Some(top) = stack.top_mut() {
                                     top.cursor = branch_idx as u16;
                                 }
@@ -29304,12 +30000,14 @@ mod __bbnfbootstrap_emit_impl {
                                     table,
                                     input,
                                     scanner,
+                                    idx,
                                     columns,
                                     psi,
                                     frame_depth,
                                     stack,
                                     branch,
                                     pos,
+                                    slot,
                                     start_depth,
                                 ) {
                                     ::core::result::Result::Ok(next) => {
@@ -29353,65 +30051,79 @@ mod __bbnfbootstrap_emit_impl {
                         51 => __cold_state_51::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         52 => __cold_state_52::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         53 => __cold_state_53::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         54 => __cold_state_54::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         55 => __cold_state_55::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         56 => __cold_state_56::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         57 => __cold_state_57::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         58 => {
                             let _ = "literal";
@@ -29457,6 +30169,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -29504,6 +30217,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -29551,6 +30265,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -29598,6 +30313,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -29645,6 +30361,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -29692,6 +30409,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -29712,14 +30430,10 @@ mod __bbnfbootstrap_emit_impl {
                             }
                             let start_depth = stack.depth();
                             let start_pos = *pos;
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                start_depth,
-                                ::bbnf::runtime::tape::TapeKind::Alt,
-                                *pos,
-                            );
+                            let start_slot = *slot;
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                            frame_depth.push(start_depth);
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -29739,7 +30453,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            let sp_after_push = stack.savepoint();
+                            let sp_after_push = stack.savepoint(*slot);
                             let cols_len_after_push = columns.len();
                             let fd_len_after_push = frame_depth.len();
                             let psi_len_after_push = psi.len();
@@ -29756,6 +30470,7 @@ mod __bbnfbootstrap_emit_impl {
                             > = ::core::option::Option::None;
                             for (branch_idx, &branch) in branches.iter().enumerate() {
                                 *pos = start_pos;
+                                *slot = start_slot;
                                 if let ::core::option::Option::Some(top) = stack.top_mut() {
                                     top.cursor = branch_idx as u16;
                                 }
@@ -29763,12 +30478,14 @@ mod __bbnfbootstrap_emit_impl {
                                     table,
                                     input,
                                     scanner,
+                                    idx,
                                     columns,
                                     psi,
                                     frame_depth,
                                     stack,
                                     branch,
                                     pos,
+                                    slot,
                                     start_depth,
                                 ) {
                                     ::core::result::Result::Ok(next) => {
@@ -29853,6 +30570,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -29900,6 +30618,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -29920,14 +30639,10 @@ mod __bbnfbootstrap_emit_impl {
                             }
                             let start_depth = stack.depth();
                             let start_pos = *pos;
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                start_depth,
-                                ::bbnf::runtime::tape::TapeKind::Alt,
-                                *pos,
-                            );
+                            let start_slot = *slot;
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                            frame_depth.push(start_depth);
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -29947,7 +30662,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            let sp_after_push = stack.savepoint();
+                            let sp_after_push = stack.savepoint(*slot);
                             let cols_len_after_push = columns.len();
                             let fd_len_after_push = frame_depth.len();
                             let psi_len_after_push = psi.len();
@@ -29964,6 +30679,7 @@ mod __bbnfbootstrap_emit_impl {
                             > = ::core::option::Option::None;
                             for (branch_idx, &branch) in branches.iter().enumerate() {
                                 *pos = start_pos;
+                                *slot = start_slot;
                                 if let ::core::option::Option::Some(top) = stack.top_mut() {
                                     top.cursor = branch_idx as u16;
                                 }
@@ -29971,12 +30687,14 @@ mod __bbnfbootstrap_emit_impl {
                                     table,
                                     input,
                                     scanner,
+                                    idx,
                                     columns,
                                     psi,
                                     frame_depth,
                                     stack,
                                     branch,
                                     pos,
+                                    slot,
                                     start_depth,
                                 ) {
                                     ::core::result::Result::Ok(next) => {
@@ -30055,15 +30773,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -30103,6 +30815,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -30156,14 +30869,10 @@ mod __bbnfbootstrap_emit_impl {
                             }
                             let start_depth = stack.depth();
                             let start_pos = *pos;
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                start_depth,
-                                ::bbnf::runtime::tape::TapeKind::Alt,
-                                *pos,
-                            );
+                            let start_slot = *slot;
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
+                            frame_depth.push(start_depth);
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -30183,7 +30892,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            let sp_after_push = stack.savepoint();
+                            let sp_after_push = stack.savepoint(*slot);
                             let cols_len_after_push = columns.len();
                             let fd_len_after_push = frame_depth.len();
                             let psi_len_after_push = psi.len();
@@ -30200,6 +30909,7 @@ mod __bbnfbootstrap_emit_impl {
                             > = ::core::option::Option::None;
                             for (branch_idx, &branch) in branches.iter().enumerate() {
                                 *pos = start_pos;
+                                *slot = start_slot;
                                 if let ::core::option::Option::Some(top) = stack.top_mut() {
                                     top.cursor = branch_idx as u16;
                                 }
@@ -30207,12 +30917,14 @@ mod __bbnfbootstrap_emit_impl {
                                     table,
                                     input,
                                     scanner,
+                                    idx,
                                     columns,
                                     psi,
                                     frame_depth,
                                     stack,
                                     branch,
                                     pos,
+                                    slot,
                                     start_depth,
                                 ) {
                                     ::core::result::Result::Ok(next) => {
@@ -30256,83 +30968,101 @@ mod __bbnfbootstrap_emit_impl {
                         72 => __cold_state_72::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         73 => __cold_state_73::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         74 => __cold_state_74::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         75 => __cold_state_75::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         76 => __cold_state_76::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         77 => __cold_state_77::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         78 => __cold_state_78::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         79 => __cold_state_79::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         80 => __cold_state_80::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         81 => {
                             let _ = "ref_target";
@@ -30368,14 +31098,9 @@ mod __bbnfbootstrap_emit_impl {
                                 ::bbnf::runtime::tape::DtaState::ShuntingYard { head, .. } => head,
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                *pos,
-                            );
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -30476,6 +31201,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -30500,6 +31226,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -30513,15 +31240,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -30561,6 +31282,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -30607,15 +31329,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -30655,6 +31371,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -30669,14 +31386,9 @@ mod __bbnfbootstrap_emit_impl {
                                 ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                *pos,
-                            );
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let counter_idx = stack.counters.len();
                             if counter_idx >= u8::MAX as usize {
@@ -30714,6 +31426,7 @@ mod __bbnfbootstrap_emit_impl {
                                         counters_len: 0,
                                         op_stack_len: 0,
                                         iter_savepoints_len: 0,
+                                        slot: 0,
                                     },
                                 });
                             let variant_idx = stack.pending_variant_idx;
@@ -30734,7 +31447,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                            stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                             if 4294967295 == 0u32 {
                                 ::bbnf::runtime::tape::close_compound(
                                     columns,
@@ -30755,6 +31468,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -30773,15 +31487,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -30821,6 +31529,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -30901,6 +31610,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -30925,6 +31635,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -30949,6 +31660,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -30962,15 +31674,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -31010,6 +31716,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -31056,15 +31763,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -31104,6 +31805,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -31118,14 +31820,9 @@ mod __bbnfbootstrap_emit_impl {
                                 ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                *pos,
-                            );
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let counter_idx = stack.counters.len();
                             if counter_idx >= u8::MAX as usize {
@@ -31163,6 +31860,7 @@ mod __bbnfbootstrap_emit_impl {
                                         counters_len: 0,
                                         op_stack_len: 0,
                                         iter_savepoints_len: 0,
+                                        slot: 0,
                                     },
                                 });
                             let variant_idx = stack.pending_variant_idx;
@@ -31183,7 +31881,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                            stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                             if 4294967295 == 0u32 {
                                 ::bbnf::runtime::tape::close_compound(
                                     columns,
@@ -31204,6 +31902,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -31222,15 +31921,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -31270,6 +31963,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -31281,11 +31975,13 @@ mod __bbnfbootstrap_emit_impl {
                         101 => __cold_state_101::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         102 => {
                             let _ = "literal";
@@ -31333,6 +32029,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -31357,6 +32054,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -31381,6 +32079,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -31394,15 +32093,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -31442,6 +32135,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -31490,15 +32184,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -31538,6 +32226,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -31549,38 +32238,46 @@ mod __bbnfbootstrap_emit_impl {
                         108 => __cold_state_108::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         109 => __cold_state_109::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         110 => __cold_state_110::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         111 => __cold_state_111::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         112 => {
                             let _ = "literal";
@@ -31628,6 +32325,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -31652,6 +32350,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -31676,6 +32375,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -31689,15 +32389,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -31737,6 +32431,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -31785,15 +32480,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -31833,6 +32522,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -31844,236 +32534,288 @@ mod __bbnfbootstrap_emit_impl {
                         118 => __cold_state_118::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         119 => __cold_state_119::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         120 => __cold_state_120::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         121 => __cold_state_121::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         122 => __cold_state_122::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         123 => __cold_state_123::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         124 => __cold_state_124::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         125 => __cold_state_125::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         126 => __cold_state_126::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         127 => __cold_state_127::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         128 => __cold_state_128::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         129 => __cold_state_129::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         130 => __cold_state_130::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         131 => __cold_state_131::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         132 => __cold_state_132::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         133 => __cold_state_133::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         134 => __cold_state_134::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         135 => __cold_state_135::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         136 => __cold_state_136::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         137 => __cold_state_137::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         138 => __cold_state_138::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         139 => __cold_state_139::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         140 => __cold_state_140::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         141 => __cold_state_141::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         142 => __cold_state_142::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         143 => __cold_state_143::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         144 => {
                             let _ = "literal";
@@ -32121,6 +32863,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -32172,6 +32915,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -32221,17 +32965,20 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
                         147 => __cold_state_147::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         148 => {
                             let _ = "literal";
@@ -32279,6 +33026,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -32330,6 +33078,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -32379,17 +33128,20 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
                         151 => __cold_state_151::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         152 => {
                             let _ = "literal";
@@ -32437,6 +33189,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -32488,71 +33241,86 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
                         154 => __cold_state_154::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         155 => __cold_state_155::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         156 => __cold_state_156::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         157 => __cold_state_157::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         158 => __cold_state_158::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         159 => __cold_state_159::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         160 => __cold_state_160::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         161 => {
                             let _ = "literal";
@@ -32600,6 +33368,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -32651,6 +33420,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -32700,107 +33470,130 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
                         164 => __cold_state_164::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         165 => __cold_state_165::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         166 => __cold_state_166::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         167 => __cold_state_167::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         168 => __cold_state_168::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         169 => __cold_state_169::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         170 => __cold_state_170::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         171 => __cold_state_171::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         172 => __cold_state_172::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         173 => __cold_state_173::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         174 => __cold_state_174::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         175 => {
                             let _ = "ref_target";
@@ -32853,6 +33646,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -32877,6 +33671,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -32890,15 +33685,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -32938,6 +33727,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -32992,6 +33782,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -33001,14 +33792,9 @@ mod __bbnfbootstrap_emit_impl {
                                 ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                *pos,
-                            );
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let counter_idx = stack.counters.len();
                             if counter_idx >= u8::MAX as usize {
@@ -33046,6 +33832,7 @@ mod __bbnfbootstrap_emit_impl {
                                         counters_len: 0,
                                         op_stack_len: 0,
                                         iter_savepoints_len: 0,
+                                        slot: 0,
                                     },
                                 });
                             let variant_idx = stack.pending_variant_idx;
@@ -33066,7 +33853,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                            stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                             if 1 == 0u32 {
                                 ::bbnf::runtime::tape::close_compound(
                                     columns,
@@ -33087,6 +33874,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -33105,15 +33893,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -33153,6 +33935,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -33167,14 +33950,9 @@ mod __bbnfbootstrap_emit_impl {
                                 ::bbnf::runtime::tape::DtaState::Repeat { inner, .. } => inner,
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                ::bbnf::runtime::tape::TapeKind::Rule,
-                                *pos,
-                            );
+                            let parent_rec = columns
+                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Rule, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let counter_idx = stack.counters.len();
                             if counter_idx >= u8::MAX as usize {
@@ -33212,6 +33990,7 @@ mod __bbnfbootstrap_emit_impl {
                                         counters_len: 0,
                                         op_stack_len: 0,
                                         iter_savepoints_len: 0,
+                                        slot: 0,
                                     },
                                 });
                             let variant_idx = stack.pending_variant_idx;
@@ -33232,7 +34011,7 @@ mod __bbnfbootstrap_emit_impl {
                                 variant_idx,
                                 promote: ::bbnf::runtime::tape::SeqPromote::Default,
                             });
-                            stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+                            stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
                             if 4294967295 == 0u32 {
                                 ::bbnf::runtime::tape::close_compound(
                                     columns,
@@ -33253,6 +34032,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -33264,38 +34044,46 @@ mod __bbnfbootstrap_emit_impl {
                         183 => __cold_state_183::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         184 => __cold_state_184::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         185 => __cold_state_185::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         186 => __cold_state_186::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         187 => {
                             let _ = "ref_target";
@@ -33348,6 +34136,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -33372,17 +34161,20 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
                         190 => __cold_state_190::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         191 => {
                             let _ = "literal";
@@ -33430,6 +34222,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -33454,6 +34247,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -33478,6 +34272,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -33491,15 +34286,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -33539,6 +34328,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -33598,6 +34388,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -33622,6 +34413,7 @@ mod __bbnfbootstrap_emit_impl {
                                     psi,
                                     stack,
                                     pos,
+                                    slot,
                                 )
                             }
                         }
@@ -33635,15 +34427,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -33683,6 +34469,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -33701,15 +34488,9 @@ mod __bbnfbootstrap_emit_impl {
                                 } => (children, frame, promote),
                                 _ => unsafe { ::core::hint::unreachable_unchecked() },
                             };
-                            let parent_rec = columns.len() as u32;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
-                            ::bbnf::runtime::tape::reserve_compound(
-                                columns,
-                                frame_depth,
-                                stack.depth(),
-                                tape_kind,
-                                *pos,
-                            );
+                            let parent_rec = columns.push_compound_fused(tape_kind, *pos);
+                            frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
                             let variant_idx = stack.pending_variant_idx;
                             stack.pending_variant_idx = u8::MAX;
@@ -33749,6 +34530,7 @@ mod __bbnfbootstrap_emit_impl {
                                         psi,
                                         stack,
                                         pos,
+                                        slot,
                                     )
                                 }
                             } else {
@@ -33760,2666 +34542,3258 @@ mod __bbnfbootstrap_emit_impl {
                         200 => __cold_state_200::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         201 => __cold_state_201::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         202 => __cold_state_202::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         203 => __cold_state_203::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         204 => __cold_state_204::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         205 => __cold_state_205::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         206 => __cold_state_206::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         207 => __cold_state_207::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         208 => __cold_state_208::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         209 => __cold_state_209::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         210 => __cold_state_210::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         211 => __cold_state_211::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         212 => __cold_state_212::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         213 => __cold_state_213::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         214 => __cold_state_214::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         215 => __cold_state_215::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         216 => __cold_state_216::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         217 => __cold_state_217::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         218 => __cold_state_218::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         219 => __cold_state_219::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         220 => __cold_state_220::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         221 => __cold_state_221::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         222 => __cold_state_222::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         223 => __cold_state_223::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         224 => __cold_state_224::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         225 => __cold_state_225::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         226 => __cold_state_226::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         227 => __cold_state_227::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         228 => __cold_state_228::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         229 => __cold_state_229::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         230 => __cold_state_230::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         231 => __cold_state_231::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         232 => __cold_state_232::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         233 => __cold_state_233::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         234 => __cold_state_234::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         235 => __cold_state_235::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         236 => __cold_state_236::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         237 => __cold_state_237::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         238 => __cold_state_238::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         239 => __cold_state_239::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         240 => __cold_state_240::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         241 => __cold_state_241::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         242 => __cold_state_242::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         243 => __cold_state_243::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         244 => __cold_state_244::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         245 => __cold_state_245::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         246 => __cold_state_246::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         247 => __cold_state_247::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         248 => __cold_state_248::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         249 => __cold_state_249::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         250 => __cold_state_250::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         251 => __cold_state_251::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         252 => __cold_state_252::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         253 => __cold_state_253::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         254 => __cold_state_254::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         255 => __cold_state_255::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         256 => __cold_state_256::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         257 => __cold_state_257::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         258 => __cold_state_258::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         259 => __cold_state_259::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         260 => __cold_state_260::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         261 => __cold_state_261::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         262 => __cold_state_262::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         263 => __cold_state_263::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         264 => __cold_state_264::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         265 => __cold_state_265::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         266 => __cold_state_266::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         267 => __cold_state_267::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         268 => __cold_state_268::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         269 => __cold_state_269::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         270 => __cold_state_270::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         271 => __cold_state_271::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         272 => __cold_state_272::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         273 => __cold_state_273::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         274 => __cold_state_274::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         275 => __cold_state_275::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         276 => __cold_state_276::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         277 => __cold_state_277::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         278 => __cold_state_278::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         279 => __cold_state_279::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         280 => __cold_state_280::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         281 => __cold_state_281::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         282 => __cold_state_282::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         283 => __cold_state_283::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         284 => __cold_state_284::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         285 => __cold_state_285::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         286 => __cold_state_286::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         287 => __cold_state_287::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         288 => __cold_state_288::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         289 => __cold_state_289::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         290 => __cold_state_290::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         291 => __cold_state_291::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         292 => __cold_state_292::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         293 => __cold_state_293::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         294 => __cold_state_294::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         295 => __cold_state_295::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         296 => __cold_state_296::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         297 => __cold_state_297::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         298 => __cold_state_298::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         299 => __cold_state_299::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         300 => __cold_state_300::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         301 => __cold_state_301::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         302 => __cold_state_302::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         303 => __cold_state_303::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         304 => __cold_state_304::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         305 => __cold_state_305::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         306 => __cold_state_306::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         307 => __cold_state_307::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         308 => __cold_state_308::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         309 => __cold_state_309::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         310 => __cold_state_310::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         311 => __cold_state_311::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         312 => __cold_state_312::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         313 => __cold_state_313::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         314 => __cold_state_314::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         315 => __cold_state_315::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         316 => __cold_state_316::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         317 => __cold_state_317::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         318 => __cold_state_318::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         319 => __cold_state_319::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         320 => __cold_state_320::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         321 => __cold_state_321::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         322 => __cold_state_322::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         323 => __cold_state_323::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         324 => __cold_state_324::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         325 => __cold_state_325::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         326 => __cold_state_326::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         327 => __cold_state_327::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         328 => __cold_state_328::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         329 => __cold_state_329::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         330 => __cold_state_330::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         331 => __cold_state_331::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         332 => __cold_state_332::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         333 => __cold_state_333::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         334 => __cold_state_334::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         335 => __cold_state_335::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         336 => __cold_state_336::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         337 => __cold_state_337::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         338 => __cold_state_338::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         339 => __cold_state_339::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         340 => __cold_state_340::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         341 => __cold_state_341::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         342 => __cold_state_342::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         343 => __cold_state_343::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         344 => __cold_state_344::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         345 => __cold_state_345::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         346 => __cold_state_346::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         347 => __cold_state_347::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         348 => __cold_state_348::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         349 => __cold_state_349::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         350 => __cold_state_350::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         351 => __cold_state_351::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         352 => __cold_state_352::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         353 => __cold_state_353::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         354 => __cold_state_354::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         355 => __cold_state_355::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         356 => __cold_state_356::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         357 => __cold_state_357::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         358 => __cold_state_358::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         359 => __cold_state_359::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         360 => __cold_state_360::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         361 => __cold_state_361::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         362 => __cold_state_362::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         363 => __cold_state_363::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         364 => __cold_state_364::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         365 => __cold_state_365::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         366 => __cold_state_366::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         367 => __cold_state_367::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         368 => __cold_state_368::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         369 => __cold_state_369::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         370 => __cold_state_370::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         371 => __cold_state_371::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         372 => __cold_state_372::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         373 => __cold_state_373::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         374 => __cold_state_374::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         375 => __cold_state_375::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         376 => __cold_state_376::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         377 => __cold_state_377::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         378 => __cold_state_378::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         379 => __cold_state_379::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         380 => __cold_state_380::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         381 => __cold_state_381::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         382 => __cold_state_382::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         383 => __cold_state_383::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         384 => __cold_state_384::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         385 => __cold_state_385::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         386 => __cold_state_386::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         387 => __cold_state_387::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         388 => __cold_state_388::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         389 => __cold_state_389::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         390 => __cold_state_390::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         391 => __cold_state_391::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         392 => __cold_state_392::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         393 => __cold_state_393::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         394 => __cold_state_394::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         395 => __cold_state_395::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         396 => __cold_state_396::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         397 => __cold_state_397::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         398 => __cold_state_398::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         399 => __cold_state_399::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         400 => __cold_state_400::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         401 => __cold_state_401::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         402 => __cold_state_402::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         403 => __cold_state_403::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         404 => __cold_state_404::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         405 => __cold_state_405::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         406 => __cold_state_406::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         407 => __cold_state_407::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         408 => __cold_state_408::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         409 => __cold_state_409::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         410 => __cold_state_410::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         411 => __cold_state_411::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         412 => __cold_state_412::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         413 => __cold_state_413::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         414 => __cold_state_414::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         415 => __cold_state_415::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         416 => __cold_state_416::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         417 => __cold_state_417::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         418 => __cold_state_418::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         419 => __cold_state_419::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         420 => __cold_state_420::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         421 => __cold_state_421::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         422 => __cold_state_422::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         423 => __cold_state_423::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         424 => __cold_state_424::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         425 => __cold_state_425::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         426 => __cold_state_426::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         427 => __cold_state_427::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         428 => __cold_state_428::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         429 => __cold_state_429::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         430 => __cold_state_430::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         431 => __cold_state_431::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         432 => __cold_state_432::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         433 => __cold_state_433::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         434 => __cold_state_434::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         435 => __cold_state_435::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         436 => __cold_state_436::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         437 => __cold_state_437::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         438 => __cold_state_438::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         439 => __cold_state_439::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         440 => __cold_state_440::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         441 => __cold_state_441::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         442 => __cold_state_442::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         443 => __cold_state_443::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         444 => __cold_state_444::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         445 => __cold_state_445::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         446 => __cold_state_446::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         447 => __cold_state_447::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         448 => __cold_state_448::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         449 => __cold_state_449::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         450 => __cold_state_450::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         451 => __cold_state_451::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         452 => __cold_state_452::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         453 => __cold_state_453::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         454 => __cold_state_454::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         455 => __cold_state_455::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         456 => __cold_state_456::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         457 => __cold_state_457::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         458 => __cold_state_458::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         459 => __cold_state_459::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         460 => __cold_state_460::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         461 => __cold_state_461::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         462 => __cold_state_462::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         463 => __cold_state_463::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         464 => __cold_state_464::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         465 => __cold_state_465::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         466 => __cold_state_466::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         467 => __cold_state_467::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         468 => __cold_state_468::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         469 => __cold_state_469::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         470 => __cold_state_470::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         471 => __cold_state_471::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         472 => __cold_state_472::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         473 => __cold_state_473::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         474 => __cold_state_474::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         475 => __cold_state_475::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         476 => __cold_state_476::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         477 => __cold_state_477::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         478 => __cold_state_478::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         479 => __cold_state_479::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         480 => __cold_state_480::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         481 => __cold_state_481::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         482 => __cold_state_482::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         483 => __cold_state_483::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         484 => __cold_state_484::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         485 => __cold_state_485::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         486 => __cold_state_486::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         487 => __cold_state_487::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         488 => __cold_state_488::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         489 => __cold_state_489::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         490 => __cold_state_490::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         491 => __cold_state_491::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         492 => __cold_state_492::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         493 => __cold_state_493::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         494 => __cold_state_494::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         495 => __cold_state_495::<__S>(
                             input,
                             scanner,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         ),
                         _ => {
                             return ::core::result::Result::Err(
@@ -36443,11 +37817,13 @@ mod __bbnfbootstrap_emit_impl {
                         match ::bbnf::runtime::tape::handle_repeat_failure(
                             table,
                             input,
+                            idx,
                             columns,
                             psi,
                             frame_depth,
                             stack,
                             pos,
+                            slot,
                         )? {
                             ::bbnf::runtime::tape::RepeatAbsorbResult::Continue(next) => {
                                 cur = next.0;

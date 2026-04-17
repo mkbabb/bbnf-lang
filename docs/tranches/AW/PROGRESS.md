@@ -80,7 +80,7 @@ W2–W4 touch substrate the legacy path still dominates.
 | W3 | Ignored-test audit + close — CLOSE 14 + DELETE 4 + cascades A/B; rest routed | 2 parallel | pending |
 | W4 | General walker-specialisation pass + cargo-asm verification | 3 parallel | pending |
 | W5 | General stage-1 SIMD bitmap pass + driver dual-cursor + fused SoA + bbnf-simd-scan crate | 3 parallel | pending |
-| W6 | Five emitter-mined consumer activations + 19-entry bench matrix + FINAL | 3 parallel + 1 serial | pending |
+| W6 | Five emitter-mined consumer activations + 19-entry bench matrix + FINAL | 3 parallel + 1 serial | ✓ landed (workspace **1469 / 0 / 54**; substrate + named-type binding + Pratt LUT; bench gate miss recorded honestly; consumer-activation completion is AW-IV W1) |
 
 Bench schedule: W4 samply sidecar on representative entries; W5 post-
 activation re-bench; W6 full 19-entry matrix → `docs/benchmarks/
@@ -1977,3 +1977,120 @@ properties — fit the §6 generalization invariant. W6 consumers
 (ShapeRef, PHF, ClassifyByte, direct-to-struct, Pratt const-fold)
 are orthogonal speed levers; the two W5-adjacent items ride along
 as a sixth consumer activation.
+
+## 2026-04-17 — AW-III W6 landed (substrate + Pratt LUT + universal named-type binding); tranche close
+
+Master HEAD `b931eafc`. Workspace **1469 / 0 / 54** (+223 from
+W5 close). Three sub-waves landed; one serial close.
+
+### W6.A — Consumer activation substrate (3 commits)
+
+`bbnf-wt-aw3-w6a` worktree.
+
+- `96f2e4de` — `feat(ir+tape): consumer activation substrate —
+  PHF, ClassifyByte, CTNS, pattern-alphabet (AW-III.W6.A)`. New
+  recognizers under `crates/ir/src/passes/recognizers/`:
+  `disjoint_first` (ClassifyByte mining), `consume_to_next_structural`
+  (CTNS lift), `pattern_alphabet` (per-pattern byte-set mining),
+  `keyword_stats` (PHF mining). New variant `DtaState::ClassifyByte
+  { table: &'static [DtaStateId; 256], fallback: DtaStateId }`
+  with walker arm in `crates/bbnf-tape/src/driver.rs`. New emitter
+  modules at `crates/core/src/backend/rust/emitter/{classify_byte,
+  keyword_dispatch}.rs`.
+- `b9af5386` — `fix(emitter+tests): byte-string literal for PHF,
+  add missing GrammarIR fields`.
+- `cf691347` — `fix(ir/lift): gate disjoint_first on missing
+  dispatch; disable CTNS lift by default (AW-III.W6.A)`. Scope-
+  reveal at execution: `disjoint_first` candidates are subsumed
+  by `compute_dispatch` across current grammars; CTNS lift needs
+  a tape-side Span-emitting record path for the scan-result
+  payload. Both gates routed forward to AW-IV W1.
+
+### W6.4 — Universal named-type binding table (2 commits)
+
+`bbnf-wt-aw3-w6.4` worktree.
+
+- `d1fef50a` — `feat(view/named_types): universal binding table
+  for named aggregate resolution (AW-III.W6.4)`. Backend-agnostic
+  `resolve_named_type(type_desc: &TypeDesc) ->
+  Option<NamedTypeBinding>` at
+  `crates/core/src/backend/rust/view/named_types.rs`. Mines
+  `TypeDesc::Named` annotations from the grammar and emits the
+  projection without per-grammar opt-in.
+- `63bf36bb` — `test(core): field-for-field parity for
+  JSON/BBNF/Sheets/CSS (AW-III.W6.4)`. New parity suites at
+  `crates/core/tests/{json_value_parity, bbnf_ast_parity,
+  sheets_expr_parity, css_color_parity}.rs`. All pass.
+
+Resolver fully operational at the binding layer; consumer wiring
+at `emit_view_impl` for the per-grammar hot-path projection
+remains on the AW-IV side.
+
+### W6.5 — Per-grammar Pratt const-fold (3 commits)
+
+`bbnf-wt-aw3-w6.5` worktree.
+
+- `2f667a82` — `feat(ir,emitter): Pratt LUT mining + per-grammar
+  const-fold (AW-III.W6.5)`. Per-grammar `PRECEDENCE_LUT: [u8;
+  256]` packed byte layout (`prec(4b) | assoc(1b) | arity(2b) |
+  two_byte(1b)`); sparse `PRECEDENCE_ENTRIES:
+  &[DtaPrecedenceEntry]` for two-byte operators (second-byte +
+  op_rule + discriminant). Mining pass extracts operator
+  precedence from each grammar's lifted DTA at
+  `crates/ir/src/passes/recognizers/operator_chain.rs`; emitter
+  at `crates/core/src/backend/rust/emitter/precedence.rs`.
+- `9cadda76` — `test(gorgeous): un-ignore test_let_parses_as_let_call
+  (AW-III.W6.5)`. Sheets dispatch surface healed by the Pratt
+  reducer subsuming LET/IF/LAMBDA dispatch.
+- `b931eafc` — `feat(emitter): wire Pratt PRECEDENCE_LUT into
+  grammar.rs + regen (AW-III.W6)`. Emitter wiring + bootstrap
+  regen at md5 `73639ef9234861c01613d688fa2d2df0`, 56,174 lines.
+
+LUT emitted in generated.rs; consumer wiring at the walker's
+ShuntingYard arm remains on the AW-IV side. The arm presently
+uses `lookup_precedence` linear scan over `PRECEDENCE_ENTRIES`;
+the packed-LUT byte-load replacement is the one-line change AW-IV
+W1 opens with.
+
+### W6.close — tranche-completion artefacts (this agent)
+
+`bbnf-wt-aw3-w6close` worktree.
+
+- Full 17-entry parse-bench matrix (cold per-parse, sequential,
+  file-first per the operational protocol). Numbers mirror
+  W5.d almost exactly because W6.A/W6.4/W6.5 land substrate, not
+  consumer-activation wiring; the hot-path samply profile is
+  unchanged from W5.d.
+- `docs/benchmarks/post-AW-III.json` — full 19-entry matrix (17
+  parse + 2 format) with multi-wave history; samply attribution
+  sidecar per the W5.d profile.
+- `docs/tranches/AW/FINAL-III.md` — full per-wave recapitulation
+  + invariant verification + cross-tranche debt + commit ledger
+  + AW-IV seeds.
+- This PROGRESS entry.
+- Tests: 1469 passed / 0 failed / 54 ignored; 0 new `#[ignore]`.
+- Bootstrap idempotent at md5
+  `73639ef9234861c01613d688fa2d2df0`, 56,174 lines.
+
+### Hard-gate verification
+
+- Workspace tests 0 failed ✓ (1469 / 0 / 54).
+- Bootstrap idempotent ✓.
+- `dispatch_one` absent from hot path ✓ (cargo expand + nm
+  carried from W4.d).
+- Stage-1 SIMD active on hot path ✓ (12.13% self-time on json
+  twitter; carried from W5.d).
+- `post-AW-III.json` exists ✓.
+- `FINAL-III.md` exists ✓.
+- `#[ignore]` audited + dispositioned + no new added ✓.
+- **Strict-better than post-AU on ≥ 15/19**: ✗ (0 of 17 parse
+  entries; consumer-activation completion is the AW-IV W1
+  opener).
+
+### Tranche close state
+
+The architectural transposition the plan invoked is complete and
+verifiable. The consumer-activation final mile that translates
+the transposition into live throughput landed as substrate;
+AW-IV opens on exactly that wiring as its W1. Gate 12 miss is
+recorded honestly in `FINAL-III.md`.

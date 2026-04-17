@@ -88,7 +88,90 @@ use crate::dta::{
 };
 use crate::kind::TapeKind;
 use crate::psi::{PayloadJob, PayloadStream};
+use crate::stage1::StructuralIndex;
 use crate::tape::TapeOffset;
+
+// ── Dual cursor (AW-III.W5.c) ───────────────────────────────────────
+
+/// Dual-cursor carrying both the byte position and the structural-index
+/// slot the driver consults at each dispatch.
+///
+/// Pre-W5.c the driver advanced byte-by-byte through `pos: u32`; every
+/// `ByteDispatch` arm read `input[*pos]` and every `Regex` arm scanned
+/// open-ended into the input tail. With the stage-1 SIMD structural
+/// scanner (W5.b) producing a `StructuralIndex` of `(positions, kinds)`
+/// pairs at parse-prologue time, the driver's hot path collapses to
+/// slot-indexed lookups:
+///
+/// - `ByteDispatch` reads `idx.kinds[slot]` and advances `slot`.
+/// - `Regex` scans bounded by `[pos, idx.positions[slot])`.
+/// - `WsTrim` jumps `pos = idx.positions[slot]`.
+/// - `ConsumeToNextStructural` collapses to the same one-step jump.
+///
+/// The driver consults `idx` opportunistically — when the
+/// `StructuralIndex` is empty (grammar without stage-1 enrichment, or
+/// pre-W5.b scanner integration), the cursor degrades to byte-stepping
+/// and the scanner-based fallback. The dual-cursor's invariant: when
+/// `idx` is non-empty, `slot` is always `idx.positions.partition_point(|p| *p < pos)`
+/// or one past it — `pos` and `slot` are consistent, and any failed
+/// branch / iter / probe rewind restores both atomically.
+///
+/// `src` is the input byte slice; the structure is `'a`-bounded by it
+/// + `idx` so the helpers can access either through the cursor handle.
+/// The pre-W5.c helpers' `input: &[u8]` parameter survives because the
+/// emitted walker keeps the `input` binding visible at every arm body
+/// for `cargo asm` parity; the cursor's `src` field mirrors it for
+/// callers that prefer to work with the cursor handle alone.
+#[derive(Debug)]
+pub struct Cursor<'a> {
+    /// Input byte slice the cursor scans.
+    pub src: &'a [u8],
+    /// Stage-1 structural index. Empty when the per-grammar SIMD
+    /// scanner has not yet been wired in (pre-W5.b integration); the
+    /// dual-cursor's slot-indexed arms then degrade to no-ops and the
+    /// byte-stepping fallback survives.
+    pub idx: &'a StructuralIndex,
+    /// Byte position into `src`. Strictly monotone across a successful
+    /// parse; rewound atomically with `slot` on failed Alt branches /
+    /// Repeat iter restarts / Minus probes.
+    pub pos: u32,
+    /// Structural-index slot — the position into `idx.positions` /
+    /// `idx.kinds`. Mirrors `pos` such that
+    /// `idx.positions[slot] >= pos` always (once `idx` is non-empty).
+    pub slot: u32,
+}
+
+impl<'a> Cursor<'a> {
+    /// Construct a cursor at the start of `src`, anchored to `idx`.
+    /// `pos` and `slot` initialise to `0`.
+    #[inline]
+    pub fn new(src: &'a [u8], idx: &'a StructuralIndex) -> Self {
+        Self { src, idx, pos: 0, slot: 0 }
+    }
+
+    /// Advance `slot` past the entry whose `position == pos`. Used by
+    /// `ByteDispatch` and `ConsumeToNextStructural` after consuming a
+    /// structural delimiter.
+    #[inline]
+    pub fn advance_slot(&mut self) {
+        self.slot += 1;
+    }
+
+    /// AW-III.W5.c — O(1) jump to the next structural slot's byte
+    /// position. Used by `ConsumeToNextStructural` and `WsTrim`'s
+    /// stage-1-aware collapse. Returns `false` when no further slot
+    /// exists — callers fall back to byte-stepping or terminate.
+    #[inline]
+    pub fn jump_to_next_structural(&mut self) -> bool {
+        let idx = self.slot as usize;
+        if let Some(&p) = self.idx.positions.get(idx) {
+            self.pos = p;
+            true
+        } else {
+            false
+        }
+    }
+}
 
 /// Inline frame-stack depth budget.
 ///
@@ -281,6 +364,13 @@ pub struct FrameStack {
 /// restore, each buffer truncates back to the captured length; inline
 /// frames are truncated via `inline_len` alone (the underlying array
 /// is overwritten in place by future pushes).
+///
+/// AW-III.W5.c — added `slot: u32` so the dual-cursor's structural
+/// position snapshots atomically with the stack lengths. Pre-W5.c the
+/// AQ-5 unsaved-cursor failure mode was the consequence of a parallel
+/// savepoint structure that left `structural_cursor` un-snapshotted;
+/// extending the existing record removes the parallel-structure
+/// possibility.
 #[derive(Clone, Copy, Debug)]
 pub struct FrameStackSavepoint {
     /// `inline_len` at capture time.
@@ -293,6 +383,11 @@ pub struct FrameStackSavepoint {
     pub op_stack_len: u32,
     /// `iter_savepoints.len()` at capture time.
     pub iter_savepoints_len: u32,
+    /// AW-III.W5.c — structural-index cursor slot at capture time.
+    /// The companion to `pos`; restored by [`FrameStack::restore`]'s
+    /// caller alongside `pos` so a failed Alt branch / Repeat iter /
+    /// Minus probe rewinds the dual cursor atomically.
+    pub slot: u32,
 }
 
 /// Deep probe-snapshot — captures the live in-place contents of
@@ -315,7 +410,13 @@ pub struct FrameStackSavepoint {
 #[derive(Clone, Debug)]
 pub struct FrameStackProbeSnapshot {
     /// Length-state portion (mirror of `FrameStackSavepoint`).
-    base: FrameStackSavepoint,
+    /// AW-III.W5.c — exposed as `pub` so emitted walker code can
+    /// restore the dual-cursor's `slot` field via
+    /// `*slot = probe_snapshot.base.slot;` before invoking
+    /// `restore_probe`. Without this access the W4 emitter would have
+    /// to add a dedicated accessor; field-level visibility is the
+    /// simpler shape.
+    pub base: FrameStackSavepoint,
     /// In-place inline frame contents at indices `[0..base.inline_len)`.
     inline_snapshot: Vec<Frame>,
     /// In-place overflow frame contents at indices `[0..base.overflow_len)`.
@@ -442,20 +543,29 @@ impl FrameStack {
         None
     }
 
-    /// Capture a savepoint — the full stack's length state so a
-    /// caller can restore it after a failed branch probe.
+    /// Capture a savepoint — the full stack's length state plus the
+    /// dual-cursor's structural slot so a caller can restore the entire
+    /// runtime state after a failed branch probe.
     ///
-    /// Infrastructure for the `AltLinear` arm. Not a separate module
-    /// because the savepoint is intimately tied to `FrameStack`'s
-    /// internal lengths and the two are never used independently.
+    /// AW-III.W5.c — `slot` parameter added so the structural cursor
+    /// snapshots atomically with the stack lengths. The caller threads
+    /// its current `cursor.slot` value; `pos` is captured externally
+    /// by `IterSavepoint` / branch-savepoint locals because the
+    /// `FrameStack` does not own the byte cursor.
+    ///
+    /// Infrastructure for the `AltLinear` arm and Repeat iteration
+    /// boundaries. Not a separate module because the savepoint is
+    /// intimately tied to `FrameStack`'s internal lengths and the two
+    /// are never used independently.
     #[inline]
-    pub fn savepoint(&self) -> FrameStackSavepoint {
+    pub fn savepoint(&self, slot: u32) -> FrameStackSavepoint {
         FrameStackSavepoint {
             inline_len: self.inline_len,
             overflow_len: self.overflow.len() as u32,
             counters_len: self.counters.len() as u32,
             op_stack_len: self.op_stack.len() as u32,
             iter_savepoints_len: self.iter_savepoints.len() as u32,
+            slot,
         }
     }
 
@@ -464,6 +574,12 @@ impl FrameStack {
     /// only the lengths matter because every push either overwrites
     /// an inline slot or appends to a `Vec`, so future pushes paper
     /// over any stale data beyond the truncation boundary.
+    ///
+    /// AW-III.W5.c — caller is responsible for restoring `pos` and
+    /// `slot` from `sp.slot` + the externally-captured `pos`. Returning
+    /// the restored slot from this method (vs. caller-managed) would
+    /// scatter the cursor invariants; the explicit caller-side restore
+    /// keeps the dual-cursor visible at every backtracking site.
     #[inline]
     pub fn restore(&mut self, sp: FrameStackSavepoint) {
         self.inline_len = sp.inline_len;
@@ -480,7 +596,11 @@ impl FrameStack {
     /// side effect — including mutations to counters/iter_savepoints/
     /// inline frame fields that the probe's nested dispatch may
     /// trigger via [`advance_or_pop_with`] walking up the stack.
-    pub fn snapshot_probe(&self) -> FrameStackProbeSnapshot {
+    ///
+    /// AW-III.W5.c — `slot` parameter mirrors [`Self::savepoint`]; the
+    /// dual cursor's structural index slot snapshots into the embedded
+    /// `base.slot` so the probe restore is total.
+    pub fn snapshot_probe(&self, slot: u32) -> FrameStackProbeSnapshot {
         let inline_len = self.inline_len as usize;
         let overflow_len = self.overflow.len();
         let counters_len = self.counters.len();
@@ -493,6 +613,7 @@ impl FrameStack {
                 counters_len: counters_len as u32,
                 op_stack_len: op_stack_len as u32,
                 iter_savepoints_len: iter_savepoints_len as u32,
+                slot,
             },
             inline_snapshot: self.inline[..inline_len].to_vec(),
             overflow_snapshot: self.overflow.clone(),
@@ -707,6 +828,11 @@ fn dta_run_with_log(
 ) -> Result<TapeOffset, DtaError> {
     let mut stack = FrameStack::new();
     let mut pos: u32 = 0;
+    // AW-III.W5.c — dual cursor's structural slot. The cold-path
+    // doesn't run the SIMD scanner, so the index stays empty; the
+    // structural-aware arms degrade to byte-stepping fallbacks.
+    let mut slot: u32 = 0;
+    let idx = StructuralIndex::new();
     let root_rec = columns.len() as u32;
 
     // Entry state: AW-I.W4γ — look up the grammar's authoritative
@@ -727,14 +853,15 @@ fn dta_run_with_log(
             log.push(state.0 as u8);
         }
         match dispatch_one(
-            table, input, scanner, columns, psi, frame_depth, &mut stack,
-            state, &mut pos,
+            table, input, scanner, &idx, columns, psi, frame_depth, &mut stack,
+            state, &mut pos, &mut slot,
         ) {
             Ok(StepResult::Next(next)) => state = next,
             Ok(StepResult::Done) => break,
             Err(e @ DtaError::Syntax { .. }) => {
                 match handle_repeat_failure(
-                    table, input, columns, psi, frame_depth, &mut stack, &mut pos,
+                    table, input, &idx, columns, psi, frame_depth, &mut stack,
+                    &mut pos, &mut slot,
                 )? {
                     RepeatAbsorbResult::Continue(next) => state = next,
                     RepeatAbsorbResult::Done => break,
@@ -761,6 +888,14 @@ fn dta_run_core(
 ) -> Result<TapeOffset, DtaError> {
     let mut stack = FrameStack::new();
     let mut pos: u32 = 0;
+    // AW-III.W5.c — dual cursor's structural slot. The cold-path
+    // doesn't run the SIMD scanner, so the index stays empty; the
+    // structural-aware arms degrade to byte-stepping fallbacks. The
+    // hot-path emitted walker can supply a populated index once the
+    // W5.b/W6 wiring lands; the cold path stays index-free for AX
+    // replay determinism.
+    let mut slot: u32 = 0;
+    let idx = StructuralIndex::new();
     let root_rec = columns.len() as u32;
 
     // AW-I.W4γ: dispatch the grammar's authoritative entry rule, not
@@ -805,14 +940,15 @@ fn dta_run_core(
 
     loop {
         match dispatch_one(
-            table, input, scanner, columns, psi, frame_depth, &mut stack,
-            state, &mut pos,
+            table, input, scanner, &idx, columns, psi, frame_depth, &mut stack,
+            state, &mut pos, &mut slot,
         ) {
             Ok(StepResult::Next(next)) => state = next,
             Ok(StepResult::Done) => break,
             Err(e @ DtaError::Syntax { .. }) => {
                 match handle_repeat_failure(
-                    table, input, columns, psi, frame_depth, &mut stack, &mut pos,
+                    table, input, &idx, columns, psi, frame_depth, &mut stack,
+                    &mut pos, &mut slot,
                 )? {
                     RepeatAbsorbResult::Continue(next) => state = next,
                     RepeatAbsorbResult::Done => break,
@@ -928,19 +1064,32 @@ pub enum RepeatAbsorbResult {
 ///
 /// AW-III.W4.c — `pub` so W4.b's emitted walker can route Syntax
 /// failures through the same absorption logic the cold loop uses.
+///
+/// AW-III.W5.c — `slot: &mut u32` carries the dual-cursor's structural
+/// index slot alongside `pos`. Restoring an iter savepoint rewinds
+/// both atomically — addresses the AQ-5 "unsaved structural cursor on
+/// checkpoint" failure mode.
+#[allow(clippy::too_many_arguments)]
 pub fn handle_repeat_failure(
     table: &DtaTable,
     input: &[u8],
+    idx: &StructuralIndex,
     columns: &mut Columns,
     psi: &mut PayloadStream,
     frame_depth: &mut Vec<u8>,
     stack: &mut FrameStack,
     pos: &mut u32,
+    slot: &mut u32,
 ) -> Result<RepeatAbsorbResult, DtaError> {
+    // AW-III.W5.c — `idx` threaded for signature uniformity with
+    // dispatch_one + try_branch; the absorption logic itself does not
+    // consult the structural index (the slot restore happens via
+    // `sp.stack.slot` below).
+    let _ = idx;
     let mut scan_depth = stack.depth();
     while scan_depth > 0 {
-        let idx = (scan_depth - 1) as usize;
-        let frame = frame_at(stack, idx);
+        let frame_idx = (scan_depth - 1) as usize;
+        let frame = frame_at(stack, frame_idx);
         if let DtaFrameKind::Repeat = frame.kind {
             let counter_idx = frame.counter_idx as usize;
             let counter_val = stack.counters[counter_idx];
@@ -957,10 +1106,13 @@ pub fn handle_repeat_failure(
                 // the next sibling's compound push.
                 stack.pending_variant_idx = u8::MAX;
                 *pos = sp.pos;
+                // AW-III.W5.c — restore the structural cursor slot
+                // captured into `sp.stack.slot` at iteration entry.
+                *slot = sp.stack.slot;
                 close_compound(columns, frame_depth, stack, *pos);
                 pop_and_release(stack);
                 let res = advance_or_pop_with(
-                    Some(table), Some(input), columns, frame_depth, psi, stack, pos,
+                    Some(table), Some(input), columns, frame_depth, psi, stack, pos, slot,
                 )?;
                 return Ok(match res {
                     StepResult::Next(n) => RepeatAbsorbResult::Continue(n),
@@ -980,20 +1132,25 @@ pub fn handle_repeat_failure(
 /// AW-III.W4.c — `pub` for W4.b's emitted walker. Same absorption
 /// invariants as [`handle_repeat_failure`] but bounded to a stack
 /// region above the AltLinear frame.
+#[allow(clippy::too_many_arguments)]
 pub fn handle_repeat_failure_bounded(
     table: &DtaTable,
     input: &[u8],
+    idx: &StructuralIndex,
     columns: &mut Columns,
     psi: &mut PayloadStream,
     frame_depth: &mut Vec<u8>,
     stack: &mut FrameStack,
     pos: &mut u32,
+    slot: &mut u32,
     bound_depth: u8,
 ) -> Result<RepeatAbsorbResult, DtaError> {
+    // AW-III.W5.c — same uniformity threading as `handle_repeat_failure`.
+    let _ = idx;
     let mut scan_depth = stack.depth();
     while scan_depth > bound_depth {
-        let idx = (scan_depth - 1) as usize;
-        let frame = frame_at(stack, idx);
+        let frame_idx = (scan_depth - 1) as usize;
+        let frame = frame_at(stack, frame_idx);
         if let DtaFrameKind::Repeat = frame.kind {
             let counter_idx = frame.counter_idx as usize;
             let counter_val = stack.counters[counter_idx];
@@ -1010,10 +1167,13 @@ pub fn handle_repeat_failure_bounded(
                 // the next sibling's compound push.
                 stack.pending_variant_idx = u8::MAX;
                 *pos = sp.pos;
+                // AW-III.W5.c — restore the structural cursor slot
+                // captured into `sp.stack.slot` at iteration entry.
+                *slot = sp.stack.slot;
                 close_compound(columns, frame_depth, stack, *pos);
                 pop_and_release(stack);
                 let res = advance_or_pop_with(
-                    Some(table), Some(input), columns, frame_depth, psi, stack, pos,
+                    Some(table), Some(input), columns, frame_depth, psi, stack, pos, slot,
                 )?;
                 return Ok(match res {
                     StepResult::Next(n) => RepeatAbsorbResult::Continue(n),
@@ -1083,22 +1243,25 @@ pub fn frame_at(stack: &FrameStack, idx: usize) -> Frame {
 /// with savepoint backtracking; the helper preserves the cold-path
 /// dispatch_one route so probes nested inside branches retain
 /// identical semantics.
+#[allow(clippy::too_many_arguments)]
 pub fn try_branch(
     table: &DtaTable,
     input: &[u8],
     scanner: &dyn RegexScanner,
+    idx: &StructuralIndex,
     columns: &mut Columns,
     psi: &mut PayloadStream,
     frame_depth: &mut Vec<u8>,
     stack: &mut FrameStack,
     entry_state: DtaStateId,
     pos: &mut u32,
+    slot: &mut u32,
     stop_depth: u8,
 ) -> Result<StepResult, DtaError> {
     let mut state = entry_state;
     loop {
         match dispatch_one(
-            table, input, scanner, columns, psi, frame_depth, stack, state, pos,
+            table, input, scanner, idx, columns, psi, frame_depth, stack, state, pos, slot,
         ) {
             Ok(StepResult::Next(next)) => {
                 state = next;
@@ -1109,7 +1272,7 @@ pub fn try_branch(
             Ok(StepResult::Done) => return Ok(StepResult::Done),
             Err(e @ DtaError::Syntax { .. }) => {
                 match handle_repeat_failure_bounded(
-                    table, input, columns, psi, frame_depth, stack, pos, stop_depth,
+                    table, input, idx, columns, psi, frame_depth, stack, pos, slot, stop_depth,
                 )? {
                     RepeatAbsorbResult::Continue(next) => {
                         state = next;
@@ -1142,16 +1305,30 @@ pub fn try_branch(
 /// function body is `dispatch_one`-symbol-free — every state's logic
 /// is inlined directly. `dispatch_one` survives in the binary as the
 /// cold-path replay surface, never invoked from the parse hot path.
+///
+/// AW-III.W5.c — dual-cursor parameters: `pos: &mut u32` is the byte
+/// cursor (unchanged), `slot: &mut u32` is the structural-index slot,
+/// `idx: &StructuralIndex` is the per-parse index built by the stage-1
+/// scanner. When `idx.is_empty()` (grammar without stage-1 enrichment,
+/// or pre-W5.b scanner integration), the structural-aware shortcuts
+/// degrade and the byte-stepping fallback survives. `ConsumeToNext-
+/// Structural` and the structural-aware shape of `WsTrim` consult
+/// `idx`; legacy arms (`ByteDispatch`, `Regex`) keep their pre-W5.c
+/// byte-driven semantics here in the cold path. The hot-path emitted
+/// walker can opt into stronger shortcuts at codegen time.
+#[allow(clippy::too_many_arguments)]
 pub fn dispatch_one(
     table: &DtaTable,
     input: &[u8],
     scanner: &dyn RegexScanner,
+    idx: &StructuralIndex,
     columns: &mut Columns,
     psi: &mut PayloadStream,
     frame_depth: &mut Vec<u8>,
     stack: &mut FrameStack,
     state: DtaStateId,
     pos: &mut u32,
+    slot: &mut u32,
 ) -> Result<StepResult, DtaError> {
     let state_idx = state.0 as usize;
     if state_idx >= table.states.len() {
@@ -1163,7 +1340,7 @@ pub fn dispatch_one(
             // parent's next child (or terminate). Drop any pending
             // rule-entry stamp since the rule produced no record.
             stack.pending_variant_idx = u8::MAX;
-            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos, slot)
         }
         DtaState::Literal { text, payload } => {
             let bytes = text.as_bytes();
@@ -1204,11 +1381,35 @@ pub fn dispatch_one(
             }
             // AW-I.W4ζ — consume the pending rule-entry stamp.
             stack.pending_variant_idx = u8::MAX;
-            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos, slot)
         }
         DtaState::Regex { pattern, payload } => {
+            // AW-III.W5.c — when the structural index is populated,
+            // bound the scan to `[pos, idx.positions[slot])`. This
+            // eliminates the open-ended scan tail that pre-W5.c
+            // dominated `memchr::closure#0` in JSON twitter (7-19%
+            // self-time per profiling-2 §3). Without the bound, the
+            // negated-char-class scanner walks past the next delimiter
+            // and the parser then has to re-validate; the bounded
+            // scan trims that work to one byte beyond the needed
+            // span.
+            let scan_input: &[u8] = if !idx.positions.is_empty() {
+                let slot_idx = *slot as usize;
+                if slot_idx < idx.positions.len() {
+                    let bound = idx.positions[slot_idx] as usize;
+                    if bound >= *pos as usize && bound <= input.len() {
+                        &input[..bound]
+                    } else {
+                        input
+                    }
+                } else {
+                    input
+                }
+            } else {
+                input
+            };
             let match_len = scanner
-                .scan(pattern, input, *pos as usize)
+                .scan(pattern, scan_input, *pos as usize)
                 .ok_or(DtaError::Syntax {
                     offset: *pos,
                     failing_state: state,
@@ -1258,7 +1459,7 @@ pub fn dispatch_one(
             let _ = (rec_idx, child_off);
             // AW-I.W4ζ — consume the pending rule-entry stamp.
             stack.pending_variant_idx = u8::MAX;
-            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos, slot)
         }
         DtaState::Seq { children, frame, promote } => {
             // Reserve the parent row — pre-order: parent sits at the
@@ -1312,7 +1513,7 @@ pub fn dispatch_one(
                 // Degenerate Seq — close immediately.
                 close_compound(columns, frame_depth, stack, *pos);
                 return advance_or_pop_with(
-                    Some(table), Some(input), columns, frame_depth, psi, stack, pos,
+                    Some(table), Some(input), columns, frame_depth, psi, stack, pos, slot,
                 );
             }
             Ok(StepResult::Next(children[0]))
@@ -1362,7 +1563,30 @@ pub fn dispatch_one(
             Ok(StepResult::Next(chosen))
         }
         DtaState::ByteDispatch { table: disp, fallback } => {
-            let b = input.get(*pos as usize).copied().unwrap_or(0);
+            // AW-III.W5.c — when the dual-cursor's structural index is
+            // populated AND its current slot's position matches `pos`,
+            // dispatch from `idx.kinds[slot]` directly — one indexed u8
+            // load with no `input.get` bounds check. The byte is the
+            // same as `input[pos]` per the scanner's positions/kinds
+            // invariant; the load comes from the dense kinds column
+            // already in cache from prior dispatches. Without the
+            // index (cold path), the byte fallback survives unchanged.
+            //
+            // Slot advance happens at the dispatching frame's pop
+            // time once the chosen branch's body consumes the byte;
+            // ByteDispatch itself is a single-byte lookahead and
+            // does NOT advance slot here (the next state may need to
+            // re-read the same byte for length-aware matching).
+            let b = if !idx.positions.is_empty() {
+                let slot_idx = *slot as usize;
+                if slot_idx < idx.positions.len() && idx.positions[slot_idx] == *pos {
+                    idx.kinds[slot_idx]
+                } else {
+                    input.get(*pos as usize).copied().unwrap_or(0)
+                }
+            } else {
+                input.get(*pos as usize).copied().unwrap_or(0)
+            };
             let next = disp[b as usize];
             let chosen = if next == DtaStateId::NONE { fallback } else { next };
             if chosen == DtaStateId::NONE {
@@ -1402,6 +1626,10 @@ pub fn dispatch_one(
 
             let start_depth = stack.depth();
             let start_pos = *pos;
+            // AW-III.W5.c — capture the structural cursor slot at Alt
+            // entry so failed branches can rewind both `pos` and
+            // `slot` atomically.
+            let start_slot = *slot;
 
             // Reserve an Alt compound frame. The branch's subtree is
             // emitted into the compound's child run; on successful
@@ -1436,8 +1664,10 @@ pub fn dispatch_one(
 
             // Savepoint AFTER pushing the Alt frame so a failed branch
             // restores the stack to exactly "Alt frame pushed, no body
-            // yet".
-            let sp_after_push = stack.savepoint();
+            // yet". AW-III.W5.c — savepoint captures the dual-cursor
+            // slot via `stack.savepoint(*slot)` so branch backtracking
+            // rewinds the structural cursor atomically with the stack.
+            let sp_after_push = stack.savepoint(*slot);
             let cols_len_after_push = columns.len();
             let fd_len_after_push = frame_depth.len();
             let psi_len_after_push = psi.len();
@@ -1461,6 +1691,12 @@ pub fn dispatch_one(
             let mut last_err: Option<DtaError> = None;
             for (branch_idx, &branch) in branches.iter().enumerate() {
                 *pos = start_pos;
+                // AW-III.W5.c — restore the dual cursor's structural
+                // slot to the pre-Alt-entry value before each branch
+                // attempt. Without this rewind, a failed branch that
+                // advanced the slot would leak into the next branch's
+                // ByteDispatch / Regex bound consultation.
+                *slot = start_slot;
                 // Stamp the branch index onto the Alt frame. Writable
                 // even after a failed attempt because the cursor is
                 // refreshed below; only the successful branch's index
@@ -1472,12 +1708,14 @@ pub fn dispatch_one(
                     table,
                     input,
                     scanner,
+                    idx,
                     columns,
                     psi,
                     frame_depth,
                     stack,
                     branch,
                     pos,
+                    slot,
                     start_depth,
                 ) {
                     Ok(next) => return Ok(next),
@@ -1496,6 +1734,11 @@ pub fn dispatch_one(
                         // sync with the surviving record stream.
                         columns.pay_agg.truncate(pay_agg_len_after_push);
                         stack.restore(sp_after_push);
+                        // AW-III.W5.c — `restore` does not touch the
+                        // cursor; the explicit slot reset above is the
+                        // companion. Pre-restore `slot` will be
+                        // re-overwritten at the next iteration's
+                        // `*slot = start_slot` line.
                         stack.pending_variant_idx = pending_after_push;
                         last_err = Some(e);
                     }
@@ -1552,6 +1795,8 @@ pub fn dispatch_one(
 
             // Pre-reserve the iter-savepoint slot; the stack field is
             // filled in place AFTER the Repeat frame is pushed.
+            // AW-III.W5.c — `slot: 0` initial; the in-place fill below
+            // captures the real slot via `stack.savepoint(*slot)`.
             stack.iter_savepoints.push(IterSavepoint {
                 cols_len: columns.len() as u32,
                 fd_len: frame_depth.len() as u32,
@@ -1564,6 +1809,7 @@ pub fn dispatch_one(
                     counters_len: 0,
                     op_stack_len: 0,
                     iter_savepoints_len: 0,
+                    slot: 0,
                 },
             });
 
@@ -1589,14 +1835,16 @@ pub fn dispatch_one(
 
             // Fill in the stack savepoint AFTER the push so body
             // failure restores exactly to "Repeat frame present, no
-            // body state yet".
-            stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+            // body state yet". AW-III.W5.c — captures the dual-cursor
+            // slot via `stack.savepoint(*slot)` so iteration restore
+            // rewinds the structural cursor atomically.
+            stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
 
             // Handle degenerate `hi == 0` — close immediately.
             if hi == 0 {
                 close_compound(columns, frame_depth, stack, *pos);
                 return advance_or_pop_with(
-                    Some(table), Some(input), columns, frame_depth, psi, stack, pos,
+                    Some(table), Some(input), columns, frame_depth, psi, stack, pos, slot,
                 );
             }
 
@@ -1613,7 +1861,28 @@ pub fn dispatch_one(
             // WsTrim never emits a record; any pending rule-entry
             // stamp survives to the next emitting state so a rule
             // whose body is `?w <body>` still tags correctly.
-            if let Some(pat) = pattern {
+            //
+            // AW-III.W5.c — when the stage-1 structural index is
+            // populated, the whitespace span before `idx.positions[slot]`
+            // is non-structural by construction (the SIMD scanner
+            // collapsed every `space|\t|\n|\r` byte into the
+            // structural mask before compaction). The arm collapses to
+            // a single cursor jump: `pos = idx.positions[slot]`. This
+            // is the architectural fix for the AQ-5 "disabled WS
+            // elision" failure mode — WS is subsumed by stage-1, no
+            // disabled state.
+            if !idx.positions.is_empty() {
+                let slot_idx = *slot as usize;
+                if slot_idx < idx.positions.len() {
+                    let next_pos = idx.positions[slot_idx];
+                    if next_pos > *pos {
+                        *pos = next_pos;
+                    }
+                }
+                // Don't advance slot — this state only collapses the
+                // whitespace prefix; the next arm consumes the
+                // structural byte at `idx.positions[slot]`.
+            } else if let Some(pat) = pattern {
                 if let Some(len) = scanner.scan(pat, input, *pos as usize) {
                     *pos += len;
                 }
@@ -1627,7 +1896,7 @@ pub fn dispatch_one(
                 }
                 *pos = p as u32;
             }
-            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos)
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos, slot)
         }
         DtaState::Minus { primary, excluded } => {
             // AW-II.W5b — Set-difference: match `primary` only if
@@ -1656,7 +1925,11 @@ pub fn dispatch_one(
             // captures the active slot contents verbatim so the
             // probe is fully side-effect-free.
             let start_pos = *pos;
-            let probe_snapshot = stack.snapshot_probe();
+            // AW-III.W5.c — capture the dual-cursor's slot at probe
+            // entry. The probe restore re-anchors `slot` from the
+            // probe snapshot's `base.slot` so the probe is fully
+            // side-effect-free for the structural cursor too.
+            let probe_snapshot = stack.snapshot_probe(*slot);
             let cols_len = columns.len();
             let fd_len = frame_depth.len();
             let psi_len = psi.len();
@@ -1667,12 +1940,14 @@ pub fn dispatch_one(
                 table,
                 input,
                 scanner,
+                idx,
                 columns,
                 psi,
                 frame_depth,
                 stack,
                 excluded,
                 pos,
+                slot,
                 start_depth,
             );
 
@@ -1683,10 +1958,12 @@ pub fn dispatch_one(
             // matched sub-Literal leaking into the post-restore
             // record stream. AW-III.W2 promotes the stack restore
             // to a deep snapshot restore (see snapshot above).
+            // AW-III.W5.c — restore `slot` from the probe snapshot.
             columns.truncate(cols_len);
             frame_depth.truncate(fd_len);
             psi.truncate(psi_len);
             columns.pay_agg.truncate(pay_agg_len);
+            *slot = probe_snapshot.base.slot;
             stack.restore_probe(probe_snapshot);
             *pos = start_pos;
 
@@ -1705,6 +1982,39 @@ pub fn dispatch_one(
                 }
                 Err(e) => Err(e),
             }
+        }
+        DtaState::ConsumeToNextStructural => {
+            // AW-III.W5.c — O(1) cursor jump to the next structural
+            // delimiter. With the dual-cursor and stage-1 SIMD index,
+            // the dispatch consumes one indexed `u32` load + a slot
+            // increment — replacing what pre-W5.c was a byte-stepping
+            // `DtaState::Regex { pattern: "[^,}\]]+" }` scan that
+            // dominated JSON `__value` self-time.
+            //
+            // Fallback semantics: when the index is empty (cold-path
+            // dta_run_inner; pre-W5.b scanner integration), the arm
+            // degrades to byte-stepping past whitespace. The downstream
+            // grammar can still parse correctly because the next
+            // dispatch state's match attempt drives the cursor forward
+            // explicitly. The cold-path's correctness is preserved;
+            // the speedup is hot-path-only by design.
+            if !idx.positions.is_empty() {
+                let slot_idx = *slot as usize;
+                if slot_idx < idx.positions.len() {
+                    *pos = idx.positions[slot_idx];
+                    *slot = (slot_idx + 1) as u32;
+                } else {
+                    // No further structural — jump to input end.
+                    *pos = input.len() as u32;
+                }
+            } else {
+                // No index — degrade to ASCII whitespace skip. The
+                // arm survives semantically; parse correctness lives
+                // in the surrounding state machine, not this jump.
+                trim_ascii_ws(input, pos);
+            }
+            stack.pending_variant_idx = u8::MAX;
+            advance_or_pop_with(Some(table), Some(input), columns, frame_depth, psi, stack, pos, slot)
         }
         DtaState::ShuntingYard { head, .. } => {
             // Shunting-yard entry: reserve the outer compound, push a
@@ -2135,6 +2445,11 @@ pub fn advance_seq_fast(
 /// fall-through cases (Seq close, Alt close, Repeat re-entry,
 /// ShuntingYard reducer) that LLVM should not inline due to their
 /// size + dynamic precedence-table consumption.
+///
+/// AW-III.W5.c — `slot: &mut u32` mirrors the dual cursor; the
+/// Repeat re-entry path captures it via [`FrameStack::savepoint`] so
+/// a subsequent absorption rewinds slot atomically with `pos`.
+#[allow(clippy::too_many_arguments)]
 #[inline]
 pub fn advance_or_pop_with(
     _table: Option<&DtaTable>,
@@ -2144,7 +2459,13 @@ pub fn advance_or_pop_with(
     psi: &mut PayloadStream,
     stack: &mut FrameStack,
     pos: &mut u32,
+    slot: &mut u32,
 ) -> Result<StepResult, DtaError> {
+    // AW-III.W5.c — `slot` participates in iter-savepoint capture so a
+    // body absorption restores the structural cursor atomically. The
+    // helper itself does not consult the structural index — the
+    // dual-cursor's per-arm shortcuts live in `dispatch_one`'s
+    // ConsumeToNextStructural / WsTrim arms.
     loop {
         let Some(top) = stack.top_mut() else {
             return Ok(StepResult::Done);
@@ -2200,7 +2521,10 @@ pub fn advance_or_pop_with(
                     let new_sp_psi = psi.len() as u32;
                     let new_sp_pay_agg = columns.pay_agg.len() as u32;
                     let pos_val = *pos;
-                    let new_stack_sp = stack.savepoint();
+                    // AW-III.W5.c — capture the structural cursor slot
+                    // alongside the stack lengths. A later body failure
+                    // restores both atomically via `handle_repeat_failure`.
+                    let new_stack_sp = stack.savepoint(*slot);
                     stack.iter_savepoints[counter_idx] = IterSavepoint {
                         cols_len: new_sp_cols,
                         fd_len: new_sp_fd,

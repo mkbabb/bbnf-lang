@@ -96,8 +96,8 @@ pub(super) fn emit_state_dispatch_arms(
                 quote! {
                     #id_lit => {
                         #cold_ident::<__S>(
-                            input, scanner, columns, psi, frame_depth,
-                            stack, pos,
+                            input, scanner, idx, columns, psi, frame_depth,
+                            stack, pos, slot,
                         )
                     }
                 }
@@ -137,14 +137,17 @@ pub(super) fn emit_cold_siblings(
             Some(quote! {
                 #[cold]
                 #[inline(never)]
+                #[allow(clippy::too_many_arguments)]
                 fn #cold_ident<__S: ::bbnf::runtime::tape::RegexScanner>(
                     input: &[u8],
                     scanner: &__S,
+                    idx: &::bbnf::runtime::tape::stage1::StructuralIndex,
                     columns: &mut ::bbnf::runtime::tape::Columns,
                     psi: &mut ::bbnf::runtime::tape::PayloadStream,
                     frame_depth: &mut ::std::vec::Vec<u8>,
                     stack: &mut ::bbnf::runtime::tape::FrameStack,
                     pos: &mut u32,
+                    slot: &mut u32,
                 ) -> ::core::result::Result<
                     ::bbnf::runtime::tape::StepResult,
                     ::bbnf::runtime::tape::DtaError,
@@ -160,6 +163,13 @@ pub(super) fn emit_cold_siblings(
                     // `__<grammar>parser_emit_impl::DTA_TABLE` const,
                     // avoiding ambiguity when multiple parsers
                     // co-exist in the same parent scope (test files).
+                    //
+                    // AW-III.W5.c — cold siblings now carry the dual
+                    // cursor (`slot`) + structural index (`idx`)
+                    // through their parameter list so the W5 helpers
+                    // (try_branch, handle_repeat_failure_bounded)
+                    // receive uniform arguments matching the hot
+                    // path's invocation shape.
                     let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
                     'step: {
                         #body
@@ -257,10 +267,13 @@ fn emit_advance_or_pop_call() -> TokenStream {
         {
             ::core::result::Result::Ok(next)
         } else {
+            // AW-III.W5.c — slot threaded through alongside pos so
+            // the iter-savepoint capture inside the Repeat re-entry
+            // path snapshots the dual cursor atomically.
             ::bbnf::runtime::tape::advance_or_pop_with(
                 ::core::option::Option::Some(table),
                 ::core::option::Option::Some(input),
-                columns, frame_depth, psi, stack, pos,
+                columns, frame_depth, psi, stack, pos, slot,
             )
         }
     }
@@ -538,6 +551,9 @@ fn emit_alt_linear_arm(idx: usize, branches: &[StateId]) -> TokenStream {
         }
         let start_depth = stack.depth();
         let start_pos = *pos;
+        // AW-III.W5.c — capture dual-cursor's structural slot at Alt
+        // entry so failed branches rewind both pos + slot atomically.
+        let start_slot = *slot;
         // AW-III.W5.c — fused compound write.
         let parent_rec = columns.push_compound_fused(
             ::bbnf::runtime::tape::TapeKind::Alt, *pos,
@@ -562,7 +578,8 @@ fn emit_alt_linear_arm(idx: usize, branches: &[StateId]) -> TokenStream {
             variant_idx,
             promote: ::bbnf::runtime::tape::SeqPromote::Default,
         });
-        let sp_after_push = stack.savepoint();
+        // AW-III.W5.c — savepoint captures the dual-cursor slot.
+        let sp_after_push = stack.savepoint(*slot);
         let cols_len_after_push = columns.len();
         let fd_len_after_push = frame_depth.len();
         let psi_len_after_push = psi.len();
@@ -579,12 +596,15 @@ fn emit_alt_linear_arm(idx: usize, branches: &[StateId]) -> TokenStream {
         > = ::core::option::Option::None;
         for (branch_idx, &branch) in branches.iter().enumerate() {
             *pos = start_pos;
+            // AW-III.W5.c — restore slot to pre-Alt-entry so each
+            // branch attempt starts with a clean dual cursor.
+            *slot = start_slot;
             if let ::core::option::Option::Some(top) = stack.top_mut() {
                 top.cursor = branch_idx as u16;
             }
             match ::bbnf::runtime::tape::try_branch(
-                table, input, scanner, columns, psi, frame_depth, stack,
-                branch, pos, start_depth,
+                table, input, scanner, idx, columns, psi, frame_depth, stack,
+                branch, pos, slot, start_depth,
             ) {
                 ::core::result::Result::Ok(next) => {
                     chosen_outcome = ::core::option::Option::Some(
@@ -676,12 +696,15 @@ fn emit_repeat_arm(
             psi_len: psi.len() as u32,
             pay_agg_len: columns.pay_agg.len() as u32,
             pos: *pos,
+            // AW-III.W5.c — placeholder; the in-place fill below
+            // captures the real slot via `stack.savepoint(*slot)`.
             stack: ::bbnf::runtime::tape::FrameStackSavepoint {
                 inline_len: 0,
                 overflow_len: 0,
                 counters_len: 0,
                 op_stack_len: 0,
                 iter_savepoints_len: 0,
+                slot: 0,
             },
         });
         let variant_idx = stack.pending_variant_idx;
@@ -702,7 +725,8 @@ fn emit_repeat_arm(
             variant_idx,
             promote: ::bbnf::runtime::tape::SeqPromote::Default,
         });
-        stack.iter_savepoints[counter_idx].stack = stack.savepoint();
+        // AW-III.W5.c — captures the dual-cursor slot.
+        stack.iter_savepoints[counter_idx].stack = stack.savepoint(*slot);
         if #hi_lit == 0u32 {
             ::bbnf::runtime::tape::close_compound(columns, frame_depth, stack, *pos);
             #advance
@@ -806,20 +830,24 @@ fn emit_minus_arm(
             _ => unsafe { ::core::hint::unreachable_unchecked() },
         };
         let start_pos = *pos;
-        let probe_snapshot = stack.snapshot_probe();
+        // AW-III.W5.c — capture dual-cursor slot for probe restore.
+        let probe_snapshot = stack.snapshot_probe(*slot);
         let cols_len = columns.len();
         let fd_len = frame_depth.len();
         let psi_len = psi.len();
         let pay_agg_len = columns.pay_agg.len();
         let start_depth = stack.depth();
         let probe = ::bbnf::runtime::tape::try_branch(
-            table, input, scanner, columns, psi, frame_depth, stack,
-            excluded, pos, start_depth,
+            table, input, scanner, idx, columns, psi, frame_depth, stack,
+            excluded, pos, slot, start_depth,
         );
         columns.truncate(cols_len);
         frame_depth.truncate(fd_len);
         psi.truncate(psi_len);
         columns.pay_agg.truncate(pay_agg_len);
+        // AW-III.W5.c — restore slot from probe snapshot before
+        // restoring the stack's deeper state.
+        *slot = probe_snapshot.base.slot;
         stack.restore_probe(probe_snapshot);
         *pos = start_pos;
         match probe {

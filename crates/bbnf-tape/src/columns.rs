@@ -360,13 +360,22 @@ impl Columns {
         self.child_off.reserve(extra);
     }
 
-    /// Unsafe path that grows every structural column to admit `n`
-    /// further records. Internal invariant for [`push_compound_fused`]
+    /// Unsafe path that grows every structural column to admit one
+    /// further record. Internal invariant for [`push_compound_fused`]
     /// + [`push_leaf_fused`]: after this call every structural column
-    /// satisfies `len + n <= capacity`.
+    /// satisfies `len + 1 <= capacity`.
+    ///
+    /// Consults the MINIMUM capacity across all seven structural
+    /// columns. `Vec::with_capacity(n)` may round up past `n` by
+    /// different amounts for different element types (a `Vec<u8>` for
+    /// `kinds` and a `Vec<u16>` for `extra` can end up with different
+    /// actual capacities even when both were asked for `n`). Checking
+    /// only `kinds.capacity()` would skip `grow_all` when a smaller
+    /// column's capacity is exhausted, violating `set_len`'s
+    /// precondition. Reading the min captures the tightest bound.
     #[inline]
     fn ensure_one(&mut self) {
-        if self.kinds.len() == self.kinds.capacity() {
+        if self.kinds.len() >= self.structural_min_cap() {
             self.grow_all();
         }
     }

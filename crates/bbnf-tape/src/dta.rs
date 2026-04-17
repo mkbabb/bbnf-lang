@@ -318,6 +318,26 @@ pub enum DtaState {
         /// Whitespace regex pattern. `None` => act as Epsilon.
         pattern: Option<&'static str>,
     },
+    /// AW-III.W5.c — O(1) cursor jump to the next structural slot.
+    ///
+    /// Lowers a Seq child whose semantics is "consume every byte up to
+    /// the next structural delimiter" — JSON `__value` parsing inside
+    /// quoted strings, CSS property-value byte runs, BBNF rule-body
+    /// scanning. Pre-W5.c the walker stepped these byte-by-byte through
+    /// `DtaState::Regex` (the negated-char-class scanner) or via the
+    /// dispatch loop's open-ended Regex tail. With the dual-cursor
+    /// (`Cursor { pos, slot }`) and the stage-1 structural index, the
+    /// driver collapses this to a single cursor advance:
+    /// `cursor.pos = idx.positions[cursor.slot]; cursor.slot += 1;`.
+    ///
+    /// The lifter mints this state when the IR pass detects "atom
+    /// followed by structural-delimiter" sequences whose body is a
+    /// negated-char-class regex bounded by the alphabet's structural
+    /// bytes. When the structural index is empty (grammar without
+    /// stage-1 enrichment, or pre-W5.b scanner integration), the
+    /// driver falls back to a single `WsTrim`-shaped scan so the
+    /// state is semantically valid in either configuration.
+    ConsumeToNextStructural,
     /// AW-II.W5b — Set-difference state (IrNode::Minus semantic).
     ///
     /// Match `primary` only if `excluded` does NOT match at the same

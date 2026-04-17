@@ -57,18 +57,42 @@ throughput marginally. Fixing all three (W1) plus wiring the seven dead
 consumer activations (W3) plus the layered work (W4–W5) compounds
 multiplicatively to the projected ceiling.
 
-**The binding rule of this tranche: no new runtime indirections.** The
-fix for AW-III's interpreter shape is *not* to add more indirection
-surfaces (function-pointer fields on `DtaState`, trait objects, runtime
-table dispatch, lazy initialisation cells). Each AW-III consumer that
-landed as substrate-without-consumer did so because it was wired
-*through* an indirection — `lookup_precedence(...)` instead of a direct
-`PRECEDENCE_LUT[byte]` load; `scanner.scan(pattern, ...)` instead of a
-direct `__dfa_match_<grammar>_<state_idx>(...)` call. AW-IV emits hot
-logic *directly* into the per-grammar walker. The runtime tape (`bbnf-
-tape::driver`) survives only as the cold-path replay surface for AX —
-correctness ground truth, not the parse hot path. Every wave's hard
-gate enforces this rule via `nm` symbol-presence assertions.
+**The binding rule of this tranche: zero function-call boundary in the
+per-grammar walker hot path; emit every callee inline at the source
+level.** The fix for AW-III's interpreter shape is not to add more
+indirection surfaces (function-pointer fields on `DtaState`, trait
+objects, runtime table dispatch, lazy initialisation cells) — and it is
+also not to leave the called function as a separately-emitted symbol
+whose inlining depends on LLVM's heuristic. The walker is one giant
+straight-line Rust function with every hot callee's body emitted into
+its arms by the walker emitter. Code-size cost (generated.rs growing
+from ~56K to ~80–100K lines per grammar) is *irrelevant*; verify the
+result with `cargo asm` and `nm`. Concretely:
+
+- DFA bodies emit *into the walker's Regex arm* (W1.4) — no separate
+  `__dfa_match_*` function.
+- Helper bodies (`emit_leaf`, `push_compound_fused`, `push_leaf_fused`,
+  `advance_or_pop_with`, `close_compound`, `trim_with_pattern`,
+  `psi.push`, `handle_repeat_failure`) emit into each calling arm
+  (W2.1).
+- Eisel-Lemire f64 decode emits *into the walker's number-Regex arm*
+  for any `Map { Regex, F64 }` (W2.3).
+- String-scan SIMD kernel emits *into the walker's quoted-string arm*
+  for string-content Regex states (W2.3).
+- PSI scheduling eliminated on the hot path for inline-decodable
+  scalars (f64, span, u8, bool) — payload writes go directly into the
+  column at parse time. PSI rayon stays for batched typed-column fills
+  post-parse only.
+- `Columns` capacity-check elided via pre-allocation
+  `input.len() / 2 + 2` per the AR audit's heuristic.
+
+Each AW-III consumer that landed as substrate-without-consumer did so
+because it was wired *through* an indirection. AW-IV emits hot logic
+*directly* into the per-grammar walker; the runtime tape
+(`bbnf-tape::driver`) survives only as the cold-path replay surface for
+AX — correctness ground truth, not the parse hot path. Every wave's
+hard gate enforces this via `nm` symbol-presence assertions and
+`cargo asm` arm-body inspection.
 
 ## Invariants
 
@@ -227,37 +251,48 @@ grammar whose IR has mineable data for that slot. The wire-contract
 test asserts the literal at `generated.rs` matches the IR's mined value
 byte-for-byte for every slot.
 
-#### W1.4 — DFA codegen with direct named calls + scanner-trait elimination
+#### W1.4 — DFA body inline emission + scanner-trait elimination
 
 Owner: `crates/core/src/backend/rust/emitter/dfa_codegen.rs` (new),
 `crates/core/src/backend/rust/emitter/dta_walker/lower_state.rs` (Regex
-arm rewrite to direct named call),
+arm rewrite to inline DFA body),
 `crates/bbnf-tape/src/driver.rs` (trait deletion),
 `crates/core/src/backend/rust/emitter/grammar.rs` (scanner-impl
 deletion).
 
-**Direct emitted calls — no function pointers, no trait dispatch, no
-`DtaState` field for the match function.** A function-pointer field on
-`DtaState::Regex` would preserve a runtime indirect-call boundary even
-after W1.1 hoists the field load out of the runtime `match
-table.states[N]`. The hot path must call the emitted DFA function
-*directly by name* — only then does LLVM inline the body at the call
-site without depending on cross-function pointer-chasing analysis.
+**The DFA body emits *into the walker's Regex arm* — no separate
+`__dfa_match_*` function exists.** The original W1.4 design used a
+separately-emitted function called by name from the arm; W1's measured
++45% on JSON came from JSON's small DFAs being inlined by LLVM, but
+CSS L4's larger DFAs stayed out-of-line as 26 fn symbols and paid the
+call boundary at every Regex visit. The fix is *not* to add
+`#[inline(always)]` and hope LLVM cooperates; the fix is to emit the
+DFA's `loop { match state { ... } }` body directly into the walker arm
+where it's used. There is no function call to inline because there is
+no function — the DFA's state machine becomes part of the walker's
+state machine in the source code.
+
+Per `bbnf-regex` precedent: that crate compiles each NFA to a
+specialised inline DFA matcher; the same pattern applies one layer up
+at the DTA level.
 
 For every `&'static str` pattern reachable from `DTA_TABLE.states`,
-lift the NFA via `parse-that::regex::nfa`, determinise via
-`parse-that::regex::dfa::Dfa::compile`, then **emit** the DFA's
-transition table as inline Rust:
+the emitter lifts the NFA via `parse-that::regex::nfa`, determinises
+via `parse-that::regex::dfa::Dfa::compile`, then **emits the DFA's
+transition table as a labelled block inline in the walker arm**:
+
 ```rust
-#[inline]
-fn __dfa_match_<grammar>_<state_idx>(input: &[u8], pos: usize) -> Option<u32> {
+// In the walker's Regex arm at state_idx N (W1.1 hoist already gives
+// us the literal pattern + payload bindings):
+let match_len = 'dfa: {
+    let lo = *pos;
+    let mut local_pos = lo as usize;
     let mut state: u32 = 0;
-    let mut pos = pos;
     let mut last_match: Option<u32> = None;
     loop {
-        let b = match input.get(pos) {
-            Some(&b) => b,
-            None => break,
+        let b = match input.get(local_pos) {
+            ::core::option::Option::Some(&b) => b,
+            ::core::option::Option::None => break,
         };
         match state {
             0 => match b {
@@ -265,52 +300,60 @@ fn __dfa_match_<grammar>_<state_idx>(input: &[u8], pos: usize) -> Option<u32> {
                 <byte_class_1_arm> => state = <next_0_1>,
                 _ => break,
             },
-            1 => match b { /* ... */ },
-            /* ... */
+            1 => match b { /* DFA-state-1 transitions emitted from
+                              parse-that::regex::dfa for this pattern */ },
+            /* ... per-DFA-state arm, emitted inline ... */
             _ => unsafe { ::core::hint::unreachable_unchecked() },
         }
-        pos += 1;
-        if <state_is_accepting> {
-            last_match = Some(pos as u32);
+        local_pos += 1;
+        if <state_is_accepting_at_compile_time> {
+            last_match = ::core::option::Option::Some(local_pos as u32);
         }
     }
-    last_match
-}
-```
-
-The walker's Regex arm — emitted by `dta_walker/lower_state.rs::emit_regex_arm`
-— becomes a direct named call to the W1.4-emitted function for *that
-specific state index*:
-```rust
-let match_len = match __dfa_match_<grammar>_<state_idx>(input, *pos as usize) {
-    ::core::option::Option::Some(n) => n,
-    ::core::option::Option::None => break 'step ::core::result::Result::Err(/* ... */),
+    match last_match {
+        ::core::option::Option::Some(end) => break 'dfa end - lo,
+        ::core::option::Option::None => break 'step ::core::result::Result::Err(
+            ::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *pos, failing_state: ::bbnf::runtime::tape::DtaStateId(N as u16),
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            },
+        ),
+    }
 };
+*pos += match_len;
 ```
-The emitter knows at codegen time that arm-for-state-N matches pattern
-K's DFA, so it emits the literal name `__dfa_match_<grammar>_<state_idx>`.
-No field load, no function pointer, no trait dispatch. The Regex pattern
-literal (`&'static str`) stays in `DtaState::Regex.pattern` for replay/
-debug only — the cold-path `dispatch_one` consults it; the hot path
-never reads it.
 
-`RegexScanner` trait deletes from `bbnf-tape/src/driver.rs`. The `__S:
-RegexScanner` generic on the emitted walker disappears (the walker
-function signature loses the `scanner: &__S` parameter). The HashMap +
+No function call, no function pointer, no trait dispatch. The walker
+arm IS the DFA matching loop — LLVM sees the entire arm as one
+straight-line Rust function and can const-fold byte comparisons,
+jump-table layouts, and tail-call patterns at the point of use.
+**Code-size cost** per grammar: JSON ~14 regex states × ~500 lines avg
+= ~7K lines added; CSS L4 ~26 states × ~1K lines = ~26K lines added.
+Total `generated.rs` growth: ~56K → ~80–100K lines per grammar. This
+is the right tradeoff per the AW-IV §architectural-thesis binding rule.
+
+The Regex `pattern: &'static str` field stays in `DtaState::Regex` for
+cold-path `dispatch_one` (replay surface) only. `RegexScanner` trait
+deletes from `bbnf-tape/src/driver.rs`. The `__S: RegexScanner` generic
+on the emitted walker disappears (no `scanner` parameter). HashMap +
 `OnceLock<RwLock<...>>` + `Box::leak` triplet at `grammar.rs:373-401`
 deletes entirely. `DtaDfaScanner` ZST + its impl + the `DTA_SCANNER`
 const all delete. `parse_that::regex::dfa::Dfa::find_at` is no longer
 referenced from any per-grammar walker — it survives only as the
 algorithm-source for the W1.4 emitter pass and as the cold-path
-`dispatch_one` Regex arm's fallback (replay surface).
+`dispatch_one` Regex arm's fallback.
 
 **Hard gate**: `nm target/release/deps/json_monolithic-* | grep -E
-'(DtaDfaScanner|RegexScanner|find_at|cached_dfa)'` returns empty.
-Per-grammar `__dfa_match_<grammar>_<state_idx>` symbols present for every
-regex pattern in `DTA_TABLE`. `cargo expand` confirms the walker's
-Regex arms emit literal-named direct calls (no `state.match_fn` field
-access, no trait method dispatch). JSON twitter samply: scanner self-
-time drops from 31.92% to ≤ 5%.
+'(DtaDfaScanner|RegexScanner|find_at|cached_dfa|__dfa_match_)'` returns
+empty (the last pattern matches the *previous* W1.4 design's symbol —
+should also be absent). `cargo expand` confirms the walker's Regex arms
+contain the DFA's `loop { match state { ... } }` body inline.
+`cargo asm` on the walker symbol shows no `bl`/`call` instructions
+inside the Regex arm body. JSON twitter samply: scanner-related
+self-time drops to ≤ 2% (the inlined DFA match cost shows up as part
+of the walker's own self-time, not as a separate scanner symbol).
+JSON twitter throughput post-W1.4-aggressive ≥ 400 MB/s (vs 246 with
+the separate-fn design).
 
 ### W2 — Per-grammar inline emission of hot helpers
 
@@ -402,6 +445,65 @@ visible in the source TokenStream output). `cargo asm` on the
 walker symbol confirms no `bl` / `call` instructions targeting the
 helper symbols. JSON twitter samply: zero cross-crate self-time on the
 hot path; throughput ≥ 1100 MB/s.
+
+#### W2.3 — Inline Eisel-Lemire f64 + string-SIMD + PSI elision + capacity pre-allocation
+
+Owner: `crates/core/src/backend/rust/emitter/dta_walker/lower_state.rs`
+(per-arm inline emission);
+`crates/core/src/backend/rust/emitter/dta_walker/decoders.rs` (new —
+inline-emit fragments for f64 / string / number decoders);
+`crates/bbnf-tape/src/columns.rs` (capacity-check elision);
+`crates/bbnf-tape/src/psi.rs` (PSI hot-path elision for inline-decodable
+scalars).
+
+The W2.1 list of helpers is necessary but not exhaustive. Aggressive
+inlining covers every callee on the hot path:
+
+**Eisel-Lemire f64 decode inline.** Every `Map { Regex, F64 }` state
+(JSON `number`, CSS `number`, Sheets `number`, etc.) emits the
+Eisel-Lemire body inline into the arm's payload-emission block.
+Replaces the call into `parse-that::parsers::eisel_lemire::compute_f64`
+with the ~150-line decoder body emitted into the arm. The W2.3
+emitter splices a TokenStream fragment that mirrors `compute_f64`'s
+body literally; per-arm specialisation lets LLVM const-fold the
+exponent-table lookups at the call site.
+
+**String-scan SIMD kernel inline.** Every quoted-string Regex arm
+(JSON `string`, CSS string-literal, BBNF string-literal, Sheets
+string) emits the `bbnf-simd-scan::neon::scan_quoted_string_simd`
+body inline. Today the kernel lives as a `pub fn` in `bbnf-simd-scan`;
+the walker calls into it. Inline-emit means the walker's quoted-string
+arm contains the NEON intrinsics directly (`vextq_u8` shift +
+escape-detection mask + position-find via `vshrn_n_u16`). The kernel
+crate retains the `pub fn` for non-walker callers (debug, fuzz tests);
+the walker emits the body verbatim into each consuming arm.
+
+**PSI elision on the hot path for inline-decodable scalars.** Today
+every leaf with a payload calls `psi.push(PayloadJob::new(...))` to
+schedule the typed-payload write to a column post-parse. For inline-
+decodable scalars (f64 via Eisel-Lemire above, span via direct
+copy, u8 via byte cast, bool via discriminant) the W2.3 emitter writes
+the payload directly into the column at parse time — no PayloadJob,
+no scheduling overhead. The PSI rayon stage-B subsystem stays for
+batched non-trivial typed-column fills (string decoding into the
+arena for owned String payloads; complex named-type payloads); the
+hot path skips it for scalars.
+
+**Capacity-check elision.** Pre-allocate `Columns` to
+`input.len() / 2 + 2` per the AR audit's tape-capacity heuristic
+(sonic-rs uses `len/2 + 2`; current bbnf uses `len * 4` over-allocating
+~64×). Hot-path `push_compound_fused` body becomes 7 unchecked stores
++ length increment — no `if idx >= self.cap { self.grow_all(); }`
+branch. Branch-predictor recovers; per-record cost drops by ~1 cycle.
+
+**Hard gate**: `nm` on the bench binary returns empty for
+`compute_f64`, `scan_quoted_string_simd`, `psi*push` for inline-
+decodable scalar paths. `cargo expand` confirms walker number-arms
+contain the Eisel-Lemire body inline; quoted-string arms contain the
+SIMD intrinsics; column writes follow `push_compound_fused` without
+the capacity-check branch. JSON twitter throughput post-W2.3
+≥ 1500 MB/s (the aggressive inline of f64 + string SIMD is what
+closes the post-AU parity gap on string- and number-dense JSON).
 
 ### W3 — Consumer activation completion
 

@@ -15,6 +15,7 @@ pub(crate) mod dta;
 pub mod dta_walker;
 mod grammar;
 pub mod keyword_dispatch;
+pub mod precedence;
 mod prettify;
 pub(crate) mod profile;
 pub mod visitor;

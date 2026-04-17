@@ -68,6 +68,7 @@ pub mod kernel_shape;
 pub mod key_dispatch;
 pub mod keyword_stats;
 mod node_facts;
+pub mod operator_chain;
 pub mod pattern_alphabet;
 mod punct_ws_region;
 mod quoted_string;
@@ -99,6 +100,9 @@ pub use identifier::IdentifierMiner;
 pub use kernel_shape::{KernelShape, KernelStrategy, select_kernel_strategy};
 pub use key_dispatch::KeyDispatchMiner;
 pub use keyword_stats::{KeywordBranch, KeywordBranchMap, KeywordStatsMiner};
+pub use operator_chain::{
+    collect_operator_chains, OperatorArity, OperatorChainEntry, OperatorChainFacts,
+};
 pub use pattern_alphabet::{PatternAlphabet, PatternAlphabetMap, PatternAlphabetMiner};
 pub use punct_ws_region::PunctWsRegionMiner;
 pub use quoted_string::QuotedStringMiner;

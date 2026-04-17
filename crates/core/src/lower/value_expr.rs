@@ -144,8 +144,25 @@ fn dispatch_value_expr<'a>(
 
         // Leaf rule_kinds — these only surface when the optimizer
         // happens to preserve the wrapper compound rather than
-        // inlining. Direct dispatch by kind.
-        BbnfBootstrapRuleKind::int_lit => parse_int_literal(node.span_text()),
+        // inlining.
+        //
+        // Under DTA `int_lit` is ALSO the walker's sentinel rule_kind
+        // for compounds emitted without a `DtaState::Ref` (the
+        // optimizer fully inlined the value_unary + value_atom
+        // layers, so the value-expression body surfaces as a
+        // sentinel-tagged compound carrying the atom's span).
+        // Distinguish real int literals from the sentinel by the
+        // leading byte: real numeric starts with a digit or `.`,
+        // anything else is the inlined atom and should route through
+        // `lower_value_atom` for proper classification by span text.
+        BbnfBootstrapRuleKind::int_lit => {
+            let text = node.span_text();
+            let first = text.trim_start().as_bytes().first().copied();
+            match first {
+                Some(b'0'..=b'9') | Some(b'.') => parse_int_literal(text),
+                _ => lower_value_atom(node, ctx),
+            }
+        }
         BbnfBootstrapRuleKind::float_lit => parse_float_literal(node.span_text()),
         BbnfBootstrapRuleKind::bool_lit => MapExpr::BoolLit(node.span_text() == "true"),
         BbnfBootstrapRuleKind::string_lit => lower_string_lit(node, ctx),
@@ -1104,6 +1121,34 @@ pub(crate) fn unwrap_value_ident_str<'a>(
                 let text = cur.span_text();
                 let trimmed = text.trim();
                 let first = trimmed.as_bytes().first().copied()?;
+                if first != b'_' && !(first as char).is_ascii_alphabetic() {
+                    return None;
+                }
+                let head = scan_ident_len(trimmed);
+                if head == trimmed.len() {
+                    return Some(&trimmed[..head]);
+                } else {
+                    return None;
+                }
+            }
+            // Under DTA the walker surfaces `int_lit` / `Unknown` as
+            // the sentinel rule_kind for compounds emitted without a
+            // `DtaState::Ref`. In the value-expression chain, these
+            // appear when the optimizer inlined the `value_unary` +
+            // `value_atom` layers entirely — the sentinel compound's
+            // span text IS the atom's text (for a type-name / bare
+            // ident: `"i64"`, `"Span"`). Classify it as an atom when
+            // the span is identifier-shaped.
+            BbnfBootstrapRuleKind::int_lit | BbnfBootstrapRuleKind::Unknown => {
+                let text = cur.span_text();
+                let trimmed = text.trim();
+                let first = trimmed.as_bytes().first().copied()?;
+                // If the span starts with a digit or `.`, this is a
+                // real int_lit / numeric — not an identifier.
+                if first.is_ascii_digit() || first == b'.' {
+                    return None;
+                }
+                // Treat as value_atom body: identifier-shaped span.
                 if first != b'_' && !(first as char).is_ascii_alphabetic() {
                     return None;
                 }

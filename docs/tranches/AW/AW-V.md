@@ -1,14 +1,22 @@
 # Tranche AW-V — Compile DTA/PSI into Hot-Path Code + Novel-Exceed
 
-AW-V **compiles the DTA IR into hot-path code** via shape-mining
-+ per-shape inline emission + novel algorithmic levers that exceed
-sonic-rs on single-thread — not via fork, not via parallelism, not
-by abandoning the DTA. The DTA IR representation (state graph,
+AW-V **compiles the DTA IR into hot-path code** via per-shape
+emitter dispatch + novel algorithmic levers that exceed sonic-rs on
+single-thread — not via fork, not via parallelism, not by abandoning
+the DTA, and not by duplicating the existing mining / CSP / e-graph
+infrastructure. The DTA IR representation (state graph,
 `GrammarProfile`, `SHAPE_DICT`, structural alphabet, dispatch-table
-mining) survives verbatim as the substrate feeding the shape miner;
-the DTA interpreter survives as AX's cold-path replay surface. What
-is replaced is the interpreter-as-consumer-on-the-hot-path shape.
-What is added is six-plus algorithmic levers sonic-rs lacks because
+mining, `disjoint_first`, `operator_chain`, `pattern_alphabet`,
+`keyword_stats`, etc.) survives verbatim as the substrate feeding the
+**shape classifier** (which is a thin pattern-match over existing
+miner outputs, ~150 LOC — not a new mining system). Per-shape emitter
+modules then consume the classifier's output + the existing mining
+facts to produce sonic-rs-shaped inline loops per rule. The DTA
+interpreter survives as AX's cold-path replay surface. CSP + e-graph
+substrates unchanged. What is replaced is the interpreter-as-consumer-
+on-the-hot-path shape. What is added is the **per-shape emitter
+modules** (new TokenStream producers that lower grammar rules to
+inline loops) plus six algorithmic levers sonic-rs lacks because
 sonic is JSON-hand-tuned rather than grammar-derived.
 
 AW-IV closed at a post-W2 floor of ~240 MB/s twitter / 24 MB/s CSS
@@ -21,7 +29,7 @@ isolated worktree validates that the existing `bbnf-tape`
 throughput (W2.1); novel-exceed levers then push the prototype past
 sonic on single-thread without recourse to document-parallel fork
 (W2.3); the same per-shape structure then generalises back through
-the emitter via a new IR shape-mining pass and per-shape emitter
+the emitter via a thin shape-dispatch classifier and per-shape emitter
 modules (W3).
 
 Six waves; strict sequencing. Prototype isolated until its exceed-
@@ -65,7 +73,7 @@ abrogated; everything is *re-consumed at the right granularity*.
 3. **Novel-exceed levers** (W2.3): six algorithmic differentiators
    sonic-rs lacks. Single-thread **≥ 1.10× sonic-rs on JSON twitter**
    after W2.3. No fork; no core-count cheating.
-4. **Shape-mining IR pass + JSON emitter-lift** (B4 Phase 2): generalise
+4. **Shape-dispatch classifier + JSON emitter-lift** (B4 Phase 2): generalise
    the prototype back through codegen. Emitter-produced JSON parser
    matches hand-prototype bench ± 5%.
 5. **CSS + Sheets + BBNF shape coverage** (B4 Phases 3–5): extend
@@ -147,7 +155,7 @@ sonic doesn't dedup. Measurable on repetition workloads (CSS
 bootstrap record count drops ≥ 30%); neutral on non-repetitive
 (JSON numeric arrays).
 
-### Lever 7 — Multi-visitor parallel monomorphisation
+### Lever 7 — Multi-visitor parallel monomorphisation (opt-in; bounded)
 
 Parse once, emit to `TapeVisitor` AND to a user-struct `ValueVisitor`
 simultaneously via two visitor arguments. Each visitor method inlines
@@ -155,6 +163,109 @@ into its call site at compile time; the walker body duplicates (code
 size) but emission is branchless at the source level. sonic's visitor
 is single-target per parse call. Our trait-based approach composes
 any finite visitor set.
+
+**Bounded in AW-V per H2's L1-fit analysis** (`aw5-h2-visitor-monomorphisation.md`):
+unconditional multi-visitor monomorphisation explodes past L1 even on
+JSON (96 pairs × 200 LOC × 25 B ≈ 480 KB). AW-V ships the
+`(TapeVisitor, ValueVisitor)` pair **only**, gated via
+`#[derive(Visitor)] #[emit_paired_with(V2)]`. User-declared custom
+multi-visitor combinations are opt-in at user authorship and land as
+AX consumers (see §Deferred — AX + successor tranches below).
+
+## Shape taxonomy — 11 categories (H1-corrected)
+
+Per `aw5-h1-shape-taxonomy-audit.md`, B4's original 7 shapes covered
+only ~58–69% of CSS / BBNF hot-path visits under strict accounting.
+Four additional shapes emerge from the grammar rule graphs and lift
+aggregate coverage to ~93% across the primary grammars:
+
+| Shape | Example rules | Emitter module |
+|---|---|---|
+| Object | JSON `object`, CSS declaration block | `shapes/object.rs` |
+| Array | JSON `array`, CSS selector list, comma-separated values | `shapes/array.rs` |
+| String | JSON `string`, CSS `<string>`, BBNF string literal | `shapes/string.rs` |
+| Number | JSON `number`, CSS number, Sheets number | `shapes/number.rs` |
+| Keyword | JSON `true`/`false`/`null`, BBNF directive prefix, CSS `@`-rule head | `shapes/keyword.rs` |
+| Pratt | Sheets operator tower, CSS `calc` / `min` / `max` body | `shapes/pratt.rs` |
+| Unordered | CSS `compoundSelector` (5-way independent branches) | `shapes/unordered.rs` |
+| **ArgList** *(new)* | **CSS `calc(...)` / `min(...)` / `rgb(...)` / `url(...)`; Sheets `func_call`** | `shapes/arglist.rs` |
+| **Flat** *(new)* | **CSS 28 `*Decl` rules + BBNF directive bodies — typed `Seq` with Kw head** | `shapes/flat.rs` |
+| **Wrap** *(new)* | **`color`, `atRule`, `range_end` — transparent `Alt(Ref…)` dispatcher** | `shapes/wrap.rs` |
+| **HRegex** *(new)* | **`hex`, `cell_ref`, `identifier` — regex leaf with host decode** | `shapes/hregex.rs` |
+
+**Sheets function dispatch correction**: H1 (and P3 samply §6)
+confirmed Sheets function names match the generic `identifier` regex;
+there is NO keyword set. Function dispatch is ArgList-shape, not
+Kw-shape + PHF. Projection updated accordingly.
+
+**Interpreter fallback — permanent** (~3–5% of CSS; the only rules
+that remain on `__dta_walker_inline::run` per the AX replay contract):
+`funcBody` (`grammar/css/l4/func-body.bbnf:11`),
+`customPropertyDecl` (`grammar/css/l4/properties.bbnf:206`),
+`genericDecl` (`grammar/css/l4/properties.bbnf:212`). These three are
+grammatically heterogeneous (free-form content, user-extension hooks);
+no general shape admits them. They stay on the interpreter by design,
+not by deferral.
+
+**Pratt AX-incremental caveat**: Pratt-shape admits local reparse only
+at the operator-chain level. Editing `a+b` → `a*b+c` changes operator
+precedence; re-parse must span the enclosing statement. Documented in
+AX.md §incremental contract; no AW-V action required beyond the
+annotation.
+
+## Deferred — AX + successor tranches
+
+Not every novel idea folds into AW-V. The following items are
+explicitly scoped out to preserve AW-V's viability-proof gate and
+prevent scope creep:
+
+**Deferred to AX** (consumer-facing; AX already owns replay / recovery
+/ incremental / subsystem closures — these fit the AX substrate):
+
+- **Gradient parsing / `LazyValue` / on-demand materialisation**
+  (`aw5-n2-novel-parsing-approaches.md` N2.2). Architecturally
+  equivalent to AX's incremental-reparse contract: on-demand
+  re-parse of a specified subtree with shape-cached re-entry. Ships
+  as `AX.X8 — Gradient parsing consumer`.
+- **User-declared custom multi-visitor pairs** (extends Lever 7
+  beyond `(TapeVisitor, ValueVisitor)`). Visitors declared by user
+  code via `#[derive(Visitor)]`; landed as the AX.X8-sibling
+  consumer phase.
+- **Speculative parsing with shape-transition Markov predictor**
+  (N2.1). The rollback-scratchpad infrastructure is a sibling of
+  AX's `DtaSnapshot` replay mechanism. Ships when AX's snapshot
+  serdes + resume entrypoint lands; natural fit as `AX.X9 —
+  Speculative consumer`.
+
+**Deferred to successor tranche** (meta-optimisation layers that sit
+atop AW-V's viability proof; implementing them before the substrate
+is proven is scope reversal):
+
+- **E-graph rewrite codegen** (`aw5-n1-egraph-rewrite-codegen.md`).
+  12 rewrites over Shape-Emit IR; +30% on CSS bootstrap, +20% on
+  Sheets, etc. Belongs in successor tranche AW-VI (or renamed) as
+  the optimisation layer over proven shape emitters.
+- **Runtime CPU-capability auto-tuning** (N2.5). Five-variant kernel
+  dispatch at runtime; 10–25% on Ice Lake / Graviton. Binary-size
+  cost bounds integration; needs dedicated tranche.
+- **PMC-feedback adaptive kernels** (N2.6). Self-tuning via Apple M
+  performance counters; experimental; ≥ 10 KB input break-even.
+  Research-tranche territory.
+- **Cranelift JIT per-schema** (N2.7). Conflicts with AW-V's static-
+  codegen invariant; useful as alternate deployment mode but needs
+  its own tranche + architectural concession.
+
+**Folded into AW-V substrate (not as novel levers; as refinements)**:
+
+- **N2.3 — kind-separated stage-1 position streams**. Refines Mison's
+  query-bitmaps into shape-parser streams; 4 c saved per per-shape
+  dispatch. Low-risk; folds into AW-V.W1.2 (`bbnf-simd-scan::emit`
+  extension — one additional body fragment per structural-byte
+  kind).
+- **N2.4 — SIMD-speculative Alt-branch prefix-match**. The natural
+  implementation of the **Unordered-shape emitter** at AW-V.W4.1.
+  CSS `compoundSelector` (5-way) is the canonical use case; already
+  in W4's scope per the plan.
 
 ## Architectural thesis
 
@@ -183,7 +294,7 @@ Per the AW-IV profile wave (six samply + static-audit agents at HEAD
    per-shape inline emission over our existing SIMD + tape substrate.
 
 4. **The generalisation is mechanical.** One new IR pass
-   (`shape_mining.rs`) classifies each rule into 7 shape categories
+   (`shape_dispatch.rs`) classifies each rule into 7 shape categories
    (Object/Array/String/Number/Keyword/Pratt/Unordered). Per-shape
    emitter modules at `crates/core/src/backend/rust/emitter/shapes/`.
    Detectors ground in existing miner outputs; no grammar-name
@@ -229,8 +340,8 @@ Per the AW-IV profile wave (six samply + static-audit agents at HEAD
 | W1 | Substrate enablers: `bbnf-tape-codegen` subcrate (TokenStream body fragments for 4 residual helpers) + `bbnf-simd-scan::emit` submodule (~300 LOC) + `Columns::push_scalar_payload_*` + `Columns::push_compound_fused_v32` (32-byte vector store, Lever 4) + monomorphic `Visitor` trait in bbnf-tape | 3 parallel | AW-IV closed | `bbnf-tape-codegen` exposes the 4 helper-body fragments; `bbnf-simd-scan::emit` round-trips a test fragment; `Visitor` trait has `TapeVisitor` + placeholder `ValueVisitor`; `push_compound_fused_v32` emits a single AVX-256/NEON-Q store on a fixture; all W1 work preserves `bbnf_tape::driver::dispatch_one` verbatim |
 | W2.1 | JSON-only hand-prototype in isolated worktree, sonic-parity form: `crates/bbnf-json-prototype/` per B1 | 2 parallel (prototype-build + bench-scaffolding) in `bbnf-wt-aw5-prototype` | W1 closed | each of {data_s, twitter, citm, canada, data_xl} within 10% of sonic-rs's ns/iter on the twin-pair bench; samply confirms 2 monomorphised hot symbols at ≥ 70% self-time (shape parity with sonic). This is the *parity baseline* before novel levers are applied |
 | W2.3 | **Novel-exceed levers** (Levers 3–7 of §Novel algorithmic levers) folded into the prototype: SIMD-parallel multi-key compare, column-parallel SoA emission, bounded Regex via inverse-alphabet, ShapeRef dedup consumer, multi-visitor monomorphisation. Grammar-specialised SIMD kernel selection (Lever 2) wired via `recognizers/kernel_shape.rs` extension | 3 parallel in `bbnf-wt-aw5-prototype` | W2.1 closed at parity gate | **JSON twitter ≥ 1.10× sonic-rs on NEON single-thread** (~2900 MB/s); citm ≥ 1.10× sonic-rs on single-thread; canada ≥ 1.20× sonic-rs on single-thread (NEON 17-digit fraction advantage); no fork; samply confirms novel-lever symbols active on hot path |
-| W3 | Shape-mining IR pass + JSON emitter-lift: `crates/ir/src/passes/recognizers/shape_mining.rs` + `crates/core/src/backend/rust/emitter/shapes/{object,array,string,number,keyword,scalar}.rs`; the novel levers from W2.3 generalise through the shape emitter | 4 parallel | W2.3 closed + cherry-picked | emitter-produced JSON parser matches hand-prototype exceed-sonic bench ± 5%; rules without shape match continue to route through `__dta_walker_inline::run`; wire-contract test per shape category |
-| W4 | CSS L4 + Sheets shape coverage: `shapes/{pratt,unordered}.rs` + extend `shape_mining.rs` for CSS compound-selectors + Sheets 6-rung Pratt + function-name PHF via shape-mining. ShapeRef dedup consumer activates on CSS (high-repetition workload) | 3 parallel | W3 closed | CSS bootstrap ≥ 1500 MB/s single-thread; tailwind / normalize sonic-parity-equivalent; Sheets parse entries ≥ parity post-AU |
+| W3 | Shape-dispatch classifier + JSON emitter-lift: `crates/ir/src/passes/recognizers/shape_dispatch.rs` + `crates/core/src/backend/rust/emitter/shapes/{object,array,string,number,keyword,scalar}.rs`; the novel levers from W2.3 generalise through the shape emitter | 4 parallel | W2.3 closed + cherry-picked | emitter-produced JSON parser matches hand-prototype exceed-sonic bench ± 5%; rules without shape match continue to route through `__dta_walker_inline::run`; wire-contract test per shape category |
+| W4 | CSS L4 + Sheets shape coverage: `shapes/{pratt,unordered}.rs` + extend `shape_dispatch.rs` for CSS compound-selectors + Sheets 6-rung Pratt + function-name PHF via shape-mining. ShapeRef dedup consumer activates on CSS (high-repetition workload) | 3 parallel | W3 closed | CSS bootstrap ≥ 1500 MB/s single-thread; tailwind / normalize sonic-parity-equivalent; Sheets parse entries ≥ parity post-AU |
 | W5 | BBNF shape coverage + wire-contract pipeline fix for BBNF's `GRAMMAR_PROFILE` silent drop | 2 parallel | W4 closed | BBNF self-host ≥ 500 MB/s single-thread; `GRAMMAR_PROFILE` literal non-empty for every slot where IR mining produces data |
 | W6 | FINAL + 19-entry bench matrix + sonic-rs + lightningcss parity harnesses CI-gated. Document-parallel fork lands as an *amortisation multiplier on top of single-thread exceed*, documented separately — not as an exceed lever | 1 serial + 1 parity-harness agent | W5 closed | every parse entry exceeds post-AU on single-thread; both parity harnesses zero-divergence + CI-gated; verification ledger complete |
 
@@ -435,13 +546,13 @@ If all three entries pass: cherry-pick the prototype + `bbnf-tape`
 W1 changes to master; W3 opens on exceeding-sonic substrate, with
 shape-mining inheriting every lever.
 
-### W3 — Shape-mining IR pass + JSON emitter-lift
+### W3 — Shape-dispatch classifier + JSON emitter-lift
 
 Four parallel agents.
 
-#### W3.1 — `shape_mining.rs` IR pass
+#### W3.1 — `shape_dispatch.rs` IR pass
 
-Owner: `crates/ir/src/passes/recognizers/shape_mining.rs` (new).
+Owner: `crates/ir/src/passes/recognizers/shape_dispatch.rs` (new).
 
 Per B4 §1–2: classify each rule into one of seven shape categories.
 Detector per category grounds in existing IR-miner outputs. Output: a
@@ -475,7 +586,7 @@ expected tags → emitter produces parse function with expected shape
 
 #### W3.3 — Shape-mining `cargo expand` regression tests
 
-Owner: `crates/core/tests/shape_mining_emission.rs` (new).
+Owner: `crates/core/tests/shape_dispatch_emission.rs` (new).
 
 For each of the 7 shape categories, a fixture grammar rule + a test
 asserting the expanded emit matches a canonical shape (per-shape
@@ -506,7 +617,7 @@ independent; emit as byte-dispatch + sub-loop per B4 §1).
 
 #### W4.2 — CSS L4 shape coverage + Pratt/Unordered consumer
 
-Owner: extend `shape_mining.rs` + wire CSS L4 rules to the new emitters.
+Owner: extend `shape_dispatch.rs` + wire CSS L4 rules to the new emitters.
 
 Target 78% coverage per B4. Rules without shape match continue through
 `__dta_walker_inline::run` per the fallback contract.
@@ -518,7 +629,7 @@ moved to shape emitters, eliminating the 154 KB overflow).
 
 #### W4.3 — Sheets shape coverage + function-name PHF
 
-Owner: extend `shape_mining.rs` for Sheets; wire Keyword-shape emitter
+Owner: extend `shape_dispatch.rs` for Sheets; wire Keyword-shape emitter
 to populate `KEYWORD_PHF` for the 150 Sheets functions.
 
 **Hard gate**: Sheets parse entries ≥ parity post-AU; `KEYWORD_PHF`
@@ -544,7 +655,7 @@ digraphs, quote_classes, keyword_tables, shape_dict, etc.).
 
 #### W5.2 — BBNF shape coverage
 
-Owner: extend `shape_mining.rs` for BBNF; wire directive dispatch via
+Owner: extend `shape_dispatch.rs` for BBNF; wire directive dispatch via
 Keyword-shape + PHF.
 
 Target 75% coverage per B4. BBNF has no upstream comparator, so the
@@ -619,11 +730,11 @@ AW-V is the algorithmic exceed.
 | `crates/bbnf-tape/src/visitor.rs` (new, trait + TapeVisitor + placeholder ValueVisitor) | W1.3 |
 | `crates/bbnf-json-prototype/` (new crate in `bbnf-wt-aw5-prototype` worktree) | W2 |
 | `crates/bbnf-json-prototype/benches/json_value.rs` (new, in worktree) | W2 |
-| `crates/ir/src/passes/recognizers/shape_mining.rs` (new) | W3.1 |
+| `crates/ir/src/passes/recognizers/shape_dispatch.rs` (new) | W3.1 |
 | `crates/core/src/backend/rust/emitter/shapes/{object,array,string,number,keyword,scalar}.rs` (new) | W3.2 |
-| `crates/core/tests/{shape_mining_emission,json_parity_shape_emit}.rs` (new) | W3.3–3.4 |
+| `crates/core/tests/{shape_dispatch_emission,json_parity_shape_emit}.rs` (new) | W3.3–3.4 |
 | `crates/core/src/backend/rust/emitter/shapes/{pratt,unordered}.rs` (new) | W4.1 |
-| `crates/ir/src/passes/recognizers/shape_mining.rs` (extend for CSS + Sheets + BBNF) | W4.2, W4.3, W5.2 |
+| `crates/ir/src/passes/recognizers/shape_dispatch.rs` (extend for CSS + Sheets + BBNF) | W4.2, W4.3, W5.2 |
 | `crates/ir/src/passes/profile.rs`, `crates/core/src/backend/rust/emitter/profile.rs` (BBNF wire-contract fix) | W5.1 |
 | `crates/core/tests/{sonic_rs_parity,lightningcss_parity}.rs` (new) | W6 |
 | `docs/tranches/AW/FINAL-V.md`, `docs/benchmarks/post-AW-V.json` | W6 |

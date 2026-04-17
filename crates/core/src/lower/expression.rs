@@ -553,14 +553,16 @@ fn iter_pair_children<'a>(
         // `int_lit` (the DTA sentinel for non-rule structural
         // compounds) and whose trimmed span IS the operator token.
         // The walker stamps `binary_operators` on the inner Alt;
-        // descending one level surfaces it.
+        // descending through any intervening Seq wrappers surfaces
+        // it regardless of DTA nesting depth.
         if child.rule_kind() == BbnfBootstrapRuleKind::int_lit
             && matches!(trimmed, "<<" | ">>" | "-")
             && matches!(child.kind(), TapeKind::Seq)
         {
-            if let Some(inner) = child.children().find(|c| {
-                c.rule_kind() == BbnfBootstrapRuleKind::binary_operators
-            }) {
+            if let Some(inner) = find_descendant_by_kind(
+                child,
+                BbnfBootstrapRuleKind::binary_operators,
+            ) {
                 out.push(inner);
                 continue;
             }

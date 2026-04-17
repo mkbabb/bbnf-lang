@@ -1,16 +1,22 @@
 # Tranche AW — The Activation
 
-> **Split into AW-I + AW-III.** [`AW-I.md`](./AW-I.md) carries
-> W0 + W1-substrate (landed) plus walker completion, legacy
-> `fn __<rule>` deletion, `parse()` swap, `MemoStore`
-> retirement, fuse/inline activation. [`AW-III.md`](./AW-III.md)
-> carries PSI rayon, ShapeRef dispatch, PHF/SIMD keyword
-> tables, selector classifier, scanner closure, document-
-> parallel parse, bloom + GADT dedup, Pratt generalisation,
-> parity harnesses, visitor API, bench parity. `FINAL.md`
-> composes at AW-III.W6. This file preserves the original plan
-> as reference; AW-I.md and AW-III.md are authoritative for
-> execution.
+> **Split into AW-I + AW-II + AW-III + AW-IV.**
+> [`AW-I.md`](./AW-I.md) carries W0 + W1-substrate (landed) plus
+> walker completion, legacy `fn __<rule>` deletion, `parse()`
+> swap, `MemoStore` retirement, fuse/inline activation.
+> [`AW-II.md`](./AW-II.md) carries the DTA self-host round-trip
+> (lowering pipeline migration off fn-per-rule tape-shape
+> assumptions onto DTA's Seq-wrapped structural layer).
+> [`AW-III.md`](./AW-III.md) carries DTA correctness + viability
+> validation: Cluster A/C/D residuals close, 67 `#[ignore]`
+> audit, samply viability profile, minimum-viable lever subset.
+> [`AW-IV.md`](./AW-IV.md) (formerly the plan named AW-III)
+> carries PSI rayon, ShapeRef dispatch, PHF/SIMD keyword tables,
+> selector classifier, scanner closure, document-parallel parse,
+> bloom + GADT dedup, Pratt generalisation, parity harnesses,
+> visitor API, bench parity. `FINAL.md` composes per-letter;
+> this file preserves the original plan as reference; AW-I.md
+> through AW-IV.md are authoritative for execution.
 
 AW is the substrate-activation tranche. AV laid every emission
 channel — `pub const DTA_TABLE`, `pub const GRAMMAR_PROFILE`,

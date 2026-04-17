@@ -217,47 +217,70 @@ numbering:
   (`docs/tranches/AW/AW-II.md`). Five waves migrating the
   lowering pipeline's tape-shape assumptions
   (`find_child_by_kind` → descendant walks). Prerequisite to
-  AW-III and AX: no workspace-green → no bench matrix → no
+  AW-III, AW-IV, and AX: no workspace-green → no bench matrix → no
   consumer wiring.
-- **AW-III** — Optimisation and Parity
-  (`docs/tranches/AW/AW-III.md`). Six waves activating every
-  AV-emitted substrate channel: PSI rayon, ShapeRef dispatch,
-  PHF + SIMD keyword tables, CSS selector classifier,
-  document-level parallel parse, bloom + GADT dedup, Pratt
-  generalisation, parity harnesses, `Tape::reduce_column<C,R>`,
-  bench parity. Presumes workspace-green — BLOCKED on AW-II
-  close.
+- **AW-III** — DTA Correctness & Viability Validation
+  (`docs/tranches/AW/AW-III.md`). Six waves closing every AW-II
+  residual (Cluster A parse failures, Cluster C payload activation,
+  Cluster D integration), auditing and closing every `#[ignore]`
+  accumulated across the arc, and answering the load-bearing
+  viability question — is the DTA-primary parse path viable given
+  the 5–40× bench regression measured at AW-II.W5 close? Activates
+  the minimum-viable AW-IV lever subset the samply profile
+  implicates; defers the remainder to AW-IV.
+- **AW-IV** — Optimisation and Parity
+  (`docs/tranches/AW/AW-IV.md`; formerly the plan named AW-III
+  before AW-II's scope-reveal reordered the arc). Six waves
+  activating every AV-emitted substrate channel AW-III did not
+  activate: remaining PSI rayon slots, ShapeRef-specialised
+  grammars, full PHF + SIMD keyword coverage, CSS selector
+  classifier, document-level parallel parse, bloom + GADT dedup,
+  Pratt generalisation, sonic-rs + lightningcss parity harnesses,
+  `Tape::reduce_column<C,R>` visitor API, full bench parity against
+  post-AU. Presumes AW-III has declared DTA viable; the first
+  lever set already active.
 - **AX** — Replay, Recovery, and the Subsystem Ledger
   (`docs/tranches/AX/AX.md`). Consumer of AW's `dta-replay`
   substrate: incremental re-parse, grammar-structural error
   recovery, parse-step debugger, test-case minimisation. Also
   closes four pre-existing Category A subsystem failures.
-  Presumes workspace-green — BLOCKED on AW-II close.
+  Presumes workspace-green — BLOCKED on AW-III close.
 
-Canonical dispatch order is **AW-II → AW-III → AX**. AW-II
-restores compile + test; AW-III re-establishes the bench
-baseline as the truth anchor before feature work perturbs it;
-AX lands replay/recovery consumers on a stable, bench-verified
-codebase. AW-III + AX can run in parallel when agents obey
-`driver.rs`-disjoint bounds, but the sequential default
+Canonical dispatch order is **AW-II → AW-III → AW-IV → AX**. AW-II
+restores compile + test; AW-III closes correctness residuals,
+audits every ignore, and validates DTA viability; AW-IV activates
+the remaining optimisation levers and hits full bench parity; AX
+lands replay/recovery consumers on a stable, bench-verified,
+viability-proven codebase. AW-IV + AX can run in parallel when
+agents obey `driver.rs`-disjoint bounds, but the sequential default
 minimises instrument-perturbation risk on bench numbers.
 
 Bench matrix layout:
 - `post-AW-II.json` — first bench run post-unworkability, at
-  AW-II close.
-- `post-AW-III-W{N}.json` — per-wave baselines for the
+  AW-II close (14/19 entries; 5 blocked by Category A parse
+  failures → closed in AW-III.W2).
+- `post-AW-III.json` — AW-III close. Full 19-entry matrix
+  (correctness closed enables the 5 blocked entries) + viability
+  profile attribution.
+- `post-AW-IV-W{N}.json` — per-wave baselines for the full
   optimisation tranche.
-- `post-AW-III.json` — final AW-III close.
-- `post-AW.json` — full AW arc composed at AW-III close
-  (`post-AW-I`-synthetic + AW-II baseline + AW-III per-wave).
+- `post-AW-IV.json` — final AW-IV close with full bench parity.
+- `post-AW.json` — full AW arc composed at AW-IV close
+  (`post-AW-I`-synthetic + AW-II baseline + AW-III viability +
+  AW-IV per-wave).
 - AX publishes no separate bench matrix — its consumers are
   feature/correctness, not performance.
 
 Letter-sequence rationale: AW-I.W4ζ's lowering-migration
 scope-reveal first shipped under an intermediate letter (AY) and
 was renamed to AW-II during AW-I's close so the AW arc stays
-contiguous. The original AW-II (optimisation, authored
-concurrently with AW-I) shifted to AW-III accordingly. AX
-retains its letter because it is thematically distinct
-(feature consumers of the `dta-replay` substrate) rather than
-part of the AW activation arc.
+contiguous. AW-II.W5 close surfaced a second scope-reveal — 50
+correctness residuals + 67 unaudited ignores + 5–40× bench
+regression vs post-AU — requiring a dedicated correctness +
+viability tranche inserted before the optimisation arc. The
+originally-planned AW-III (optimisation, authored concurrently
+with AW-I) shifted wholesale to AW-IV; the new AW-III is the
+correctness + viability validator. AX retains its letter because
+it is thematically distinct (feature consumers of the
+`dta-replay` substrate) rather than part of the AW activation
+arc.

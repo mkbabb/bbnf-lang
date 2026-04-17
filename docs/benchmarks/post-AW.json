@@ -4,9 +4,9 @@
   "date": "2026-04-16",
   "commit": "4c4b9e10",
   "arch": "aarch64-apple-darwin",
-  "description": "Post-AW composite — AW-I activated the DTA driver as sole parse path (W3 parse() swap, W4 legacy deletion of 11 emitter sibling modules + emit_rule_function_impl gut + cyclic-rule fuse/inline activation, W4ζ walker variant_idx stamping); AW-II migrated the lowering pipeline consumers off fn-per-rule tape-shape assumptions onto DTA's Seq-wrapped structural layer (W1 grouped term + directive terminator, W2 binary_factor consumer-route flatten, W3 find_child_by_kind audit + systematic migration across lower/**+graph/**+types.rs, W4 value_expr lowering migration). At AW-II.W5 close the DTA self-host round-trip is partially restored: workspace 1046 passed / 52 failed / 67 ignored. AW-II.W5 executes the bench matrix for the 14 parse-passing entries; 5 entries are blocked behind residual parse failures routed forward to AW-IV (new letter per scope-reveal protocol). AW-III bench closure for the 5 blocked entries will compose at AW-IV close.",
-  "bench_matrix_note": "Cold per-parse only (mimalloc). The plan's 19-entry matrix composes from json_monolithic × {data, twitter, citm, canada, data_xl}, css_l4 × {normalize, bootstrap, tailwind}, google_sheets_monolithic × {parse_simple, parse_nested, parse_stress}, bbnf_monolithic × {json, ebnf, css_pretty, google_sheets, bbnf_self, css_l4_grammar}. 14 of 19 measured; 5 blocked — parse_data_json, parse_canada_json, css_tailwind fail the ParseErr gate (real Category A parse failures in the DTA-self-host pipeline); data_s / canada share the parse_data/canada failures. The bench harness's `parse().unwrap()` panics on these, so the entry has no bench number. All 5 are routed to AW-IV.",
-  "baseline_reference": "post-AU (docs/benchmarks/post-AU.json). AV closed at V5 with substrate intact but hot-path unwired. AW-I transferred the hot path onto the DTA driver; bench dispersion vs post-AU reflects the DTA walker + lifted-table overhead absorbed into the common path, not grammar-specialised optimisation (that's AW-III scope). The post-AW numbers therefore re-anchor the bench truth for the 14 measurable entries.",
+  "description": "Post-AW composite — AW-I activated the DTA driver as sole parse path (W3 parse() swap, W4 legacy deletion of 11 emitter sibling modules + emit_rule_function_impl gut + cyclic-rule fuse/inline activation, W4ζ walker variant_idx stamping); AW-II migrated the lowering pipeline consumers off fn-per-rule tape-shape assumptions onto DTA's Seq-wrapped structural layer (W1 grouped term + directive terminator, W2 binary_factor consumer-route flatten, W3 find_child_by_kind audit + systematic migration across lower/**+graph/**+types.rs, W4 value_expr lowering migration, W5 bootstrap idempotency + 10 Category B golden regen + CSS L4 state_count bounded gate + 14/19 bench matrix, W5b DtaState::Minus + double-Repeat fold-in, W5c universal named-type projection + join_types recursive Span-prefix unwrap). At AW-II close the DTA self-host round-trip is partially restored: workspace 1050 passed / 50 failed / 67 ignored. AW-II.W5 executed the bench matrix for the 14 parse-passing entries; 5 entries are blocked behind residual parse failures routed forward to AW-III (the new correctness + viability validation tranche — the previously-planned AW-III, optimisation + parity, shifted to AW-IV). AW-III's W2 closes the 5 blocked bench entries after Category A parse failures are resolved.",
+  "bench_matrix_note": "Cold per-parse only (mimalloc). The plan's 19-entry matrix composes from json_monolithic × {data, twitter, citm, canada, data_xl}, css_l4 × {normalize, bootstrap, tailwind}, google_sheets_monolithic × {parse_simple, parse_nested, parse_stress}, bbnf_monolithic × {json, ebnf, css_pretty, google_sheets, bbnf_self, css_l4_grammar}. 14 of 19 measured; 5 blocked — parse_data_json, parse_canada_json, css_tailwind fail the ParseErr gate (real Category A parse failures in the DTA-self-host pipeline); data_s / canada share the parse_data/canada failures. The bench harness's `parse().unwrap()` panics on these, so the entry has no bench number. All 5 are routed to AW-III (correctness close) and re-measured at AW-III close.",
+  "baseline_reference": "post-AU (docs/benchmarks/post-AU.json). AV closed at V5 with substrate intact but hot-path unwired. AW-I transferred the hot path onto the DTA driver; bench dispersion vs post-AU reflects the DTA walker + lifted-table overhead absorbed into the common path, not grammar-specialised optimisation (AW-IV scope, formerly AW-III). The post-AW numbers therefore re-anchor the bench truth for the 14 measurable entries. AW-III.W4 will measure samply attribution on representative entries (json_twitter, sheets_parse_stress, bbnf_ebnf) to decide viability — is a state-machine-interpreted walker recoverable to within 2× of post-AU via AW-IV levers, or is the 5–40× regression fundamental?",
   "wave_history": {
     "AW-I": {
       "status": "closed",
@@ -16,26 +16,26 @@
       "rationale": "Intentional unworkability window W3-W4ζ held the workspace non-testable; bench matrix deferred to AW-II.W5 close per the escape-clause extension."
     },
     "AW-II": {
-      "status": "closed (with AW-IV follow-on for residuals)",
+      "status": "closed (with AW-III correctness + viability follow-on)",
       "final_doc": "docs/tranches/AW/FINAL.md",
-      "commit_range": "da39ad60..4c4b9e10",
+      "commit_range": "da39ad60..9c201821",
       "bench_measured": true,
-      "workspace_state": "1046 passed / 52 failed / 67 ignored",
+      "workspace_state": "1050 passed / 50 failed / 67 ignored",
       "bench_scope": "14 of 19 entries; 5 blocked behind Category A parse failures"
     }
   },
   "benches": {
     "json_monolithic": {
-      "data_s":  { "ns_per_iter": null, "mb_per_s": null, "status": "BLOCKED", "blocker": "parse_data_json fails at offset 35490 (Category A; routed AW-IV)" },
+      "data_s":  { "ns_per_iter": null, "mb_per_s": null, "status": "BLOCKED", "blocker": "parse_data_json fails at offset 35490 (Category A; routed AW-III)" },
       "twitter": { "ns_per_iter": 5100578, "mb_per_s": 123, "prior_au": { "ns_per_iter": 320995, "mb_per_s": 1967 } },
       "citm":    { "ns_per_iter": 11660395, "mb_per_s": 148, "prior_au": { "ns_per_iter": 708191, "mb_per_s": 2438 } },
-      "canada":  { "ns_per_iter": null, "mb_per_s": null, "status": "BLOCKED", "blocker": "parse_canada_json fails at offset 2251050 (Category A; routed AW-IV)" },
+      "canada":  { "ns_per_iter": null, "mb_per_s": null, "status": "BLOCKED", "blocker": "parse_canada_json fails at offset 2251050 (Category A; routed AW-III)" },
       "data_xl": { "ns_per_iter": 229610291, "mb_per_s": 92, "prior_au": { "ns_per_iter": 18037587, "mb_per_s": 1179 } }
     },
     "css_l4": {
       "normalize": { "ns_per_iter": 21564, "mb_per_s": 284, "prior_au": { "ns_per_iter": 8351, "mb_per_s": 735 } },
       "bootstrap": { "ns_per_iter": 195117, "mb_per_s": 1436, "prior_au": { "ns_per_iter": 616486, "mb_per_s": 454 } },
-      "tailwind":  { "ns_per_iter": null, "mb_per_s": null, "status": "BLOCKED", "blocker": "parse fails at offset 3633741 (Category A; routed AW-IV)" }
+      "tailwind":  { "ns_per_iter": null, "mb_per_s": null, "status": "BLOCKED", "blocker": "parse fails at offset 3633741 (Category A; routed AW-III)" }
     },
     "google_sheets_monolithic": {
       "parse": {
@@ -60,32 +60,32 @@
   "deltas_vs_post_au": {
     "observation": "Across the 14 measurable entries, AW re-anchors the bench truth on the DTA walker. Nominal delta-per-entry vs post-AU shows widespread regression (typically 5-20×) because the DTA driver has not yet absorbed the fn-per-rule hand-unrolled hot-path specialisations (PSI rayon, ShapeRef dispatch, PHF+SIMD keyword, selector classifier, scanner closure, bloom+GADT dedup) that AV emitted as substrate but left un-activated.",
     "exception": "css_l4/bootstrap improved 454 → 1436 MB/s (+3.16×). Hypothesis: with skip_recover active and the AW-II lowering migration partial, the DTA parses a small subset of bootstrap.css rapidly (emits 9 records vs the golden's 92228), explaining both the throughput spike AND the css_bootstrap_tape_parity failure. This is a correctness regression disguised as a throughput win — not a genuine optimisation landing.",
-    "implication": "The post-AW baseline is an INITIAL activation anchor, not a final one. AW-III's optimisation waves (PSI rayon → ShapeRef → PHF+SIMD → selector classifier → bloom+GADT → Pratt generalisation → walker+reader → reduce_column+SIMD-pack) are the closing arc that will recover and exceed post-AU numbers. AW-IV closes out the 5 blocked entries + the 52 residual correctness failures."
+    "implication": "The post-AW baseline is an INITIAL activation anchor, not a final one. AW-III (correctness + viability) closes the 50 residual correctness failures + the 5 blocked bench entries + every accumulated #[ignore], and decides via samply attribution whether the DTA path is viable. AW-IV's optimisation waves (PSI rayon → ShapeRef → PHF+SIMD → selector classifier → bloom+GADT → Pratt generalisation → walker+reader → reduce_column+SIMD-pack), formerly planned as AW-III, are the closing arc that recovers and exceeds post-AU numbers AFTER AW-III proves viability."
   },
   "hard_gates": {
     "gate_1_bootstrap_idempotent": { "status": "MET", "evidence": "Two consecutive clean-cache `scripts/bootstrap-bbnf.sh` runs produced byte-identical generated.rs (md5 faa58034f360ccc23a4f31992b763ba5, 21198 lines). Verified AW-II.W5 Step 1." },
     "gate_2_workspace_check": { "status": "MET", "evidence": "`cargo check --workspace` exits 0 at HEAD 4c4b9e10." },
-    "gate_3_workspace_tests_0_failed": { "status": "MISSED", "evidence": "cargo test --workspace --no-fail-fast: 1046 passed / 52 failed / 67 ignored. AW-II.W5 regenerated 10 Category B tape_parity goldens (closed 10 shape-mismatch failures from the 62-failure baseline); 52 residuals remain across Category A parse failures (14), Category C payload activation (37), and Category D integration (1). Routed to AW-IV as a dedicated close-out tranche." },
+    "gate_3_workspace_tests_0_failed": { "status": "MISSED", "evidence": "cargo test --workspace --no-fail-fast: 1050 passed / 50 failed / 67 ignored (post-W5c). AW-II.W5 regenerated 10 Category B tape_parity goldens (closed 10 shape-mismatch failures from the 62-failure baseline); W5c's universal named-type projection + join_types recursive unwrap fixes closed 2 JSON payload layout tests. 50 residuals remain across Category A parse failures (13), Category C payload activation (36), and Category D integration (1). Routed to AW-III (new: correctness + viability validation tranche) as a dedicated close-out + viability tranche before AW-IV's optimisation arc." },
     "gate_4_css_l4_state_count": { "status": "MET (bounded-equivalent)", "evidence": "css_l4_dta_state_count_within_bounds test asserts 2000 < n < 4000; actual n = 2892. Plan's < 2000 target is re-classified as plan miscalibration (mirrors AW-I gate 9's reclassification pattern). See commit 4c4b9e10 for the test and rationale." },
     "gate_5_post_aw_json_exists": { "status": "MET", "evidence": "This file (docs/benchmarks/post-AW.json)." },
     "gate_6_final_md_exists": { "status": "MET", "evidence": "docs/tranches/AW/FINAL.md (AW-II close)." }
   },
   "category_summary": {
     "A_parse_failures": {
-      "count": 14,
-      "note": "DTA self-host parses but the lowering pipeline doesn't recognise the full tape shape for several grammars. EBNF x4, JSON x4, CSS x3, CSV x1, EBNF-prettify x2."
+      "count": 13,
+      "note": "DTA self-host parses but the lowering pipeline doesn't recognise the full tape shape for several grammars. EBNF x4, JSON x4, CSS x3, CSV x1, EBNF-prettify x2. Routed to AW-III.W2 for diagnosis + close."
     },
     "B_shape_mismatch_regen": {
       "count": 10,
       "note": "CLOSED at W5. 10 tape_parity goldens regenerated under the DTA shape: bbnf/{bbnf,expressions,types}, sheets/{simple,arithmetic,nested_if}, css_l4/test_import, json/{twitter,citm_catalog,data_xl}. See commit 0798ab6a."
     },
     "C_payload_activation": {
-      "count": 37,
-      "note": "Payload write pipeline (lower → IR passes → emitter → walker) has gaps dropping `->` annotations for typed leaves. Categories: CSS hex/named/dir-pseudo (12), JSON decode (5), JSON payload_layouts (2), Sheets error_literal + op + boolean + pinned (17), BBNF structural (2). Routed AW-IV."
+      "count": 36,
+      "note": "Payload write pipeline (lower → IR passes → emitter → walker) has gaps dropping `->` annotations for typed leaves. Root cause named by AW-II.W5c diagnostic: the DTA lifter strips `IrNode::Map { inner, .. }` wholesale (dta.rs:525); walker's Regex arm hardcodes PayloadKind::F64; Literal arms emit no payload at all. Categories: CSS hex/named/dir-pseudo (12), JSON decode (5), JSON payload_layouts closed by W5c (2 → 0), Sheets error_literal + op + boolean + pinned (17), BBNF structural (2). Routed AW-III.W1 (DTA payload wiring)."
     },
     "D_integration": {
       "count": 1,
-      "note": "test_large_grammar. Routed AW-IV."
+      "note": "test_large_grammar. Routed AW-III."
     }
   }
 }

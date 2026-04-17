@@ -34,7 +34,8 @@ Workspace at W2 close: **1078/0/68** (−22 DELETE, −1 new Category A
 |   — W5.11 | CSS L4 state_count bounded gate | 1 serial | ✓ landed (`89eb6feb` — plan's `< 2000` target revised to `(2000, 4000)` envelope per W4α cyclic-fuse impact; actual 2892) |
 |   — W5.7 | Bench matrix 14/19 | 1 serial | ✓ landed (`413f023f` — 5 entries blocked behind Category A parse failures) |
 |   — W5b | DtaState::Minus + double-Repeat fix | 1 serial (producer-side fold-in per invariant 1) | ✓ landed (`3e14d279 e7637ccc 3b6035d3` — architectural groundwork, tests 1048/52/67) |
-|   — W5c | Type-inference projection fix (Cluster B — 32 tests) | 1 serial | in flight |
+|   — W5c | Type-inference projection fix (Cluster B — 32 tests) | 1 serial | ✓ landed (`d635086f c7791075 9c201821` — 3 coupled fixes: recursive Span-prefix unwrap + span-text disambiguator + universal Named fallback; tests 1050/50/67) |
+|   — FINAL | AW-II FINAL.md + post-AW.json successor-chain corrections | 1 serial (orchestrator) | ✓ landed |
 
 ### Workspace state post-W2 (master HEAD `7f3de323`)
 
@@ -70,7 +71,22 @@ Bench schedule: one cold run at AW-I.W5 close →
 `docs/benchmarks/post-AW-I.json`. No per-wave checkpoints —
 W2–W4 touch substrate the legacy path still dominates.
 
-### AW-III — Optimisation + parity
+### AW-III — DTA Correctness & Viability Validation (NEW — inserted 2026-04-17)
+
+| Wave | Scope | Agents | Status |
+|------|-------|--------|--------|
+| W1 | DTA payload wiring — DtaState::Regex/Literal carry PayloadKind; lifter threads from IrNode::Map; walker consumes; Seq→KvPair promotion. Cluster C close (36 tests). | 1 serial | pending |
+| W2 | DTA parse completeness — EBNF offset-0, CSS truncation, JSON large-file. Cluster A close (13 tests). Unblocks 5 bench entries. | 1 serial | pending |
+| W3 | Ignored-test audit + close — all 67 existing `#[ignore]` dispositioned. | 2 parallel (by grammar family) | pending |
+| W4 | Viability profile — samply attribution on json_twitter, sheets_parse_stress, bbnf_ebnf. Binary decision document. | 1 serial | pending |
+| W5 | Minimum-viable specialisation — activate AW-IV lever subset the W4 profile implicates. | 2–3 parallel | pending |
+| W6 | FINAL + full 19-entry bench matrix + close | 1 serial | pending |
+
+Bench schedule: W4 samply sidecar on representative entries; W5 post-
+activation re-bench; W6 full 19-entry matrix → `docs/benchmarks/
+post-AW-III.json` + update `post-AW.json` multi-wave history.
+
+### AW-IV — Optimisation + parity (formerly the plan named AW-III)
 
 | Wave | Scope | Agents | Status |
 |------|-------|--------|--------|
@@ -82,8 +98,26 @@ W2–W4 touch substrate the legacy path still dominates.
 | W6 | FINAL + close | 1 serial | pending |
 
 Bench schedule: per-wave cold run at W1–W5 close →
-`docs/benchmarks/post-AW-III-W{N}.json`. W6 composes
-`docs/benchmarks/post-AW.json` as multi-wave history.
+`docs/benchmarks/post-AW-IV-W{N}.json`. W6 composes the AW-IV close
+entry into `docs/benchmarks/post-AW.json` multi-wave history.
+
+AW-IV presumes AW-III has declared DTA viable; the first lever set
+(AW-III.W5 minimum-viable specialisation) already active.
+
+### Successor chain
+
+**AW-II → AW-III → AW-IV → AX** is the canonical arc.
+
+- AW-II closes correctness-partial at 1050/50/67; routes 50 residuals
+  + 67 ignores + 5 blocked bench entries + viability question to AW-III.
+- AW-III closes correctness + audits ignores + validates DTA viability
+  via samply + activates minimum-viable lever subset. Decides viable /
+  not-viable via W4 profile.
+- AW-IV (formerly the plan named AW-III; renamed 2026-04-17 following
+  AW-II.W5 scope-reveal) activates the remaining optimisation levers
+  to match/beat post-AU bench numbers.
+- AX lands replay/recovery/incremental-reparse consumers on a
+  stable, bench-verified, viability-proven codebase.
 
 ### SoA 4-lane — tranche placement
 
@@ -1210,14 +1244,94 @@ Worktree: `../bbnf-wt-aw-ii-w5c`.
 
 ### W5c completion + close posture
 
-W5c in flight. Outcomes:
-- If W5c closes Cluster B (≥25 of 32 tests), residual drops to <20.
-  Additional cluster-A/C pass may close tranche green.
-- If W5c surfaces cascade issues beyond Cluster B, honest close
-  composes FINAL.md with AW-II escape-clause extension + AW-IV plan.
-- In either case: no deferrals of work declared in-plan; scope-reveal
-  → new-letter (AW-IV) is the edict-compliant path precedented by
-  AW-I → AW-II.
+W5c completed (agent `a11fbde7ea0c8d613`). Three commits cherry-picked:
+- `d635086f` — `diag(ir,lower): hex_color_6digit payload trace (AW-
+  II.W5c.0)`
+- `c7791075` — `fix(ir/passes/payload/layout): universal named-type
+  projection (AW-II.W5c.1)`
+- `9c201821` — `chore(benches/ts): regen generated_json.mjs under W5c
+  type projection`
+
+Three coupled fixes landed:
+1. `effective_payload_type` in `types/constraint/helpers.rs` —
+   recursive `Tuple([Span, T])` unwrap (pre-fix: single-level,
+   dropped 3+ nested Span-prefix stacks produced by
+   `factor_common_prefixes` on CSS L4's 148-branch namedColor Alt).
+2. `lower_map_arrow` in `lower/expression.rs` — span-text
+   disambiguator for bool + numeric-suffix detection (pre-fix gated
+   on rule_kind whitelist, missed DTA sentinel `int_lit` compounds).
+3. `crates/ir/src/passes/payload/layout.rs` — universal named-type
+   shape fallback for `Named("String")`, `"str"`, `"Bytes"` →
+   `Tuple([U32, U32])` across all backends (VM / TS / WASM had no
+   admission path).
+
+Workspace post-W5c cherry-pick: **1050 / 50 / 67** (+2 JSON payload
+layout tests closed; the 32-test Cluster B target mostly stuck —
+agent's scope-reveal named the remaining root cause upstream of
+W5c's scope).
+
+### W5c scope-reveal → AW-III (new: correctness + viability)
+
+W5c agent named the Cluster C root cause concretely:
+
+> The DTA lifter strips `IrNode::Map { inner, .. }` wholesale
+> (`crates/ir/src/passes/recognizers/dta.rs:525`). The walker's
+> `DtaState::Regex` arm hardcodes `PayloadKind::F64` for every
+> regex match (`crates/bbnf-tape/src/driver.rs:912`). Literal arms
+> never emit any payload at all. The comment at driver.rs:908
+> attributes the gap to AW.1.2 tranche work.
+
+This is producer-side work spanning DtaState schema extension (IR
+side + wire contract), lifter threading, walker consumption, and
+bootstrap regen under the extended schema. Out of W5c's "single
+pipeline gap" envelope.
+
+### Successor chain reordering — 2026-04-17
+
+User directive on 2026-04-17 corrected the interim "AW-IV" framing
+the W5 + W5b + W5c agents had proposed:
+
+> wtf is AW-IV? We have an AW-III, I suppose that needs to shift
+> to AW-IV, and then the next true AW-III needs to be a correctness
+> and continuation of everything found and deferred within AW-I and
+> AW-II — we should have NO skipped or ignored tests and we MUST
+> validate that this approach with the DTA is viable. We're seeing
+> 20x regressions across the board, which does not seem correct and
+> we need to, hereupon the final agent's completion, deeply
+> investigate and refine AW-III.
+
+Resulting renumbering:
+- `docs/tranches/AW/AW-III.md` (optimisation and parity, formerly
+  authored concurrently with AW-I) → moved to
+  `docs/tranches/AW/AW-IV.md` with title + internal references
+  updated.
+- NEW `docs/tranches/AW/AW-III.md` composed — DTA Correctness &
+  Viability Validation. Six waves: W1 DTA payload wiring (Cluster C
+  close), W2 DTA parse completeness (Cluster A close), W3 ignored-
+  test audit + close, W4 viability profile (samply attribution
+  decision document), W5 minimum-viable specialisation, W6 FINAL +
+  full 19-entry bench matrix.
+- Canonical arc: **AW-II → AW-III (new) → AW-IV (renamed) → AX**.
+
+`docs/benchmarks/post-AW.json` updated with the renamed routing
+(residuals → AW-III, not AW-IV). `docs/tranches/AW/FINAL-I.md`
+successor-chain section rewritten to reflect the insertion.
+
+Historical log entries above (W5 and W5b sections) preserve the
+agent-era "AW-IV" framing as what the orchestrator actually said
+at that point; the renumbering post-dates those decisions and
+supersedes the framing at 2026-04-17.
+
+### AW-II close
+
+AW-II closes at master HEAD `9c201821` (post-W5c cherry-pick).
+Workspace: **1050 passed / 50 failed / 67 ignored**. Bootstrap
+idempotent (md5 `faa58034f360ccc23a4f31992b763ba5`, 21198 lines).
+14 of 19 bench entries measured.
+
+`docs/tranches/AW/FINAL.md` composed with honest close + routing
+of 50 correctness residuals + 67 ignores + 5 blocked bench entries
++ viability question to AW-III.
 
 ## GrammarProfile population matrix (AW.0.9 ledger)
 

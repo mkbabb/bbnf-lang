@@ -121,28 +121,96 @@ pub(crate) fn find_descendant_by_kind<'tape>(
     None
 }
 
-/// Collect every descendant of `view` (inclusive) whose `rule_kind()`
-/// matches `target` into `out`, stopping descent along any branch at
-/// the first hit.
+/// Find the first descendant of `view` whose `rule_kind()` matches
+/// `target`, descending only through structurally-anonymous wrappers
+/// (Seq / Alt / Repeat compounds whose own `rule_kind` is `Unknown`
+/// or the catch-all `int_lit` sentinel the walker stamps when a
+/// compound isn't preceded by a `DtaState::Ref`).
 ///
-/// Complements [`find_descendant_by_kind`] when multiple occurrences
-/// of the same rule_kind are expected as siblings under the caller's
-/// view (e.g. the flat list of `call_arg` rules produced by the
-/// `identifier , ( "(" , call_arg ?w , ( "," ?w , call_arg ?w ) * , ")" ) ?`
-/// term branch — under DTA each `call_arg` is wrapped one Seq deeper
-/// but they still surface as disjoint subtrees).
+/// This is the correct companion to [`find_descendant_by_kind`] for
+/// "find my own body's direct child under DTA's Seq wrappers": the
+/// caller's grammar body is wrapped in one or more anonymous Seq /
+/// Alt compounds emitted by the lifter's tape-shape requirement, and
+/// the target is a genuine sibling of the other body components (not
+/// a descendant inside another semantic rule's subtree). Blind
+/// descent via `find_descendant_by_kind` would step past a sibling
+/// boundary — e.g. searching a `factor` for a `modifier` would
+/// descend into the sibling `term`'s subtree and return a modifier
+/// belonging to a nested expression.
 ///
-/// Stop-at-hit semantics match the grammar's structural intent:
-/// nested targets within a target's own subtree are typically
-/// grammar-level compositions (a `call_arg`'s body may reference
-/// another rule that itself contains a `call_arg`), not genuine
-/// siblings. Descending past the first hit would conflate positional
-/// arguments with nested call-argument expressions.
+/// Stop conditions when descending:
+/// - reached the target rule_kind → return
+/// - hit a known semantic rule_kind (i.e. any variant of
+///   `BbnfBootstrapRuleKind` that is NOT `Unknown` and NOT `int_lit`)
+///   that differs from `target` → don't descend past it (skip its
+///   subtree)
+/// - anonymous wrapper (`Unknown` or `int_lit` sentinel) → descend
+///   one level and repeat
+pub(crate) fn find_sibling_by_kind<'tape>(
+    view: BbnfBootstrapNodeView<'tape>,
+    target: BbnfBootstrapRuleKind,
+) -> Option<BbnfBootstrapNodeView<'tape>> {
+    if view.rule_kind() == target {
+        return Some(view);
+    }
+    for child in view.children() {
+        if child.rule_kind() == target {
+            return Some(child);
+        }
+        if is_anonymous_wrapper(child) {
+            if let Some(found) = find_sibling_by_kind(child, target) {
+                return Some(found);
+            }
+        }
+        // Otherwise `child` is a semantic-rule compound that is NOT
+        // the target — its subtree carries the nested grammar, not a
+        // sibling body component. Skip descending into it.
+    }
+    None
+}
+
+/// Whether `view` is an anonymous structural wrapper — a compound
+/// the DTA lifter emitted without a semantic-rule identity. These
+/// are the only nodes a sibling-scoped search (see
+/// [`find_sibling_by_kind`]) steps through when looking for a
+/// sibling-level body component.
 ///
-/// Mirrors `grammar::host::collect_pretty_hint_descendants` exactly;
-/// generalised here because every DTA-shape consumer of a "collect
-/// all occurrences of kind X" pattern needs the same walk.
-pub(crate) fn collect_descendants_by_kind<'tape>(
+/// The DTA driver stamps `variant_idx = 0` on compounds whose
+/// `variant_idx` was never captured from a `DtaState::Ref` dispatch;
+/// the generated `rule_kind()` projection maps `variant_idx = 0` to
+/// `int_lit` (the zeroth enum variant) and unmapped variant_idx
+/// values to `Unknown`. Either mean "no semantic-rule identity" —
+/// but `int_lit` is ambiguous: a real `int_lit` leaf from
+/// `value_expr` lowering carries `TapeKind::Span` / `Literal` /
+/// `Regex`, not a compound shape. Gate on both rule_kind AND tape
+/// kind so a real leaf doesn't get descended through.
+fn is_anonymous_wrapper(view: BbnfBootstrapNodeView<'_>) -> bool {
+    use ::bbnf::runtime::tape::TapeKind;
+    if !matches!(
+        view.kind(),
+        TapeKind::Rule | TapeKind::Seq | TapeKind::Alt | TapeKind::Repeat,
+    ) {
+        return false;
+    }
+    matches!(
+        view.rule_kind(),
+        BbnfBootstrapRuleKind::Unknown | BbnfBootstrapRuleKind::int_lit,
+    )
+}
+
+/// Collect every sibling-scoped occurrence of `target` reachable from
+/// `view` by descending only through anonymous structural wrappers,
+/// appending each to `out` with stop-at-hit semantics.
+///
+/// The multi-hit analogue of [`find_sibling_by_kind`]: positional
+/// occurrences of `target` that surface as disjoint subtrees under
+/// the caller's body wrapper (e.g. multiple `call_arg` rules under a
+/// term compound) are gathered without descending into any
+/// individual target's own body. Semantic-rule compounds that aren't
+/// the target (e.g. an `identifier` sibling of the `call_arg` list)
+/// are skipped entirely so their subtrees don't leak nested targets
+/// into the sibling set.
+pub(crate) fn collect_siblings_by_kind<'tape>(
     view: BbnfBootstrapNodeView<'tape>,
     target: BbnfBootstrapRuleKind,
     out: &mut Vec<BbnfBootstrapNodeView<'tape>>,
@@ -152,7 +220,15 @@ pub(crate) fn collect_descendants_by_kind<'tape>(
         return;
     }
     for child in view.children() {
-        collect_descendants_by_kind(child, target, out);
+        if child.rule_kind() == target {
+            out.push(child);
+            continue;
+        }
+        if is_anonymous_wrapper(child) {
+            collect_siblings_by_kind(child, target, out);
+        }
+        // Semantic-rule sibling that isn't the target — skip its
+        // subtree (don't flatten nested occurrences).
     }
 }
 

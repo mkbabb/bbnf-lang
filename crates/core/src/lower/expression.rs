@@ -31,8 +31,8 @@ use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 
 use super::LowerCtx;
 use super::tape_walk::{
-    collect_descendants_by_kind, find_descendant_by_kind, iter_rep_children,
-    peel_transparent,
+    collect_siblings_by_kind, find_descendant_by_kind, find_sibling_by_kind,
+    iter_rep_children, peel_transparent,
 };
 use super::value_expr::{
     deep_unwrap_value, extract_value_func_name, is_type_name, lower_value_expr,
@@ -836,12 +836,15 @@ fn find_type_annotation_child<'a>(
 ///       of `?w`, `?`, `*`, `+`.
 fn lower_factor<'a>(node: BbnfBootstrapNodeView<'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     // Under DTA the factor body `big_comment? , term ?w , modifier? ,
-    // big_comment?` is emitted as a Seq compound, so `term` and
-    // `modifier` sit one level deeper than the factor compound itself.
-    // `find_descendant_by_kind` sees through that Seq wrapper; the
-    // document-order first-hit semantics preserve the `term` → first
-    // occurrence ordering (a modifier's rule never embeds a term).
-    let term = find_descendant_by_kind(node, BbnfBootstrapRuleKind::term)
+    // big_comment?` is emitted inside one or more anonymous Seq /
+    // Alt / Repeat wrappers by the lifter's tape-shape requirement;
+    // `term` and `modifier` surface as sibling body components one or
+    // two anonymous-wrapper levels deeper than the factor compound
+    // itself. `find_sibling_by_kind` descends only through those
+    // anonymous wrappers — crucially NOT into the sibling `term`'s
+    // own subtree — so the modifier returned belongs to THIS factor,
+    // not to some nested expression inside the term.
+    let term = find_sibling_by_kind(node, BbnfBootstrapRuleKind::term)
         .or_else(|| find_term_child_by_elimination(node))
         .unwrap_or_else(|| {
             panic!(
@@ -856,7 +859,7 @@ fn lower_factor<'a>(node: BbnfBootstrapNodeView<'a>, ctx: &mut LowerCtx<'a>) -> 
     // span-text classification for the clean-regen shape where the
     // modifier sits inside a Repeat(vi=0) optional wrapper whose
     // rule_kind maps to `int_lit` instead of `modifier`.
-    if let Some(mod_node) = find_descendant_by_kind(node, BbnfBootstrapRuleKind::modifier)
+    if let Some(mod_node) = find_sibling_by_kind(node, BbnfBootstrapRuleKind::modifier)
         && mod_node.span().1 > mod_node.span().0
     {
         return apply_modifier(base, mod_node.span_text());
@@ -1410,13 +1413,17 @@ fn lower_identifier_with_optional_call<'a>(
     node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,
 ) -> IrNode {
-    // Under DTA the term's identifier branch wraps everything inside a
-    // Seq compound; the `identifier` record sits one level deeper than
-    // the term compound. Descend to find it. If no identifier-kinded
-    // descendant exists (optimizer fully inlined the leaf), fall back
-    // to the first substantive direct child — that first-child carries
-    // the identifier's span text in the inlined shape.
-    let ident = find_descendant_by_kind(node, BbnfBootstrapRuleKind::identifier)
+    // Under DTA the term's identifier branch body
+    // `identifier , ( "(" , call_arg ?w , ( "," ?w , call_arg ?w ) * , ")" ) ?`
+    // is emitted inside anonymous Seq / Alt wrappers; the `identifier`
+    // record and each `call_arg` surface as sibling body components
+    // one or more wrapper levels below the term compound. Use the
+    // sibling-scoped descent so the search doesn't step past a
+    // sibling boundary into a nested expression's own identifier or
+    // call_arg list. Fallback first-substantive-child handles the
+    // optimizer-inlined shape where the identifier leaf surfaces
+    // directly.
+    let ident = find_sibling_by_kind(node, BbnfBootstrapRuleKind::identifier)
         .or_else(|| {
             node.children().find(|c| {
                 let (lo, hi) = c.span();
@@ -1430,17 +1437,11 @@ fn lower_identifier_with_optional_call<'a>(
             )
         });
     let name = ident.span_text();
-    // The call argument list, if present, surfaces as zero or more
-    // `call_arg`-kinded descendants. Under DTA each `call_arg` is
-    // wrapped one Seq deeper than the term compound (the term body
-    // `identifier , ( "(" , call_arg ?w , ( "," ?w , call_arg ?w ) * , ")" ) ?`
-    // is emitted as a Seq), so a direct-child filter misses every
-    // call_arg. Collect descendants with stop-at-hit semantics so
-    // each positional argument surfaces as a disjoint subtree, not as
-    // a flattened list of every nested call_arg inside an argument's
-    // body.
+    // Positional `call_arg` siblings under the term compound, gathered
+    // with the same scoping rule: no descent past the nested
+    // expressions inside any individual arg's body.
     let mut call_args: Vec<BbnfBootstrapNodeView<'a>> = Vec::new();
-    collect_descendants_by_kind(node, BbnfBootstrapRuleKind::call_arg, &mut call_args);
+    collect_siblings_by_kind(node, BbnfBootstrapRuleKind::call_arg, &mut call_args);
     if call_args.is_empty() {
         resolve_name(name, ctx)
     } else {

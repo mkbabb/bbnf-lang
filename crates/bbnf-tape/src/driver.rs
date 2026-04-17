@@ -1237,7 +1237,15 @@ pub fn pop_and_release(stack: &mut FrameStack) -> Option<Frame> {
 /// AW-III.W4.c — `pub` so W4.b's emitted walker can introspect frames
 /// during its own absorption logic (the absorber walks the stack
 /// looking for the innermost Repeat frame).
-#[inline]
+///
+/// AW-IV.W2.1 — `#[inline(always)]` upgrade. The per-grammar walker's
+/// inline-emitted `handle_repeat_failure` splice calls this at the
+/// head of every stack-walk iteration; `#[inline]` alone left the
+/// cross-crate call boundary in post-W2.1 `nm` symbol scans for some
+/// bench binaries. `#[inline(always)]` forces the 4-line body to fold
+/// at the splice site so the residual dispatch is eliminated even in
+/// non-LTO builds.
+#[inline(always)]
 pub fn frame_at(stack: &FrameStack, idx: usize) -> Frame {
     let inline_len = stack.inline_len as usize;
     if idx < inline_len {

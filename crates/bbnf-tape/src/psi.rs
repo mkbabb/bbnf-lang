@@ -270,7 +270,14 @@ impl PayloadStream {
     /// per scalar leaf during Stage A; the cost is one store per leaf
     /// plus the amortised Vec growth (zero growths if the capacity
     /// was pre-allocated correctly).
-    #[inline]
+    ///
+    /// AW-IV.W2.1 — `#[inline(always)]` upgrade. The per-grammar
+    /// walker's Regex arms splice construction + push inline via
+    /// `emit_psi_push_inline`; the method wrapper must fold into the
+    /// splice site in non-LTO builds so the cross-crate
+    /// `PayloadStream::push` symbol does not persist in the bench
+    /// binary's `nm` scan. The body is one `Vec::push` call.
+    #[inline(always)]
     pub fn push(&mut self, job: PayloadJob) {
         self.jobs.push(job);
     }

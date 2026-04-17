@@ -25,10 +25,36 @@ Workspace at W2 close: **1078/0/68** (−22 DELETE, −1 new Category A
 | Wave | Scope | Agents | Status |
 |------|-------|--------|--------|
 | W1 | `lower/expression.rs` — grouped term + directive terminator + substrate helper | 1 serial | ✓ landed (BbnfBootstrap derive expands cleanly; gorgeous grammars still hit binary_factor per plan → W2) |
-| W2 | binary_factor operator recognition | 1 serial | pending |
+| W2 | binary_factor operator recognition — consumer route (flatten iteration pair Seq + span-text operator detection) | 1 serial | ✓ landed (cargo check clean; **1035/62/67** workspace tests) |
 | W3 | find_child_by_kind audit + migration across lower/**, graph/**, types.rs | 3 parallel | pending |
 | W4 | value_expr `->` lowering | 1 serial | pending |
 | W5 | Round-trip + bench matrix + FINAL | 1 serial (orchestrator) | pending |
+
+### Workspace state post-W2 (master HEAD `7f3de323`)
+
+`cargo check --workspace` exit 0. `cargo test --workspace --no-fail-fast` →
+**1035 passed / 62 failed / 67 ignored**. The 62 residuals split across
+the plan's W3/W4/W5 envelopes:
+
+- `css_l4_hex_color_roundtrip` (3), `css_l4_color_white_and_named` (2),
+  `css_l4_payload_materialization` (7), `named_color_aliceblue_fires_inline_u32`,
+  hex/named color materialization — CSS lowering. Destination: W3.1 or W4
+  depending on root cause.
+- `ebnf_prettify::parse_{single,multi}_rule` — ebnf-grammar lowering.
+  W3.1 / W4.
+- `decode_*` (5) — JSON string decoding at lowering. W4.
+- `sheets_parity::*` (16) — sheets grammar lowering. W3.1 / W4.
+- `tape_parity::{bbnf_types,ebnf_*,sheets_*,json_*}` (~18) — snapshot
+  regeneration. W5.
+- `test_json_payload_layouts{,_baseline}` (2) — JSON payload. W4.
+- `every_declared_leaf_reaches_the_tape`, `structural_mode`,
+  `bool_true_branch_currently_drops_payload` — structural. W3.1.
+- `pipeline_css_dfa_fidelity`, `ebnf_root_has_at_least_one_rule`,
+  `csv_multi`, `parse_{canada,data}_json` — integration. Follow-up.
+
+Baseline for W3 evaluation: 1035 passed / 62 failed. Gate at W3 close:
+every passed count preserved or improved; no new failures from the
+migration.
 
 Bench schedule: one cold run at AW-II.W5 close →
 `docs/benchmarks/post-AW.json` as multi-wave history. AW-I W2 baseline

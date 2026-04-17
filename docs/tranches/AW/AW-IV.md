@@ -317,18 +317,15 @@ count drops to 1; every scanner call site resolves through
 the consolidated miners. `parse-that` f64-parse tests
 pass bit-identically on fractional inputs up to 17 digits.
 
-### W3 — Codegen-specialised per-grammar walkers + direct-to-struct expansion [3 parallel] — **LOAD-BEARING FOR EXCEEDING RD**
+> **§W3 moved to AW-III.W5.6–W5.8** per 2026-04-17 fold-in directive.
+> Codegen-specialised per-grammar walkers + direct-to-struct expansion
+> (JSON + BBNF) + per-grammar Pratt const-fold are structural items
+> that prove viability and belong in the correctness tranche. AW-III.W5
+> now delivers the 2× envelope on ALL 19 entries; AW-IV is the
+> granular-optimisation tranche atop. See `docs/tranches/AW/AW-III.md`
+> §W5 for the specification.
 
-**Moved to AW-III.W5.6–W5.8** per 2026-04-17 fold-in directive. Codegen-
-specialised per-grammar walkers + direct-to-struct expansion (JSON +
-BBNF) + per-grammar Pratt const-fold are STRUCTURAL items that prove
-viability and belong in the correctness + viability tranche, not the
-granular-optimisation tranche. AW-III.W5 now delivers the 2× envelope
-on ALL 19 entries; AW-IV adds granular optimisations atop.
-
-See docs/tranches/AW/AW-III.md §W5 for the specification.
-
-### W4 — Document-level parallel parse + bloom dedup + cost-model grid [4 parallel]
+### W3 — Document-level parallel parse + bloom dedup + cost-model grid [4 parallel]
 
 #### W3.1 List-rule identification + chunk fork
 
@@ -512,7 +509,7 @@ CostWeights are the permanent decision with measurement
 evidence in `cost-weights-sweep.json`. Either outcome
 closes the chronic.
 
-### W5 — Walker + reader migration + parity harnesses (formerly W4) [3 parallel]
+### W4 — Walker + reader migration + parity harnesses [3 parallel]
 
 #### W4.1 variant_idx walker coherence
 
@@ -572,7 +569,7 @@ data / data_xl (sonic-rs) and bootstrap / tailwind /
 normalize (lightningcss); CI step wired in
 `.github/workflows/ci.yml`.
 
-### W6 — Visitor reduce_column + SIMD pack + bench parity (formerly W5) [2 parallel]
+### W5 — Visitor reduce_column + SIMD pack + bench parity [2 parallel]
 
 #### W5.1 `Tape::reduce_column<C, R>` + per-column codegen + SoA 4-lane SIMD pack
 
@@ -677,7 +674,7 @@ Hard gate: every entry meets its W6 gate OR carries a
 written rationale; samply sidecars present for the two
 self-time gates.
 
-### W7 — FINAL + close [1 serial]
+### W6 — FINAL + close [1 serial]
 
 Compose `docs/tranches/AW/FINAL.md` (final AW FINAL
 across AW-I + AW-IV): per-phase recap with commit

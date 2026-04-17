@@ -2128,11 +2128,44 @@ pub fn stack_top(stack: &FrameStack) -> Option<&Frame> {
 /// AW-III.W4.c — `pub` for W4.b's emitted walker; the per-state
 /// arms call this at every leaf-emit site to drive the next
 /// dispatch. The function is large (the SY arm + Repeat arm carry
-/// non-trivial logic), so it is NOT marked `#[inline(always)]` —
-/// LLVM's cost model decides per call site. Hot leaf-emitting arms
-/// (Literal, Regex) hit a tight Seq-cursor advance path that
-/// specialises well; the larger Repeat/SY arms branch to the cold
-/// case body via the loop.
+/// non-trivial logic).
+///
+/// AW-III.W4.d — Seq fast-path probe. When the topmost frame is a
+/// Seq with cursor that can advance (cursor + 1 < children.len()),
+/// returns `Some(Next(children[cursor + 1]))` after incrementing the
+/// cursor in place. Otherwise returns `None` and the caller falls
+/// through to the full [`advance_or_pop_with`] body for close + pop
+/// + Alt / Repeat / SY handling.
+///
+/// Marked `#[inline(always)]` so the per-state arm body folds the
+/// in-place cursor increment + child read directly into its tail —
+/// the JSON struct-traversal hot loop never crosses a function-call
+/// boundary on the dominant Seq advance.
+#[inline(always)]
+pub fn advance_seq_fast(
+    stack: &mut FrameStack,
+) -> Option<StepResult> {
+    let top = stack.top_mut()?;
+    if matches!(top.kind, DtaFrameKind::Seq) {
+        let next_cursor = top.cursor + 1;
+        if (next_cursor as usize) < top.children.len() {
+            top.cursor = next_cursor;
+            return Some(StepResult::Next(top.children[next_cursor as usize]));
+        }
+    }
+    None
+}
+
+/// AW-III.W4.d — split into a Seq-fast-path inline shim
+/// ([`advance_seq_fast`]) plus the full-body helper here.
+/// Most leaf emit sites (Literal, Regex, Epsilon, WsTrim) hit a
+/// Seq frame whose cursor advances and dispatches the next child
+/// immediately — that case folds directly into the call site via
+/// the inline-always shim. The full body below covers the
+/// fall-through cases (Seq close, Alt close, Repeat re-entry,
+/// ShuntingYard reducer) that LLVM should not inline due to their
+/// size + dynamic precedence-table consumption.
+#[inline]
 pub fn advance_or_pop_with(
     _table: Option<&DtaTable>,
     _input: Option<&[u8]>,

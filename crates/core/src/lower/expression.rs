@@ -834,7 +834,13 @@ fn find_type_annotation_child<'a>(
 ///       classification: a non-empty child whose trimmed text is one
 ///       of `?w`, `?`, `*`, `+`.
 fn lower_factor<'a>(node: BbnfBootstrapNodeView<'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
-    let term = find_child_by_kind(node, BbnfBootstrapRuleKind::term)
+    // Under DTA the factor body `big_comment? , term ?w , modifier? ,
+    // big_comment?` is emitted as a Seq compound, so `term` and
+    // `modifier` sit one level deeper than the factor compound itself.
+    // `find_descendant_by_kind` sees through that Seq wrapper; the
+    // document-order first-hit semantics preserve the `term` → first
+    // occurrence ordering (a modifier's rule never embeds a term).
+    let term = find_descendant_by_kind(node, BbnfBootstrapRuleKind::term)
         .or_else(|| find_term_child_by_elimination(node))
         .unwrap_or_else(|| {
             panic!(
@@ -849,7 +855,7 @@ fn lower_factor<'a>(node: BbnfBootstrapNodeView<'a>, ctx: &mut LowerCtx<'a>) -> 
     // span-text classification for the clean-regen shape where the
     // modifier sits inside a Repeat(vi=0) optional wrapper whose
     // rule_kind maps to `int_lit` instead of `modifier`.
-    if let Some(mod_node) = find_child_by_kind(node, BbnfBootstrapRuleKind::modifier)
+    if let Some(mod_node) = find_descendant_by_kind(node, BbnfBootstrapRuleKind::modifier)
         && mod_node.span().1 > mod_node.span().0
     {
         return apply_modifier(base, mod_node.span_text());

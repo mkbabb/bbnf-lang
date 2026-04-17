@@ -165,10 +165,13 @@ fn byte_dispatch_inlined_as_match_arms() {
     let s = tokens.to_string();
     // The inlined ByteDispatch arm reads `input[pos]` and matches on
     // the byte. Every dispatch byte the test seeded ('n', 't', 'f')
-    // appears as a numeric literal in the emitted code.
+    // appears as a numeric literal in the emitted code. AW-III.W4.d
+    // threads `pos: &mut u32` through the walker so the byte-peek
+    // dereferences the pointer (`*pos`).
     assert!(
-        s.contains("input . get (pos as usize)") || s.contains("input.get(pos as usize)"),
-        "ByteDispatch arm lacks `input[pos]` peek:\n{s}",
+        s.contains("input . get (* pos as usize)")
+            || s.contains("input.get(*pos as usize)"),
+        "ByteDispatch arm lacks `input[*pos]` peek:\n{s}",
     );
     for byte in [b'n', b't', b'f'] {
         let needle = format!("{byte}u8");
@@ -289,25 +292,75 @@ fn emit_is_grammar_name_agnostic() {
     );
 }
 
-/// Cold-path bridge presence: the emitted module includes the
-/// `__dispatch_via_cold` bridge function the lowered arms route
-/// through. The bridge is the single coupling point between the
-/// hot-path emitter and the cold-path replay surface.
+/// AW-III.W4.d — confirm the bridge collapsed. Earlier waves routed
+/// every non-`ByteDispatch` arm through `__dispatch_via_cold` /
+/// `dta_run_cold`; the W4.d inline-lowering closes that bridge so the
+/// hot path never crosses into `dispatch_one`. The emitted module
+/// references `StepResult` (the runtime outcome enum) directly; the
+/// per-arm bodies advance `cur` via `StepResult::Next(<id>)`.
+///
+/// The check strips doc-comment tokens (`# [doc = ...]`) before
+/// scanning so prose mentions of the cold-path symbols in the
+/// emitter's own documentation do not trigger false positives.
 #[test]
-fn emits_cold_path_bridge() {
+fn no_cold_path_bridge_in_emitted_code() {
     let table = synth_byte_dispatch_table();
     let alphabet = StructuralAlphabet::default();
     let profile = GrammarProfile::default();
     let tokens = emit_specialised_walker("synth", &table, &alphabet, &profile);
     let s = tokens.to_string();
+    let stripped = strip_doc_comments(&s);
     assert!(
-        s.contains("__dispatch_via_cold"),
-        "emitted code lacks the cold-path bridge function",
+        !stripped.contains("__dispatch_via_cold"),
+        "emitted code still references the cold-path bridge — W4.d collapse incomplete",
     );
     assert!(
-        s.contains("__StepOutcome"),
-        "emitted code lacks the `__StepOutcome` walker outcome enum",
+        !stripped.contains("dta_run_cold"),
+        "emitted code still references `dta_run_cold` — hot path leaks into the cold dispatcher",
     );
+    assert!(
+        !stripped.contains("dispatch_one"),
+        "emitted code still references `dispatch_one` — interpreter floor not removed",
+    );
+    assert!(
+        s.contains("StepResult"),
+        "emitted code lacks the runtime `StepResult` outcome enum reference",
+    );
+}
+
+/// Strip `# [doc = r" ..."]` token sequences from the proc_macro2
+/// `to_string()` output so the `no_cold_path_bridge_in_emitted_code`
+/// check can scan for actual code mentions of the cold-path symbols
+/// without tripping on prose in the emitter's own documentation.
+fn strip_doc_comments(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let bytes = s.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        // Match the literal token sequence `# [doc = ` produced by
+        // proc_macro2's `to_string()` for `#[doc = "..."]` attrs.
+        let needle = b"# [doc = ";
+        if i + needle.len() <= bytes.len() && &bytes[i..i + needle.len()] == needle {
+            // Skip until the matching `]`. The doc literal is a Rust
+            // string literal that proc_macro2 prints verbatim; the
+            // closing `]` may be preceded by `"`. Walk until the
+            // first `]` after a `"`.
+            let mut j = i + needle.len();
+            // Skip the opening `r"` or `"`.
+            while j < bytes.len() && bytes[j] != b']' {
+                j += 1;
+            }
+            // Move past the `]`.
+            if j < bytes.len() {
+                j += 1;
+            }
+            i = j;
+        } else {
+            out.push(bytes[i] as char);
+            i += 1;
+        }
+    }
+    out
 }
 
 // Stub so SeqPromote / FrameKind aren't unused — the synthetic table

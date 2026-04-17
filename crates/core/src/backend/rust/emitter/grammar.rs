@@ -23,6 +23,7 @@ use quote::quote;
 
 use crate::backend::driver::analysis::BackendAnalysis;
 
+use super::dfa_codegen;
 use super::{RustEmitCtx, RustEmitter};
 
 impl RustEmitter {
@@ -189,8 +190,29 @@ impl RustEmitter {
         // again. Both the hot-emitted and cold-private paths read
         // the same `DTA_TABLE` and produce structurally-identical
         // tapes for the same input.
+        // AW-IV.W1.β — lift the DTA table once and share it between
+        // the walker emitter and the per-state DFA match function
+        // emitter. The `dfa_codegen` pass compiles every regex-bearing
+        // state's pattern via `parse_that::regex::dfa::Dfa::compile` at
+        // codegen time and emits a straight-line match function; the
+        // companion `__regex_scan_<grammar>` adapter dispatches on
+        // pointer-equality of interned pattern statics. Hot-path
+        // walker arms emit direct named calls to the per-state match
+        // functions; the cold-path replay consumes the adapter as its
+        // `regex_scan` fn pointer.
+        let dta_walker_table = super::dta_walker::lift_for_walker(ir);
+        let grammar_name = ident.to_string();
+        let dfa_match_fns = dfa_codegen::emit_dfa_match_fns(
+            grammar_name.as_str(),
+            ir,
+            &dta_walker_table,
+        );
+        let regex_scan_adapter = dfa_codegen::emit_regex_scan_adapter(
+            grammar_name.as_str(),
+            ir,
+            &dta_walker_table,
+        );
         let dta_walker = {
-            let table = super::dta_walker::lift_for_walker(ir);
             let alphabet = ir
                 .structural_alphabet
                 .as_ref()
@@ -198,8 +220,8 @@ impl RustEmitter {
                 .unwrap_or_default();
             let profile = ir.profile();
             super::dta_walker::emit_specialised_walker(
-                ident.to_string().as_str(),
-                &table,
+                grammar_name.as_str(),
+                &dta_walker_table,
                 &alphabet,
                 &profile,
             )
@@ -301,10 +323,17 @@ impl RustEmitter {
         // upstream compilation step once the sibling emitter modules
         // are deleted.
         //
-        // `DTA_SCANNER` is promoted to a module-level `const` singleton
-        // so `parse()` borrows a single shared scanner instead of
-        // stack-allocating one per call. The `DtaDfaScanner` struct is
-        // zero-size so `const` is canonical.
+        // AW-IV.W1.β — the DtaDfaScanner ZST + RegexScanner impl +
+        // DTA_SCANNER const all delete. Their replacement is a pair of
+        // emitter-produced token streams above: `#dfa_match_fns`
+        // (one straight-line `__dfa_match_<grammar>_<state_idx>` per
+        // regex-bearing state) and `#regex_scan_adapter` (one
+        // `__regex_scan_<grammar>` that pointer-equality-dispatches on
+        // the interned pattern statics). The hot-path walker emits
+        // direct named calls to the per-state match functions; the
+        // cold-path replay consumes the adapter as its `regex_scan` fn
+        // pointer. The runtime DFA interpreter that accounted for
+        // 31.92% self-time on JSON twitter is gone.
         let _ = rule_functions;
 
         quote! {
@@ -328,84 +357,31 @@ impl RustEmitter {
             // ShuntingYard arm via a single indexed byte load.
             #precedence_lut
 
+            // AW-IV.W1.β — per-state DFA-compiled match functions.
+            // One `__dfa_match_<grammar>_<state_idx>(input, pos) ->
+            // Option<u32>` per regex-bearing state; the walker's
+            // Regex / WsTrim arms emit direct named calls to these.
+            // Compiled at codegen time via
+            // `parse_that::regex::dfa::Dfa::compile`; the DFA walk
+            // inlines as a flat `match state { 0 => match b { ... },
+            // ... }` — no runtime interpreter, no trait dispatch, no
+            // HashMap lookup.
+            #dfa_match_fns
+
+            // AW-IV.W1.β — per-grammar regex-scan adapter. Dispatches
+            // on pointer-equality of the interned pattern `&'static
+            // str` statics (`__DTA_REGEX_K` / `__DTA_WS_K`) against
+            // each regex-bearing state's per-state match function.
+            // Consumed as the `regex_scan: fn(&str, &[u8], usize) ->
+            // Option<u32>` parameter by the cold-path replay (AX) and
+            // any call site that dispatches by pattern string. The
+            // hot path emits direct named calls and never reaches
+            // this adapter.
+            #regex_scan_adapter
+
             #dta_walker
 
             #type_defs
-
-            /// AW-III.W1.8 — DTA regex-scanner adapter that bypasses
-            /// the global `cached_dfa` HashMap on the hot path.
-            ///
-            /// The pattern → Dfa cache lives in a per-pattern
-            /// `OnceLock<&'static Dfa>` keyed by interned pattern
-            /// pointer (each `&'static str` pattern emitted by the
-            /// DTA literal table is unique by address). The first
-            /// scan for a pattern compiles + leaks the Dfa into the
-            /// static slot; subsequent scans hit a single atomic
-            /// load. The leak is bounded by the grammar's regex
-            /// count (≤ a few hundred per shipped grammar) and lives
-            /// for the process lifetime — symmetric with the global
-            /// HashMap in `parse_that::cached_dfa` that would have
-            /// stored the same `Arc<Dfa>` payload, minus the
-            /// per-scan `RwLock + HashMap::get + Sip13` overhead.
-            struct DtaDfaScanner;
-
-            impl ::bbnf::runtime::tape::RegexScanner for DtaDfaScanner {
-                fn scan(
-                    &self,
-                    pattern: &str,
-                    input: &[u8],
-                    offset: usize,
-                ) -> ::core::option::Option<u32> {
-                    // AW-III.W1.8 — bypass the global `cached_dfa`
-                    // HashMap on the hot path. The pattern's interned
-                    // `&'static str` pointer IS the cache key; the
-                    // resolved `&'static Dfa` is leaked once on first
-                    // touch. Lookups use a global `RwLock<HashMap>`
-                    // keyed on pointer (Sip13-free, just `usize`
-                    // hashing); read-only path takes the read lock
-                    // and returns a `&'static Dfa` directly. The
-                    // leak is bounded by the grammar's regex count
-                    // (≤ a few hundred per shipped grammar) and
-                    // lives for the process lifetime — symmetric
-                    // with the global HashMap in
-                    // `parse_that::cached_dfa` minus the per-scan
-                    // Sip13 + Arc::clone overhead.
-                    use ::std::collections::HashMap;
-                    use ::std::sync::{OnceLock, RwLock};
-                    static SLOTS: OnceLock<RwLock<HashMap<usize, &'static ::parse_that::regex::dfa::Dfa>>> =
-                        OnceLock::new();
-                    let slots = SLOTS.get_or_init(|| RwLock::new(HashMap::new()));
-                    let key = pattern.as_ptr() as usize;
-                    let dfa: &'static ::parse_that::regex::dfa::Dfa = {
-                        let map = slots.read().unwrap();
-                        if let Some(d) = map.get(&key).copied() {
-                            d
-                        } else {
-                            drop(map);
-                            let mut map = slots.write().unwrap();
-                            if let Some(d) = map.get(&key).copied() {
-                                d
-                            } else {
-                                let compiled = ::parse_that::regex::dfa::Dfa::compile(pattern)
-                                    .unwrap_or_else(|| {
-                                        panic!("Failed to compile regex to DFA: {}", pattern)
-                                    });
-                                let leaked: &'static ::parse_that::regex::dfa::Dfa =
-                                    ::std::boxed::Box::leak(::std::boxed::Box::new(compiled));
-                                map.insert(key, leaked);
-                                leaked
-                            }
-                        }
-                    };
-                    dfa.find_at(input, offset).map(|end| (end - offset) as u32)
-                }
-            }
-
-            /// Module-level scanner singleton. `DtaDfaScanner` is a ZST;
-            /// `const` binds the one-and-only value at compile time so
-            /// every `parse()` call borrows the same instance rather
-            /// than materialising a new stack local.
-            const DTA_SCANNER: DtaDfaScanner = DtaDfaScanner;
 
             impl #ident {
                 #depth_counter
@@ -479,9 +455,15 @@ impl RustEmitter {
                     let root_off = {
                         let (columns, frame_depth) =
                             builder.columns_and_frame_depth_mut();
+                        // AW-IV.W1.β — W1.α's walker signature drops
+                        // the `<__S: RegexScanner>` generic + the
+                        // `scanner: &__S` parameter. The walker emits
+                        // direct named calls to the per-state
+                        // `__dfa_match_<grammar>_<state_idx>` functions
+                        // for Regex / WsTrim arms; no fn-pointer
+                        // plumbing reaches the hot-path call site.
                         #walker_fn_ident(
                             input.as_bytes(),
-                            &DTA_SCANNER,
                             &idx,
                             columns,
                             &mut psi,

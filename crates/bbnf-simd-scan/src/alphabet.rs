@@ -72,6 +72,27 @@ impl StructuralAlphabet {
         }
     }
 
+    /// Build the scanner alphabet from a
+    /// [`bbnf_tape::GrammarProfile`]. The tape profile and the scanner
+    /// alphabet share the same underlying `&'static` data — the tape
+    /// profile's `structural_alphabet`, `structural_digraphs`,
+    /// `structural_digraph_mask`, and `structural_quote_classes` feed
+    /// directly into the scanner's `singletons`, `digraph_pairs`,
+    /// `digraph_mask`, and `quote_classes` without any intermediate
+    /// copy, allocation, or shim layer (AW-III.W5.d).
+    ///
+    /// `const fn` so `parse()` constructs the alphabet at compile time
+    /// when the profile is itself a const — the entire alphabet folds
+    /// into `.rodata` alongside the profile's backing statics.
+    pub const fn from_profile(profile: &bbnf_tape::GrammarProfile) -> Self {
+        Self {
+            singletons: profile.structural_alphabet,
+            digraph_pairs: profile.structural_digraphs,
+            digraph_mask: profile.structural_digraph_mask,
+            quote_classes: profile.structural_quote_classes,
+        }
+    }
+
     /// `true` iff `byte` is the first byte of a digraph.
     #[inline]
     pub const fn digraph_first(&self, byte: u8) -> bool {

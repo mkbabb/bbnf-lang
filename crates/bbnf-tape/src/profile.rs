@@ -181,7 +181,12 @@ pub struct GrammarProfile {
     /// Observed two-byte digraphs at scanner boundaries
     /// (`/*`, `*/`, `->`, `(*`, `*)`). First byte is always in
     /// `structural_alphabet`.
-    pub structural_digraphs: &'static [[u8; 2]],
+    ///
+    /// Stored as `(first, second)` tuples so the same static literal
+    /// feeds both the tape-side profile and the SIMD scanner's
+    /// [`bbnf_simd_scan::StructuralAlphabet::digraph_pairs`] without
+    /// a shim layer (AW-III.W5.d).
+    pub structural_digraphs: &'static [(u8, u8)],
 
     /// 256-bit bitmap of `structural_digraphs` first-bytes, packed
     /// as four `u64` words. Word `i` covers bytes `64*i .. 64*(i+1)`.

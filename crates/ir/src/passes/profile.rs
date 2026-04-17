@@ -91,7 +91,13 @@ pub struct GrammarProfile {
     pub structural_alphabet: Vec<u8>,
 
     /// Two-byte digraphs observed at scanner boundaries.
-    pub structural_digraphs: Vec<[u8; 2]>,
+    ///
+    /// Stored as `(first, second)` tuples — the emitter lowers this
+    /// directly to a `&'static [(u8, u8)]` that feeds the tape-side
+    /// [`bbnf_tape::GrammarProfile::structural_digraphs`] and the SIMD
+    /// scanner's [`bbnf_simd_scan::StructuralAlphabet::digraph_pairs`]
+    /// with no shim layer (AW-III.W5.d).
+    pub structural_digraphs: Vec<(u8, u8)>,
 
     /// 256-bit bitmap of `structural_digraphs` first-bytes, packed
     /// as four `u64` words. Pre-computed at IR time so the SIMD
@@ -188,12 +194,7 @@ impl GrammarIR {
         ) = match self.structural_alphabet.as_ref() {
             Some(alphabet) => (
                 alphabet.single_bytes_vec(),
-                alphabet
-                    .digraphs
-                    .iter()
-                    .copied()
-                    .map(|(a, b)| [a, b])
-                    .collect(),
+                alphabet.digraphs.clone(),
                 alphabet.digraph_mask,
                 alphabet.quote_classes_vec(),
             ),

@@ -76,18 +76,21 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
         )
     };
 
+    // AW-III.W5.d — `(u8, u8)` tuple shape so the same static feeds
+    // both the tape-side profile field and the SIMD scanner alphabet's
+    // `digraph_pairs` without a shim layer.
     let (digraphs_decl, digraphs_ref) = if profile.structural_digraphs.is_empty() {
         (TokenStream::new(), quote! { &[] })
     } else {
-        let pairs = profile.structural_digraphs.iter().map(|pair| {
-            let a = Literal::u8_unsuffixed(pair[0]);
-            let b = Literal::u8_unsuffixed(pair[1]);
-            quote! { [#a, #b] }
+        let pairs = profile.structural_digraphs.iter().map(|(a, b)| {
+            let a_lit = Literal::u8_unsuffixed(*a);
+            let b_lit = Literal::u8_unsuffixed(*b);
+            quote! { (#a_lit, #b_lit) }
         });
         let len = profile.structural_digraphs.len();
         (
             quote! {
-                static __GRAMMAR_PROFILE_DIGRAPHS: [[u8; 2]; #len] = [#(#pairs),*];
+                static __GRAMMAR_PROFILE_DIGRAPHS: [(u8, u8); #len] = [#(#pairs),*];
             },
             quote! { &__GRAMMAR_PROFILE_DIGRAPHS },
         )

@@ -830,7 +830,7 @@ const _EMPTY_WITNESS: GrammarProfile = GrammarProfile::EMPTY;
 // slice is a `&'static` reference to a `static` array, every scalar
 // is a numeric literal.
 static _SAMPLE_ALPHABET: [u8; 3] = [b'{', b'}', b','];
-static _SAMPLE_DIGRAPHS: [[u8; 2]; 1] = [[b'/', b'*']];
+static _SAMPLE_DIGRAPHS: [(u8, u8); 1] = [(b'/', b'*')];
 static _SAMPLE_LIST_RULES: [RuleId; 2] = [RuleId(0), RuleId(7)];
 const _SAMPLE_PROFILE: GrammarProfile = GrammarProfile {
     push_compound_count: 7,
@@ -888,7 +888,7 @@ fn grammar_profile_slices_reference_rodata() {
     assert_eq!(_SAMPLE_PROFILE.structural_alphabet, &[b'{', b'}', b',']);
     assert_eq!(
         _SAMPLE_PROFILE.structural_digraphs,
-        &[[b'/', b'*']] as &[[u8; 2]],
+        &[(b'/', b'*')] as &[(u8, u8)],
     );
     assert_eq!(_SAMPLE_PROFILE.list_rules.len(), 2);
     assert_eq!(_SAMPLE_PROFILE.list_rules[0].0, 0);

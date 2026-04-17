@@ -128,6 +128,9 @@ declared deferrals:
 | 3 gorgeous dump tests (non-checked-in fixtures) | Pre-AV | AW W5 Category A | **Phase 6** |
 | 2 pprint-vm hint tests (softbreak/indent_group drift) | Pre-AV | AW W5 Category A | **Phase 6** |
 | `test_selective_transitive_unfurling` (imports subsystem) | Pre-AV | AV.0.12 → AW.5.5 (disposition decides) | **Phase 7** (if AW.5.5 routes here) |
+| Gradient parsing / `LazyValue` / on-demand materialisation | AW-V research (`aw5-n2-novel-parsing-approaches.md` N2.2) | AW-V.md §Deferred | **Phase 8** (new) |
+| Speculative parsing with shape-transition Markov predictor | AW-V research (`aw5-n2-novel-parsing-approaches.md` N2.1) | AW-V.md §Deferred | **Phase 9** (new) |
+| User-declared custom multi-visitor pairs (Lever 7 beyond `(TapeVisitor, ValueVisitor)`) | AW-V research (`aw5-h2-visitor-monomorphisation.md`) | AW-V.md §Novel Lever 7 bounded; extensions deferred | **Phase 10** (new) |
 
 ## Wave schedule
 
@@ -145,6 +148,9 @@ test-suite-clean on the subsystem-closure waves.
 | **X4 — Closure language-feature closure** (serial) | Single agent: address `closure_*_param` and `lower::expression` gaps. Closure-binding semantics in BBNF were partial pre-AV; this wave finishes the language feature. | Green. | 5 closure tests un-ignore. |
 | **X5 — Analysis structural-mode** (2 parallel) | (a) Cycle/alias detection under structural mode (AX.5.1). (b) Diagnostics surface for analysis gates (AX.5.2). | Green. | 4 analysis structural-mode tests un-ignore. |
 | **X6 — Gorgeous fixtures + pprint-vm hints** (2 parallel) | (a) Gorgeous fixtures: commit non-checked-in snapshot files OR delete the tests (AX.6.1). (b) pprint-vm `softbreak`/`indent_group` drift fix (AX.6.2). | Green. | 5 fixture/hint tests un-ignore or delete. |
+| **X8 — Gradient parsing / `LazyValue` consumer** (serial → 2 parallel on extensions) | Single agent for the core: per-visitor materialisation budget + `LazyRef` payload variant + shape-cached re-entry via `parse_resume` (extends X1 substrate). Parallel extensions for per-grammar `LazyValue` ergonomics (AX.8.1 JSON, AX.8.2 CSS, AX.8.3 BBNF, AX.8.4 Sheets). Grammar-agnostic by construction; the re-entry reuses the shape-dispatch classifier from AW-V.W3. | Green. | Materialisation budget honoured on twitter (ignore-keys workload 2–3× baseline); shape-cached re-entry O(subtree) not O(input); AX.X8.{1..4} JSON/CSS/BBNF/Sheets fixture passes. |
+| **X9 — Speculative parsing + shape-transition Markov predictor** (2 parallel) | (a) Shape-transition matrix mined at codegen OR online from workload stats; per-compound top-1 speculation. (b) Rollback scratchpad via `DtaSnapshot` resume (extends X1 substrate). Speculation runs the predicted N+1 compound in parallel with finalising Nth; rollback on mispredict discards speculative tape writes. Applies to high-repetition workloads (CSS ruleBlock, JSON uniform arrays). | Green. | CSS bootstrap hot-predict hit-rate ≥ 0.75; twitter rollback frequency ≤ 5%; on-correct-predict speedup ≥ 1.05× vs baseline. |
+| **X10 — User-declared custom multi-visitor pairs** (2 parallel) | (a) `#[derive(Visitor)]` macro accepts `#[emit_paired_with(OtherVisitor)]` annotation; emitter monomorphises per declared pair. (b) Per-grammar user-facing visitor examples (AX.10.1 JSON serde-compat, AX.10.2 CSS lightningcss-compat). L1-fit analysis from `aw5-h2-visitor-monomorphisation.md` applies; emitter rejects combinations exceeding budget with a diagnostic. | Green. | AX.10.1 JSON serde-compat visitor bench matches sonic-rs on serde workload; AX.10.2 CSS lightningcss-compat visitor bench within 10% of lightningcss. |
 | **X7 — Tranche completion** (serial) | Single agent: `FINAL.md`, `post-AX.json`, ignored count = 0 (or documented residual with explicit ticket). | Green. | — |
 
 ## Phases
@@ -351,6 +357,109 @@ to AX as a standalone phase. If routed:
 If AW.5.5 fixes it, this phase deletes from AX scope before
 X7 dispatches.
 
+### Phase 8 — Gradient parsing / `LazyValue` / on-demand materialisation (X8)
+
+AW-V's per-shape inline emitter produces full-materialisation
+parsers. Many workloads consume only a fraction of the tape
+(extract `keys.name`, ignore `metadata`); sonic-rs ships a
+JSON-only `LazyValue` for exactly this case. AX extends the idea
+*grammar-agnostically* via the per-shape emitter's visitor hooks.
+
+The mechanism:
+- Visitor declares a "materialisation budget" (e.g., `fn
+  should_descend(&mut self, path: &VisitorPath) -> bool`); parser
+  consults per-compound at begin.
+- Under-budget compounds materialise fully per existing AW-V
+  emission.
+- Over-budget compounds emit `LazyRef { input_start, input_end,
+  shape_tag }` instead. Parser skips the byte range via the
+  structural-index cursor-jump (one O(1) slot-advance per
+  skipped compound). No sub-parsing.
+- User re-parses a `LazyRef` via `lazy_ref.parse_into::<V>()`
+  which calls the shape-dispatch classifier with the cached
+  `shape_tag` as an entry hint; O(subtree) not O(whole-input).
+
+Architectural equivalence to incremental re-parse (X2): both
+re-enter the parser at a known shape boundary with `parse_resume`
+semantics. X8 reuses X1's `DtaSnapshot` serdes + X2's
+shape-cached re-entry infrastructure. Grammar-agnostic because
+shape-dispatch is grammar-agnostic.
+
+#### AX.8.1 — Core `LazyRef` variant + visitor budget hook
+
+Owner: `crates/bbnf-tape/src/tape.rs` (new `LazyRef` tape kind);
+`crates/bbnf-tape/src/visitor.rs` (extend `GrammarVisitor` with
+`should_descend`); `crates/core/src/backend/rust/emitter/shapes/*`
+(each per-shape emitter checks the budget at compound-begin).
+
+#### AX.8.2 / .8.3 / .8.4 / .8.5 — Per-grammar LazyValue ergonomics
+
+Owner per grammar: `crates/core/src/backend/rust/view/{json,css,
+bbnf,sheets}_lazy.rs` (new files). User-facing type for each
+grammar: `JsonLazyValue`, `CssLazyDeclaration`, etc. Each exposes
+`.parse_into::<V>()`, `.as_raw_bytes()`, `.shape_tag()`.
+
+**Hard gate**: materialisation budget honoured on twitter
+(ignore-keys workload 2–3× baseline); shape-cached re-entry
+O(subtree) not O(input); per-grammar fixture passes.
+
+### Phase 9 — Speculative parsing + shape-transition Markov predictor (X9)
+
+High-repetition workloads (CSS `ruleBlock` sequences, JSON
+uniform arrays, BBNF rule lists) exhibit strong
+compound-to-compound shape transitions. A shape-transition
+Markov predictor mined at codegen time (from grammar corpus
+samples) OR online (from workload stats during the first N
+parses) identifies the most likely next compound shape. The
+parser speculatively executes the predicted path while
+finalising the current compound; rollback on mispredict
+discards speculative tape writes.
+
+#### AX.9.1 — Shape-transition matrix + predictor
+
+Owner: `crates/ir/src/passes/recognizers/shape_transitions.rs`
+(new — mines per-grammar transition matrix from corpus samples);
+`crates/bbnf-tape/src/predictor.rs` (new — per-parse online
+update of transition probabilities).
+
+#### AX.9.2 — Rollback scratchpad + speculation orchestration
+
+Owner: `crates/bbnf-tape/src/speculative.rs` (new — speculative
+`Columns` slice + commit/rollback via existing snapshot
+substrate).
+
+**Hard gate**: CSS bootstrap hot-predict hit-rate ≥ 0.75 (per
+N2.1 §measurability); twitter rollback frequency ≤ 5%;
+on-correct-predict speedup ≥ 1.05× vs baseline.
+
+### Phase 10 — User-declared custom multi-visitor pairs (X10)
+
+AW-V ships Lever 7 bounded to `(TapeVisitor, ValueVisitor)`.
+X10 lifts the bound via `#[derive(Visitor)]` macro extension:
+users declare `#[emit_paired_with(OtherVisitor)]` to request a
+paired-emit monomorphisation per grammar.
+
+#### AX.10.1 — `#[derive(Visitor)]` macro + L1-budget guard
+
+Owner: `crates/derive/src/visitor.rs` (new — derive macro);
+`crates/core/src/backend/rust/emitter/shapes/*` (emitter accepts
+the pair-declaration as per-grammar monomorphisation hint).
+Emitter rejects combinations exceeding L1-fit budget per
+`aw5-h2-visitor-monomorphisation.md`'s per-grammar × visitor
+projection; compile error with actionable diagnostic.
+
+#### AX.10.2 — Per-grammar user-facing example visitors
+
+Owner: `crates/core/examples/`. JSON serde-compat visitor; CSS
+lightningcss-compat visitor; BBNF AST visitor; Sheets formula
+visitor. Each ships as an example + bench-pair entry.
+
+**Hard gate**: AX.10.1 macro compiles on at least two-pair
+combinations per grammar; emitter rejects over-L1 combinations
+with a clear message. AX.10.2 JSON serde-compat visitor bench
+matches sonic-rs on the serde workload; CSS lightningcss-compat
+visitor bench within 10% of lightningcss.
+
 ## Critical files
 
 | File | Phase |
@@ -369,7 +478,15 @@ X7 dispatches.
 | `crates/core/src/imports.rs` (selective-transitive resolver) | 7 |
 | `crates/core/tests/incremental_parity.rs` (**new** — incremental-edit fixture suite) | 2 |
 | `crates/core/tests/recovery_parity.rs` (**new** — recovery-event fixture suite) | 3 |
-| `docs/tranches/AX/{PROGRESS,FINAL}.md` + `docs/benchmarks/{post-AX,post-AX-X{0,1,2,3,4,5,6}}.json` | 0–7 |
+| `crates/bbnf-tape/src/tape.rs` (**extend** — `LazyRef` tape kind for gradient parsing) | 8 |
+| `crates/bbnf-tape/src/visitor.rs` (**extend** — `should_descend` budget hook) | 8 |
+| `crates/core/src/backend/rust/view/{json,css,bbnf,sheets}_lazy.rs` (**new** — per-grammar `LazyValue` ergonomics) | 8 |
+| `crates/ir/src/passes/recognizers/shape_transitions.rs` (**new** — shape-transition Markov mining) | 9 |
+| `crates/bbnf-tape/src/predictor.rs` (**new** — online transition updates) | 9 |
+| `crates/bbnf-tape/src/speculative.rs` (**new** — speculative `Columns` slice + commit/rollback) | 9 |
+| `crates/derive/src/visitor.rs` (**extend** — `#[emit_paired_with]` macro attribute) | 10 |
+| `crates/core/examples/{json_serde_visitor,css_lightningcss_visitor,bbnf_ast_visitor,sheets_formula_visitor}.rs` (**new**) | 10 |
+| `docs/tranches/AX/{PROGRESS,FINAL}.md` + `docs/benchmarks/{post-AX,post-AX-X{0..10}}.json` | 0–10 |
 
 ## Hard gates summary
 
@@ -408,9 +525,30 @@ X7 dispatches.
 ### X7 — Imports + completion
 
 17. `test_selective_transitive_unfurling` un-ignores OR carries a documented forward-ticket to a dedicated imports tranche.
-18. `cargo test --workspace --no-fail-fast` 0 failures, ignored count = 0 (or documented residual with explicit ticket per AW Category A discipline).
-19. `docs/tranches/AX/FINAL.md` exists per `docs/instructions/README.md` requirements.
-20. `docs/benchmarks/post-AX.json` exists covering the four parse-bench matrix; cold-parse regression < 5% vs AW close (incremental + recovery substrate is paid for by feature value, not throughput).
+
+### X8 — Gradient parsing / `LazyValue`
+
+18. `LazyRef` tape kind + `should_descend` visitor hook land; every primary-grammar compound shape honours the materialisation budget in its per-shape emit path.
+19. Ignore-keys JSON twitter workload (visitor descends ≤ 20% of keys) shows 2–3× speedup vs full-materialisation baseline; `LazyRef` re-entry via `parse_into::<V>()` is O(subtree) not O(whole-input) per a bench fixture.
+20. Per-grammar `LazyValue` ergonomics shipped (`JsonLazyValue`, `CssLazyDeclaration`, `BbnfLazyRule`, `SheetsLazyFormula`); each has fixture coverage.
+
+### X9 — Speculative parsing
+
+21. Shape-transition Markov matrix mined at codegen (corpus samples) OR online (first-N-parse stats); per-grammar matrix literal emitted into `generated.rs`.
+22. CSS bootstrap hot-predict hit-rate ≥ 0.75; twitter rollback frequency ≤ 5% on typical workload.
+23. On-correct-predict speedup ≥ 1.05× vs AW-V baseline per `post-AX-X9.json`; rollback overhead bounded ≤ 2% on mispredict-dense workloads.
+
+### X10 — User-declared custom multi-visitor pairs
+
+24. `#[derive(Visitor)] #[emit_paired_with(V2)]` macro compiles on at least two pair combinations per primary grammar (JSON + CSS minimum).
+25. Emitter rejects over-L1-budget combinations with an actionable diagnostic naming the visitor pair + budget exceeded.
+26. `AX.10.1` JSON serde-compat visitor bench matches sonic-rs on the serde workload; `AX.10.2` CSS lightningcss-compat visitor bench within 10% of lightningcss.
+
+### Tranche completion
+
+27. `cargo test --workspace --no-fail-fast` 0 failures, ignored count = 0 (or documented residual with explicit ticket per AW Category A discipline).
+28. `docs/tranches/AX/FINAL.md` exists per `docs/instructions/README.md` requirements.
+29. `docs/benchmarks/post-AX.json` exists covering the four parse-bench matrix; cold-parse regression < 5% vs AW close (incremental + recovery + gradient substrate paid for by feature value, not throughput).
 
 ## Indefatigability
 

@@ -5,37 +5,78 @@
 //! The Dispatch Tape Automaton (Stage A — `crates/bbnf-tape/src/dta.rs`)
 //! emits the tape's structural skeleton in a single linear byte pass:
 //! every record lands with its kind, variant, and `span_lo` populated.
-//! Scalar leaves whose payloads need decoding (`f64`, `u8`, `bool`,
-//! `hex u32`, decoded JSON strings, oversized colour-function aggregates)
-//! are not decoded inline — that work is deferred to **Stage B**, which
-//! consumes a `Vec<PayloadJob>` describing exactly what to decode and
-//! where to write the result.
+//! Two populations of payload decoding fan out from this skeleton:
+//!
+//! - **Inline-decodable scalars** — `f64`, `i64`, `u8`, `bool`,
+//!   `HexU32` — decode trivially from the matched byte slice via
+//!   Eisel-Lemire / integer parse / direct byte cast / discriminant /
+//!   nibble expansion. Their decoded value fits in the arena slot the
+//!   emitter already reserved, so **Stage A writes the decoded bytes
+//!   straight into [`Columns::pay_agg`](crate::columns::Columns::pay_agg)
+//!   at parse time** — no PSI job, no post-parse scheduling. The
+//!   per-grammar walker's Regex arms splice the decoder body inline
+//!   via the decoder-emit fragments in
+//!   `crates/core/src/backend/rust/emitter/dta_walker/decoders.rs`
+//!   (AW-IV.W2.3.a); the arena column is pre-sized from an
+//!   input-proportional capacity hint (AW-IV.W2.3.b) so the direct-
+//!   write path sees neither `psi.push` nor a per-record capacity
+//!   check. Payload-less Regex leaves (`RegexPayloadKind::None`) were
+//!   already PSI-free pre-W2.3 — their Span emission needs no decode.
+//!
+//! - **Residual non-scalar payloads** — `String` (JSON-escape decode
+//!   into a framed `(len: u32, bytes)` arena slot via
+//!   [`decoders::json_string::decode_into`](crate::decoders::json_string::decode_into))
+//!   and `AggregateLarge` (verbatim byte copy for CSS `color()`-style
+//!   oversize aggregates) — are **not** inline-decodable. Their decode
+//!   bodies are non-trivial (tens-to-hundreds of instructions per
+//!   record, branchy escape-handling for strings) and pay enough
+//!   per-record work that amortising the decode across a rayon
+//!   `par_chunks_mut` pass pays for the scheduling overhead. For these
+//!   kinds Stage A schedules a [`PayloadJob`] via
+//!   [`PayloadStream::push`] and **Stage B** drains the queue with the
+//!   sequential or parallel walk chosen by
+//!   [`PayloadStream::should_parallelise`].
 //!
 //! ```text
-//! input bytes ─► Stage A (DTA) ─► Tape skeleton + Vec<PayloadJob>
-//!                                                ▼
-//!                                       Stage B (rayon)
-//!                                                ▼
-//!                                       Tape with payloads filled
+//! input bytes ─► Stage A (DTA) ──────────────────────────────────► tape
+//!                   │                                                 ▲
+//!                   ├─ inline-decodable scalar? ──► write pay_agg ────┘
+//!                   │  (F64/I64/U8/Bool/HexU32)      no PSI, no Stage B
+//!                   │
+//!                   └─ residual (String/AggregateLarge)
+//!                         ─► Vec<PayloadJob> ─► Stage B (rayon) ─► pay_agg
 //! ```
+//!
+//! The post-AW-IV.W2.3 per-grammar walker's `nm` scan therefore shows
+//! `PayloadStream::push` **absent** from hot-path arms whose payload
+//! kind is scalar — the call is structurally gone, not merely inlined
+//! away. The symbol persists only where a `String`- or `AggregateLarge`-
+//! kinded leaf is lowered and where the cold-path replay driver
+//! (`driver::dispatch_one`, the AX correctness ground truth) still
+//! funnels every payload kind through the PSI queue uniformly. Every
+//! `psi.push` in a per-grammar walker Regex arm post-W2.3 corresponds
+//! to one of those two residual populations.
 //!
 //! # PSI stream construction (AV.4.1)
 //!
-//! Stage A emits one [`PayloadJob`] per scalar leaf that requires
-//! payload decoding. The job carries:
+//! For the residual non-scalar populations, Stage A emits one
+//! [`PayloadJob`] per leaf that requires Stage-B decoding. The job
+//! carries:
 //!
 //! - `rec_idx` — the structural record's index in
 //!   [`Columns`](crate::columns::Columns), set by the DTA at push time.
 //! - `input_lo` / `input_hi` — the source-byte slice the scanner reads.
 //! - `kind` — the [`PayloadKind`] selecting the terminal scanner.
-//! - `column_idx` — the slot in the active payload column where the
-//!   decoded value lands. The DTA pre-allocates column ranks for every
-//!   job so workers see disjoint write targets.
+//! - `arena_offset` — the byte offset in [`Columns::pay_agg`](crate::columns::Columns::pay_agg)
+//!   where the decoded payload lands. Stage A monotonically advances
+//!   the arena cursor per job so offsets are unique and bounds-disjoint
+//!   across workers.
 //!
-//! The struct is `#[repr(C)]` and 16 bytes wide so a `Vec<PayloadJob>`
-//! has the same cache-line behaviour as a `Vec<TapeRec>` — four jobs
-//! per 64 B line. Stage B's rayon stride is chosen to honour this
-//! alignment and avoid false sharing across workers.
+//! The struct is `#[repr(C)]` and 20 bytes wide so a `Vec<PayloadJob>`
+//! places roughly three jobs per 64 B cache line. Stage B's rayon
+//! stride ([`PayloadStream::CHUNK_RECS`]) is chosen to keep every
+//! worker's chunk on one cache line of the job stream, avoiding false
+//! sharing across workers.
 //!
 //! Capacity is derived from
 //! [`GrammarProfile::leaves_per_input_byte`](crate::profile::GrammarProfile::leaves_per_input_byte)
@@ -46,23 +87,31 @@
 //! # Stage B rayon payload fill (AV.4.2)
 //!
 //! [`PayloadStream::fill_columns`] dispatches the decoded values into
-//! the matching typed payload column. The driver uses the grammar's
+//! the matching typed payload column for the residual non-scalar
+//! populations (`String`, `AggregateLarge`) the walker scheduled. The
+//! driver uses the grammar's
 //! [`parallel_break_even_bytes`](crate::profile::GrammarProfile::parallel_break_even_bytes)
-//! threshold from the [`GrammarProfile`](crate::profile::GrammarProfile)
-//! to choose between the sequential walk and the rayon
+//! threshold from the [`GrammarProfile`] to choose between the
+//! sequential walk and the rayon
 //! `par_chunks_mut`-driven parallel walk. Both paths write into the
 //! same column slots — the API is uniform; only the iterator differs.
+//! For grammars whose payloads are exclusively inline-decodable
+//! scalars the PSI stream is empty after parse, [`PayloadStream::len`]
+//! returns zero, and [`PayloadStream::fill_columns`] is a no-op — the
+//! hot-path decoder-splice already populated every arena slot.
 //!
-//! Cache-line alignment: [`Self::CHUNK_RECS`] is `4` so each rayon
-//! chunk owns exactly one 64 B cache line of `PayloadJob`s. False
+//! Cache-line alignment: [`Self::CHUNK_RECS`] is `64 /
+//! size_of::<PayloadJob>()` (three jobs per line at the current 20 B
+//! struct width) so each rayon chunk fits inside one 64 B cache line
+//! of `PayloadJob`s with no straddle. False
 //! sharing on the *job* stream is structurally impossible (workers
-//! own disjoint chunks), and false sharing on the *column* stream is
-//! impossible by construction — every job's `column_idx` is unique
-//! because the DTA assigns ranks in push order. The only contention
-//! risk is across-line tearing on the destination columns when two
-//! workers write adjacent slots in `pay_narrow` / `pay_wide`. That is
-//! benign on every architecture in scope (x86/ARM both guarantee
-//! aligned-store atomicity at the word boundary).
+//! own disjoint chunks), and false sharing on the arena stream is
+//! impossible by construction — every job's `arena_offset` is unique
+//! because Stage A monotonically advances the arena cursor per job.
+//! The only contention risk is across-line tearing on the destination
+//! arena when two workers write adjacent byte ranges in `pay_agg`.
+//! That is benign on every architecture in scope (x86/ARM both
+//! guarantee aligned-store atomicity at the word boundary).
 
 use crate::columns::Columns;
 use crate::profile::GrammarProfile;
@@ -266,17 +315,65 @@ impl PayloadStream {
         }
     }
 
-    /// Append a job to the stream. The DTA emitter calls this once
-    /// per scalar leaf during Stage A; the cost is one store per leaf
-    /// plus the amortised Vec growth (zero growths if the capacity
-    /// was pre-allocated correctly).
+    /// Append a job to the stream.
     ///
-    /// AW-IV.W2.1 — `#[inline(always)]` upgrade. The per-grammar
-    /// walker's Regex arms splice construction + push inline via
-    /// `emit_psi_push_inline`; the method wrapper must fold into the
-    /// splice site in non-LTO builds so the cross-crate
-    /// `PayloadStream::push` symbol does not persist in the bench
-    /// binary's `nm` scan. The body is one `Vec::push` call.
+    /// # Hot-path elision (AW-IV.W2.3)
+    ///
+    /// Post-AW-IV.W2.3 this method is **not reached** from the
+    /// per-grammar walker's hot path for inline-decodable scalar
+    /// payload kinds — `F64`, `I64`, `U8`, `Bool`, `HexU32`. Those
+    /// kinds decode directly into
+    /// [`Columns::pay_agg`](crate::columns::Columns::pay_agg) at parse
+    /// time via the decoder-splice emitter
+    /// (`crates/core/src/backend/rust/emitter/dta_walker/decoders.rs`,
+    /// W2.3.a) with the arena column pre-sized from an input-
+    /// proportional capacity hint (W2.3.b); no [`PayloadJob`] is
+    /// constructed and no `Vec::push` runs. `nm target/release/deps/
+    /// <bench>` on a bench binary whose grammar contains only inline-
+    /// decodable scalar payloads shows the `PayloadStream::push`
+    /// symbol absent.
+    ///
+    /// The method remains the canonical append entry-point for the
+    /// two residual populations that genuinely require Stage-B
+    /// deferral:
+    ///
+    /// - [`PayloadKind::String`] — escape-resolving JSON-string decode
+    ///   into a framed `(len: u32, bytes)` arena slot. The decoder
+    ///   (`decoders::json_string::decode_into`) runs a stateful
+    ///   escape-handling loop whose per-record cost amortises rayon's
+    ///   scheduling overhead above the break-even threshold in
+    ///   [`GrammarProfile::parallel_break_even_bytes`](crate::profile::GrammarProfile::parallel_break_even_bytes).
+    /// - [`PayloadKind::AggregateLarge`] — verbatim byte copy of
+    ///   oversize aggregates (CSS `color()`-style > 16 B payloads).
+    ///   Per-record cost is modest but the copy itself widens with
+    ///   input and benefits from Stage-B parallelism on large corpora.
+    ///
+    /// For both residual kinds the walker emit at
+    /// `dta_walker::lower_state::emit_regex_arm` splices the arena-
+    /// reserve + `push` pair inline (`emit_psi_push_inline` in
+    /// `dta_walker::helpers`). The splice keeps the surface `push`
+    /// symbol load-bearing in every per-grammar walker whose IR lifts
+    /// at least one `String` or `AggregateLarge` payload; grammars
+    /// whose payloads are all inline-decodable scalars emit zero
+    /// references.
+    ///
+    /// Additionally the cold-path `dispatch_one` replay surface
+    /// (`driver::dispatch_one`, the AX correctness ground truth)
+    /// funnels every payload kind — scalar or residual — through
+    /// `push` uniformly; the cold path's single `psi.push` call at
+    /// `driver.rs::dispatch_one` is never reached from the per-grammar
+    /// hot walker and is attributed cold at whole-function granularity.
+    ///
+    /// # Annotation
+    ///
+    /// `#[inline(always)]` is preserved from AW-IV.W2.1 so any splice
+    /// site the codegen still emits (the residual-kind arms; the
+    /// cold-path driver) folds the one-instruction `Vec::push` body
+    /// into the call site without a function-call boundary surviving
+    /// in the bench binary's `nm` output. The annotation is not a
+    /// hot-path optimisation hint; per W2.3 the hot path of the
+    /// per-grammar walker does not reach this method for scalar
+    /// payloads regardless.
     #[inline(always)]
     pub fn push(&mut self, job: PayloadJob) {
         self.jobs.push(job);
@@ -401,13 +498,15 @@ impl PayloadStream {
     /// raw-pointer stores guarded by this disjointness invariant —
     /// no `&mut T` aliases ever co-exist across threads.
     ///
-    /// Cache lines: [`Self::CHUNK_RECS`] is 4, so each rayon chunk
-    /// owns one 64 B line of `PayloadJob`s on the read side.
-    /// Destination column writes can land on shared cache lines
-    /// (adjacent `column_idx` values), but the writes themselves are
-    /// disjoint and the underlying architectures (x86, ARM) tolerate
-    /// concurrent stores to different bytes within a line at the
-    /// hardware-coherence level.
+    /// Cache lines: [`Self::CHUNK_RECS`] is `64 /
+    /// size_of::<PayloadJob>()` (three jobs per line at the current
+    /// 20 B struct width) so each rayon chunk fits inside one 64 B
+    /// line of `PayloadJob`s on the read side. Destination arena
+    /// writes can land on shared cache lines (adjacent `arena_offset`
+    /// ranges), but the writes themselves are disjoint and the
+    /// underlying architectures (x86, ARM) tolerate concurrent stores
+    /// to different bytes within a line at the hardware-coherence
+    /// level.
     #[cfg(feature = "rayon")]
     fn fill_parallel(&self, input: &[u8], columns: &mut Columns) -> usize {
         let caps = self.required_column_capacities();

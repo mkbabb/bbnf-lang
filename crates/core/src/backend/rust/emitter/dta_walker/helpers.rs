@@ -102,7 +102,7 @@ fn emit_dispatch_bridge() -> TokenStream {
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
         > {
-            ::bbnf::runtime::tape::dta_run(
+            ::bbnf::runtime::tape::dta_run_cold(
                 table, input, scanner, columns, psi, frame_depth,
             )
         }

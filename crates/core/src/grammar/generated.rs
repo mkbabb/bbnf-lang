@@ -3230,6 +3230,13825 @@ mod __bbnfbootstrap_emit_impl {
     /// this dictionary at compile time and emits a single
     /// `push_shape_ref` per match. See AV.5.6 / AV.6.1–6.3.
     pub const BBNF_SHAPE_DICT: &[::bbnf::runtime::tape::BbnfShapeEntry] = &__BBNF_SHAPE_TEMPLATES;
+    #[allow(dead_code, unused_variables, unused_assignments, unused_mut)]
+    mod __dta_walker_inline {
+        use super::*;
+        /// Outcome of a single dispatch step in the specialised
+        /// walker.
+        ///
+        /// Mirrors the cold-path `StepResult` shape so every lowered
+        /// arm surfaces a uniform return contract to the outer
+        /// `match cur` loop.
+        #[allow(dead_code)]
+        enum __StepOutcome {
+            /// Continue with the named next state id.
+            Next(u16),
+            /// Walker terminated — the entry rule's root frame closed.
+            Done,
+            /// Syntax error at the named state. The dispatch loop
+            /// surfaces this as `DtaError::Syntax` to the caller.
+            Syntax(::bbnf::runtime::tape::DtaStateId),
+        }
+        /// Bridge into the cold-path dispatcher. Runs the parse to
+        /// completion from the current state via
+        /// `bbnf_tape::driver::dta_run` and surfaces the outcome.
+        ///
+        /// Both paths read the same `DTA_TABLE` and produce
+        /// structurally-identical tapes for the same input — the
+        /// bridge keeps the hot dispatch loop's match arms uniform
+        /// without crossing the cold-path helper boundary.
+        #[inline(always)]
+        fn __dispatch_via_cold(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+        ) -> ::core::result::Result<
+            ::bbnf::runtime::tape::TapeOffset,
+            ::bbnf::runtime::tape::DtaError,
+        > {
+            ::bbnf::runtime::tape::dta_run_cold(
+                table,
+                input,
+                scanner,
+                columns,
+                psi,
+                frame_depth,
+            )
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_51(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_52(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_53(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_54(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_55(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_56(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_57(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_72(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_73(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_74(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_75(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_76(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_77(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_78(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_79(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_80(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_101(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_108(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_109(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_110(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_111(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_118(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_119(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_120(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_121(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_122(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_123(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_124(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_125(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_126(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_127(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_128(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_129(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_130(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_131(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_132(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_133(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_134(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_135(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_136(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_137(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_138(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_139(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_140(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_141(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "regex";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_142(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_143(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "regex";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_147(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_151(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_154(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_155(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_156(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_157(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_158(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "regex";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_159(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_160(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_164(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_165(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_166(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_167(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_168(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_169(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "regex";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_170(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_171(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_172(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_173(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_174(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_183(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_184(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_185(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_186(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_190(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_200(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_201(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_202(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_203(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_204(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_205(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_206(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_207(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_208(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_209(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_210(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_211(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_212(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_213(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_214(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_215(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_216(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_217(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_218(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_219(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_220(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_221(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_222(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_223(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_224(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_225(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_226(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_227(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_228(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_229(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_230(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_231(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_232(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_233(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_234(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_235(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_236(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_237(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_238(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_239(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_240(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_241(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_242(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_243(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_244(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_245(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_246(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_247(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_248(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_249(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_250(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_251(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_252(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_253(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_254(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_255(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_256(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_257(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_258(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_259(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_260(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_261(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_262(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_263(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_264(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_265(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_266(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_267(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_268(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_269(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_270(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_271(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_272(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_273(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_274(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_275(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_276(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_277(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_278(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_279(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_280(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_281(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_282(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_283(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_284(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_285(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_286(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_287(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_288(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_289(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_290(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_291(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_292(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_293(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_294(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_295(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_296(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_297(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_298(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_299(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_300(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_301(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_302(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_303(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_304(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_305(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_306(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_307(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_308(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_309(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_310(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_311(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_312(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_313(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_314(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_315(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_316(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_317(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_318(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_319(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_320(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_321(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_322(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_323(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_324(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_325(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "regex";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_326(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_327(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_328(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_329(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_330(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_331(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_332(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_333(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_334(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_335(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_336(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_337(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_338(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_339(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_340(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_341(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_342(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_343(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_344(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_345(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_346(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_347(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_348(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_349(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_350(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_351(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_352(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_353(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_354(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_355(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_356(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_357(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_358(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_359(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_360(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_361(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_362(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_363(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_364(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_365(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_366(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_367(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_368(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_369(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_370(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_371(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_372(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_373(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_374(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_375(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_376(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_377(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_378(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_379(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_380(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_381(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_382(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_383(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_384(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_385(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_386(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_387(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_388(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_389(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "regex";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_390(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_391(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_392(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_393(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_394(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_395(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_396(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_397(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_398(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_399(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_400(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_401(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_402(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_403(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_404(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_405(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_406(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_407(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_408(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_409(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_410(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_411(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_412(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_413(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_414(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_415(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_416(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_417(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_418(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_419(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_420(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_421(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_422(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_423(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_424(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_425(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_426(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_427(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_428(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_429(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_430(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_431(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_432(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_433(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_434(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_435(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_436(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_437(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_438(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_439(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_440(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_441(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_442(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_443(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_444(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_445(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_446(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_447(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_448(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_449(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_450(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_451(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_452(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_453(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_454(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_455(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_456(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_457(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_458(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_459(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_460(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_461(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_462(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_463(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_464(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_465(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_466(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_467(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_468(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_469(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_470(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_471(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_472(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_473(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_474(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "literal";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_475(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_476(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_477(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_478(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_479(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_480(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_481(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_482(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_483(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_484(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_485(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_486(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_487(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_488(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_489(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_490(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "alt_linear";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_491(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ref_target";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_492(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_493(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "ws_trim";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_494(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "seq";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        #[cold]
+        #[inline(never)]
+        fn __cold_state_495(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+            pos: u32,
+            cur: u16,
+        ) -> ::core::result::Result<__StepOutcome, ::bbnf::runtime::tape::DtaError> {
+            let pos = pos;
+            let cur = cur;
+            let _ = (pos, cur);
+            ::core::result::Result::Ok({
+                let _ = "repeat";
+                __dispatch_via_cold(table, input, scanner, columns, psi, frame_depth)?;
+                __StepOutcome::Done
+            })
+        }
+        /// AW-III.W4.b — specialised DTA walker for this grammar.
+        ///
+        /// Mechanically lowered from `DTA_TABLE.states`. The outer
+        /// `match cur` has one arm per state-id; the dispatch is
+        /// jump-table-ready, eliminating the runtime
+        /// `match table.states[idx]` over the 14-variant enum
+        /// that LLVM lowered to a 4-compare ladder.
+        ///
+        /// `ByteDispatch` arms inline their 256-entry LUT
+        /// verbatim — LLVM lowers the inlined byte match to a
+        /// jump table indexed by `input[pos]`. Other variants
+        /// route through the cold-path bridge while preserving
+        /// the per-state arm structure; W4.c collapses the
+        /// bridge into per-arm inlined logic once the cold
+        /// helpers are exposed.
+        ///
+        /// Drop-in replacement contract for `dta_run` per the W4
+        /// hard gate; the cold-path `dispatch_one` survives in
+        /// `bbnf_tape::driver` for replay/recovery only (AX
+        /// substrate).
+        #[allow(dead_code)]
+        pub fn run(
+            table: &::bbnf::runtime::tape::DtaTable,
+            input: &[u8],
+            scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+            columns: &mut ::bbnf::runtime::tape::Columns,
+            psi: &mut ::bbnf::runtime::tape::PayloadStream,
+            frame_depth: &mut ::std::vec::Vec<u8>,
+        ) -> ::core::result::Result<
+            ::bbnf::runtime::tape::TapeOffset,
+            ::bbnf::runtime::tape::DtaError,
+        > {
+            let root_rec = ::bbnf::runtime::tape::TapeOffset(columns.len() as u32);
+            let pos: u32 = 0;
+            let _ = pos;
+            let mut cur: u16 = {
+                let s = table.rule_entry_for(table.entry);
+                if s == ::bbnf::runtime::tape::DtaStateId::NONE {
+                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::InvalidState {
+                        state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    });
+                }
+                s.0
+            };
+            'walk: loop {
+                let outcome = match cur {
+                    0 => {
+                        let _ = "regex";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    1 => {
+                        let _ = "regex";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    2 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    3 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    4 => {
+                        let _ = "alt_linear";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    5 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    6 => {
+                        let _ = "regex";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    7 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    8 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    9 => {
+                        let _ = "regex";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    10 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    11 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    12 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    13 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    14 => {
+                        let _ = "repeat";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    15 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    16 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    17 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    18 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    19 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    20 => {
+                        let _ = "repeat";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    21 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    22 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    23 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    24 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    25 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    26 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    27 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    28 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    29 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    30 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    31 => {
+                        let _ = "repeat";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    32 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    33 => {
+                        let _ = "repeat";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    34 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    35 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    36 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    37 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    38 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    39 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    40 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    41 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    42 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    43 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    44 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    45 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    46 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    47 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    48 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    49 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    50 => {
+                        let _ = "alt_linear";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    51 => {
+                        __cold_state_51(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    52 => {
+                        __cold_state_52(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    53 => {
+                        __cold_state_53(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    54 => {
+                        __cold_state_54(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    55 => {
+                        __cold_state_55(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    56 => {
+                        __cold_state_56(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    57 => {
+                        __cold_state_57(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    58 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    59 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    60 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    61 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    62 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    63 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    64 => {
+                        let _ = "alt_linear";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    65 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    66 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    67 => {
+                        let _ = "alt_linear";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    68 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    69 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    70 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    71 => {
+                        let _ = "alt_linear";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    72 => {
+                        __cold_state_72(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    73 => {
+                        __cold_state_73(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    74 => {
+                        __cold_state_74(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    75 => {
+                        __cold_state_75(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    76 => {
+                        __cold_state_76(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    77 => {
+                        __cold_state_77(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    78 => {
+                        __cold_state_78(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    79 => {
+                        __cold_state_79(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    80 => {
+                        __cold_state_80(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    81 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    82 => {
+                        let _ = "shunting_yard";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    83 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    84 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    85 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    86 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    87 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    88 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    89 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    90 => {
+                        let _ = "repeat";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    91 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    92 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    93 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    94 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    95 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    96 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    97 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    98 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    99 => {
+                        let _ = "repeat";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    100 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    101 => {
+                        __cold_state_101(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    102 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    103 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    104 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    105 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    106 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    107 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    108 => {
+                        __cold_state_108(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    109 => {
+                        __cold_state_109(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    110 => {
+                        __cold_state_110(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    111 => {
+                        __cold_state_111(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    112 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    113 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    114 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    115 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    116 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    117 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    118 => {
+                        __cold_state_118(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    119 => {
+                        __cold_state_119(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    120 => {
+                        __cold_state_120(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    121 => {
+                        __cold_state_121(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    122 => {
+                        __cold_state_122(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    123 => {
+                        __cold_state_123(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    124 => {
+                        __cold_state_124(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    125 => {
+                        __cold_state_125(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    126 => {
+                        __cold_state_126(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    127 => {
+                        __cold_state_127(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    128 => {
+                        __cold_state_128(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    129 => {
+                        __cold_state_129(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    130 => {
+                        __cold_state_130(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    131 => {
+                        __cold_state_131(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    132 => {
+                        __cold_state_132(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    133 => {
+                        __cold_state_133(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    134 => {
+                        __cold_state_134(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    135 => {
+                        __cold_state_135(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    136 => {
+                        __cold_state_136(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    137 => {
+                        __cold_state_137(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    138 => {
+                        __cold_state_138(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    139 => {
+                        __cold_state_139(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    140 => {
+                        __cold_state_140(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    141 => {
+                        __cold_state_141(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    142 => {
+                        __cold_state_142(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    143 => {
+                        __cold_state_143(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    144 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    145 => {
+                        let _ = "regex";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    146 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    147 => {
+                        __cold_state_147(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    148 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    149 => {
+                        let _ = "regex";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    150 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    151 => {
+                        __cold_state_151(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    152 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    153 => {
+                        let _ = "regex";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    154 => {
+                        __cold_state_154(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    155 => {
+                        __cold_state_155(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    156 => {
+                        __cold_state_156(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    157 => {
+                        __cold_state_157(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    158 => {
+                        __cold_state_158(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    159 => {
+                        __cold_state_159(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    160 => {
+                        __cold_state_160(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    161 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    162 => {
+                        let _ = "regex";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    163 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    164 => {
+                        __cold_state_164(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    165 => {
+                        __cold_state_165(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    166 => {
+                        __cold_state_166(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    167 => {
+                        __cold_state_167(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    168 => {
+                        __cold_state_168(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    169 => {
+                        __cold_state_169(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    170 => {
+                        __cold_state_170(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    171 => {
+                        __cold_state_171(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    172 => {
+                        __cold_state_172(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    173 => {
+                        __cold_state_173(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    174 => {
+                        __cold_state_174(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    175 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    176 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    177 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    178 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    179 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    180 => {
+                        let _ = "repeat";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    181 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    182 => {
+                        let _ = "repeat";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    183 => {
+                        __cold_state_183(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    184 => {
+                        __cold_state_184(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    185 => {
+                        __cold_state_185(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    186 => {
+                        __cold_state_186(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    187 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    188 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    189 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    190 => {
+                        __cold_state_190(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    191 => {
+                        let _ = "literal";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    192 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    193 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    194 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    195 => {
+                        let _ = "ref_target";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    196 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    197 => {
+                        let _ = "ws_trim";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    198 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    199 => {
+                        let _ = "seq";
+                        __dispatch_via_cold(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                        )?;
+                        __StepOutcome::Done
+                    }
+                    200 => {
+                        __cold_state_200(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    201 => {
+                        __cold_state_201(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    202 => {
+                        __cold_state_202(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    203 => {
+                        __cold_state_203(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    204 => {
+                        __cold_state_204(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    205 => {
+                        __cold_state_205(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    206 => {
+                        __cold_state_206(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    207 => {
+                        __cold_state_207(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    208 => {
+                        __cold_state_208(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    209 => {
+                        __cold_state_209(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    210 => {
+                        __cold_state_210(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    211 => {
+                        __cold_state_211(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    212 => {
+                        __cold_state_212(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    213 => {
+                        __cold_state_213(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    214 => {
+                        __cold_state_214(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    215 => {
+                        __cold_state_215(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    216 => {
+                        __cold_state_216(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    217 => {
+                        __cold_state_217(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    218 => {
+                        __cold_state_218(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    219 => {
+                        __cold_state_219(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    220 => {
+                        __cold_state_220(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    221 => {
+                        __cold_state_221(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    222 => {
+                        __cold_state_222(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    223 => {
+                        __cold_state_223(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    224 => {
+                        __cold_state_224(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    225 => {
+                        __cold_state_225(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    226 => {
+                        __cold_state_226(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    227 => {
+                        __cold_state_227(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    228 => {
+                        __cold_state_228(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    229 => {
+                        __cold_state_229(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    230 => {
+                        __cold_state_230(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    231 => {
+                        __cold_state_231(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    232 => {
+                        __cold_state_232(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    233 => {
+                        __cold_state_233(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    234 => {
+                        __cold_state_234(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    235 => {
+                        __cold_state_235(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    236 => {
+                        __cold_state_236(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    237 => {
+                        __cold_state_237(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    238 => {
+                        __cold_state_238(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    239 => {
+                        __cold_state_239(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    240 => {
+                        __cold_state_240(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    241 => {
+                        __cold_state_241(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    242 => {
+                        __cold_state_242(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    243 => {
+                        __cold_state_243(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    244 => {
+                        __cold_state_244(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    245 => {
+                        __cold_state_245(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    246 => {
+                        __cold_state_246(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    247 => {
+                        __cold_state_247(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    248 => {
+                        __cold_state_248(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    249 => {
+                        __cold_state_249(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    250 => {
+                        __cold_state_250(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    251 => {
+                        __cold_state_251(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    252 => {
+                        __cold_state_252(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    253 => {
+                        __cold_state_253(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    254 => {
+                        __cold_state_254(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    255 => {
+                        __cold_state_255(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    256 => {
+                        __cold_state_256(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    257 => {
+                        __cold_state_257(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    258 => {
+                        __cold_state_258(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    259 => {
+                        __cold_state_259(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    260 => {
+                        __cold_state_260(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    261 => {
+                        __cold_state_261(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    262 => {
+                        __cold_state_262(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    263 => {
+                        __cold_state_263(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    264 => {
+                        __cold_state_264(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    265 => {
+                        __cold_state_265(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    266 => {
+                        __cold_state_266(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    267 => {
+                        __cold_state_267(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    268 => {
+                        __cold_state_268(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    269 => {
+                        __cold_state_269(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    270 => {
+                        __cold_state_270(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    271 => {
+                        __cold_state_271(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    272 => {
+                        __cold_state_272(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    273 => {
+                        __cold_state_273(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    274 => {
+                        __cold_state_274(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    275 => {
+                        __cold_state_275(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    276 => {
+                        __cold_state_276(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    277 => {
+                        __cold_state_277(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    278 => {
+                        __cold_state_278(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    279 => {
+                        __cold_state_279(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    280 => {
+                        __cold_state_280(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    281 => {
+                        __cold_state_281(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    282 => {
+                        __cold_state_282(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    283 => {
+                        __cold_state_283(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    284 => {
+                        __cold_state_284(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    285 => {
+                        __cold_state_285(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    286 => {
+                        __cold_state_286(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    287 => {
+                        __cold_state_287(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    288 => {
+                        __cold_state_288(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    289 => {
+                        __cold_state_289(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    290 => {
+                        __cold_state_290(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    291 => {
+                        __cold_state_291(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    292 => {
+                        __cold_state_292(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    293 => {
+                        __cold_state_293(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    294 => {
+                        __cold_state_294(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    295 => {
+                        __cold_state_295(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    296 => {
+                        __cold_state_296(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    297 => {
+                        __cold_state_297(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    298 => {
+                        __cold_state_298(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    299 => {
+                        __cold_state_299(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    300 => {
+                        __cold_state_300(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    301 => {
+                        __cold_state_301(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    302 => {
+                        __cold_state_302(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    303 => {
+                        __cold_state_303(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    304 => {
+                        __cold_state_304(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    305 => {
+                        __cold_state_305(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    306 => {
+                        __cold_state_306(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    307 => {
+                        __cold_state_307(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    308 => {
+                        __cold_state_308(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    309 => {
+                        __cold_state_309(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    310 => {
+                        __cold_state_310(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    311 => {
+                        __cold_state_311(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    312 => {
+                        __cold_state_312(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    313 => {
+                        __cold_state_313(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    314 => {
+                        __cold_state_314(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    315 => {
+                        __cold_state_315(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    316 => {
+                        __cold_state_316(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    317 => {
+                        __cold_state_317(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    318 => {
+                        __cold_state_318(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    319 => {
+                        __cold_state_319(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    320 => {
+                        __cold_state_320(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    321 => {
+                        __cold_state_321(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    322 => {
+                        __cold_state_322(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    323 => {
+                        __cold_state_323(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    324 => {
+                        __cold_state_324(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    325 => {
+                        __cold_state_325(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    326 => {
+                        __cold_state_326(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    327 => {
+                        __cold_state_327(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    328 => {
+                        __cold_state_328(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    329 => {
+                        __cold_state_329(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    330 => {
+                        __cold_state_330(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    331 => {
+                        __cold_state_331(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    332 => {
+                        __cold_state_332(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    333 => {
+                        __cold_state_333(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    334 => {
+                        __cold_state_334(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    335 => {
+                        __cold_state_335(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    336 => {
+                        __cold_state_336(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    337 => {
+                        __cold_state_337(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    338 => {
+                        __cold_state_338(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    339 => {
+                        __cold_state_339(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    340 => {
+                        __cold_state_340(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    341 => {
+                        __cold_state_341(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    342 => {
+                        __cold_state_342(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    343 => {
+                        __cold_state_343(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    344 => {
+                        __cold_state_344(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    345 => {
+                        __cold_state_345(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    346 => {
+                        __cold_state_346(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    347 => {
+                        __cold_state_347(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    348 => {
+                        __cold_state_348(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    349 => {
+                        __cold_state_349(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    350 => {
+                        __cold_state_350(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    351 => {
+                        __cold_state_351(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    352 => {
+                        __cold_state_352(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    353 => {
+                        __cold_state_353(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    354 => {
+                        __cold_state_354(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    355 => {
+                        __cold_state_355(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    356 => {
+                        __cold_state_356(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    357 => {
+                        __cold_state_357(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    358 => {
+                        __cold_state_358(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    359 => {
+                        __cold_state_359(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    360 => {
+                        __cold_state_360(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    361 => {
+                        __cold_state_361(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    362 => {
+                        __cold_state_362(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    363 => {
+                        __cold_state_363(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    364 => {
+                        __cold_state_364(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    365 => {
+                        __cold_state_365(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    366 => {
+                        __cold_state_366(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    367 => {
+                        __cold_state_367(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    368 => {
+                        __cold_state_368(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    369 => {
+                        __cold_state_369(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    370 => {
+                        __cold_state_370(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    371 => {
+                        __cold_state_371(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    372 => {
+                        __cold_state_372(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    373 => {
+                        __cold_state_373(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    374 => {
+                        __cold_state_374(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    375 => {
+                        __cold_state_375(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    376 => {
+                        __cold_state_376(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    377 => {
+                        __cold_state_377(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    378 => {
+                        __cold_state_378(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    379 => {
+                        __cold_state_379(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    380 => {
+                        __cold_state_380(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    381 => {
+                        __cold_state_381(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    382 => {
+                        __cold_state_382(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    383 => {
+                        __cold_state_383(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    384 => {
+                        __cold_state_384(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    385 => {
+                        __cold_state_385(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    386 => {
+                        __cold_state_386(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    387 => {
+                        __cold_state_387(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    388 => {
+                        __cold_state_388(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    389 => {
+                        __cold_state_389(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    390 => {
+                        __cold_state_390(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    391 => {
+                        __cold_state_391(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    392 => {
+                        __cold_state_392(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    393 => {
+                        __cold_state_393(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    394 => {
+                        __cold_state_394(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    395 => {
+                        __cold_state_395(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    396 => {
+                        __cold_state_396(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    397 => {
+                        __cold_state_397(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    398 => {
+                        __cold_state_398(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    399 => {
+                        __cold_state_399(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    400 => {
+                        __cold_state_400(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    401 => {
+                        __cold_state_401(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    402 => {
+                        __cold_state_402(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    403 => {
+                        __cold_state_403(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    404 => {
+                        __cold_state_404(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    405 => {
+                        __cold_state_405(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    406 => {
+                        __cold_state_406(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    407 => {
+                        __cold_state_407(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    408 => {
+                        __cold_state_408(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    409 => {
+                        __cold_state_409(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    410 => {
+                        __cold_state_410(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    411 => {
+                        __cold_state_411(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    412 => {
+                        __cold_state_412(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    413 => {
+                        __cold_state_413(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    414 => {
+                        __cold_state_414(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    415 => {
+                        __cold_state_415(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    416 => {
+                        __cold_state_416(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    417 => {
+                        __cold_state_417(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    418 => {
+                        __cold_state_418(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    419 => {
+                        __cold_state_419(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    420 => {
+                        __cold_state_420(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    421 => {
+                        __cold_state_421(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    422 => {
+                        __cold_state_422(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    423 => {
+                        __cold_state_423(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    424 => {
+                        __cold_state_424(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    425 => {
+                        __cold_state_425(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    426 => {
+                        __cold_state_426(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    427 => {
+                        __cold_state_427(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    428 => {
+                        __cold_state_428(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    429 => {
+                        __cold_state_429(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    430 => {
+                        __cold_state_430(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    431 => {
+                        __cold_state_431(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    432 => {
+                        __cold_state_432(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    433 => {
+                        __cold_state_433(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    434 => {
+                        __cold_state_434(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    435 => {
+                        __cold_state_435(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    436 => {
+                        __cold_state_436(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    437 => {
+                        __cold_state_437(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    438 => {
+                        __cold_state_438(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    439 => {
+                        __cold_state_439(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    440 => {
+                        __cold_state_440(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    441 => {
+                        __cold_state_441(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    442 => {
+                        __cold_state_442(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    443 => {
+                        __cold_state_443(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    444 => {
+                        __cold_state_444(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    445 => {
+                        __cold_state_445(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    446 => {
+                        __cold_state_446(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    447 => {
+                        __cold_state_447(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    448 => {
+                        __cold_state_448(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    449 => {
+                        __cold_state_449(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    450 => {
+                        __cold_state_450(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    451 => {
+                        __cold_state_451(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    452 => {
+                        __cold_state_452(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    453 => {
+                        __cold_state_453(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    454 => {
+                        __cold_state_454(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    455 => {
+                        __cold_state_455(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    456 => {
+                        __cold_state_456(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    457 => {
+                        __cold_state_457(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    458 => {
+                        __cold_state_458(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    459 => {
+                        __cold_state_459(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    460 => {
+                        __cold_state_460(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    461 => {
+                        __cold_state_461(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    462 => {
+                        __cold_state_462(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    463 => {
+                        __cold_state_463(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    464 => {
+                        __cold_state_464(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    465 => {
+                        __cold_state_465(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    466 => {
+                        __cold_state_466(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    467 => {
+                        __cold_state_467(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    468 => {
+                        __cold_state_468(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    469 => {
+                        __cold_state_469(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    470 => {
+                        __cold_state_470(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    471 => {
+                        __cold_state_471(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    472 => {
+                        __cold_state_472(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    473 => {
+                        __cold_state_473(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    474 => {
+                        __cold_state_474(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    475 => {
+                        __cold_state_475(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    476 => {
+                        __cold_state_476(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    477 => {
+                        __cold_state_477(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    478 => {
+                        __cold_state_478(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    479 => {
+                        __cold_state_479(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    480 => {
+                        __cold_state_480(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    481 => {
+                        __cold_state_481(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    482 => {
+                        __cold_state_482(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    483 => {
+                        __cold_state_483(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    484 => {
+                        __cold_state_484(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    485 => {
+                        __cold_state_485(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    486 => {
+                        __cold_state_486(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    487 => {
+                        __cold_state_487(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    488 => {
+                        __cold_state_488(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    489 => {
+                        __cold_state_489(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    490 => {
+                        __cold_state_490(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    491 => {
+                        __cold_state_491(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    492 => {
+                        __cold_state_492(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    493 => {
+                        __cold_state_493(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    494 => {
+                        __cold_state_494(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    495 => {
+                        __cold_state_495(
+                            table,
+                            input,
+                            scanner,
+                            columns,
+                            psi,
+                            frame_depth,
+                            pos,
+                            cur,
+                        )?
+                    }
+                    _ => {
+                        return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::InvalidState {
+                            state: ::bbnf::runtime::tape::DtaStateId(cur),
+                        });
+                    }
+                };
+                match outcome {
+                    __StepOutcome::Next(next) => {
+                        cur = next;
+                    }
+                    __StepOutcome::Done => break 'walk,
+                    __StepOutcome::Syntax(state_id) => {
+                        return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: 0,
+                            failing_state: state_id,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(root_rec)
+        }
+    }
+    /// AW-III.W4.b — public entry into the specialised DTA walker.
+    ///
+    /// Surfaces the per-grammar `__dta_walker_inline::run` under a
+    /// stable name (`dta_run_<grammar>`) so the surrounding
+    /// `parse()` can call into it without traversing the inner
+    /// module. The inner module exists to scope the per-state
+    /// helper functions away from the surrounding `generated.rs`
+    /// namespace.
+    #[allow(dead_code)]
+    pub fn dta_run_BbnfBootstrap(
+        table: &::bbnf::runtime::tape::DtaTable,
+        input: &[u8],
+        scanner: &dyn ::bbnf::runtime::tape::RegexScanner,
+        columns: &mut ::bbnf::runtime::tape::Columns,
+        psi: &mut ::bbnf::runtime::tape::PayloadStream,
+        frame_depth: &mut ::std::vec::Vec<u8>,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        __dta_walker_inline::run(table, input, scanner, columns, psi, frame_depth)
+    }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct int_litView<'p> {

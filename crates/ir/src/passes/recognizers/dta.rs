@@ -589,12 +589,13 @@ impl<'ir> DtaBuilder<'ir> {
                 payload: literal_payload,
             }),
             IrNode::Regex(sid) => {
-                // AW-III.W5-carry — consult the CTNS lifter. When the
-                // pattern's matchable alphabet is disjoint from the
-                // grammar's structural alphabet, lift to
-                // `ConsumeToNextStructural` so the walker's hot path
-                // collapses the byte-by-byte regex scan into a single
-                // cursor jump.
+                // AW-III.W5-carry / AW-IV.W3.5b — consult the CTNS
+                // lifter. When the pattern's matchable alphabet is
+                // disjoint from the grammar's structural alphabet,
+                // lift to `ConsumeToNextStructural` so the walker's
+                // hot path collapses the byte-by-byte regex scan into
+                // a single cursor jump via the stage-1 structural
+                // index.
                 //
                 // The lift is gated on both:
                 // 1. no payload decoder (CTNS emits structural-only
@@ -602,16 +603,14 @@ impl<'ir> DtaBuilder<'ir> {
                 // 2. the lifter flagging this NodeId (the miner's
                 //    admission check proves alphabet disjointness).
                 //
-                // CTNS lift is DISABLED by default until the emitter
-                // + walker consumer surface a matching record-
-                // emission path. The substrate ships; the consumer
-                // activation awaits downstream wiring. This gate
-                // keeps the IR-side admission active for test
-                // inspection while preventing the walker from
-                // consuming the lift (which would break parsing on
-                // any grammar whose regex arm writes a Span record).
-                let ctns_enabled = false;
-                if ctns_enabled && regex_payload.is_none() && self.is_ctns_lifted(node) {
+                // AW-IV.W3.5b — the `ctns_enabled = false` gate cf691347
+                // landed because the walker's Regex arm writes a Span
+                // record and the CTNS arm wrote no record; downstream
+                // grammar consumers fell off the data. W3.5b adds the
+                // `TapeKind::Scanned` record variant for the CTNS arm
+                // so the leaf-emit contract holds across both lifts;
+                // un-gated here.
+                if regex_payload.is_none() && self.is_ctns_lifted(node) {
                     self.alloc_state(DtaState::ConsumeToNextStructural { pattern: *sid })
                 } else {
                     self.alloc_state(DtaState::Regex {

@@ -318,13 +318,28 @@ fn state_kind_tag(state: &IrState) -> &'static str {
     }
 }
 
-/// AW-III.W5-carry — Emit the CTNS arm body. Collapses the regex
-/// scan to a single cursor jump via the stage-1 structural index
-/// (when populated) or degrades to ASCII-whitespace trim when the
-/// index is empty.
+/// AW-III.W5-carry / AW-IV.W3.5b — Emit the CTNS arm body. Collapses
+/// the regex scan to a single cursor jump via the stage-1 structural
+/// index (when populated) or degrades to ASCII-whitespace trim when
+/// the index is empty.
+///
+/// AW-IV.W3.5b — the arm now emits a `TapeKind::Scanned` leaf carrying
+/// the scanned byte range so downstream grammar consumers that expect
+/// a leaf record for this Regex NodeId still see one. The record's
+/// `(span_lo, span_hi)` mirrors what the pre-lift Regex arm would have
+/// emitted as `TapeKind::Span`, but the distinct kind lets consumers
+/// distinguish CTNS-produced records from full-DFA scans.
 fn emit_consume_to_next_structural_arm(_idx: usize) -> TokenStream {
     let advance = emit_advance_or_pop_call();
+    let rec_ident = format_ident!("_rec_scanned");
+    let emit_leaf = emit_emit_leaf_inline(
+        &rec_ident,
+        quote! { ::bbnf::runtime::tape::TapeKind::Scanned },
+        quote! { lo },
+        quote! { *pos },
+    );
     quote! {
+        let lo = *pos;
         if !idx.positions.is_empty() {
             let slot_idx = *slot as usize;
             if slot_idx < idx.positions.len() {
@@ -336,6 +351,7 @@ fn emit_consume_to_next_structural_arm(_idx: usize) -> TokenStream {
         } else {
             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
         }
+        #emit_leaf
         stack.pending_variant_idx = u8::MAX;
         #advance
     }

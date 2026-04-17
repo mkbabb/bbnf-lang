@@ -3225,6 +3225,78 @@ mod __bbnfbootstrap_emit_impl {
     /// this dictionary at compile time and emits a single
     /// `push_shape_ref` per match. See AV.5.6 / AV.6.1–6.3.
     pub const BBNF_SHAPE_DICT: &[::bbnf::runtime::tape::BbnfShapeEntry] = &__BBNF_SHAPE_TEMPLATES;
+    /// AW-III.W6.5 — dense Pratt precedence LUT.
+    ///
+    /// One byte per dispatch byte. Consulted by the DTA driver's
+    /// `ShuntingYard` arm. See `bbnf::backend::rust::emitter::
+    /// precedence` for the bit layout.
+    pub const PRECEDENCE_LUT: [u8; 256] = [
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 1u8, 0u8, 0u8, 0u8, 0u8, 1u8, 2u8, 0u8, 2u8, 0u8, 1u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8,
+    ];
+    /// AW-III.W6.5 — sparse Pratt metadata slice.
+    ///
+    /// One entry per mined operator. Consulted by the DTA
+    /// driver when `PRECEDENCE_LUT[byte] & 0x80 != 0` (two-byte
+    /// operator) to resolve the second byte + discriminant.
+    pub const PRECEDENCE_ENTRIES: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 43u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 2u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            op_discriminant: 0u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 45u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 2u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            op_discriminant: 1u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 42u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(9u32),
+            op_discriminant: 0u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 47u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(9u32),
+            op_discriminant: 1u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 37u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(9u32),
+            op_discriminant: 2u8,
+        },
+    ];
+    /// AW-III.W6.5 — total mined operator count for this
+    /// grammar. Non-zero iff the lift admitted ≥ 1 chain.
+    pub const PRECEDENCE_OPERATOR_COUNT: usize = 5usize;
     #[allow(
         dead_code,
         unused_variables,

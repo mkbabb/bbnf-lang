@@ -250,6 +250,24 @@ impl RustEmitter {
             )
         };
 
+        // AW-III.W6.5 — per-grammar Pratt precedence LUT. Mines every
+        // DtaState::ShuntingYard chain's operators from the lifted
+        // DTA table and emits a packed `const PRECEDENCE_LUT: [u8; 256]`
+        // plus a sparse `PRECEDENCE_ENTRIES` slice. The walker's
+        // ShuntingYard arm (specialised inline by W4) consults the LUT
+        // at runtime — one indexed byte load + three shifts per operator
+        // dispatch. Grammars without operator chains emit a zeroed LUT
+        // for uniform downstream consumption.
+        let precedence_lut = {
+            let lifted_table = super::dta_walker::lift_for_walker(ir);
+            let chain_facts =
+                bbnf_ir::passes::collect_operator_chains(&lifted_table);
+            super::precedence::emit_precedence_lut(
+                ident.to_string().as_str(),
+                &chain_facts,
+            )
+        };
+
         // Tranche AV Phase 2 — AV.2.5 reordered-unrolling kernels for
         // typed-payload visitors. One free-function per descriptor
         // with a 4-lane reordered accumulator (Sum) or lane-wise
@@ -303,6 +321,12 @@ impl RustEmitter {
             // literal-led branches ≥ PHF_MIN_BRANCHES; consulted by
             // downstream AltLinear / ClassifyByte call sites.
             #keyword_phf_tables
+
+            // AW-III.W6.5 — Pratt precedence LUT. Dense `[u8; 256]`
+            // packed byte layout + sparse metadata slice for two-byte
+            // operators. Consulted by the W4-emitted walker's
+            // ShuntingYard arm via a single indexed byte load.
+            #precedence_lut
 
             #dta_walker
 

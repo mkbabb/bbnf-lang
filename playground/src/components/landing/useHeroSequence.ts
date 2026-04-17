@@ -1,5 +1,6 @@
 import { ref, onMounted, onBeforeUnmount, type Ref } from "vue";
-import { ScrollTimeline, easeOutCubic } from "@mkbabb/keyframes.js";
+import { ScrollTimeline } from "@mkbabb/keyframes.js";
+import { easeOutCubic } from "@mkbabb/value.js";
 import type { TypewriterControl, TypewriterWord } from "./useTypewriter";
 import { useHeroState } from "@/composables/useHeroState";
 

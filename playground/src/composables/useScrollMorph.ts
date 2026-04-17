@@ -1,5 +1,6 @@
 import { ref, onMounted, onBeforeUnmount, type Ref } from "vue";
-import { ScrollTimeline, easeOutCubic } from "@mkbabb/keyframes.js";
+import { ScrollTimeline } from "@mkbabb/keyframes.js";
+import { easeOutCubic } from "@mkbabb/value.js";
 
 const snap = (v: number) => Math.round(v * 2) / 2;
 

@@ -11,7 +11,8 @@
     },
     "dependencies": {
         "@mkbabb/glass-ui": "file:../../glass-ui",
-        "@mkbabb/keyframes.js": "^1.2.0",
+        "@mkbabb/keyframes.js": "^2.0.0",
+        "@mkbabb/value.js": "^0.5.1",
         "@vueuse/core": "^13.0.0",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.0",

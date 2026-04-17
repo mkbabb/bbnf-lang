@@ -1,5 +1,5 @@
 import { ref, onMounted, onBeforeUnmount, type Ref } from "vue";
-import { easeOutCubic } from "@mkbabb/keyframes.js";
+import { easeOutCubic } from "@mkbabb/value.js";
 
 /**
  * Scroll-driven entrance animation: element fades in + translates up as it scrolls into view.

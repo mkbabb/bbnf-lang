@@ -31,38 +31,52 @@ exploits:
 
 2. **Snapshot-and-resume is mechanical.** The AW.1.7
    `DtaSnapshot` captures the DTA's frame stack + counter
-   registers + byte offset in a serialisable struct. Resume
-   = pass the snapshot back into the driver. Stack depth ≤
-   12 on every grammar in the corpus; snapshot cost is O(1)
-   in input size.
+   registers + byte offset **+ structural-index slot**
+   (the dual-cursor `slot: u32` field added in AW-III.W5
+   alongside `pos: u32` for the stage-1 SIMD bitmap consumer
+   redesign). Resume = pass the snapshot back into the driver.
+   Stack depth ≤ 12 on every grammar in the corpus; snapshot
+   cost is O(1) in input size.
 
 3. **Incremental re-parse is two snapshots, a localised
    re-walk, and a column splice.** When the source buffer is
    edited from `[old_lo, old_hi]` to new bytes:
+   - Re-derive the stage-1 structural index for the edited
+     region (deterministic function of input bytes; one
+     bbnf-simd-scan pass over the affected stripe ~5%
+     replay-time overhead per tranche AW-III §5).
    - Locate the highest tape record whose span fully
      contains `[old_lo, old_hi]` via binary search on
      `span_lo`.
    - Snapshot the DTA at that record's saved state (kept on
      the tape's per-record metadata column, populated during
-     the original parse).
-   - Re-drive the DTA over `[span_lo, edit_end]` from the
-     snapshot.
+     the original parse) — both `pos` and `slot` restored.
+   - Re-drive the specialised walker over
+     `[span_lo, edit_end]` from the snapshot, consuming the
+     re-derived structural index slice via the dual cursor.
    - Splice the resulting Columns slice into the master
      Columns at the affected record range; bump downstream
      `span_lo`/`span_hi` by the byte delta in one linear
-     pass.
+     pass; rewrite `slot` references via the per-record slot
+     metadata (mirrors the existing `sib_skip` rewrite).
 
    tree-sitter ships this as its headline feature. AX ships
    it because the substrate makes it cheap, not because it
-   reframes anything load-bearing in the architecture.
+   reframes anything load-bearing in the architecture. The
+   stage-1 index re-derivation is the only AW-III addition
+   to AX's existing model — it is deterministic and amortises
+   trivially over the edit region.
 
-The recovery story is parallel: when a DTA transition fails,
-walk the frame stack upward looking for a state whose grammar
-declares a structural-sync byte (or the AW-derived default —
-the next byte in the structural-alphabet that closes or
-advances that level). Skip ahead, pop the frame, resume.
-`@recover` becomes sugar over the structural default rather
-than the only mechanism.
+The recovery story is parallel: when the specialised walker's
+dispatch fails, walk the frame stack upward looking for a state
+whose grammar declares a structural-sync byte (or the AW-derived
+default — the next byte in the structural-alphabet that closes
+or advances that level). Skip ahead via cursor jump (`cursor.pos
+= idx.positions[cursor.slot_of_sync_byte]`), pop the frame,
+resume. `@recover` becomes sugar over the structural default
+rather than the only mechanism. The dual cursor makes the skip-
+ahead O(1) in the input distance to the sync byte — the structural
+index already knows where it is.
 
 ## Invariants (inherited from AU/AV/AW, refined)
 

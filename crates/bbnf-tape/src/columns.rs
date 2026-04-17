@@ -22,8 +22,8 @@
 //! | Column      | Type            | Role                                            |
 //! |-------------|-----------------|-------------------------------------------------|
 //! | `kinds`     | `Vec<u8>`       | `TapeKind` + meta_idx nibble (packed byte)      |
-//! | `flags`     | `Vec<u8>`       | variant_idx (6b) + has_children + meta_idx\[4\] |
-//! | `extra`     | `Vec<u16>`      | packed per-record flags (STRING_BORROW_BIT…)    |
+//! | `flags`     | `Vec<u8>`       | full 8-bit `variant_idx` (AW-III.W1.A widened)  |
+//! | `extra`     | `Vec<u16>`      | packed bits: STRING_BORROW, PAYLOAD_IN_ARENA, HAS_CHILDREN, META_IDX_HI |
 //! | `span_lo`   | `Vec<u32>`      | source-byte start offset                        |
 //! | `span_hi`   | `Vec<u32>`      | source-byte end offset                          |
 //! | `sib_skip`  | `Vec<u32>`      | distance to next sibling (0 = last)             |
@@ -83,10 +83,13 @@ pub struct Columns {
     /// bits of `meta_idx`. Read with [`TapeKind::from_u8`] and the
     /// [`TapeRec::pack_kind_meta`] inverse.
     pub kinds: Vec<u8>,
-    /// Bitfield byte: variant_idx (low 6), has_children (bit 6),
-    /// meta_idx bit \[4\] (bit 7).
+    /// Full 8-bit `variant_idx` (rule discriminant). AW-III.W1.A
+    /// widened from 6 → 8 bits; `has_children` and `meta_idx[4]`
+    /// migrated to [`Self::extra`].
     pub flags: Vec<u8>,
-    /// Packed per-record flags (`STRING_BORROW_BIT` today).
+    /// Packed per-record flags: `STRING_BORROW_BIT`,
+    /// `PAYLOAD_IN_ARENA_BIT`, `HAS_CHILDREN_BIT` (post-W1.A),
+    /// `META_IDX_HI_BIT` (post-W1.A).
     pub extra: Vec<u16>,
     /// Source-byte start offset.
     pub span_lo: Vec<u32>,
@@ -261,11 +264,12 @@ impl Columns {
         TapeKind::from_u8(self.kinds[i as usize] & 0x0F)
     }
 
-    /// Read a record's `has_children` bit directly from the `flags`
-    /// column.
+    /// Read a record's `has_children` bit directly from the `extra`
+    /// column. Migrated from `flags[6]` in AW-III.W1.A alongside the
+    /// `variant_idx` widening.
     #[inline]
     pub fn has_children_at(&self, i: u32) -> bool {
-        (self.flags[i as usize] & 0x40) != 0
+        (self.extra[i as usize] & TapeRec::HAS_CHILDREN_BIT) != 0
     }
 
     /// Read a record's `child_off` directly.

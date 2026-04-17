@@ -147,7 +147,8 @@ impl<'tape> TapeCursor<'tape> {
         self.tape.columns().span_at(self.offset.0)
     }
 
-    /// Variant index stored in flags (low 6 bits).
+    /// Full 8-bit variant index from `flags`. AW-III.W1.A widened
+    /// from 6 → 8 bits; rules with ids ≥ 64 no longer alias.
     #[inline]
     pub fn variant_idx(&self) -> u8 {
         self.record().variant_idx()

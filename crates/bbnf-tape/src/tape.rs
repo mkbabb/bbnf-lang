@@ -69,10 +69,13 @@ impl TapeOffset {
 ///
 /// - `kind_meta` — packed byte: low 4 bits = [`TapeKind`]
 ///   discriminant, high 4 bits = `meta_idx` bits \[0:3\].
-/// - `flags` — bitfield: variant index (low 6 bits), `has_children`
-///   (bit 6), `meta_idx` bit \[4\] (bit 7).
-/// - `extra` — packed per-record flags ([`Self::STRING_BORROW_BIT`]
-///   today; 15 bits free).
+/// - `flags` — full 8-bit `variant_idx` (rule discriminant in
+///   `[0, 256)`). AW-III.W1.A widened from 6 to 8 bits to admit
+///   grammars with > 64 typed rules (CSS L4 has 186); the prior
+///   mask collided distinct rules sharing low-6-bit ids.
+/// - `extra` — packed per-record flags. Bit 0
+///   ([`Self::STRING_BORROW_BIT`]), bit 1 ([`Self::PAYLOAD_IN_ARENA_BIT`]),
+///   bit 2 ([`Self::HAS_CHILDREN_BIT`]), bit 3 ([`Self::META_IDX_HI_BIT`]).
 /// - `span_lo` / `span_hi` — source-byte offsets.
 /// - `child_off` — polymorphic pointer (see [`Columns::child_off`]).
 #[repr(C)]
@@ -81,13 +84,24 @@ pub struct TapeRec {
     /// Packed byte: low 4 bits = [`TapeKind`] discriminant, high 4
     /// bits = `meta_idx` bits \[0:3\].
     pub kind_meta: u8,
-    /// Bitfield: variant index (low 6 bits), has_children (bit 6),
-    /// meta_idx bit \[4\] (bit 7).
+    /// Full 8-bit `variant_idx` (rule discriminant in `[0, 256)`).
+    /// AW-III.W1.A widened from 6 → 8 bits; the prior `& 0x3F` mask
+    /// collided distinct rules whose ids shared their low six bits
+    /// (CSS L4's `colorProps` and `namedColor`, BBNF's `> 64` rules).
+    /// `has_children` and `meta_idx` bit \[4\] moved to
+    /// [`Self::extra`].
     pub flags: u8,
-    /// Packed per-record flags. Bit 0 ([`Self::STRING_BORROW_BIT`])
-    /// marks a string leaf whose content is a zero-copy slice of
-    /// the parser input (`source[span_lo+1..span_hi-1]`). Remaining
-    /// 15 bits are free for future packed metadata.
+    /// Packed per-record flags.
+    ///
+    /// - bit 0: [`Self::STRING_BORROW_BIT`] — string leaf borrows
+    ///   from source.
+    /// - bit 1: [`Self::PAYLOAD_IN_ARENA_BIT`] — `child_off` is an
+    ///   arena byte offset.
+    /// - bit 2: [`Self::HAS_CHILDREN_BIT`] — compound has emitted
+    ///   children (was bit 6 of `flags` pre-AW-III.W1.A).
+    /// - bit 3: [`Self::META_IDX_HI_BIT`] — high bit (bit \[4\]) of
+    ///   the 5-bit `meta_idx` (was bit 7 of `flags` pre-AW-III.W1.A).
+    /// Remaining 12 bits are free for future packed metadata.
     pub extra: u16,
     /// Byte offset into the source input where this record's span
     /// begins.
@@ -138,12 +152,28 @@ impl TapeRec {
     /// (unit tests) survives unchanged.
     pub const PAYLOAD_IN_ARENA_BIT: u16 = 0x0002;
 
-    /// Pack a [`TapeKind`] and `meta_idx` into the `kind_meta` and
-    /// `flags` bytes. Returns `(kind_meta, flags_meta_bit)` where
-    /// `flags_meta_bit` is `0x00` or `0x80` — the caller ORs it into
-    /// the flags byte.
+    /// AW-III.W1.A — bit in [`TapeRec::extra`] marking a compound
+    /// record whose children run is non-empty. Migrated from the
+    /// pre-W1.A `flags` bit 6 to free the full `flags` byte for an
+    /// 8-bit `variant_idx`.
+    pub const HAS_CHILDREN_BIT: u16 = 0x0004;
+
+    /// AW-III.W1.A — bit in [`TapeRec::extra`] carrying the high bit
+    /// (bit \[4\]) of the 5-bit `meta_idx`. Migrated from the
+    /// pre-W1.A `flags` bit 7 alongside [`Self::HAS_CHILDREN_BIT`].
+    pub const META_IDX_HI_BIT: u16 = 0x0008;
+
+    /// Pack a [`TapeKind`] and `meta_idx` into the `kind_meta` byte
+    /// and an `extra` companion bit. Returns
+    /// `(kind_meta, extra_meta_bit)` where `extra_meta_bit` is
+    /// either `0` or [`Self::META_IDX_HI_BIT`] — the caller ORs it
+    /// into the `extra` u16.
+    ///
+    /// AW-III.W1.A — the high bit of `meta_idx` migrated from
+    /// `flags[7]` to `extra[3]` to free the full `flags` byte for an
+    /// 8-bit `variant_idx`.
     #[inline]
-    pub(crate) fn pack_kind_meta(kind: TapeKind, meta_idx: u8) -> (u8, u8) {
+    pub(crate) fn pack_kind_meta(kind: TapeKind, meta_idx: u8) -> (u8, u16) {
         debug_assert!(
             meta_idx <= Self::MAX_META_IDX,
             "meta_idx {} exceeds 5-bit maximum ({})",
@@ -151,8 +181,12 @@ impl TapeRec {
             Self::MAX_META_IDX,
         );
         let kind_meta = (kind as u8 & 0x0F) | ((meta_idx & 0x0F) << 4);
-        let flags_meta_bit = (meta_idx >> 4) << 7; // bit [4] → bit 7 of flags
-        (kind_meta, flags_meta_bit)
+        let extra_meta_bit = if meta_idx & 0x10 != 0 {
+            Self::META_IDX_HI_BIT
+        } else {
+            0
+        };
+        (kind_meta, extra_meta_bit)
     }
 
     /// Extract the [`TapeKind`] from the packed `kind_meta` byte.
@@ -161,25 +195,34 @@ impl TapeRec {
         TapeKind::from_u8(self.kind_meta & 0x0F)
     }
 
-    /// Extract the 5-bit `meta_idx` from the packed `kind_meta` and
-    /// `flags` bytes.
+    /// Extract the 5-bit `meta_idx` from the packed `kind_meta` byte
+    /// (low 4 bits) and `extra` (high bit).
     #[inline]
     pub fn meta_idx(&self) -> u8 {
         let lo4 = (self.kind_meta >> 4) & 0x0F;
-        let hi1 = (self.flags >> 7) & 0x01;
+        let hi1 = if (self.extra & Self::META_IDX_HI_BIT) != 0 {
+            1
+        } else {
+            0
+        };
         lo4 | (hi1 << 4)
     }
 
-    /// Extract the variant index from `flags` (low 6 bits).
+    /// Extract the 8-bit variant index from `flags`.
+    ///
+    /// AW-III.W1.A widened from 6 to 8 bits — the prior `& 0x3F`
+    /// mask is gone. Distinct rules whose ids share low six bits
+    /// (CSS L4's `colorProps` and `namedColor`) no longer collide.
     #[inline]
     pub fn variant_idx(&self) -> u8 {
-        self.flags & 0x3F
+        self.flags
     }
 
-    /// Does this record have children? (Bit 6 of `flags`.)
+    /// Does this record have children? Bit [`Self::HAS_CHILDREN_BIT`]
+    /// of `extra` (post-AW-III.W1.A; was `flags` bit 6).
     #[inline]
     pub fn has_children(&self) -> bool {
-        (self.flags & 0x40) != 0
+        (self.extra & Self::HAS_CHILDREN_BIT) != 0
     }
 
     /// Byte length of the record's source span.

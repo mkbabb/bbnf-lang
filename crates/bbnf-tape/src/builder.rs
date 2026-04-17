@@ -208,12 +208,11 @@ impl TapeBuilder {
         meta_idx: u8,
     ) -> TapeOffset {
         debug_assert!(kind.is_leaf(), "push_leaf on compound kind {:?}", kind);
-        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        let flags = (variant_idx & 0x3F) | flags_meta_bit;
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
         let idx = self.columns.push_structural(
             kind_meta,
-            flags,
-            0,
+            variant_idx,
+            extra_meta_bit,
             span_lo,
             span_hi,
             TapeOffset::NONE,
@@ -266,12 +265,12 @@ impl TapeBuilder {
         } else {
             TapeOffset::NONE
         };
-        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        let flags = (variant_idx & 0x3F) | if has_children { 0x40 } else { 0 } | flags_meta_bit;
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
+        let extra = extra_meta_bit | if has_children { TapeRec::HAS_CHILDREN_BIT } else { 0 };
         let idx = self.columns.push_structural(
             kind_meta,
-            flags,
-            0,
+            variant_idx,
+            extra,
             span_lo,
             span_hi,
             effective_child_off,
@@ -342,12 +341,11 @@ impl TapeBuilder {
                 TapeOffset(offset)
             }
         };
-        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        let flags = (variant_idx & 0x3F) | flags_meta_bit;
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
         let idx = self.columns.push_structural(
             kind_meta,
-            flags,
-            0,
+            variant_idx,
+            extra_meta_bit,
             span_lo,
             span_hi,
             child_off,
@@ -490,12 +488,11 @@ impl TapeBuilder {
             arena_offset,
             self.columns.pay_agg.len()
         );
-        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        let flags = (variant_idx & 0x3F) | flags_meta_bit;
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
         let idx = self.columns.push_structural(
             kind_meta,
-            flags,
-            0,
+            variant_idx,
+            extra_meta_bit,
             span_lo,
             span_hi,
             TapeOffset(arena_offset),
@@ -536,12 +533,11 @@ impl TapeBuilder {
             span_lo,
             span_hi,
         );
-        let (kind_meta, flags_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        let flags = (variant_idx & 0x3F) | flags_meta_bit;
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
         let idx = self.columns.push_structural(
             kind_meta,
-            flags,
-            TapeRec::STRING_BORROW_BIT,
+            variant_idx,
+            TapeRec::STRING_BORROW_BIT | extra_meta_bit,
             span_lo,
             span_hi,
             TapeOffset::NONE,

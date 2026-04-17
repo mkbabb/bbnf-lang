@@ -207,13 +207,17 @@ pub enum DtaState {
         table: Vec<StateId>,
         fallback: Option<StateId>,
     },
-    /// AW-III.W6.3 — ClassifyByte dispatched Alt — mined by
-    /// `disjoint_first` pass when every branch's FIRST set is
+    /// AW-III.W6.3 / AW-IV.W3.3 — ClassifyByte dispatched Alt — mined
+    /// by `disjoint_first` pass when every branch's FIRST set is
     /// mutually-disjoint. Structurally equivalent to `ByteDispatch`
     /// but the IR discriminant preserves mining provenance so the
-    /// emitter can specialize downstream (inline as `match`,
-    /// const-fold via LLVM jumptable) without re-deriving the
-    /// disjointness analysis. Per §6 the mechanism is grammar-agnostic.
+    /// emitter can specialise downstream (AW-IV.W3.3 lowers it to a
+    /// single indexed load on a `&'static [DtaStateId; 256]` LUT —
+    /// the tightest dispatch form, one load + branch per Alt entry).
+    /// Per §6 the mechanism is grammar-agnostic. AW-IV.W3.3 promotes
+    /// ClassifyByte ahead of ByteDispatch: when `disjoint_first` has
+    /// mined a table, it replaces the upstream `compute_dispatch`
+    /// admission so the walker arm sees the specialised LUT path.
     ClassifyByte {
         table: Vec<StateId>,
         fallback: Option<StateId>,
@@ -535,10 +539,12 @@ impl<'ir> DtaBuilder<'ir> {
         self.lift_node_with_payload(node, LiteralPayload::None, None)
     }
 
-    /// AW-III.W6.3 — look up the disjoint_first mining entry for an
-    /// `IrNode::Alt`. Returns `None` when the Alt didn't admit
-    /// ClassifyByte substitution (overlapping FIRST sets, empty
-    /// branches, or the mining pass didn't run).
+    /// AW-III.W6.3 / AW-IV.W3.3 — look up the disjoint_first mining
+    /// entry for an `IrNode::Alt`. Returns `None` when the Alt didn't
+    /// admit ClassifyByte substitution (overlapping FIRST sets, empty
+    /// branches, or the mining pass didn't run). The lifter consults
+    /// this FIRST; when it returns `Some`, `ClassifyByte` supersedes
+    /// any upstream `ByteDispatch` admission for the same Alt.
     fn lookup_disjoint_first(
         &self,
         node: &IrNode,
@@ -642,36 +648,41 @@ impl<'ir> DtaBuilder<'ir> {
                         )
                     })
                     .collect();
-                // AW-III.W6.3 — consult the disjoint_first mining
-                // pass only when the upstream dispatch analysis
-                // didn't populate its own table. The upstream pass
-                // (`compute_dispatch`) is authoritative for Alt
-                // admission — it owns fallback-branch handling, the
-                // 128-entry table construction, and the heuristic
-                // admission budget. The disjoint_first miner is a
-                // more restrictive grammar-shape check that may
-                // admit Alts the dispatch pass rejected (e.g. when
-                // the dispatch heuristic prefers linear over LUT for
-                // few-branch cases). When the dispatch pass has
-                // already admitted the Alt, defer to its table —
-                // the linear-branch case falls through to AltLinear
-                // as before.
-                if dispatch.is_none() {
-                    if let Some(disjoint) = self.lookup_disjoint_first(node) {
-                        let mut table = vec![StateId::NONE; 256];
-                        for (byte, branch_idx) in disjoint.table.iter().enumerate() {
-                            if *branch_idx == u8::MAX {
-                                continue;
-                            }
-                            if let Some(&state) = branch_states.get(*branch_idx as usize) {
-                                table[byte] = state;
-                            }
+                // AW-IV.W3.3 — reverse the dispatch gate.
+                //
+                // Pre-W3.3 `compute_dispatch` admitted every
+                // disjoint-FIRST candidate first as `ByteDispatch`, so
+                // the new `ClassifyByte` mining never observed any
+                // admissible Alts: the miner ran, produced its table,
+                // and the lifter always deferred to the upstream
+                // dispatch because `dispatch.is_some()`. Reverse:
+                // `ClassifyByte` runs FIRST. When `disjoint_first` has
+                // mined a table, it REPLACES `ByteDispatch` — the
+                // walker arm becomes a single indexed load on the
+                // precomputed `[DtaStateId; 256]` LUT, the tightest
+                // dispatch form. When `disjoint_first` has NOT mined
+                // this Alt (overlapping FIRSTs, empty branches, or
+                // regex-valued branches that preclude single-byte
+                // classification), fall back to `ByteDispatch` from
+                // the upstream `compute_dispatch` pass — the less-
+                // optimised path that preserves fallback-branch
+                // handling + 128-entry ASCII window semantics.
+                // `AltLinear` remains the final fallback when neither
+                // pass admitted the Alt.
+                if let Some(disjoint) = self.lookup_disjoint_first(node) {
+                    let mut table = vec![StateId::NONE; 256];
+                    for (byte, branch_idx) in disjoint.table.iter().enumerate() {
+                        if *branch_idx == u8::MAX {
+                            continue;
                         }
-                        return self.alloc_state(DtaState::ClassifyByte {
-                            table,
-                            fallback: None,
-                        });
+                        if let Some(&state) = branch_states.get(*branch_idx as usize) {
+                            table[byte] = state;
+                        }
                     }
+                    return self.alloc_state(DtaState::ClassifyByte {
+                        table,
+                        fallback: None,
+                    });
                 }
                 if let Some(ad) = dispatch {
                     let fallback = ad

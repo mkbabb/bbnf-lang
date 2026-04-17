@@ -70,6 +70,7 @@ mod separator_list;
 pub mod shape_dict;
 pub mod shape_dict_bbnf;
 mod signature;
+pub mod state_visit_frequency;
 mod token_led_branches;
 pub mod visitor;
 

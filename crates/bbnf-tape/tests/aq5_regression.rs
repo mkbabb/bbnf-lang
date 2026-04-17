@@ -49,16 +49,14 @@
 use bbnf_tape::{
     dta_run_cold, Columns, DtaFrameKind, DtaRuleEntry, DtaRuleId, DtaState,
     DtaStateId, DtaTable, FrameStack, FrameStackSavepoint, LiteralPayload,
-    PayloadStream, RegexScanner, SeqPromote, StructuralIndex, TapeKind,
+    PayloadStream, SeqPromote, StructuralIndex, TapeKind,
 };
 
-/// No-op regex scanner — the regression tests use only Literal +
-/// Epsilon + dispatch states, so the scanner is never consulted.
-struct NullScanner;
-impl RegexScanner for NullScanner {
-    fn scan(&self, _pattern: &str, _input: &[u8], _offset: usize) -> Option<u32> {
-        None
-    }
+/// AW-IV.W1.β — null regex-scan fn pointer; these regression tests
+/// drive only Literal + Epsilon + dispatch states, so the scan fn is
+/// never called.
+fn null_regex_scan(_pattern: &str, _input: &[u8], _pos: usize) -> Option<u32> {
+    None
 }
 
 /// AW-III.W5.c — Failure 1: scalar quote-parity.
@@ -113,7 +111,7 @@ fn aq5_scalar_quote_parity_no_double_emission() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"\"hello\"", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"\"hello\"", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(
         result.is_ok(),
         "quote-parity body parse failed: {:?}",
@@ -176,7 +174,7 @@ fn aq5_duplicated_alt_arms_one_branch_only() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"ay", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"ay", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(
         result.is_ok(),
         "alt second-branch parse failed: {:?}",
@@ -279,7 +277,7 @@ fn aq5_unsaved_cursor_on_checkpoint_savepoint_carries_slot() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"xxx", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"xxx", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(
         result.is_ok(),
         "Repeat 3x parse failed: {:?}",
@@ -352,7 +350,7 @@ fn aq5_disabled_ws_elision_wstrim_collapses() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"a   b", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"a   b", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(
         result.is_ok(),
         "WsTrim collapse parse failed: {:?}",

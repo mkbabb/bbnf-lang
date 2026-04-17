@@ -83,7 +83,7 @@ pub use driver::{
     saturating_u16, stack_top, stage_literal_payload_in_arena,
     trim_ascii_ws, trim_with_pattern, try_branch, Cursor, DtaError, Frame,
     FrameStack, FrameStackProbeSnapshot, FrameStackSavepoint, IterSavepoint,
-    OpStackEntry, RegexScanner, RepeatAbsorbResult, StepResult,
+    OpStackEntry, RepeatAbsorbResult, StepResult,
     COUNTER_INLINE_SLOTS, STACK_INLINE_DEPTH,
 };
 #[cfg(feature = "dta-replay")]

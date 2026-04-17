@@ -76,11 +76,28 @@
 //!
 //! # Regex + byte-dispatch hooks
 //!
-//! Regex matching is delegated to a caller-supplied scanner — the
-//! DTA describes the state machine but the regex engine lives in
-//! `parse-that`'s scanner suite. The driver accepts a `&dyn
-//! RegexScanner` so the tape crate carries no regex dependency edge.
-//! Literal matches are pure byte compares.
+//! Regex matching is delegated to a caller-supplied function pointer
+//! — the DTA describes the state machine but the regex engine lives
+//! in the per-grammar emitter (see `bbnf-core`'s `dfa_codegen` pass
+//! which compiles every regex pattern at codegen time and emits a
+//! straight-line specialised match function plus a per-grammar
+//! `__regex_scan_<grammar>` adapter). The driver accepts a
+//! `fn(&str, &[u8], usize) -> Option<u32>` so the tape crate carries
+//! no regex dependency edge.
+//!
+//! # AW-IV.W1.β — scanner-trait elimination
+//!
+//! Pre-W1.β the cold path took a `scanner: &dyn RegexScanner` trait
+//! object; the hot path emitted a `<__S: RegexScanner>` generic. The
+//! trait survived 31.92% self-time on JSON twitter because
+//! `<DtaDfaScanner as RegexScanner>::scan` routed to a runtime DFA
+//! interpreter (`Dfa::find_at`) through a leaked `&'static Dfa`
+//! cache. W1.β lifts the interpreter into codegen; the trait deletes;
+//! the cold path takes a fn pointer that the per-grammar emitter
+//! wires to the emitted `__regex_scan_<grammar>` adapter. The hot
+//! path emits direct named calls to the per-state match functions
+//! and never reaches the adapter. Literal matches are pure byte
+//! compares, unchanged.
 
 use crate::columns::Columns;
 use crate::dta::{
@@ -701,21 +718,21 @@ pub enum DtaError {
     },
 }
 
-// ── Regex scanner trait ─────────────────────────────────────────────
-
-/// Scanner hook supplied by the caller for [`DtaState::Regex`] arms.
-///
-/// The tape crate cannot depend on a regex engine directly (leaf-crate
-/// invariant: zero inter-crate dependencies beyond std). Callers pass
-/// a scanner implementation that converts `(pattern, input[offset..])`
-/// into `Some(match_len)` on success, `None` on no match. The bbnf-
-/// generated `parse()` wires the scanner to `parse-that`'s regex
-/// suite.
-pub trait RegexScanner {
-    /// Match `pattern` at `input[offset..]`, returning the match
-    /// length in bytes on success.
-    fn scan(&self, pattern: &str, input: &[u8], offset: usize) -> Option<u32>;
-}
+// ── Regex scan hook ─────────────────────────────────────────────────
+//
+// AW-IV.W1.β — the pre-W1.β `RegexScanner` trait deletes in favour of
+// a function pointer (`fn(&str, &[u8], usize) -> Option<u32>`) the
+// cold path accepts as a parameter. The per-grammar emitter
+// (`bbnf-core`'s `dfa_codegen` pass) emits a `__regex_scan_<grammar>`
+// adapter that dispatches on pointer-equality of interned pattern
+// statics against per-state DFA-compiled match functions; callers pass
+// the adapter as the fn pointer. The hot path never reaches the
+// adapter — emitted walker arms call the per-state match functions
+// directly by name.
+//
+// The tape crate keeps its leaf-crate invariant: the fn-pointer
+// parameter carries no regex-engine type, so `bbnf-tape` compiles
+// without any regex dependency edge.
 
 // ── Driver entry point ──────────────────────────────────────────────
 
@@ -771,12 +788,12 @@ pub trait RegexScanner {
 pub fn dta_run_cold(
     table: &DtaTable,
     input: &[u8],
-    scanner: &dyn RegexScanner,
+    regex_scan: fn(&str, &[u8], usize) -> Option<u32>,
     columns: &mut Columns,
     psi: &mut PayloadStream,
     frame_depth: &mut Vec<u8>,
 ) -> Result<TapeOffset, DtaError> {
-    dta_run_inner(table, input, scanner, columns, psi, frame_depth)
+    dta_run_inner(table, input, regex_scan, columns, psi, frame_depth)
 }
 
 /// Replay-enabled variant of the cold-path dispatch loop —
@@ -787,13 +804,13 @@ pub fn dta_run_cold(
 pub fn dta_run_with_replay(
     table: &DtaTable,
     input: &[u8],
-    scanner: &dyn RegexScanner,
+    regex_scan: fn(&str, &[u8], usize) -> Option<u32>,
     columns: &mut Columns,
     psi: &mut PayloadStream,
     frame_depth: &mut Vec<u8>,
     decision_log: Option<&mut Vec<u8>>,
 ) -> Result<TapeOffset, DtaError> {
-    dta_run_with_log(table, input, scanner, columns, psi, frame_depth, decision_log)
+    dta_run_with_log(table, input, regex_scan, columns, psi, frame_depth, decision_log)
 }
 
 // ── Core walker ─────────────────────────────────────────────────────
@@ -801,18 +818,18 @@ pub fn dta_run_with_replay(
 fn dta_run_inner(
     table: &DtaTable,
     input: &[u8],
-    scanner: &dyn RegexScanner,
+    regex_scan: fn(&str, &[u8], usize) -> Option<u32>,
     columns: &mut Columns,
     psi: &mut PayloadStream,
     frame_depth: &mut Vec<u8>,
 ) -> Result<TapeOffset, DtaError> {
     #[cfg(feature = "dta-replay")]
     {
-        dta_run_with_log(table, input, scanner, columns, psi, frame_depth, None)
+        dta_run_with_log(table, input, regex_scan, columns, psi, frame_depth, None)
     }
     #[cfg(not(feature = "dta-replay"))]
     {
-        dta_run_core(table, input, scanner, columns, psi, frame_depth)
+        dta_run_core(table, input, regex_scan, columns, psi, frame_depth)
     }
 }
 
@@ -820,7 +837,7 @@ fn dta_run_inner(
 fn dta_run_with_log(
     table: &DtaTable,
     input: &[u8],
-    scanner: &dyn RegexScanner,
+    regex_scan: fn(&str, &[u8], usize) -> Option<u32>,
     columns: &mut Columns,
     psi: &mut PayloadStream,
     frame_depth: &mut Vec<u8>,
@@ -853,7 +870,7 @@ fn dta_run_with_log(
             log.push(state.0 as u8);
         }
         match dispatch_one(
-            table, input, scanner, &idx, columns, psi, frame_depth, &mut stack,
+            table, input, regex_scan, &idx, columns, psi, frame_depth, &mut stack,
             state, &mut pos, &mut slot,
         ) {
             Ok(StepResult::Next(next)) => state = next,
@@ -881,7 +898,7 @@ fn dta_run_with_log(
 fn dta_run_core(
     table: &DtaTable,
     input: &[u8],
-    scanner: &dyn RegexScanner,
+    regex_scan: fn(&str, &[u8], usize) -> Option<u32>,
     columns: &mut Columns,
     psi: &mut PayloadStream,
     frame_depth: &mut Vec<u8>,
@@ -935,12 +952,12 @@ fn dta_run_core(
     // whitespace is structurally meaningful.
     let boundary_ws = first_ws_pattern(table);
     if let Some(pat) = boundary_ws {
-        trim_with_pattern(scanner, pat, input, &mut pos);
+        trim_with_pattern(regex_scan, pat, input, &mut pos);
     }
 
     loop {
         match dispatch_one(
-            table, input, scanner, &idx, columns, psi, frame_depth, &mut stack,
+            table, input, regex_scan, &idx, columns, psi, frame_depth, &mut stack,
             state, &mut pos, &mut slot,
         ) {
             Ok(StepResult::Next(next)) => state = next,
@@ -959,7 +976,7 @@ fn dta_run_core(
         }
     }
     if let Some(pat) = boundary_ws {
-        trim_with_pattern(scanner, pat, input, &mut pos);
+        trim_with_pattern(regex_scan, pat, input, &mut pos);
     }
     if (pos as usize) < input.len() {
         return Err(DtaError::UnexpectedEnd { offset: pos });
@@ -987,20 +1004,25 @@ pub fn first_ws_pattern(table: &DtaTable) -> Option<Option<&'static str>> {
 
 /// AW-III.W2 — trim using the grammar's declared whitespace
 /// semantics. Mirrors the `DtaState::WsTrim` arm: when `pattern`
-/// carries a regex pattern, scan with the supplied scanner;
-/// otherwise fall back to ASCII whitespace (matches `?w` default
-/// semantics).
+/// carries a regex pattern, scan via the supplied `regex_scan` fn
+/// pointer; otherwise fall back to ASCII whitespace (matches `?w`
+/// default semantics).
 ///
 /// AW-III.W4.c — `pub` for consumption by W4.b's emitted walker.
+///
+/// AW-IV.W1.β — `regex_scan: fn(&str, &[u8], usize) -> Option<u32>`
+/// replaces the pre-W1.β `scanner: &dyn RegexScanner`. The per-grammar
+/// emitter wires this to its `__regex_scan_<grammar>` adapter; the
+/// trait dispatch + `&'static Dfa` HashMap lookup are gone.
 #[inline]
 pub fn trim_with_pattern(
-    scanner: &dyn RegexScanner,
+    regex_scan: fn(&str, &[u8], usize) -> Option<u32>,
     pattern: Option<&'static str>,
     input: &[u8],
     pos: &mut u32,
 ) {
     if let Some(pat) = pattern {
-        if let Some(len) = scanner.scan(pat, input, *pos as usize) {
+        if let Some(len) = regex_scan(pat, input, *pos as usize) {
             *pos += len;
         }
     } else {
@@ -1247,7 +1269,7 @@ pub fn frame_at(stack: &FrameStack, idx: usize) -> Frame {
 pub fn try_branch(
     table: &DtaTable,
     input: &[u8],
-    scanner: &dyn RegexScanner,
+    regex_scan: fn(&str, &[u8], usize) -> Option<u32>,
     idx: &StructuralIndex,
     columns: &mut Columns,
     psi: &mut PayloadStream,
@@ -1261,7 +1283,7 @@ pub fn try_branch(
     let mut state = entry_state;
     loop {
         match dispatch_one(
-            table, input, scanner, idx, columns, psi, frame_depth, stack, state, pos, slot,
+            table, input, regex_scan, idx, columns, psi, frame_depth, stack, state, pos, slot,
         ) {
             Ok(StepResult::Next(next)) => {
                 state = next;
@@ -1320,7 +1342,7 @@ pub fn try_branch(
 pub fn dispatch_one(
     table: &DtaTable,
     input: &[u8],
-    scanner: &dyn RegexScanner,
+    regex_scan: fn(&str, &[u8], usize) -> Option<u32>,
     idx: &StructuralIndex,
     columns: &mut Columns,
     psi: &mut PayloadStream,
@@ -1398,8 +1420,7 @@ pub fn dispatch_one(
             // advances post-scan via the `slot` resync inside
             // `advance_or_pop_with`, so the index stays usable for
             // ConsumeToNextStructural / WsTrim's slot-aware paths.
-            let match_len = scanner
-                .scan(pattern, input, *pos as usize)
+            let match_len = regex_scan(pattern, input, *pos as usize)
                 .ok_or(DtaError::Syntax {
                     offset: *pos,
                     failing_state: state,
@@ -1731,7 +1752,7 @@ pub fn dispatch_one(
                 match try_branch(
                     table,
                     input,
-                    scanner,
+                    regex_scan,
                     idx,
                     columns,
                     psi,
@@ -1918,7 +1939,7 @@ pub fn dispatch_one(
             // single source of truth for the byte-class boundary;
             // the index serves only the slot resync above when present.
             if let Some(pat) = pattern {
-                if let Some(len) = scanner.scan(pat, input, *pos as usize) {
+                if let Some(len) = regex_scan(pat, input, *pos as usize) {
                     *pos += len;
                 }
             } else {
@@ -1974,7 +1995,7 @@ pub fn dispatch_one(
             let probe = try_branch(
                 table,
                 input,
-                scanner,
+                regex_scan,
                 idx,
                 columns,
                 psi,

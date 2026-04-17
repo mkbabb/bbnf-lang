@@ -2171,12 +2171,10 @@ fn cursor_child_zero_is_o1_under_preorder() {
         entry: DtaRuleId(0),
     };
 
-    // Stub regex scanner — not exercised by the literal-only DTA.
-    struct NoScanner;
-    impl bbnf_tape::RegexScanner for NoScanner {
-        fn scan(&self, _: &str, _: &[u8], _: usize) -> Option<u32> {
-            None
-        }
+    // AW-IV.W1.β — null regex-scan fn pointer; not exercised by the
+    // literal-only DTA.
+    fn no_regex_scan(_: &str, _: &[u8], _: usize) -> Option<u32> {
+        None
     }
 
     let mut builder = TapeBuilder::new();
@@ -2189,7 +2187,7 @@ fn cursor_child_zero_is_o1_under_preorder() {
     // the driver wants without fighting the borrow checker over the
     // builder's aggregate borrow.
     builder
-        .dta_run_into(&TABLE, input, &NoScanner, &mut psi)
+        .dta_run_into(&TABLE, input, no_regex_scan, &mut psi)
         .expect("empty-literal DTA run");
 
     assert_eq!(builder.columns().len(), 4, "Seq + 3 literal leaves");

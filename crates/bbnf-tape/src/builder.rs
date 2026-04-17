@@ -780,13 +780,13 @@ impl TapeBuilder {
         &mut self,
         table: &'t crate::dta::DtaTable,
         input: &'t [u8],
-        scanner: &'t dyn crate::driver::RegexScanner,
+        regex_scan: fn(&str, &[u8], usize) -> Option<u32>,
         psi: &mut crate::psi::PayloadStream,
     ) -> Result<crate::tape::TapeOffset, crate::driver::DtaError> {
         crate::driver::dta_run_cold(
             table,
             input,
-            scanner,
+            regex_scan,
             &mut self.columns,
             psi,
             &mut self.frame_depth,

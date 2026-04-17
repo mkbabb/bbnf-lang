@@ -12,14 +12,12 @@
 use bbnf_tape::{
     dispatch_one, Columns, Cursor, DtaFrameKind, DtaRuleEntry, DtaRuleId,
     DtaState, DtaStateId, DtaTable, FrameStack, LiteralPayload, PayloadStream,
-    RegexScanner, SeqPromote, StepResult, StructuralIndex,
+    SeqPromote, StepResult, StructuralIndex,
 };
 
-struct NullScanner;
-impl RegexScanner for NullScanner {
-    fn scan(&self, _pattern: &str, _input: &[u8], _offset: usize) -> Option<u32> {
-        None
-    }
+/// AW-IV.W1.β — null regex-scan fn pointer (see `walker_arms.rs`).
+fn null_regex_scan(_pattern: &str, _input: &[u8], _pos: usize) -> Option<u32> {
+    None
 }
 
 /// AW-III.W5.c — `Cursor::new` constructs at offset 0 with empty state.
@@ -110,7 +108,7 @@ fn byte_dispatch_consults_index_when_aligned() {
     let mut slot: u32 = 0;
 
     let result = dispatch_one(
-        &table, input, &NullScanner, &idx, &mut cols, &mut psi, &mut fd,
+        &table, input, null_regex_scan, &idx, &mut cols, &mut psi, &mut fd,
         &mut stack, DtaStateId(0), &mut pos, &mut slot,
     );
     assert!(result.is_ok(), "byte dispatch with index failed: {:?}", result);
@@ -150,7 +148,7 @@ fn consume_to_next_structural_jumps_via_index() {
     let mut slot: u32 = 0;
 
     let _ = dispatch_one(
-        &table, input, &NullScanner, &idx, &mut cols, &mut psi, &mut fd,
+        &table, input, null_regex_scan, &idx, &mut cols, &mut psi, &mut fd,
         &mut stack, DtaStateId(0), &mut pos, &mut slot,
     );
 
@@ -186,7 +184,7 @@ fn consume_to_next_structural_ascii_fallback_no_index() {
     let mut slot: u32 = 0;
 
     let _ = dispatch_one(
-        &table, input, &NullScanner, &idx, &mut cols, &mut psi, &mut fd,
+        &table, input, null_regex_scan, &idx, &mut cols, &mut psi, &mut fd,
         &mut stack, DtaStateId(0), &mut pos, &mut slot,
     );
 
@@ -243,7 +241,7 @@ fn ws_trim_collapses_via_index() {
     let mut state = DtaStateId(0);
     loop {
         let r = dispatch_one(
-            &table, input, &NullScanner, &idx, &mut cols, &mut psi, &mut fd,
+            &table, input, null_regex_scan, &idx, &mut cols, &mut psi, &mut fd,
             &mut stack, state, &mut pos, &mut slot,
         );
         match r {

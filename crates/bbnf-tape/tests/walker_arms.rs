@@ -12,16 +12,16 @@
 
 use bbnf_tape::{
     dta_run_cold, Columns, DtaAssociativity, DtaError, DtaFrameKind, DtaPrecedenceEntry,
-    DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable, PayloadStream, RegexScanner, TapeKind,
+    DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable, PayloadStream, TapeKind,
 };
 
-/// No-op regex scanner — the tests use only Literal / Epsilon states,
-/// so the scanner is never called.
-struct NullScanner;
-impl RegexScanner for NullScanner {
-    fn scan(&self, _pattern: &str, _input: &[u8], _offset: usize) -> Option<u32> {
-        None
-    }
+/// AW-IV.W1.β — null regex-scan fn pointer. These tests drive
+/// Literal / Epsilon / AltLinear / Repeat / ShuntingYard states only;
+/// the cold path never consults the scan fn. Passing a never-matches
+/// closure as `fn(&str, &[u8], usize) -> Option<u32>` satisfies the
+/// signature without dragging in parse-that's Dfa machinery.
+fn null_regex_scan(_pattern: &str, _input: &[u8], _pos: usize) -> Option<u32> {
+    None
 }
 
 // ── AltLinear ───────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ fn altlinear_backtracks_after_first_failure() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"ab", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"ab", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(
         result.is_ok(),
         "altlinear second-branch probe failed: {:?}",
@@ -117,7 +117,7 @@ fn altlinear_exhausts_all_branches_returns_syntax() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let err = dta_run_cold(&table, b"z", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let err = dta_run_cold(&table, b"z", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(matches!(err, Err(DtaError::Syntax { .. })));
 }
 
@@ -185,7 +185,7 @@ fn altlinear_nested_paren_group() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"(x)", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"(x)", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(
         result.is_ok(),
         "nested paren-group parse of `(x)` failed: {:?}",
@@ -290,7 +290,7 @@ fn altlinear_branch_fails_after_nested_ref_alt_partial() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"(a)", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"(a)", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(
         result.is_ok(),
         "nested-ref Alt paren parse of `(a)` failed: {:?}",
@@ -335,7 +335,7 @@ fn altlinear_branch_partial_match_then_fails_restores_pos() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"a", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"a", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(result.is_ok(), "partial-match restore failed: {:?}", result);
     let root = cols.materialize(0);
     assert_eq!(root.variant_idx(), 1);
@@ -378,7 +378,7 @@ fn altlinear_nested_paren_literal_only_works() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"x", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"x", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(result.is_ok(), "bare literal parse failed: {:?}", result);
     let root = cols.materialize(0);
     assert_eq!(root.kind(), TapeKind::Alt);
@@ -414,7 +414,7 @@ fn repeat_iterates_to_hi() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"aaa", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"aaa", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(result.is_ok(), "repeat {{0,3}} on aaa: {:?}", result);
     let root = cols.materialize(0);
     assert_eq!(root.kind(), TapeKind::Rule);
@@ -452,7 +452,7 @@ fn repeat_many1_rejects_empty() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(
         matches!(result, Err(DtaError::Syntax { .. })),
         "many1 on empty input must error: {:?}",
@@ -487,7 +487,7 @@ fn repeat_optional_admits_empty() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(result.is_ok(), "optional on empty input: {:?}", result);
     let root = cols.materialize(0);
     assert_eq!(root.kind(), TapeKind::Rule);
@@ -569,7 +569,7 @@ fn shunting_yard_left_associative_add() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"1+2*3", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"1+2*3", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(result.is_ok(), "1+2*3 parse: {:?}", result);
 
     // Outer SY root's child_off points at the final reduced operand.
@@ -649,7 +649,7 @@ fn shunting_yard_right_associative_pow() {
     let mut cols = Columns::new();
     let mut psi = PayloadStream::new();
     let mut fd: Vec<u8> = Vec::new();
-    let result = dta_run_cold(&table, b"2^3^4", &NullScanner, &mut cols, &mut psi, &mut fd);
+    let result = dta_run_cold(&table, b"2^3^4", null_regex_scan, &mut cols, &mut psi, &mut fd);
     assert!(result.is_ok(), "2^3^4 parse: {:?}", result);
 
     // Right-assoc: the reducer emits the inner ^(3,4) first then the

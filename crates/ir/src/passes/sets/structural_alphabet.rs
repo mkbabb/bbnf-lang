@@ -1,47 +1,72 @@
 //! `compute_structural_alphabet` — derives per-grammar structural
 //! alphabets for the scanner-kernel emitters.
 //!
-//! A "structural byte" is any byte value that could terminate a
-//! scanner's inner loop — an Alt-dispatch starter, a terminal literal
-//! starter, or the first byte of a structural digraph (`/*`, `*/`,
-//! `->`, `(*`, `*)`). When the set size is small (≤ 8, the nibble-LUT
-//! window), codegen in `crates/core/src/generate/regex/emit/simd.rs`
-//! can emit a grammar-wide bitmap kernel that every scan site routes
-//! through.
+//! A "structural byte" is any byte value that **delineates parse-tree
+//! structure** — the simdjson definition, not "any byte appearing in
+//! any rule's FIRST set". Concretely, a byte is structural iff:
 //!
-//! ## Archaeology (AO.0.1 / AU.2.7 v2 / AW-III.W5.a)
+//! 1. It terminates a single-byte `Literal` (`{`, `}`, `;`, `:`, `(`,
+//!    `)`, `[`, `]`, `,`, `<`, `>`, `=`, `!`, `?`, `*`, `+`, `-`, `|`,
+//!    `&`, etc. — literals whose body is exactly one byte).
+//! 2. It is a `Repeat` separator byte (e.g. `,` in CSV-style lists).
+//!    These fall out of the recursive walk into the Repeat's inner.
+//! 3. It is an `Alt` discriminator byte where the Alt's branches' FIRST
+//!    sets are themselves single-byte literals (the branch leads with a
+//!    single-byte `Literal`). The `AltDispatch.table` is populated from
+//!    branch FIRST sets verbatim — byte-class regexes like
+//!    `[a-zA-Z_]` contribute every letter byte. Admitting those would
+//!    mine `[0..127]` on any grammar with an identifier rule. The
+//!    correct admission reads the *branch node shape*, not the
+//!    dispatch table, and only admits a byte when the branch's leading
+//!    terminal is a single-byte `Literal`.
+//! 4. The first byte of each `digraph` pair (`/` for `/*`, `*/`; `(`
+//!    for `(*`, `*)`; `-` for `->`). Digraph mining is separate and
+//!    walks exactly-two-byte literals; its first-byte admission is
+//!    unconditional.
 //!
-//! AW-III.W5.a (this file) extends the AU.2.7 v2 derivation with three
-//! new fields the stage-1 SIMD pre-pass kernel consumes per the
-//! `bbnf-simd-scan` crate's alphabet contract:
+//! EXCLUDED:
 //!
-//! - `digraph_mask: [u64; 4]` — 256-bit bitmap of digraph **first**
-//!   bytes. Lets the kernel cheaply ask "is this byte a potential
-//!   digraph opener" without scanning a `Vec`.
-//! - `digraph_pairs: Vec<(u8, u8)>` — full mined digraph pair list.
-//!   Generalised from the AU.2.7 candidate-table approach: the v2
-//!   pass hardcoded a 5-pair candidate list and asked which were
-//!   "observed"; v3 walks every `IrNode::Literal` and harvests the
-//!   first two bytes of any 2+ byte literal whose first byte appears
-//!   in the structural set. No grammar-name conditionals; the data is
-//!   the data.
-//! - `quote_classes: BTreeSet<u8>` — bytes that toggle string mode.
-//!   Sourced from `IrNode::Regex` nodes whose `regex_info`
-//!   classification is `RegexClass::QuotedString { quote_char, .. }`.
-//!   The CLMUL/PMULL parity path in the kernel needs this set so it
-//!   can mask off bytes inside string literals before compaction.
+//! - Bytes inside character classes, regex content, or string content.
+//! - First bytes of any `IrNode::Regex` body (those are metacharacter
+//!   classes, not delimiters).
+//! - First bytes of any `IrNode::Literal` whose body is longer than
+//!   one byte (`"true"`, `"false"`, `"null"`, identifiers, keywords —
+//!   those go through the keyword-dispatch path, not the
+//!   structural-bitmap kernel).
 //!
-//! ## Digraph derivation
+//! When the set size is small (≤ 8, the nibble-LUT window), codegen in
+//! `crates/core/src/generate/regex/emit/simd.rs` can emit a
+//! grammar-wide bitmap kernel that every scan site routes through.
 //!
-//! Pre-W5.a the digraph table was a hardcoded candidate list filtered
-//! by literal occurrence. W5.a removes the candidate list entirely:
-//! every exactly-2-byte literal in the grammar is a candidate
-//! digraph; the pair survives if its first byte is also in the
-//! structural single-byte set. Multi-byte literals (`true`, `false`,
-//! `null`, identifiers, …) are NOT digraphs — those go through the
-//! keyword-dispatch path, not the structural-bitmap kernel. Mining
-//! is fully general across grammar families with no list maintenance
-//! and no per-grammar special cases.
+//! ## Archaeology (AO.0.1 / AU.2.7 v2 / AW-III.W5.a / AW-IV.W1.γ)
+//!
+//! AW-III.W5.a extended the AU.2.7 v2 derivation with `digraph_mask`,
+//! `digraph_pairs`, and `quote_classes`. AW-IV.W1.γ corrects the
+//! single-byte mining definition: pre-γ the pass admitted the first
+//! byte of every `Literal` regardless of length, plus every
+//! `AltDispatch.table` entry whose slot was not `0xFF`. Both channels
+//! over-flagged on grammars with multi-byte keywords (`t` from
+//! `"true"`) and byte-class-first Alt branches (every letter from a
+//! `Regex`-led branch's FIRST set). CSS L4 mined `[0..127]` as a
+//! consequence; JSON mined `t`, `f`, `n` as phantom singletons. γ
+//! restricts admission to the four categories above — CSS L4 drops to
+//! the actual delimiter count (~15–25), JSON to 6–7, and the stage-1
+//! SIMD scanner's structural index stops being degenerate.
+//!
+//! ## Digraph derivation (unchanged)
+//!
+//! Every exactly-2-byte literal in the grammar is a candidate digraph;
+//! the pair survives if its first byte is also in the structural
+//! single-byte set. Digraph mining is the ONE channel that admits a
+//! multi-byte literal's first byte, and it does so via its own
+//! unconditional re-insertion of `(first, _)` pairs into the byte set
+//! after digraphs are mined — see below. Fully general across
+//! grammar families; no per-grammar special cases.
+//!
+//! ## Quote-class derivation (unchanged)
+//!
+//! Every `IrNode::Regex` whose `RegexInfo::classification` is
+//! `QuotedString { quote_char, .. }` contributes its `quote_char`.
 
 use crate::{GrammarIR, IrNode, StringId};
 
@@ -179,27 +204,27 @@ pub fn compute_structural_alphabet(ir: &mut GrammarIR) {
     // dispatch table, not the structural-bitmap kernel. Regex
     // patterns are also excluded (their bytes describe
     // metacharacters, not delimiters). No hardcoded candidate list —
-    // the data is the data. A digraph pair `(a, b)` is admitted iff
-    // `a` is in the structural set (otherwise no scanner path will
-    // ever check for it). Mining is deduplicated and sorted for
-    // determinism.
+    // the data is the data. Every 2-byte literal is a candidate; no
+    // pre-mining gate on `byte_set` — under the corrected W1.γ
+    // single-byte mining definition, the digraph openers for `/*`,
+    // `*/`, `(*`, `*)`, `->` are NOT themselves single-byte
+    // `Literal`s in the grammar and would be filtered out. The
+    // unconditional first-byte re-insertion below keeps every digraph
+    // opener in the structural set regardless. Mining is
+    // deduplicated and sorted for determinism.
     let mut digraph_set: BTreeSet<(u8, u8)> = BTreeSet::new();
     for sid in &literal_sids {
         let bytes = ir.strings[*sid as usize].as_bytes();
         if bytes.len() != 2 {
             continue;
         }
-        let first = bytes[0];
-        let second = bytes[1];
-        if byte_set.contains(&first) {
-            digraph_set.insert((first, second));
-        }
+        digraph_set.insert((bytes[0], bytes[1]));
     }
 
     // Add digraph first-bytes to the structural set so the bitmap
     // kernel sees every digraph opener even if the byte was not
     // already a single-byte terminator (e.g. `-` in BBNF's `->` arrow
-    // when no rule uses `-` as a leaf alone).
+    // when no rule uses `-` as a leaf alone; `/` for CSS `/* */`).
     for (first, _) in &digraph_set {
         byte_set.insert(*first);
     }
@@ -290,23 +315,58 @@ fn collect_node_sids(
     }
 }
 
+/// Walk a node tree and harvest bytes that delineate parse-tree
+/// structure. Admission rules:
+///
+/// - `Literal(sid)` — admits `strings[sid][0]` iff the literal is
+///   exactly one byte long. Multi-byte literals do NOT contribute
+///   their first byte here; only the digraph mining (in
+///   `compute_structural_alphabet`) admits a multi-byte first-byte,
+///   and only when the literal is exactly two bytes.
+/// - `Regex(_)` — contributes no bytes. The regex body's first-byte
+///   classes describe metacharacters, not parse-tree delimiters.
+/// - `Alt(branches, _)` — the dispatch table (if present) reflects
+///   branch FIRST sets, which over-flag when a branch starts with a
+///   byte-class regex. Instead of admitting every `dispatch.table[b]
+///   != 0xFF`, we admit only branches whose leading terminal is itself
+///   a single-byte `Literal` — that byte *is* a structural
+///   discriminator; everything else is consumed by the branch's
+///   non-structural prefix (regex, multi-byte literal, etc.) and
+///   never reaches the scanner's inner loop as a terminator.
+/// - `Repeat { inner, .. }` — recurses into `inner`. Separator bytes
+///   (e.g. `,` in `list = item ("," item)*`) are reached through the
+///   inner walk — no extra admission logic needed; the inner's own
+///   single-byte literal terminals are admitted as leaf `Literal`s.
+/// - All other combinators recurse structurally.
 fn collect_bytes(node: &IrNode, ir: &GrammarIR, bytes: &mut BTreeSet<u8>) {
     match node {
-        IrNode::Alt(branches, dispatch_opt) => {
-            if let Some(dispatch) = dispatch_opt {
-                for (byte_val, &branch_idx) in dispatch.table.iter().enumerate() {
-                    if branch_idx != 0xFF {
-                        bytes.insert(byte_val as u8);
-                    }
-                }
-            }
+        IrNode::Alt(branches, _dispatch_opt) => {
+            // The `_dispatch_opt.table` is derived from branch FIRST
+            // sets; admitting every populated slot over-flags for
+            // branches that lead with a byte-class regex. Instead,
+            // examine each branch's IR shape directly — a branch
+            // whose leading terminal is a single-byte `Literal`
+            // contributes that byte as a structural discriminator.
+            // Everything else (Regex-led, multi-byte-literal-led,
+            // Ref-led into a non-single-byte-terminal rule) recurses
+            // into its body and contributes only what that body
+            // itself exposes under the same rules.
             for b in branches {
+                if let Some(byte) = leading_single_byte_literal(&b.node, ir) {
+                    bytes.insert(byte);
+                }
                 collect_bytes(&b.node, ir, bytes);
             }
         }
         IrNode::Literal(sid) => {
-            if let Some(first) = ir.strings[*sid as usize].as_bytes().first() {
-                bytes.insert(*first);
+            // Admit the first byte ONLY for single-byte literals.
+            // Multi-byte literals are keyword-dispatch material, not
+            // structural-scanner terminators. Digraph mining (in
+            // `compute_structural_alphabet`) handles 2-byte literals
+            // separately by re-inserting first-bytes after mining.
+            let literal_bytes = ir.strings[*sid as usize].as_bytes();
+            if literal_bytes.len() == 1 {
+                bytes.insert(literal_bytes[0]);
             }
         }
         IrNode::Seq(children) => {
@@ -327,6 +387,9 @@ fn collect_bytes(node: &IrNode, ir: &GrammarIR, bytes: &mut BTreeSet<u8>) {
             arms,
             fallback,
         } => {
+            // Recurse into all of `token`, each arm's continuation,
+            // and the fallback. The actual structural bytes land via
+            // the single-byte-literal admission inside those subtrees.
             collect_bytes(token, ir, bytes);
             for arm in arms {
                 collect_bytes(&arm.continuation, ir, bytes);
@@ -334,6 +397,36 @@ fn collect_bytes(node: &IrNode, ir: &GrammarIR, bytes: &mut BTreeSet<u8>) {
             collect_bytes(fallback, ir, bytes);
         }
         IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
+    }
+}
+
+/// If `node`'s leading terminal is a single-byte `Literal`, return its
+/// byte; otherwise `None`. "Leading terminal" unwraps transparent
+/// wrappers (`Map`, `OptionalWhitespace`) and descends into the first
+/// child of structural composites (`Seq` first child, `Skip`/`Next`
+/// left operand). Does NOT cross rule boundaries (`Ref` returns
+/// `None`) — a branch whose FIRST set comes from a referenced rule
+/// may expose a byte class far wider than any single-byte terminator
+/// we could admit here; that analysis belongs in per-rule mining, not
+/// per-Alt-branch.
+fn leading_single_byte_literal(node: &IrNode, ir: &GrammarIR) -> Option<u8> {
+    match node {
+        IrNode::Literal(sid) => {
+            let bytes = ir.strings[*sid as usize].as_bytes();
+            if bytes.len() == 1 { Some(bytes[0]) } else { None }
+        }
+        IrNode::Seq(children) => children
+            .iter()
+            .find(|c| !matches!(c, IrNode::Epsilon))
+            .and_then(|c| leading_single_byte_literal(c, ir)),
+        IrNode::Skip(a, _) | IrNode::Next(a, _) => leading_single_byte_literal(a, ir),
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+            leading_single_byte_literal(inner, ir)
+        }
+        // Alt, Repeat, Regex, Ref, Epsilon, Negate, Minus, TokenDispatch
+        // — none of these expose a single leading single-byte literal
+        // byte at this level.
+        _ => None,
     }
 }
 

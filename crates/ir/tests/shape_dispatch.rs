@@ -1079,3 +1079,156 @@ fn w4_hregex_rejects_quoted_string_regex_leaf() {
         "no HRegex tags when all regex leaves are typed"
     );
 }
+
+// ─── W4-fix detector extension tests ─────────────────────────────────
+//
+// The AW-V.W4-fix wave broadens four detectors beyond the W4.1
+// scaffolding. Each extension gets a synthetic fixture asserting the
+// admission fires.
+
+/// Build a Ref-headed Flat fixture: `decl = kwGroup, ":", valueRef,
+/// ";"` where `kwGroup` is a Keyword-classified Alt-of-literal rule.
+/// Mirrors CSS `colorDecl = colorProps, ":", value, ";"` shape.
+fn build_ref_headed_flat_fixture() -> (GrammarIR, RuleId, RuleId) {
+    let mut ir = base_ir();
+    // kwGroup = "color" | "background-color" — Alt-of-literal →
+    // classifies as Keyword.
+    let kw_alt = IrNode::Alt(
+        vec![
+            AltBranch { node: lit(&mut ir, "color"), first_set: None },
+            AltBranch {
+                node: lit(&mut ir, "background-color"),
+                first_set: None,
+            },
+        ],
+        None,
+    );
+    let kw_group = push_rule(&mut ir, "kwGroup", kw_alt);
+    // value = /[a-z]+/
+    let value_body = mapped(regex(&mut ir, r"[a-z]+"));
+    let value = push_rule(&mut ir, "value", value_body);
+    // decl = kwGroup, ":", value, ";"
+    let decl_body = IrNode::Seq(vec![
+        IrNode::Ref(kw_group),
+        lit(&mut ir, ":"),
+        IrNode::Ref(value),
+        lit(&mut ir, ";"),
+    ]);
+    let decl = push_rule(&mut ir, "decl", decl_body);
+    ir.entry = decl;
+    finalise_and_classify(&mut ir);
+    (ir, decl, kw_group)
+}
+
+#[test]
+fn w4fix_flat_admits_ref_to_keyword_head() {
+    let (ir, decl, kw_group) = build_ref_headed_flat_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(kw_group),
+        ShapeTag::Keyword,
+        "kwGroup's Alt-of-literal body classifies as Keyword"
+    );
+    assert_eq!(
+        ir.shape_assignments.get(decl),
+        ShapeTag::Flat,
+        "W4-fix: Ref-to-Keyword head admits Flat classification"
+    );
+}
+
+/// Build a typed-dimension Flat fixture: `length = number, unit`
+/// where both positions are Refs. Mirrors CSS `length = number,
+/// lengthUnit`.
+fn build_typed_dimension_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    let num_body = mapped(regex(&mut ir, r"-?\d+"));
+    let num = push_rule(&mut ir, "num", num_body);
+    let unit_alt = IrNode::Alt(
+        vec![
+            AltBranch { node: lit(&mut ir, "px"), first_set: None },
+            AltBranch { node: lit(&mut ir, "em"), first_set: None },
+        ],
+        None,
+    );
+    let unit = push_rule(&mut ir, "unit", unit_alt);
+    let length_body = IrNode::Seq(vec![
+        IrNode::Ref(num),
+        IrNode::Ref(unit),
+    ]);
+    let length = push_rule(&mut ir, "length", length_body);
+    ir.entry = length;
+    finalise_and_classify(&mut ir);
+    (ir, length)
+}
+
+#[test]
+fn w4fix_flat_admits_typed_dimension() {
+    let (ir, length) = build_typed_dimension_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(length),
+        ShapeTag::Flat,
+        "W4-fix: typed dimension Seq(Ref, Ref) admits Flat"
+    );
+}
+
+/// Build an optional Seq Flat fixture: `importantSuffix = ("!",
+/// "important") ?`. Mirrors CSS `importantSuffix`.
+fn build_optional_seq_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    let inner = IrNode::Seq(vec![
+        lit(&mut ir, "!"),
+        lit(&mut ir, "important"),
+    ]);
+    let body = IrNode::Repeat {
+        inner: Box::new(inner),
+        lo: 0,
+        hi: 1,
+    };
+    let suffix = push_rule(&mut ir, "importantSuffix", body);
+    ir.entry = suffix;
+    finalise_and_classify(&mut ir);
+    (ir, suffix)
+}
+
+#[test]
+fn w4fix_flat_admits_optional_seq() {
+    let (ir, suffix) = build_optional_seq_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(suffix),
+        ShapeTag::Flat,
+        "W4-fix: Repeat(0, 1, Seq(...)) admits Flat via optional-Seq"
+    );
+}
+
+/// Build a BBNF-style ArgList with a Ref head + explicit paren:
+/// `fnCall = idPath, "(", args, ")"`. Mirrors BBNF `value_fn_call =
+/// value_path , "(" , args , ")"`.
+fn build_ref_head_arglist_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    // idPath = /[a-z]+(::[a-z]+)*/
+    let ident_body = mapped(regex(&mut ir, r"[a-z]+(::[a-z]+)*"));
+    let id_path = push_rule(&mut ir, "idPath", ident_body);
+    // args = /[^)]*/
+    let args_body = mapped(regex(&mut ir, r"[^)]*"));
+    let args = push_rule(&mut ir, "args", args_body);
+    // fnCall = idPath, "(", args, ")"
+    let body = IrNode::Seq(vec![
+        IrNode::Ref(id_path),
+        lit(&mut ir, "("),
+        IrNode::Ref(args),
+        lit(&mut ir, ")"),
+    ]);
+    let fn_call = push_rule(&mut ir, "fnCall", body);
+    ir.entry = fn_call;
+    finalise_and_classify(&mut ir);
+    (ir, fn_call)
+}
+
+#[test]
+fn w4fix_arglist_admits_ref_head_with_separate_paren() {
+    let (ir, fn_call) = build_ref_head_arglist_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(fn_call),
+        ShapeTag::ArgList,
+        "W4-fix: Ref head + separate `(` admits ArgList"
+    );
+}

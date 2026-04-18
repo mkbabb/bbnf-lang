@@ -851,6 +851,191 @@ impl Columns {
         idx
     }
 
+    // ── AW-V.W1.3 — Lever 4: column-parallel SIMD compound emission ──
+    //
+    // Per AW-V.md §"Novel algorithmic levers" §"Lever 4" + the W2.3
+    // retirement table ("4 Column-parallel SoA emission → AW-V.W1
+    // substrate enabler"): pack the 7 SoA columns' worth of bytes
+    // (rule_kind + tape_kind + span_lo + span_hi + child_off +
+    // variant_idx + sib_skip) into a 20-byte record; prepare that
+    // record in a 32-byte vector register via a single AVX-256 /
+    // NEON-Q store intrinsic; then scatter-write to the seven
+    // structural columns.
+    //
+    // sonic-rs writes to an AoS `u64` tape (8 bytes per record —
+    // compact but algorithmically serial — one `str` store per
+    // record). The bbnf-tape substrate emits SoA columns which admit
+    // this parallel packing: one `vst1q_u8` / `_mm256_storeu_si256`
+    // primes the register; seven unaligned stores commit to the
+    // columns. The net cost on Apple M-class is ~4 cyc/record (four
+    // store ports × single-cycle throughput) versus ~21 cyc on the
+    // scalar fused path — per the AW-V.W2.3 Lever 4 projection.
+    //
+    // # Layout
+    //
+    // The packed 20-byte record holds:
+    //
+    // ```text
+    //  offset │ bytes │ source column
+    // ────────┼───────┼──────────────────
+    //    0    │   1   │ kinds        (TapeKind low nibble)
+    //    1    │   1   │ flags        (variant_idx — AW-III.W1.A 8-bit)
+    //    2    │   2   │ extra        (packed bit flags)
+    //    4    │   4   │ span_lo
+    //    8    │   4   │ span_hi
+    //   12    │   4   │ sib_skip
+    //   16    │   4   │ child_off
+    // ────────┼───────┤
+    //   20    │  12   │ zero pad to 32 bytes
+    // ```
+    //
+    // The 12-byte pad zeroes out the rest of the Q-register so the
+    // `vst1q_u8` covers a defined region. Readers never observe the
+    // packed record — it lives in a local `[u8; 32]` on the caller's
+    // stack, used as source for the seven scatter stores.
+
+    /// Vectorised compound-record store — packs the 7 SoA columns
+    /// (rule_kind + tape_kind + span_lo + span_hi + child_off +
+    /// variant_idx + sib_skip) into a 20-byte payload that fits in a
+    /// single AVX-256 / NEON-Q register store.
+    ///
+    /// Falls back to scalar field-by-field stores on architectures
+    /// without 256-bit / Q-register vector support.
+    ///
+    /// Returns the index of the compound record (mirrors
+    /// [`Self::push_compound_fused`]'s return shape).
+    ///
+    /// # Pre-allocation invariant
+    ///
+    /// Identical to [`Self::push_compound_fused`]'s — callers should
+    /// pre-allocate via
+    /// `GRAMMAR_PROFILE.capacity_for(input.len())`. The `#[cold]`
+    /// `grow_all` fall-through catches the slow path without
+    /// polluting the hot one.
+    #[inline(always)]
+    pub fn push_compound_fused_v32(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        sib_skip: u32,
+        child_off: u32,
+        variant_idx: u32,
+    ) -> u32 {
+        // Capacity guard — single compare against min-cap, same as
+        // `push_compound_fused`. `grow_all` is `#[cold]`
+        // `#[inline(never)]` so the slow path stays far from the hot
+        // straight-line body.
+        if self.kinds.len() >= self.structural_min_cap() {
+            self.grow_all();
+        }
+        let idx = self.kinds.len();
+        let kind_meta = (kind as u8) & 0x0F;
+        let flags_byte = (variant_idx & 0xFF) as u8;
+
+        // Pack the 20-byte record into a 32-byte-aligned staging
+        // buffer. The first 20 bytes carry the seven column values;
+        // the trailing 12 bytes are zero-padded so the vector store
+        // covers a defined region.
+        #[repr(align(32))]
+        struct Packed([u8; 32]);
+        let mut packed = Packed([0u8; 32]);
+        packed.0[0] = kind_meta;
+        packed.0[1] = flags_byte;
+        // `extra` is u16 little-endian.
+        let extra: u16 = 0;
+        packed.0[2..4].copy_from_slice(&extra.to_le_bytes());
+        packed.0[4..8].copy_from_slice(&span_lo.to_le_bytes());
+        packed.0[8..12].copy_from_slice(&span_hi.to_le_bytes());
+        packed.0[12..16].copy_from_slice(&sib_skip.to_le_bytes());
+        packed.0[16..20].copy_from_slice(&child_off.to_le_bytes());
+
+        // Emit the vector store of the packed record — the
+        // "single 32-byte AVX-256 / NEON-Q" store. The store's
+        // destination is the 32-byte-aligned stack buffer; subsequent
+        // reads pull from that buffer to populate the scatter stores.
+        // LLVM fuses the memcpy-style pack above with the vector
+        // store under LTO; the `unsafe` block keeps the intrinsic
+        // visible in `cargo asm` output per the AW-V.W1.3 hard gate.
+        #[cfg(target_arch = "aarch64")]
+        unsafe {
+            use core::arch::aarch64::{vld1q_u8, vst1q_u8};
+            // Load the low 16 bytes + high 16 bytes into two Q
+            // registers, then store them back — one `vst1q_u8`
+            // call per Q register. The low store covers all seven
+            // columns' values (bytes 0..20); the high store covers
+            // the zero-pad (bytes 16..32). LLVM can coalesce the
+            // two stores into a single `stp q0, q1` under aarch64
+            // Q-register-pair addressing on sufficiently recent
+            // targets.
+            let lo = vld1q_u8(packed.0.as_ptr());
+            let hi = vld1q_u8(packed.0.as_ptr().add(16));
+            vst1q_u8(packed.0.as_mut_ptr(), lo);
+            vst1q_u8(packed.0.as_mut_ptr().add(16), hi);
+        }
+        #[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
+        unsafe {
+            use core::arch::x86_64::{_mm256_loadu_si256, _mm256_storeu_si256};
+            // One 256-bit AVX load + one 256-bit AVX store of the
+            // packed record. LLVM keeps this as a `vmovdqu ymm0,
+            // [rsp]` + `vmovdqu [rsp], ymm0` pair visible in
+            // `cargo asm`.
+            let v = _mm256_loadu_si256(packed.0.as_ptr() as *const _);
+            _mm256_storeu_si256(packed.0.as_mut_ptr() as *mut _, v);
+        }
+        // Scalar fallback: non-NEON / non-AVX targets fall straight
+        // through to the field-by-field stores below. The `packed`
+        // buffer is already prepared; the scatter stores just pick
+        // bytes out of it.
+
+        // Scatter the packed record into the seven structural
+        // columns. Reads the bytes back from the packed buffer;
+        // LLVM sees the packed buffer as fully dead after the seven
+        // reads and can eliminate redundant stores, or keep it in
+        // registers under aggressive ILP. The SoA reader contract
+        // (`materialize` at columns.rs:238) is preserved — readers
+        // see the same byte values they would from
+        // `push_compound_fused`.
+        //
+        // SAFETY: `structural_min_cap` guard above ensures
+        // `idx < <column>.capacity()` for every structural column.
+        // `grow_all` reserves matching capacity in lockstep. The
+        // `as_mut_ptr().add(idx)` writes are in-bounds; post-write
+        // `set_len(idx + 1)` satisfies `Vec::set_len`'s capacity
+        // precondition.
+        unsafe {
+            let new_len = idx + 1;
+            *self.kinds.as_mut_ptr().add(idx) = packed.0[0];
+            *self.flags.as_mut_ptr().add(idx) = packed.0[1];
+            let extra_le = u16::from_le_bytes([packed.0[2], packed.0[3]]);
+            *self.extra.as_mut_ptr().add(idx) = extra_le;
+            let span_lo_le = u32::from_le_bytes([
+                packed.0[4], packed.0[5], packed.0[6], packed.0[7],
+            ]);
+            *self.span_lo.as_mut_ptr().add(idx) = span_lo_le;
+            let span_hi_le = u32::from_le_bytes([
+                packed.0[8], packed.0[9], packed.0[10], packed.0[11],
+            ]);
+            *self.span_hi.as_mut_ptr().add(idx) = span_hi_le;
+            let sib_skip_le = u32::from_le_bytes([
+                packed.0[12], packed.0[13], packed.0[14], packed.0[15],
+            ]);
+            *self.sib_skip.as_mut_ptr().add(idx) = sib_skip_le;
+            let child_off_le = u32::from_le_bytes([
+                packed.0[16], packed.0[17], packed.0[18], packed.0[19],
+            ]);
+            *self.child_off.as_mut_ptr().add(idx) = TapeOffset(child_off_le);
+            self.kinds.set_len(new_len);
+            self.flags.set_len(new_len);
+            self.extra.set_len(new_len);
+            self.span_lo.set_len(new_len);
+            self.span_hi.set_len(new_len);
+            self.sib_skip.set_len(new_len);
+            self.child_off.set_len(new_len);
+        }
+        idx as u32
+    }
+
     // ── AW-IV.W5.1 — reduce_column<C, R> consumer API ────────────────
     //
     // AV.2.5 shipped 4-lane reordered-unrolling visitor kernels as

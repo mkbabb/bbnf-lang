@@ -77,6 +77,7 @@ mod quoted_string;
 mod separator_list;
 pub mod shape_dict;
 pub mod shape_dict_bbnf;
+pub mod shape_dispatch;
 mod signature;
 pub mod state_visit_frequency;
 mod token_led_branches;
@@ -111,6 +112,7 @@ pub use punct_ws_region::PunctWsRegionMiner;
 pub use quoted_string::QuotedStringMiner;
 pub use separator_list::SeparatorListMiner;
 pub use shape_dict::{ShapeDictMap, ShapeDictMiner, ShapeTemplate, TemplatePiece};
+pub use shape_dispatch::{shape_dispatch, ShapeAssignments, ShapeTag};
 pub use token_led_branches::TokenLedBranchesMiner;
 
 // ── Recognizer miner substrate (Tranche Z.0 + AF.1) ────────────────────
@@ -338,6 +340,14 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
             )
         })
     });
+
+    // AW-V.W3.1 — shape-dispatch classifier. Runs AFTER every miner
+    // has committed its sidecar on `ir`, so every detector reads
+    // authoritative data (disjoint_first_tables, keyword_branches,
+    // regex_info, delim_scan_configs). Rules that no detector admits
+    // default to `ShapeTag::None` (walker fallback per the AX
+    // cold-path replay contract).
+    ir.shape_assignments = shape_dispatch::shape_dispatch(ir);
 }
 
 /// Insert or update a recognizer record on the given node.

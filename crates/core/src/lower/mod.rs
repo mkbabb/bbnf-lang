@@ -239,6 +239,7 @@ pub fn lower_to_ir<'a>(
         structural_alphabet: None,
         push_fingerprint: None,
         dedup_eligible_rules: Vec::new(),
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
     }
 }
 

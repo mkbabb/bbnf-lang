@@ -354,6 +354,22 @@ pub struct GrammarIR {
     /// Not serialized: every compile rebuilds it from scratch.
     #[serde(skip, default)]
     pub dedup_eligible_rules: Vec<u32>,
+
+    /// AW-V.W3.1 — per-rule shape-dispatch classification.
+    ///
+    /// Populated by
+    /// [`passes::recognizers::shape_dispatch::shape_dispatch`] at the
+    /// tail of `mine_recognizers`. Maps each rule to one of 12
+    /// shape tags (Object / Array / String / Number / Keyword /
+    /// Scalar today; Pratt / Unordered / ArgList / Flat / Wrap /
+    /// HRegex lands W4). The per-shape emitter modules at
+    /// `crates/core/src/backend/rust/emitter/shapes/` consume the
+    /// tags to route codegen; rules absent from the map fall back to
+    /// `__dta_walker_inline::run` per the AX cold-path replay
+    /// contract. Not serialized: every compile rebuilds it from
+    /// scratch.
+    #[serde(skip, default)]
+    pub shape_assignments: passes::recognizers::shape_dispatch::ShapeAssignments,
 }
 
 impl GrammarIR {

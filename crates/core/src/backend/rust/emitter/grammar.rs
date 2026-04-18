@@ -119,6 +119,38 @@ fn emit_direct_to_struct_projection(ir: &GrammarIR, _grammar_name: &str) -> Toke
     }
 }
 
+/// AW-V.W3.2 — emit the per-grammar shared helpers the shape fns
+/// consume — JSON string escape decoder, number fallback, etc.
+/// Emitted once per compilation when the grammar has any shape-
+/// classified rule.
+fn emit_shape_helpers(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
+    use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
+    if !super::shapes::has_full_shape_coverage(ir) {
+        return quote! {};
+    }
+    let grammar_suffix = super::shapes::sanitise_grammar(grammar_ident_str);
+    let mut helpers: Vec<TokenStream> = Vec::new();
+    // String escape helper — emit when the grammar has any
+    // String-shape rule.
+    if ir
+        .rules
+        .iter()
+        .any(|r| matches!(ir.shape_assignments.get(r.id), ShapeTag::String))
+    {
+        helpers.push(super::shapes::string::emit_escape_helper(&grammar_suffix));
+    }
+    // Number fallback helper — emit when the grammar has any
+    // Number-shape rule.
+    if ir
+        .rules
+        .iter()
+        .any(|r| matches!(ir.shape_assignments.get(r.id), ShapeTag::Number))
+    {
+        helpers.push(super::shapes::number::emit_number_fallback_helper());
+    }
+    quote! { #(#helpers)* }
+}
+
 impl RustEmitter {
     pub(super) fn emit_fused_number_rule_impl(
         &mut self,
@@ -438,6 +470,33 @@ impl RustEmitter {
 
         let extra = &self.extra_impl_methods;
 
+        // AW-V.W3.2 — per-shape emitter modules.
+        //
+        // Walks the IR's ShapeAssignments (populated by the W3.1
+        // classifier) and emits one `parse_<shape>_<grammar>_<rule>`
+        // function per shape-classified rule, plus the top-level
+        // `parse_<grammar>_<root>` dispatcher. The emitted stream
+        // lives alongside `#dta_walker`; rules without shape match
+        // continue to route through `__dta_walker_inline::run` per
+        // the AX cold-path replay contract.
+        //
+        // When every non-transparent rule in the grammar has a W3-
+        // active shape classification (JSON after W3.1 ships), the
+        // grammar's `parse()` entry routes through the shape
+        // dispatcher — eliminating the structural scan + PSI +
+        // walker tax on the hot path. Grammars with unshaped rules
+        // (CSS / Sheets / BBNF until W4 extends the detectors)
+        // continue to call `dta_run_<grammar>`.
+        let shape_emitters = super::shapes::emit_shapes_for_grammar(
+            ident.to_string().as_str(),
+            ir,
+        );
+        let shape_helpers = emit_shape_helpers(ident.to_string().as_str(), ir);
+        let use_shape_dispatch = super::shapes::has_full_shape_coverage(ir);
+        let shape_dispatcher_ident = super::shapes::root_rule_name(ir).map(|root| {
+            super::shapes::dispatcher_fn_ident(ident.to_string().as_str(), &root)
+        });
+
         // AW-I.W3: `parse()` dispatches through `dta_run` wholesale.
         // The per-rule `rule_functions` stream and the trailing_ws /
         // root_fn_ident / with_capacity scaffolding previously woven
@@ -461,6 +520,161 @@ impl RustEmitter {
         // AW-III's runtime DFA interpreter imposed (31.92% self-time
         // on JSON twitter) is gone from the hot path entirely.
         let _ = rule_functions;
+
+        // AW-V.W3.2 — parse() routes through the shape dispatcher
+        // when every non-transparent rule has a W3-active shape
+        // classification. Otherwise it falls through to the legacy
+        // walker path (`dta_run_<grammar>`), preserving CSS / Sheets
+        // / BBNF coverage until W4 extends the detectors.
+        let parse_body = if use_shape_dispatch {
+            let dispatcher = shape_dispatcher_ident
+                .as_ref()
+                .expect("use_shape_dispatch gated on root_rule_name");
+            let support_mod_ident = quote::format_ident!(
+                "__shape_support_{}",
+                super::shapes::sanitise_grammar(ident.to_string().as_str()),
+            );
+            quote! {
+                let mut builder =
+                    ::bbnf::runtime::tape::TapeBuilder::with_capacity(
+                        GRAMMAR_PROFILE.capacity_for(input.len()),
+                    );
+                let root_off = {
+                    let mut pos: usize = 0;
+                    let mut state = #support_mod_ident::ScanState::new();
+                    let off = #dispatcher(
+                        input.as_bytes(),
+                        &mut pos,
+                        &mut state,
+                        &mut builder,
+                    )
+                    .map_err(|e| match e {
+                        ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset,
+                                rule: None,
+                            }
+                        }
+                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset,
+                                rule: None,
+                            }
+                        }
+                        ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset: 0,
+                                rule: None,
+                            }
+                        }
+                    })?;
+                    // Trailing whitespace.
+                    let _ = #support_mod_ident::skip_space(
+                        input.as_bytes(), &mut pos, &mut state,
+                    );
+                    if pos != input.len() {
+                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                            offset: pos as u32,
+                            rule: None,
+                        });
+                    }
+                    off
+                };
+                let tape = builder
+                    .finish()
+                    .map_err(::bbnf::runtime::ParseErr::Tape)?;
+                ::core::result::Result::Ok(
+                    ::bbnf::runtime::Parsed::new(tape, input, root_off),
+                )
+            }
+        } else {
+            quote! {
+                let mut builder =
+                    ::bbnf::runtime::tape::TapeBuilder::with_capacity(
+                        GRAMMAR_PROFILE.capacity_for(input.len()),
+                    );
+                builder.enable_inline_frame_depth();
+                let mut psi = psi_with_capacity(input.len());
+                // AW-III.W5.d — stage-1 SIMD structural pre-pass.
+                const STRUCTURAL_ALPHABET:
+                    ::bbnf::runtime::scan::StructuralAlphabet =
+                    ::bbnf::runtime::scan::StructuralAlphabet::from_profile(
+                        &GRAMMAR_PROFILE,
+                    );
+                let idx = ::bbnf::runtime::scan::scan_structural(
+                    input.as_bytes(),
+                    &STRUCTURAL_ALPHABET,
+                );
+                let root_off = {
+                    let (columns, frame_depth) =
+                        builder.columns_and_frame_depth_mut();
+                    if !GRAMMAR_PROFILE.list_rules.is_empty()
+                        && (input.as_bytes().len() as u32)
+                            > GRAMMAR_PROFILE.parallel_break_even_bytes
+                        && GRAMMAR_PROFILE.parallel_break_even_bytes > 0
+                    {
+                        let n_workers = ::core::cmp::min(
+                            4usize,
+                            ::core::cmp::max(
+                                1usize,
+                                ::bbnf::runtime::tape::rayon_num_threads(),
+                            ),
+                        );
+                        let list_rule_id =
+                            GRAMMAR_PROFILE.list_rules[0].0;
+                        ::bbnf::runtime::tape::dta_run_parallel(
+                            input.as_bytes(),
+                            &idx,
+                            list_rule_id,
+                            n_workers,
+                            #walker_fn_ident,
+                            columns,
+                            &mut psi,
+                            frame_depth,
+                        )
+                    } else {
+                        #walker_fn_ident(
+                            input.as_bytes(),
+                            &idx,
+                            columns,
+                            &mut psi,
+                            frame_depth,
+                        )
+                    }
+                }
+                    .map_err(|e| match e {
+                        ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset,
+                                rule: None,
+                            }
+                        }
+                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset,
+                                rule: None,
+                            }
+                        }
+                        ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset: 0,
+                                rule: None,
+                            }
+                        }
+                    })?;
+                psi.fill_columns(
+                    input.as_bytes(),
+                    builder.columns_mut(),
+                    &GRAMMAR_PROFILE,
+                );
+                let tape = builder
+                    .finish()
+                    .map_err(::bbnf::runtime::ParseErr::Tape)?;
+                ::core::result::Result::Ok(
+                    ::bbnf::runtime::Parsed::new(tape, input, root_off),
+                )
+            }
+        };
 
         quote! {
             use ::parse_that::*;
@@ -497,6 +711,12 @@ impl RustEmitter {
             #regex_scan_adapter
 
             #dta_walker
+
+            // AW-V.W3.2 — per-shape emitter modules + helpers. The
+            // dispatcher emits alongside the walker; `parse()` routes
+            // through it when the grammar's shape coverage is total.
+            #shape_helpers
+            #shape_emitters
 
             #type_defs
 
@@ -543,124 +763,7 @@ impl RustEmitter {
                     ::bbnf::runtime::Parsed<'_, Self>,
                     ::bbnf::runtime::ParseErr,
                 > {
-                    let mut builder =
-                        ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                            GRAMMAR_PROFILE.capacity_for(input.len()),
-                        );
-                    builder.enable_inline_frame_depth();
-                    let mut psi = psi_with_capacity(input.len());
-                    // AW-III.W5.d — stage-1 SIMD structural pre-pass.
-                    //
-                    // `STRUCTURAL_ALPHABET` is a `const` projection of
-                    // `GRAMMAR_PROFILE`'s structural fields into the
-                    // scanner's alphabet shape; the underlying data
-                    // lives in the same `.rodata` statics. The scanner
-                    // picks the optimal per-arch kernel at runtime via
-                    // `bbnf_simd_scan::scan_structural` and produces a
-                    // `StructuralIndex` — the walker's dual cursor
-                    // then advances by slot (`idx.positions[slot]`)
-                    // instead of walking every byte.
-                    const STRUCTURAL_ALPHABET:
-                        ::bbnf::runtime::scan::StructuralAlphabet =
-                        ::bbnf::runtime::scan::StructuralAlphabet::from_profile(
-                            &GRAMMAR_PROFILE,
-                        );
-                    let idx = ::bbnf::runtime::scan::scan_structural(
-                        input.as_bytes(),
-                        &STRUCTURAL_ALPHABET,
-                    );
-                    let root_off = {
-                        let (columns, frame_depth) =
-                            builder.columns_and_frame_depth_mut();
-                        // AW-IV.W1.4-aggro — the walker signature
-                        // drops the `<__S: RegexScanner>` generic +
-                        // the `scanner: &__S` parameter. Every Regex
-                        // / WsTrim / boundary-ws site splices the
-                        // DFA's loop body inline at the source level;
-                        // no fn-pointer plumbing reaches the hot
-                        // path, and no separately-emitted
-                        // `__dfa_match_*` fn exists.
-                        //
-                        // AW-IV.W4.4 — document-parallel fork.
-                        // Routes through `dta_run_parallel` when
-                        // the grammar's entry rule is a top-level
-                        // list (`GRAMMAR_PROFILE.list_rules` non-
-                        // empty) AND the input crosses the
-                        // `parallel_break_even_bytes` threshold.
-                        // Workers run the same per-grammar walker
-                        // (`#walker_fn_ident`) over disjoint byte
-                        // sub-slices; the driver's join phase
-                        // memcpy-concatenates the per-worker
-                        // columns + PSI + frame_depth and rewrites
-                        // cross-worker `child_off` / `span_*` /
-                        // PSI references. Worker count is capped
-                        // at 4 per the AW-IV.W4.4 canonical bench
-                        // (tailwind.css 4c hard gate).
-                        if !GRAMMAR_PROFILE.list_rules.is_empty()
-                            && (input.as_bytes().len() as u32)
-                                > GRAMMAR_PROFILE.parallel_break_even_bytes
-                            && GRAMMAR_PROFILE.parallel_break_even_bytes > 0
-                        {
-                            let n_workers = ::core::cmp::min(
-                                4usize,
-                                ::core::cmp::max(
-                                    1usize,
-                                    ::bbnf::runtime::tape::rayon_num_threads(),
-                                ),
-                            );
-                            let list_rule_id =
-                                GRAMMAR_PROFILE.list_rules[0].0;
-                            ::bbnf::runtime::tape::dta_run_parallel(
-                                input.as_bytes(),
-                                &idx,
-                                list_rule_id,
-                                n_workers,
-                                #walker_fn_ident,
-                                columns,
-                                &mut psi,
-                                frame_depth,
-                            )
-                        } else {
-                            #walker_fn_ident(
-                                input.as_bytes(),
-                                &idx,
-                                columns,
-                                &mut psi,
-                                frame_depth,
-                            )
-                        }
-                    }
-                        .map_err(|e| match e {
-                            ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
-                                ::bbnf::runtime::ParseErr::Syntax {
-                                    offset,
-                                    rule: None,
-                                }
-                            }
-                            ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
-                                ::bbnf::runtime::ParseErr::Syntax {
-                                    offset,
-                                    rule: None,
-                                }
-                            }
-                            ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
-                                ::bbnf::runtime::ParseErr::Syntax {
-                                    offset: 0,
-                                    rule: None,
-                                }
-                            }
-                        })?;
-                    psi.fill_columns(
-                        input.as_bytes(),
-                        builder.columns_mut(),
-                        &GRAMMAR_PROFILE,
-                    );
-                    let tape = builder
-                        .finish()
-                        .map_err(::bbnf::runtime::ParseErr::Tape)?;
-                    ::core::result::Result::Ok(
-                        ::bbnf::runtime::Parsed::new(tape, input, root_off),
-                    )
+                    #parse_body
                 }
             }
         }

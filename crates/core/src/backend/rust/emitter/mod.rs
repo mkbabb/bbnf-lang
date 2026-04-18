@@ -19,6 +19,7 @@ pub mod keyword_dispatch;
 pub mod precedence;
 mod prettify;
 pub(crate) mod profile;
+pub mod shapes;
 pub mod visitor;
 
 use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, TypeDesc};

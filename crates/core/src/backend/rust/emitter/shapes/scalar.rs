@@ -25,7 +25,9 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
+use super::dispatcher::{
+    emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident, visitor_shape_fn_ident,
+};
 
 /// Emit `pub fn parse_scalar_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>`.
@@ -37,59 +39,91 @@ pub fn emit_parse_scalar(
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("scalar", grammar_suffix, rule_name);
     let variant_idx = (rule.id & 0xFF) as u8;
+    let support_mod = quote::format_ident!("__shape_support_{}", grammar_suffix);
 
     let body = unwrap_trivia(&rule.body);
-    let IrNode::Literal(sid) = body else {
-        unreachable!(
-            "Scalar-shape emitter invoked on non-Literal body for rule {}; the \
-             Scalar detector at \
-             crates/ir/src/passes/recognizers/shape_dispatch/scalar.rs admits \
-             Literal-only — Regex/Ref bodies belong to W4 HRegex/Wrap shapes \
-             and stay ShapeTag::None in W3.",
-            rule_name,
-        );
-    };
-    let bytes = ir.get_string(*sid).as_bytes();
-    let len = bytes.len();
-    let byte_lits: Vec<TokenStream> = bytes
-        .iter()
-        .map(|b| {
-            let lit = *b;
-            quote! { #lit }
-        })
-        .collect();
-    let support_mod = quote::format_ident!("__shape_support_{}", grammar_suffix);
-    quote! {
-        /// AW-V.W3.2 — per-grammar Scalar-shape parse function.
-        #[inline(always)]
-        #[allow(non_snake_case, clippy::too_many_arguments)]
-        pub fn #fn_ident(
-            input: &[u8],
-            p: &mut usize,
-            _state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
-        ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
-        > {
-            let at = *p;
-            let end = at + #len;
-            if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                });
+    match body {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> = bytes
+                .iter()
+                .map(|b| {
+                    let lit = *b;
+                    quote! { #lit }
+                })
+                .collect();
+            quote! {
+                /// AW-V.W3.2 — per-grammar Scalar-shape parse function
+                /// (single-literal body).
+                #[inline(always)]
+                #[allow(non_snake_case, clippy::too_many_arguments)]
+                pub fn #fn_ident(
+                    input: &[u8],
+                    p: &mut usize,
+                    _state: &mut #support_mod::ScanState,
+                    builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+                ) -> ::core::result::Result<
+                    ::bbnf::runtime::tape::TapeOffset,
+                    ::bbnf::runtime::tape::DtaError,
+                > {
+                    let at = *p;
+                    let end = at + #len;
+                    if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: at as u32,
+                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                    *p = end;
+                    let off = builder.push_leaf(
+                        ::bbnf::runtime::tape::TapeKind::Literal,
+                        at as u32,
+                        end as u32,
+                        #variant_idx,
+                        0,
+                    );
+                    Ok(off)
+                }
             }
-            *p = end;
-            let off = builder.push_leaf(
-                ::bbnf::runtime::tape::TapeKind::Literal,
-                at as u32,
-                end as u32,
-                #variant_idx,
-                0,
+        }
+        IrNode::Ref(rid) => {
+            // AX.W0a.2.b — transparent-alias Scalar. Delegate to
+            // the target rule's shape fn; no compound push — the
+            // alias shares the target's offset.
+            let call = match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+                Some(c) => c,
+                None => {
+                    // Detector should have rejected — defensive empty body.
+                    return quote! {};
+                }
+            };
+            quote! {
+                /// AX.W0a.2.b — per-grammar Scalar-shape parse function
+                /// (transparent-Ref body). Delegates to the target's
+                /// shape fn.
+                #[inline(always)]
+                #[allow(non_snake_case, clippy::too_many_arguments)]
+                pub fn #fn_ident(
+                    input: &[u8],
+                    p: &mut usize,
+                    state: &mut #support_mod::ScanState,
+                    builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+                ) -> ::core::result::Result<
+                    ::bbnf::runtime::tape::TapeOffset,
+                    ::bbnf::runtime::tape::DtaError,
+                > {
+                    #call
+                }
+            }
+        }
+        other => {
+            unreachable!(
+                "Scalar-shape emitter invoked on unexpected body {:?} for rule {}",
+                std::mem::discriminant(other),
+                rule_name,
             );
-            Ok(off)
         }
     }
 }
@@ -121,43 +155,77 @@ pub fn emit_parse_scalar_visitor(
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("scalar", grammar_suffix, rule_name);
+    let support_mod = quote::format_ident!("__shape_support_{}", grammar_suffix);
 
     let body = unwrap_trivia(&rule.body);
-    let IrNode::Literal(sid) = body else {
-        return quote! {};
-    };
-    let bytes = ir.get_string(*sid).as_bytes();
-    let len = bytes.len();
-    let byte_lits: Vec<TokenStream> = bytes
-        .iter()
-        .map(|b| {
-            let lit = *b;
-            quote! { #lit }
-        })
-        .collect();
-    let support_mod = quote::format_ident!("__shape_support_{}", grammar_suffix);
-    quote! {
-        /// AW-V.W3-bench-fix — visitor-path Scalar-shape parse function.
-        #[inline(always)]
-        #[allow(non_snake_case, clippy::too_many_arguments)]
-        pub fn #fn_ident<V>(
-            input: &[u8],
-            p: &mut usize,
-            _state: &mut #support_mod::ScanState,
-            _visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
-        where
-            V: ::bbnf::runtime::tape::KeywordVisitor,
-        {
-            let at = *p;
-            let end = at + #len;
-            if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
-                    offset: at as u32, rule: None,
-                });
+    match body {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> = bytes
+                .iter()
+                .map(|b| {
+                    let lit = *b;
+                    quote! { #lit }
+                })
+                .collect();
+            quote! {
+                /// AW-V.W3-bench-fix — visitor-path Scalar-shape parse
+                /// function (literal body).
+                #[inline(always)]
+                #[allow(non_snake_case, clippy::too_many_arguments)]
+                pub fn #fn_ident<V>(
+                    input: &[u8],
+                    p: &mut usize,
+                    _state: &mut #support_mod::ScanState,
+                    _visitor: &mut V,
+                ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+                where
+                    V: ::bbnf::runtime::tape::ObjectVisitor
+                        + ::bbnf::runtime::tape::ArrayVisitor
+                        + ::bbnf::runtime::tape::StringVisitor
+                        + ::bbnf::runtime::tape::NumberVisitor
+                        + ::bbnf::runtime::tape::KeywordVisitor,
+                {
+                    let at = *p;
+                    let end = at + #len;
+                    if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32, rule: None,
+                        });
+                    }
+                    *p = end;
+                    Ok(())
+                }
             }
-            *p = end;
-            Ok(())
         }
+        IrNode::Ref(rid) => {
+            let call = match emit_ref_call_visitor(grammar_suffix, *rid, ir) {
+                Some(c) => c,
+                None => return quote! {},
+            };
+            quote! {
+                /// AX.W0a.2.b — visitor-path Scalar-shape parse function
+                /// (transparent-Ref body).
+                #[inline(always)]
+                #[allow(non_snake_case, clippy::too_many_arguments)]
+                pub fn #fn_ident<V>(
+                    input: &[u8],
+                    p: &mut usize,
+                    state: &mut #support_mod::ScanState,
+                    visitor: &mut V,
+                ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+                where
+                    V: ::bbnf::runtime::tape::ObjectVisitor
+                        + ::bbnf::runtime::tape::ArrayVisitor
+                        + ::bbnf::runtime::tape::StringVisitor
+                        + ::bbnf::runtime::tape::NumberVisitor
+                        + ::bbnf::runtime::tape::KeywordVisitor,
+                {
+                    #call.map(|_| ())
+                }
+            }
+        }
+        _ => quote! {},
     }
 }

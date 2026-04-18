@@ -559,6 +559,7 @@ pub(super) fn shape_tag_name(tag: ShapeTag) -> &'static str {
         ShapeTag::Flat => "flat",
         ShapeTag::Wrap => "wrap",
         ShapeTag::HRegex => "hregex",
+        ShapeTag::AltDispatch => "altdispatch",
         ShapeTag::None => "unknown",
     }
 }
@@ -907,6 +908,7 @@ pub fn emit_ref_call_tape(
         ShapeTag::Flat => "flat",
         ShapeTag::Wrap => "wrap",
         ShapeTag::HRegex => "hregex",
+        ShapeTag::AltDispatch => "altdispatch",
         ShapeTag::None => return None,
     };
     let target_fn = shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
@@ -954,6 +956,7 @@ pub fn emit_ref_call_visitor(
         ShapeTag::Flat => "flat",
         ShapeTag::Wrap => "wrap",
         ShapeTag::HRegex => "hregex",
+        ShapeTag::AltDispatch => "altdispatch",
         ShapeTag::None => return None,
     };
     let target_fn =

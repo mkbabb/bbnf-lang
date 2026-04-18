@@ -228,6 +228,7 @@ fn shape_tag_name(
         ShapeTag::Flat => Some("flat"),
         ShapeTag::Wrap => Some("wrap"),
         ShapeTag::HRegex => Some("hregex"),
+        ShapeTag::AltDispatch => Some("altdispatch"),
         ShapeTag::None => None,
     }
 }

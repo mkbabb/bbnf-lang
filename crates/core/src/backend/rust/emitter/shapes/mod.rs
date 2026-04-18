@@ -64,6 +64,7 @@
 //! through `__dta_walker_inline::run` per the AX cold-path replay
 //! contract — their codegen path is unchanged.
 
+pub mod alt_dispatch;
 pub mod arglist;
 pub mod array;
 pub mod dispatcher;
@@ -177,6 +178,9 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
             ShapeTag::Flat => flat::emit_parse_flat(&grammar_suffix, rule, ir),
             ShapeTag::Wrap => wrap::emit_parse_wrap(&grammar_suffix, rule, ir),
             ShapeTag::HRegex => hregex::emit_parse_hregex(&grammar_suffix, rule, ir),
+            ShapeTag::AltDispatch => {
+                alt_dispatch::emit_parse_alt_dispatch(&grammar_suffix, rule, ir)
+            }
             ShapeTag::None => continue,
         };
         per_rule.push(fragment);
@@ -207,6 +211,9 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
                     arglist::emit_parse_arglist_visitor(&grammar_suffix, rule, ir)
                 }
                 ShapeTag::HRegex => hregex::emit_parse_hregex_visitor(&grammar_suffix, rule, ir),
+                ShapeTag::AltDispatch => {
+                    alt_dispatch::emit_parse_alt_dispatch_visitor(&grammar_suffix, rule, ir)
+                }
                 // Pratt / Unordered need W4-specific trait bounds outside
                 // the dispatcher's W3 union; `has_w4_classified` gates
                 // the entire visitor path off before we reach this arm

@@ -588,6 +588,36 @@ fn css_l4_parse_mixed_shape_fixture_produces_compound_root() {
 
 // ─── W4 emitter-gating audit (informational) ─────────────────────────
 
+/// Enumerate the unclassified CSS L4 rules for close-ledger
+/// reporting. Skipped-tested (`[ignore]` would hide the list); runs
+/// unconditionally and only checks that the cardinality sits in the
+/// W4.1 post-close range — the failure message carries the actual
+/// names so tranche audits surface them without needing to re-run
+/// `w41_classify_probe`.
+#[test]
+fn css_l4_unclassified_rules_enumerated() {
+    let Some(ir) = compile_css_l4() else { return };
+    let mut unclassified: Vec<String> = ir
+        .rules
+        .iter()
+        .filter(|r| !r.meta.is_transparent)
+        .filter(|r| ir.shape_assignments.get(r.id) == ShapeTag::None)
+        .map(|r| ir.get_string(r.name).to_string())
+        .collect();
+    unclassified.sort();
+    let total = ir.rules.iter().filter(|r| !r.meta.is_transparent).count();
+    let count = unclassified.len();
+    // W4.1 post-close: 57 unclassified (187 non-transparent - 130
+    // classified). The cap is the current figure; when detectors
+    // improve this should drop — the test surfaces the drop as a
+    // needed-assertion-update.
+    assert!(
+        count <= 75,
+        "{count} unclassified CSS L4 rules (of {total}) — exceeded \
+         the W4.1 post-close baseline (57). Unclassified set: {unclassified:?}"
+    );
+}
+
 /// Audit the W4 emitter-body completion status.
 ///
 /// W4.1 landed per-shape emitter scaffolding for Pratt / Unordered /

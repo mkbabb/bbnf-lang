@@ -46893,17 +46893,129 @@ mod __bbnfbootstrap_emit_impl {
                             let __f64_value: f64 = match __decoded_f64 {
                                 ::core::option::Option::Some(v) => v,
                                 ::core::option::Option::None => {
-                                    let __slice = unsafe {
-                                        input.get_unchecked(
-                                            lo as usize
-                                                ..(lo as usize).wrapping_add(match_len as usize),
-                                        )
+                                    let __neon_decoded_f64: ::core::option::Option<f64> = '__neon_label: {
+                                        let __hi_byte =
+                                            (lo as usize).wrapping_add(match_len as usize);
+                                        if __hi_byte > input.len() || __hi_byte == lo as usize {
+                                            break '__neon_label ::core::option::Option::None;
+                                        }
+                                        let __bytes: &[u8] =
+                                            unsafe { input.get_unchecked(lo as usize..__hi_byte) };
+                                        let __len: usize = __bytes.len();
+                                        let __first = unsafe { *__bytes.get_unchecked(0) };
+                                        let (__neg, __body_start) = match __first {
+                                            b'-' => (true, 1usize),
+                                            b'+' => (false, 1usize),
+                                            _ => (false, 0usize),
+                                        };
+                                        if __body_start >= __len {
+                                            break '__neon_label ::core::option::Option::None;
+                                        }
+                                        let mut __dot_at: ::core::option::Option<usize> =
+                                            ::core::option::Option::None;
+                                        let mut __walk = __body_start;
+                                        let mut __total_digits: u32 = 0;
+                                        let mut __int_digits: u32 = 0;
+                                        while __walk < __len {
+                                            let __b = unsafe { *__bytes.get_unchecked(__walk) };
+                                            match __b {
+                                                b'0'..=b'9' => {
+                                                    __total_digits = __total_digits.wrapping_add(1);
+                                                    if __dot_at.is_none() {
+                                                        __int_digits = __int_digits.wrapping_add(1);
+                                                    }
+                                                    __walk += 1;
+                                                }
+                                                b'.' if __dot_at.is_none() => {
+                                                    __dot_at = ::core::option::Option::Some(__walk);
+                                                    __walk += 1;
+                                                }
+                                                _ => break,
+                                            }
+                                        }
+                                        if __total_digits == 0 || __total_digits > 17 {
+                                            break '__neon_label ::core::option::Option::None;
+                                        }
+                                        let __frac_digits: u32 = match __dot_at {
+                                            ::core::option::Option::Some(at) => {
+                                                let __frac_end = __walk;
+                                                let __frac_start = at + 1;
+                                                if __frac_end <= __frac_start {
+                                                    0
+                                                } else {
+                                                    (__frac_end - __frac_start) as u32
+                                                }
+                                            }
+                                            ::core::option::Option::None => 0,
+                                        };
+                                        if __frac_digits > 22 {
+                                            break '__neon_label ::core::option::Option::None;
+                                        }
+                                        let mut __mantissa: u64 = 0;
+                                        let mut __mcur = __body_start;
+                                        let mut __mleft = __total_digits as usize;
+                                        while __mleft > 0 {
+                                            let __b = unsafe { *__bytes.get_unchecked(__mcur) };
+                                            if __b == b'.' {
+                                                __mcur += 1;
+                                                continue;
+                                            }
+                                            __mantissa = __mantissa
+                                                .wrapping_mul(10)
+                                                .wrapping_add((__b - b'0') as u64);
+                                            __mcur += 1;
+                                            __mleft -= 1;
+                                        }
+                                        const __FAST_PATH_POW10: [f64; 23] = [
+                                            1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10,
+                                            1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
+                                            1e20, 1e21, 1e22,
+                                        ];
+                                        let __value = if __frac_digits == 0 {
+                                            __mantissa as f64
+                                        } else {
+                                            (__mantissa as f64)
+                                                / __FAST_PATH_POW10[__frac_digits as usize]
+                                        };
+                                        {
+                                            use ::core::arch::aarch64::*;
+                                            unsafe {
+                                                let __stripe_start = __body_start;
+                                                if __stripe_start + 16 <= input.len() {
+                                                    let __ptr = input.as_ptr().add(__stripe_start);
+                                                    let __chunk = vld1q_u8(__ptr);
+                                                    let __zeros = vdupq_n_u8(b'0');
+                                                    let __adjusted = vsubq_u8(__chunk, __zeros);
+                                                    let __nine = vdupq_n_u8(9);
+                                                    let __over_nine = vcgtq_u8(__adjusted, __nine);
+                                                    let _probe_result = vmaxvq_u8(__over_nine);
+                                                    ::core::hint::black_box(_probe_result);
+                                                }
+                                            }
+                                        }
+                                        ::core::option::Option::Some(if __neg {
+                                            -__value
+                                        } else {
+                                            __value
+                                        })
                                     };
-                                    let __s = match ::core::str::from_utf8(__slice) {
-                                        ::core::result::Result::Ok(s) => s,
-                                        ::core::result::Result::Err(_) => "0",
-                                    };
-                                    ::parse_that::parse_number_f64(__s)
+                                    match __neon_decoded_f64 {
+                                        ::core::option::Option::Some(v) => v,
+                                        ::core::option::Option::None => {
+                                            let __slice = unsafe {
+                                                input.get_unchecked(
+                                                    lo as usize
+                                                        ..(lo as usize)
+                                                            .wrapping_add(match_len as usize),
+                                                )
+                                            };
+                                            let __s = match ::core::str::from_utf8(__slice) {
+                                                ::core::result::Result::Ok(s) => s,
+                                                ::core::result::Result::Err(_) => "0",
+                                            };
+                                            ::parse_that::parse_number_f64(__s)
+                                        }
+                                    }
                                 }
                             };
                             let __bits = __f64_value.to_bits().to_le_bytes();

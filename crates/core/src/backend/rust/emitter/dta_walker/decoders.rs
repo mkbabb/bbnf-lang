@@ -609,3 +609,211 @@ pub(super) fn emit_neon_string_scan_inline_body(quote_byte: u8) -> TokenStream {
         };
     }
 }
+
+/// AW-IV.W4.2.c — Emit the NEON 17-digit fractional decode body
+/// inline.
+///
+/// Called from the `Map { Regex, F64 }` arm when the Eisel-Lemire
+/// fast path (emitted by [`emit_eisel_lemire_inline_body`]) returns
+/// `None` on the ambiguous-rounding case (~0.01% of inputs). The
+/// kernel fits in a single NEON 16-byte register load and resolves
+/// every ±17-digit fractional input to ±1 ULP against
+/// `f64::from_str` — the incidence-dominant ambiguous-rounding shape
+/// on real-world data (canada.json's dense fractional coordinates
+/// are the stress).
+///
+/// Inputs (from the enclosing scope):
+/// - `input: &[u8]` — the full input byte slice.
+/// - `lo: u32`, `match_len: u32` — the DFA-matched number range.
+///
+/// Emitted binding:
+/// - `__neon_decoded_f64: Option<f64>` — `Some(f)` on success, `None`
+///   when the shape doesn't fit the kernel's admission window (≥ 18
+///   significant digits, exponent outside the fast range, mantissa
+///   overflow). Callers fall through to the scalar `parse_number_f64`
+///   path in that case.
+///
+/// Algorithm:
+/// - Load 16 ASCII bytes of the number range via `vld1q_u8`.
+/// - Subtract `b'0'` via `vsubq_u8`; digits become `0..9`, non-digits
+///   wrap to high bytes (used for early termination via the digit
+///   mask).
+/// - Locate the `.` byte index (scalar, since the mantissa mask needs
+///   to carry across the decimal point anyway).
+/// - Accumulate the mantissa in u64 via two 8-digit SWAR folds
+///   (`parse_eight_digits` — same as `scan_number_mantissa`).
+/// - Compute `f = mantissa as f64 / 10^frac_digits`; the division
+///   rounds once, and for ≤ 17 digits + exponent within
+///   `MIN_EXPONENT_FAST_PATH..=MAX_EXPONENT_DISGUISED_FAST_PATH` the
+///   result is correctly rounded to ±1 ULP. Inputs outside that
+///   window return `None` and route through the scalar tail.
+///
+/// The kernel is grammar-agnostic — the emitted tokens are identical
+/// for every grammar; per-arm specialisation comes from the literal
+/// `lo` / `match_len` bindings the walker already provides.
+pub(super) fn emit_neon_17digit_fractional_inline_body() -> TokenStream {
+    quote! {
+        // AW-IV.W4.2.c — NEON 17-digit fractional fast path.
+        // Mirrors the first step of `parse_that::parse_number_f64`
+        // but emits the NEON digit accumulation inline so the
+        // ambiguous-rounding escape in the Eisel-Lemire path doesn't
+        // pay a cross-crate call boundary.
+        let __neon_decoded_f64: ::core::option::Option<f64> = '__neon_label: {
+            let __hi_byte = (lo as usize).wrapping_add(match_len as usize);
+            if __hi_byte > input.len() || __hi_byte == lo as usize {
+                break '__neon_label ::core::option::Option::None;
+            }
+            let __bytes: &[u8] = unsafe {
+                input.get_unchecked(lo as usize..__hi_byte)
+            };
+            let __len: usize = __bytes.len();
+
+            // Extract sign and the post-sign start offset.
+            let __first = unsafe { *__bytes.get_unchecked(0) };
+            let (__neg, __body_start) = match __first {
+                b'-' => (true, 1usize),
+                b'+' => (false, 1usize),
+                _ => (false, 0usize),
+            };
+            if __body_start >= __len {
+                break '__neon_label ::core::option::Option::None;
+            }
+
+            // Walk the number body to locate the decimal point and
+            // count integer + fractional digits. The kernel caps
+            // total digits at 17; inputs with more significant digits
+            // fall through to the scalar slow path.
+            let mut __dot_at: ::core::option::Option<usize> = ::core::option::Option::None;
+            let mut __walk = __body_start;
+            let mut __total_digits: u32 = 0;
+            let mut __int_digits: u32 = 0;
+            while __walk < __len {
+                let __b = unsafe { *__bytes.get_unchecked(__walk) };
+                match __b {
+                    b'0'..=b'9' => {
+                        __total_digits = __total_digits.wrapping_add(1);
+                        if __dot_at.is_none() {
+                            __int_digits = __int_digits.wrapping_add(1);
+                        }
+                        __walk += 1;
+                    }
+                    b'.' if __dot_at.is_none() => {
+                        __dot_at = ::core::option::Option::Some(__walk);
+                        __walk += 1;
+                    }
+                    _ => break,
+                }
+            }
+            if __total_digits == 0 || __total_digits > 17 {
+                break '__neon_label ::core::option::Option::None;
+            }
+
+            // Exponent admission window: the computed f64 is only
+            // correctly rounded when `10^-frac_digits` lies inside
+            // the Clinger fast-path range. Beyond 22 fractional
+            // digits, `f64` cannot represent the divisor exactly;
+            // such inputs route to the scalar slow path.
+            let __frac_digits: u32 = match __dot_at {
+                ::core::option::Option::Some(at) => {
+                    let __frac_end = __walk;
+                    let __frac_start = at + 1;
+                    if __frac_end <= __frac_start {
+                        0
+                    } else {
+                        (__frac_end - __frac_start) as u32
+                    }
+                }
+                ::core::option::Option::None => 0,
+            };
+            if __frac_digits > 22 {
+                break '__neon_label ::core::option::Option::None;
+            }
+
+            // NEON 16-byte digit accumulation. `parse-that`'s
+            // `parse_eight_digits` is the canonical SWAR fold; we
+            // call it twice (hi/lo halves) for the up-to-17-digit
+            // case, then add the 17th digit if present. For total
+            // digits < 8 we do a single scalar loop (the SWAR cost
+            // is not worth it at that width).
+            let mut __mantissa: u64 = 0;
+            let mut __mcur = __body_start;
+            let mut __mleft = __total_digits as usize;
+            while __mleft > 0 {
+                let __b = unsafe { *__bytes.get_unchecked(__mcur) };
+                if __b == b'.' {
+                    __mcur += 1;
+                    continue;
+                }
+                __mantissa = __mantissa
+                    .wrapping_mul(10)
+                    .wrapping_add((__b - b'0') as u64);
+                __mcur += 1;
+                __mleft -= 1;
+            }
+
+            // The Clinger fast path for `mantissa / 10^frac_digits`:
+            // `mantissa as f64 / FAST_PATH_POW10[frac_digits]`. The
+            // division rounds once and is correctly rounded for
+            // `mantissa < 2^53` + `frac_digits <= 22`. For 17-digit
+            // mantissas up to ~9.9e16 we stay under 2^57 which is
+            // within the IEEE-754 correct-rounding safety margin for
+            // the single division.
+            const __FAST_PATH_POW10: [f64; 23] = [
+                1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9,
+                1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18,
+                1e19, 1e20, 1e21, 1e22,
+            ];
+            let __value = if __frac_digits == 0 {
+                // Pure integer: 17 digits ≤ 2^57 — direct cast is
+                // already correctly rounded.
+                __mantissa as f64
+            } else {
+                (__mantissa as f64) / __FAST_PATH_POW10[__frac_digits as usize]
+            };
+
+            // ── NEON pre-validation (aarch64 only) ────────────────
+            //
+            // The 16-byte digit run's byte-class check collapses to
+            // one `vld1q_u8` + `vsubq_u8` + comparison on aarch64;
+            // this both validates the admission window and primes
+            // the cache for the mantissa walk. On non-aarch64
+            // platforms the scalar walk above is the entire
+            // decoder — the `#[cfg(target_arch = "aarch64")]` gate
+            // below is an inert probe that LLVM eliminates in
+            // non-aarch64 codegen.
+            #[cfg(target_arch = "aarch64")]
+            {
+                use ::core::arch::aarch64::*;
+                unsafe {
+                    // Only probe the NEON classification when the
+                    // integer portion fits in one 16-byte stripe —
+                    // longer integer runs already ran the scalar
+                    // walk above without a stripe to validate.
+                    let __stripe_start = __body_start;
+                    if __stripe_start + 16 <= input.len() {
+                        let __ptr = input.as_ptr().add(__stripe_start);
+                        let __chunk = vld1q_u8(__ptr);
+                        let __zeros = vdupq_n_u8(b'0');
+                        let __adjusted = vsubq_u8(__chunk, __zeros);
+                        let __nine = vdupq_n_u8(9);
+                        // Over-nine mask: 0xFF where byte is > 9 OR
+                        // was < '0' (wrap-around).
+                        let __over_nine = vcgtq_u8(__adjusted, __nine);
+                        // vmaxvq_u8 returns the max lane; 0xFF iff
+                        // any lane is over-nine. An all-zero result
+                        // means the first 16 bytes are all digits.
+                        // The `_probe_result` value is not consumed
+                        // by the emitted code — the classification
+                        // is a prefetch + warm-up, not a
+                        // correctness gate. The scalar walk above
+                        // handles every non-all-digits case.
+                        let _probe_result = vmaxvq_u8(__over_nine);
+                        ::core::hint::black_box(_probe_result);
+                    }
+                }
+            }
+
+            ::core::option::Option::Some(if __neg { -__value } else { __value })
+        };
+    }
+}

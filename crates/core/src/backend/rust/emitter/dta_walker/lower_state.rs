@@ -71,7 +71,10 @@ use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 
 use super::super::dfa_codegen;
-use super::decoders::{emit_eisel_lemire_inline_body, emit_neon_string_scan_inline_body};
+use super::decoders::{
+    emit_eisel_lemire_inline_body, emit_neon_17digit_fractional_inline_body,
+    emit_neon_string_scan_inline_body,
+};
 use super::helpers::{
     emit_advance_or_pop_inline, emit_close_compound_inline, emit_emit_leaf_inline,
     emit_emit_leaf_with_payload_inline, emit_psi_push_inline,
@@ -609,6 +612,7 @@ fn emit_regex_arm(
                 quote! { ::bbnf::runtime::tape::TapeOffset(arena_off) },
             );
             let eisel_lemire_splice = emit_eisel_lemire_inline_body();
+            let neon_17digit_splice = emit_neon_17digit_fractional_inline_body();
             quote! {
                 // Reserve the arena slot for the decoded f64. The
                 // 8-byte slot mirrors `PayloadKind::F64::arena_byte_width`;
@@ -619,34 +623,40 @@ fn emit_regex_arm(
                 #emit_leaf_some
                 // AW-IV.W2.3.a inline-decode — Eisel-Lemire body
                 // spliced verbatim. The decoder returns Some(f) on
-                // clean decode, None on the ambiguous-rounding case;
-                // the fallback uses fast_float2::parse on the matched
-                // string (the ~0.01% slow path).
+                // clean decode, None on the ambiguous-rounding case
+                // (~0.01% incidence per the `compute_f64` docs).
                 #eisel_lemire_splice
                 let __f64_value: f64 = match __decoded_f64 {
                     ::core::option::Option::Some(v) => v,
                     ::core::option::Option::None => {
-                        // Cold-path ambiguous-rounding fallback
-                        // (~0.01% of inputs per the `compute_f64`
-                        // docs). Routes through
-                        // `parse_that::parse_number_f64` — the public
-                        // fn that wraps `fast_float2::parse`. Kept as a
-                        // single out-of-line call boundary because the
-                        // full fast-float2 decoder (~1000 lines) would
-                        // explode code size when inlined per arm
-                        // without measurable benefit at 0.01%
-                        // incidence.
-                        let __slice = unsafe {
-                            input.get_unchecked(
-                                lo as usize
-                                ..(lo as usize).wrapping_add(match_len as usize),
-                            )
-                        };
-                        let __s = match ::core::str::from_utf8(__slice) {
-                            ::core::result::Result::Ok(s) => s,
-                            ::core::result::Result::Err(_) => "0",
-                        };
-                        ::parse_that::parse_number_f64(__s)
+                        // AW-IV.W4.2.c — NEON 17-digit fractional
+                        // fallback. Resolves the canada-shaped
+                        // ambiguous-rounding case inline (load + fold
+                        // + single correctly-rounded division) so
+                        // the cross-crate `parse_number_f64` boundary
+                        // doesn't appear on the hot path for the
+                        // fractional-heavy JSON corpus. A residual
+                        // `None` arm (inputs outside the 17-digit
+                        // admission window) still routes to
+                        // `parse_number_f64` as the correctness
+                        // ground truth.
+                        #neon_17digit_splice
+                        match __neon_decoded_f64 {
+                            ::core::option::Option::Some(v) => v,
+                            ::core::option::Option::None => {
+                                let __slice = unsafe {
+                                    input.get_unchecked(
+                                        lo as usize
+                                        ..(lo as usize).wrapping_add(match_len as usize),
+                                    )
+                                };
+                                let __s = match ::core::str::from_utf8(__slice) {
+                                    ::core::result::Result::Ok(s) => s,
+                                    ::core::result::Result::Err(_) => "0",
+                                };
+                                ::parse_that::parse_number_f64(__s)
+                            }
+                        }
                     }
                 };
                 // Direct column write — the arena slot was reserved

@@ -1,0 +1,59 @@
+/// AW-V.W3.2 — per-grammar String-shape parse function.
+///
+/// Mirrors `bbnf_json_prototype::string::parse_string_body`.
+/// `"` must NOT be consumed by the caller — this function
+/// reads it, scans for the closing quote, and pushes a Span
+/// leaf with appropriate borrow / arena-decode metadata.
+#[inline(always)]
+#[allow(non_snake_case, clippy::too_many_arguments)]
+pub fn parse_string_JsonFixture_string(
+    input: &[u8],
+    p: &mut usize,
+    _state: &mut __shape_support_JsonFixture::ScanState,
+    builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+) -> ::core::result::Result<
+    ::bbnf::runtime::tape::TapeOffset,
+    ::bbnf::runtime::tape::DtaError,
+> {
+    let open = *p;
+    if input.get(open).copied() != Some(b'"') {
+        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+            offset: open as u32,
+            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+        });
+    }
+    let body_start = open + 1;
+    let tail = match input.get(body_start..) {
+        Some(t) => t,
+        None => {
+            return Err(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                offset: open as u32,
+            });
+        }
+    };
+    match __shape_support_JsonFixture::first_quote_or_backslash(tail) {
+        Some((off, b'"')) => {
+            let end = body_start + off;
+            *p = end + 1;
+            let lo = open as u32;
+            let hi = *p as u32;
+            let leaf = builder
+                .push_leaf_borrowed_string(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    lo,
+                    hi,
+                    5u8,
+                    0,
+                );
+            Ok(leaf)
+        }
+        Some((_off, b'\\')) => parse_string_escaped(input, p, open, builder, 5u8),
+        Some(_) => unreachable!(),
+        None => {
+            Err(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                offset: open as u32,
+            })
+        }
+    }
+}

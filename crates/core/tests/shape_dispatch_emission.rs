@@ -25,7 +25,7 @@
 //! landing can't silently claim coverage the mechanism hasn't
 //! produced.
 
-use bbnf::backend::rust::emitter::shapes::{array, object};
+use bbnf::backend::rust::emitter::shapes::{array, number, object, string};
 use bbnf_ir::passes::recognizers::shape_dispatch::{shape_dispatch, ShapeTag};
 use bbnf_ir::{IrNode, RuleId};
 
@@ -100,6 +100,46 @@ fn array_shape_emit_matches_golden() {
         "fixtures/shape_dispatch_emission/array.rs.expected"
     );
     assert_matches_golden(&actual, expected, "array.rs");
+}
+
+// ─── Classify + emit — String ───────────────────────────────────────
+
+#[test]
+fn string_shape_classifies_correctly() {
+    let (ir, rules) = build_json_ir();
+    assert_eq!(ir.shape_assignments.get(rules.string), ShapeTag::String);
+}
+
+#[test]
+fn string_shape_emit_matches_golden() {
+    let (ir, rules) = build_json_ir();
+    let rule = &ir.rules[rules.string as usize];
+    let ts = string::emit_parse_string("JsonFixture", rule, &ir);
+    let actual = format_tokens(&ts);
+    let expected = include_str!(
+        "fixtures/shape_dispatch_emission/string.rs.expected"
+    );
+    assert_matches_golden(&actual, expected, "string.rs");
+}
+
+// ─── Classify + emit — Number ───────────────────────────────────────
+
+#[test]
+fn number_shape_classifies_correctly() {
+    let (ir, rules) = build_json_ir();
+    assert_eq!(ir.shape_assignments.get(rules.number), ShapeTag::Number);
+}
+
+#[test]
+fn number_shape_emit_matches_golden() {
+    let (ir, rules) = build_json_ir();
+    let rule = &ir.rules[rules.number as usize];
+    let ts = number::emit_parse_number("JsonFixture", rule, &ir);
+    let actual = format_tokens(&ts);
+    let expected = include_str!(
+        "fixtures/shape_dispatch_emission/number.rs.expected"
+    );
+    assert_matches_golden(&actual, expected, "number.rs");
 }
 
 // ─── Wire-contract invariants ───────────────────────────────────────

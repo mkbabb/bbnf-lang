@@ -510,47 +510,39 @@ shape is correct; exceed-sonic work is W2.3.
 If gate passes: W2.3 opens on the same prototype crate; cherry-pick
 to master happens at W3 open after W2.3 lands the exceed gate.
 
-### W2.3 — Novel-exceed levers (RESCOPED post-W2.1-exceed)
+### W2.3 — Novel-exceed levers (WAVE RETIRED; CONTENT PRESERVED)
 
 **Rescope rationale**: W2.1 closed with prototype beating sonic-rs on
 every twin-pair entry 0.89–0.94×. The 6 novel levers are no longer
 required to meet the exceed-sonic gate — the gate is already met by
-shape + inlining discipline alone. W2.3 was designed as "needed
-work to reach exceed"; it is now **optional refinement on top of an
-already-exceeding baseline**.
+shape + inlining discipline alone. The W2.3 **wave structure** (3
+parallel agents with an independent gate) is unnecessary. The W2.3
+**lever content is preserved in full** — every lever has a concrete
+home in W1 / W3 / AX per the table below. Nothing is abrogated.
 
-Per the scope principle (prove substrate first; compose refinements
-only after), the 6 levers redistribute:
+Full lever accounting:
 
-- **Lever 3 — SIMD-parallel multi-key compare**: folded into W3's
-  shape-dispatch classifier as an `ObjectVisitor` optimisation where
-  the visitor declares known keys (serde-compat use case). Lands in
-  AW-V.W3 as a codegen optimisation within the Object-shape emitter.
-  No standalone W2.3 agent needed.
-- **Lever 4 — Column-parallel SoA emission** (`push_compound_fused_v32`):
-  folded into W1's `bbnf-tape` substrate enablers. The 32-byte vector
-  store is a `Columns` method addition; ships in W1 alongside the
-  other B2 §1-4 changes.
-- **Lever 5 — Bounded Regex via inverse-alphabet**: folded into W3's
-  per-shape String/HRegex emitters where the `pattern.last_byte_set`
-  invariant holds. Shape-dispatch classifier gates it per rule.
-  Lands in AW-V.W3.
-- **Lever 6 — ShapeRef dedup consumer**: already-substrate from AW
-  era; W3's Object / Array / Flat shape emitters check
-  `SHAPE_DICT.lookup` in compound-emit branches before
-  `push_compound_fused_v32`. Lands in AW-V.W3.
-- **Lever 7 — Multi-visitor parallel monomorphisation**: bounded to
-  `(TapeVisitor, ValueVisitor)` pair only per H2's L1-fit analysis;
-  lands in AW-V.W3 as a codegen option, not a standalone wave.
-  User-declared custom multi-visitor pairs defer to **AX.X10** per
-  the AX update.
+| Lever | Home | Rationale |
+|---|---|---|
+| 1 Shape-mined codegen | AW-V.W3 (core thesis; shape-dispatch classifier + per-shape emitters) | The thesis of AW-V; every other lever composes with it. |
+| 2 Grammar-specialised SIMD kernel selection | AW-V.W3 via `recognizers/kernel_shape.rs` | IR-cardinality gate `prefer_inline_in_loop`; per-compound dispatch at codegen time. |
+| 3 SIMD-parallel multi-key compare | AW-V.W3 Object-shape emitter codegen option | Active when `ObjectVisitor` declares known keys (serde-compat use case); NEON `vceqq_u8` / AVX2 `vpcmpeqb` over up to 16 packed key prefixes. |
+| 4 Column-parallel SoA emission | AW-V.W1 substrate enabler | `Columns::push_compound_fused_v32` — 32-byte AVX-256 / NEON-Q vector store; method on `Columns`. |
+| 5 Bounded Regex via inverse-alphabet | AW-V.W3 String / HRegex shape emitters | `pattern.last_byte_set ⊆ structural_alphabet` invariant check per rule; scan bounded at next structural byte when admissible. |
+| 6 ShapeRef dedup | AW-V.W3 Object / Array / Flat compound-emit | `SHAPE_DICT.lookup(shape_hash)` short-circuit before `push_compound_fused_v32`; substrate already mined. |
+| 7 Multi-visitor `(TapeVisitor, ValueVisitor)` pair | AW-V.W3 codegen option (bounded) | Per H2's L1-fit analysis — only the named pair lands in AW-V; user-declared custom pairs → AX.X10. |
+| 7-ext user-declared custom pairs | **AX.X10** | `#[derive(Visitor)] #[emit_paired_with]` macro + emitter budget guard; user-authored multi-visitor combinations. |
 
-W2.3 as an independent sub-wave is **retired**. The levers land
-within W3 / W4 where they naturally belong (shape-emitter codegen
-options), or within W1 substrate enablers (`push_compound_fused_v32`).
-W2 closes at W2.1.close.
+**W3 is a multi-file wave** consuming these levers as codegen options
+in per-shape emitter modules. The levers do not require their own
+standalone wave because they're *per-shape codegen features*, not
+standalone architectural layers. Each shape module decides which
+lever(s) apply to its output.
 
-No standalone W2.3 agent is dispatched.
+**Preservation guarantee**: if a planned AW-V work item discovers a
+reason any Lever cannot land in its assigned wave, the orchestrator
+re-plans-with-more-agents per `docs/instructions/README.md`
+§code-discipline. Silently dropping a lever is a deferral violation.
 
 ### W3 — Shape-dispatch classifier + JSON emitter-lift
 

@@ -25,6 +25,7 @@
 //! landing can't silently claim coverage the mechanism hasn't
 //! produced.
 
+use bbnf::backend::rust::emitter::shapes::{array, object};
 use bbnf_ir::passes::recognizers::shape_dispatch::{shape_dispatch, ShapeTag};
 use bbnf_ir::{IrNode, RuleId};
 
@@ -41,7 +42,6 @@ use fixtures::*;
 /// the token stream parses cleanly as a `syn::File`. The unparsed
 /// output is deterministic and survives round-trip — regenerating a
 /// golden from the same emitter output yields byte-identical text.
-#[allow(dead_code)]
 fn format_tokens(ts: &proc_macro2::TokenStream) -> String {
     let file: syn::File = syn::parse2(ts.clone())
         .expect("emitter output must parse as a syn::File");
@@ -52,7 +52,6 @@ fn format_tokens(ts: &proc_macro2::TokenStream) -> String {
 /// goldens omit the trailing newline `prettyplease` adds so the
 /// diff reads cleanly; we trim both sides before comparison.
 #[track_caller]
-#[allow(dead_code)]
 fn assert_matches_golden(actual: &str, expected: &str, golden_name: &str) {
     let a = actual.trim_end();
     let e = expected.trim_end();
@@ -61,6 +60,46 @@ fn assert_matches_golden(actual: &str, expected: &str, golden_name: &str) {
         "{golden_name} golden drift — re-run the golden bootstrap if the \
          emitter intentionally changed.",
     );
+}
+
+// ─── Classify + emit — Object ───────────────────────────────────────
+
+#[test]
+fn object_shape_classifies_correctly() {
+    let (ir, rules) = build_json_ir();
+    assert_eq!(ir.shape_assignments.get(rules.object), ShapeTag::Object);
+}
+
+#[test]
+fn object_shape_emit_matches_golden() {
+    let (ir, rules) = build_json_ir();
+    let rule = &ir.rules[rules.object as usize];
+    let ts = object::emit_parse_object("JsonFixture", rule, &ir);
+    let actual = format_tokens(&ts);
+    let expected = include_str!(
+        "fixtures/shape_dispatch_emission/object.rs.expected"
+    );
+    assert_matches_golden(&actual, expected, "object.rs");
+}
+
+// ─── Classify + emit — Array ────────────────────────────────────────
+
+#[test]
+fn array_shape_classifies_correctly() {
+    let (ir, rules) = build_json_ir();
+    assert_eq!(ir.shape_assignments.get(rules.array), ShapeTag::Array);
+}
+
+#[test]
+fn array_shape_emit_matches_golden() {
+    let (ir, rules) = build_json_ir();
+    let rule = &ir.rules[rules.array as usize];
+    let ts = array::emit_parse_array("JsonFixture", rule, &ir);
+    let actual = format_tokens(&ts);
+    let expected = include_str!(
+        "fixtures/shape_dispatch_emission/array.rs.expected"
+    );
+    assert_matches_golden(&actual, expected, "array.rs");
 }
 
 // ─── Wire-contract invariants ───────────────────────────────────────

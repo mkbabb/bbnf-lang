@@ -54,13 +54,19 @@ pub fn emit_parse_keyword(
             // the rule doesn't carry a `-> const` payload, fall back
             // to pushing an empty Literal leaf (no payload).
             let payload = literal_payload_for(rule, ir);
-            let payload_push = match payload {
-                Some(value) => quote! {
-                    ::bbnf::runtime::tape::PayloadData::InlineScalar(#value)
-                },
-                None => quote! {
-                    ::bbnf::runtime::tape::PayloadData::InlineScalar(0u32)
-                },
+            // Payload: Aggregate(&[byte]) for 1-byte arena slot; the
+            // reader's `payload_bytes(rec, 1)` pulls the byte back
+            // out. For a missing annotation we default to 0.
+            let payload_byte = match payload.as_ref() {
+                Some(_) => {
+                    // Cast the u32 literal to u8 for the 1-byte arena
+                    // slot. `payload` is always 0 / 1 for bool/null.
+                    quote! { #payload }
+                }
+                None => quote! { 0u32 },
+            };
+            let payload_push = quote! {
+                ::bbnf::runtime::tape::PayloadData::Aggregate(&[(#payload_byte) as u8])
             };
             let byte_lits: Vec<TokenStream> = bytes
                 .iter()
@@ -93,8 +99,12 @@ pub fn emit_parse_keyword(
                         });
                     }
                     *p = end;
+                    // Span kind + Aggregate(&[byte]) matches the
+                    // existing walker's emission — the bench's
+                    // `tape.payload_bytes(rec, 1)` reader consumes
+                    // the 1-byte arena slot.
                     let off = builder.push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Literal,
+                        ::bbnf::runtime::tape::TapeKind::Span,
                         at as u32,
                         end as u32,
                         #variant_idx,
@@ -140,8 +150,9 @@ pub fn emit_parse_keyword(
                                 });
                             }
                             *p = end;
+                            // Span + Aggregate — see null arm.
                             let off = builder.push_leaf_with(
-                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                ::bbnf::runtime::tape::TapeKind::Span,
                                 at as u32,
                                 end as u32,
                                 #variant_idx,
@@ -218,13 +229,12 @@ fn alt_branch_payload(
     let payload = find_map_fn(&branch.node)
         .and_then(|fid| ir.fns.get(fid as usize))
         .and_then(|fd| payload_from_fn(fd, ir));
-    match payload {
-        Some(value) => quote! {
-            ::bbnf::runtime::tape::PayloadData::InlineScalar(#value)
-        },
-        None => quote! {
-            ::bbnf::runtime::tape::PayloadData::InlineScalar(0u32)
-        },
+    let payload_byte = match payload {
+        Some(value) => quote! { #value },
+        None => quote! { 0u32 },
+    };
+    quote! {
+        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(#payload_byte) as u8])
     }
 }
 

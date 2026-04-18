@@ -429,6 +429,13 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
         }
     };
 
+    // Non-root dispatcher — used by Object/Array recursion into
+    // child values. Does NOT wrap the result in an outer compound
+    // so the inner shape record is a direct child of the enclosing
+    // object/array compound. Matches the existing walker shape for
+    // Alt-branch members inside compound bodies.
+    let nonroot_ident = format_ident!("{}__value", dispatcher_ident);
+    let root_variant_idx = (entry & 0xFF) as u8;
     quote! {
         /// AW-V.W3.2 — top-level shape dispatcher.
         ///
@@ -436,9 +443,47 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
         /// whitespace, dispatch on the first byte to a per-shape fn,
         /// verify trailing whitespace. The returned `TapeOffset` is
         /// the root record the caller's `Parsed::new` wraps.
+        ///
+        /// When the root rule is an Alt (JSON's `value = object |
+        /// array | string | number | bool | null` pattern) the
+        /// dispatcher wraps the inner shape record in an outer Rule
+        /// compound to match the existing walker's tape shape. The
+        /// wrap applies only at the root call site — recursive calls
+        /// from Object / Array bodies use [`#nonroot_ident`] which
+        /// skips the wrap.
         #[inline(always)]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #dispatcher_ident(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut #support_mod::ScanState,
+            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        ) -> ::core::result::Result<
+            ::bbnf::runtime::tape::TapeOffset,
+            ::bbnf::runtime::tape::DtaError,
+        > {
+            let span_lo = *p as u32;
+            let child_off = builder.mark_children();
+            #nonroot_ident(input, p, state, builder)?;
+            let span_hi = *p as u32;
+            Ok(builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                child_off,
+                span_lo,
+                span_hi,
+                #root_variant_idx,
+                0,
+            ))
+        }
+
+        /// AW-V.W3.2 — non-root value-position dispatcher. Called
+        /// recursively from Object / Array compound bodies. Does NOT
+        /// wrap the inner shape record in an outer compound — the
+        /// enclosing Object / Array's `mark_children` / `push_compound`
+        /// bracket already provides the structural wrap.
+        #[inline(always)]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        pub fn #nonroot_ident(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,

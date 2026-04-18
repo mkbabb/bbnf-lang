@@ -31,8 +31,13 @@ pub fn emit_parse_array(
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let variant_idx = (rule.id & 0xFF) as u8;
 
+    // Non-root dispatcher — skips the outer Rule wrap. See object.rs
+    // for the same rationale.
     let dispatcher_ident = match root_rule_name(ir) {
-        Some(root) => dispatcher_fn_ident(grammar_suffix, &root),
+        Some(root) => {
+            let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
+            format_ident!("{}__value", root_disp)
+        }
         None => return quote! {},
     };
 

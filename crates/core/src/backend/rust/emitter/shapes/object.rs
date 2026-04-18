@@ -48,9 +48,15 @@ pub fn emit_parse_object(
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let variant_idx = (rule.id & 0xFF) as u8;
 
-    // Resolve the dispatcher — the fn the value position recurses into.
+    // Resolve the non-root dispatcher — the fn the value position
+    // recurses into. The non-root variant skips the outer Rule-
+    // compound wrap (which the enclosing Object / Array already
+    // provides via `mark_children` / `push_compound`).
     let dispatcher_ident = match root_rule_name(ir) {
-        Some(root) => dispatcher_fn_ident(grammar_suffix, &root),
+        Some(root) => {
+            let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
+            format_ident!("{}__value", root_disp)
+        }
         None => {
             // No root — emit an empty stub (shouldn't reach here in
             // the wire-up path).

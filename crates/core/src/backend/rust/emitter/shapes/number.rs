@@ -150,8 +150,12 @@ pub fn emit_parse_number(
                 }
             };
 
+            // Span kind + WideScalar payload matches the existing
+            // walker's JSON `number` emission shape; the bench's
+            // `tape.payload_f64(rec)` reader consumes the 8-byte
+            // arena-backed slot via `PAYLOAD_IN_ARENA_BIT`.
             let off = builder.push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Regex,
+                ::bbnf::runtime::tape::TapeKind::Span,
                 start as u32,
                 end as u32,
                 #variant_idx,

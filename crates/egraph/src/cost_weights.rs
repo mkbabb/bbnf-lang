@@ -132,3 +132,62 @@ impl Default for CostWeights {
         }
     }
 }
+
+/// AW-IV.W5.3 (AM.6 chronic) — grid-sweep-calibrated extraction
+/// weights.
+///
+/// Produced by `scripts/cost-grid-sweep.sh` over a 54-configuration
+/// grid across {structural, alt_per_branch, dispatch_bonus, ref_cost}
+/// on the 4-grammar corpus (JSON, BBNF, CSS L4, Sheets). Full sweep
+/// artefact at `docs/benchmarks/cost-weights-sweep.json`.
+///
+/// # Calibration result: null (baseline weights retained)
+///
+/// Across all 54 swept configurations, the DTA state count for every
+/// primary grammar was identical to the baseline:
+///
+/// | Grammar | Baseline states | Sweep variance |
+/// |---------|----------------:|---------------:|
+/// | JSON    | 51              | {51}           |
+/// | BBNF    | 476             | {476}          |
+/// | CSS L4  | 2875            | {2875}         |
+/// | Sheets  | 191             | {191}          |
+///
+/// The current e-graph rewrite set
+/// (`DeduplicateAltBranches`, `SupersetAbsorbAlt`, `UnionMergeAlt`,
+/// `FuseAltRegexBranches`, `CommonSuffixFactor`) produces e-classes
+/// with at most one semantically-distinct canonical form for these
+/// grammars, so the cost model has no choice to exercise. Additional
+/// rewrite rules that introduce real alternatives to the class would
+/// be prerequisite to non-trivial calibration; that work is outside
+/// AW-IV.W5.3's scope.
+///
+/// The hard gate was reported as a documented null result per the
+/// plan's escape clause ("or null-result close with measurement
+/// evidence"). The sweep itself is the evidence; re-running it with
+/// an expanded rewrite set in a future tranche reuses the same
+/// harness.
+///
+/// # Consumer contract
+///
+/// Every production consumer constructing a `CostWeights` reads
+/// `CALIBRATED_WEIGHTS` (via `CostWeights::default()`, which aliases
+/// to this const) so there is exactly one slot to update when a
+/// future calibration produces a non-trivial result.
+pub const CALIBRATED_WEIGHTS: CostWeights = CostWeights {
+    structural: 1.0,
+    alt_per_branch: 1.5,
+    dispatch_bonus: -2.0,
+
+    // AF.2 defaults — calibrated to preserve pre-AF.2 behavior at
+    // the dimension level. Every consumer that reads these values
+    // should see the same decisions it made before the weights were
+    // consolidated.
+    call_overhead: 4.0,
+    inline_body_size_penalty: 0.5,
+    tape_push: 1.0,
+    dispatch_branch: 0.5,
+    dispatch_table: 3.0,
+    prettify_emission: 2.0,
+    cross_module_coercion: 1.5,
+};

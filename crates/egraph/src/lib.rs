@@ -45,7 +45,7 @@ mod unionfind;
 
 pub use analysis::{Analysis, NoAnalysis};
 pub use cost_config::CostConfig;
-pub use cost_weights::CostWeights;
+pub use cost_weights::{CALIBRATED_WEIGHTS, CostWeights};
 pub use csp_scheduler::{CspScheduler, DirtyDomain, ParentDirtyProp};
 pub use eclass::EClass;
 pub use egraph::EGraph;

@@ -28,7 +28,7 @@
 //! `@cost` directive lands in a future tranche and reads the same
 //! struct.
 
-use crate::cost_weights::CostWeights;
+use crate::cost_weights::{CALIBRATED_WEIGHTS, CostWeights};
 
 /// Shared cost / scheduling substrate. See module docs.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -56,7 +56,13 @@ pub struct CostConfig {
 impl Default for CostConfig {
     fn default() -> Self {
         Self {
-            weights: CostWeights::default(),
+            // AW-IV.W5.3 — extraction cost weights come from the
+            // grid-sweep-calibrated const. `CostWeights::default()`
+            // remains the per-field-default surface (useful in unit
+            // tests and when constructing from raw fields); every
+            // production extraction consumer receives
+            // `CALIBRATED_WEIGHTS` here.
+            weights: CALIBRATED_WEIGHTS,
             egraph_iter_limit: 64,
             egraph_node_limit: 100_000,
             parallelism_threshold: 128,

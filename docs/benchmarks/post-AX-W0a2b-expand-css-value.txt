@@ -1,0 +1,170 @@
+    pub fn parse_altdispatch_CssL4Parser_value(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+        let alt_lo = *p as u32;
+        let alt_child = builder.mark_children();
+        let save_p = *p;
+        let save_child = builder.mark_children();
+        let _ = save_p;
+        let _ = save_child;
+        'try_branches: loop {
+            match first {
+                34u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_string_CssL4Parser_cssString(input, p, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                35u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_flat_CssL4Parser_hex(input, p, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                39u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_string_CssL4Parser_cssString(input, p, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                43u8 => {
+                    {
+                        let attempt_p = *p;
+                        match {
+                            let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                            parse_wrap_CssL4Parser_valueUnit(input, p, state, builder)
+                        } {
+                            Ok(_) => break 'try_branches,
+                            Err(_) => {
+                                *p = attempt_p;
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        match {
+                            let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
+                                .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                    offset: *p as u32,
+                                })?;
+                            parse_number_CssL4Parser_number(input, p, __first, builder)
+                        } {
+                            Ok(_) => break 'try_branches,
+                            Err(_) => {
+                                *p = attempt_p;
+                            }
+                        }
+                    }
+                }
+                44u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [44u8] {
+                        *p = end;
+                        let _ = builder.push_leaf(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                        );
+                        break 'try_branches;
+                    }
+                }
+                45u8 => {
+                    {
+                        let attempt_p = *p;
+                        match {
+                            let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                            parse_wrap_CssL4Parser_valueUnit(input, p, state, builder)
+                        } {
+                            Ok(_) => break 'try_branches,
+                            Err(_) => {
+                                *p = attempt_p;
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        match {
+                            let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
+                                .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                    offset: *p as u32,
+                                })?;
+                            parse_number_CssL4Parser_number(input, p, __first, builder)
+                        } {
+                            Ok(_) => break 'try_branches,
+                            Err(_) => {
+                                *p = attempt_p;
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        match {
+                            let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                            parse_hregex_CssL4Parser_dashIdent(input, p, state, builder)
+                        } {
+                            Ok(_) => break 'try_branches,
+                            Err(_) => {
+                                *p = attempt_p;
+                            }
+                        }
+                    }
+                }
+                46u8 => {
+                    {
+                        let attempt_p = *p;
+                        match {
+                            let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                            parse_wrap_CssL4Parser_valueUnit(input, p, state, builder)
+                        } {
+                            Ok(_) => break 'try_branches,
+                            Err(_) => {
+                                *p = attempt_p;
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        match {
+                            let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
+                                .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                    offset: *p as u32,
+                                })?;
+                            parse_number_CssL4Parser_number(input, p, __first, builder)
+                        } {
+                            Ok(_) => break 'try_branches,
+                            Err(_) => {
+                                *p = attempt_p;
+                            }
+                        }
+                    }
+                }
+                47u8 => {
+                    let at = *p;
+                    let end = at + 1usize;

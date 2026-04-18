@@ -2,32 +2,37 @@
 //!
 //! # Role — AW-V.W3.2
 //!
-//! Emits the per-grammar Object-shape parse function mirroring
-//! `bbnf_json_prototype::parse_object` (crates/bbnf-json-prototype/
-//! src/lib.rs:258). The emitted function:
+//! Emits walker-tape-identical code for the canonical JSON object rule:
 //!
-//! 1. Marks children via [`TapeBuilder::mark_children`].
-//! 2. Fast-empty check: `}` immediately after `{` closes the compound
-//!    without visiting keys.
-//! 3. Loop: key (`"`) → `:` → value (recurse into dispatcher) → `,`
-//!    or `}`.
-//! 4. Pushes a compound record with `TapeKind::Rule` on close.
+//! ```text
+//! object = "{" >> ((pair << comma?)*)?w << "}"
+//! pair   = string, colon >> value
+//! ```
 //!
-//! The emitter assumes the Object-shape detector has already admitted
-//! the rule (W3.1 contract). For JSON's `object =
-//! "{" >> ((pair << comma?)*)?w << "}"` the emitted shape is
-//! identical to the prototype; other grammars' Object-shape rules
-//! emit the same mechanism with per-grammar `open` / `close` / `sep`
-//! bytes (W4 generalisation).
+//! The emitted tape mirrors the walker's structural compound tree
+//! exactly — the only difference is that dispatch is inlined (no
+//! `dispatch_one`, no `try_branch`) while the record stream matches
+//! byte-for-byte.
 //!
-//! # Wire contract
+//! # Emitted tape shape (for `{"k":v}`)
 //!
-//! The emitted function's signature is
-//! `parse_object_<grammar>_<rule>(input, p, state, builder) ->
-//! Result<TapeOffset, DtaError>`. The returned `TapeOffset` is the
-//! compound record's index — the dispatcher threads this up the
-//! recursion as the parent compound's root / a child of an enclosing
-//! compound.
+//! ```text
+//! [ 0] Seq     variant=<object_id>  span=0..N                                <- object outer Seq
+//! [ 1] Seq     variant=0            span=0..N-1 has_children                 <- Next("{" , rest)
+//! [ 2] Literal variant=0            span=0..1                                <- "{"
+//! [ 3] Seq     variant=0            has_children                             <- OptionalWhitespace
+//! [ 4] Rule    variant=0            has_children                             <- Repeat
+//! [ 5] Seq     variant=0            has_children                             <- per-iter Skip(pair, Repeat(,?))
+//! [ 6] Seq     variant=<pair_id>    has_children                             <- pair (Seq)
+//! [ 7] ... string records ...                                                <- Ref(string)
+//! [ .] Seq     variant=0            has_children                             <- Next(OptionalWhitespace(":"), Ref(value))
+//! [ .] Seq     variant=0            has_children                             <- OptionalWhitespace(":")
+//! [ .] Literal variant=0                                                     <- ":"
+//! [ .] ... value records ...                                                 <- Ref(value)
+//! [ .] Rule    variant=0            has_children                             <- Repeat(,?)
+//! [ .] ... optional "," records ...
+//! [ .] Literal variant=0                                                     <- "}"
+//! ```
 
 use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
@@ -48,34 +53,21 @@ pub fn emit_parse_object(
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let variant_idx = (rule.id & 0xFF) as u8;
 
-    // Resolve the non-root dispatcher — the fn the value position
-    // recurses into. The non-root variant skips the outer Rule-
-    // compound wrap (which the enclosing Object / Array already
-    // provides via `mark_children` / `push_compound`).
     let dispatcher_ident = match root_rule_name(ir) {
         Some(root) => {
             let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
             format_ident!("{}__value", root_disp)
         }
-        None => {
-            // No root — emit an empty stub (shouldn't reach here in
-            // the wire-up path).
-            return quote! {};
-        }
+        None => return quote! {},
     };
 
-    // The key parse path: when the grammar has a String-shape rule,
-    // call its parse fn for keys; otherwise inline a minimal quoted-
-    // string key reader. JSON's `pair = string, colon >> value` uses
-    // the grammar's `string` rule for keys.
-    let key_call = resolve_key_parse(grammar_suffix, ir);
+    // Locate the string rule and its variant_idx so we can call its
+    // shape fn + stamp the pair's `Ref(string)` correctly.
+    let (string_fn, string_variant, pair_variant) = resolve_pair_context(grammar_suffix, ir);
 
     quote! {
-        /// AW-V.W3.2 — per-grammar Object-shape parse function.
-        ///
-        /// Mirrors `bbnf_json_prototype::parse_object`. `{` must NOT
-        /// be consumed by the caller — this function reads and
-        /// verifies it, advances past it, and parses the object body.
+        /// AW-V.W3.2 — per-grammar Object-shape parse function,
+        /// **walker-tape-identical**.
         #[inline(always)]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #fn_ident(
@@ -87,8 +79,6 @@ pub fn emit_parse_object(
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
         > {
-            // The dispatcher has already verified `input[*p] == b'{'`
-            // via its byte-dispatch arm; we consume it here.
             let span_lo = *p as u32;
             if input.get(*p).copied() != Some(b'{') {
                 return Err(::bbnf::runtime::tape::DtaError::Syntax {
@@ -97,70 +87,274 @@ pub fn emit_parse_object(
                     failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
-            *p += 1;
-            let child_off = builder.mark_children();
-            let mut cur = #support_mod::skip_space(input, p, state);
 
-            if cur == Some(b'}') {
-                *p += 1;
-                let span_hi = *p as u32;
-                let off = builder.push_compound(
+            // Outer object Seq compound.
+            let outer_child = builder.mark_children();
+
+            // Next("{" , rest) Seq compound.
+            let lbrace_open = *p as u32;
+            let next_child = builder.mark_children();
+
+            // Leaf: "{" Literal — walker stamps variant_idx with the
+            // enclosing rule's id (object, here) from the Ref's pending
+            // stamp inherited into the Literal arm.
+            *p += 1;
+            let brace_close = *p as u32;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                lbrace_open,
+                brace_close,
+                #variant_idx,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+
+            // OptionalWhitespace Seq compound.
+            let opt_ws_open = *p as u32;
+            let opt_ws_child = builder.mark_children();
+
+            let _ = #support_mod::skip_space(input, p, state);
+            let repeat_open = *p as u32;
+            let repeat_child = builder.mark_children();
+
+            if input.get(*p).copied() == Some(b'}') {
+                // Empty object — close the Repeat (0 iters), OptionalWhitespace, Next, outer.
+                let repeat_close = *p as u32;
+                let _ = builder.push_compound(
                     ::bbnf::runtime::tape::TapeKind::Rule,
-                    child_off,
+                    repeat_child,
+                    repeat_open,
+                    repeat_close,
+                    0,
+                    0,
+                );
+                let opt_ws_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    opt_ws_child,
+                    opt_ws_open,
+                    opt_ws_close,
+                    0,
+                    0,
+                );
+                let next_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    next_child,
+                    lbrace_open,
+                    next_close,
+                    0,
+                    0,
+                );
+                *p += 1;
+                let rbrace_hi = *p as u32;
+                let _ = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    next_close,
+                    rbrace_hi,
+                    #variant_idx,
+                    0,
+                    ::bbnf::runtime::tape::PayloadData::None,
+                );
+                let outer_close = *p as u32;
+                let outer_off = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    outer_child,
                     span_lo,
-                    span_hi,
+                    outer_close,
                     #variant_idx,
                     0,
                 );
-                return Ok(off);
+                return Ok(outer_off);
             }
 
+            // Non-empty: loop per iter (Skip(pair, Repeat(,?))).
             loop {
-                if cur != Some(b'"') {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                // Key parse — inline string read, pushes a Span leaf.
-                #key_call
+                let iter_open = *p as u32;
+                let iter_child = builder.mark_children();
 
-                if #support_mod::skip_space(input, p, state) != Some(b':') {
+                // pair Seq compound.
+                let pair_open = *p as u32;
+                let pair_child = builder.mark_children();
+
+                // Ref(string) — emit string shape fn (its own Span leaf).
+                if input.get(*p).copied() != Some(b'"') {
                     return Err(::bbnf::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
                         failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
                         failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
+                let _key_off = #string_fn(input, p, state, builder)?;
+
+                // Next(OptionalWhitespace(":"), Ref(value)) Seq compound.
+                let _ = #support_mod::skip_space(input, p, state);
+                let colon_open = *p as u32;
+                let colon_next_child = builder.mark_children();
+
+                // OptionalWhitespace(":") Seq compound.
+                let opt_colon_child = builder.mark_children();
+                if input.get(*p).copied() != Some(b':') {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                let colon_lo = *p as u32;
                 *p += 1;
+                let colon_hi = *p as u32;
+                let _ = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    colon_lo,
+                    colon_hi,
+                    #pair_variant,
+                    0,
+                    ::bbnf::runtime::tape::PayloadData::None,
+                );
+                let opt_colon_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    opt_colon_child,
+                    colon_open,
+                    opt_colon_close,
+                    0,
+                    0,
+                );
 
-                // Value — recurse into the dispatcher.
+                // Ref(value) — recurse through dispatcher.
+                let _ = #support_mod::skip_space(input, p, state);
                 let _value_off = #dispatcher_ident(input, p, state, builder)?;
 
-                match #support_mod::skip_space(input, p, state) {
+                // Close Next(colon_ws, value) Seq compound.
+                let value_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    colon_next_child,
+                    colon_open,
+                    value_close,
+                    0,
+                    0,
+                );
+
+                // Close pair Seq compound.
+                let pair_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    pair_child,
+                    pair_open,
+                    pair_close,
+                    #pair_variant,
+                    0,
+                );
+
+                // Comma-optional Repeat compound.
+                let _ = #support_mod::skip_space(input, p, state);
+                let comma_repeat_open = *p as u32;
+                let comma_repeat_child = builder.mark_children();
+                if input.get(*p).copied() == Some(b',') {
+                    let opt_comma_open = *p as u32;
+                    let opt_comma_child = builder.mark_children();
+                    let comma_lo = *p as u32;
+                    *p += 1;
+                    let comma_hi = *p as u32;
+                    let _ = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Literal,
+                        comma_lo,
+                        comma_hi,
+                        #pair_variant,
+                        0,
+                        ::bbnf::runtime::tape::PayloadData::None,
+                    );
+                    let opt_comma_close = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        opt_comma_child,
+                        opt_comma_open,
+                        opt_comma_close,
+                        0,
+                        0,
+                    );
+                }
+                let comma_repeat_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    comma_repeat_child,
+                    comma_repeat_open,
+                    comma_repeat_close,
+                    0,
+                    0,
+                );
+
+                let iter_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_open,
+                    iter_close,
+                    0,
+                    0,
+                );
+
+                // Peek: loop or close.
+                let _ = #support_mod::skip_space(input, p, state);
+                match input.get(*p).copied() {
                     Some(b'}') => {
-                        *p += 1;
-                        let span_hi = *p as u32;
-                        let off = builder.push_compound(
+                        let repeat_close = *p as u32;
+                        let _ = builder.push_compound(
                             ::bbnf::runtime::tape::TapeKind::Rule,
-                            child_off,
+                            repeat_child,
+                            repeat_open,
+                            repeat_close,
+                            0,
+                            0,
+                        );
+                        let opt_ws_close = *p as u32;
+                        let _ = builder.push_compound(
+                            ::bbnf::runtime::tape::TapeKind::Seq,
+                            opt_ws_child,
+                            opt_ws_open,
+                            opt_ws_close,
+                            0,
+                            0,
+                        );
+                        let next_close = *p as u32;
+                        let _ = builder.push_compound(
+                            ::bbnf::runtime::tape::TapeKind::Seq,
+                            next_child,
+                            lbrace_open,
+                            next_close,
+                            0,
+                            0,
+                        );
+                        *p += 1;
+                        let rbrace_hi = *p as u32;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            next_close,
+                            rbrace_hi,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let outer_close = *p as u32;
+                        let outer_off = builder.push_compound(
+                            ::bbnf::runtime::tape::TapeKind::Seq,
+                            outer_child,
                             span_lo,
-                            span_hi,
+                            outer_close,
                             #variant_idx,
                             0,
                         );
-                        return Ok(off);
+                        let _ = #string_variant;
+                        return Ok(outer_off);
                     }
-                    Some(b',') => {
-                        *p += 1;
-                        cur = #support_mod::skip_space(input, p, state);
+                    Some(_) => {
+                        // next iteration
                     }
-                    _ => {
-                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    None => {
+                        return Err(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
                             offset: *p as u32,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -169,53 +363,38 @@ pub fn emit_parse_object(
     }
 }
 
-/// Resolve the per-grammar key-parse call. When the grammar declares
-/// a String-shape rule (e.g. JSON's `string`), dispatch to its
-/// shape fn. Otherwise emit an inline quoted-string reader.
-fn resolve_key_parse(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
+/// Resolve the grammar's String-shape rule (for key parsing) and the
+/// pair rule's variant_idx. Returns `(string_fn_ident, string_variant_idx, pair_variant_idx)`.
+///
+/// The pair rule is the one whose body is `Seq(Ref(string), ...)`; per
+/// JSON's canonical shape `pair = string, colon >> value`, walking the
+/// rule list for a Seq-bodied rule with a Ref-to-string head yields it.
+fn resolve_pair_context(
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> (proc_macro2::Ident, u8, u8) {
     use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
-    for rule in &ir.rules {
-        if rule.meta.is_transparent {
-            continue;
-        }
-        if !matches!(ir.shape_assignments.get(rule.id), ShapeTag::String) {
-            continue;
-        }
-        let name = ir.get_string(rule.name);
-        let string_fn = shape_fn_ident("string", grammar_suffix, name);
-        return quote! {
-            {
-                let _key_off = #string_fn(input, p, state, builder)?;
-            }
-        };
-    }
-    // No String-shape rule — emit an inline quoted-string span push.
-    // This is the fallback for grammars without a typed string rule.
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
-    quote! {
-        {
-            let key_lo = *p as u32;
-            let body_start = *p + 1;
-            let tail = &input[body_start..];
-            match #support_mod::first_quote_or_backslash(tail) {
-                Some((off, b'"')) => {
-                    *p = body_start + off + 1;
-                }
-                _ => {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: key_lo,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-            }
-            let _key_off = builder.push_leaf_borrowed_string(
-                ::bbnf::runtime::tape::TapeKind::Span,
-                key_lo,
-                *p as u32,
-                0,
-                0,
-            );
-        }
-    }
+    use bbnf_ir::IrNode;
+
+    // Find the String-shape rule.
+    let string_rule = ir
+        .rules
+        .iter()
+        .find(|r| matches!(ir.shape_assignments.get(r.id), ShapeTag::String))
+        .expect("object-shape admission requires a String-shape sibling rule");
+    let string_name = ir.get_string(string_rule.name);
+    let string_fn = shape_fn_ident("string", grammar_suffix, string_name);
+    let string_variant = (string_rule.id & 0xFF) as u8;
+
+    // Find the pair rule — a Seq whose first child is Ref(string_rule_id).
+    let pair_rule = ir.rules.iter().find(|r| match &r.body {
+        IrNode::Seq(children) => children
+            .first()
+            .map(|c| matches!(c, IrNode::Ref(rid) if *rid == string_rule.id))
+            .unwrap_or(false),
+        _ => false,
+    });
+    let pair_variant = pair_rule.map(|r| (r.id & 0xFF) as u8).unwrap_or(0);
+
+    (string_fn, string_variant, pair_variant)
 }

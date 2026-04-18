@@ -153,6 +153,12 @@ fn emit_shape_helpers(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
         .any(|r| matches!(ir.shape_assignments.get(r.id), ShapeTag::Number))
     {
         helpers.push(super::shapes::number::emit_number_fallback_helper());
+        // AW-V.W3-bench-fix — aarch64 NEON fraction SIMD accumulator.
+        // Mirrors the prototype's `simd_str2int`; canada.json's
+        // 15-digit fractions amortise across the 16-byte stripe.
+        helpers.push(
+            super::shapes::number::emit_number_simd_fraction_helper(),
+        );
     }
     quote! { #(#helpers)* }
 }

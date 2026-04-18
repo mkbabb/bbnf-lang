@@ -89,26 +89,16 @@ pub(crate) fn parse_number_body<V: JsonVisitor>(
         *p += 1;
     }
 
-    // Integer digits.
+    // Integer digits. sonic-rs's pattern: the integer part is
+    // typically short (1–5 digits for real-world corpora — twitter
+    // ids are the exception), so the scalar loop is faster in
+    // steady-state than a SIMD stripe whose `tzcnt >> 2` locate
+    // finds the stop quickly but pays the 16-byte load regardless.
+    // The fraction path below still uses SIMD where it fires on
+    // 15-digit precision floats (canada).
     let int_start = *p;
     let mut mantissa: u64 = 0;
     let mut many_digits = false;
-    // SIMD fast path — absorb up to 16 digits in one NEON stripe.
-    #[cfg(target_arch = "aarch64")]
-    {
-        while *p + 16 <= len {
-            let (sum, count) =
-                unsafe { simd_str2int(&input[*p..*p + 16], 16) };
-            if count == 0 {
-                break;
-            }
-            mantissa = mantissa.wrapping_mul(POW10_U64[count]).wrapping_add(sum);
-            *p += count;
-            if count < 16 {
-                break;
-            }
-        }
-    }
     while *p < len {
         let b = input[*p];
         if b.is_ascii_digit() {

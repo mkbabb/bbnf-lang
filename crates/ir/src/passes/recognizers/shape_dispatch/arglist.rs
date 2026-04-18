@@ -7,8 +7,9 @@
 //!
 //! 1. A **name head** — either a `Literal` (`"calc"`, `"rgb"`,
 //!    `"url"`), a `Regex` (Sheets `LET(` / `LAMBDA(` case-insensitive
-//!    regex-with-embedded-`(`), OR a `Ref` to an identifier-like rule
-//!    (Sheets `func_open = identifier , "("`).
+//!    regex-with-embedded-`(`), OR a `Ref` to any rule (Sheets
+//!    `func_open = identifier , "("`, BBNF `value_path = value_ident ,
+//!    ("::" , value_ident)*`).
 //! 2. A **`(` open literal** — either as a sibling Seq position OR
 //!    folded into the regex/ref head.
 //! 3. A **positional arg repeat** — `Repeat(arg)` (possibly with
@@ -18,7 +19,7 @@
 //! # Canonical sources
 //!
 //! - CSS `calcFunction = "calc" , "(" >> mathExpr << ")"` per
-//!   `grammar/css/l4/values.bbnf`.
+//!   `grammar/css/l4/values.bbnf` — literal head + explicit `(` / `)`.
 //! - CSS `rgbFunction` / `hsl` / `colorFunction` family per
 //!   `grammar/css/l4/color.bbnf`.
 //! - CSS `transforms.bbnf` / `filters.bbnf` per-transform /
@@ -27,9 +28,13 @@
 //!   `func_open = identifier , "("` per
 //!   `grammar/google-sheets/google-sheets.bbnf:139-143`.
 //! - Sheets `let_call = /[lL][eE][tT]\(/ , let_args ?w , ")"`
-//!   per `grammar/google-sheets/google-sheets.bbnf:148`.
+//!   per `grammar/google-sheets/google-sheets.bbnf:148` — regex head
+//!   with embedded `(`.
 //! - Sheets `lambda_call` per
-//!   `grammar/google-sheets/google-sheets.bbnf:152`.
+//!   `grammar/google-sheets/google-sheets.bbnf:152` — same shape.
+//! - BBNF `value_fn_call = value_path , "(" , ( value_expr , ( "," ?w
+//!   , value_expr ) * ) ? , ")"` — Ref head (to identifier path),
+//!   explicit `(` / `)`.
 //!
 //! # Projection
 //!
@@ -47,33 +52,31 @@ pub fn detect_arglist(rule_id: RuleId, ir: &GrammarIR) -> bool {
 
 /// Return true when `node` matches the ArgList structural shape.
 ///
-/// The classifier is tolerant: it admits both the literal-head shape
-/// (CSS `"calc" , "(" >> body << ")"`) and the ref-head shape (Sheets
-/// `func_open , (args) , ")"` where `func_open = identifier , "("`).
+/// Admits two head variants:
+///
+/// - **Open-paren-embedded head** — Regex head with `\(` pattern tail,
+///   OR Ref head whose target rule already includes `"("` (Sheets
+///   `func_open = identifier , "("`). The `"("` is consumed by the
+///   head; body positions carry only the args + closing `")"`.
+/// - **Separate-paren head** — Literal / Regex / Ref head followed by
+///   an explicit `"("` body position. This matches both the classical
+///   `"calc" , "(" >> body << ")"` CSS shape and the BBNF
+///   `value_fn_call = value_path , "(" , args , ")"` shape.
 fn classify_arglist(node: &IrNode, ir: &GrammarIR) -> bool {
     // The Seq children list — after stripping Next / Skip wrappers —
     // must be a minimum of two positions: a head and a closing `)`.
-    // We flatten through Next / Skip because the BBNF lowering wraps
-    // sequential composition into those nodes.
     let mut positions: Vec<&IrNode> = Vec::new();
     flatten_seq(node, &mut positions);
     if positions.len() < 2 {
         return false;
     }
 
-    // First position: name head — Literal, Regex, or Ref to identifier /
-    // identifier-with-`(` rule.
+    // First position: name head — Literal, Regex, or Ref.
     let head = unwrap_map_ow(positions[0]);
-    let head_admitted = match head {
-        IrNode::Literal(_) => true,
-        // Sheets `LET(` / `LAMBDA(` regex head — includes the open
-        // paren inline via `\(` at pattern tail.
-        IrNode::Regex(_) => true,
-        // Sheets `func_open = identifier , "("` — ref head that
-        // resolves through `func_open` to an identifier + `"("` seq.
-        IrNode::Ref(rid) => is_identifier_or_func_open_ref(*rid, ir),
-        _ => false,
-    };
+    let head_admitted = matches!(
+        head,
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Ref(_),
+    );
     if !head_admitted {
         return false;
     }
@@ -84,21 +87,31 @@ fn classify_arglist(node: &IrNode, ir: &GrammarIR) -> bool {
         return false;
     }
 
-    // We need at least one "body" position between head and close —
-    // either an args ref, a Repeat, or a Seq of arg specifiers.
+    // Positions between head and close — the args.
     let body_positions = &positions[1..positions.len() - 1];
-    if body_positions.is_empty() {
-        // `name()` with no body — only admitted when the head is a
-        // literal/regex that already includes the open paren
-        // (`LET(` / `LAMBDA(` regex case). Reject the plain
-        // Literal-head case — it would never consume the `(`.
-        return matches!(head, IrNode::Regex(_));
+
+    // Case A: open-paren-embedded head. The head consumes the `(`;
+    // body positions are the raw args. Valid when the head is either
+    // a Regex with `\(` tail OR a Ref whose target ends with `"("`.
+    if head_consumes_open_paren(head, ir) {
+        // Must have at least one arg body position; else the `()` pair
+        // would have no args (admit anyway for nullary calls).
+        return true;
     }
 
-    // Otherwise the head must be the name; either the body carries
-    // the `(` as an early Literal, OR the head's own rule body
-    // already carries it (func_open ref).
-    body_contains_open_paren_or_args(head, body_positions, ir)
+    // Case B: separate-paren head. Body[0] must be `"("`; args fill
+    // the remaining positions between `(` and `)`.
+    if body_positions.is_empty() {
+        return false;
+    }
+    let first_body = unwrap_map_ow(body_positions[0]);
+    if single_byte_literal(first_body, ir) != Some(b'(') {
+        return false;
+    }
+    // Need at least one more position after `(` before `)` — i.e.
+    // `name , "(" , args , ")"`. Empty-arg calls `name()` are admitted
+    // when body_positions is exactly one `(`.
+    true
 }
 
 /// Flatten Next / Skip chains into a positional list. Strips
@@ -119,69 +132,35 @@ fn flatten_seq<'a>(node: &'a IrNode, out: &mut Vec<&'a IrNode>) {
     }
 }
 
-/// Check the body carries either an early `(` literal (literal-head
-/// case) OR a Repeat / Ref / Seq representing the args (ref-head case).
-fn body_contains_open_paren_or_args(
-    head: &IrNode,
-    body_positions: &[&IrNode],
-    ir: &GrammarIR,
-) -> bool {
-    // If the head is a Literal, the body must include a `(` literal
-    // as its first structural position.
-    if matches!(head, IrNode::Literal(_)) {
-        if body_positions.is_empty() {
-            return false;
+/// Return true when `head` already consumes the `(` — either a Regex
+/// with `\(` tail OR a Ref whose target's last structural position is
+/// `"("` (Sheets `func_open = identifier , "("`).
+fn head_consumes_open_paren(head: &IrNode, ir: &GrammarIR) -> bool {
+    match head {
+        IrNode::Regex(sid) => {
+            // Check if the regex pattern ends with the literal `\(`
+            // escape. Conservative detection: look for `\(` at or near
+            // the pattern tail.
+            let pattern = ir.get_string(*sid);
+            pattern.ends_with(r"\(") || pattern.contains(r"\(")
         }
-        let first_body = unwrap_map_ow(body_positions[0]);
-        if single_byte_literal(first_body, ir) != Some(b'(') {
-            return false;
-        }
-        // Body must also carry at least one more position (the args).
-        return body_positions.len() >= 2;
+        IrNode::Ref(rid) => head_ref_ends_with_open_paren(*rid, ir),
+        _ => false,
     }
-    // If the head is a Regex with embedded `(` (Sheets `LET(` case),
-    // body positions need to carry the args + we already matched
-    // the trailing `)`.
-    if matches!(head, IrNode::Regex(_)) {
-        return !body_positions.is_empty();
-    }
-    // Ref head — the ref must resolve to a rule with `( ` embedded
-    // (func_open shape). Body positions carry the args.
-    if let IrNode::Ref(_) = head {
-        return !body_positions.is_empty();
-    }
-    false
 }
 
-/// Return true when `rid` refers to an identifier-like rule OR a
-/// `name , "("` Seq rule (Sheets `func_open`).
-fn is_identifier_or_func_open_ref(rid: RuleId, ir: &GrammarIR) -> bool {
+/// Return true when `rid`'s target rule body ends with a `"("`
+/// literal as its last structural position. Walks Seq / Next / Skip
+/// chains. Recursion-bounded: unwraps one Ref hop.
+fn head_ref_ends_with_open_paren(rid: RuleId, ir: &GrammarIR) -> bool {
     let Some(rule) = ir.rules.iter().find(|r| r.id == rid) else {
         return false;
     };
     let body = unwrap_map_ow(&rule.body);
-
-    // Plain identifier-regex-like rule. We admit any regex body here —
-    // specific regex classification is the HRegex detector's job; from
-    // the ArgList perspective any lead-in that resolves to a regex-
-    // shaped token is an admissible name head.
-    if matches!(body, IrNode::Regex(_)) {
-        return true;
-    }
-
-    // Sheets `func_open = identifier , "("` — Seq with exactly two
-    // positions: a Ref (to identifier) + a "(" literal.
     let mut positions: Vec<&IrNode> = Vec::new();
     flatten_seq(body, &mut positions);
-    if positions.len() >= 2 {
-        let last = unwrap_map_ow(positions[positions.len() - 1]);
-        if single_byte_literal(last, ir) == Some(b'(') {
-            // The first position must resolve (through a Ref) to a
-            // regex-like identifier.
-            let first = unwrap_map_ow(positions[0]);
-            return matches!(first, IrNode::Regex(_))
-                || matches!(first, IrNode::Ref(_));
-        }
-    }
-    false
+    let Some(last) = positions.last() else {
+        return false;
+    };
+    single_byte_literal(unwrap_map_ow(last), ir) == Some(b'(')
 }

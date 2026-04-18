@@ -1,40 +1,60 @@
 //! ArgList-shape emitter — `parse_arglist_<grammar>_<rule>`.
 //!
-//! # Role — AW-V.W4.1
+//! # Role — AW-V.W4-fix
 //!
 //! Emits per-grammar ArgList-shape parse functions for
 //! `name(arg, arg, …)` positional function calls. The emitted body
 //! matches the function-name head, consumes the `(`, runs the
-//! positional-arg repeat with separator handling, matches the `)`.
+//! positional-arg body via the grammar's value-position dispatcher,
+//! matches the `)`, and emits a `Rule` outer compound covering the
+//! whole call site.
 //!
-//! Canonical:
-//! - CSS `calcFunction = "calc" , "(" >> mathExpr << ")"` — fixed name
-//!   literal.
-//! - Sheets `func_call = func_open , (func_args ?) ?w , ")"` where
-//!   `func_open = identifier , "("` — identifier regex head.
-//! - Sheets `let_call = /[lL][eE][tT]\(/ , let_args ?w , ")"` —
-//!   regex with embedded `(`.
+//! # Head variants
+//!
+//! The detector admits three head variants; the emitter produces a
+//! matching branch per variant:
+//!
+//! 1. **Literal head** (`"calc" , "(" >> body << ")"`) — direct
+//!    byte-sequence match for the literal, followed by a separate `"("`
+//!    position.
+//! 2. **Regex head with inline `(`** (`/[lL][eE][tT]\(/, body, ")"`)
+//!    — the regex scan consumes the `(` as part of the lexeme; no
+//!    separate `(` consume is emitted.
+//! 3. **Ref head** — two flavours:
+//!    - Ref to an identifier-like rule whose body ends with `"("`
+//!      (Sheets `func_open = identifier , "("`). The ref call is
+//!      responsible for consuming the `(`.
+//!    - Ref to a plain identifier path followed by a separate `"("`
+//!      body position (BBNF `value_fn_call = value_path , "(" , args
+//!      , ")"`).
 //!
 //! # Emission shape
 //!
-//! The emitter produces three sub-shapes depending on the head kind:
+//! ```text
+//! Rule compound {
+//!   span_lo = *p
+//!   <head match — Literal byte-seq / dispatcher call for Ref / Regex>
+//!   [ "(" Literal leaf — when head doesn't consume the paren ]
+//!   <arg body — each inter-paren position via dispatcher>
+//!   ")" Literal leaf
+//!   span_hi = *p
+//! }
+//! ```
 //!
-//! 1. **Literal head**: direct byte-sequence match for `name`, then
-//!    `(`, args, `)`.
-//! 2. **Regex head (inline `(`)**: regex scan bounded to the embedded
-//!    `(` position; no separate `(` consume.
-//! 3. **Ref head**: call into the ref's rule (typically
-//!    `func_open = identifier , "("`); the ref is responsible for
-//!    the `(` advancement.
+//! # Wire contract
 //!
-//! W4.1 emits the scaffolding (head + `)` + tape compound); W4.2/W4.3
-//! wires the arg-repeat body.
+//! Walker-tape parity: every structural IR production → one tape
+//! record. The emitter is gated behind `has_full_shape_coverage` in
+//! [`super::emit_shapes_for_grammar`].
 
-use bbnf_ir::{GrammarIR, IrRule};
+use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 
-use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
+use super::dispatcher::{
+    dispatcher_fn_ident, shape_fn_ident, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
+};
+use super::root_rule_name;
 
 /// Emit `pub fn parse_arglist_<grammar>_<rule>(input, p, state,
 /// builder) -> Result<TapeOffset, DtaError>`.
@@ -46,19 +66,36 @@ pub fn emit_parse_arglist(
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("arglist", grammar_suffix, rule_name);
     let variant_idx = (rule.id & 0xFF) as u8;
-    let support_mod = quote::format_ident!("__shape_support_{}", grammar_suffix);
-    let _ = ir;
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+
+    let dispatcher_ident = match root_rule_name(ir) {
+        Some(root) => {
+            let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
+            format_ident!("{}__value", root_disp)
+        }
+        None => return quote! {},
+    };
+
+    // Flatten the rule body into positional IR nodes.
+    let positions = collect_positions(&rule.body);
+
+    let body_emission = emit_tape_body(
+        &positions,
+        variant_idx,
+        &support_mod,
+        &dispatcher_ident,
+        ir,
+    );
 
     quote! {
-        /// AW-V.W4.1 — per-grammar ArgList-shape parse function.
+        /// AW-V.W4-fix — per-grammar ArgList-shape parse function.
         ///
-        /// `name(arg, arg, …)` positional call. Outer `TapeKind::Rule`
-        /// compound; inner children are the head (name + `(` pair),
-        /// the positional args, and the closing `)`. Matches the
-        /// walker's Seq-emission tape layout for Function-shape
-        /// rules.
+        /// Emits one outer Rule compound over the whole call site.
+        /// Head (Literal / Regex / Ref) + optional `(` + body arg
+        /// positions (dispatched through the grammar's value-
+        /// dispatcher) + `)` literal.
         #[inline(always)]
-        #[allow(non_snake_case, clippy::too_many_arguments)]
+        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
         pub fn #fn_ident(
             input: &[u8],
             p: &mut usize,
@@ -71,17 +108,7 @@ pub fn emit_parse_arglist(
             let span_lo = *p as u32;
             let outer_child = builder.mark_children();
 
-            // Head match placeholder. W4.2/W4.3 extends this with the
-            // per-head dispatch (Literal / Regex / Ref).
-            let _ = #support_mod::skip_space(input, p, state);
-
-            // Positional args — Repeat(arg, separator). The arg body
-            // dispatches through the value-position call; W4.2/W4.3
-            // fills this in with the per-grammar argument refs.
-            let _ = #support_mod::skip_space(input, p, state);
-
-            // Close paren — expected after the args.
-            let _ = #support_mod::skip_space(input, p, state);
+            #body_emission
 
             let span_hi = *p as u32;
             let outer_off = builder.push_compound(
@@ -90,6 +117,7 @@ pub fn emit_parse_arglist(
                 span_lo,
                 span_hi,
                 #variant_idx,
+                0,
             );
             Ok(outer_off)
         }
@@ -97,7 +125,288 @@ pub fn emit_parse_arglist(
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// AW-V.W4.1 — visitor-path ArgList emitter.
+// Position collection + tape emission
+// ─────────────────────────────────────────────────────────────────────
+
+/// A flattened position in the rule body carrying leading / trailing
+/// ws-trim markers inherited from enclosing `OptionalWhitespace`s.
+#[derive(Clone)]
+struct PositionedNode<'a> {
+    node: &'a IrNode,
+    leading_ws: bool,
+    trailing_ws: bool,
+}
+
+/// Flatten a rule body into a list of positional nodes.
+fn collect_positions<'a>(node: &'a IrNode) -> Vec<PositionedNode<'a>> {
+    let mut out = Vec::new();
+    walk_positions(node, false, false, &mut out);
+    out
+}
+
+fn walk_positions<'a>(
+    node: &'a IrNode,
+    leading: bool,
+    trailing: bool,
+    out: &mut Vec<PositionedNode<'a>>,
+) {
+    match node {
+        IrNode::Map { inner, .. } => walk_positions(inner, leading, trailing, out),
+        IrNode::OptionalWhitespace(inner) => {
+            walk_positions(inner, true, true, out)
+        }
+        IrNode::Seq(children) => {
+            for child in children {
+                walk_positions(child, leading, trailing, out);
+            }
+        }
+        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+            walk_positions(lhs, leading, trailing, out);
+            walk_positions(rhs, leading, trailing, out);
+        }
+        IrNode::Epsilon => {}
+        _ => out.push(PositionedNode {
+            node,
+            leading_ws: leading,
+            trailing_ws: trailing,
+        }),
+    }
+}
+
+/// Emit the tape-path body for all positions.
+fn emit_tape_body(
+    positions: &[PositionedNode],
+    variant_idx: u8,
+    support_mod: &proc_macro2::Ident,
+    dispatcher_ident: &proc_macro2::Ident,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let mut emissions = Vec::with_capacity(positions.len());
+    for pos in positions {
+        let leading = if pos.leading_ws {
+            quote! { let _ = #support_mod::skip_space(input, p, state); }
+        } else {
+            quote! {}
+        };
+        let trailing = if pos.trailing_ws {
+            quote! { let _ = #support_mod::skip_space(input, p, state); }
+        } else {
+            quote! {}
+        };
+        let core = emit_tape_position_core(
+            pos.node,
+            variant_idx,
+            support_mod,
+            dispatcher_ident,
+            ir,
+        );
+        emissions.push(quote! {
+            {
+                #leading
+                #core
+                #trailing
+            }
+        });
+    }
+    quote! { #(#emissions)* }
+}
+
+/// Emit the record-producing core for one position. ArgList shares
+/// the same structure as Flat; the difference is only the outer
+/// compound kind (Rule vs Seq) which the caller emits.
+fn emit_tape_position_core(
+    node: &IrNode,
+    variant_idx: u8,
+    support_mod: &proc_macro2::Ident,
+    dispatcher_ident: &proc_macro2::Ident,
+    ir: &GrammarIR,
+) -> TokenStream {
+    match node {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> =
+                bytes.iter().map(|b| quote! { #b }).collect();
+            quote! {
+                let at = *p;
+                let end = at + #len;
+                if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let _ = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    at as u32,
+                    end as u32,
+                    #variant_idx,
+                    0,
+                    ::bbnf::runtime::tape::PayloadData::None,
+                );
+            }
+        }
+        IrNode::Regex(_) | IrNode::Ref(_) | IrNode::Alt(_, _)
+        | IrNode::Negate(_) | IrNode::Minus(_, _)
+        | IrNode::TokenDispatch { .. } => {
+            quote! {
+                let _ = #dispatcher_ident(input, p, state, builder)?;
+            }
+        }
+        IrNode::Repeat { inner, lo, hi } => {
+            let inner_emit = emit_tape_position_core(
+                inner,
+                variant_idx,
+                support_mod,
+                dispatcher_ident,
+                ir,
+            );
+            let lo_lit = *lo as usize;
+            if *hi == 1 && *lo == 0 {
+                // Optional — attempt once, restore on failure.
+                quote! {
+                    let save_p = *p;
+                    let iter_lo = *p as u32;
+                    let iter_child = builder.mark_children();
+                    let attempt = (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
+                        #inner_emit
+                        Ok(())
+                    })();
+                    if attempt.is_err() {
+                        *p = save_p;
+                    } else {
+                        let iter_hi = *p as u32;
+                        let _ = builder.push_compound(
+                            ::bbnf::runtime::tape::TapeKind::Seq,
+                            iter_child,
+                            iter_lo,
+                            iter_hi,
+                            0,
+                            0,
+                        );
+                    }
+                }
+            } else {
+                // Generic repeat — iterate greedily, count iters.
+                quote! {
+                    let repeat_lo = *p as u32;
+                    let repeat_child = builder.mark_children();
+                    let mut iter_count: u32 = 0;
+                    loop {
+                        let save_p = *p;
+                        let iter_lo = *p as u32;
+                        let iter_child = builder.mark_children();
+                        let attempt = (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
+                            #inner_emit
+                            Ok(())
+                        })();
+                        if attempt.is_err() {
+                            *p = save_p;
+                            break;
+                        }
+                        if *p == save_p { break; }
+                        let iter_hi = *p as u32;
+                        let _ = builder.push_compound(
+                            ::bbnf::runtime::tape::TapeKind::Seq,
+                            iter_child,
+                            iter_lo,
+                            iter_hi,
+                            0,
+                            0,
+                        );
+                        iter_count = iter_count.saturating_add(1);
+                    }
+                    if iter_count < (#lo_lit as u32) {
+                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                    let repeat_hi = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        repeat_child,
+                        repeat_lo,
+                        repeat_hi,
+                        0,
+                        0,
+                    );
+                }
+            }
+        }
+        IrNode::Seq(children) => {
+            let mut out = Vec::with_capacity(children.len());
+            for c in children {
+                out.push(emit_tape_position_core(
+                    c,
+                    variant_idx,
+                    support_mod,
+                    dispatcher_ident,
+                    ir,
+                ));
+            }
+            quote! {
+                let seq_lo = *p as u32;
+                let seq_child = builder.mark_children();
+                #(#out)*
+                let seq_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    seq_child,
+                    seq_lo,
+                    seq_hi,
+                    0,
+                    0,
+                );
+            }
+        }
+        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+            let l = emit_tape_position_core(
+                lhs,
+                variant_idx,
+                support_mod,
+                dispatcher_ident,
+                ir,
+            );
+            let r = emit_tape_position_core(
+                rhs,
+                variant_idx,
+                support_mod,
+                dispatcher_ident,
+                ir,
+            );
+            quote! { #l #r }
+        }
+        IrNode::Map { inner, .. } => emit_tape_position_core(
+            inner,
+            variant_idx,
+            support_mod,
+            dispatcher_ident,
+            ir,
+        ),
+        IrNode::OptionalWhitespace(inner) => {
+            let inner_emit = emit_tape_position_core(
+                inner,
+                variant_idx,
+                support_mod,
+                dispatcher_ident,
+                ir,
+            );
+            quote! {
+                let _ = #support_mod::skip_space(input, p, state);
+                #inner_emit
+                let _ = #support_mod::skip_space(input, p, state);
+            }
+        }
+        IrNode::Epsilon => quote! {},
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AW-V.W4-fix — visitor-path ArgList emitter.
 // ─────────────────────────────────────────────────────────────────────
 
 /// Emit `pub fn parse_arglist_visitor_<grammar>_<rule><V>(input, p,
@@ -109,30 +418,205 @@ pub fn emit_parse_arglist_visitor(
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("arglist", grammar_suffix, rule_name);
-    let support_mod = quote::format_ident!("__shape_support_{}", grammar_suffix);
-    let _ = ir;
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+
+    let dispatcher_ident = match root_rule_name(ir) {
+        Some(root) => {
+            let root_disp = visitor_dispatcher_fn_ident(grammar_suffix, &root);
+            format_ident!("{}__value", root_disp)
+        }
+        None => return quote! {},
+    };
+
+    let positions = collect_positions(&rule.body);
+    let body_emission = emit_visitor_body(
+        &positions,
+        &support_mod,
+        &dispatcher_ident,
+        ir,
+    );
 
     quote! {
-        /// AW-V.W4.1 — visitor-path ArgList-shape parse function.
+        /// AW-V.W4-fix — visitor-path ArgList-shape parse function.
         ///
-        /// Visitor method dispatch replaces the tape-record writes.
-        /// `V: ArrayVisitor` is the natural bound — `begin_array` at
-        /// the head, `end_array` at the close, per-arg value
-        /// dispatch inside. The per-grammar visitor's `begin_call` /
-        /// `end_call` methods may specialise further.
+        /// Visitor method dispatch replaces tape record writes.
+        /// Literal positions byte-match only; Ref / Regex / Alt
+        /// positions recurse through the visitor dispatcher.
         #[inline(always)]
-        #[allow(non_snake_case, clippy::too_many_arguments)]
+        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
         pub fn #fn_ident<V>(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            _visitor: &mut V,
+            visitor: &mut V,
         ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::ArrayVisitor,
+            V: ::bbnf::runtime::tape::ObjectVisitor
+                + ::bbnf::runtime::tape::ArrayVisitor
+                + ::bbnf::runtime::tape::StringVisitor
+                + ::bbnf::runtime::tape::NumberVisitor
+                + ::bbnf::runtime::tape::KeywordVisitor,
         {
-            let _ = #support_mod::skip_space(input, p, state);
+            #body_emission
             Ok(())
         }
+    }
+}
+
+fn emit_visitor_body(
+    positions: &[PositionedNode],
+    support_mod: &proc_macro2::Ident,
+    dispatcher_ident: &proc_macro2::Ident,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let mut emissions = Vec::with_capacity(positions.len());
+    for pos in positions {
+        let leading = if pos.leading_ws {
+            quote! { let _ = #support_mod::skip_space(input, p, state); }
+        } else {
+            quote! {}
+        };
+        let trailing = if pos.trailing_ws {
+            quote! { let _ = #support_mod::skip_space(input, p, state); }
+        } else {
+            quote! {}
+        };
+        let core = emit_visitor_position_core(
+            pos.node,
+            support_mod,
+            dispatcher_ident,
+            ir,
+        );
+        emissions.push(quote! {
+            {
+                #leading
+                #core
+                #trailing
+            }
+        });
+    }
+    quote! { #(#emissions)* }
+}
+
+fn emit_visitor_position_core(
+    node: &IrNode,
+    support_mod: &proc_macro2::Ident,
+    dispatcher_ident: &proc_macro2::Ident,
+    ir: &GrammarIR,
+) -> TokenStream {
+    match node {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> =
+                bytes.iter().map(|b| quote! { #b }).collect();
+            quote! {
+                let at = *p;
+                let end = at + #len;
+                if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: at as u32, rule: None,
+                    });
+                }
+                *p = end;
+            }
+        }
+        IrNode::Regex(_) | IrNode::Ref(_) | IrNode::Alt(_, _)
+        | IrNode::Negate(_) | IrNode::Minus(_, _)
+        | IrNode::TokenDispatch { .. } => {
+            quote! {
+                #dispatcher_ident(input, p, state, visitor)?;
+            }
+        }
+        IrNode::Repeat { inner, lo, hi } => {
+            let inner_emit = emit_visitor_position_core(
+                inner,
+                support_mod,
+                dispatcher_ident,
+                ir,
+            );
+            let lo_lit = *lo as usize;
+            if *hi == 1 && *lo == 0 {
+                quote! {
+                    let save_p = *p;
+                    let res = (|| -> ::core::result::Result<(), ::bbnf::runtime::ParseErr> {
+                        #inner_emit
+                        Ok(())
+                    })();
+                    if res.is_err() {
+                        *p = save_p;
+                    }
+                }
+            } else {
+                quote! {
+                    let mut iter_count: u32 = 0;
+                    loop {
+                        let save_p = *p;
+                        let res = (|| -> ::core::result::Result<(), ::bbnf::runtime::ParseErr> {
+                            #inner_emit
+                            Ok(())
+                        })();
+                        if res.is_err() {
+                            *p = save_p;
+                            break;
+                        }
+                        if *p == save_p { break; }
+                        iter_count = iter_count.saturating_add(1);
+                    }
+                    if iter_count < (#lo_lit as u32) {
+                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                            offset: *p as u32, rule: None,
+                        });
+                    }
+                }
+            }
+        }
+        IrNode::Seq(children) => {
+            let mut out = Vec::with_capacity(children.len());
+            for c in children {
+                out.push(emit_visitor_position_core(
+                    c,
+                    support_mod,
+                    dispatcher_ident,
+                    ir,
+                ));
+            }
+            quote! { #(#out)* }
+        }
+        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+            let l = emit_visitor_position_core(
+                lhs,
+                support_mod,
+                dispatcher_ident,
+                ir,
+            );
+            let r = emit_visitor_position_core(
+                rhs,
+                support_mod,
+                dispatcher_ident,
+                ir,
+            );
+            quote! { #l #r }
+        }
+        IrNode::Map { inner, .. } => emit_visitor_position_core(
+            inner,
+            support_mod,
+            dispatcher_ident,
+            ir,
+        ),
+        IrNode::OptionalWhitespace(inner) => {
+            let inner_emit = emit_visitor_position_core(
+                inner,
+                support_mod,
+                dispatcher_ident,
+                ir,
+            );
+            quote! {
+                let _ = #support_mod::skip_space(input, p, state);
+                #inner_emit
+                let _ = #support_mod::skip_space(input, p, state);
+            }
+        }
+        IrNode::Epsilon => quote! {},
     }
 }

@@ -32,10 +32,11 @@
 
 #![allow(dead_code)]
 
+use bbnf::backend::rust::emitter::shapes::pratt;
 use bbnf::pipeline::compile::compile_paths_request;
 use bbnf::pipeline::{CompileOutput, CompileRequest, CompileTarget, PipelineOptions};
 use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
-use bbnf_ir::{GrammarIR, RuleId};
+use bbnf_ir::{GrammarIR, IrRule, RuleId};
 
 /// Compile `grammar/css/l4/stylesheet.bbnf` from the workspace tree
 /// and return the post-`mine_recognizers` IR.
@@ -98,6 +99,24 @@ fn assert_shape(ir: &GrammarIR, rule_name: &str, expected: ShapeTag) {
     );
 }
 
+/// Return the IR rule with the given name. Panics when absent — the
+/// rule name is a hard-coded reference to the committed grammar.
+fn rule_by_name<'a>(ir: &'a GrammarIR, name: &str) -> &'a IrRule {
+    ir.rules
+        .iter()
+        .find(|r| ir.get_string(r.name) == name)
+        .unwrap_or_else(|| panic!("css_l4_shape_emit: rule `{name}` not found"))
+}
+
+/// Parse the TokenStream as a `syn::File`, panicking with the emitter
+/// label on failure. Mirrors the sibling helper in
+/// `sheets_shape_emit.rs`.
+fn format_tokens(ts: &proc_macro2::TokenStream, label: &str) -> String {
+    let file: syn::File = syn::parse2(ts.clone())
+        .unwrap_or_else(|e| panic!("{label}: emitter output must parse as syn::File: {e}"));
+    prettyplease::unparse(&file)
+}
+
 // ─── Pratt: CSS operator-chain rules ─────────────────────────────────
 
 /// `complexSelector = compoundSelector, (combinator, compoundSelector)*`
@@ -110,6 +129,29 @@ fn css_complex_selector_classified_as_pratt() {
         return;
     };
     assert_shape(&ir, "complexSelector", ShapeTag::Pratt);
+}
+
+/// `mathExpr = mathProduct , ( ("+" | "-") >> mathProduct ) *` at
+/// `grammar/css/l4/values.bbnf:50`. The `(op >> mathProduct)` body is
+/// `IrNode::Next(Alt_op, Ref(mathProduct))`, not a bare `Seq` — the
+/// AW-V.W4-fix detector widening admits this alongside the
+/// Sheets-style `Seq(op, operand)` shape. Before the fix, CSS math
+/// chains were silently rejected and fell through to the walker
+/// fallback.
+#[test]
+fn css_math_expr_classified_as_pratt() {
+    let Some(ir) = compile_css_l4() else { return };
+    assert_shape(&ir, "mathExpr", ShapeTag::Pratt);
+}
+
+/// `mathProduct = mathValue , ( ("*" | "/") >> mathValue ) *` — the
+/// innermost rung of the CSS math operator tower. Same structural
+/// shape as `mathExpr`; Pratt admission validates the detector
+/// fires on every rung of the chain, not just the outermost.
+#[test]
+fn css_math_product_classified_as_pratt() {
+    let Some(ir) = compile_css_l4() else { return };
+    assert_shape(&ir, "mathProduct", ShapeTag::Pratt);
 }
 
 // ─── ArgList: CSS function-call family ───────────────────────────────
@@ -413,12 +455,18 @@ fn css_l4_w4_shape_counts_within_audit_bounds() {
          hex depending on emission)"
     );
 
-    // Pratt — complexSelector (operator-chain via combinator).
+    // Pratt — complexSelector + mathExpr + mathProduct + the comma-
+    // separated list rules (selectorList, relativeSelectorList,
+    // keyframeSel, mediaQueryList) all admit the operator-chain
+    // predicate after the AW-V.W4-fix detector widening that accepts
+    // `Next` / `Skip` as the Repeat body (CSS's `>>` / `<<`
+    // combinators).
     let pratt = ir.shape_assignments.count_of(ShapeTag::Pratt);
     assert!(
-        pratt >= 1,
-        "CSS L4 Pratt count {pratt} < 1; at minimum `complexSelector` \
-         admits the operator-chain predicate via the combinator Repeat"
+        pratt >= 3,
+        "CSS L4 Pratt count {pratt} < 3; at minimum `complexSelector`, \
+         `mathExpr`, and `mathProduct` admit the operator-chain \
+         predicate (list rules with `, >> rhs` shape add more)"
     );
 }
 
@@ -664,4 +712,81 @@ fn css_l4_shape_coverage_gate_matches_emitter_completion() {
          admission logic changed prematurely or the emitter bodies \
          silently landed without flipping this test."
     );
+}
+
+// ─── Pratt emitter TokenStream parity ──────────────────────────────
+//
+// Direct invocation of the Pratt emitter over canonical CSS math-chain
+// rules — the output must parse as syntactically-valid Rust AND must
+// contain the functional-body markers that distinguish the AW-V.W4-fix
+// emitter from the pre-fix scaffolding stub. Both tape-path and
+// visitor-path emitters exercised.
+
+/// Pratt tape-path emitter over `mathExpr` must produce parsable Rust
+/// that exercises the functional shunting-yard reducer —
+/// `PRECEDENCE_LUT` read, op-stack declaration, reducer compound
+/// emission, outer Rule compound close.
+#[test]
+fn w4_pratt_emits_functional_tape_body_for_css_math_expr() {
+    let Some(ir) = compile_css_l4() else { return };
+    let rule = rule_by_name(&ir, "mathExpr");
+    let ts = pratt::emit_parse_pratt("CssL4Fixture", rule, &ir);
+    let rendered = format_tokens(&ts, "pratt::emit_parse_pratt/mathExpr");
+    // Functional-body markers. The pre-fix scaffolding had none of
+    // these — it emitted a bare outer compound + single-probe loop.
+    for marker in [
+        "PRECEDENCE_LUT",
+        "LocalOpEntry",
+        "op_stack",
+        "push_compound",
+        "should_reduce",
+    ] {
+        assert!(
+            rendered.contains(marker),
+            "emit_parse_pratt/mathExpr missing functional marker `{marker}` — \
+             the scaffolding stub re-landed: {rendered}"
+        );
+    }
+}
+
+/// Visitor-path Pratt emitter over `mathProduct` — same functional
+/// markers except visitor calls replace the tape-path column writes.
+#[test]
+fn w4_pratt_emits_functional_visitor_body_for_css_math_product() {
+    let Some(ir) = compile_css_l4() else { return };
+    let rule = rule_by_name(&ir, "mathProduct");
+    let ts = pratt::emit_parse_pratt_visitor("CssL4Fixture", rule, &ir);
+    let rendered = format_tokens(&ts, "pratt::emit_parse_pratt_visitor/mathProduct");
+    for marker in [
+        "PRECEDENCE_LUT",
+        "LocalOpEntry",
+        "op_stack",
+        "begin_pratt",
+        "operator",
+        "end_pratt",
+    ] {
+        assert!(
+            rendered.contains(marker),
+            "emit_parse_pratt_visitor/mathProduct missing functional \
+             marker `{marker}` — the scaffolding stub re-landed: {rendered}"
+        );
+    }
+}
+
+/// Pratt emitter over `complexSelector` — validates the same
+/// functional markers fire on the combinator chain rule that sits
+/// outside the math family (selector combinators `>`, `+`, `~`, ` `).
+#[test]
+fn w4_pratt_emits_functional_tape_body_for_css_complex_selector() {
+    let Some(ir) = compile_css_l4() else { return };
+    let rule = rule_by_name(&ir, "complexSelector");
+    let ts = pratt::emit_parse_pratt("CssL4Fixture", rule, &ir);
+    let rendered = format_tokens(&ts, "pratt::emit_parse_pratt/complexSelector");
+    for marker in ["PRECEDENCE_LUT", "op_stack", "push_compound"] {
+        assert!(
+            rendered.contains(marker),
+            "emit_parse_pratt/complexSelector missing functional marker \
+             `{marker}`: {rendered}"
+        );
+    }
 }

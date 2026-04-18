@@ -591,6 +591,92 @@ fn w4_pratt_detector_admits_operator_chain_rung() {
     );
 }
 
+/// CSS math operator chains use `(op >> operand)` inside the Repeat —
+/// i.e. `IrNode::Next`, not `IrNode::Seq`. Before AW-V.W4-fix the
+/// detector's `is_operator_chain_tail` required a bare `Seq` and
+/// rejected every CSS math chain. This fixture mirrors CSS's
+/// `mathProduct = mathValue , (("*"|"/") >> mathValue)*` topology —
+/// `Next(Alt_op, Ref(operand))` inside the outer `Repeat`.
+fn build_pratt_next_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    let operand_body = mapped(regex(&mut ir, r"[0-9]+"));
+    let operand_rule = push_rule(&mut ir, "operand", operand_body);
+    // expr = operand, (("*" | "/") >> operand)*
+    let op_alt = IrNode::Alt(
+        vec![
+            AltBranch { node: lit(&mut ir, "*"), first_set: None },
+            AltBranch { node: lit(&mut ir, "/"), first_set: None },
+        ],
+        None,
+    );
+    let repeat_inner = IrNode::Next(
+        Box::new(op_alt),
+        Box::new(IrNode::Ref(operand_rule)),
+    );
+    let expr_body = IrNode::Seq(vec![
+        IrNode::Ref(operand_rule),
+        IrNode::Repeat {
+            inner: Box::new(repeat_inner),
+            lo: 0,
+            hi: u32::MAX,
+        },
+    ]);
+    let expr_rule = push_rule(&mut ir, "expr", expr_body);
+    ir.entry = expr_rule;
+    finalise_and_classify(&mut ir);
+    (ir, expr_rule)
+}
+
+#[test]
+fn w4_pratt_detector_admits_next_based_operator_chain() {
+    // AW-V.W4-fix regression: the detector must admit `(op >> operand)`
+    // shape — CSS's mathProduct / mathExpr body — in addition to the
+    // Sheets-style `(op, operand)` Seq shape. Pre-fix the detector's
+    // is_operator_chain_tail required `IrNode::Seq(_)` inside the
+    // Repeat; CSS math chains failed admission because their `>>`
+    // combinator lowers to `IrNode::Next`, not a bare Seq.
+    let (ir, expr_rule) = build_pratt_next_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(expr_rule),
+        ShapeTag::Pratt,
+        "Next-based operator chain (`(op >> operand)*`) must classify as Pratt — \
+         mirrors CSS mathProduct / mathExpr body topology"
+    );
+}
+
+/// `Skip` is the dual of `Next` (`a << b` keeps left); the Pratt
+/// detector must admit it via the same projection. No canonical
+/// grammar uses Skip inside an operator-chain repeat, but the
+/// structural admission is symmetric and cheap to verify.
+#[test]
+fn w4_pratt_detector_admits_skip_based_operator_chain() {
+    let mut ir = base_ir();
+    let operand_body = mapped(regex(&mut ir, r"[0-9]+"));
+    let operand_rule = push_rule(&mut ir, "operand", operand_body);
+    let op_body = mapped(lit(&mut ir, "+"));
+    let op_rule = push_rule(&mut ir, "op", op_body);
+    let repeat_inner = IrNode::Skip(
+        Box::new(IrNode::Ref(op_rule)),
+        Box::new(IrNode::Ref(operand_rule)),
+    );
+    let expr_body = IrNode::Seq(vec![
+        IrNode::Ref(operand_rule),
+        IrNode::Repeat {
+            inner: Box::new(repeat_inner),
+            lo: 0,
+            hi: u32::MAX,
+        },
+    ]);
+    let expr_rule = push_rule(&mut ir, "expr", expr_body);
+    ir.entry = expr_rule;
+    finalise_and_classify(&mut ir);
+    assert_eq!(
+        ir.shape_assignments.get(expr_rule),
+        ShapeTag::Pratt,
+        "Skip-based operator chain must classify as Pratt"
+    );
+}
+
 /// Build an Unordered-shape IR: `Repeat(lo: 1)` over an Alt whose
 /// branches have disjoint FIRST byte sets (mirrors CSS
 /// `compoundSelector`).

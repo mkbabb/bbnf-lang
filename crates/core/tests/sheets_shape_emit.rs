@@ -386,15 +386,78 @@ fn sheets_entry_rule_is_formula_with_seq_body() {
 // over Sheets's production IR.
 
 /// Pratt emitter over `comparison_expr` — Sheets's top-level operator-
-/// chain rung.
+/// chain rung. Asserts both tape-path and visitor-path emitters carry
+/// the functional shunting-yard body markers (PRECEDENCE_LUT read,
+/// op-stack, reducer emission). Pre-AW-V.W4-fix the emitters were
+/// empty-body stubs with a single-probe loop; this test pins the
+/// functional-body contract so a future regression surfaces
+/// deterministically.
 #[test]
 fn w4_pratt_emits_parsable_rust_for_sheets_comparison_expr() {
     let ir = sheets_ir();
     let rule = rule_by_name(&ir, "comparison_expr");
     let ts = pratt::emit_parse_pratt("SheetsFixture", rule, &ir);
-    let _ = format_tokens(&ts, "pratt::emit_parse_pratt/comparison_expr");
+    let rendered =
+        format_tokens(&ts, "pratt::emit_parse_pratt/comparison_expr");
+    for marker in [
+        "PRECEDENCE_LUT",
+        "LocalOpEntry",
+        "op_stack",
+        "push_compound",
+        "should_reduce",
+    ] {
+        assert!(
+            rendered.contains(marker),
+            "emit_parse_pratt/comparison_expr missing functional marker \
+             `{marker}` — scaffolding stub re-landed: {rendered}"
+        );
+    }
     let ts_v = pratt::emit_parse_pratt_visitor("SheetsFixture", rule, &ir);
-    let _ = format_tokens(&ts_v, "pratt::emit_parse_pratt_visitor/comparison_expr");
+    let rendered_v =
+        format_tokens(&ts_v, "pratt::emit_parse_pratt_visitor/comparison_expr");
+    for marker in [
+        "PRECEDENCE_LUT",
+        "LocalOpEntry",
+        "op_stack",
+        "begin_pratt",
+        "operator",
+        "end_pratt",
+    ] {
+        assert!(
+            rendered_v.contains(marker),
+            "emit_parse_pratt_visitor/comparison_expr missing functional \
+             marker `{marker}`: {rendered_v}"
+        );
+    }
+}
+
+/// Every Sheets operator-tower rung emits functional Pratt bodies —
+/// the detector fires on all 5 rungs (comparison_expr → exp_expr)
+/// and the emitter produces walker-tape-parity shunting-yard code
+/// for each.
+#[test]
+fn w4_pratt_emits_functional_body_for_every_sheets_tower_rung() {
+    let ir = sheets_ir();
+    for rung in [
+        "comparison_expr",
+        "concat_expr",
+        "add_expr",
+        "mul_expr",
+        "exp_expr",
+    ] {
+        let rule = rule_by_name(&ir, rung);
+        let ts = pratt::emit_parse_pratt("SheetsFixture", rule, &ir);
+        let rendered =
+            format_tokens(&ts, &format!("pratt::emit_parse_pratt/{rung}"));
+        assert!(
+            rendered.contains("PRECEDENCE_LUT"),
+            "Sheets `{rung}` Pratt emitter missing PRECEDENCE_LUT: {rendered}"
+        );
+        assert!(
+            rendered.contains("push_compound"),
+            "Sheets `{rung}` Pratt emitter missing reducer compound emission"
+        );
+    }
 }
 
 /// ArgList emitter over `func_call` — Sheets's identifier-head call.

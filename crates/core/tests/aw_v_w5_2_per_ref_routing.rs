@@ -141,14 +141,20 @@ fn json_admits_via_shape_dispatcher_entrypoint() {
 /// direct calls to target shape fns; calling a non-existent shape fn
 /// would be a compilation error. The admission gate prevents that.
 #[test]
-fn admission_accepts_grammars_with_classified_value_ref_targets() {
-    // Post AX.W0a.2.b — detector widening (AltDispatch + Flat +
-    // Scalar extensions + fixed-point classification) closes the
-    // entry-reachable unclassified Ref gap for Sheets / CSS L4 /
-    // BBNF / EBNF / BNF / BbnfBootstrap. The admission gate now
-    // accepts every grammar with classified entry-reachable Refs.
-    // Per AX invariant 9, any subsequent wave that flips this back
-    // without cause must amend `gate_predicate_wire_contract.rs`.
+fn admission_rejects_sheets_due_to_inline_regex_positions() {
+    // Post AX.W0a.2.b — detector widening closes the entry-reachable
+    // unclassified Ref gap, but `has_shape_dispatcher_entrypoint` also
+    // checks per hard gate 7 ("No `__value` fallback emission") that
+    // no classified rule body contains inline Regex / Alt / Negate /
+    // Minus / TokenDispatch positions that would emit
+    // `#dispatcher_ident` fallback.
+    //
+    // Sheets's entry `formula = /=?/ , expression` has an inline Regex
+    // at position 0. Flat's emitter delegates Regex positions to the
+    // grammar's `__value` dispatcher; for non-Alt-rooted grammars
+    // that IS the entry's shape fn, causing infinite recursion. The
+    // admission gate correctly rejects until the Flat emitter inlines
+    // regex matches (AX successor waves).
     let ir = compile_grammar("../../grammar/google-sheets/google-sheets.bbnf");
     assert!(
         has_shape_dispatch(&ir),
@@ -159,10 +165,11 @@ fn admission_accepts_grammars_with_classified_value_ref_targets() {
         "Sheets's entry (formula) is classified (Flat) — has_full_shape_coverage admits"
     );
     assert!(
-        has_shape_dispatcher_entrypoint(&ir),
-        "Post AX.W0a.2.b: Sheets's entry-reachable Ref graph is closed \
-         over classified targets (let_args → Flat, let_binding → Flat, \
-         etc.). The admission gate accepts."
+        !has_shape_dispatcher_entrypoint(&ir),
+        "Sheets's entry-reachable Ref graph is closed but `formula`'s \
+         body contains an inline Regex position (`/=?/`) that would \
+         fall back to `__value` and infinite-loop. The admission gate \
+         rejects per hard gate 7."
     );
 }
 

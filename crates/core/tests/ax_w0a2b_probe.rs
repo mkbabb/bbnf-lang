@@ -208,6 +208,24 @@ fn dump_css_alignDecl() {
 }
 
 #[test]
+fn dump_has_shape_dispatcher_entrypoint_outcome() {
+    use bbnf::backend::rust::emitter::shapes::has_shape_dispatcher_entrypoint;
+    for (label, path, structural) in [
+        ("JSON", "../../grammar/json/json.bbnf", false),
+        ("CSS L4", "../../grammar/css/l4/stylesheet.bbnf", false),
+        ("Sheets", "../../grammar/google-sheets/google-sheets.bbnf", false),
+        ("BBNF", "../../grammar/bbnf/bbnf.bbnf", false),
+        ("EBNF", "../../grammar/ebnf/ebnf.bbnf", false),
+        ("BNF", "../../grammar/bnf/bnf.bbnf", false),
+        ("BbnfBootstrap", "../../grammar/bbnf/bbnf.bbnf", true),
+    ] {
+        let ir = compile(path, structural);
+        let out = has_shape_dispatcher_entrypoint(&ir);
+        println!("  {label:16} has_shape_dispatcher_entrypoint = {out}");
+    }
+}
+
+#[test]
 fn dump_remaining_unclassified() {
     for (label, path, structural) in [
         ("Sheets", "../../grammar/google-sheets/google-sheets.bbnf", false),

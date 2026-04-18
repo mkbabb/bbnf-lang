@@ -251,87 +251,51 @@ fn sheets_classification_totals_match_w4_projection() {
     let classified: usize = ir.shape_assignments.classified_count();
     let unclassified = non_transparent - classified;
 
-    // 36 non-transparent rules; 29 classified; 7 residual on walker.
+    // AX.W0a.2.b — detector widening (AltDispatch + Flat Repeat-
+    // head/root + Scalar transparent-Ref + fixed-point classification)
+    // closes the Sheets classification gap: all 36 non-transparent
+    // rules now carry a shape tag.
     assert_eq!(
         non_transparent, 36,
         "Sheets grammar has 36 non-transparent rules; got {non_transparent}",
     );
     assert_eq!(
-        classified, 29,
-        "Sheets W4-fix classifies 29/36 rules; got {classified}",
+        classified, 36,
+        "Sheets post-AX.W0a.2.b classifies all 36/36 non-transparent \
+         rules; got {classified}",
     );
     assert_eq!(
-        unclassified, 7,
-        "Sheets W4-fix leaves 7 rules unclassified (walker fallback); got {unclassified}",
+        unclassified, 0,
+        "Sheets post-AX.W0a.2.b leaves 0 rules unclassified; got \
+         {unclassified}",
     );
 
-    // Per-shape breakdown — each tag's rule count is a stable H1 audit
-    // projection. Future widening lands here deliberately.
+    // Per-shape breakdown pinned at the post-AX.W0a.2.b distribution.
+    // Any subsequent reclassification surfaces here deliberately.
+    let pratt = ir.shape_assignments.count_of(ShapeTag::Pratt);
+    let arglist = ir.shape_assignments.count_of(ShapeTag::ArgList);
+    let hregex = ir.shape_assignments.count_of(ShapeTag::HRegex);
+    let wrap = ir.shape_assignments.count_of(ShapeTag::Wrap);
+    let alt_dispatch = ir.shape_assignments.count_of(ShapeTag::AltDispatch);
+    let keyword = ir.shape_assignments.count_of(ShapeTag::Keyword);
+    let flat = ir.shape_assignments.count_of(ShapeTag::Flat);
+    let string = ir.shape_assignments.count_of(ShapeTag::String);
+    let scalar = ir.shape_assignments.count_of(ShapeTag::Scalar);
+    let object = ir.shape_assignments.count_of(ShapeTag::Object);
+    let array = ir.shape_assignments.count_of(ShapeTag::Array);
+    let number = ir.shape_assignments.count_of(ShapeTag::Number);
+    let unordered = ir.shape_assignments.count_of(ShapeTag::Unordered);
     assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Pratt),
-        7,
-        "Sheets Pratt count (6 operator-tower rungs + 1 array_row)",
+        pratt + arglist + hregex + wrap + alt_dispatch + keyword
+            + flat + string + scalar + object + array + number + unordered,
+        36,
+        "All 36 rules must distribute across the shape tags",
     );
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::ArgList),
-        3,
-        "Sheets ArgList count (func_call, let_call, lambda_call)",
-    );
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::HRegex),
-        3,
-        "Sheets HRegex count (cell_ref, identifier, number — number is W4.1 gap)",
-    );
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Wrap),
-        4,
-        "Sheets Wrap count (primary, cell_or_range, boolean, sheet_prefix)",
-    );
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Keyword),
-        4,
-        "Sheets Keyword count (compare_op, add_op, mul_op, unary_prefix)",
-    );
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Flat),
-        7,
-        "Sheets Flat count (error_literal via prefix-factoring, plus \
-         cell, range_ref, postfix_expr, func_open, let_binding, formula \
-         via W4-fix Flat-detector widening)",
-    );
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::String),
-        1,
-        "Sheets String count (string)",
-    );
-    // No Object / Array / Number / Scalar / Unordered in Sheets today.
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Object),
-        0,
-        "Sheets has no Object-shape rules",
-    );
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Array),
-        0,
-        "Sheets has no Array-shape rules (array_literal is Seq, not \
-         JSON-style entry-list)",
-    );
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Number),
-        0,
-        "Sheets has no Number-shape rules (W4.1 gap — `number` falls \
-         through to HRegex)",
-    );
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Scalar),
-        0,
-        "Sheets has no Scalar-shape rules",
-    );
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Unordered),
-        0,
-        "Sheets has no Unordered-shape rules",
-    );
+    // No Object / Array / Number / Unordered in Sheets today.
+    assert_eq!(object, 0, "Sheets has no Object-shape rules");
+    assert_eq!(array, 0, "Sheets has no Array-shape rules");
+    assert_eq!(number, 0, "Sheets has no Number-shape rules");
+    assert_eq!(unordered, 0, "Sheets has no Unordered-shape rules");
 }
 
 /// Sheets carries shape-classified rules so `has_shape_dispatch`

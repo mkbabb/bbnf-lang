@@ -54,6 +54,7 @@
 //! classes + literal-Alt bodies) claim their regex / literal leaves
 //! ahead of HRegex / Scalar (the fallthrough leaf families).
 
+pub mod alt_dispatch;
 pub mod arglist;
 pub mod array;
 pub mod flat;
@@ -175,6 +176,15 @@ pub enum ShapeTag {
     /// BBNF `identifier`).
     HRegex,
 
+    /// AX.W0a.2.b — generalized `Alt` byte-dispatcher over classified
+    /// leaves (Ref-to-classified / Literal / Regex / leaf-only Seq).
+    /// Strict superset of Wrap; Wrap wins on the narrow
+    /// `Alt(Ref | Regex)` canonical cases (JSON `value`, CSS
+    /// `color`). AltDispatch captures the broader pattern covering
+    /// CSS `value`, BBNF `type_name`, CSS `keyframeStop`, EBNF
+    /// `letter`, etc.
+    AltDispatch,
+
     /// Rule did not match any detector — falls back to the walker.
     None,
 }
@@ -197,8 +207,8 @@ impl ShapeTag {
     }
 
     /// Returns true when this tag represents a W4-actively-classified
-    /// shape (Pratt / Unordered / ArgList / Flat / Wrap / HRegex).
-    /// W3 shapes and `None` return false.
+    /// shape (Pratt / Unordered / ArgList / Flat / Wrap / HRegex /
+    /// AltDispatch). W3 shapes and `None` return false.
     #[inline]
     pub fn is_w4_classified(self) -> bool {
         matches!(
@@ -209,6 +219,7 @@ impl ShapeTag {
                 | ShapeTag::Flat
                 | ShapeTag::Wrap
                 | ShapeTag::HRegex
+                | ShapeTag::AltDispatch
         )
     }
 
@@ -228,15 +239,42 @@ impl ShapeTag {
 /// outputs committed on `ir` by
 /// [`crate::passes::recognizers::mine_recognizers`]; this function
 /// must run AFTER that pass completes.
-pub fn shape_dispatch(ir: &GrammarIR) -> ShapeAssignments {
-    let mut assignments = ShapeAssignments::default();
-    for rule in &ir.rules {
-        let tag = classify_rule(rule.id, ir);
-        if !matches!(tag, ShapeTag::None) {
-            assignments.assign(rule.id, tag);
+pub fn shape_dispatch(ir: &mut GrammarIR) -> ShapeAssignments {
+    // AX.W0a.2.b — fixed-point classification. The AltDispatch
+    // detector depends on its branch targets already carrying a
+    // classified shape tag; when the grammar declares rules
+    // top-down (value defined before calcFunction, etc.), a single-
+    // pass walk reads stale `ir.shape_assignments`. Iterate until no
+    // new rule changes classification (Changed-bool convergence per
+    // the LLVM-style fixed-point discipline).
+    //
+    // Each iteration commits the running classifications back to
+    // `ir.shape_assignments` so downstream detectors observe the
+    // latest state. The monotone admission invariant (a rule once
+    // classified never regresses in the same grammar, because
+    // predicates are positive-monotone over the assignments state)
+    // guarantees convergence in ≤ N passes.
+    let mut iterations = 0;
+    loop {
+        iterations += 1;
+        if iterations > ir.rules.len() + 2 {
+            // Defensive cap — convergence must happen in ≤ N passes
+            // for any finite grammar. Break to avoid runaway.
+            break ir.shape_assignments.clone();
+        }
+        let mut next = ShapeAssignments::default();
+        for rule in &ir.rules {
+            let tag = classify_rule(rule.id, ir);
+            if !matches!(tag, ShapeTag::None) {
+                next.assign(rule.id, tag);
+            }
+        }
+        let stable = next.per_rule == ir.shape_assignments.per_rule;
+        ir.shape_assignments = next;
+        if stable {
+            break ir.shape_assignments.clone();
         }
     }
-    assignments
 }
 
 /// Classify a single rule. First matching detector (by the precedence
@@ -304,11 +342,18 @@ fn classify_rule(rule_id: RuleId, ir: &GrammarIR) -> ShapeTag {
     if arglist::detect_arglist(rule_id, ir) {
         return ShapeTag::ArgList;
     }
-    if flat::detect_flat(rule_id, ir) {
-        return ShapeTag::Flat;
-    }
     if wrap::detect_wrap(rule_id, ir) {
         return ShapeTag::Wrap;
+    }
+    // AX.W0a.2.b — AltDispatch generalizes Wrap to mixed
+    // Ref / Literal / Regex / leaf-Seq branches. Runs AFTER Wrap so
+    // the narrow `Alt(Ref | Regex)` canonical cases (JSON `value`,
+    // CSS `color`) keep their specialized emitter.
+    if alt_dispatch::detect_alt_dispatch(rule_id, ir) {
+        return ShapeTag::AltDispatch;
+    }
+    if flat::detect_flat(rule_id, ir) {
+        return ShapeTag::Flat;
     }
     if scalar::detect_scalar(rule_id, ir) {
         return ShapeTag::Scalar;

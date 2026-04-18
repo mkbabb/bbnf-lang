@@ -347,6 +347,10 @@ pub fn mine_recognizers(ir: &mut GrammarIR) {
     // regex_info, delim_scan_configs). Rules that no detector admits
     // default to `ShapeTag::None` (walker fallback per the AX
     // cold-path replay contract).
+    // AX.W0a.2.b — fixed-point classification. shape_dispatch
+    // converges by committing assignments each iteration so later
+    // detectors observe the latest state (AltDispatch's predicate
+    // reads branch-target classifications).
     ir.shape_assignments = shape_dispatch::shape_dispatch(ir);
 }
 

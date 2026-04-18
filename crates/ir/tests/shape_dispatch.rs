@@ -531,8 +531,8 @@ fn w4_hregex_no_hits_on_json_grammar() {
 fn shape_dispatch_is_idempotent() {
     // Running the classifier twice over the same IR yields identical
     // assignments — it's a pure projection.
-    let (ir, _) = build_json_ir();
-    let direct = shape_dispatch(&ir);
+    let (mut ir, _) = build_json_ir();
+    let direct = shape_dispatch(&mut ir);
     assert_eq!(direct.per_rule.len(), ir.shape_assignments.per_rule.len());
     for (rule, tag) in &ir.shape_assignments.per_rule {
         assert_eq!(

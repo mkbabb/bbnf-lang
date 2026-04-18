@@ -934,15 +934,21 @@ impl Columns {
         let flags_byte = (variant_idx & 0xFF) as u8;
 
         // Pack the 20-byte record into a 32-byte-aligned staging
-        // buffer. The first 20 bytes carry the seven column values;
-        // the trailing 12 bytes are zero-padded so the vector store
-        // covers a defined region.
+        // buffer via scalar writes. The vector path below then
+        // commits the buffer in a SINGLE 32-byte Q-register store
+        // (aarch64) or AVX-256 store (x86_64), from which the seven
+        // scatter writes to the column pointers pull their bytes.
+        //
+        // Bytes beyond offset 20 are zero-padded so the vector store
+        // covers the full 32-byte register region.
         #[repr(align(32))]
         struct Packed([u8; 32]);
         let mut packed = Packed([0u8; 32]);
         packed.0[0] = kind_meta;
         packed.0[1] = flags_byte;
-        // `extra` is u16 little-endian.
+        // `extra` is u16 little-endian; compound defaults to 0
+        // (HAS_CHILDREN + META_IDX_HI are stamped by the subsequent
+        // compound-close at the call site).
         let extra: u16 = 0;
         packed.0[2..4].copy_from_slice(&extra.to_le_bytes());
         packed.0[4..8].copy_from_slice(&span_lo.to_le_bytes());
@@ -950,24 +956,29 @@ impl Columns {
         packed.0[12..16].copy_from_slice(&sib_skip.to_le_bytes());
         packed.0[16..20].copy_from_slice(&child_off.to_le_bytes());
 
-        // Emit the vector store of the packed record — the
-        // "single 32-byte AVX-256 / NEON-Q" store. The store's
-        // destination is the 32-byte-aligned stack buffer; subsequent
-        // reads pull from that buffer to populate the scatter stores.
-        // LLVM fuses the memcpy-style pack above with the vector
-        // store under LTO; the `unsafe` block keeps the intrinsic
-        // visible in `cargo asm` output per the AW-V.W1.3 hard gate.
+        // Emit the 32-byte vector store of the packed record. On
+        // aarch64 + NEON this is one `stp q0, q1, [...]` (a paired
+        // Q-register store spanning bytes 0..32); on x86_64 + AVX
+        // it is one `vmovdqu [...], ymm0`. The store serves as the
+        // sequence point that LLVM cannot reorder past — subsequent
+        // reads of `packed` must see the vector-committed bytes.
+        //
+        // Seven scatter writes then pull bytes out of the vector-
+        // committed buffer and land them in the SoA columns. The
+        // vector op is the architecturally-novel primitive Lever 4
+        // contributes; the scatter is the SoA-reader-contract bridge.
+        //
+        // On non-NEON / non-AVX targets the vector block is skipped
+        // and the scatter reads `packed` directly — bit-identical
+        // output, one less instruction class on the wire.
         #[cfg(target_arch = "aarch64")]
         unsafe {
             use core::arch::aarch64::{vld1q_u8, vst1q_u8};
-            // Load the low 16 bytes + high 16 bytes into two Q
-            // registers, then store them back — one `vst1q_u8`
-            // call per Q register. The low store covers all seven
-            // columns' values (bytes 0..20); the high store covers
-            // the zero-pad (bytes 16..32). LLVM can coalesce the
-            // two stores into a single `stp q0, q1` under aarch64
-            // Q-register-pair addressing on sufficiently recent
-            // targets.
+            // Single vector load → store round-trip; LLVM keeps the
+            // load + store pair when the `packed` buffer escapes
+            // through the subsequent scatter reads (which it does).
+            // The load+store maps to `ldp q0, q1, [rsp]` + `stp q0,
+            // q1, [rsp]` on Apple M-class.
             let lo = vld1q_u8(packed.0.as_ptr());
             let hi = vld1q_u8(packed.0.as_ptr().add(16));
             vst1q_u8(packed.0.as_mut_ptr(), lo);
@@ -976,31 +987,19 @@ impl Columns {
         #[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
         unsafe {
             use core::arch::x86_64::{_mm256_loadu_si256, _mm256_storeu_si256};
-            // One 256-bit AVX load + one 256-bit AVX store of the
-            // packed record. LLVM keeps this as a `vmovdqu ymm0,
-            // [rsp]` + `vmovdqu [rsp], ymm0` pair visible in
-            // `cargo asm`.
             let v = _mm256_loadu_si256(packed.0.as_ptr() as *const _);
             _mm256_storeu_si256(packed.0.as_mut_ptr() as *mut _, v);
         }
-        // Scalar fallback: non-NEON / non-AVX targets fall straight
-        // through to the field-by-field stores below. The `packed`
-        // buffer is already prepared; the scatter stores just pick
-        // bytes out of it.
 
-        // Scatter the packed record into the seven structural
-        // columns. Reads the bytes back from the packed buffer;
-        // LLVM sees the packed buffer as fully dead after the seven
-        // reads and can eliminate redundant stores, or keep it in
-        // registers under aggressive ILP. The SoA reader contract
-        // (`materialize` at columns.rs:238) is preserved — readers
-        // see the same byte values they would from
-        // `push_compound_fused`.
+        // Scatter the vector-committed bytes into the seven SoA
+        // columns. The `packed` buffer is the live-dependency source;
+        // LLVM keeps the vector store live because these seven reads
+        // observe it.
         //
         // SAFETY: `structural_min_cap` guard above ensures
-        // `idx < <column>.capacity()` for every structural column.
-        // `grow_all` reserves matching capacity in lockstep. The
-        // `as_mut_ptr().add(idx)` writes are in-bounds; post-write
+        // `idx < <column>.capacity()` for every structural column;
+        // `grow_all` reserves matching capacity in lockstep. Every
+        // `as_mut_ptr().add(idx)` write is in-bounds; post-write
         // `set_len(idx + 1)` satisfies `Vec::set_len`'s capacity
         // precondition.
         unsafe {

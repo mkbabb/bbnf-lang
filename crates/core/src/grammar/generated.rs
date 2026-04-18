@@ -23,8 +23,201 @@ mod __bbnfbootstrap_emit_impl {
         use super::*;
     pub const GRAMMAR_BbnfBootstrap: [&'static str; 1usize] =
         ["// BBNF \u{2014} Better Backus-Naur Form\n// Self-hosted grammar definition.\n\n@import { value_expr, type_annotation } from \"expressions\" ;\n@import { type_name } from \"types\" ;\n\n// \u{2500}\u{2500}\u{2500} Terminals \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nidentifier = /[_a-zA-Z][_a-zA-Z0-9-]*/ -> Span ;\n\nliteral = ( \"\\\"\" , /(\\\\.|[^\"\\\\])*/  , \"\\\"\"\n        | \"\'\"  , /(\\\\.|[^\'\\\\])*/  , \"\'\"\n        | \"`\"  , /(\\\\.|[^`\\\\])*/  , \"`\" ) -> Span ;\n\nregex = ( \"/\" , /(\\\\.|[^\\/])+/ , \"/\" ) -> Span ;\n\nbig_comment = ( \"/*\" , /[^\\*]*/ , \"*/\" ) ?w -> Span ;\ncomment = ( \"//\" , /.*/ ) ?w -> Span ;\n\n// \u{2500}\u{2500}\u{2500} Expressions \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nlhs = identifier ;\n\n// Grammar function call args: each arg is a single binary_factor\n// (alternation of binary_factors, no comma-concatenation).\n// This avoids ambiguity between call arg commas and concatenation commas.\ncall_arg = ( binary_factor ?w , \"|\" ? ) + ;\n\nterm = \"\u{3b5}\" | \"epsilon\"\n     | identifier , ( \"(\" , call_arg ?w , ( \",\" ?w , call_arg ?w ) * , \")\" ) ?\n     | literal\n     | regex\n     | \"@{\" , rhs ?w , \"}\"\n     | \"(\" , rhs ?w , \")\"\n     | \"[\" , rhs ?w , \"]\"\n     | \"{\" , rhs ?w , \"}\" ;\n\nmodifier = \"?w\" | \"?\" | \"*\" | \"+\" ;\nfactor = big_comment ? , term ?w , modifier ? , big_comment ? ;\n\n// Map syntax: factor -> value_expr : type\nmapped_factor = factor , ( \"->\" ?w , ( value_expr , type_annotation ? ) ) ? ;\n\nbinary_operators = \"<<\" | \">>\" | \"-\" ;\nbinary_factor = mapped_factor , ( binary_operators ?w , mapped_factor ) * ;\n\nconcatenation = ( binary_factor ?w , \",\" ? ) + ;\nalternation = ( concatenation ?w , \"|\" ? ) + ;\n\n// Closures at rule level: |params| rhs (grammar functions)\nclosure = \"|\" , identifier , ( \",\" ?w , identifier ) * , \"|\" ?w , rhs ;\nrhs = closure | alternation ;\n\n// \u{2500}\u{2500}\u{2500} Rules and Directives \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nrule = lhs , \"=\" ?w , rhs ?w , ( \";\" | \".\" ) ;\n\nimport_path = \"\\\"\" , /(\\\\.|[^\"\\\\])*/ , \"\\\"\" ;\nimport_items = \"{\" ?w , ( identifier , ( \",\" ?w , identifier ) * ) ?w , \"}\" ;\nimport_directive = \"@import\" ?w , (\n      import_items ?w , \"from\" ?w , import_path\n    | import_path\n) ?w , ( \";\" | \".\" ) ? ;\n\nrecover_directive = \"@recover\" ?w , identifier ?w , rhs ?w , ( \";\" | \".\" ) ? ;\n\npretty_hint = identifier , ( \"(\" , /[^)]*/ , \")\" ) ? ;\npretty_directive = \"@pretty\" ?w , ( \"*\" | identifier ) ?w , ( pretty_hint ?w ) + , ( \";\" | \".\" ) ? ;\n\nws_directive = \"@ws\" ?w , regex ?w , ( \";\" | \".\" ) ? ;\ntoken_directive = \"@token\" ?w , identifier ?w , ( \";\" | \".\" ) ? ;\ndebug_directive = \"@debug\" ?w , ( \"*\" | identifier ) ?w , ( \";\" | \".\" ) ? ;\nhost_directive = \"@host\" ?w , identifier ?w , ( \":\" ?w , type_name ?w ) ? , ( \";\" | \".\" ) ? ;\n\ndirective = import_directive\n          | recover_directive\n          | pretty_directive\n          | ws_directive\n          | token_directive\n          | debug_directive\n          | host_directive ;\n\n// Grammar: top-level items in any order.\ngrammar_item = comment | big_comment | directive | rule ;\ngrammar = ( grammar_item ?w ) * ;\n\n@pretty grammar block ;\n@pretty rule group ;\n@pretty alternation group ;\n"];
+    static __GRAMMAR_PROFILE_ALPHABET: [u8; 28usize] = [
+        33, 34, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 58, 59, 60, 61, 62, 63, 64, 91, 93, 96,
+        117, 123, 124, 125, 206,
+    ];
+    static __GRAMMAR_PROFILE_DIGRAPHS: [(u8, u8); 17usize] = [
+        (33, 61),
+        (38, 38),
+        (42, 47),
+        (45, 62),
+        (47, 42),
+        (47, 47),
+        (58, 58),
+        (60, 60),
+        (60, 61),
+        (61, 61),
+        (62, 61),
+        (62, 62),
+        (63, 119),
+        (64, 123),
+        (117, 56),
+        (124, 124),
+        (206, 181),
+    ];
     static __GRAMMAR_PROFILE_LIST_RULES: [::bbnf::runtime::tape::RuleId; 1usize] =
         [::bbnf::runtime::tape::RuleId(52)];
+    static __GRAMMAR_PROFILE_KW_0: [&[u8]; 2usize] = [b"false", b"true"];
+    static __GRAMMAR_PROFILE_KW_1: [&[u8]; 3usize] = [b"\"", b"(", b"input"];
+    static __GRAMMAR_PROFILE_KW_2: [&[u8]; 3usize] = [b"%", b"*", b"/"];
+    static __GRAMMAR_PROFILE_KW_3: [&[u8]; 2usize] = [b"+", b"-"];
+    static __GRAMMAR_PROFILE_KW_4: [&[u8]; 6usize] = [b"!=", b"<", b"<=", b"==", b">", b">="];
+    static __GRAMMAR_PROFILE_KW_5: [&[u8]; 1usize] = [b"|"];
+    static __GRAMMAR_PROFILE_KW_6: [&[u8]; 10usize] = [
+        b"bool", b"f32", b"f64", b"i32", b"i64", b"u16", b"u32", b"u64", b"u8", b"usize",
+    ];
+    static __GRAMMAR_PROFILE_KW_7: [&[u8]; 7usize] =
+        [b"(", b"/", b"@{", b"[", b"epsilon", b"{", b"\xce\xb5"];
+    static __GRAMMAR_PROFILE_KW_8: [&[u8]; 4usize] = [b"*", b"+", b"?", b"?w"];
+    static __GRAMMAR_PROFILE_KW_9: [&[u8]; 3usize] = [b"-", b"<<", b">>"];
+    static __GRAMMAR_PROFILE_KW_10: [&[u8]; 1usize] = [b"|"];
+    static __GRAMMAR_PROFILE_KW_11: [&[u8]; 7usize] = [
+        b"@debug",
+        b"@host",
+        b"@import",
+        b"@pretty",
+        b"@recover",
+        b"@token",
+        b"@ws",
+    ];
+    static __GRAMMAR_PROFILE_KW_12: [&[u8]; 2usize] = [b"/*", b"//"];
+    static __GRAMMAR_PROFILE_KEYWORD_TABLES: [::bbnf::runtime::tape::KeywordTable; 13usize] = [
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(2),
+            keywords: &__GRAMMAR_PROFILE_KW_0,
+        },
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(8),
+            keywords: &__GRAMMAR_PROFILE_KW_1,
+        },
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(9),
+            keywords: &__GRAMMAR_PROFILE_KW_2,
+        },
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(10),
+            keywords: &__GRAMMAR_PROFILE_KW_3,
+        },
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(11),
+            keywords: &__GRAMMAR_PROFILE_KW_4,
+        },
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(19),
+            keywords: &__GRAMMAR_PROFILE_KW_5,
+        },
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(21),
+            keywords: &__GRAMMAR_PROFILE_KW_6,
+        },
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(29),
+            keywords: &__GRAMMAR_PROFILE_KW_7,
+        },
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(30),
+            keywords: &__GRAMMAR_PROFILE_KW_8,
+        },
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(33),
+            keywords: &__GRAMMAR_PROFILE_KW_9,
+        },
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(38),
+            keywords: &__GRAMMAR_PROFILE_KW_10,
+        },
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(50),
+            keywords: &__GRAMMAR_PROFILE_KW_11,
+        },
+        ::bbnf::runtime::tape::KeywordTable {
+            rule: ::bbnf::runtime::tape::RuleId(51),
+            keywords: &__GRAMMAR_PROFILE_KW_12,
+        },
+    ];
+    static __GRAMMAR_PROFILE_SHAPE_0_KINDS: [u8; 3usize] = [3, 1, 3];
+    static __GRAMMAR_PROFILE_SHAPE_0_OFFSETS: [u16; 3usize] = [65535, 0, 65535];
+    static __GRAMMAR_PROFILE_SHAPE_1_KINDS: [u8; 2usize] = [1, 1];
+    static __GRAMMAR_PROFILE_SHAPE_1_OFFSETS: [u16; 2usize] = [0, 8];
+    static __GRAMMAR_PROFILE_SHAPE_2_KINDS: [u8; 2usize] = [3, 1];
+    static __GRAMMAR_PROFILE_SHAPE_2_OFFSETS: [u16; 2usize] = [65535, 0];
+    static __GRAMMAR_PROFILE_SHAPE_3_KINDS: [u8; 4usize] = [1, 3, 1, 3];
+    static __GRAMMAR_PROFILE_SHAPE_3_OFFSETS: [u16; 4usize] = [0, 65535, 8, 65535];
+    static __GRAMMAR_PROFILE_SHAPE_4_KINDS: [u8; 5usize] = [3, 1, 1, 3, 1];
+    static __GRAMMAR_PROFILE_SHAPE_4_OFFSETS: [u16; 5usize] = [65535, 0, 8, 65535, 16];
+    static __GRAMMAR_PROFILE_SHAPE_5_KINDS: [u8; 4usize] = [1, 1, 1, 1];
+    static __GRAMMAR_PROFILE_SHAPE_5_OFFSETS: [u16; 4usize] = [0, 8, 16, 24];
+    static __GRAMMAR_PROFILE_SHAPE_6_KINDS: [u8; 4usize] = [1, 3, 1, 1];
+    static __GRAMMAR_PROFILE_SHAPE_6_OFFSETS: [u16; 4usize] = [0, 65535, 8, 16];
+    static __GRAMMAR_PROFILE_SHAPE_7_KINDS: [u8; 4usize] = [3, 1, 1, 3];
+    static __GRAMMAR_PROFILE_SHAPE_7_OFFSETS: [u16; 4usize] = [65535, 0, 8, 65535];
+    static __GRAMMAR_PROFILE_SHAPE_8_KINDS: [u8; 3usize] = [3, 1, 1];
+    static __GRAMMAR_PROFILE_SHAPE_8_OFFSETS: [u16; 3usize] = [65535, 0, 8];
+    static __GRAMMAR_PROFILE_SHAPE_9_KINDS: [u8; 4usize] = [3, 1, 1, 1];
+    static __GRAMMAR_PROFILE_SHAPE_9_OFFSETS: [u16; 4usize] = [65535, 0, 8, 16];
+    static __GRAMMAR_PROFILE_SHAPE_DICT: [::bbnf::runtime::tape::ShapeEntry; 10usize] = [
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 2825624961820939012,
+            rule: ::bbnf::runtime::tape::RuleId(3),
+            child_kinds: &__GRAMMAR_PROFILE_SHAPE_0_KINDS,
+            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_0_OFFSETS,
+            payload_bytes: 8,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 6396768038867141257,
+            rule: ::bbnf::runtime::tape::RuleId(5),
+            child_kinds: &__GRAMMAR_PROFILE_SHAPE_1_KINDS,
+            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_1_OFFSETS,
+            payload_bytes: 16,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 17638471073072642298,
+            rule: ::bbnf::runtime::tape::RuleId(6),
+            child_kinds: &__GRAMMAR_PROFILE_SHAPE_2_KINDS,
+            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_2_OFFSETS,
+            payload_bytes: 8,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 10771097919717133086,
+            rule: ::bbnf::runtime::tape::RuleId(7),
+            child_kinds: &__GRAMMAR_PROFILE_SHAPE_3_KINDS,
+            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_3_OFFSETS,
+            payload_bytes: 16,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 14644283236504918401,
+            rule: ::bbnf::runtime::tape::RuleId(18),
+            child_kinds: &__GRAMMAR_PROFILE_SHAPE_4_KINDS,
+            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_4_OFFSETS,
+            payload_bytes: 24,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 4871589534026976350,
+            rule: ::bbnf::runtime::tape::RuleId(31),
+            child_kinds: &__GRAMMAR_PROFILE_SHAPE_5_KINDS,
+            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_5_OFFSETS,
+            payload_bytes: 32,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 15576067703920521532,
+            rule: ::bbnf::runtime::tape::RuleId(39),
+            child_kinds: &__GRAMMAR_PROFILE_SHAPE_6_KINDS,
+            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_6_OFFSETS,
+            payload_bytes: 24,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 4956789208849799176,
+            rule: ::bbnf::runtime::tape::RuleId(41),
+            child_kinds: &__GRAMMAR_PROFILE_SHAPE_7_KINDS,
+            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_7_OFFSETS,
+            payload_bytes: 16,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 2287542396738729071,
+            rule: ::bbnf::runtime::tape::RuleId(42),
+            child_kinds: &__GRAMMAR_PROFILE_SHAPE_8_KINDS,
+            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_8_OFFSETS,
+            payload_bytes: 16,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 15032356378685040353,
+            rule: ::bbnf::runtime::tape::RuleId(43),
+            child_kinds: &__GRAMMAR_PROFILE_SHAPE_9_KINDS,
+            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_9_OFFSETS,
+            payload_bytes: 24,
+        },
+    ];
     static __GRAMMAR_PROFILE_DEDUP_RULES: [::bbnf::runtime::tape::RuleId; 16usize] = [
         ::bbnf::runtime::tape::RuleId(0),
         ::bbnf::runtime::tape::RuleId(1),
@@ -64,14 +257,14 @@ mod __bbnfbootstrap_emit_impl {
             payload_bytes_per_input_byte: 0f32,
             expected_ns_per_byte: 0f32,
             parallel_break_even_bytes: 1048576u32,
-            structural_alphabet: &[],
-            structural_digraphs: &[],
-            structural_digraph_mask: [0, 0, 0, 0],
+            structural_alphabet: &__GRAMMAR_PROFILE_ALPHABET,
+            structural_digraphs: &__GRAMMAR_PROFILE_DIGRAPHS,
+            structural_digraph_mask: [17582233548629213184, 1161928703861587969, 0, 16384],
             structural_quote_classes: &[],
             active_columns: &[],
             list_rules: &__GRAMMAR_PROFILE_LIST_RULES,
-            keyword_tables: &[],
-            shape_dict: &[],
+            keyword_tables: &__GRAMMAR_PROFILE_KEYWORD_TABLES,
+            shape_dict: &__GRAMMAR_PROFILE_SHAPE_DICT,
             branch_priors: &[],
             dedup_eligible_rules: &__GRAMMAR_PROFILE_DEDUP_RULES,
             reorder_unroll_visitors: &[],
@@ -80,9 +273,263 @@ mod __bbnfbootstrap_emit_impl {
     static __DTA_REGEX_1: &str = "[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?\\w*";
     static __DTA_LITERAL_2: &str = "true";
     static __DTA_LITERAL_3: &str = "false";
-    static __DTA_ALT_LIN_4: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(2),
+    static __DTA_CLASSIFY_4: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(3),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(2),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_LITERAL_5: &str = "\"";
     static __DTA_REGEX_6: &str = "(\\\\.|[^\"\\\\])*";
@@ -159,16 +606,523 @@ mod __bbnfbootstrap_emit_impl {
     static __DTA_LITERAL_51: &str = "*";
     static __DTA_LITERAL_52: &str = "/";
     static __DTA_LITERAL_53: &str = "%";
-    static __DTA_ALT_LIN_54: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(51),
-        ::bbnf::runtime::tape::DtaStateId(52),
+    static __DTA_CLASSIFY_54: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(53),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(51),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(52),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_LITERAL_55: &str = "+";
     static __DTA_LITERAL_56: &str = "-";
-    static __DTA_ALT_LIN_57: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+    static __DTA_CLASSIFY_57: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(55),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(56),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_LITERAL_58: &str = "==";
     static __DTA_LITERAL_59: &str = "!=";
@@ -186,9 +1140,263 @@ mod __bbnfbootstrap_emit_impl {
     ];
     static __DTA_LITERAL_65: &str = "!";
     static __DTA_LITERAL_66: &str = "-";
-    static __DTA_ALT_LIN_67: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
+    static __DTA_CLASSIFY_67: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(65),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(66),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_SEQ_69_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
         ::bbnf::runtime::tape::DtaStateId(67),
@@ -376,10 +1584,263 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(153),
         ::bbnf::runtime::tape::DtaStateId(154),
     ];
-    static __DTA_ALT_LIN_156: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
+    static __DTA_CLASSIFY_156: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(147),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(151),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(155),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_LITERAL_157: &str = "/";
     static __DTA_REGEX_158: &str = "(\\\\.|[^\\/])+";
@@ -558,10 +2019,263 @@ mod __bbnfbootstrap_emit_impl {
     static __DTA_LITERAL_264: &str = "<<";
     static __DTA_LITERAL_265: &str = ">>";
     static __DTA_LITERAL_266: &str = "-";
-    static __DTA_ALT_LIN_267: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
-        ::bbnf::runtime::tape::DtaStateId(264),
-        ::bbnf::runtime::tape::DtaStateId(265),
+    static __DTA_CLASSIFY_267: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(266),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(264),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(265),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_SEQ_272_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(270),
@@ -637,9 +2351,263 @@ mod __bbnfbootstrap_emit_impl {
     ];
     static __DTA_LITERAL_320: &str = ";";
     static __DTA_LITERAL_321: &str = ".";
-    static __DTA_ALT_LIN_322: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(320),
+    static __DTA_CLASSIFY_322: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(321),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(320),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_SEQ_323_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
         ::bbnf::runtime::tape::DtaStateId(311),
@@ -708,9 +2676,263 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::DtaStateId(357),
         ::bbnf::runtime::tape::DtaStateId(358),
     ];
-    static __DTA_ALT_LIN_361: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(359),
+    static __DTA_CLASSIFY_361: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(360),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(359),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_SEQ_364_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(362),
@@ -719,9 +2941,263 @@ mod __bbnfbootstrap_emit_impl {
     ];
     static __DTA_LITERAL_365: &str = ";";
     static __DTA_LITERAL_366: &str = ".";
-    static __DTA_ALT_LIN_367: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(365),
+    static __DTA_CLASSIFY_367: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(366),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(365),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_SEQ_369_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(349),
@@ -746,9 +3222,263 @@ mod __bbnfbootstrap_emit_impl {
     ];
     static __DTA_LITERAL_382: &str = ";";
     static __DTA_LITERAL_383: &str = ".";
-    static __DTA_ALT_LIN_384: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(382),
+    static __DTA_CLASSIFY_384: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(383),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(382),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_SEQ_386_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
         ::bbnf::runtime::tape::DtaStateId(373),
@@ -791,9 +3521,263 @@ mod __bbnfbootstrap_emit_impl {
     ];
     static __DTA_LITERAL_409: &str = ";";
     static __DTA_LITERAL_410: &str = ".";
-    static __DTA_ALT_LIN_411: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(409),
+    static __DTA_CLASSIFY_411: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(410),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(409),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_SEQ_413_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
         ::bbnf::runtime::tape::DtaStateId(397),
@@ -814,9 +3798,263 @@ mod __bbnfbootstrap_emit_impl {
     ];
     static __DTA_LITERAL_422: &str = ";";
     static __DTA_LITERAL_423: &str = ".";
-    static __DTA_ALT_LIN_424: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(422),
+    static __DTA_CLASSIFY_424: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(423),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(422),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_SEQ_426_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(417),
@@ -836,9 +4074,263 @@ mod __bbnfbootstrap_emit_impl {
     ];
     static __DTA_LITERAL_435: &str = ";";
     static __DTA_LITERAL_436: &str = ".";
-    static __DTA_ALT_LIN_437: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(435),
+    static __DTA_CLASSIFY_437: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(436),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(435),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_SEQ_439_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(430),
@@ -863,9 +4355,263 @@ mod __bbnfbootstrap_emit_impl {
     ];
     static __DTA_LITERAL_450: &str = ";";
     static __DTA_LITERAL_451: &str = ".";
-    static __DTA_ALT_LIN_452: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(450),
+    static __DTA_CLASSIFY_452: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(451),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(450),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_SEQ_454_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 3usize] = [
         ::bbnf::runtime::tape::DtaStateId(443),
@@ -900,9 +4646,263 @@ mod __bbnfbootstrap_emit_impl {
     ];
     static __DTA_LITERAL_473: &str = ";";
     static __DTA_LITERAL_474: &str = ".";
-    static __DTA_ALT_LIN_475: [::bbnf::runtime::tape::DtaStateId; 2usize] = [
-        ::bbnf::runtime::tape::DtaStateId(473),
+    static __DTA_CLASSIFY_475: [::bbnf::runtime::tape::DtaStateId; 256] = [
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
         ::bbnf::runtime::tape::DtaStateId(474),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(473),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
+        ::bbnf::runtime::tape::DtaStateId(65535),
     ];
     static __DTA_SEQ_477_CHILDREN: [::bbnf::runtime::tape::DtaStateId; 4usize] = [
         ::bbnf::runtime::tape::DtaStateId(458),
@@ -947,8 +4947,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_3,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_4,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_4,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_5,
@@ -1160,8 +5161,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_53,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_54,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_54,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_55,
@@ -1171,8 +5173,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_56,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_57,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_57,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_58,
@@ -1209,8 +5212,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_66,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_67,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_67,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(8),
@@ -1580,8 +5584,9 @@ mod __bbnfbootstrap_emit_impl {
             frame: ::bbnf::runtime::tape::DtaFrameKind::Seq,
             promote: ::bbnf::runtime::tape::SeqPromote::Default,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_156,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_156,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Literal {
             text: __DTA_LITERAL_157,
@@ -2042,8 +6047,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_266,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_267,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_267,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Ref {
             rule: ::bbnf::runtime::tape::DtaRuleId(32),
@@ -2271,8 +6277,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_321,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_322,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_322,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Seq {
             children: &__DTA_SEQ_323_CHILDREN,
@@ -2428,8 +6435,9 @@ mod __bbnfbootstrap_emit_impl {
             rule: ::bbnf::runtime::tape::DtaRuleId(40),
             target: ::bbnf::runtime::tape::DtaStateId(327),
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_361,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_361,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::WsTrim {
             pattern: ::core::option::Option::None,
@@ -2450,8 +6458,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_366,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_367,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_367,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(367),
@@ -2517,8 +6526,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_383,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_384,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_384,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(384),
@@ -2629,8 +6639,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_410,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_411,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_411,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(411),
@@ -2681,8 +6692,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_423,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_424,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_424,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(424),
@@ -2733,8 +6745,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_436,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_437,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_437,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(437),
@@ -2792,8 +6805,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_451,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_452,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_452,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(452),
@@ -2885,8 +6899,9 @@ mod __bbnfbootstrap_emit_impl {
             text: __DTA_LITERAL_474,
             payload: ::bbnf::runtime::tape::LiteralPayload::None,
         },
-        ::bbnf::runtime::tape::DtaState::AltLinear {
-            branches: &__DTA_ALT_LIN_475,
+        ::bbnf::runtime::tape::DtaState::ClassifyByte {
+            table: &__DTA_CLASSIFY_475,
+            fallback: ::bbnf::runtime::tape::DtaStateId::NONE,
         },
         ::bbnf::runtime::tape::DtaState::Repeat {
             inner: ::bbnf::runtime::tape::DtaStateId(475),
@@ -3199,13 +7214,109 @@ mod __bbnfbootstrap_emit_impl {
         rule_entries: &__DTA_RULE_ENTRIES,
         shunting_yard_rules: &__DTA_SHUNTING_YARD_RULES,
         counter_optional_rules: &[],
-        max_nesting_depth: 8u16,
+        max_nesting_depth: 19u16,
         entry: ::bbnf::runtime::tape::DtaRuleId(52),
     };
-    /// Shape dictionary — empty for this grammar (selection
-    /// admitted no templates). Reserved symbol so downstream
-    /// driver code can reference it unconditionally.
-    pub const SHAPE_DICT: &[::bbnf::runtime::tape::ShapeEntry] = &[];
+    static __SHAPE_DICT_0_KINDS: [u8; 3usize] = [3, 1, 3];
+    static __SHAPE_DICT_0_OFFSETS: [u16; 3usize] = [65535, 0, 65535];
+    static __SHAPE_DICT_1_KINDS: [u8; 2usize] = [1, 1];
+    static __SHAPE_DICT_1_OFFSETS: [u16; 2usize] = [0, 8];
+    static __SHAPE_DICT_2_KINDS: [u8; 2usize] = [3, 1];
+    static __SHAPE_DICT_2_OFFSETS: [u16; 2usize] = [65535, 0];
+    static __SHAPE_DICT_3_KINDS: [u8; 4usize] = [1, 3, 1, 3];
+    static __SHAPE_DICT_3_OFFSETS: [u16; 4usize] = [0, 65535, 8, 65535];
+    static __SHAPE_DICT_4_KINDS: [u8; 5usize] = [3, 1, 1, 3, 1];
+    static __SHAPE_DICT_4_OFFSETS: [u16; 5usize] = [65535, 0, 8, 65535, 16];
+    static __SHAPE_DICT_5_KINDS: [u8; 4usize] = [1, 1, 1, 1];
+    static __SHAPE_DICT_5_OFFSETS: [u16; 4usize] = [0, 8, 16, 24];
+    static __SHAPE_DICT_6_KINDS: [u8; 4usize] = [1, 3, 1, 1];
+    static __SHAPE_DICT_6_OFFSETS: [u16; 4usize] = [0, 65535, 8, 16];
+    static __SHAPE_DICT_7_KINDS: [u8; 4usize] = [3, 1, 1, 3];
+    static __SHAPE_DICT_7_OFFSETS: [u16; 4usize] = [65535, 0, 8, 65535];
+    static __SHAPE_DICT_8_KINDS: [u8; 3usize] = [3, 1, 1];
+    static __SHAPE_DICT_8_OFFSETS: [u16; 3usize] = [65535, 0, 8];
+    static __SHAPE_DICT_9_KINDS: [u8; 4usize] = [3, 1, 1, 1];
+    static __SHAPE_DICT_9_OFFSETS: [u16; 4usize] = [65535, 0, 8, 16];
+    static __SHAPE_DICT_TABLE: [::bbnf::runtime::tape::ShapeEntry; 10usize] = [
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 2825624961820939012,
+            rule: ::bbnf::runtime::tape::RuleId(3),
+            child_kinds: &__SHAPE_DICT_0_KINDS,
+            leaf_payload_offsets: &__SHAPE_DICT_0_OFFSETS,
+            payload_bytes: 8,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 6396768038867141257,
+            rule: ::bbnf::runtime::tape::RuleId(5),
+            child_kinds: &__SHAPE_DICT_1_KINDS,
+            leaf_payload_offsets: &__SHAPE_DICT_1_OFFSETS,
+            payload_bytes: 16,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 17638471073072642298,
+            rule: ::bbnf::runtime::tape::RuleId(6),
+            child_kinds: &__SHAPE_DICT_2_KINDS,
+            leaf_payload_offsets: &__SHAPE_DICT_2_OFFSETS,
+            payload_bytes: 8,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 10771097919717133086,
+            rule: ::bbnf::runtime::tape::RuleId(7),
+            child_kinds: &__SHAPE_DICT_3_KINDS,
+            leaf_payload_offsets: &__SHAPE_DICT_3_OFFSETS,
+            payload_bytes: 16,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 14644283236504918401,
+            rule: ::bbnf::runtime::tape::RuleId(18),
+            child_kinds: &__SHAPE_DICT_4_KINDS,
+            leaf_payload_offsets: &__SHAPE_DICT_4_OFFSETS,
+            payload_bytes: 24,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 4871589534026976350,
+            rule: ::bbnf::runtime::tape::RuleId(31),
+            child_kinds: &__SHAPE_DICT_5_KINDS,
+            leaf_payload_offsets: &__SHAPE_DICT_5_OFFSETS,
+            payload_bytes: 32,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 15576067703920521532,
+            rule: ::bbnf::runtime::tape::RuleId(39),
+            child_kinds: &__SHAPE_DICT_6_KINDS,
+            leaf_payload_offsets: &__SHAPE_DICT_6_OFFSETS,
+            payload_bytes: 24,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 4956789208849799176,
+            rule: ::bbnf::runtime::tape::RuleId(41),
+            child_kinds: &__SHAPE_DICT_7_KINDS,
+            leaf_payload_offsets: &__SHAPE_DICT_7_OFFSETS,
+            payload_bytes: 16,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 2287542396738729071,
+            rule: ::bbnf::runtime::tape::RuleId(42),
+            child_kinds: &__SHAPE_DICT_8_KINDS,
+            leaf_payload_offsets: &__SHAPE_DICT_8_OFFSETS,
+            payload_bytes: 16,
+        },
+        ::bbnf::runtime::tape::ShapeEntry {
+            shape_hash: 15032356378685040353,
+            rule: ::bbnf::runtime::tape::RuleId(43),
+            child_kinds: &__SHAPE_DICT_9_KINDS,
+            leaf_payload_offsets: &__SHAPE_DICT_9_OFFSETS,
+            payload_bytes: 24,
+        },
+    ];
+    /// Shape dictionary — Tranche AV.5.4 emission. Each entry
+    /// describes one fixed-shape compound subtree the parser
+    /// collapses to a single `TapeKind::ShapeRef` record. The
+    /// V4+ DTA driver consults this table by `shape_hash`
+    /// during counter-DFA stage-A transitions; on match it
+    /// routes through `TapeBuilder::push_shape_ref` instead of
+    /// the per-position child push sites.
+    pub const SHAPE_DICT: &[::bbnf::runtime::tape::ShapeEntry] = &__SHAPE_DICT_TABLE;
     /// AV.4.1 — Allocate this grammar's stage-A PSI stream sized
     /// from [`GRAMMAR_PROFILE`]'s `leaves_per_input_byte`.
     ///
@@ -3251,6 +7362,233 @@ mod __bbnfbootstrap_emit_impl {
     /// this dictionary at compile time and emits a single
     /// `push_shape_ref` per match. See AV.5.6 / AV.6.1–6.3.
     pub const BBNF_SHAPE_DICT: &[::bbnf::runtime::tape::BbnfShapeEntry] = &__BBNF_SHAPE_TEMPLATES;
+    /// AW-III.W6.2 — PHF keyword table.
+    ///
+    /// Mined literal-led Alt branches, sorted lexicographically.
+    /// Binary search dispatches in O(log N) compares; LLVM lowers
+    /// the fixed-size table to a balanced compare tree.
+    static __PHF_BbnfBootstrap_8_KW: [&[u8]; 3usize] = [b"\"", b"(", b"input"];
+    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
+    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
+    /// branch with discriminant `#idx_ident[i]`.
+    static __PHF_BbnfBootstrap_8_IDX: [u8; 3usize] = [3, 7, 5];
+    /// AW-III.W6.2 — dispatch the mined keyword table for rule
+    /// `#rule_id`.
+    ///
+    /// Returns `Some(branch_idx)` when `bytes` matches a mined
+    /// keyword, `None` otherwise. Called from the walker's
+    /// AltLinear / ClassifyByte arm to short-circuit the branch
+    /// scan to a single binary search.
+    #[allow(dead_code)]
+    #[inline]
+    fn __phf_BbnfBootstrap_dispatch_8(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_BbnfBootstrap_8_KW.binary_search(&bytes) {
+            ::core::result::Result::Ok(idx) => {
+                ::core::option::Option::Some(__PHF_BbnfBootstrap_8_IDX[idx])
+            }
+            ::core::result::Result::Err(_) => ::core::option::Option::None,
+        }
+    }
+    /// AW-III.W6.2 — PHF keyword table.
+    ///
+    /// Mined literal-led Alt branches, sorted lexicographically.
+    /// Binary search dispatches in O(log N) compares; LLVM lowers
+    /// the fixed-size table to a balanced compare tree.
+    static __PHF_BbnfBootstrap_9_KW: [&[u8]; 3usize] = [b"%", b"*", b"/"];
+    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
+    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
+    /// branch with discriminant `#idx_ident[i]`.
+    static __PHF_BbnfBootstrap_9_IDX: [u8; 3usize] = [2, 0, 1];
+    /// AW-III.W6.2 — dispatch the mined keyword table for rule
+    /// `#rule_id`.
+    ///
+    /// Returns `Some(branch_idx)` when `bytes` matches a mined
+    /// keyword, `None` otherwise. Called from the walker's
+    /// AltLinear / ClassifyByte arm to short-circuit the branch
+    /// scan to a single binary search.
+    #[allow(dead_code)]
+    #[inline]
+    fn __phf_BbnfBootstrap_dispatch_9(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_BbnfBootstrap_9_KW.binary_search(&bytes) {
+            ::core::result::Result::Ok(idx) => {
+                ::core::option::Option::Some(__PHF_BbnfBootstrap_9_IDX[idx])
+            }
+            ::core::result::Result::Err(_) => ::core::option::Option::None,
+        }
+    }
+    /// AW-III.W6.2 — PHF keyword table.
+    ///
+    /// Mined literal-led Alt branches, sorted lexicographically.
+    /// Binary search dispatches in O(log N) compares; LLVM lowers
+    /// the fixed-size table to a balanced compare tree.
+    static __PHF_BbnfBootstrap_11_KW: [&[u8]; 6usize] = [b"!=", b"<", b"<=", b"==", b">", b">="];
+    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
+    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
+    /// branch with discriminant `#idx_ident[i]`.
+    static __PHF_BbnfBootstrap_11_IDX: [u8; 6usize] = [1, 4, 2, 0, 5, 3];
+    /// AW-III.W6.2 — dispatch the mined keyword table for rule
+    /// `#rule_id`.
+    ///
+    /// Returns `Some(branch_idx)` when `bytes` matches a mined
+    /// keyword, `None` otherwise. Called from the walker's
+    /// AltLinear / ClassifyByte arm to short-circuit the branch
+    /// scan to a single binary search.
+    #[allow(dead_code)]
+    #[inline]
+    fn __phf_BbnfBootstrap_dispatch_11(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_BbnfBootstrap_11_KW.binary_search(&bytes) {
+            ::core::result::Result::Ok(idx) => {
+                ::core::option::Option::Some(__PHF_BbnfBootstrap_11_IDX[idx])
+            }
+            ::core::result::Result::Err(_) => ::core::option::Option::None,
+        }
+    }
+    /// AW-III.W6.2 — PHF keyword table.
+    ///
+    /// Mined literal-led Alt branches, sorted lexicographically.
+    /// Binary search dispatches in O(log N) compares; LLVM lowers
+    /// the fixed-size table to a balanced compare tree.
+    static __PHF_BbnfBootstrap_21_KW: [&[u8]; 10usize] = [
+        b"bool", b"f32", b"f64", b"i32", b"i64", b"u16", b"u32", b"u64", b"u8", b"usize",
+    ];
+    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
+    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
+    /// branch with discriminant `#idx_ident[i]`.
+    static __PHF_BbnfBootstrap_21_IDX: [u8; 10usize] = [8, 6, 7, 4, 5, 1, 2, 3, 0, 9];
+    /// AW-III.W6.2 — dispatch the mined keyword table for rule
+    /// `#rule_id`.
+    ///
+    /// Returns `Some(branch_idx)` when `bytes` matches a mined
+    /// keyword, `None` otherwise. Called from the walker's
+    /// AltLinear / ClassifyByte arm to short-circuit the branch
+    /// scan to a single binary search.
+    #[allow(dead_code)]
+    #[inline]
+    fn __phf_BbnfBootstrap_dispatch_21(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_BbnfBootstrap_21_KW.binary_search(&bytes) {
+            ::core::result::Result::Ok(idx) => {
+                ::core::option::Option::Some(__PHF_BbnfBootstrap_21_IDX[idx])
+            }
+            ::core::result::Result::Err(_) => ::core::option::Option::None,
+        }
+    }
+    /// AW-III.W6.2 — PHF keyword table.
+    ///
+    /// Mined literal-led Alt branches, sorted lexicographically.
+    /// Binary search dispatches in O(log N) compares; LLVM lowers
+    /// the fixed-size table to a balanced compare tree.
+    static __PHF_BbnfBootstrap_29_KW: [&[u8]; 7usize] =
+        [b"(", b"/", b"@{", b"[", b"epsilon", b"{", b"\xce\xb5"];
+    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
+    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
+    /// branch with discriminant `#idx_ident[i]`.
+    static __PHF_BbnfBootstrap_29_IDX: [u8; 7usize] = [6, 4, 5, 7, 1, 8, 0];
+    /// AW-III.W6.2 — dispatch the mined keyword table for rule
+    /// `#rule_id`.
+    ///
+    /// Returns `Some(branch_idx)` when `bytes` matches a mined
+    /// keyword, `None` otherwise. Called from the walker's
+    /// AltLinear / ClassifyByte arm to short-circuit the branch
+    /// scan to a single binary search.
+    #[allow(dead_code)]
+    #[inline]
+    fn __phf_BbnfBootstrap_dispatch_29(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_BbnfBootstrap_29_KW.binary_search(&bytes) {
+            ::core::result::Result::Ok(idx) => {
+                ::core::option::Option::Some(__PHF_BbnfBootstrap_29_IDX[idx])
+            }
+            ::core::result::Result::Err(_) => ::core::option::Option::None,
+        }
+    }
+    /// AW-III.W6.2 — PHF keyword table.
+    ///
+    /// Mined literal-led Alt branches, sorted lexicographically.
+    /// Binary search dispatches in O(log N) compares; LLVM lowers
+    /// the fixed-size table to a balanced compare tree.
+    static __PHF_BbnfBootstrap_30_KW: [&[u8]; 4usize] = [b"*", b"+", b"?", b"?w"];
+    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
+    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
+    /// branch with discriminant `#idx_ident[i]`.
+    static __PHF_BbnfBootstrap_30_IDX: [u8; 4usize] = [2, 3, 1, 0];
+    /// AW-III.W6.2 — dispatch the mined keyword table for rule
+    /// `#rule_id`.
+    ///
+    /// Returns `Some(branch_idx)` when `bytes` matches a mined
+    /// keyword, `None` otherwise. Called from the walker's
+    /// AltLinear / ClassifyByte arm to short-circuit the branch
+    /// scan to a single binary search.
+    #[allow(dead_code)]
+    #[inline]
+    fn __phf_BbnfBootstrap_dispatch_30(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_BbnfBootstrap_30_KW.binary_search(&bytes) {
+            ::core::result::Result::Ok(idx) => {
+                ::core::option::Option::Some(__PHF_BbnfBootstrap_30_IDX[idx])
+            }
+            ::core::result::Result::Err(_) => ::core::option::Option::None,
+        }
+    }
+    /// AW-III.W6.2 — PHF keyword table.
+    ///
+    /// Mined literal-led Alt branches, sorted lexicographically.
+    /// Binary search dispatches in O(log N) compares; LLVM lowers
+    /// the fixed-size table to a balanced compare tree.
+    static __PHF_BbnfBootstrap_33_KW: [&[u8]; 3usize] = [b"-", b"<<", b">>"];
+    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
+    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
+    /// branch with discriminant `#idx_ident[i]`.
+    static __PHF_BbnfBootstrap_33_IDX: [u8; 3usize] = [2, 0, 1];
+    /// AW-III.W6.2 — dispatch the mined keyword table for rule
+    /// `#rule_id`.
+    ///
+    /// Returns `Some(branch_idx)` when `bytes` matches a mined
+    /// keyword, `None` otherwise. Called from the walker's
+    /// AltLinear / ClassifyByte arm to short-circuit the branch
+    /// scan to a single binary search.
+    #[allow(dead_code)]
+    #[inline]
+    fn __phf_BbnfBootstrap_dispatch_33(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_BbnfBootstrap_33_KW.binary_search(&bytes) {
+            ::core::result::Result::Ok(idx) => {
+                ::core::option::Option::Some(__PHF_BbnfBootstrap_33_IDX[idx])
+            }
+            ::core::result::Result::Err(_) => ::core::option::Option::None,
+        }
+    }
+    /// AW-III.W6.2 — PHF keyword table.
+    ///
+    /// Mined literal-led Alt branches, sorted lexicographically.
+    /// Binary search dispatches in O(log N) compares; LLVM lowers
+    /// the fixed-size table to a balanced compare tree.
+    static __PHF_BbnfBootstrap_50_KW: [&[u8]; 7usize] = [
+        b"@debug",
+        b"@host",
+        b"@import",
+        b"@pretty",
+        b"@recover",
+        b"@token",
+        b"@ws",
+    ];
+    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
+    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
+    /// branch with discriminant `#idx_ident[i]`.
+    static __PHF_BbnfBootstrap_50_IDX: [u8; 7usize] = [5, 6, 0, 2, 1, 4, 3];
+    /// AW-III.W6.2 — dispatch the mined keyword table for rule
+    /// `#rule_id`.
+    ///
+    /// Returns `Some(branch_idx)` when `bytes` matches a mined
+    /// keyword, `None` otherwise. Called from the walker's
+    /// AltLinear / ClassifyByte arm to short-circuit the branch
+    /// scan to a single binary search.
+    #[allow(dead_code)]
+    #[inline]
+    fn __phf_BbnfBootstrap_dispatch_50(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_BbnfBootstrap_50_KW.binary_search(&bytes) {
+            ::core::result::Result::Ok(idx) => {
+                ::core::option::Option::Some(__PHF_BbnfBootstrap_50_IDX[idx])
+            }
+            ::core::result::Result::Err(_) => ::core::option::Option::None,
+        }
+    }
     /// AW-III.W6.5 — dense Pratt precedence LUT.
     ///
     /// One byte per dispatch byte. Consulted by the DTA driver's
@@ -4510,167 +8848,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_54;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(54 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_54: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(53),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(51),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(52),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_54[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(54 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(54 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -4900,167 +9357,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_57;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(57 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_57: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(55),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(56),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_57[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(57 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(57 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -7914,6 +12490,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 1;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -9328,7 +13907,32 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_hit_branch: ::core::option::Option<u8> = {
+                    let __phf_pos = *pos as usize;
+                    let __phf_rest_len = input.len().saturating_sub(__phf_pos);
+                    let mut __phf_hit: ::core::option::Option<u8> = ::core::option::Option::None;
+                    if __phf_hit.is_none() && __phf_rest_len >= 5 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_21(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 5)
+                        });
+                    }
+                    if __phf_hit.is_none() && __phf_rest_len >= 4 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_21(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 4)
+                        });
+                    }
+                    if __phf_hit.is_none() && __phf_rest_len >= 3 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_21(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 3)
+                        });
+                    }
+                    if __phf_hit.is_none() && __phf_rest_len >= 2 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_21(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 2)
+                        });
+                    }
+                    __phf_hit
+                };
                 let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
                     ::core::option::Option::Some(branch_idx)
                         if (branch_idx as usize) < branches.len() =>
@@ -9618,6 +14222,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 0;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -9802,6 +14409,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 0;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -10090,6 +14700,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 0;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -10266,167 +14879,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_156;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(156 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_156: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(147),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(151),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(155),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_156[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(156 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(156 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -10877,6 +15609,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::KvPair;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 0;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let __dedup_start: u32 = columns.len() as u32;
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
@@ -11081,6 +15816,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 0;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -11847,6 +16585,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 2;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -13243,6 +17984,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 7;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -13635,6 +18379,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 1;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -14452,6 +19199,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 0;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -15187,6 +19937,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 0;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -15922,6 +20675,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 0;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -16657,6 +21413,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 0;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -16883,7 +21642,27 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_hit_branch: ::core::option::Option<u8> = {
+                    let __phf_pos = *pos as usize;
+                    let __phf_rest_len = input.len().saturating_sub(__phf_pos);
+                    let mut __phf_hit: ::core::option::Option<u8> = ::core::option::Option::None;
+                    if __phf_hit.is_none() && __phf_rest_len >= 7 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_29(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 7)
+                        });
+                    }
+                    if __phf_hit.is_none() && __phf_rest_len >= 2 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_29(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 2)
+                        });
+                    }
+                    if __phf_hit.is_none() && __phf_rest_len >= 1 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_29(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 1)
+                        });
+                    }
+                    __phf_hit
+                };
                 let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
                     ::core::option::Option::Some(branch_idx)
                         if (branch_idx as usize) < branches.len() =>
@@ -17481,7 +22260,22 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_hit_branch: ::core::option::Option<u8> = {
+                    let __phf_pos = *pos as usize;
+                    let __phf_rest_len = input.len().saturating_sub(__phf_pos);
+                    let mut __phf_hit: ::core::option::Option<u8> = ::core::option::Option::None;
+                    if __phf_hit.is_none() && __phf_rest_len >= 2 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_30(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 2)
+                        });
+                    }
+                    if __phf_hit.is_none() && __phf_rest_len >= 1 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_30(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 1)
+                        });
+                    }
+                    __phf_hit
+                };
                 let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
                     ::core::option::Option::Some(branch_idx)
                         if (branch_idx as usize) < branches.len() =>
@@ -18711,6 +23505,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 5;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -19816,6 +24613,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 1;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -20696,167 +25496,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_267;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(267 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_267: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(266),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(264),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(265),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_267[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(267 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(267 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -22542,6 +27461,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 1;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -23589,6 +28511,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 1;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -24573,6 +29498,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 1;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -26850,167 +31778,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_322;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(322 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_322: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(321),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(320),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_322[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(322 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(322 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -27040,6 +32087,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 5;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -27616,6 +32666,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::KvPair;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 0;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let __dedup_start: u32 = columns.len() as u32;
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
@@ -28714,6 +33767,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 1;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -29106,6 +34162,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 1;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -31293,167 +36352,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_361;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(361 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_361: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(360),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(359),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_361[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(361 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(361 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -31985,167 +37163,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_367;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(367 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_367: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(366),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(365),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_367[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(367 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(367 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -33859,167 +39156,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_384;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(384 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_384: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(383),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(382),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_384[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(384 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(384 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -34257,6 +39673,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 5;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -34846,6 +40265,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 0;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -35238,6 +40660,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 1;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -37208,167 +42633,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_411;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(411 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_411: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(410),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(409),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_411[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(411 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(411 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -37606,6 +43150,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 5;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -38739,167 +44286,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_424;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(424 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_424: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(423),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(422),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_424[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(424 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(424 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -40270,167 +45936,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_437;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(437 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_437: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(436),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(435),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_437[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(437 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(437 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -42087,167 +47872,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_452;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(452 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_452: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(451),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(450),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_452[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(452 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(452 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -44167,6 +50071,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 1;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -44759,167 +50666,286 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let table: &::bbnf::runtime::tape::DtaTable = &DTA_TABLE;
             'step: {
-                let _ = "alt_linear";
-                let branches: &'static [::bbnf::runtime::tape::DtaStateId] = &__DTA_ALT_LIN_475;
-                if branches.is_empty() {
-                    break 'step ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: *pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(475 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    );
-                }
-                let start_depth = stack.depth();
-                let start_pos = *pos;
-                let start_slot = *slot;
-                let parent_rec =
-                    columns.push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                frame_depth.push(start_depth);
-                let child_mark = columns.len() as u32;
-                let variant_idx = stack.pending_variant_idx;
-                stack.pending_variant_idx = u8::MAX;
-                stack.push(::bbnf::runtime::tape::Frame {
-                    kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                    counter_idx: u8::MAX,
-                    cursor: 0,
-                    children: &[],
-                    repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    parent_rec,
-                    child_mark,
-                    tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                    last_pos: *pos,
-                    lo: 0,
-                    hi: 0,
-                    counter_optional_flag: 0,
-                    variant_idx,
-                    promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                });
-                let sp_after_push = stack.savepoint(*slot);
-                let cols_len_after_push = columns.len();
-                let fd_len_after_push = frame_depth.len();
-                let psi_len_after_push = psi.len();
-                let pay_agg_len_after_push = columns.pay_agg.len();
-                let pending_after_push = stack.pending_variant_idx;
-                let mut last_err: ::core::option::Option<::bbnf::runtime::tape::DtaError> =
-                    ::core::option::Option::None;
-                let mut chosen_outcome: ::core::option::Option<
-                    ::core::result::Result<
-                        ::bbnf::runtime::tape::StepResult,
-                        ::bbnf::runtime::tape::DtaError,
-                    >,
-                > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
-                let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
-                    ::core::option::Option::Some(branch_idx)
-                        if (branch_idx as usize) < branches.len() =>
+                let _ = "classify_byte";
+                const __CLASSIFY_TABLE_475: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(474),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId(473),
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                ];
+                let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                let __next = __CLASSIFY_TABLE_475[__b as usize];
+                let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                     {
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branches[branch_idx as usize],
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                ::core::option::Option::None
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                                ::core::option::Option::Some(branch_idx)
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
+                        break 'step ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *pos,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId(475 as u16),
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    _ => ::core::option::Option::None,
-                };
-                if chosen_outcome.is_none() {
-                    for (branch_idx, &branch) in branches.iter().enumerate() {
-                        if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                            if skipped as usize == branch_idx {
-                                continue;
-                            }
-                        }
-                        *pos = start_pos;
-                        *slot = start_slot;
-                        if let ::core::option::Option::Some(top) = stack.top_mut() {
-                            top.cursor = branch_idx as u16;
-                        }
-                        match ::bbnf::runtime::tape::try_branch(
-                            table,
-                            input,
-                            __regex_scan_BbnfBootstrap,
-                            idx,
-                            columns,
-                            psi,
-                            frame_depth,
-                            stack,
-                            branch,
-                            pos,
-                            slot,
-                            start_depth,
-                        ) {
-                            ::core::result::Result::Ok(next) => {
-                                chosen_outcome =
-                                    ::core::option::Option::Some(::core::result::Result::Ok(next));
-                                break;
-                            }
-                            ::core::result::Result::Err(
-                                e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                            ) => {
-                                columns.truncate(cols_len_after_push);
-                                frame_depth.truncate(fd_len_after_push);
-                                psi.truncate(psi_len_after_push);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                stack.restore(sp_after_push);
-                                stack.pending_variant_idx = pending_after_push;
-                                last_err = ::core::option::Option::Some(e);
-                            }
-                            ::core::result::Result::Err(e) => {
-                                break 'step ::core::result::Result::Err(e);
-                            }
-                        }
-                    }
-                }
-                if let ::core::option::Option::Some(out) = chosen_outcome {
-                    out
                 } else {
-                    columns.truncate(parent_rec as usize);
-                    frame_depth.truncate(parent_rec as usize);
-                    columns.pay_agg.truncate(pay_agg_len_after_push);
-                    ::bbnf::runtime::tape::pop_and_release(stack);
-                    ::core::result::Result::Err(last_err.unwrap_or(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: start_pos,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId(475 as u16),
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        },
-                    ))
+                    __next
+                };
+                if let ::core::option::Option::Some(top) = stack.top_mut() {
+                    if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                        top.cursor = chosen.0;
+                    }
                 }
+                ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(chosen))
             }
         }
         #[cold]
@@ -45157,6 +51183,9 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::Default;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                const SHAPE_REF_DICT_IDX: u8 = 5;
+                let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                    &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -45670,7 +51699,37 @@ mod __bbnfbootstrap_emit_impl {
                         ::bbnf::runtime::tape::DtaError,
                     >,
                 > = ::core::option::Option::None;
-                let __phf_hit_branch: ::core::option::Option<u8> = { ::core::option::Option::None };
+                let __phf_hit_branch: ::core::option::Option<u8> = {
+                    let __phf_pos = *pos as usize;
+                    let __phf_rest_len = input.len().saturating_sub(__phf_pos);
+                    let mut __phf_hit: ::core::option::Option<u8> = ::core::option::Option::None;
+                    if __phf_hit.is_none() && __phf_rest_len >= 8 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_50(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 8)
+                        });
+                    }
+                    if __phf_hit.is_none() && __phf_rest_len >= 7 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_50(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 7)
+                        });
+                    }
+                    if __phf_hit.is_none() && __phf_rest_len >= 6 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_50(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 6)
+                        });
+                    }
+                    if __phf_hit.is_none() && __phf_rest_len >= 5 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_50(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 5)
+                        });
+                    }
+                    if __phf_hit.is_none() && __phf_rest_len >= 3 {
+                        __phf_hit = __phf_BbnfBootstrap_dispatch_50(unsafe {
+                            input.get_unchecked(__phf_pos..__phf_pos + 3)
+                        });
+                    }
+                    __phf_hit
+                };
                 let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch {
                     ::core::option::Option::Some(branch_idx)
                         if (branch_idx as usize) < branches.len() =>
@@ -47712,173 +53771,292 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                         4 => {
-                            let _ = "alt_linear";
-                            let branches: &'static [::bbnf::runtime::tape::DtaStateId] =
-                                &__DTA_ALT_LIN_4;
-                            if branches.is_empty() {
-                                break 'step ::core::result::Result::Err(
-                                    ::bbnf::runtime::tape::DtaError::Syntax {
-                                        offset: *pos,
-                                        failing_state: ::bbnf::runtime::tape::DtaStateId(4 as u16),
-                                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                    },
-                                );
-                            }
-                            let start_depth = stack.depth();
-                            let start_pos = *pos;
-                            let start_slot = *slot;
-                            let parent_rec = columns
-                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                            frame_depth.push(start_depth);
-                            let child_mark = columns.len() as u32;
-                            let variant_idx = stack.pending_variant_idx;
-                            stack.pending_variant_idx = u8::MAX;
-                            stack.push(::bbnf::runtime::tape::Frame {
-                                kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                                counter_idx: u8::MAX,
-                                cursor: 0,
-                                children: &[],
-                                repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                parent_rec,
-                                child_mark,
-                                tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                                last_pos: *pos,
-                                lo: 0,
-                                hi: 0,
-                                counter_optional_flag: 0,
-                                variant_idx,
-                                promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                            });
-                            let sp_after_push = stack.savepoint(*slot);
-                            let cols_len_after_push = columns.len();
-                            let fd_len_after_push = frame_depth.len();
-                            let psi_len_after_push = psi.len();
-                            let pay_agg_len_after_push = columns.pay_agg.len();
-                            let pending_after_push = stack.pending_variant_idx;
-                            let mut last_err: ::core::option::Option<
-                                ::bbnf::runtime::tape::DtaError,
-                            > = ::core::option::Option::None;
-                            let mut chosen_outcome: ::core::option::Option<
-                                ::core::result::Result<
-                                    ::bbnf::runtime::tape::StepResult,
-                                    ::bbnf::runtime::tape::DtaError,
-                                >,
-                            > = ::core::option::Option::None;
-                            let __phf_hit_branch: ::core::option::Option<u8> =
-                                { ::core::option::Option::None };
-                            let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch
-                            {
-                                ::core::option::Option::Some(branch_idx)
-                                    if (branch_idx as usize) < branches.len() =>
+                            let _ = "classify_byte";
+                            const __CLASSIFY_TABLE_4: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId(3),
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId(2),
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                            ];
+                            let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                            let __next = __CLASSIFY_TABLE_4[__b as usize];
+                            let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                                 {
-                                    *pos = start_pos;
-                                    *slot = start_slot;
-                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                                        top.cursor = branch_idx as u16;
-                                    }
-                                    match ::bbnf::runtime::tape::try_branch(
-                                        table,
-                                        input,
-                                        __regex_scan_BbnfBootstrap,
-                                        idx,
-                                        columns,
-                                        psi,
-                                        frame_depth,
-                                        stack,
-                                        branches[branch_idx as usize],
-                                        pos,
-                                        slot,
-                                        start_depth,
-                                    ) {
-                                        ::core::result::Result::Ok(next) => {
-                                            chosen_outcome = ::core::option::Option::Some(
-                                                ::core::result::Result::Ok(next),
-                                            );
-                                            ::core::option::Option::None
-                                        }
-                                        ::core::result::Result::Err(
-                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                                        ) => {
-                                            columns.truncate(cols_len_after_push);
-                                            frame_depth.truncate(fd_len_after_push);
-                                            psi.truncate(psi_len_after_push);
-                                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                                            stack.restore(sp_after_push);
-                                            stack.pending_variant_idx = pending_after_push;
-                                            last_err = ::core::option::Option::Some(e);
-                                            ::core::option::Option::Some(branch_idx)
-                                        }
-                                        ::core::result::Result::Err(e) => {
-                                            break 'step ::core::result::Result::Err(e);
-                                        }
-                                    }
+                                    break 'step ::core::result::Result::Err(
+                                        ::bbnf::runtime::tape::DtaError::Syntax {
+                                            offset: *pos,
+                                            failing_state: ::bbnf::runtime::tape::DtaStateId(
+                                                4 as u16,
+                                            ),
+                                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(
+                                                u32::MAX,
+                                            ),
+                                        },
+                                    );
                                 }
-                                _ => ::core::option::Option::None,
-                            };
-                            if chosen_outcome.is_none() {
-                                for (branch_idx, &branch) in branches.iter().enumerate() {
-                                    if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                                        if skipped as usize == branch_idx {
-                                            continue;
-                                        }
-                                    }
-                                    *pos = start_pos;
-                                    *slot = start_slot;
-                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                                        top.cursor = branch_idx as u16;
-                                    }
-                                    match ::bbnf::runtime::tape::try_branch(
-                                        table,
-                                        input,
-                                        __regex_scan_BbnfBootstrap,
-                                        idx,
-                                        columns,
-                                        psi,
-                                        frame_depth,
-                                        stack,
-                                        branch,
-                                        pos,
-                                        slot,
-                                        start_depth,
-                                    ) {
-                                        ::core::result::Result::Ok(next) => {
-                                            chosen_outcome = ::core::option::Option::Some(
-                                                ::core::result::Result::Ok(next),
-                                            );
-                                            break;
-                                        }
-                                        ::core::result::Result::Err(
-                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                                        ) => {
-                                            columns.truncate(cols_len_after_push);
-                                            frame_depth.truncate(fd_len_after_push);
-                                            psi.truncate(psi_len_after_push);
-                                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                                            stack.restore(sp_after_push);
-                                            stack.pending_variant_idx = pending_after_push;
-                                            last_err = ::core::option::Option::Some(e);
-                                        }
-                                        ::core::result::Result::Err(e) => {
-                                            break 'step ::core::result::Result::Err(e);
-                                        }
-                                    }
-                                }
-                            }
-                            if let ::core::option::Option::Some(out) = chosen_outcome {
-                                out
                             } else {
-                                columns.truncate(parent_rec as usize);
-                                frame_depth.truncate(parent_rec as usize);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                ::bbnf::runtime::tape::pop_and_release(stack);
-                                ::core::result::Result::Err(last_err.unwrap_or(
-                                    ::bbnf::runtime::tape::DtaError::Syntax {
-                                        offset: start_pos,
-                                        failing_state: ::bbnf::runtime::tape::DtaStateId(4 as u16),
-                                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                    },
-                                ))
+                                __next
+                            };
+                            if let ::core::option::Option::Some(top) = stack.top_mut() {
+                                if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                                    top.cursor = chosen.0;
+                                }
                             }
+                            ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
+                                chosen,
+                            ))
                         }
                         5 => {
                             let _ = "literal";
@@ -48250,6 +54428,9 @@ mod __bbnfbootstrap_emit_impl {
                             let promote: ::bbnf::runtime::tape::SeqPromote =
                                 ::bbnf::runtime::tape::SeqPromote::KvPair;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                            const SHAPE_REF_DICT_IDX: u8 = 0;
+                            let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                                &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                             let __dedup_start: u32 = columns.len() as u32;
                             let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                             frame_depth.push(stack.depth());
@@ -48724,6 +54905,9 @@ mod __bbnfbootstrap_emit_impl {
                             let promote: ::bbnf::runtime::tape::SeqPromote =
                                 ::bbnf::runtime::tape::SeqPromote::Default;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                            const SHAPE_REF_DICT_IDX: u8 = 2;
+                            let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                                &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                             let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                             frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
@@ -49104,6 +55288,9 @@ mod __bbnfbootstrap_emit_impl {
                             let promote: ::bbnf::runtime::tape::SeqPromote =
                                 ::bbnf::runtime::tape::SeqPromote::Default;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                            const SHAPE_REF_DICT_IDX: u8 = 1;
+                            let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                                &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                             let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                             frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
@@ -49481,6 +55668,9 @@ mod __bbnfbootstrap_emit_impl {
                             let promote: ::bbnf::runtime::tape::SeqPromote =
                                 ::bbnf::runtime::tape::SeqPromote::Default;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                            const SHAPE_REF_DICT_IDX: u8 = 2;
+                            let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                                &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                             let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                             frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
@@ -49861,6 +56051,9 @@ mod __bbnfbootstrap_emit_impl {
                             let promote: ::bbnf::runtime::tape::SeqPromote =
                                 ::bbnf::runtime::tape::SeqPromote::Default;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                            const SHAPE_REF_DICT_IDX: u8 = 2;
+                            let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                                &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                             let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                             frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
@@ -51397,6 +57590,9 @@ mod __bbnfbootstrap_emit_impl {
                             let promote: ::bbnf::runtime::tape::SeqPromote =
                                 ::bbnf::runtime::tape::SeqPromote::Default;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                            const SHAPE_REF_DICT_IDX: u8 = 3;
+                            let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                                &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                             let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                             frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
@@ -52211,6 +58407,9 @@ mod __bbnfbootstrap_emit_impl {
                             let promote: ::bbnf::runtime::tape::SeqPromote =
                                 ::bbnf::runtime::tape::SeqPromote::Default;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                            const SHAPE_REF_DICT_IDX: u8 = 0;
+                            let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                                &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                             let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                             frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
@@ -52433,8 +58632,23 @@ mod __bbnfbootstrap_emit_impl {
                                     ::bbnf::runtime::tape::DtaError,
                                 >,
                             > = ::core::option::Option::None;
-                            let __phf_hit_branch: ::core::option::Option<u8> =
-                                { ::core::option::Option::None };
+                            let __phf_hit_branch: ::core::option::Option<u8> = {
+                                let __phf_pos = *pos as usize;
+                                let __phf_rest_len = input.len().saturating_sub(__phf_pos);
+                                let mut __phf_hit: ::core::option::Option<u8> =
+                                    ::core::option::Option::None;
+                                if __phf_hit.is_none() && __phf_rest_len >= 5 {
+                                    __phf_hit = __phf_BbnfBootstrap_dispatch_8(unsafe {
+                                        input.get_unchecked(__phf_pos..__phf_pos + 5)
+                                    });
+                                }
+                                if __phf_hit.is_none() && __phf_rest_len >= 1 {
+                                    __phf_hit = __phf_BbnfBootstrap_dispatch_8(unsafe {
+                                        input.get_unchecked(__phf_pos..__phf_pos + 1)
+                                    });
+                                }
+                                __phf_hit
+                            };
                             let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch
                             {
                                 ::core::option::Option::Some(branch_idx)
@@ -53201,8 +59415,23 @@ mod __bbnfbootstrap_emit_impl {
                                     ::bbnf::runtime::tape::DtaError,
                                 >,
                             > = ::core::option::Option::None;
-                            let __phf_hit_branch: ::core::option::Option<u8> =
-                                { ::core::option::Option::None };
+                            let __phf_hit_branch: ::core::option::Option<u8> = {
+                                let __phf_pos = *pos as usize;
+                                let __phf_rest_len = input.len().saturating_sub(__phf_pos);
+                                let mut __phf_hit: ::core::option::Option<u8> =
+                                    ::core::option::Option::None;
+                                if __phf_hit.is_none() && __phf_rest_len >= 2 {
+                                    __phf_hit = __phf_BbnfBootstrap_dispatch_11(unsafe {
+                                        input.get_unchecked(__phf_pos..__phf_pos + 2)
+                                    });
+                                }
+                                if __phf_hit.is_none() && __phf_rest_len >= 1 {
+                                    __phf_hit = __phf_BbnfBootstrap_dispatch_11(unsafe {
+                                        input.get_unchecked(__phf_pos..__phf_pos + 1)
+                                    });
+                                }
+                                __phf_hit
+                            };
                             let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch
                             {
                                 ::core::option::Option::Some(branch_idx)
@@ -53492,173 +59721,292 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                         67 => {
-                            let _ = "alt_linear";
-                            let branches: &'static [::bbnf::runtime::tape::DtaStateId] =
-                                &__DTA_ALT_LIN_67;
-                            if branches.is_empty() {
-                                break 'step ::core::result::Result::Err(
-                                    ::bbnf::runtime::tape::DtaError::Syntax {
-                                        offset: *pos,
-                                        failing_state: ::bbnf::runtime::tape::DtaStateId(67 as u16),
-                                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                    },
-                                );
-                            }
-                            let start_depth = stack.depth();
-                            let start_pos = *pos;
-                            let start_slot = *slot;
-                            let parent_rec = columns
-                                .push_compound_fused(::bbnf::runtime::tape::TapeKind::Alt, *pos);
-                            frame_depth.push(start_depth);
-                            let child_mark = columns.len() as u32;
-                            let variant_idx = stack.pending_variant_idx;
-                            stack.pending_variant_idx = u8::MAX;
-                            stack.push(::bbnf::runtime::tape::Frame {
-                                kind: ::bbnf::runtime::tape::DtaFrameKind::Alt,
-                                counter_idx: u8::MAX,
-                                cursor: 0,
-                                children: &[],
-                                repeat_inner: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                parent_rec,
-                                child_mark,
-                                tape_kind: ::bbnf::runtime::tape::TapeKind::Alt,
-                                last_pos: *pos,
-                                lo: 0,
-                                hi: 0,
-                                counter_optional_flag: 0,
-                                variant_idx,
-                                promote: ::bbnf::runtime::tape::SeqPromote::Default,
-                            });
-                            let sp_after_push = stack.savepoint(*slot);
-                            let cols_len_after_push = columns.len();
-                            let fd_len_after_push = frame_depth.len();
-                            let psi_len_after_push = psi.len();
-                            let pay_agg_len_after_push = columns.pay_agg.len();
-                            let pending_after_push = stack.pending_variant_idx;
-                            let mut last_err: ::core::option::Option<
-                                ::bbnf::runtime::tape::DtaError,
-                            > = ::core::option::Option::None;
-                            let mut chosen_outcome: ::core::option::Option<
-                                ::core::result::Result<
-                                    ::bbnf::runtime::tape::StepResult,
-                                    ::bbnf::runtime::tape::DtaError,
-                                >,
-                            > = ::core::option::Option::None;
-                            let __phf_hit_branch: ::core::option::Option<u8> =
-                                { ::core::option::Option::None };
-                            let __phf_attempted: ::core::option::Option<u8> = match __phf_hit_branch
-                            {
-                                ::core::option::Option::Some(branch_idx)
-                                    if (branch_idx as usize) < branches.len() =>
+                            let _ = "classify_byte";
+                            const __CLASSIFY_TABLE_67: [::bbnf::runtime::tape::DtaStateId; 256] = [
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId(65),
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId(66),
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                            ];
+                            let __b = input.get(*pos as usize).copied().unwrap_or(0);
+                            let __next = __CLASSIFY_TABLE_67[__b as usize];
+                            let chosen = if __next == ::bbnf::runtime::tape::DtaStateId::NONE {
                                 {
-                                    *pos = start_pos;
-                                    *slot = start_slot;
-                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                                        top.cursor = branch_idx as u16;
-                                    }
-                                    match ::bbnf::runtime::tape::try_branch(
-                                        table,
-                                        input,
-                                        __regex_scan_BbnfBootstrap,
-                                        idx,
-                                        columns,
-                                        psi,
-                                        frame_depth,
-                                        stack,
-                                        branches[branch_idx as usize],
-                                        pos,
-                                        slot,
-                                        start_depth,
-                                    ) {
-                                        ::core::result::Result::Ok(next) => {
-                                            chosen_outcome = ::core::option::Option::Some(
-                                                ::core::result::Result::Ok(next),
-                                            );
-                                            ::core::option::Option::None
-                                        }
-                                        ::core::result::Result::Err(
-                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                                        ) => {
-                                            columns.truncate(cols_len_after_push);
-                                            frame_depth.truncate(fd_len_after_push);
-                                            psi.truncate(psi_len_after_push);
-                                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                                            stack.restore(sp_after_push);
-                                            stack.pending_variant_idx = pending_after_push;
-                                            last_err = ::core::option::Option::Some(e);
-                                            ::core::option::Option::Some(branch_idx)
-                                        }
-                                        ::core::result::Result::Err(e) => {
-                                            break 'step ::core::result::Result::Err(e);
-                                        }
-                                    }
+                                    break 'step ::core::result::Result::Err(
+                                        ::bbnf::runtime::tape::DtaError::Syntax {
+                                            offset: *pos,
+                                            failing_state: ::bbnf::runtime::tape::DtaStateId(
+                                                67 as u16,
+                                            ),
+                                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(
+                                                u32::MAX,
+                                            ),
+                                        },
+                                    );
                                 }
-                                _ => ::core::option::Option::None,
-                            };
-                            if chosen_outcome.is_none() {
-                                for (branch_idx, &branch) in branches.iter().enumerate() {
-                                    if let ::core::option::Option::Some(skipped) = __phf_attempted {
-                                        if skipped as usize == branch_idx {
-                                            continue;
-                                        }
-                                    }
-                                    *pos = start_pos;
-                                    *slot = start_slot;
-                                    if let ::core::option::Option::Some(top) = stack.top_mut() {
-                                        top.cursor = branch_idx as u16;
-                                    }
-                                    match ::bbnf::runtime::tape::try_branch(
-                                        table,
-                                        input,
-                                        __regex_scan_BbnfBootstrap,
-                                        idx,
-                                        columns,
-                                        psi,
-                                        frame_depth,
-                                        stack,
-                                        branch,
-                                        pos,
-                                        slot,
-                                        start_depth,
-                                    ) {
-                                        ::core::result::Result::Ok(next) => {
-                                            chosen_outcome = ::core::option::Option::Some(
-                                                ::core::result::Result::Ok(next),
-                                            );
-                                            break;
-                                        }
-                                        ::core::result::Result::Err(
-                                            e @ ::bbnf::runtime::tape::DtaError::Syntax { .. },
-                                        ) => {
-                                            columns.truncate(cols_len_after_push);
-                                            frame_depth.truncate(fd_len_after_push);
-                                            psi.truncate(psi_len_after_push);
-                                            columns.pay_agg.truncate(pay_agg_len_after_push);
-                                            stack.restore(sp_after_push);
-                                            stack.pending_variant_idx = pending_after_push;
-                                            last_err = ::core::option::Option::Some(e);
-                                        }
-                                        ::core::result::Result::Err(e) => {
-                                            break 'step ::core::result::Result::Err(e);
-                                        }
-                                    }
-                                }
-                            }
-                            if let ::core::option::Option::Some(out) = chosen_outcome {
-                                out
                             } else {
-                                columns.truncate(parent_rec as usize);
-                                frame_depth.truncate(parent_rec as usize);
-                                columns.pay_agg.truncate(pay_agg_len_after_push);
-                                ::bbnf::runtime::tape::pop_and_release(stack);
-                                ::core::result::Result::Err(last_err.unwrap_or(
-                                    ::bbnf::runtime::tape::DtaError::Syntax {
-                                        offset: start_pos,
-                                        failing_state: ::bbnf::runtime::tape::DtaStateId(67 as u16),
-                                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                    },
-                                ))
+                                __next
+                            };
+                            if let ::core::option::Option::Some(top) = stack.top_mut() {
+                                if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
+                                    top.cursor = chosen.0;
+                                }
                             }
+                            ::core::result::Result::Ok(::bbnf::runtime::tape::StepResult::Next(
+                                chosen,
+                            ))
                         }
                         68 => {
                             let _ = "ref_target";
@@ -57265,6 +63613,9 @@ mod __bbnfbootstrap_emit_impl {
                             let promote: ::bbnf::runtime::tape::SeqPromote =
                                 ::bbnf::runtime::tape::SeqPromote::Default;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                            const SHAPE_REF_DICT_IDX: u8 = 1;
+                            let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                                &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                             let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                             frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
@@ -59865,6 +66216,9 @@ mod __bbnfbootstrap_emit_impl {
                             let promote: ::bbnf::runtime::tape::SeqPromote =
                                 ::bbnf::runtime::tape::SeqPromote::Default;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                            const SHAPE_REF_DICT_IDX: u8 = 1;
+                            let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                                &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                             let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                             frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
@@ -61051,6 +67405,9 @@ mod __bbnfbootstrap_emit_impl {
                             let promote: ::bbnf::runtime::tape::SeqPromote =
                                 ::bbnf::runtime::tape::SeqPromote::Default;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                            const SHAPE_REF_DICT_IDX: u8 = 1;
+                            let _shape_dict_entry: &::bbnf::runtime::tape::ShapeEntry =
+                                &SHAPE_DICT[SHAPE_REF_DICT_IDX as usize];
                             let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                             frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
@@ -64727,6 +71084,4547 @@ mod __bbnfbootstrap_emit_impl {
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
         __dta_walker_inline::run(input, idx, columns, psi, frame_depth)
+    }
+    /// AW-V.W3.2 — per-grammar shape-dispatch support.
+    ///
+    /// Inlined by every `parse_<shape>_<grammar>_<rule>` emitted
+    /// sibling; carries the SIMD whitespace bitmap cache + the
+    /// quoted-string scanner primitive. The module is private to
+    /// the generated code — downstream consumers route through the
+    /// top-level `parse_<grammar>_<root>` which inlines every
+    /// helper under workspace LTO.
+    #[allow(dead_code, non_snake_case)]
+    pub(crate) mod __shape_support_BbnfBootstrap {
+        /// Per-parse SIMD scratch — 64-byte whitespace-bitmap
+        /// cache mirroring `bbnf-json-prototype::simd::ScanState`.
+        pub struct ScanState {
+            pub(crate) nospace_bits: u64,
+            pub(crate) nospace_start: isize,
+        }
+        impl ScanState {
+            #[inline]
+            pub fn new() -> Self {
+                Self {
+                    nospace_bits: 0,
+                    nospace_start: -1,
+                }
+            }
+        }
+        /// Skip JSON whitespace at `*p`, returning the first
+        /// non-whitespace byte (or `None` on EOF). Hot-path fast-
+        /// exit when the next byte is non-whitespace.
+        #[inline(always)]
+        pub fn skip_space(input: &[u8], p: &mut usize, state: &mut ScanState) -> Option<u8> {
+            match input.get(*p) {
+                Some(&b) if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' => Some(b),
+                None => None,
+                _ => {
+                    skip_space_slow(input, p, state);
+                    input.get(*p).copied()
+                }
+            }
+        }
+        #[inline(always)]
+        pub(crate) fn skip_space_slow(input: &[u8], p: &mut usize, state: &mut ScanState) {
+            loop {
+                let cache_base = state.nospace_start;
+                if cache_base >= 0 && (*p as isize) >= cache_base {
+                    let rel = *p - cache_base as usize;
+                    if rel < 64 {
+                        let masked = state.nospace_bits & (!0u64 << rel);
+                        if masked != 0 {
+                            let bit = masked.trailing_zeros() as usize;
+                            *p = cache_base as usize + bit;
+                            return;
+                        }
+                        *p = cache_base as usize + 64;
+                    }
+                }
+                if *p + 64 > input.len() {
+                    while let Some(&b) = input.get(*p) {
+                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                            return;
+                        }
+                        *p += 1;
+                    }
+                    return;
+                }
+                let stripe = unsafe { ::core::slice::from_raw_parts(input.as_ptr().add(*p), 64) };
+                let mask = nospace_bitmap_64(stripe);
+                state.nospace_bits = mask;
+                state.nospace_start = *p as isize;
+                if mask != 0 {
+                    let bit = mask.trailing_zeros() as usize;
+                    *p += bit;
+                    return;
+                }
+                *p += 64;
+            }
+        }
+        /// Compute the 64-bit "non-whitespace" bitmap for a 64-byte
+        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT in
+        /// `{b' ', b'\t', b'\n', b'\r'}`.
+        #[inline(always)]
+        pub(crate) fn nospace_bitmap_64(stripe: &[u8]) -> u64 {
+            unsafe {
+                return nospace_bitmap_64_neon(stripe);
+            }
+
+            #[allow(unreachable_code)]
+            nospace_bitmap_64_scalar(stripe)
+        }
+        #[inline(always)]
+        unsafe fn nospace_bitmap_64_neon(stripe: &[u8]) -> u64 {
+            use core::arch::aarch64::*;
+            unsafe {
+                let ptr = stripe.as_ptr();
+                let space = vdupq_n_u8(b' ');
+                let tab = vdupq_n_u8(b'\t');
+                let nl = vdupq_n_u8(b'\n');
+                let cr = vdupq_n_u8(b'\r');
+                let bits_lo: [u8; 16] = [1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128];
+                let bit_vec = vld1q_u8(bits_lo.as_ptr());
+                let m0 = chunk_ns_mask16(ptr, 0, space, tab, nl, cr, bit_vec);
+                let m1 = chunk_ns_mask16(ptr, 16, space, tab, nl, cr, bit_vec);
+                let m2 = chunk_ns_mask16(ptr, 32, space, tab, nl, cr, bit_vec);
+                let m3 = chunk_ns_mask16(ptr, 48, space, tab, nl, cr, bit_vec);
+                (m0 as u64) | ((m1 as u64) << 16) | ((m2 as u64) << 32) | ((m3 as u64) << 48)
+            }
+        }
+        #[inline(always)]
+        unsafe fn chunk_ns_mask16(
+            ptr: *const u8,
+            off: usize,
+            space: core::arch::aarch64::uint8x16_t,
+            tab: core::arch::aarch64::uint8x16_t,
+            nl: core::arch::aarch64::uint8x16_t,
+            cr: core::arch::aarch64::uint8x16_t,
+            bit_vec: core::arch::aarch64::uint8x16_t,
+        ) -> u16 {
+            use core::arch::aarch64::*;
+            unsafe {
+                let chunk = vld1q_u8(ptr.add(off));
+                let ws = vorrq_u8(
+                    vorrq_u8(vceqq_u8(chunk, space), vceqq_u8(chunk, tab)),
+                    vorrq_u8(vceqq_u8(chunk, nl), vceqq_u8(chunk, cr)),
+                );
+                let ns = vmvnq_u8(ws);
+                let weighted = vandq_u8(ns, bit_vec);
+                let low = vaddv_u8(vget_low_u8(weighted)) as u16;
+                let high = vaddv_u8(vget_high_u8(weighted)) as u16;
+                low | (high << 8)
+            }
+        }
+        #[inline(always)]
+        pub(crate) fn nospace_bitmap_64_scalar(stripe: &[u8]) -> u64 {
+            let mut out = 0u64;
+            for (i, &b) in stripe.iter().enumerate() {
+                if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                    out |= 1u64 << i;
+                }
+            }
+            out
+        }
+        /// Find the first `b'"'` or `b'\\'` byte in `bytes`.
+        /// Mirrors `bbnf-json-prototype::simd::first_quote_or_backslash`.
+        #[inline(always)]
+        pub fn first_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
+            unsafe {
+                return first_quote_or_backslash_neon(bytes);
+            }
+
+            #[allow(unreachable_code)]
+            first_quote_or_backslash_scalar(bytes)
+        }
+        #[inline(always)]
+        unsafe fn first_quote_or_backslash_neon(bytes: &[u8]) -> Option<(usize, u8)> {
+            use core::arch::aarch64::*;
+            unsafe {
+                let quote = vdupq_n_u8(b'"');
+                let backslash = vdupq_n_u8(b'\\');
+                let ptr = bytes.as_ptr();
+                let len = bytes.len();
+                let mut i = 0usize;
+                while i + 16 <= len {
+                    let v = vld1q_u8(ptr.add(i));
+                    let hit = vorrq_u8(vceqq_u8(v, quote), vceqq_u8(v, backslash));
+                    let packed = vshrn_n_u16::<4>(vreinterpretq_u16_u8(hit));
+                    let bits = vget_lane_u64::<0>(vreinterpret_u64_u8(packed));
+                    if bits != 0 {
+                        let off = (bits.trailing_zeros() >> 2) as usize;
+                        let byte = *ptr.add(i + off);
+                        return Some((i + off, byte));
+                    }
+                    i += 16;
+                }
+                while i < len {
+                    let b = *ptr.add(i);
+                    if b == b'"' || b == b'\\' {
+                        return Some((i, b));
+                    }
+                    i += 1;
+                }
+                None
+            }
+        }
+        #[inline(always)]
+        pub(crate) fn first_quote_or_backslash_scalar(bytes: &[u8]) -> Option<(usize, u8)> {
+            for (i, &b) in bytes.iter().enumerate() {
+                if b == b'"' || b == b'\\' {
+                    return Some((i, b));
+                }
+            }
+            None
+        }
+        /// Map a byte into one of six arms: object `{` → 0,
+        /// array `[` → 1, string `"` → 2, digit/`-` (number) → 3,
+        /// keyword-led `t` / `f` / `n` → 4, else → 5.
+        ///
+        /// The emitter's dispatcher inlines this to compile-time
+        /// byte matches; kept here as a reference helper for tests.
+        #[inline(always)]
+        pub(crate) fn shape_byte_arm(b: u8) -> u8 {
+            match b {
+                b'{' => 0,
+                b'[' => 1,
+                b'"' => 2,
+                b'-' | b'0'..=b'9' => 3,
+                b't' | b'f' | b'n' => 4,
+                _ => 5,
+            }
+        }
+        /// Expect an exact keyword sequence at `*p` and advance
+        /// past it on match.
+        #[inline(always)]
+        pub fn expect_keyword(input: &[u8], p: &mut usize, word: &[u8]) -> bool {
+            let at = *p;
+            let end = at + word.len();
+            if input.len() < end || &input[at..end] != word {
+                return false;
+            }
+            *p = end;
+            true
+        }
+    }
+    /// AW-V.W4-fix — per-grammar HRegex-shape parse function.
+    ///
+    /// Regex scan via the per-grammar adapter; emits a
+    /// `TapeKind::Regex` leaf carrying the matched span. Decoder
+    /// hooks (host_fn payloads) are wired at the dispatcher level
+    /// post-scan; the raw Span-leaf path is the default.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_hregex_BbnfBootstrap_int_lit(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let Some(match_len) =
+            __regex_scan_BbnfBootstrap("0[xX][0-9a-fA-F]+\\w*|[0-9]+\\w*", input, *p)
+        else {
+            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: span_lo,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        };
+        *p += match_len as usize;
+        let span_hi = *p as u32;
+        let leaf_off = builder.push_leaf_with(
+            ::bbnf::runtime::tape::TapeKind::Regex,
+            span_lo,
+            span_hi,
+            0u8,
+            0,
+            ::bbnf::runtime::tape::PayloadData::None,
+        );
+        Ok(leaf_off)
+    }
+    /// AW-V.W4-fix — per-grammar HRegex-shape parse function.
+    ///
+    /// Regex scan via the per-grammar adapter; emits a
+    /// `TapeKind::Regex` leaf carrying the matched span. Decoder
+    /// hooks (host_fn payloads) are wired at the dispatcher level
+    /// post-scan; the raw Span-leaf path is the default.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_hregex_BbnfBootstrap_float_lit(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let Some(match_len) =
+            __regex_scan_BbnfBootstrap("[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?\\w*", input, *p)
+        else {
+            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: span_lo,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        };
+        *p += match_len as usize;
+        let span_hi = *p as u32;
+        let leaf_off = builder.push_leaf_with(
+            ::bbnf::runtime::tape::TapeKind::Regex,
+            span_lo,
+            span_hi,
+            1u8,
+            0,
+            ::bbnf::runtime::tape::PayloadData::None,
+        );
+        Ok(leaf_off)
+    }
+    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
+    /// (Alt of literal-led branches).
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_BbnfBootstrap_bool_lit(
+        input: &[u8],
+        p: &mut usize,
+        first_byte: u8,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        match first_byte {
+            116u8 => {
+                let at = *p;
+                let end = at + 4usize;
+                if input.len() < end || input[at..end] != [116u8, 114u8, 117u8, 101u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    2u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            102u8 => {
+                let at = *p;
+                let end = at + 5usize;
+                if input.len() < end || input[at..end] != [102u8, 97u8, 108u8, 115u8, 101u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    2u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            }),
+        }
+    }
+    /// AW-V.W4-fix — per-grammar HRegex-shape parse function.
+    ///
+    /// Regex scan via the per-grammar adapter; emits a
+    /// `TapeKind::Regex` leaf carrying the matched span. Decoder
+    /// hooks (host_fn payloads) are wired at the dispatcher level
+    /// post-scan; the raw Span-leaf path is the default.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_hregex_BbnfBootstrap_value_ident(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let Some(match_len) = __regex_scan_BbnfBootstrap("[_a-zA-Z][_a-zA-Z0-9]*", input, *p)
+        else {
+            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: span_lo,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        };
+        *p += match_len as usize;
+        let span_hi = *p as u32;
+        let leaf_off = builder.push_leaf_with(
+            ::bbnf::runtime::tape::TapeKind::Regex,
+            span_lo,
+            span_hi,
+            4u8,
+            0,
+            ::bbnf::runtime::tape::PayloadData::None,
+        );
+        Ok(leaf_off)
+    }
+    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    ///
+    /// Runs the operand-led shunting-yard reducer bounded by the
+    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
+    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
+    /// outer compound + per-op reduced binary compounds via
+    /// `emit_reducer_compound`.
+    ///
+    /// # Emitted algorithm
+    ///
+    /// 1. Reserve an outer Rule compound via
+    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    record the parse-open position.
+    /// 2. Dispatch the leftmost operand through the grammar's
+    ///    value-position dispatcher; the operand's records land
+    ///    inside the outer compound's child run.
+    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
+    ///    zero, break; when nonzero:
+    ///    a. Reduce every top-of-op-stack entry whose precedence
+    ///       exceeds the new byte's (or ties + left-assoc); each
+    ///       reduce emits a `TapeKind::Rule` reducer compound via
+    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
+    ///       byte's u8 discriminant into `pay_agg`.
+    ///    c. Push the operator onto the local op stack with its
+    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
+    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
+    ///    e. Re-dispatch the RHS operand.
+    /// 4. On EOF-operator: drain the op stack — every remaining
+    ///    entry reduces into a terminal compound. The final
+    ///    `this_operand_root` is stamped onto the outer Rule
+    ///    compound's `child_off` (overriding the default
+    ///    `mark_children` index) so the cursor's pre-order walk
+    ///    surfaces the reduced tree root as the compound's first
+    ///    child.
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_assignments,
+        unused_mut,
+        unused_variables
+    )]
+    pub fn parse_pratt_BbnfBootstrap_value_path(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        struct LocalOpEntry {
+            op_discriminant: u8,
+            precedence: u8,
+            associativity_is_left: bool,
+            lhs_idx: u32,
+            lhs_span_lo: u32,
+        }
+        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let outer_span_lo = *p as u32;
+        let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
+        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _ = _operand_off;
+        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
+        loop {
+            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
+            if lut_byte == 0 {
+                break;
+            }
+            let precedence: u8 = lut_byte & 0x0Fu8;
+            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
+            let associativity_is_left: bool = assoc_bit == 0;
+            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+            let (op_width, op_discriminant) = if two_byte == 0 {
+                let mut found_disc: u8 = 0u8;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte.is_none() {
+                        found_disc = e.op_discriminant;
+                        break;
+                    }
+                }
+                (1u32, found_disc)
+            } else {
+                let mut found_disc: u8 = 0u8;
+                let mut matched_two_byte: bool = false;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte == second_byte {
+                        found_disc = e.op_discriminant;
+                        matched_two_byte = e.second_byte.is_some();
+                        break;
+                    }
+                }
+                let width = if matched_two_byte { 2u32 } else { 1u32 };
+                (width, found_disc)
+            };
+            let op_lo: u32 = *p as u32;
+            *p = (*p).saturating_add(op_width as usize);
+            let op_hi: u32 = *p as u32;
+            let arena_off: u32 = builder.arena_mut().len() as u32;
+            builder.arena_mut().push(op_discriminant);
+            let _op_rec = builder.push_leaf_with_arena_frame(
+                ::bbnf::runtime::tape::TapeKind::Span,
+                op_lo,
+                op_hi,
+                0,
+                0,
+                arena_off,
+            );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
+            op_stack.push(LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            });
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            this_operand_root = _op_rec.0 + 1;
+        }
+        let outer_span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+            outer_span_lo,
+            outer_span_hi,
+            5u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    ///
+    /// Runs the operand-led shunting-yard reducer bounded by the
+    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
+    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
+    /// outer compound + per-op reduced binary compounds via
+    /// `emit_reducer_compound`.
+    ///
+    /// # Emitted algorithm
+    ///
+    /// 1. Reserve an outer Rule compound via
+    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    record the parse-open position.
+    /// 2. Dispatch the leftmost operand through the grammar's
+    ///    value-position dispatcher; the operand's records land
+    ///    inside the outer compound's child run.
+    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
+    ///    zero, break; when nonzero:
+    ///    a. Reduce every top-of-op-stack entry whose precedence
+    ///       exceeds the new byte's (or ties + left-assoc); each
+    ///       reduce emits a `TapeKind::Rule` reducer compound via
+    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
+    ///       byte's u8 discriminant into `pay_agg`.
+    ///    c. Push the operator onto the local op stack with its
+    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
+    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
+    ///    e. Re-dispatch the RHS operand.
+    /// 4. On EOF-operator: drain the op stack — every remaining
+    ///    entry reduces into a terminal compound. The final
+    ///    `this_operand_root` is stamped onto the outer Rule
+    ///    compound's `child_off` (overriding the default
+    ///    `mark_children` index) so the cursor's pre-order walk
+    ///    surfaces the reduced tree root as the compound's first
+    ///    child.
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_assignments,
+        unused_mut,
+        unused_variables
+    )]
+    pub fn parse_pratt_BbnfBootstrap_value_input(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        struct LocalOpEntry {
+            op_discriminant: u8,
+            precedence: u8,
+            associativity_is_left: bool,
+            lhs_idx: u32,
+            lhs_span_lo: u32,
+        }
+        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let outer_span_lo = *p as u32;
+        let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
+        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _ = _operand_off;
+        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
+        loop {
+            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
+            if lut_byte == 0 {
+                break;
+            }
+            let precedence: u8 = lut_byte & 0x0Fu8;
+            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
+            let associativity_is_left: bool = assoc_bit == 0;
+            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+            let (op_width, op_discriminant) = if two_byte == 0 {
+                let mut found_disc: u8 = 0u8;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte.is_none() {
+                        found_disc = e.op_discriminant;
+                        break;
+                    }
+                }
+                (1u32, found_disc)
+            } else {
+                let mut found_disc: u8 = 0u8;
+                let mut matched_two_byte: bool = false;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte == second_byte {
+                        found_disc = e.op_discriminant;
+                        matched_two_byte = e.second_byte.is_some();
+                        break;
+                    }
+                }
+                let width = if matched_two_byte { 2u32 } else { 1u32 };
+                (width, found_disc)
+            };
+            let op_lo: u32 = *p as u32;
+            *p = (*p).saturating_add(op_width as usize);
+            let op_hi: u32 = *p as u32;
+            let arena_off: u32 = builder.arena_mut().len() as u32;
+            builder.arena_mut().push(op_discriminant);
+            let _op_rec = builder.push_leaf_with_arena_frame(
+                ::bbnf::runtime::tape::TapeKind::Span,
+                op_lo,
+                op_hi,
+                0,
+                0,
+                arena_off,
+            );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
+            op_stack.push(LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            });
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            this_operand_root = _op_rec.0 + 1;
+        }
+        let outer_span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+            outer_span_lo,
+            outer_span_hi,
+            6u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar ArgList-shape parse function.
+    ///
+    /// Emits one outer Rule compound over the whole call site.
+    /// Head (Literal / Regex / Ref) + optional `(` + body arg
+    /// positions (dispatched through the grammar's value-
+    /// dispatcher) + `)` literal.
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_arglist_BbnfBootstrap_value_fn_call(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        }
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [40u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                7u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+        }
+        {
+            let save_p = *p;
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let attempt = (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
+                let seq_lo = *p as u32;
+                let seq_child = builder.mark_children();
+                let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+                let repeat_lo = *p as u32;
+                let repeat_child = builder.mark_children();
+                let mut iter_count: u32 = 0;
+                loop {
+                    let save_p = *p;
+                    let iter_lo = *p as u32;
+                    let iter_child = builder.mark_children();
+                    let attempt =
+                        (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
+                            let seq_lo = *p as u32;
+                            let seq_child = builder.mark_children();
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [44u8] {
+                                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            let _ = builder.push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                7u8,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+                            let seq_hi = *p as u32;
+                            let _ = builder.push_compound(
+                                ::bbnf::runtime::tape::TapeKind::Seq,
+                                seq_child,
+                                seq_lo,
+                                seq_hi,
+                                0,
+                                0,
+                            );
+                            Ok(())
+                        })();
+                    if attempt.is_err() {
+                        *p = save_p;
+                        break;
+                    }
+                    if *p == save_p {
+                        break;
+                    }
+                    let iter_hi = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        iter_child,
+                        iter_lo,
+                        iter_hi,
+                        0,
+                        0,
+                    );
+                    iter_count = iter_count.saturating_add(1);
+                }
+                if iter_count < (0usize as u32) {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                let repeat_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    repeat_child,
+                    repeat_lo,
+                    repeat_hi,
+                    0,
+                    0,
+                );
+                let seq_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    seq_child,
+                    seq_lo,
+                    seq_hi,
+                    0,
+                    0,
+                );
+                Ok(())
+            })();
+            if attempt.is_err() {
+                *p = save_p;
+            } else {
+                let iter_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
+                    0,
+                );
+            }
+        }
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [41u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                7u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            outer_child,
+            span_lo,
+            span_hi,
+            7u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
+    /// (Alt of literal-led branches).
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_BbnfBootstrap_mul_op(
+        input: &[u8],
+        p: &mut usize,
+        first_byte: u8,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        match first_byte {
+            42u8 => {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [42u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    9u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            47u8 => {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [47u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    9u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            37u8 => {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [37u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    9u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            }),
+        }
+    }
+    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
+    /// (Alt of literal-led branches).
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_BbnfBootstrap_add_op(
+        input: &[u8],
+        p: &mut usize,
+        first_byte: u8,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        match first_byte {
+            43u8 => {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [43u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    10u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            45u8 => {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [45u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    10u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            }),
+        }
+    }
+    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
+    /// (Alt of literal-led branches).
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_BbnfBootstrap_cmp_op(
+        input: &[u8],
+        p: &mut usize,
+        first_byte: u8,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        match first_byte {
+            61u8 => {
+                let at = *p;
+                let end = at + 2usize;
+                if input.len() < end || input[at..end] != [61u8, 61u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    11u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            33u8 => {
+                let at = *p;
+                let end = at + 2usize;
+                if input.len() < end || input[at..end] != [33u8, 61u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    11u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            60u8 => {
+                let at = *p;
+                let end = at + 2usize;
+                if input.len() < end || input[at..end] != [60u8, 61u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    11u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            62u8 => {
+                let at = *p;
+                let end = at + 2usize;
+                if input.len() < end || input[at..end] != [62u8, 61u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    11u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            60u8 => {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [60u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    11u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            62u8 => {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [62u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    11u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            }),
+        }
+    }
+    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    ///
+    /// Runs the operand-led shunting-yard reducer bounded by the
+    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
+    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
+    /// outer compound + per-op reduced binary compounds via
+    /// `emit_reducer_compound`.
+    ///
+    /// # Emitted algorithm
+    ///
+    /// 1. Reserve an outer Rule compound via
+    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    record the parse-open position.
+    /// 2. Dispatch the leftmost operand through the grammar's
+    ///    value-position dispatcher; the operand's records land
+    ///    inside the outer compound's child run.
+    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
+    ///    zero, break; when nonzero:
+    ///    a. Reduce every top-of-op-stack entry whose precedence
+    ///       exceeds the new byte's (or ties + left-assoc); each
+    ///       reduce emits a `TapeKind::Rule` reducer compound via
+    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
+    ///       byte's u8 discriminant into `pay_agg`.
+    ///    c. Push the operator onto the local op stack with its
+    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
+    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
+    ///    e. Re-dispatch the RHS operand.
+    /// 4. On EOF-operator: drain the op stack — every remaining
+    ///    entry reduces into a terminal compound. The final
+    ///    `this_operand_root` is stamped onto the outer Rule
+    ///    compound's `child_off` (overriding the default
+    ///    `mark_children` index) so the cursor's pre-order walk
+    ///    surfaces the reduced tree root as the compound's first
+    ///    child.
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_assignments,
+        unused_mut,
+        unused_variables
+    )]
+    pub fn parse_pratt_BbnfBootstrap_value_mul(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        struct LocalOpEntry {
+            op_discriminant: u8,
+            precedence: u8,
+            associativity_is_left: bool,
+            lhs_idx: u32,
+            lhs_span_lo: u32,
+        }
+        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let outer_span_lo = *p as u32;
+        let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
+        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _ = _operand_off;
+        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
+        loop {
+            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
+            if lut_byte == 0 {
+                break;
+            }
+            let precedence: u8 = lut_byte & 0x0Fu8;
+            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
+            let associativity_is_left: bool = assoc_bit == 0;
+            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+            let (op_width, op_discriminant) = if two_byte == 0 {
+                let mut found_disc: u8 = 0u8;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte.is_none() {
+                        found_disc = e.op_discriminant;
+                        break;
+                    }
+                }
+                (1u32, found_disc)
+            } else {
+                let mut found_disc: u8 = 0u8;
+                let mut matched_two_byte: bool = false;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte == second_byte {
+                        found_disc = e.op_discriminant;
+                        matched_two_byte = e.second_byte.is_some();
+                        break;
+                    }
+                }
+                let width = if matched_two_byte { 2u32 } else { 1u32 };
+                (width, found_disc)
+            };
+            let op_lo: u32 = *p as u32;
+            *p = (*p).saturating_add(op_width as usize);
+            let op_hi: u32 = *p as u32;
+            let arena_off: u32 = builder.arena_mut().len() as u32;
+            builder.arena_mut().push(op_discriminant);
+            let _op_rec = builder.push_leaf_with_arena_frame(
+                ::bbnf::runtime::tape::TapeKind::Span,
+                op_lo,
+                op_hi,
+                0,
+                0,
+                arena_off,
+            );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
+            op_stack.push(LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            });
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            this_operand_root = _op_rec.0 + 1;
+        }
+        let outer_span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+            outer_span_lo,
+            outer_span_hi,
+            13u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    ///
+    /// Runs the operand-led shunting-yard reducer bounded by the
+    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
+    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
+    /// outer compound + per-op reduced binary compounds via
+    /// `emit_reducer_compound`.
+    ///
+    /// # Emitted algorithm
+    ///
+    /// 1. Reserve an outer Rule compound via
+    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    record the parse-open position.
+    /// 2. Dispatch the leftmost operand through the grammar's
+    ///    value-position dispatcher; the operand's records land
+    ///    inside the outer compound's child run.
+    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
+    ///    zero, break; when nonzero:
+    ///    a. Reduce every top-of-op-stack entry whose precedence
+    ///       exceeds the new byte's (or ties + left-assoc); each
+    ///       reduce emits a `TapeKind::Rule` reducer compound via
+    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
+    ///       byte's u8 discriminant into `pay_agg`.
+    ///    c. Push the operator onto the local op stack with its
+    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
+    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
+    ///    e. Re-dispatch the RHS operand.
+    /// 4. On EOF-operator: drain the op stack — every remaining
+    ///    entry reduces into a terminal compound. The final
+    ///    `this_operand_root` is stamped onto the outer Rule
+    ///    compound's `child_off` (overriding the default
+    ///    `mark_children` index) so the cursor's pre-order walk
+    ///    surfaces the reduced tree root as the compound's first
+    ///    child.
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_assignments,
+        unused_mut,
+        unused_variables
+    )]
+    pub fn parse_pratt_BbnfBootstrap_value_add(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        struct LocalOpEntry {
+            op_discriminant: u8,
+            precedence: u8,
+            associativity_is_left: bool,
+            lhs_idx: u32,
+            lhs_span_lo: u32,
+        }
+        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let outer_span_lo = *p as u32;
+        let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
+        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _ = _operand_off;
+        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
+        loop {
+            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
+            if lut_byte == 0 {
+                break;
+            }
+            let precedence: u8 = lut_byte & 0x0Fu8;
+            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
+            let associativity_is_left: bool = assoc_bit == 0;
+            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+            let (op_width, op_discriminant) = if two_byte == 0 {
+                let mut found_disc: u8 = 0u8;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte.is_none() {
+                        found_disc = e.op_discriminant;
+                        break;
+                    }
+                }
+                (1u32, found_disc)
+            } else {
+                let mut found_disc: u8 = 0u8;
+                let mut matched_two_byte: bool = false;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte == second_byte {
+                        found_disc = e.op_discriminant;
+                        matched_two_byte = e.second_byte.is_some();
+                        break;
+                    }
+                }
+                let width = if matched_two_byte { 2u32 } else { 1u32 };
+                (width, found_disc)
+            };
+            let op_lo: u32 = *p as u32;
+            *p = (*p).saturating_add(op_width as usize);
+            let op_hi: u32 = *p as u32;
+            let arena_off: u32 = builder.arena_mut().len() as u32;
+            builder.arena_mut().push(op_discriminant);
+            let _op_rec = builder.push_leaf_with_arena_frame(
+                ::bbnf::runtime::tape::TapeKind::Span,
+                op_lo,
+                op_hi,
+                0,
+                0,
+                arena_off,
+            );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
+            op_stack.push(LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            });
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            this_operand_root = _op_rec.0 + 1;
+        }
+        let outer_span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+            outer_span_lo,
+            outer_span_hi,
+            14u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    ///
+    /// Runs the operand-led shunting-yard reducer bounded by the
+    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
+    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
+    /// outer compound + per-op reduced binary compounds via
+    /// `emit_reducer_compound`.
+    ///
+    /// # Emitted algorithm
+    ///
+    /// 1. Reserve an outer Rule compound via
+    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    record the parse-open position.
+    /// 2. Dispatch the leftmost operand through the grammar's
+    ///    value-position dispatcher; the operand's records land
+    ///    inside the outer compound's child run.
+    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
+    ///    zero, break; when nonzero:
+    ///    a. Reduce every top-of-op-stack entry whose precedence
+    ///       exceeds the new byte's (or ties + left-assoc); each
+    ///       reduce emits a `TapeKind::Rule` reducer compound via
+    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
+    ///       byte's u8 discriminant into `pay_agg`.
+    ///    c. Push the operator onto the local op stack with its
+    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
+    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
+    ///    e. Re-dispatch the RHS operand.
+    /// 4. On EOF-operator: drain the op stack — every remaining
+    ///    entry reduces into a terminal compound. The final
+    ///    `this_operand_root` is stamped onto the outer Rule
+    ///    compound's `child_off` (overriding the default
+    ///    `mark_children` index) so the cursor's pre-order walk
+    ///    surfaces the reduced tree root as the compound's first
+    ///    child.
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_assignments,
+        unused_mut,
+        unused_variables
+    )]
+    pub fn parse_pratt_BbnfBootstrap_value_cmp(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        struct LocalOpEntry {
+            op_discriminant: u8,
+            precedence: u8,
+            associativity_is_left: bool,
+            lhs_idx: u32,
+            lhs_span_lo: u32,
+        }
+        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let outer_span_lo = *p as u32;
+        let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
+        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _ = _operand_off;
+        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
+        loop {
+            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
+            if lut_byte == 0 {
+                break;
+            }
+            let precedence: u8 = lut_byte & 0x0Fu8;
+            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
+            let associativity_is_left: bool = assoc_bit == 0;
+            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+            let (op_width, op_discriminant) = if two_byte == 0 {
+                let mut found_disc: u8 = 0u8;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte.is_none() {
+                        found_disc = e.op_discriminant;
+                        break;
+                    }
+                }
+                (1u32, found_disc)
+            } else {
+                let mut found_disc: u8 = 0u8;
+                let mut matched_two_byte: bool = false;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte == second_byte {
+                        found_disc = e.op_discriminant;
+                        matched_two_byte = e.second_byte.is_some();
+                        break;
+                    }
+                }
+                let width = if matched_two_byte { 2u32 } else { 1u32 };
+                (width, found_disc)
+            };
+            let op_lo: u32 = *p as u32;
+            *p = (*p).saturating_add(op_width as usize);
+            let op_hi: u32 = *p as u32;
+            let arena_off: u32 = builder.arena_mut().len() as u32;
+            builder.arena_mut().push(op_discriminant);
+            let _op_rec = builder.push_leaf_with_arena_frame(
+                ::bbnf::runtime::tape::TapeKind::Span,
+                op_lo,
+                op_hi,
+                0,
+                0,
+                arena_off,
+            );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
+            op_stack.push(LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            });
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            this_operand_root = _op_rec.0 + 1;
+        }
+        let outer_span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+            outer_span_lo,
+            outer_span_hi,
+            15u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    ///
+    /// Runs the operand-led shunting-yard reducer bounded by the
+    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
+    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
+    /// outer compound + per-op reduced binary compounds via
+    /// `emit_reducer_compound`.
+    ///
+    /// # Emitted algorithm
+    ///
+    /// 1. Reserve an outer Rule compound via
+    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    record the parse-open position.
+    /// 2. Dispatch the leftmost operand through the grammar's
+    ///    value-position dispatcher; the operand's records land
+    ///    inside the outer compound's child run.
+    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
+    ///    zero, break; when nonzero:
+    ///    a. Reduce every top-of-op-stack entry whose precedence
+    ///       exceeds the new byte's (or ties + left-assoc); each
+    ///       reduce emits a `TapeKind::Rule` reducer compound via
+    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
+    ///       byte's u8 discriminant into `pay_agg`.
+    ///    c. Push the operator onto the local op stack with its
+    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
+    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
+    ///    e. Re-dispatch the RHS operand.
+    /// 4. On EOF-operator: drain the op stack — every remaining
+    ///    entry reduces into a terminal compound. The final
+    ///    `this_operand_root` is stamped onto the outer Rule
+    ///    compound's `child_off` (overriding the default
+    ///    `mark_children` index) so the cursor's pre-order walk
+    ///    surfaces the reduced tree root as the compound's first
+    ///    child.
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_assignments,
+        unused_mut,
+        unused_variables
+    )]
+    pub fn parse_pratt_BbnfBootstrap_value_and(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        struct LocalOpEntry {
+            op_discriminant: u8,
+            precedence: u8,
+            associativity_is_left: bool,
+            lhs_idx: u32,
+            lhs_span_lo: u32,
+        }
+        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let outer_span_lo = *p as u32;
+        let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
+        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _ = _operand_off;
+        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
+        loop {
+            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
+            if lut_byte == 0 {
+                break;
+            }
+            let precedence: u8 = lut_byte & 0x0Fu8;
+            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
+            let associativity_is_left: bool = assoc_bit == 0;
+            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+            let (op_width, op_discriminant) = if two_byte == 0 {
+                let mut found_disc: u8 = 0u8;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte.is_none() {
+                        found_disc = e.op_discriminant;
+                        break;
+                    }
+                }
+                (1u32, found_disc)
+            } else {
+                let mut found_disc: u8 = 0u8;
+                let mut matched_two_byte: bool = false;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte == second_byte {
+                        found_disc = e.op_discriminant;
+                        matched_two_byte = e.second_byte.is_some();
+                        break;
+                    }
+                }
+                let width = if matched_two_byte { 2u32 } else { 1u32 };
+                (width, found_disc)
+            };
+            let op_lo: u32 = *p as u32;
+            *p = (*p).saturating_add(op_width as usize);
+            let op_hi: u32 = *p as u32;
+            let arena_off: u32 = builder.arena_mut().len() as u32;
+            builder.arena_mut().push(op_discriminant);
+            let _op_rec = builder.push_leaf_with_arena_frame(
+                ::bbnf::runtime::tape::TapeKind::Span,
+                op_lo,
+                op_hi,
+                0,
+                0,
+                arena_off,
+            );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
+            op_stack.push(LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            });
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            this_operand_root = _op_rec.0 + 1;
+        }
+        let outer_span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+            outer_span_lo,
+            outer_span_hi,
+            16u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    ///
+    /// Runs the operand-led shunting-yard reducer bounded by the
+    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
+    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
+    /// outer compound + per-op reduced binary compounds via
+    /// `emit_reducer_compound`.
+    ///
+    /// # Emitted algorithm
+    ///
+    /// 1. Reserve an outer Rule compound via
+    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    record the parse-open position.
+    /// 2. Dispatch the leftmost operand through the grammar's
+    ///    value-position dispatcher; the operand's records land
+    ///    inside the outer compound's child run.
+    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
+    ///    zero, break; when nonzero:
+    ///    a. Reduce every top-of-op-stack entry whose precedence
+    ///       exceeds the new byte's (or ties + left-assoc); each
+    ///       reduce emits a `TapeKind::Rule` reducer compound via
+    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
+    ///       byte's u8 discriminant into `pay_agg`.
+    ///    c. Push the operator onto the local op stack with its
+    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
+    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
+    ///    e. Re-dispatch the RHS operand.
+    /// 4. On EOF-operator: drain the op stack — every remaining
+    ///    entry reduces into a terminal compound. The final
+    ///    `this_operand_root` is stamped onto the outer Rule
+    ///    compound's `child_off` (overriding the default
+    ///    `mark_children` index) so the cursor's pre-order walk
+    ///    surfaces the reduced tree root as the compound's first
+    ///    child.
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_assignments,
+        unused_mut,
+        unused_variables
+    )]
+    pub fn parse_pratt_BbnfBootstrap_value_or(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        struct LocalOpEntry {
+            op_discriminant: u8,
+            precedence: u8,
+            associativity_is_left: bool,
+            lhs_idx: u32,
+            lhs_span_lo: u32,
+        }
+        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let outer_span_lo = *p as u32;
+        let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
+        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _ = _operand_off;
+        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
+        loop {
+            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
+            if lut_byte == 0 {
+                break;
+            }
+            let precedence: u8 = lut_byte & 0x0Fu8;
+            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
+            let associativity_is_left: bool = assoc_bit == 0;
+            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+            let (op_width, op_discriminant) = if two_byte == 0 {
+                let mut found_disc: u8 = 0u8;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte.is_none() {
+                        found_disc = e.op_discriminant;
+                        break;
+                    }
+                }
+                (1u32, found_disc)
+            } else {
+                let mut found_disc: u8 = 0u8;
+                let mut matched_two_byte: bool = false;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte == second_byte {
+                        found_disc = e.op_discriminant;
+                        matched_two_byte = e.second_byte.is_some();
+                        break;
+                    }
+                }
+                let width = if matched_two_byte { 2u32 } else { 1u32 };
+                (width, found_disc)
+            };
+            let op_lo: u32 = *p as u32;
+            *p = (*p).saturating_add(op_width as usize);
+            let op_hi: u32 = *p as u32;
+            let arena_off: u32 = builder.arena_mut().len() as u32;
+            builder.arena_mut().push(op_discriminant);
+            let _op_rec = builder.push_leaf_with_arena_frame(
+                ::bbnf::runtime::tape::TapeKind::Span,
+                op_lo,
+                op_hi,
+                0,
+                0,
+                arena_off,
+            );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
+            op_stack.push(LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            });
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            this_operand_root = _op_rec.0 + 1;
+        }
+        let outer_span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+            outer_span_lo,
+            outer_span_hi,
+            17u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_value_closure(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [124u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                18u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+        }
+        {
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let mut iter_count: u32 = 0;
+            loop {
+                let save_p = *p;
+                let iter_lo = *p as u32;
+                let iter_child = builder.mark_children();
+                let attempt =
+                    (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
+                        let seq_lo = *p as u32;
+                        let seq_child = builder.mark_children();
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [44u8] {
+                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: at as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        }
+                        *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            18u8,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+                        let seq_hi = *p as u32;
+                        let _ = builder.push_compound(
+                            ::bbnf::runtime::tape::TapeKind::Seq,
+                            seq_child,
+                            seq_lo,
+                            seq_hi,
+                            0,
+                            0,
+                        );
+                        Ok(())
+                    })();
+                if attempt.is_err() {
+                    *p = save_p;
+                    break;
+                }
+                if *p == save_p {
+                    break;
+                }
+                let iter_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
+                    0,
+                );
+                iter_count = iter_count.saturating_add(1);
+            }
+            if iter_count < (0usize as u32) {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [124u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                18u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+        }
+        {
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            18u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
+    ///
+    /// Transparent dispatcher — skip leading ws, byte-dispatch
+    /// to the chosen branch's shape fn, return that shape fn's
+    /// offset unchanged. No outer compound emission; the
+    /// branch's own shape fn owns the tape record.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_wrap_BbnfBootstrap_value_expr(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+        match first {
+            124u8 => parse_flat_BbnfBootstrap_value_closure(input, p, state, builder),
+            _ => parse_BbnfBootstrap_grammar__value(input, p, state, builder),
+        }
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_type_annotation(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [58u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                20u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            20u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar HRegex-shape parse function.
+    ///
+    /// Regex scan via the per-grammar adapter; emits a
+    /// `TapeKind::Regex` leaf carrying the matched span. Decoder
+    /// hooks (host_fn payloads) are wired at the dispatcher level
+    /// post-scan; the raw Span-leaf path is the default.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_hregex_BbnfBootstrap_identifier(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let Some(match_len) = __regex_scan_BbnfBootstrap("[_a-zA-Z][_a-zA-Z0-9-]*", input, *p)
+        else {
+            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: span_lo,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        };
+        *p += match_len as usize;
+        let span_hi = *p as u32;
+        let leaf_off = builder.push_leaf_with(
+            ::bbnf::runtime::tape::TapeKind::Regex,
+            span_lo,
+            span_hi,
+            22u8,
+            0,
+            ::bbnf::runtime::tape::PayloadData::None,
+        );
+        Ok(leaf_off)
+    }
+    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
+    /// (Alt of literal-led branches).
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_BbnfBootstrap_literal(
+        input: &[u8],
+        p: &mut usize,
+        first_byte: u8,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        match first_byte {
+            _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            }),
+        }
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_regex(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [47u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                24u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+        }
+        {
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        }
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [47u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                24u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            24u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_big_comment(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 2usize;
+            if input.len() < end || input[at..end] != [47u8, 42u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                25u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 2usize;
+            if input.len() < end || input[at..end] != [42u8, 47u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                25u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            25u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_comment(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 2usize;
+            if input.len() < end || input[at..end] != [47u8, 47u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                26u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            26u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
+    /// (Alt of literal-led branches).
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_BbnfBootstrap_modifier(
+        input: &[u8],
+        p: &mut usize,
+        first_byte: u8,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        match first_byte {
+            63u8 => {
+                let at = *p;
+                let end = at + 2usize;
+                if input.len() < end || input[at..end] != [63u8, 119u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    30u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            63u8 => {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [63u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    30u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            42u8 => {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [42u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    30u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            43u8 => {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [43u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    30u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            }),
+        }
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_factor(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            31u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_mapped_factor(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let seq_lo = *p as u32;
+            let seq_child = builder.mark_children();
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 2usize;
+            if input.len() < end || input[at..end] != [45u8, 62u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                32u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let seq_lo = *p as u32;
+            let seq_child = builder.mark_children();
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+            let seq_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                seq_child,
+                seq_lo,
+                seq_hi,
+                0,
+                0,
+            );
+            let seq_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                seq_child,
+                seq_lo,
+                seq_hi,
+                0,
+                0,
+            );
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            32u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
+    /// (Alt of literal-led branches).
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_BbnfBootstrap_binary_operators(
+        input: &[u8],
+        p: &mut usize,
+        first_byte: u8,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        match first_byte {
+            60u8 => {
+                let at = *p;
+                let end = at + 2usize;
+                if input.len() < end || input[at..end] != [60u8, 60u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    33u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            62u8 => {
+                let at = *p;
+                let end = at + 2usize;
+                if input.len() < end || input[at..end] != [62u8, 62u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    33u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            45u8 => {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [45u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let off = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    33u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+                Ok(off)
+            }
+            _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            }),
+        }
+    }
+    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    ///
+    /// Runs the operand-led shunting-yard reducer bounded by the
+    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
+    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
+    /// outer compound + per-op reduced binary compounds via
+    /// `emit_reducer_compound`.
+    ///
+    /// # Emitted algorithm
+    ///
+    /// 1. Reserve an outer Rule compound via
+    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    record the parse-open position.
+    /// 2. Dispatch the leftmost operand through the grammar's
+    ///    value-position dispatcher; the operand's records land
+    ///    inside the outer compound's child run.
+    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
+    ///    zero, break; when nonzero:
+    ///    a. Reduce every top-of-op-stack entry whose precedence
+    ///       exceeds the new byte's (or ties + left-assoc); each
+    ///       reduce emits a `TapeKind::Rule` reducer compound via
+    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
+    ///       byte's u8 discriminant into `pay_agg`.
+    ///    c. Push the operator onto the local op stack with its
+    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
+    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
+    ///    e. Re-dispatch the RHS operand.
+    /// 4. On EOF-operator: drain the op stack — every remaining
+    ///    entry reduces into a terminal compound. The final
+    ///    `this_operand_root` is stamped onto the outer Rule
+    ///    compound's `child_off` (overriding the default
+    ///    `mark_children` index) so the cursor's pre-order walk
+    ///    surfaces the reduced tree root as the compound's first
+    ///    child.
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_assignments,
+        unused_mut,
+        unused_variables
+    )]
+    pub fn parse_pratt_BbnfBootstrap_binary_factor(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        struct LocalOpEntry {
+            op_discriminant: u8,
+            precedence: u8,
+            associativity_is_left: bool,
+            lhs_idx: u32,
+            lhs_span_lo: u32,
+        }
+        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let outer_span_lo = *p as u32;
+        let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
+        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _ = _operand_off;
+        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
+        loop {
+            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
+            if lut_byte == 0 {
+                break;
+            }
+            let precedence: u8 = lut_byte & 0x0Fu8;
+            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
+            let associativity_is_left: bool = assoc_bit == 0;
+            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+            let (op_width, op_discriminant) = if two_byte == 0 {
+                let mut found_disc: u8 = 0u8;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte.is_none() {
+                        found_disc = e.op_discriminant;
+                        break;
+                    }
+                }
+                (1u32, found_disc)
+            } else {
+                let mut found_disc: u8 = 0u8;
+                let mut matched_two_byte: bool = false;
+                for e in PRECEDENCE_ENTRIES.iter() {
+                    if e.byte == op_byte && e.second_byte == second_byte {
+                        found_disc = e.op_discriminant;
+                        matched_two_byte = e.second_byte.is_some();
+                        break;
+                    }
+                }
+                let width = if matched_two_byte { 2u32 } else { 1u32 };
+                (width, found_disc)
+            };
+            let op_lo: u32 = *p as u32;
+            *p = (*p).saturating_add(op_width as usize);
+            let op_hi: u32 = *p as u32;
+            let arena_off: u32 = builder.arena_mut().len() as u32;
+            builder.arena_mut().push(op_discriminant);
+            let _op_rec = builder.push_leaf_with_arena_frame(
+                ::bbnf::runtime::tape::TapeKind::Span,
+                op_lo,
+                op_hi,
+                0,
+                0,
+                arena_off,
+            );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
+            op_stack.push(LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            });
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            this_operand_root = _op_rec.0 + 1;
+        }
+        let outer_span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+            outer_span_lo,
+            outer_span_hi,
+            34u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_closure(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [124u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                37u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+        }
+        {
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let mut iter_count: u32 = 0;
+            loop {
+                let save_p = *p;
+                let iter_lo = *p as u32;
+                let iter_child = builder.mark_children();
+                let attempt =
+                    (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
+                        let seq_lo = *p as u32;
+                        let seq_child = builder.mark_children();
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [44u8] {
+                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: at as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        }
+                        *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            37u8,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+                        let seq_hi = *p as u32;
+                        let _ = builder.push_compound(
+                            ::bbnf::runtime::tape::TapeKind::Seq,
+                            seq_child,
+                            seq_lo,
+                            seq_hi,
+                            0,
+                            0,
+                        );
+                        Ok(())
+                    })();
+                if attempt.is_err() {
+                    *p = save_p;
+                    break;
+                }
+                if *p == save_p {
+                    break;
+                }
+                let iter_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
+                    0,
+                );
+                iter_count = iter_count.saturating_add(1);
+            }
+            if iter_count < (0usize as u32) {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [124u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                37u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            37u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
+    ///
+    /// Transparent dispatcher — skip leading ws, byte-dispatch
+    /// to the chosen branch's shape fn, return that shape fn's
+    /// offset unchanged. No outer compound emission; the
+    /// branch's own shape fn owns the tape record.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_wrap_BbnfBootstrap_rhs(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+        match first {
+            124u8 => parse_flat_BbnfBootstrap_closure(input, p, state, builder),
+            _ => parse_BbnfBootstrap_grammar__value(input, p, state, builder),
+        }
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_rule(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [61u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                39u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            39u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_import_directive(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 7usize;
+            if input.len() < end
+                || input[at..end] != [64u8, 105u8, 109u8, 112u8, 111u8, 114u8, 116u8]
+            {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                42u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            42u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_recover_directive(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 8usize;
+            if input.len() < end
+                || input[at..end] != [64u8, 114u8, 101u8, 99u8, 111u8, 118u8, 101u8, 114u8]
+            {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                43u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            43u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_pretty_hint(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let seq_lo = *p as u32;
+            let seq_child = builder.mark_children();
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [40u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                44u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [41u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                44u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let seq_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                seq_child,
+                seq_lo,
+                seq_hi,
+                0,
+                0,
+            );
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            44u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_pretty_directive(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 7usize;
+            if input.len() < end
+                || input[at..end] != [64u8, 112u8, 114u8, 101u8, 116u8, 116u8, 121u8]
+            {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                45u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let mut iter_count: u32 = 0;
+            loop {
+                let save_p = *p;
+                let iter_lo = *p as u32;
+                let iter_child = builder.mark_children();
+                let attempt =
+                    (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        Ok(())
+                    })();
+                if attempt.is_err() {
+                    *p = save_p;
+                    break;
+                }
+                if *p == save_p {
+                    break;
+                }
+                let iter_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
+                    0,
+                );
+                iter_count = iter_count.saturating_add(1);
+            }
+            if iter_count < (1usize as u32) {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            45u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_ws_directive(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 3usize;
+            if input.len() < end || input[at..end] != [64u8, 119u8, 115u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                46u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            46u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_token_directive(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 6usize;
+            if input.len() < end || input[at..end] != [64u8, 116u8, 111u8, 107u8, 101u8, 110u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                47u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            47u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_debug_directive(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 6usize;
+            if input.len() < end || input[at..end] != [64u8, 100u8, 101u8, 98u8, 117u8, 103u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                48u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            48u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    #[inline(always)]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut
+    )]
+    pub fn parse_flat_BbnfBootstrap_host_directive(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 5usize;
+            if input.len() < end || input[at..end] != [64u8, 104u8, 111u8, 115u8, 116u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                49u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let seq_lo = *p as u32;
+            let seq_child = builder.mark_children();
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [58u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                49u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let seq_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                seq_child,
+                seq_lo,
+                seq_hi,
+                0,
+                0,
+            );
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.mark_children();
+            let iter_lo = *p as u32;
+            let iter_child = builder.mark_children();
+            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let iter_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_lo,
+                iter_hi,
+                0,
+                0,
+            );
+            let repeat_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_lo,
+                repeat_hi,
+                0,
+                0,
+            );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            span_hi,
+            49u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
+    /// (Alt of literal-led branches).
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_BbnfBootstrap_directive(
+        input: &[u8],
+        p: &mut usize,
+        first_byte: u8,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        match first_byte {
+            _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            }),
+        }
+    }
+    /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
+    ///
+    /// Transparent dispatcher — skip leading ws, byte-dispatch
+    /// to the chosen branch's shape fn, return that shape fn's
+    /// offset unchanged. No outer compound emission; the
+    /// branch's own shape fn owns the tape record.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_wrap_BbnfBootstrap_grammar_item(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+        match first {
+            47u8 => parse_flat_BbnfBootstrap_comment(input, p, state, builder),
+            47u8 => parse_flat_BbnfBootstrap_big_comment(input, p, state, builder),
+            _ => parse_BbnfBootstrap_grammar__value(input, p, state, builder),
+        }
+    }
+    /// AW-V.W3.2 — per-grammar Array-shape parse function,
+    /// **walker-tape-identical**.
+    ///
+    /// Emits the same nested Seq/Seq/Repeat/Seq compound tree the
+    /// walker produces for the canonical JSON array rule. The
+    /// record tree is navigated by every downstream view derive
+    /// and the `tape_parity` golden fixtures; only dispatch is
+    /// inlined relative to the walker, not the record stream.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_array_BbnfBootstrap_grammar(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        if input.get(*p).copied() != Some(b'[') {
+            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        }
+        let outer_child = builder.mark_children();
+        let lbracket_open = *p as u32;
+        let next_child = builder.mark_children();
+        *p += 1;
+        let bracket_close = *p as u32;
+        let _ = builder.push_leaf_with(
+            ::bbnf::runtime::tape::TapeKind::Literal,
+            lbracket_open,
+            bracket_close,
+            52u8,
+            0,
+            ::bbnf::runtime::tape::PayloadData::None,
+        );
+        let opt_ws_open = *p as u32;
+        let opt_ws_child = builder.mark_children();
+        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let repeat_open = *p as u32;
+        let repeat_child = builder.mark_children();
+        let maybe_close = input.get(*p).copied();
+        if maybe_close == Some(b']') {
+            let repeat_close = *p as u32;
+            let _repeat_off = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_child,
+                repeat_open,
+                repeat_close,
+                0,
+                0,
+            );
+            let opt_ws_close = *p as u32;
+            let _opt_ws_off = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                opt_ws_child,
+                opt_ws_open,
+                opt_ws_close,
+                0,
+                0,
+            );
+            let next_close = *p as u32;
+            let _next_off = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                next_child,
+                lbracket_open,
+                next_close,
+                0,
+                0,
+            );
+            *p += 1;
+            let rbracket_lo = next_close;
+            let rbracket_hi = *p as u32;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                rbracket_lo,
+                rbracket_hi,
+                52u8,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+            let outer_close = *p as u32;
+            let outer_off = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                outer_child,
+                span_lo,
+                outer_close,
+                52u8,
+                0,
+            );
+            return Ok(outer_off);
+        }
+        loop {
+            let iter_open = *p as u32;
+            let iter_child = builder.mark_children();
+            let _value_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let comma_repeat_open = *p as u32;
+            let comma_repeat_child = builder.mark_children();
+            let comma_iter_save_p = *p;
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            let has_comma = input.get(*p).copied() == Some(b',');
+            if has_comma {
+                let comma_iter_open = comma_iter_save_p as u32;
+                let comma_iter_child = builder.mark_children();
+                let comma_lo = *p as u32;
+                *p += 1;
+                let comma_hi = *p as u32;
+                let _ = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    comma_lo,
+                    comma_hi,
+                    52u8,
+                    0,
+                    ::bbnf::runtime::tape::PayloadData::None,
+                );
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                let comma_iter_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    comma_iter_child,
+                    comma_iter_open,
+                    comma_iter_close,
+                    0,
+                    0,
+                );
+            } else {
+                *p = comma_iter_save_p;
+            }
+            let comma_repeat_close = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                comma_repeat_child,
+                comma_repeat_open,
+                comma_repeat_close,
+                0,
+                0,
+            );
+            let iter_close = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_open,
+                iter_close,
+                0,
+                0,
+            );
+            let is_value_start = match input.get(*p).copied() {
+                Some(b'{') | Some(b'[') | Some(b'"') | Some(b'-') | Some(b'0'..=b'9')
+                | Some(b't') | Some(b'f') | Some(b'n') => true,
+                _ => false,
+            };
+            if !is_value_start {
+                let repeat_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    repeat_child,
+                    repeat_open,
+                    repeat_close,
+                    0,
+                    0,
+                );
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                let opt_ws_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    opt_ws_child,
+                    opt_ws_open,
+                    opt_ws_close,
+                    0,
+                    0,
+                );
+                if input.get(*p).copied() != Some(b']') {
+                    return Err(match input.get(*p).copied() {
+                        None => {
+                            ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 }
+                        }
+                        _ => ::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        },
+                    });
+                }
+                let next_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    next_child,
+                    lbracket_open,
+                    next_close,
+                    0,
+                    0,
+                );
+                *p += 1;
+                let rbracket_hi = *p as u32;
+                let _ = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    next_close,
+                    rbracket_hi,
+                    52u8,
+                    0,
+                    ::bbnf::runtime::tape::PayloadData::None,
+                );
+                let outer_close = *p as u32;
+                let outer_off = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    outer_child,
+                    span_lo,
+                    outer_close,
+                    52u8,
+                    0,
+                );
+                return Ok(outer_off);
+            }
+        }
+    }
+    /// AW-V.W3.2 — top-level shape dispatcher.
+    ///
+    /// Mirrors the walker's `value` rule ByteDispatch: skip leading
+    /// whitespace, dispatch on the first byte to the chosen branch
+    /// shape fn, return its `TapeOffset` unchanged. No outer Rule /
+    /// Alt compound is pushed — the DTA's ByteDispatch state for
+    /// `value` emits no compound either, and the target rule's Ref
+    /// overwrites any `pending_variant_idx` en route, so the chosen
+    /// rule's own compound carries the final root variant.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_BbnfBootstrap_grammar(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        parse_BbnfBootstrap_grammar__value(input, p, state, builder)
+    }
+    /// AW-V.W3.2 — value-position shape dispatcher. Called both at
+    /// the grammar root and from Object / Array compound bodies.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_BbnfBootstrap_grammar__value(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        parse_array_BbnfBootstrap_grammar(input, p, state, builder)
     }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]

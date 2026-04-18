@@ -171,8 +171,20 @@ fn try_emit_lazy_literal_scan(subs: &[Hir]) -> Option<(TokenStream, usize)> {
         quote! {
             {
                 let __search_start = state.offset + #min;
-                let __rem = state.src_bytes.get(__search_start..)?;
+                // AW-IV.W4.2.a — memchr over the padded slice. The
+                // SIMD kernel inside `memchr::memchr` can safely read
+                // a full AVX2/SSE2 stripe past the logical input end
+                // into the zero pad; grammar literal needles are never
+                // `0x00`, so the NUL padding never produces a false
+                // match. The position is still clamped to
+                // `__view.len()` below — any hit in the pad would be
+                // `>= __view.len()`, triggering the miss branch.
+                let __view = state.padded();
+                let __rem = __view.bytes().get(__search_start..)?;
                 let __pos = memchr::memchr(#b, __rem)?;
+                if __search_start + __pos >= __view.len() {
+                    return None;
+                }
                 state.offset = __search_start + __pos + 1;
             }
         }
@@ -182,8 +194,16 @@ fn try_emit_lazy_literal_scan(subs: &[Hir]) -> Option<(TokenStream, usize)> {
         quote! {
             {
                 let __search_start = state.offset + #min;
-                let __rem = state.src_bytes.get(__search_start..)?;
+                // AW-IV.W4.2.a — padded-slice memmem. Same
+                // NUL-padding rationale as the single-byte path above;
+                // a match position that extends into the pad fails
+                // the `__pos + #needle_len > __view.len()` clamp.
+                let __view = state.padded();
+                let __rem = __view.bytes().get(__search_start..)?;
                 let __pos = memchr::memmem::find(__rem, #needle)?;
+                if __search_start + __pos + #needle_len > __view.len() {
+                    return None;
+                }
                 state.offset = __search_start + __pos + #needle_len;
             }
         }

@@ -355,13 +355,24 @@ fn emit_general_state_machine(
                     #sid_lit => {
                         // SIMD-accelerated self-loop scan.
                         if __pos < __end {
-                            let __accel_haystack = &state.src_bytes[__pos..];
+                            // AW-IV.W4.2.a — padded-slice accel scan.
+                            // memchr / nibble-LUT needles are
+                            // non-NUL grammar literals, so the zero
+                            // pad is structurally inert; the
+                            // `__skip_end >= __end` guard clamps any
+                            // pad-position hit back into the public
+                            // input range.
+                            let __view = state.padded();
+                            let __accel_haystack = &__view.bytes()[__pos..];
                             if let Some(__found) = #accel_code {
                                 let __skip_end = __pos + __found;
-                                __pos = __skip_end;
-                                __last_accept = Some(__pos);
-                                // Check the exit byte for non-self transitions.
-                                if __pos < __end {
+                                if __skip_end >= __end {
+                                    __pos = __end;
+                                    __last_accept = Some(__pos);
+                                } else {
+                                    __pos = __skip_end;
+                                    __last_accept = Some(__pos);
+                                    // Check the exit byte for non-self transitions.
                                     let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
                                     #(#other_arms)*
                                 }

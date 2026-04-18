@@ -238,11 +238,21 @@ pub(super) fn try_emit_accel_scan(accel: &StateAccel) -> Option<TokenStream> {
     let expr = try_emit_accel_expr(accel)?;
     Some(quote! {
         {
-            let __accel_haystack = &state.src_bytes[state.offset..];
+            // AW-IV.W4.2.a — accel scan over the padded slice. memchr
+            // / nibble-LUT needles are grammar literals (non-NUL), so
+            // the NUL pad cannot produce a false positive; a hit at a
+            // padded position is clamped by `__view.len()` below.
+            let __view = state.padded();
+            let __accel_haystack = &__view.bytes()[state.offset..];
             if let Some(__skip) = #expr {
-                state.offset += __skip;
+                let __hit = state.offset + __skip;
+                if __hit >= __view.len() {
+                    state.offset = __view.len();
+                } else {
+                    state.offset = __hit;
+                }
             } else {
-                state.offset = state.src_bytes.len();
+                state.offset = __view.len();
             }
         }
     })

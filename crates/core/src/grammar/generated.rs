@@ -77650,7 +77650,7 @@ mod __bbnfbootstrap_emit_impl {
                                                         0, 0,
                                                     ];
                                                     ::parse_that::find_next_structural_from(
-                                                        &state.src_bytes,
+                                                        state.padded(),
                                                         __start,
                                                         &__LO_LUT,
                                                         &__HI_LUT,
@@ -77764,7 +77764,7 @@ mod __bbnfbootstrap_emit_impl {
                                                         0, 0,
                                                     ];
                                                     ::parse_that::find_next_structural_from(
-                                                        &state.src_bytes,
+                                                        state.padded(),
                                                         __start,
                                                         &__LO_LUT,
                                                         &__HI_LUT,
@@ -80223,7 +80223,7 @@ mod __bbnfbootstrap_emit_impl {
                                                         0, 0,
                                                     ];
                                                     ::parse_that::find_next_structural_from(
-                                                        &state.src_bytes,
+                                                        state.padded(),
                                                         __start,
                                                         &__LO_LUT,
                                                         &__HI_LUT,
@@ -81270,7 +81270,7 @@ mod __bbnfbootstrap_emit_impl {
                                                                                                                                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0];
                                                                                                                                     static __HI_LUT: [u8; 16] =
                                                                                                                                         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-                                                                                                                                    ::parse_that::find_next_structural_from(&state.src_bytes,
+                                                                                                                                    ::parse_that::find_next_structural_from(state.padded(),
                                                                                                                                             __start, &__LO_LUT, &__HI_LUT).map(|(pos, _)| pos - __start)
                                                                                                                                 }).unwrap_or(state.src_bytes.len() - __start)
                                                                                                                     };

@@ -102,8 +102,13 @@ pub fn emit_structural_bitmap_kernel(targets: &[u8]) -> Option<TokenStream> {
         {
             static __LO_LUT: [u8; 16] = [#(#lo_bytes),*];
             static __HI_LUT: [u8; 16] = [#(#hi_bytes),*];
+            // AW-IV.W4.2.a — PaddedView pass-through. `state.padded()`
+            // carries the 64-byte trailing zero pad at the type level
+            // so the SIMD stripe loop drops the per-stripe tail guard
+            // and the scalar tail epilogue that the unpadded entry
+            // previously required.
             ::parse_that::find_next_structural_from(
-                &state.src_bytes,
+                state.padded(),
                 __start,
                 &__LO_LUT,
                 &__HI_LUT,

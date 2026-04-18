@@ -57,11 +57,13 @@ Four propositions:
 
 5. **Y4 — Replay tooling.** CLI: `inspect-log` (per-transition trace dump), `minimise` (O(log n × parse) shrink loop), `replay-test` (#[test] macro capturing log + asserting bit-identical re-walk).
 
-6. **Y5 — FINAL.** FINAL.md + `post-AY.json` (bench regression ≤ 5% vs AX close; tranche value is feature-correctness not throughput).
+6. **Y5 — Cranelift JIT per-schema** (moved from AX per scope re-sequencing). Opt-in per-grammar JIT + SHA cache. Separate from replay/recovery/incremental substrate but lives in AY as post-performance-terminus feature.
+
+7. **Y6 — FINAL.** FINAL.md + `post-AY.json` (bench regression ≤ 5% vs AX close default-features; tranche value is feature-correctness + JIT option, not throughput on default path).
 
 ## Wave schedule
 
-Six waves.
+Seven waves.
 
 | Wave | Scope | Agents | Opens after | Hard gate |
 |------|-------|--------|-------------|-----------|
@@ -70,7 +72,8 @@ Six waves.
 | **Y2** Incremental re-parse | Edit-localisation + subtree re-walk + Columns splice | 2 parallel (edit-local + splice, incremental harness) | Y1 | 100 KB CSS edit median ≤ 200 µs; 10 KB JSON edit ≤ 50 µs; 1 KB Sheets edit ≤ 10 µs; incremental-parity harness: per-grammar canonical edits (insert / delete / replace) produce bit-identical tapes vs cold re-parse on ≥ 50 test cases per grammar. |
 | **Y3** Recovery + `@recover` audit | Structural-default recovery in shape emitter + `@recover` semantics refinement + deprecation audit | 2 parallel (recovery impl, audit) | Y2 | Per-grammar recovery harness: malformed inputs (truncated CSS rules, missing JSON braces, BBNF syntax errors mid-grammar, Sheets formula errors mid-row) each assert a specific recovery point + downstream continuation. `recover-audit.md` ships per-site verdict for every `@recover` annotation in BBNF self-host; deprecation decision recorded. |
 | **Y4** Replay tooling | `inspect-log` CLI + `minimise` CLI + `replay-test` #[test] macro | 3 parallel (one per tool) | Y3 | `bbnf-cli inspect-log <grammar> <input>` emits a per-transition trace dump with (byte_offset, rule_id, shape_tag, branch_idx, frame_depth). `minimise` shrinks a 1 KB malformed input to ≤ 32 bytes in O(log n) parse calls. `replay-test` macro: log-record → replay → assert tape-identical across all corpus fixtures. |
-| **Y5** FINAL | `FINAL.md`, `post-AY.json`, aggregator | 1 serial | Y4 | Replay/recovery/incremental substrate complete; `cargo test --workspace` green; `cargo test --features replay` green; cold-parse bench regression ≤ 5% vs AX close under default features. |
+| **Y5** Cranelift JIT per-schema | Opt-in JIT (`jit` crate) + SHA cache on grammar AST hash + workload-profile-informed specialization | 2 parallel (JIT emitter, cache) | Y4 | Canada JIT 1.10-1.25× AOT; JIT compile ≤ 5 ms per grammar; cache cold-start < 1 µs; `ParseOptions::jit = true` default off; feature-off: no change from Y4 |
+| **Y6** FINAL | `FINAL.md`, `post-AY.json`, aggregator | 1 serial | Y5 | Replay/recovery/incremental + JIT feature complete; `cargo test --workspace` green; `cargo test --features replay` green; `cargo test --features jit` green; default-features cold-parse regression ≤ 5% vs AX close |
 
 ## Phases
 

@@ -427,18 +427,23 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
     // (e.g. a top-level Object), we emit a delegator to that shape fn.
     let root_tag = ir.shape_assignments.get(entry);
 
-    let dispatch_body = if (matches!(root_tag, ShapeTag::None | ShapeTag::Wrap))
+    let dispatch_body = if matches!(&entry_rule.body, bbnf_ir::IrNode::Alt(_, _))
         && has_shape_dispatch(ir)
     {
-        // Root is Alt-like — enumerate branches via the Alt body and
-        // emit per-branch arms that call the matched shape fn. Both
-        // an unclassified root (pre-W4) and a `Wrap` root (W4+) take
-        // this path — Wrap-shape IS the Alt-of-Ref dispatcher.
+        // Root body is an Alt — enumerate branches and emit per-branch
+        // byte-dispatch arms targeting each Ref's shape fn. Both an
+        // unclassified root (pre-W4) and a Wrap-classified root (W4+)
+        // take this path when the body is Alt-shaped.
         emit_alt_dispatch_body(grammar_suffix, entry_rule, ir)
-    } else if root_tag.is_w3_classified() {
-        // Root is itself a shape — direct delegator. Number- and
-        // Keyword-shape fns take `first_byte`; Object / Array /
-        // String / Scalar do not.
+    } else if root_tag.is_classified() {
+        // AW-V.W4-activation — root is itself a W3 or W4 shape. The
+        // dispatcher delegates directly to `parse_<shape>_<grammar>_<root>`.
+        // Shape-fn arg shapes:
+        //   - Number / Keyword take `first_byte` — the dispatcher peeks
+        //     first non-ws byte, passes it in.
+        //   - Object / Array / String / Scalar / Pratt / Unordered /
+        //     ArgList / Flat / Wrap / HRegex take `(input, p, state,
+        //     builder)` — the dispatcher skips leading ws and delegates.
         let shape_name = shape_tag_name(root_tag);
         let target_ident = shape_fn_ident(shape_name, grammar_suffix, &root_name);
         match root_tag {
@@ -452,6 +457,11 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
                 #target_ident(input, p, state, builder)
             },
         }
+    } else if matches!(root_tag, ShapeTag::None) && has_shape_dispatch(ir) {
+        // Root unclassified but grammar has classified rules — use the
+        // legacy Alt-dispatch body (pre-W4 pattern preserved for
+        // transitional grammars where the root is a transparent alias).
+        emit_alt_dispatch_body(grammar_suffix, entry_rule, ir)
     } else {
         // No shape coverage — shouldn't reach here (caller gates
         // dispatcher emission); emit a stub for safety.
@@ -526,7 +536,8 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
 
 /// Convert a [`ShapeTag`] into the shape-fn prefix used by the
 /// emitter (`object` / `array` / `string` / `number` / `keyword` /
-/// `scalar`).
+/// `scalar` for W3; `pratt` / `unordered` / `arglist` / `flat` /
+/// `wrap` / `hregex` for W4).
 pub(super) fn shape_tag_name(tag: ShapeTag) -> &'static str {
     match tag {
         ShapeTag::Object => "object",
@@ -535,7 +546,13 @@ pub(super) fn shape_tag_name(tag: ShapeTag) -> &'static str {
         ShapeTag::Number => "number",
         ShapeTag::Keyword => "keyword",
         ShapeTag::Scalar => "scalar",
-        _ => "unknown",
+        ShapeTag::Pratt => "pratt",
+        ShapeTag::Unordered => "unordered",
+        ShapeTag::ArgList => "arglist",
+        ShapeTag::Flat => "flat",
+        ShapeTag::Wrap => "wrap",
+        ShapeTag::HRegex => "hregex",
+        ShapeTag::None => "unknown",
     }
 }
 
@@ -709,11 +726,12 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
 
     let root_tag = ir.shape_assignments.get(entry);
 
-    let dispatch_body = if (matches!(root_tag, ShapeTag::None | ShapeTag::Wrap))
+    let dispatch_body = if matches!(&entry_rule.body, bbnf_ir::IrNode::Alt(_, _))
         && has_shape_dispatch(ir)
     {
         emit_visitor_alt_dispatch_body(grammar_suffix, entry_rule, ir)
-    } else if root_tag.is_w3_classified() {
+    } else if root_tag.is_classified() {
+        // AW-V.W4-activation — root is itself a W3 or W4 shape.
         let shape_name = shape_tag_name(root_tag);
         let target_ident = visitor_shape_fn_ident(shape_name, grammar_suffix, &root_name);
         match root_tag {
@@ -729,6 +747,8 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
                 #target_ident(input, p, state, visitor)
             },
         }
+    } else if matches!(root_tag, ShapeTag::None) && has_shape_dispatch(ir) {
+        emit_visitor_alt_dispatch_body(grammar_suffix, entry_rule, ir)
     } else {
         quote! {
             Err(::bbnf::runtime::ParseErr::Syntax {
@@ -746,6 +766,18 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
         /// `StringVisitor`, `NumberVisitor`, `KeywordVisitor`) so every
         /// per-shape method invocation resolves statically at the
         /// monomorphisation site. Bypasses the tape entirely.
+        ///
+        /// The dispatcher's bounds are narrow by design: emitted only
+        /// for grammars whose classified rules use W3-pure shapes
+        /// (Object / Array / String / Number / Keyword / Scalar).
+        /// Grammars carrying W4-classified rules (Pratt / Unordered /
+        /// ArgList / Flat / Wrap / HRegex) skip visitor dispatcher
+        /// emission entirely — the tape-path dispatcher still emits,
+        /// the per-shape fns still compile, but the generic `V`
+        /// visitor bound can't union W4 visitor sub-traits without
+        /// rippling into callers that don't have those bounds. Visitor
+        /// activation for W4-carrying grammars lands in a follow-on
+        /// wave alongside the per-Ref `__value` dispatcher refactor.
         #[inline(always)]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #dispatcher_ident<V>(
@@ -786,6 +818,20 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
         }
     }
 }
+
+/// Returns `true` when `ir` has any W4-classified rule. Used by
+/// [`emit_shapes_for_grammar`] + `grammar::emit_grammar_impl` to gate
+/// visitor-path emission: the W4 visitor traits (e.g. `PrattVisitor`)
+/// don't compose cleanly with the dispatcher's narrow W3 bounds, so
+/// grammars carrying W4 rules emit the tape path only. The visitor
+/// path for such grammars waits on the per-Ref `__value` dispatcher
+/// refactor (a follow-on wave).
+pub fn has_w4_classified(ir: &GrammarIR) -> bool {
+    ir.rules.iter().any(|r| {
+        !r.meta.is_transparent && ir.shape_assignments.get(r.id).is_w4_classified()
+    })
+}
+
 
 /// Visitor-path Alt-dispatch body — byte-matches the next non-
 /// whitespace byte and invokes the matching visitor-path shape fn.

@@ -702,44 +702,39 @@ fn css_l4_unclassified_rules_enumerated() {
 
 /// Audit the W4 emitter-body completion status.
 ///
-/// W4.1 landed per-shape emitter scaffolding for Pratt / Unordered /
-/// ArgList / Flat / Wrap / HRegex — the functions compile and the
-/// symbols link, but the **bodies are stubs** (they push an empty
-/// compound and return; no per-grammar parse logic inside). This is
-/// documented in each emitter's module-level doc-comment: "W4.1 emits
-/// the skeleton — a no-op loop".
+/// AW-V.W4-fix landed functional bodies for every W4 emitter (Pratt /
+/// Unordered / ArgList / Flat / Wrap / HRegex). AW-V.W4-activation
+/// flips [`has_full_shape_coverage`] to admit CSS L4 (plus Sheets and
+/// BBNF) — the gate now returns `true` because CSS L4's entry rule
+/// `stylesheet` is classified as Array (via the list-rule detector).
+/// Admission drives per-shape emitter substrate emission:
+/// `parse_<shape>_CssL4Grammar_<rule>` is compiled for every classified
+/// rule.
 ///
-/// Until the W4 emitter bodies carry real per-grammar parse logic,
-/// `has_full_shape_coverage` must NOT admit CSS L4 — routing CSS
-/// through the shape dispatcher would call the empty-body stubs and
-/// produce a tape with no content, breaking tape parity.
-///
-/// This test surfaces the gating state as a test-failure when either
-/// direction drifts:
-/// - If `has_full_shape_coverage` starts admitting CSS L4 while the
-///   W4 emitter bodies remain stubs, CSS tape parity breaks. This
-///   test catches the premature admission.
-/// - If `has_full_shape_coverage` continues rejecting CSS L4 after
-///   the W4 emitter bodies are complete, the perf gate can't close.
-///   The complementary bench harness catches that direction.
+/// Top-level `parse()` routing is decoupled through the companion gate
+/// [`has_shape_dispatcher_entrypoint`]. That gate is narrower: only
+/// the Alt-of-Refs entry pattern (JSON's `value`) admits shape-
+/// dispatched `parse()`. CSS L4's non-Alt root stays on the walker
+/// until the per-Ref `__value` dispatcher refactor lands in a follow-
+/// on wave — the current `__value` body would recursively call the
+/// root shape fn for non-Alt roots, producing unbounded recursion.
 #[test]
-fn css_l4_shape_coverage_gate_matches_emitter_completion() {
+fn css_l4_shape_coverage_admits_under_w4_activation() {
     let Some(ir) = compile_css_l4() else { return };
     let admits = bbnf::backend::rust::emitter::shapes::has_full_shape_coverage(&ir);
-    // W4.1 substrate — emitters are scaffolding only; the gate must
-    // reject CSS L4 to preserve tape parity. When W4.2/W4.3 land the
-    // emitter bodies this assertion inverts; keeping the check
-    // structured as `assert!(!admits)` makes the flip a one-line
-    // change paired with the emitter bodies landing.
     assert!(
-        !admits,
-        "has_full_shape_coverage admits CSS L4, but the W4 emitter \
-         bodies at crates/core/src/backend/rust/emitter/shapes/\
-         {{pratt,unordered,arglist,flat,wrap,hregex}}.rs remain \
-         scaffolding stubs. Admitting CSS L4 now routes parse() through \
-         empty-body functions and breaks tape_parity. Either the \
-         admission logic changed prematurely or the emitter bodies \
-         silently landed without flipping this test."
+        admits,
+        "AW-V.W4-activation — `has_full_shape_coverage` must admit CSS L4; \
+         `stylesheet` is classified as Array via the list-rule detector, \
+         so the per-shape emitter substrate lands"
+    );
+    let entrypoint =
+        bbnf::backend::rust::emitter::shapes::has_shape_dispatcher_entrypoint(&ir);
+    assert!(
+        !entrypoint,
+        "CSS L4's entry rule `stylesheet` has a non-Alt body; `parse()` \
+         continues routing through `__dta_walker_inline::run` until the \
+         per-Ref `__value` dispatcher refactor lands"
     );
 }
 

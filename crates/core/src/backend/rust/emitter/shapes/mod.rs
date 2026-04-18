@@ -83,7 +83,9 @@ use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-pub use dispatcher::{dispatcher_fn_ident, visitor_dispatcher_fn_ident};
+pub use dispatcher::{
+    dispatcher_fn_ident, has_w4_classified, visitor_dispatcher_fn_ident,
+};
 
 /// Sanitise a grammar identifier into a Rust ident fragment.
 ///
@@ -121,12 +123,14 @@ pub(crate) fn sanitise_grammar(grammar: &str) -> String {
 /// condition to decide whether `parse()` routes through shape
 /// dispatch or the existing `dta_run_<grammar>`.
 pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
-    // Only emit the shape fn family when the grammar's dispatch
-    // shape is consumable by the dispatcher — otherwise the emitted
-    // fns compile but go unused, and the dispatcher could emit
-    // incorrect routing. JSON's `value = object|array|...` pattern
-    // satisfies the admission; grammars where the root rule is
-    // itself a Wrap / Repeat / Seq currently defer to the walker.
+    // AW-V.W4-activation — emit the shape fn family when the grammar's
+    // dispatch shape is consumable by the dispatcher. The admission
+    // gate ([`has_full_shape_coverage`]) covers JSON's Alt-of-Refs
+    // pattern plus the W4-activated forms (Wrap-rooted Alt dispatcher
+    // OR a W3/W4 classified root whose shape fn handles recursion
+    // through the `__value` dispatcher). Grammars that don't meet the
+    // gate continue through the walker fallback per the AX cold-path
+    // replay contract.
     if !has_full_shape_coverage(ir) {
         return quote! {};
     }
@@ -135,19 +139,29 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
     let mut per_rule: Vec<TokenStream> = Vec::new();
     let mut per_rule_visitor: Vec<TokenStream> = Vec::new();
 
+    // AW-V.W4-activation — visitor-path emission gates on W4-absence.
+    // The visitor dispatcher's generic-V bound is narrow by design
+    // (W3 sub-traits only); W4 visitor sub-traits (`PrattVisitor` and
+    // similar) can't be added without rippling through every caller's
+    // bound. Grammars carrying W4-classified rules emit the tape path
+    // only; the visitor path activates for them in a follow-on wave
+    // alongside the per-Ref `__value` dispatcher refactor.
+    let emit_visitor_path = !dispatcher::has_w4_classified(ir);
+
     for rule in &ir.rules {
         if rule.meta.is_transparent {
             continue;
         }
         let tag = ir.shape_assignments.get(rule.id);
-        // W3 shapes have complete emitter + dispatcher wiring.
-        // W4 shapes (Pratt / Unordered / ArgList / Flat / Wrap /
-        // HRegex) land their emitter scaffolding in W4.1 but are
-        // not consumed by the dispatcher until W4.2 / W4.3 wire the
-        // per-grammar consumer routes. Skip W4 tags here so the
-        // scaffolding compiles without being called; they get
-        // activated grammar-by-grammar in subsequent sub-waves.
-        if !tag.is_w3_classified() {
+        // AW-V.W4-activation — emit per-shape fns for BOTH W3-active
+        // shapes (Object / Array / String / Number / Keyword / Scalar)
+        // AND W4-active shapes (Pratt / Unordered / ArgList / Flat /
+        // Wrap / HRegex). The W4 emitters landed functional bodies
+        // under AW-V.W4-fix; this activation wires them into the
+        // dispatcher's call surface. Unclassified rules (`ShapeTag::None`)
+        // continue routing through `__dta_walker_inline::run` per the
+        // AX cold-path replay contract.
+        if !tag.is_classified() {
             continue;
         }
         let fragment = match tag {
@@ -157,21 +171,33 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
             ShapeTag::Number => number::emit_parse_number(&grammar_suffix, rule, ir),
             ShapeTag::Keyword => keyword::emit_parse_keyword(&grammar_suffix, rule, ir),
             ShapeTag::Scalar => scalar::emit_parse_scalar(&grammar_suffix, rule, ir),
-            _ => continue,
+            ShapeTag::Pratt => pratt::emit_parse_pratt(&grammar_suffix, rule, ir),
+            ShapeTag::Unordered => unordered::emit_parse_unordered(&grammar_suffix, rule, ir),
+            ShapeTag::ArgList => arglist::emit_parse_arglist(&grammar_suffix, rule, ir),
+            ShapeTag::Flat => flat::emit_parse_flat(&grammar_suffix, rule, ir),
+            ShapeTag::Wrap => wrap::emit_parse_wrap(&grammar_suffix, rule, ir),
+            ShapeTag::HRegex => hregex::emit_parse_hregex(&grammar_suffix, rule, ir),
+            ShapeTag::None => continue,
         };
         per_rule.push(fragment);
 
-        // AW-V.W3-bench-fix — visitor-path per-shape fns.
-        let visitor_fragment = match tag {
-            ShapeTag::Object => object::emit_parse_object_visitor(&grammar_suffix, rule, ir),
-            ShapeTag::Array => array::emit_parse_array_visitor(&grammar_suffix, rule, ir),
-            ShapeTag::String => string::emit_parse_string_visitor(&grammar_suffix, rule, ir),
-            ShapeTag::Number => number::emit_parse_number_visitor(&grammar_suffix, rule, ir),
-            ShapeTag::Keyword => keyword::emit_parse_keyword_visitor(&grammar_suffix, rule, ir),
-            ShapeTag::Scalar => scalar::emit_parse_scalar_visitor(&grammar_suffix, rule, ir),
-            _ => quote! {},
-        };
-        per_rule_visitor.push(visitor_fragment);
+        if emit_visitor_path {
+            // W3-pure grammar — visitor-path fns compose via the
+            // visitor dispatcher's narrow bound. Emit the sibling
+            // visitor fns.
+            let visitor_fragment = match tag {
+                ShapeTag::Object => object::emit_parse_object_visitor(&grammar_suffix, rule, ir),
+                ShapeTag::Array => array::emit_parse_array_visitor(&grammar_suffix, rule, ir),
+                ShapeTag::String => string::emit_parse_string_visitor(&grammar_suffix, rule, ir),
+                ShapeTag::Number => number::emit_parse_number_visitor(&grammar_suffix, rule, ir),
+                ShapeTag::Keyword => {
+                    keyword::emit_parse_keyword_visitor(&grammar_suffix, rule, ir)
+                }
+                ShapeTag::Scalar => scalar::emit_parse_scalar_visitor(&grammar_suffix, rule, ir),
+                _ => quote! {},
+            };
+            per_rule_visitor.push(visitor_fragment);
+        }
     }
 
     if per_rule.is_empty() {
@@ -180,7 +206,11 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
 
     let support = dispatcher::emit_support_module(&grammar_suffix);
     let dispatcher_fn = dispatcher::emit_dispatcher(&grammar_suffix, ir);
-    let visitor_dispatcher_fn = dispatcher::emit_visitor_dispatcher(&grammar_suffix, ir);
+    let visitor_dispatcher_fn = if emit_visitor_path {
+        dispatcher::emit_visitor_dispatcher(&grammar_suffix, ir)
+    } else {
+        quote! {}
+    };
     quote! {
         #support
         #(#per_rule)*
@@ -195,52 +225,93 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
 pub fn has_shape_dispatch(ir: &GrammarIR) -> bool {
     ir.rules.iter().any(|rule| {
         !rule.meta.is_transparent
-            && ir.shape_assignments.get(rule.id).is_w3_classified()
+            && ir.shape_assignments.get(rule.id).is_classified()
     })
 }
 
-/// Returns `true` when `ir` admits full shape dispatch — every non-
-/// transparent rule classifies to a W3 shape OR the root rule is an
-/// Alt whose branches all resolve to W3 shape fns.
+/// Returns `true` when `ir` admits shape dispatch — the grammar has
+/// W3- or W4-classified rules whose per-shape emitters land as
+/// substrate for the runtime consumer.
 ///
-/// The JSON grammar satisfies the Alt branch: `value = object | array
-/// | string | number | bool | null` — six Refs, each landing on a W3
-/// shape (`pair` is Seq of Ref+Ref+Ref and stays unshaped but is
-/// consumed inside the Object shape's inline-key-value loop).
+/// Admission criteria (AW-V.W4-activation):
 ///
-/// W4 shapes (Pratt / Unordered / ArgList / Flat / Wrap / HRegex)
-/// are EXCLUDED from this admission predicate. The W4 emitter
-/// scaffolding landed in W4.1 but the per-grammar consumer wiring
-/// lands in W4.2 (CSS L4) and W4.3 (Sheets + BBNF); until that
-/// wiring is in place, grammars carrying W4-classified rules stay
-/// on the walker fallback. This preserves the substrate-with-
-/// consumer landing rule declared in AW-V.md §invariants.
+/// 1. **Alt-of-Refs entry.** The entry rule's body is `Alt(Ref, Ref, ...)`
+///    and every branch Ref resolves to a shape-classified rule
+///    (W3 or W4). Covers JSON's `value = object | array | string |
+///    number | bool | null`.
 ///
-/// When this returns `false`, `parse()` routes through the existing
-/// `dta_run_<grammar>` walker — the cold-path AX replay surface.
+/// 2. **Classified entry rule.** The entry rule itself carries a W3 or
+///    W4 shape tag. Covers CSS L4 (`stylesheet` → Array-tagged via
+///    list-rule detection), Sheets (`formula` → Flat), BBNF (`grammar`
+///    → Array).
+///
+/// Admission drives substrate emission via [`emit_shapes_for_grammar`]:
+/// every classified rule gets its per-shape `parse_<shape>_<grammar>_
+/// <rule>` function compiled. Rules absent from [`ShapeAssignments`]
+/// (`ShapeTag::None`) continue routing through `__dta_walker_inline::run`
+/// per the AX cold-path replay contract.
+///
+/// See [`has_shape_dispatcher_entrypoint`] for the companion gate that
+/// decides whether `parse()` invokes the shape dispatcher or falls
+/// through to the walker. Admission is broader than entrypoint
+/// routing: a grammar may admit substrate emission (shape fns compile
+/// per-rule) without the top-level `parse()` routing through the
+/// dispatcher yet — this is the architectural split the W4-activation
+/// sub-wave uses to land W4 emitters as substrate before the
+/// per-Ref-routed `__value` dispatcher refactor lands in a follow-on.
 pub fn has_full_shape_coverage(ir: &GrammarIR) -> bool {
-    // Find the entry rule. When it's a 6-arm Alt over shape-bearing
-    // Refs (the JSON `value = object|array|string|number|bool|null`
-    // pattern), we admit shape dispatch regardless of whether every
-    // rule classifies — the Alt branches cover the dispatch surface.
+    let Some(entry_rule) = ir.rules.iter().find(|r| r.id == ir.entry) else {
+        return false;
+    };
+    use bbnf_ir::IrNode;
+
+    // Criterion 1 — Alt-of-Refs entry with every branch classified.
+    if let IrNode::Alt(branches, _) = &entry_rule.body {
+        return branches.iter().all(|b| match &b.node {
+            IrNode::Ref(rid) => ir.shape_assignments.get(*rid).is_classified(),
+            _ => false,
+        });
+    }
+
+    // Criterion 2 — classified entry rule. The per-shape emitter for
+    // the entry fires; internal Ref recursion currently routes through
+    // `__value` (the Alt-dispatch body on Alt-rooted grammars, or the
+    // root shape fn on non-Alt-rooted — see
+    // [`has_shape_dispatcher_entrypoint`]).
+    let entry_tag = ir.shape_assignments.get(entry_rule.id);
+    entry_tag.is_classified()
+}
+
+/// Returns `true` when `parse()` should route through the shape
+/// dispatcher as its top-level entrypoint.
+///
+/// Today this is strictly narrower than [`has_full_shape_coverage`] —
+/// only the Alt-of-Refs entry pattern (JSON's `value`) admits shape-
+/// dispatched `parse()`. Grammars that satisfy
+/// [`has_full_shape_coverage`] via the classified-entry criterion
+/// (CSS L4 / Sheets / BBNF with non-Alt roots) emit per-shape fn
+/// substrate but continue to route `parse()` through the walker —
+/// the `__value` dispatcher's per-Ref routing table hasn't landed
+/// yet, so calling shape fns whose internal Ref recursion reaches
+/// `__value` would cycle back into the root shape fn for non-Alt
+/// roots.
+///
+/// The split preserves the substrate-with-consumer invariant at the
+/// emitter level (shape fns compile, link, and are reachable from the
+/// per-grammar `generated.rs`) while deferring top-level hot-path
+/// activation to the follow-on wave that lands the per-Ref dispatcher.
+pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
     let Some(entry_rule) = ir.rules.iter().find(|r| r.id == ir.entry) else {
         return false;
     };
     use bbnf_ir::IrNode;
     if let IrNode::Alt(branches, _) = &entry_rule.body {
-        // Every branch must be a Ref to a shape-classified rule.
         return branches.iter().all(|b| match &b.node {
-            IrNode::Ref(rid) => {
-                ir.shape_assignments.get(*rid).is_w3_classified()
-            }
+            IrNode::Ref(rid) => ir.shape_assignments.get(*rid).is_classified(),
             _ => false,
         });
     }
-    // Fallback: every non-transparent rule is shape-classified.
-    ir.rules.iter().all(|rule| {
-        rule.meta.is_transparent
-            || ir.shape_assignments.get(rule.id).is_w3_classified()
-    })
+    false
 }
 
 /// Resolve the grammar's root rule per [`GrammarIR::entry`]. Returns

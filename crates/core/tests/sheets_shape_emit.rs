@@ -335,24 +335,36 @@ fn sheets_classification_totals_match_w4_projection() {
 }
 
 /// Sheets carries shape-classified rules so `has_shape_dispatch`
-/// is `true`, but `has_full_shape_coverage` is `false` — Sheets has
-/// unclassified rules *and* the entry rule is a Seq (`formula`), not
-/// the `value = object | array | ...` six-Ref Alt pattern that admits
-/// the JSON dispatch. `parse()` therefore continues to route through
-/// the existing `dta_run_<grammar>` walker path.
+/// is `true`. Post AW-V.W4-activation, `has_full_shape_coverage` is
+/// also `true` — the coverage gate admits Sheets's non-Alt root
+/// (`formula` → Flat-tagged via the W4-fix Flat detector widening).
+/// Admission drives per-shape substrate emission (every classified
+/// rule gets `parse_<shape>_SheetsShapeParser_<rule>` compiled).
+///
+/// `parse()` routing is decoupled: the companion gate
+/// `has_shape_dispatcher_entrypoint` is narrower, admitting only the
+/// Alt-of-Refs entry pattern. Sheets's `formula = Seq(/=?/,
+/// expression)` does not satisfy that gate, so `parse()` continues
+/// through the walker until the per-Ref `__value` dispatcher refactor
+/// lands in a follow-on wave.
 #[test]
-fn sheets_routes_through_walker_under_w4_admission() {
+fn sheets_admits_shape_substrate_but_walker_routes_parse() {
     let ir = sheets_ir();
     assert!(
         has_shape_dispatch(&ir),
-        "Sheets has W3-classified rules so `has_shape_dispatch` is true",
+        "Sheets has W3/W4-classified rules so `has_shape_dispatch` is true",
     );
     assert!(
-        !has_full_shape_coverage(&ir),
-        "Sheets has unclassified rules + a Seq entry (`formula`); \
-         `has_full_shape_coverage` must return false so `parse()` \
-         continues routing through `__dta_walker_inline::run` per the \
-         AX cold-path replay contract",
+        has_full_shape_coverage(&ir),
+        "AW-V.W4-activation — `has_full_shape_coverage` admits Sheets; \
+         `formula` is classified as Flat and the per-shape emitter \
+         substrate lands",
+    );
+    assert!(
+        !bbnf::backend::rust::emitter::shapes::has_shape_dispatcher_entrypoint(&ir),
+        "Sheets's entry rule `formula` has a Seq body, not Alt-of-Refs; \
+         `parse()` continues routing through `__dta_walker_inline::run` \
+         until the per-Ref `__value` dispatcher refactor lands",
     );
 }
 

@@ -504,7 +504,15 @@ impl RustEmitter {
             ir,
         );
         let shape_helpers = emit_shape_helpers(ident.to_string().as_str(), ir);
-        let use_shape_dispatch = super::shapes::has_full_shape_coverage(ir);
+        // AW-V.W4-activation — parse() routing is narrower than
+        // [`has_full_shape_coverage`] admission. The coverage gate
+        // admits substrate emission for CSS / Sheets / BBNF with
+        // classified entry rules; the entrypoint gate preserves
+        // walker-routed parse() for non-Alt-rooted grammars until the
+        // per-Ref `__value` dispatcher refactor lands. See
+        // [`super::shapes::has_shape_dispatcher_entrypoint`] for the
+        // decoupling rationale.
+        let use_shape_dispatch = super::shapes::has_shape_dispatcher_entrypoint(ir);
         let shape_dispatcher_ident = super::shapes::root_rule_name(ir).map(|root| {
             super::shapes::dispatcher_fn_ident(ident.to_string().as_str(), &root)
         });
@@ -701,7 +709,15 @@ impl RustEmitter {
         // The visitor is monomorphised at the call site; per-shape
         // bodies inline into one tight dispatcher, matching the
         // prototype's perf shape.
-        let parse_with_visitor_body = if use_shape_dispatch {
+        // AW-V.W4-activation — `parse_with_visitor` emission gates on
+        // W4-absence. The visitor dispatcher it calls has narrow W3
+        // trait bounds; grammars carrying W4 rules skip visitor
+        // emission entirely (see
+        // [`super::shapes::has_w4_classified`]). Visitor activation
+        // for W4 grammars lands in a follow-on wave.
+        let parse_with_visitor_body = if use_shape_dispatch
+            && !super::shapes::has_w4_classified(ir)
+        {
             let visitor_dispatcher = visitor_dispatcher_ident
                 .as_ref()
                 .expect("use_shape_dispatch gated on root_rule_name");

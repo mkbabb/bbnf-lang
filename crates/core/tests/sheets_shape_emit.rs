@@ -233,15 +233,17 @@ fn sheets_error_literal_classifies_as_flat() {
 
 // ─── Coverage totals + gate state ───────────────────────────────────
 
-/// The Sheets grammar has 36 non-transparent rules; under the W4.1
-/// detector substrate 23 classify (63.9%). The 13 residual rules route
-/// through `__dta_walker_inline::run` per the AX replay contract.
+/// The Sheets grammar has 36 non-transparent rules; under the
+/// W4-fix detector substrate 29 classify (80.6%). The 7 residual
+/// rules route through `__dta_walker_inline::run` per the AX replay
+/// contract.
 ///
-/// This test pins the number so a future detector widening (e.g.
-/// admitting Sheets's unsigned Number regex, admitting the Seq-shaped
-/// aggregate rules to Flat without a literal head, or adding a
-/// Postfix-Pratt variant for `unary_expr`/`postfix_expr`) surfaces as a
-/// deliberate test update — not a silent reclassification.
+/// This test pins the number so a future detector widening surfaces
+/// as a deliberate test update — not a silent reclassification. The
+/// residual 7 rules (`unary_expr`, `paren_expr`, `arg`, `func_args`,
+/// `let_args`, `lambda_params`, `array_literal`) share a structural
+/// pattern — Alt-of-Refs with a mix of typed/untyped branches, or
+/// Seq-with-Repeat-of-Ref bodies that fit no shape cleanly.
 #[test]
 fn sheets_classification_totals_match_w4_projection() {
     let ir = sheets_ir();
@@ -249,18 +251,18 @@ fn sheets_classification_totals_match_w4_projection() {
     let classified: usize = ir.shape_assignments.classified_count();
     let unclassified = non_transparent - classified;
 
-    // 36 non-transparent rules; 23 classified; 13 residual on walker.
+    // 36 non-transparent rules; 29 classified; 7 residual on walker.
     assert_eq!(
         non_transparent, 36,
         "Sheets grammar has 36 non-transparent rules; got {non_transparent}",
     );
     assert_eq!(
-        classified, 23,
-        "Sheets W4.1 classifies 23/36 rules; got {classified}",
+        classified, 29,
+        "Sheets W4-fix classifies 29/36 rules; got {classified}",
     );
     assert_eq!(
-        unclassified, 13,
-        "Sheets W4.1 leaves 13 rules unclassified (walker fallback); got {unclassified}",
+        unclassified, 7,
+        "Sheets W4-fix leaves 7 rules unclassified (walker fallback); got {unclassified}",
     );
 
     // Per-shape breakdown — each tag's rule count is a stable H1 audit
@@ -292,8 +294,10 @@ fn sheets_classification_totals_match_w4_projection() {
     );
     assert_eq!(
         ir.shape_assignments.count_of(ShapeTag::Flat),
-        1,
-        "Sheets Flat count (error_literal via prefix-factoring)",
+        7,
+        "Sheets Flat count (error_literal via prefix-factoring, plus \
+         cell, range_ref, postfix_expr, func_open, let_binding, formula \
+         via W4-fix Flat-detector widening)",
     );
     assert_eq!(
         ir.shape_assignments.count_of(ShapeTag::String),

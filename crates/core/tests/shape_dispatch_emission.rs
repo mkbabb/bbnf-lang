@@ -264,11 +264,14 @@ fn w4_arglist_no_hits_on_json_fixture() {
 }
 
 #[test]
-fn w4_flat_no_hits_on_json_fixture() {
-    // JSON's `pair` Seq has a Ref head (not a Literal), so Flat
-    // rejects it.
-    let (ir, _) = build_json_ir();
-    assert_eq!(ir.shape_assignments.count_of(ShapeTag::Flat), 0);
+fn w4_flat_classifies_json_pair() {
+    // AW-V.W4-fix — the Flat detector now admits Ref-headed typed
+    // Seqs. JSON's `pair = string, colon >> value` is a three-Ref
+    // Seq that matches. The JSON fixture therefore carries exactly
+    // one Flat-classified rule.
+    let (ir, rules) = build_json_ir();
+    assert_eq!(ir.shape_assignments.count_of(ShapeTag::Flat), 1);
+    assert_eq!(ir.shape_assignments.get(rules.pair), ShapeTag::Flat);
 }
 
 #[test]
@@ -422,18 +425,17 @@ fn json_fixture_structural_rules_all_classified() {
     }
 }
 
-/// The `value` rule classifies as Wrap under W4. `pair` has a Ref
-/// head (not a Literal) so Flat rejects it; it stays unclassified.
+/// AW-V.W4-fix — `value` classifies as Wrap; `pair` classifies as
+/// Flat (the W4-fix Flat detector admits Ref-headed typed Seqs).
 #[test]
-fn json_fixture_value_is_wrap_pair_stays_unclassified() {
+fn json_fixture_value_is_wrap_pair_is_flat() {
     let (ir, rules) = build_json_ir();
     let _ = matches!(&ir.rules[rules.pair as usize].body, IrNode::Seq(_));
     let _ = matches!(&ir.rules[rules.value as usize].body, IrNode::Alt(..));
     assert_eq!(
         ir.shape_assignments.get(rules.pair),
-        ShapeTag::None,
-        "`pair` has a Ref head; Flat requires a Literal head so it \
-         stays unclassified",
+        ShapeTag::Flat,
+        "W4-fix: `pair`'s Ref-headed typed Seq classifies as Flat",
     );
     assert_eq!(
         ir.shape_assignments.get(rules.value),

@@ -421,16 +421,19 @@ fn json_value_classifies_as_wrap_under_w4() {
 }
 
 #[test]
-fn json_pair_defers_to_walker_under_w4() {
-    // The `pair` rule's body is `Seq(string_ref, Next(colon_ref,
-    // value_ref))` — no literal-led head, so Flat rejects it. The
-    // three-Ref Seq shape isn't admitted by the 11-shape taxonomy;
-    // the rule stays on the walker fallback.
+fn json_pair_classifies_as_flat_under_w4_fix() {
+    // AW-V.W4-fix — `pair = string, colon >> value` is a typed Seq
+    // of three Refs. The W4.1 Flat detector rejected Ref-headed Seqs;
+    // the W4-fix extends admission to include them, so `pair` now
+    // classifies as Flat. This is harmless under the current W3
+    // emitter gate — W4 emitters are not consumed while emitter
+    // bodies are being specialised, so `pair` continues to route
+    // through the walker at parse time.
     let (ir, rules) = build_json_ir();
     assert_eq!(
         ir.shape_assignments.get(rules.pair),
-        ShapeTag::None,
-        "`pair` has no literal head; stays on walker fallback"
+        ShapeTag::Flat,
+        "W4-fix: Ref-headed typed Seq classifies as Flat"
     );
 }
 
@@ -491,12 +494,14 @@ fn w4_arglist_no_hits_on_json_grammar() {
 }
 
 #[test]
-fn w4_flat_no_hits_on_json_grammar() {
-    // JSON's `pair` is a Seq but its head is a Ref to `string` (not a
-    // literal). Flat requires a literal / keyword head, so JSON's
-    // only multi-position Seq-bodied rule stays unclassified.
-    let (ir, _) = build_json_ir();
-    assert_eq!(ir.shape_assignments.count_of(ShapeTag::Flat), 0);
+fn w4_flat_classifies_json_pair() {
+    // AW-V.W4-fix — the Flat detector now admits Ref-headed typed
+    // Seqs. JSON's `pair = string, colon >> value` is the only
+    // rule in the JSON fixture that matches, so exactly one Flat
+    // hit.
+    let (ir, rules) = build_json_ir();
+    assert_eq!(ir.shape_assignments.count_of(ShapeTag::Flat), 1);
+    assert_eq!(ir.shape_assignments.get(rules.pair), ShapeTag::Flat);
 }
 
 #[test]

@@ -289,33 +289,15 @@ fn css_overflow_decl_classified_as_flat() {
     assert_shape(&ir, "overflowDecl", ShapeTag::Flat);
 }
 
-/// W4.1 detector gap — `colorDecl = colorProps, ":" ?w, …` where
-/// `colorProps` is a Ref to a typed keyword-Alt rule. The Flat
-/// detector admits Ref-to-keyword-Alt heads via
-/// `head_is_literal_or_kw`'s Ref branch, but on CSS L4 the detector
-/// currently returns `None` on these rules; the continuation
-/// `__colorDecl_cont_<N>` IS classified as Flat. Annotating as a
-/// W4.1 detector gap; the continuation path carries the hot-path
-/// work so the Wrap-of-declaration alternation remains the effective
-/// dispatch entry.
-///
-/// This test asserts the observed state so a future detector fix
-/// that starts admitting the parent raises the test to capture the
-/// improvement.
+/// AW-V.W4-fix — `colorDecl = colorProps, ":" ?w, …` and its
+/// siblings now classify as Flat. The W4-fix extends the Flat
+/// detector's head predicate to admit Refs (including Refs to the
+/// typed keyword-Alt rules like `colorProps` / `sizeProps`), so the
+/// parent `*Decl` rules match without relying on the continuation
+/// lifter.
 #[test]
-fn css_ref_headed_decl_rules_remain_unclassified() {
+fn css_ref_headed_decl_rules_classify_as_flat() {
     let Some(ir) = compile_css_l4() else { return };
-    // Ref-headed `*Decl` rules — their head position is a `Ref` to a
-    // typed keyword-set rule (colorProps, sizeProps, spacingProps,
-    // fontProps, bgProps, transformProps, transitionProps,
-    // listTableProps, alignDecl's 6-branch inline Alt…).
-    //
-    // The parent rule's body emerges from lowering as a `Next`
-    // chain whose leftmost position wraps the head in additional
-    // structural layers. The current Flat detector's `head_is_
-    // literal_or_kw` predicate rejects that pattern; the continuation
-    // rule (`__<parent>_cont_<N>`) is what actually carries the
-    // keyword Alt + typed value list in the IR.
     let ref_headed_decls = [
         "colorDecl",
         "sizeDecl",
@@ -331,18 +313,14 @@ fn css_ref_headed_decl_rules_remain_unclassified() {
         let actual = ir.shape_assignments.get(id);
         assert_eq!(
             actual,
-            ShapeTag::None,
+            ShapeTag::Flat,
             "CSS L4 Ref-headed decl `{name}` classified as {actual:?}; \
-             under the W4.1-landed detector it was `None` (the \
-             detector's head-is-literal-or-kw predicate rejects the \
-             Ref-to-keyword-Alt pattern after Next / Skip layering). \
-             If this assertion newly fails, the Flat detector has \
-             been extended — update the assertion to the new shape \
-             and re-measure the aggregate coverage gate."
+             W4-fix Flat detector admits Ref-to-keyword-Alt heads."
         );
     }
-    // Sanity-check that the same family's continuation rules ARE
-    // classified as Flat — the hot-path work sits there.
+    // Continuation rules ALSO classify as Flat — same detector, same
+    // structural admission. Both parent and continuation reach the
+    // same shape consumer.
     for parent in ref_headed_decls {
         let cont_name = ir
             .rules
@@ -359,9 +337,7 @@ fn css_ref_headed_decl_rules_remain_unclassified() {
             actual,
             ShapeTag::Flat,
             "CSS L4 continuation `{cont_name}` (for parent `{parent}`) \
-             classified as {actual:?}, expected Flat. The continuation \
-             is where the hot-path work actually sits; if it stops \
-             classifying as Flat the W4.2 coverage collapses."
+             classified as {actual:?}, expected Flat.",
         );
     }
 }

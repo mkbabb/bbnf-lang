@@ -315,8 +315,10 @@ pub fn has_full_shape_coverage(ir: &GrammarIR) -> bool {
 /// 2. **Every value-position Ref transitively reachable from the
 ///    entry's classified shape fns resolves to a classified rule.**
 ///    Per-Ref routing emits direct calls to each Ref target's shape
-///    fn; if any Ref target is unclassified, the emitter has no shape
-///    fn to call, so the grammar must fall back to the walker.
+///    fn; if any Ref target is unclassified, the emitter falls back
+///    to the `__value` dispatcher — which for non-Alt roots
+///    recursively invokes the entry's shape fn, triggering runtime
+///    infinite recursion unless the fallback is never reached.
 ///
 /// JSON's Alt-of-Refs entry is a special case of the general rule —
 /// the entry rule itself doesn't need a shape tag (it's transparent
@@ -328,6 +330,18 @@ pub fn has_full_shape_coverage(ir: &GrammarIR) -> bool {
 /// emit a direct delegation from the dispatcher to the root's shape
 /// fn — the root's per-shape body then recurses via per-Ref routing
 /// (emitted inline via [`dispatcher::emit_ref_call_tape`]).
+///
+/// # AX.W0a.2 — entry-reachable narrowing
+///
+/// The reachability walk starts at the entry rule and traverses every
+/// value-position Ref through classified rule bodies, accumulating a
+/// visited set. Unclassified rules that are structurally present in
+/// the IR but unreachable from the entry cannot trip the `__value`
+/// fallback at parse time, so they do not block admission. Prior
+/// implementation iterated every classified rule (reachable or not),
+/// rejecting grammars whose genuine entry-reachable Ref graph was
+/// already closed over classified targets — a false-negative the
+/// docstring had already described the narrow shape of.
 pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
     let Some(entry_rule) = ir.rules.iter().find(|r| r.id == ir.entry) else {
         return false;
@@ -343,36 +357,48 @@ pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
         });
     }
 
-    // Criterion 2 — classified entry with per-Ref-routable body.
-    // Entry is classified AND every value-position Ref transitively
-    // reachable from any classified rule's body resolves to a
-    // classified rule (so emit_ref_call_tape returns Some at every
-    // recursion site).
+    // Criterion 2 — classified entry with entry-reachable per-Ref
+    // routability. Entry is classified AND every value-position Ref
+    // transitively reachable through classified rule bodies starting
+    // from the entry resolves to a classified rule. Unclassified rules
+    // unreachable from the entry are irrelevant — their shape fns are
+    // never compiled, so no `__value` fallback call site exists that
+    // could run at parse time.
     let entry_tag = ir.shape_assignments.get(entry_rule.id);
     if !entry_tag.is_classified() {
         return false;
     }
-    // Verify every value-position Ref in every classified rule's body
-    // resolves to a classified target. Walk the full body of each
-    // classified rule to collect all Refs; any Ref to an unclassified
-    // target means a per-Ref-routed call site would have no shape fn
-    // to invoke. The per-shape emitters filter Refs at shape-specific
-    // points (e.g. `string_fn` for Object's key, `value_ref` for
-    // Object's value), so the admission check must be conservative:
-    // EVERY Ref in every classified body must resolve to a classified
-    // rule.
-    for rule in &ir.rules {
-        if rule.meta.is_transparent {
-            continue;
-        }
-        let tag = ir.shape_assignments.get(rule.id);
-        if !tag.is_classified() {
-            continue;
-        }
+
+    // BFS from entry, following Refs through classified rule bodies.
+    // A Ref to an unclassified rule is a dispositive rejection: the
+    // shape emitter at that Ref's call site emits a `__value`
+    // fallback, which re-enters the entry's shape fn and loops.
+    let mut visited: std::collections::HashSet<bbnf_ir::RuleId> = Default::default();
+    let mut stack: Vec<bbnf_ir::RuleId> = vec![entry_rule.id];
+    visited.insert(entry_rule.id);
+    while let Some(rid) = stack.pop() {
+        let Some(rule) = ir.rules.iter().find(|r| r.id == rid) else {
+            // Stale RuleId — treat as structural corruption. Reject
+            // to preserve the walker path; a downstream wave surfaces
+            // the IR-build bug.
+            return false;
+        };
+        // Skip transparent rules' bodies — transparent rules collapse
+        // into their alias targets during lowering, but the interned
+        // IR still carries the body. Walk their Refs so Alt-of-Refs
+        // dispatchers (e.g. CSS `ruleItem`) compose transitively.
         let refs = dispatcher::collect_value_refs(&rule.body);
         for target_rid in refs {
-            if !ir.shape_assignments.get(target_rid).is_classified() {
+            let target_tag = ir.shape_assignments.get(target_rid);
+            if !target_tag.is_classified() {
+                // The target is an unclassified rule reachable from
+                // the entry — admitting this grammar would compile a
+                // `__value` fallback call site that infinite-loops at
+                // parse time. Reject.
                 return false;
+            }
+            if visited.insert(target_rid) {
+                stack.push(target_rid);
             }
         }
     }

@@ -92,6 +92,32 @@ fn scan_nibble(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
             i += STRIPE;
         }
 
+        // 32-byte chunk tail: handles 32..63 residual bytes in one
+        // `__m256i` operation, matching the wider AVX2 lane width.
+        // Mirrors NEON's 16-byte tail loop shape one level up.
+        while i + CHUNK <= input.len() {
+            let mut m = classify_chunk_nibble(input.as_ptr().add(i), lo_v, hi_v, lo_mask) as u64;
+            if has_digraphs {
+                m |= digraph_chunk(input.as_ptr().add(i), &alphabet.digraph_pairs) as u64;
+            }
+            if has_quotes {
+                let qmask = quote_chunk(input.as_ptr().add(i), alphabet.quote_classes) as u64;
+                let prefix = parity::prefix_xor_64(qmask, carry);
+                m &= !prefix;
+                carry = (prefix >> 31) & 1 == 1;
+            }
+            if m != 0 {
+                compaction::compact_stripe_tzcnt(
+                    m,
+                    i as u32,
+                    input,
+                    &mut idx.positions,
+                    &mut idx.kinds,
+                );
+            }
+            i += CHUNK;
+        }
+
         while i < input.len() {
             let b = *input.get_unchecked(i);
             let inside = if has_quotes { carry } else { false };
@@ -149,6 +175,31 @@ fn scan_multi(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
                 );
             }
             i += STRIPE;
+        }
+
+        // 32-byte chunk tail: handles 32..63 residual bytes in one
+        // `__m256i` operation, matching the wider AVX2 lane width.
+        while i + CHUNK <= input.len() {
+            let mut m = classify_chunk_multi(input.as_ptr().add(i), alphabet.singletons) as u64;
+            if has_digraphs {
+                m |= digraph_chunk(input.as_ptr().add(i), &alphabet.digraph_pairs) as u64;
+            }
+            if has_quotes {
+                let qmask = quote_chunk(input.as_ptr().add(i), alphabet.quote_classes) as u64;
+                let prefix = parity::prefix_xor_64(qmask, carry);
+                m &= !prefix;
+                carry = (prefix >> 31) & 1 == 1;
+            }
+            if m != 0 {
+                compaction::compact_stripe_tzcnt(
+                    m,
+                    i as u32,
+                    input,
+                    &mut idx.positions,
+                    &mut idx.kinds,
+                );
+            }
+            i += CHUNK;
         }
 
         while i < input.len() {
@@ -222,6 +273,23 @@ unsafe fn digraph_stripe(ptr: *const u8, pairs: &[(u8, u8)]) -> u64 {
 }
 
 #[inline(always)]
+unsafe fn digraph_chunk(ptr: *const u8, pairs: &[(u8, u8)]) -> u32 {
+    // SAFETY: caller ensures ptr..ptr+33 in bounds (chunk-bound).
+    let mut mask = 0u32;
+    unsafe {
+        for &(first, second) in pairs {
+            let chunk = _mm256_loadu_si256(ptr as *const __m256i);
+            let next = _mm256_loadu_si256(ptr.add(1) as *const __m256i);
+            let f_eq = _mm256_cmpeq_epi8(chunk, _mm256_set1_epi8(first as i8));
+            let s_eq = _mm256_cmpeq_epi8(next, _mm256_set1_epi8(second as i8));
+            let both = _mm256_and_si256(f_eq, s_eq);
+            mask |= _mm256_movemask_epi8(both) as u32;
+        }
+    }
+    mask
+}
+
+#[inline(always)]
 unsafe fn quote_stripe(ptr: *const u8, quotes: &[u8]) -> u64 {
     let mut mask = 0u64;
     // SAFETY: caller ensures ptr..ptr+64 in bounds.
@@ -234,15 +302,15 @@ unsafe fn quote_stripe(ptr: *const u8, quotes: &[u8]) -> u64 {
                 acc = _mm256_or_si256(acc, cmp);
             }
             // Strip escaped quotes via shifted-compare against `\\`.
-            // For k=0, we read an extra byte to shift in: load
-            // (ptr-1, ptr+31). For k=1, the 32-byte chunk's predecessor
-            // is at ptr+31.
+            // For k=0 (first chunk of stripe), there is no in-memory
+            // predecessor byte within the stripe — we lane-shift the
+            // current chunk right by 1, filling lane 0 with 0 (no
+            // backslash). Stripe-carry backslash parity is handled by
+            // the caller's `carry` bit through `parity::prefix_xor_64`.
+            // For k=1, the predecessor byte is at ptr+31 (last byte
+            // of chunk 0).
             let prev = if k == 0 {
-                let b = if ptr.is_null() { 0u8 } else { 0u8 }; // dead branch; placeholder for clarity
-                let _ = b;
-                let prev_chunk = _mm256_loadu_si256(ptr as *const __m256i);
-                // shift right one byte: lane 0 = 0, lane i = chunk[i-1]
-                shift_right_one_avx2(prev_chunk)
+                shift_right_one_avx2(chunk)
             } else {
                 _mm256_loadu_si256(ptr.add(k * CHUNK - 1) as *const __m256i)
             };
@@ -253,6 +321,25 @@ unsafe fn quote_stripe(ptr: *const u8, quotes: &[u8]) -> u64 {
         }
     }
     mask
+}
+
+#[inline(always)]
+unsafe fn quote_chunk(ptr: *const u8, quotes: &[u8]) -> u32 {
+    // SAFETY: caller ensures ptr..ptr+32 in bounds.
+    unsafe {
+        let chunk = _mm256_loadu_si256(ptr as *const __m256i);
+        let mut acc = _mm256_setzero_si256();
+        for &q in quotes {
+            let cmp = _mm256_cmpeq_epi8(chunk, _mm256_set1_epi8(q as i8));
+            acc = _mm256_or_si256(acc, cmp);
+        }
+        // Lane-shift; cross-stripe backslash carry is folded via
+        // prefix_xor_64 at the call site.
+        let prev = shift_right_one_avx2(chunk);
+        let bs = _mm256_cmpeq_epi8(prev, _mm256_set1_epi8(b'\\' as i8));
+        let unescaped = _mm256_andnot_si256(bs, acc);
+        _mm256_movemask_epi8(unescaped) as u32
+    }
 }
 
 #[inline(always)]

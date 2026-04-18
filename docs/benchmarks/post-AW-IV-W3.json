@@ -1,0 +1,102 @@
+{
+  "tranche": "AW-IV",
+  "wave": "W3",
+  "checkpoint": "post-AW-IV-W3",
+  "date": "2026-04-17",
+  "master_head": "9d9dddbb",
+  "scope": "Five emitter-mined consumer activations: ShapeRef (W3.1) + PHF AltLinear (W3.2) + ClassifyByte (W3.3) + Pratt LUT (W3.4) + direct-to-struct view + CTNS lifter + bounded-Regex substrate (W3.5)",
+  "verification_ledger": {
+    "shape_dict_cardinality": {
+      "json": 2,
+      "bbnf": 10,
+      "css_l4": 24,
+      "sheets": 7
+    },
+    "phf_table_count": {
+      "css_l4": 30,
+      "bbnf": 4,
+      "ebnf": 4,
+      "sheets": 2,
+      "json": 1,
+      "bbnf_bootstrap": 0
+    },
+    "classify_byte_count": {
+      "css_l4": 135,
+      "json": 1,
+      "sheets": 4,
+      "bbnf": 0
+    },
+    "ctns_admitted_count_per_grammar": 0,
+    "direct_to_struct_projections_emitted": "CSS L4 Color/ColorMix bindings",
+    "workspace_tests": "1348 passed / 0 failed / 36 ignored",
+    "bootstrap_idempotent": true,
+    "generated_rs_lines": 81816,
+    "generated_rs_delta_vs_w2": "+1704 lines (W2: 80112)"
+  },
+  "benches": {
+    "json_monolithic": {
+      "twitter": {"mb_s": 277, "ns_iter": 2273763},
+      "citm": {"mb_s": 287, "ns_iter": 6012593},
+      "canada": {"mb_s": 136, "ns_iter": 16513237},
+      "data_xl": {"mb_s": 197, "ns_iter": 107942599},
+      "data_s": {"mb_s": 274, "ns_iter": 129420}
+    },
+    "css_l4": {
+      "normalize": {"mb_s": 24, "ns_iter": 245760},
+      "bootstrap": {"mb_s": 14, "ns_iter": 19044887},
+      "tailwind": {"mb_s": 16, "ns_iter": 224900070}
+    },
+    "google_sheets_monolithic": {
+      "parse_simple": {"mb_s": 6, "ns_iter": 80474},
+      "parse_nested": {"mb_s": 7, "ns_iter": 195045},
+      "parse_stress": {"mb_s": 6, "ns_iter": 296897},
+      "format_simple": {"mb_s": 40, "ns_iter": 147},
+      "format_stress": {"mb_s": 44, "ns_iter": 4427}
+    },
+    "bbnf_monolithic": {
+      "json": {"mb_s": 15, "ns_iter": 35345},
+      "ebnf": {"mb_s": 10, "ns_iter": 142054},
+      "css_pretty": {"mb_s": 33, "ns_iter": 77483},
+      "google_sheets": {"mb_s": 48, "ns_iter": 153408},
+      "bbnf_self": {"mb_s": 19, "ns_iter": 260351},
+      "css_l4_grammar": {"mb_s": 30, "ns_iter": 1803379}
+    }
+  },
+  "delta_vs_post_AW_IV_W2": {
+    "json_twitter": "-1.1% (280 -> 277) — within noise",
+    "json_citm": "-0.7% (289 -> 287)",
+    "json_canada": "0% (136 -> 136)",
+    "json_data_xl": "-1.0% (199 -> 197)",
+    "json_data_s": "+0.4% (273 -> 274)",
+    "css_normalize": "-4.0% (25 -> 24) — within noise",
+    "css_bootstrap": "0% (14 -> 14)",
+    "css_tailwind": "0% (16 -> 16)",
+    "sheets_parse_simple": "0% (6 -> 6)",
+    "sheets_parse_nested": "0% (7 -> 7)",
+    "sheets_parse_stress": "0% (6 -> 6)",
+    "bbnf_json": "+7.1% (14 -> 15)",
+    "bbnf_ebnf": "+11.1% (9 -> 10)",
+    "bbnf_css_pretty": "+6.5% (31 -> 33)",
+    "bbnf_google_sheets": "+2.1% (47 -> 48)",
+    "bbnf_bbnf_self": "0% (19 -> 19)",
+    "bbnf_css_l4_grammar": "+3.4% (29 -> 30)"
+  },
+  "hard_gate_status": {
+    "shape_dict_non_empty_per_primary_grammar": "MET (4/4 — JSON=2, BBNF=10, CSS L4=24, Sheets=7)",
+    "phf_table_non_empty": "MET (5/5 primary grammars where keyword Alt is mineable)",
+    "classify_byte_non_empty_per_primary": "PARTIAL (CSS L4=135, JSON=1, Sheets=4; BBNF=0 — vacuously unfired because BBNF Alts are mostly regex-valued)",
+    "lookup_precedence_symbol_absent": "MISS (1 occurrence — `advance_or_pop_with`'s ShuntingYard arm still calls it; W3.4 file bounds excluded driver.rs ShuntingYard arm; symbol present but unreachable from walker hot path so 0% samply self-time)",
+    "ctns_state_per_grammar": "MISS (0 admitted; tightened admission rejects all production patterns; W3.5 substrate landed but consumer-activation deferred pending soundness fix)",
+    "bounded_regex_active": "MISS (deferred — last_byte_set admission unsound for patterns with mid-pattern structural-byte matches; substrate landed)",
+    "json_twitter_ge_2000_mb_s_w3_gate": "MISS (277 / 2000 = 14% of gate)",
+    "wire_contract_tests_pass_per_slot": "MET (workspace 1348/0/36)"
+  },
+  "gate_miss_attribution": {
+    "primary_throughput": "W3 substrate landed verifiably (SHAPE_DICT cardinality met per grammar; PHF tables emitted; ClassifyByte 135 tables on CSS L4; Pratt LUT inline; direct-to-struct + TapeKind::Scanned new variants) but throughput-translation deferred. The expected compounding gain (W3.1 ShapeRef record-count drop ≥ 30% on bootstrap; W3.4 sheets +67%) requires consumer wiring W3 file-bounds excluded:",
+    "shaperef_record_drop": "Requires SeqPromote::ShapeRef path in bbnf-tape/src/driver.rs (out of W3.1 file bounds). The walker emits `const SHAPE_REF_DICT_IDX: u8 = <idx>;` + `&SHAPE_DICT[...]` reference at every mineable Seq arm (1044 emissions in BBNF walker per cargo expand) but the close_compound path doesn't promote.",
+    "pratt_lookup_precedence_residual": "advance_or_pop_with's ShuntingYard arm still calls lookup_precedence; LTO can't DCE through cold-path retention; #[cold] annotation prevents hot-path inlining but symbol survives.",
+    "ctns_unsound_admission": "Strict matchable ∩ structural = ∅ rejects every production pattern (JSON number's \\d escapes; CSS pretty's interior structural bytes). A provably-sound admission requires per-run DFA state analysis; deferred.",
+    "bounded_regex_unsound": "last_byte_set ⊆ structural admission unsound for patterns whose interior matches structural bytes (CSS pretty's ws comment body); deferred for the same reason.",
+    "next_wave_remediation": "W4 layered SIMD widening + bloom/GADT dedup + grammar-level pattern hoisting + document-parallel fork over stage-1 index. The substrate-without-consumer pattern in W3 is the primary cross-tranche debt for AX cleanup."
+  }
+}

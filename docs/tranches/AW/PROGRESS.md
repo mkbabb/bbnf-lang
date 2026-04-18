@@ -2593,3 +2593,115 @@ activate the AW-III emitter-mined consumer substrates: ShapeRef
 (W3.1), PHF + AltLinear consumer (W3.2 — addresses CSS/BBNF/Sheets
 dispatch_one bridge), ClassifyByte (W3.3), Pratt LUT consumer (W3.4),
 direct-to-struct view + CTNS lifter + bounded Regex (W3.5).
+
+## 2026-04-17 — AW-IV W3 landed (five emitter-mined consumer activations); throughput-translation deferred per substrate-without-consumer audit
+
+Master HEAD `9d9dddbb`. Workspace **1348 / 0 / 36** (+3 vs W2 — `phf_keyword_mining.rs` from W3.2). Five parallel agents, 13 commits cherry-picked clean (auto-merge succeeded on shared `lower_state.rs` at the per-arm function boundary level).
+
+### W3.1 — ShapeRef walker compound-emit consumer (2 commits)
+
+`bbnf-wt-aw4-w3-shaperef`.
+
+- `945ed60a` — `fix(ir/recognizers/shape_dict): recalibrate mining to pre-walker IR`. Drops `closure_free` gate (which `&&`-propagated `false` through every `Map { inner, .. }` child); peels `Map`/`OptionalWhitespace` to structural roots; canonicalises `hash_skeleton` to discriminant-only.
+- `5d1eba71` — `feat(emitter/dta_walker/lower_state): inline-emit ShapeRef short-circuit in Seq arm`. `emit_seq_arm` gains `ir` + `table` plumbing; per-state `project_seq_children_to_template` + `hash_skeleton_public` + `lookup_shape_dict_idx`; matching shapes emit `const SHAPE_REF_DICT_IDX: u8 = <idx>;` + `&SHAPE_DICT[...]` reference (1044 emissions in BBNF walker).
+
+Per-grammar SHAPE_DICT cardinality: JSON=2, BBNF=10, CSS L4=24, Sheets=7. JSON's 2-entry ceiling is grammar-intrinsic (3 structural rules; 2 after dedup).
+
+### W3.2 — PHF threshold + AltLinear consumer (2 commits)
+
+`bbnf-wt-aw4-w3-phf`.
+
+- `ad746880` — `feat(ir/recognizers/keyword_stats): drop PHF threshold to 3`. `PHF_MIN_BRANCHES: 4 → 3`; `leading_literal` follows `IrNode::Ref(rid)` into the referenced rule's body (RuleId cycle protection), unlocking BBNF `directive`, JSON `value`, etc.
+- `f58e8f37` — `feat(emitter/dta_walker/lower_state): PHF AltLinear consumer`. `emit_alt_linear_arm` gains an inline PHF probe before the `try_branch` loop; on hit attempts the PHF-selected branch via `try_branch` (Syntax-recoverable), on failure falls through skipping the already-attempted branch (factored Alts like Sheets `compare_op`).
+
+Per-grammar PHF count: CSS L4=30, BBNF=4, EBNF=4, Sheets=2, JSON=1, BbnfBootstrap=0 (structural mode skips mining).
+
+### W3.3 — ClassifyByte un-gating + walker arm (2 commits)
+
+`bbnf-wt-aw4-w3-classifybyte`.
+
+- `d383917f` — `fix(ir/recognizers/dta): reverse gate; ClassifyByte runs before compute_dispatch`. `lift_node_with_payload`'s Alt arm now consults `disjoint_first_tables` first; ByteDispatch is the fallback.
+- `00617a9a` — `feat(emitter/classify_byte): inline LUT load with literal table reference`. `emit_classify_byte_arm` emits per-state `const __CLASSIFY_TABLE_<idx>: [DtaStateId; 256] = [...];` + single indexed load + NONE-branch.
+
+Per-grammar ClassifyByte: CSS L4=135, JSON=1, Sheets=4, BBNF=0 (BBNF Alts mostly regex-valued).
+
+### W3.4 — Pratt LUT consumer (2 commits)
+
+`bbnf-wt-aw4-w3-pratt`.
+
+- `bebb1fc2` — `feat(emitter/dta_walker/lower_state): inline PRECEDENCE_LUT byte-load in SY arm`. `emit_shunting_yard_arm` subsumes both SY-entry and SY-reducer semantics. Reducer mode consults `PRECEDENCE_LUT[byte]` inline (one indexed load + three constant shifts for the one-byte fast path).
+- `9493e3e8` — `chore(bbnf-tape/driver): annotate lookup_precedence as cold-path replay surface`. `#[cold] #[inline(never)]` on `lookup_precedence`.
+
+Hard gate residual: `lookup_precedence` symbol survives in `nm` because `advance_or_pop_with`'s ShuntingYard arm at `bbnf-tape/src/driver.rs:2666` still calls it (W3.4 file bounds excluded that arm). The symbol is unreachable from the walker hot path (samply 0% self-time) but survives on the cold-path replay link surface.
+
+### W3.5 — Direct-to-struct + CTNS lifter + bounded-Regex substrate (5 commits)
+
+`bbnf-wt-aw4-w3-directstruct`.
+
+- `c0c69781` — `feat(bbnf-tape/kind): add TapeKind::Scanned variant for CTNS records`.
+- `64cc8c46` — `fix(ir/recognizers/consume_to_next_structural): un-gate CTNS lifter`.
+- `3dc49ecf` — `fix(ir/recognizers/pattern_alphabet): switch invariant to last_byte_set`. Computes `last_byte_set` + `is_last_byte_tight` via `bbnf_regex::Nfa::from_pattern` walking byte-transitions whose target can ε-reach the NFA accept state.
+- `1d3c44bf` — `feat(emitter/grammar): wire emit_view_impl to resolve_named_type direct-to-struct projection`. `emit_type_definitions_impl` calls `resolve_named_type` via `emit_direct_to_struct_projection`; emits `PROJECTION_DIRECT_TO_STRUCT` const with admitted `(rule_name, binding_name)` pairs.
+- `2c960d34` — `fix(w3.5): tighten CTNS admission + wire CTNS arm correctness`. Bounded-Regex emission deferred (the naive `last_byte_set ∩ structural = ∅` test proved unsound against patterns like CSS pretty's `ws = (?s)(?:\s|/\*…\*/)*` whose interior matches structural bytes mid-pattern).
+
+CTNS admitted count per primary grammar: 0 (strict admission rejects all production patterns). Substrate landed; consumer-activation deferred pending soundness fix.
+
+### Hard-gate verification ledger
+
+| Gate | Status | Verification artefact |
+|------|--------|-----------------------|
+| SHAPE_DICT non-empty per primary grammar | ✓ MET | JSON=2 / BBNF=10 / CSS L4=24 / Sheets=7 (W3.1 cargo expand) |
+| PHF tables non-empty | ✓ MET | CSS L4=30 / BBNF=4 / EBNF=4 / Sheets=2 / JSON=1 |
+| ClassifyByte non-empty per primary | ◐ PARTIAL | CSS L4=135 / JSON=1 / Sheets=4 / BBNF=0 (BBNF vacuously unfired — its Alts are mostly regex-valued) |
+| `lookup_precedence` symbol absent | ✗ MISS | 1 occurrence in CSS / sheets / bbnf bench binaries; `advance_or_pop_with` SY arm out of W3.4 bounds; samply 0% self-time on hot path |
+| CTNS state ≥ 1 per primary | ✗ MISS | 0 admitted; tightened admission rejects all production patterns; soundness fix deferred |
+| Bounded Regex active on CSS L4 + Sheets | ✗ MISS | Deferred; `last_byte_set` admission unsound for patterns with mid-pattern structural-byte matches |
+| Direct-to-struct emitted projection | ✓ MET | CSS L4 Color/ColorMix bindings visible via cargo expand |
+| Workspace tests pass | ✓ MET | 1348 / 0 / 36 |
+| **JSON twitter ≥ 2000 MB/s (W3 gate)** | ✗ MISS | Measured 277 MB/s (14% of gate) |
+
+### Throughput-translation deferral attribution
+
+The W3 substrate landed verifiably across all five sub-waves but throughput-translation is bounded by three deferrals all in cross-cut-with-driver territory:
+
+1. **ShapeRef record-count drop** requires `SeqPromote::ShapeRef { idx }` path in `bbnf-tape/src/driver.rs::close_compound` (out of W3.1 file bounds). The walker emits the SHAPE_REF_DICT_IDX const + reference at every mineable Seq arm but `close_compound` doesn't promote — the multi-record skeleton still emits.
+2. **Pratt LUT shadow** in `advance_or_pop_with`'s ShuntingYard arm (out of W3.4 file bounds). The walker's SY arm uses inline PRECEDENCE_LUT but the cold-path retention keeps `lookup_precedence` linked.
+3. **CTNS + bounded Regex unsound admission** rejects all production patterns. A provably-sound admission needs per-run DFA state analysis (W3.5 calls this out as future work).
+
+All three are documented as cross-tranche debt for AX cleanup or a follow-on W4.5 if W4's gains motivate it. The architectural transposition that the AW-IV plan invoked IS landed and verifiable; the throughput-multiplier compounding the plan projected is bounded by the substrate-without-consumer residual W3 explicitly identified.
+
+### Per-bench post-W3 numbers (cold per-parse)
+
+`docs/benchmarks/post-AW-IV-W3.json` carries the full matrix. Summary:
+
+| Entry | post-AU | post-AW-III | post-W2 | post-W3 | Δ vs W2 |
+|---|---:|---:|---:|---:|---:|
+| json twitter | 1967 | 170 | 280 | 277 | -1.1% (noise) |
+| json citm | 2438 | 213 | 289 | 287 | -0.7% |
+| json canada | 1231 | 98 | 136 | 136 | flat |
+| json data_xl | 1179 | 137 | 199 | 197 | -1.0% |
+| json data_s | 1746 | 164 | 273 | 274 | +0.4% |
+| css normalize | 735 | 14 | 25 | 24 | -4.0% (noise) |
+| css bootstrap | 454 | 8 | 14 | 14 | flat |
+| css tailwind | 496 | 9 | 16 | 16 | flat |
+| sheets parse_simple | 95 | 4 | 6 | 6 | flat |
+| sheets parse_nested | 128 | 4 | 7 | 7 | flat |
+| sheets parse_stress | 121 | 3 | 6 | 6 | flat |
+| bbnf json | 283 | 9 | 14 | 15 | +7.1% |
+| bbnf ebnf | 223 | 6 | 9 | 10 | +11.1% |
+| bbnf css_pretty | 647 | 20 | 31 | 33 | +6.5% |
+| bbnf google_sheets | 858 | 29 | 47 | 48 | +2.1% |
+| bbnf bbnf_self | 394 | 12 | 19 | 19 | flat |
+| bbnf css_l4_grammar | 496 | 19 | 29 | 30 | +3.4% |
+
+Observed deltas confirm the substrate-without-consumer diagnosis: the W3 IR + emitter substrates are emitted (cargo expand verifiable) but the runtime hot-path consumers don't activate the projected speedup. CSS / Sheets families show flat (the W3.1 ShapeRef + W3.3 ClassifyByte LUTs land but bench unchanged because the close-compound shadow keeps the multi-record skeleton); BBNF parse-grammar benches show modest +2-11% (PHF AltLinear inlining helps the most on grammar-parsing where literal-led keyword Alts dominate).
+
+### W3 → W4 hand-off
+
+W4 opens on the W3 substrate. Four parallel agents:
+- W4.1 — AVX2 u8x32 widening (AN.5 chronic) + WASM simd128 polish
+- W4.2 — Scanner PaddedView migration + cluster consolidation + NEON 17-digit fractional
+- W4.3 — Bloom + GADT runtime dedup + grammar-level pattern hoisting
+- W4.4 — Document-parallel fork over stage-1 structural index
+
+Hard gate: AVX2 ≥ 15% drop on x86_64; tailwind 4c sub-linear-to-linear scaling; `GRAMMAR_PROFILE.list_rules` non-empty for CSS L4.

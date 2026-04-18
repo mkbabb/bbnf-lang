@@ -79,22 +79,17 @@ fn emit_ref_call_tape_returns_some_for_classified_target() {
 /// `emit_ref_call_tape` returns None for an unclassified target rule.
 #[test]
 fn emit_ref_call_tape_returns_none_for_unclassified_target() {
-    // Find a grammar with unclassified rules. Sheets has 6 such rules
-    // (unary_expr, array_literal, paren_expr, func_args, let_args,
-    // lambda_params). Pick one.
+    // AX.W0a.2.b widened detector coverage — Sheets no longer has
+    // any unclassified entry-reachable rules. Use a synthesised
+    // RuleId above the rule count to exercise the None return path
+    // (a lookup that falls off `ir.rules`).
     let ir = compile_grammar("../../grammar/google-sheets/google-sheets.bbnf");
-    let unclassified = ir
-        .rules
-        .iter()
-        .find(|r| {
-            !r.meta.is_transparent
-                && !ir.shape_assignments.get(r.id).is_classified()
-        })
-        .expect("Sheets must have at least one unclassified rule");
-    let call = emit_ref_call_tape("Sheets", unclassified.id, &ir);
+    let nonexistent: bbnf_ir::RuleId = ir.rules.len() as u32 + 999;
+    let call = emit_ref_call_tape("Sheets", nonexistent, &ir);
     assert!(
         call.is_none(),
-        "emit_ref_call_tape must return None for an unclassified target"
+        "emit_ref_call_tape must return None when the target RuleId is \
+         out of range"
     );
 }
 
@@ -146,9 +141,14 @@ fn json_admits_via_shape_dispatcher_entrypoint() {
 /// direct calls to target shape fns; calling a non-existent shape fn
 /// would be a compilation error. The admission gate prevents that.
 #[test]
-fn admission_rejects_grammars_with_unclassified_value_ref_targets() {
-    // Sheets has unclassified rules (unary_expr, array_literal, etc.)
-    // reachable from classified rules. Admission must reject.
+fn admission_accepts_grammars_with_classified_value_ref_targets() {
+    // Post AX.W0a.2.b — detector widening (AltDispatch + Flat +
+    // Scalar extensions + fixed-point classification) closes the
+    // entry-reachable unclassified Ref gap for Sheets / CSS L4 /
+    // BBNF / EBNF / BNF / BbnfBootstrap. The admission gate now
+    // accepts every grammar with classified entry-reachable Refs.
+    // Per AX invariant 9, any subsequent wave that flips this back
+    // without cause must amend `gate_predicate_wire_contract.rs`.
     let ir = compile_grammar("../../grammar/google-sheets/google-sheets.bbnf");
     assert!(
         has_shape_dispatch(&ir),
@@ -159,12 +159,10 @@ fn admission_rejects_grammars_with_unclassified_value_ref_targets() {
         "Sheets's entry (formula) is classified (Flat) — has_full_shape_coverage admits"
     );
     assert!(
-        !has_shape_dispatcher_entrypoint(&ir),
-        "Sheets has unclassified rules reachable from classified bodies (unary_expr, \
-         array_literal, paren_expr, func_args, let_args, lambda_params). The W5.2 \
-         strict admission gate rejects such grammars to prevent emission of direct \
-         calls to non-existent shape fns. Full activation requires broader detector \
-         coverage or a walker-fallback shim (follow-on wave)."
+        has_shape_dispatcher_entrypoint(&ir),
+        "Post AX.W0a.2.b: Sheets's entry-reachable Ref graph is closed \
+         over classified targets (let_args → Flat, let_binding → Flat, \
+         etc.). The admission gate accepts."
     );
 }
 

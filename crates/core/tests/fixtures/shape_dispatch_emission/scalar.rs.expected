@@ -1,4 +1,5 @@
-/// AW-V.W3.2 — per-grammar Scalar-shape parse function.
+/// AW-V.W3.2 — per-grammar Scalar-shape parse function
+/// (single-literal body).
 #[inline(always)]
 #[allow(non_snake_case, clippy::too_many_arguments)]
 pub fn parse_scalar_JsonFixture_comma(

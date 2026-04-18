@@ -1232,3 +1232,172 @@ fn w4fix_arglist_admits_ref_head_with_separate_paren() {
         "W4-fix: Ref head + separate `(` admits ArgList"
     );
 }
+
+// ─── AX.W0a.2.b — AltDispatch + detector-widening tests ──────────────
+
+/// Fixture: a three-branch mixed Alt dispatcher —
+/// `target = subA | "literal" | /[regex]/` where `subA` is
+/// classified. Mirrors CSS `value`'s mixed-leaf pattern.
+fn build_alt_dispatch_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    // subA: Literal("sub") — classifies as Keyword.
+    let sub_body = mapped(lit(&mut ir, "sub"));
+    let sub_a = push_rule(&mut ir, "subA", sub_body);
+    // target: Alt of Ref(subA) | Literal("only") | Regex("\\d+")
+    let target_body = IrNode::Alt(
+        vec![
+            AltBranch {
+                node: IrNode::Ref(sub_a),
+                first_set: None,
+            },
+            AltBranch {
+                node: lit(&mut ir, "only"),
+                first_set: None,
+            },
+            AltBranch {
+                node: regex(&mut ir, r"\d+"),
+                first_set: None,
+            },
+        ],
+        None,
+    );
+    let target = push_rule(&mut ir, "target", target_body);
+    ir.entry = target;
+    finalise_and_classify(&mut ir);
+    (ir, target)
+}
+
+#[test]
+fn axw0a2b_alt_dispatch_admits_mixed_leaf_alt() {
+    let (ir, target) = build_alt_dispatch_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(target),
+        ShapeTag::AltDispatch,
+        "AltDispatch admits Alt mixing Ref-to-classified + Literal + Regex"
+    );
+}
+
+/// Fixture: a single-Ref body — `alias = target` where `target` is
+/// classified. Mirrors BbnfBootstrap `lhs = identifier`.
+fn build_scalar_ref_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    let target_body = mapped(lit(&mut ir, "x"));
+    let target = push_rule(&mut ir, "target", target_body);
+    let alias_body = IrNode::Ref(target);
+    let alias = push_rule(&mut ir, "alias", alias_body);
+    ir.entry = alias;
+    finalise_and_classify(&mut ir);
+    (ir, alias)
+}
+
+#[test]
+fn axw0a2b_scalar_admits_transparent_ref_body() {
+    let (ir, alias) = build_scalar_ref_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(alias),
+        ShapeTag::Scalar,
+        "Scalar admits single-Ref transparent-alias bodies \
+         when the target is classified"
+    );
+}
+
+/// Fixture: a non-entry Repeat-rooted rule — `list = inner +`
+/// where `list` is NOT the entry rule. Mirrors BBNF `alternation =
+/// (concatenation ?w, "|"?) +` (a non-entry rule reachable from the
+/// entry `grammar`).
+///
+/// An entry-rule Repeat body is claimed by Array's Shape 2
+/// (list-rule detection); Flat's Repeat-rooted admission covers
+/// non-entry cases.
+fn build_repeat_rooted_flat_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    let item_body = mapped(lit(&mut ir, "a"));
+    let item = push_rule(&mut ir, "item", item_body);
+    let list_body = IrNode::Repeat {
+        inner: Box::new(IrNode::Seq(vec![
+            IrNode::Ref(item),
+            lit(&mut ir, "|"),
+        ])),
+        lo: 1,
+        hi: u32::MAX,
+    };
+    let list = push_rule(&mut ir, "list", list_body);
+    // Wrap `list` in a separate entry rule so `list` is NOT the
+    // list-rule entry candidate.
+    let outer_body = IrNode::Ref(list);
+    let outer = push_rule(&mut ir, "outer", outer_body);
+    ir.entry = outer;
+    finalise_and_classify(&mut ir);
+    (ir, list)
+}
+
+#[test]
+fn axw0a2b_flat_admits_repeat_rooted_body() {
+    let (ir, list) = build_repeat_rooted_flat_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(list),
+        ShapeTag::Flat,
+        "Flat admits Repeat-rooted bodies after AX.W0a.2.b"
+    );
+}
+
+/// Fixture: a Seq with a Repeat head — `expr = prefix* , core`.
+/// Mirrors Sheets `unary_expr = unary_prefix * , postfix_expr`.
+fn build_repeat_head_flat_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    let prefix_body = mapped(lit(&mut ir, "-"));
+    let prefix = push_rule(&mut ir, "prefix", prefix_body);
+    let core_body = mapped(lit(&mut ir, "x"));
+    let core = push_rule(&mut ir, "core", core_body);
+    let expr_body = IrNode::Seq(vec![
+        IrNode::Repeat {
+            inner: Box::new(IrNode::Ref(prefix)),
+            lo: 0,
+            hi: u32::MAX,
+        },
+        IrNode::Ref(core),
+    ]);
+    let expr = push_rule(&mut ir, "expr", expr_body);
+    ir.entry = expr;
+    finalise_and_classify(&mut ir);
+    (ir, expr)
+}
+
+#[test]
+fn axw0a2b_flat_admits_repeat_max_head() {
+    let (ir, expr) = build_repeat_head_flat_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(expr),
+        ShapeTag::Flat,
+        "Flat admits Seq with Repeat(lo, MAX) head after AX.W0a.2.b"
+    );
+}
+
+/// Fixture: a delimited Seq — `block = "[" , ref , "]"`. Previously
+/// rejected by Flat's head-byte exclusion; now admitted since
+/// Object/Array claim their narrow cases first.
+fn build_delimited_seq_flat_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    let body_body = mapped(lit(&mut ir, "x"));
+    let body = push_rule(&mut ir, "body", body_body);
+    let block_body = IrNode::Seq(vec![
+        lit(&mut ir, "["),
+        IrNode::Ref(body),
+        lit(&mut ir, "]"),
+    ]);
+    let block = push_rule(&mut ir, "block", block_body);
+    ir.entry = block;
+    finalise_and_classify(&mut ir);
+    (ir, block)
+}
+
+#[test]
+fn axw0a2b_flat_admits_bracketed_seq() {
+    let (ir, block) = build_delimited_seq_flat_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(block),
+        ShapeTag::Flat,
+        "Flat admits bracketed `[ ... ]` Seqs after AX.W0a.2.b \
+         (Array/Object/ArgList/Wrap claim their narrow cases first)"
+    );
+}

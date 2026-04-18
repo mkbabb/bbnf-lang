@@ -182,30 +182,58 @@ fn flatten_seq<'a>(node: &'a IrNode, out: &mut Vec<&'a IrNode>) {
 /// `Alt` with non-literal branches does not — those would have been
 /// claimed by Wrap / AltDispatch / Keyword detectors earlier.
 fn head_is_admissible(node: &IrNode, ir: &GrammarIR) -> bool {
-    let _ = ir;
     match unwrap_map_ow(node) {
         IrNode::Literal(_) => true,
         IrNode::Regex(_) => true,
         IrNode::Ref(_) => true,
         IrNode::Alt(branches, _) => {
-            // A head that is itself an Alt only passes when every branch
-            // is literal-led (classical keyword-set head). Mixed or
-            // Ref-containing Alts suggest Wrap / decision-point shapes.
-            branches
-                .iter()
-                .all(|b| matches!(unwrap_map_ow(&b.node), IrNode::Literal(_)))
+            // AX.W0a.2.b: admit Alt heads whose every branch is a
+            // leaf-like node — Literal, Regex, Ref, or a literal-only
+            // Seq (the prefix-tree-factored case).
+            //
+            // Canonical: CSS `alignDecl = ("justify-content" |
+            // "align-items" | …)` where the BBNF string alternation
+            // gets optimized into nested `Seq(Literal(prefix),
+            // Alt(Literal(suffix_a), Literal(suffix_b), …))` chains.
+            // The emitter's Seq position emission handles the nested
+            // structure correctly.
+            branches.iter().all(|b| {
+                head_branch_is_leaf_like(&b.node, ir)
+            })
         }
-        // AX.W0a.2.b: admit any `Repeat` head whose inner is a
-        // Literal / Ref / Regex leaf — covers Sheets
-        // `unary_expr = unary_prefix * , postfix_expr`
-        // (Repeat(0, MAX) head) as well as the older optional-head
-        // case (CSS `mediaQuery = (mediaQualifier)?, (mediaType)?,
-        // …`).
-        IrNode::Repeat { inner, .. } => {
-            matches!(
-                unwrap_map_ow(inner),
-                IrNode::Ref(_) | IrNode::Literal(_) | IrNode::Regex(_)
-            )
+        // AX.W0a.2.b: admit any `Repeat` head whose inner is
+        // leaf-like (Literal / Ref / Regex / leaf-only Seq / Alt of
+        // leaves). Covers:
+        //   - Sheets `unary_expr = unary_prefix * , postfix_expr`
+        //     (Repeat(0, MAX, Ref) head).
+        //   - Sheets `let_args = (let_binding << comma) * ,
+        //     expression` (Repeat(0, MAX, Skip(Ref, Ref)) head).
+        //   - BNF `alternation = expression , …` where the non-
+        //     structural pipeline inlines `expression` into its
+        //     Repeat body, yielding a Repeat head.
+        //   - The older optional-head case (CSS `mediaQuery =
+        //     (mediaQualifier)?, (mediaType)?, …`).
+        IrNode::Repeat { inner, .. } => head_branch_is_leaf_like(inner, ir),
+        _ => false,
+    }
+}
+
+/// Whether a Flat head's Alt branch is leaf-like — Literal / Regex /
+/// Ref to a classified rule / Seq whose children are themselves
+/// leaf-like (prefix-tree factoring).
+fn head_branch_is_leaf_like(node: &IrNode, ir: &GrammarIR) -> bool {
+    match unwrap_map_ow(node) {
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
+        IrNode::Ref(rid) => ir.shape_assignments.get(*rid).is_classified(),
+        IrNode::Alt(branches, _) => branches
+            .iter()
+            .all(|b| head_branch_is_leaf_like(&b.node, ir)),
+        IrNode::Seq(children) => children
+            .iter()
+            .all(|c| head_branch_is_leaf_like(c, ir)),
+        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+            head_branch_is_leaf_like(lhs, ir)
+                && head_branch_is_leaf_like(rhs, ir)
         }
         _ => false,
     }

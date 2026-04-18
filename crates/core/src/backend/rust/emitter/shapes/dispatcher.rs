@@ -427,9 +427,13 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
     // (e.g. a top-level Object), we emit a delegator to that shape fn.
     let root_tag = ir.shape_assignments.get(entry);
 
-    let dispatch_body = if matches!(root_tag, ShapeTag::None) && has_shape_dispatch(ir) {
+    let dispatch_body = if (matches!(root_tag, ShapeTag::None | ShapeTag::Wrap))
+        && has_shape_dispatch(ir)
+    {
         // Root is Alt-like — enumerate branches via the Alt body and
-        // emit per-branch arms that call the matched shape fn.
+        // emit per-branch arms that call the matched shape fn. Both
+        // an unclassified root (pre-W4) and a `Wrap` root (W4+) take
+        // this path — Wrap-shape IS the Alt-of-Ref dispatcher.
         emit_alt_dispatch_body(grammar_suffix, entry_rule, ir)
     } else if root_tag.is_w3_classified() {
         // Root is itself a shape — direct delegator. Number- and
@@ -705,7 +709,9 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
 
     let root_tag = ir.shape_assignments.get(entry);
 
-    let dispatch_body = if matches!(root_tag, ShapeTag::None) && has_shape_dispatch(ir) {
+    let dispatch_body = if (matches!(root_tag, ShapeTag::None | ShapeTag::Wrap))
+        && has_shape_dispatch(ir)
+    {
         emit_visitor_alt_dispatch_body(grammar_suffix, entry_rule, ir)
     } else if root_tag.is_w3_classified() {
         let shape_name = shape_tag_name(root_tag);

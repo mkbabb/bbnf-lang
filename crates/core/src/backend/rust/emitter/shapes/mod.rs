@@ -13,6 +13,9 @@
 //!
 //! # Module layout
 //!
+//! ## W3.2 — JSON shape emitters (active; consumed by
+//! [`emit_shapes_for_grammar`]):
+//!
 //! - [`object`] — `parse_object_<grammar>_<rule>` emitter.
 //! - [`array`] — `parse_array_<grammar>_<rule>` emitter.
 //! - [`string`] — `parse_string_<grammar>_<rule>` emitter (quoted-
@@ -27,6 +30,28 @@
 //! - [`dispatcher`] — top-level `parse_<grammar>_<root>` + the shared
 //!   `ScanState` / whitespace-skip emission.
 //!
+//! ## W4.1 — CSS L4 + Sheets shape emitters (substrate landed; W4.2 /
+//! W4.3 wire the per-grammar consumers):
+//!
+//! - [`pratt`] — `parse_pratt_<grammar>_<rule>` emitter for
+//!   operator-chain head rules (Sheets operator tower, CSS calc /
+//!   min / max).
+//! - [`unordered`] — `parse_unordered_<grammar>_<rule>` emitter for
+//!   `Repeat { lo: 1, .. }` over a disjoint-FIRST Alt (CSS
+//!   `compoundSelector` canonical case).
+//! - [`arglist`] — `parse_arglist_<grammar>_<rule>` emitter for
+//!   `name(arg, arg, …)` positional calls (CSS function family,
+//!   Sheets `func_call` / `let_call` / `lambda_call`).
+//! - [`flat`] — `parse_flat_<grammar>_<rule>` emitter for typed
+//!   `Seq(literal_head, body+)` rules (CSS `*Decl` family, BBNF
+//!   directive bodies).
+//! - [`wrap`] — `parse_wrap_<grammar>_<rule>` emitter for transparent
+//!   `Alt(Ref, Ref, …)` dispatchers (JSON `value`, CSS `color` /
+//!   `atRule`, Sheets `range_end`).
+//! - [`hregex`] — `parse_hregex_<grammar>_<rule>` emitter for regex
+//!   leaves with host decode (CSS `ident`, Sheets `cell_ref` /
+//!   `identifier`, BBNF `identifier`).
+//!
 //! # Wire contract
 //!
 //! Each per-shape emitter takes `(grammar_ident, rule, ir)` and returns
@@ -39,13 +64,19 @@
 //! through `__dta_walker_inline::run` per the AX cold-path replay
 //! contract — their codegen path is unchanged.
 
+pub mod arglist;
 pub mod array;
 pub mod dispatcher;
+pub mod flat;
+pub mod hregex;
 pub mod keyword;
 pub mod number;
 pub mod object;
+pub mod pratt;
 pub mod scalar;
 pub mod string;
+pub mod unordered;
+pub mod wrap;
 
 use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use bbnf_ir::GrammarIR;
@@ -109,6 +140,13 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
             continue;
         }
         let tag = ir.shape_assignments.get(rule.id);
+        // W3 shapes have complete emitter + dispatcher wiring.
+        // W4 shapes (Pratt / Unordered / ArgList / Flat / Wrap /
+        // HRegex) land their emitter scaffolding in W4.1 but are
+        // not consumed by the dispatcher until W4.2 / W4.3 wire the
+        // per-grammar consumer routes. Skip W4 tags here so the
+        // scaffolding compiles without being called; they get
+        // activated grammar-by-grammar in subsequent sub-waves.
         if !tag.is_w3_classified() {
             continue;
         }

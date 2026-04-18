@@ -20,13 +20,15 @@
 //! consumes.
 //!
 //! W4 shapes (Pratt / Unordered / ArgList / Flat / Wrap / HRegex)
-//! remain stubs returning `false` from their detectors; the deferral
-//! assertions at the bottom document that contract so a partial W4
-//! landing can't silently claim coverage the mechanism hasn't
-//! produced.
+//! landed as part of AW-V.W4.1. The W4 detectors admit the structural
+//! predicates their emitter modules consume; the emitter scaffolding
+//! produces parsable-Rust TokenStreams verified by the per-shape
+//! `w4_<shape>_emitter_produces_parsable_tokens` tests. The per-
+//! grammar consumer wiring for CSS / Sheets lands in W4.2 / W4.3.
 
 use bbnf::backend::rust::emitter::shapes::{
-    array, keyword, number, object, scalar, string,
+    arglist, array, flat, hregex, keyword, number, object, pratt, scalar,
+    string, unordered, wrap,
 };
 use bbnf_ir::passes::recognizers::shape_dispatch::{
     scalar as scalar_detect, shape_dispatch, ShapeTag,
@@ -235,83 +237,126 @@ fn scalar_shape_emit_matches_golden() {
     assert_matches_golden(&actual, expected, "scalar.rs");
 }
 
-// ─── W4 deferral assertions ─────────────────────────────────────────
+// ─── W4 detector activation assertions ──────────────────────────────
 //
 // The W4 detectors (Pratt / Unordered / ArgList / Flat / Wrap /
-// HRegex) are defined in [`ShapeTag`] today but their detector
-// bodies return `false` — W3.1 stubbed them so the wire contract was
-// in place for W3.2's emitter lift. These tests document that
-// status: no rule in the JSON fixture receives any of the W4 tags.
+// HRegex) landed in W4.1. The JSON fixture exercises Wrap via
+// `value = object | array | ...`; it has no Pratt / Unordered /
+// ArgList / Flat / HRegex rules. Per-grammar coverage for Sheets /
+// CSS / BBNF lands in the parity tests + bench suites.
+
+#[test]
+fn w4_pratt_no_hits_on_json_fixture() {
+    let (ir, _) = build_json_ir();
+    assert_eq!(ir.shape_assignments.count_of(ShapeTag::Pratt), 0);
+}
+
+#[test]
+fn w4_unordered_no_hits_on_json_fixture() {
+    let (ir, _) = build_json_ir();
+    assert_eq!(ir.shape_assignments.count_of(ShapeTag::Unordered), 0);
+}
+
+#[test]
+fn w4_arglist_no_hits_on_json_fixture() {
+    let (ir, _) = build_json_ir();
+    assert_eq!(ir.shape_assignments.count_of(ShapeTag::ArgList), 0);
+}
+
+#[test]
+fn w4_flat_no_hits_on_json_fixture() {
+    // JSON's `pair` Seq has a Ref head (not a Literal), so Flat
+    // rejects it.
+    let (ir, _) = build_json_ir();
+    assert_eq!(ir.shape_assignments.count_of(ShapeTag::Flat), 0);
+}
+
+#[test]
+fn w4_wrap_classifies_json_value() {
+    // JSON `value = object | array | string | number | bool | null`
+    // is the canonical Wrap-shape rule — exactly one hit.
+    let (ir, rules) = build_json_ir();
+    assert_eq!(ir.shape_assignments.count_of(ShapeTag::Wrap), 1);
+    assert_eq!(ir.shape_assignments.get(rules.value), ShapeTag::Wrap);
+}
+
+#[test]
+fn w4_hregex_no_hits_on_json_fixture() {
+    let (ir, _) = build_json_ir();
+    assert_eq!(ir.shape_assignments.count_of(ShapeTag::HRegex), 0);
+}
+
+// ─── W4 emitter TokenStream parse check ─────────────────────────────
 //
-// When W4 lands, each assertion below gets replaced by a
-// shape-positive test over a grammar that exercises the detector.
-// Today they guard the stub contract so a partial W4 landing doesn't
-// silently claim coverage the mechanism hasn't produced.
+// Each W4 emitter produces a `pub fn parse_<shape>_<grammar>_<rule>`
+// item that MUST parse as valid Rust. We invoke each emitter directly
+// over a rule whose shape matches the emitter's domain and assert the
+// TokenStream parses — proving the emitter output is syntactically
+// well-formed even before W4.2 / W4.3 wires per-grammar consumers.
+//
+// The emitters are referenced via JSON's `value` (Wrap) rule for
+// Wrap; for the other five shapes we pass any JSON rule — the
+// emitters' outputs are scaffold-level and shape-agnostic beyond
+// the rule's ident + variant stamping.
 
 #[test]
-fn w4_pratt_detector_returns_none_for_all_w3_fixtures() {
-    // Sheets operator towers / CSS math bodies — the W3 fixture has
-    // no operator chains, so every rule stays out of Pratt.
-    let (ir, _) = build_json_ir();
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Pratt),
-        0,
-        "W4 Pratt detector stubbed — no W3 rule may carry the Pratt \
-         tag until the detector body lands",
-    );
+fn w4_pratt_emitter_produces_parsable_tokens() {
+    let (ir, rules) = build_json_ir();
+    let rule = &ir.rules[rules.number as usize];
+    let ts = pratt::emit_parse_pratt("JsonFixture", rule, &ir);
+    let _ = format_tokens(&ts);
+    let ts_v = pratt::emit_parse_pratt_visitor("JsonFixture", rule, &ir);
+    let _ = format_tokens(&ts_v);
 }
 
 #[test]
-fn w4_unordered_detector_returns_none_for_all_w3_fixtures() {
-    let (ir, _) = build_json_ir();
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Unordered),
-        0,
-        "W4 Unordered detector stubbed — no W3 rule may carry the \
-         Unordered tag",
-    );
+fn w4_unordered_emitter_produces_parsable_tokens() {
+    let (ir, rules) = build_json_ir();
+    let rule = &ir.rules[rules.array as usize];
+    let ts = unordered::emit_parse_unordered("JsonFixture", rule, &ir);
+    let _ = format_tokens(&ts);
+    let ts_v = unordered::emit_parse_unordered_visitor("JsonFixture", rule, &ir);
+    let _ = format_tokens(&ts_v);
 }
 
 #[test]
-fn w4_arglist_detector_returns_none_for_all_w3_fixtures() {
-    let (ir, _) = build_json_ir();
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::ArgList),
-        0,
-        "W4 ArgList detector stubbed — no W3 rule may carry the \
-         ArgList tag",
-    );
+fn w4_arglist_emitter_produces_parsable_tokens() {
+    let (ir, rules) = build_json_ir();
+    let rule = &ir.rules[rules.object as usize];
+    let ts = arglist::emit_parse_arglist("JsonFixture", rule, &ir);
+    let _ = format_tokens(&ts);
+    let ts_v = arglist::emit_parse_arglist_visitor("JsonFixture", rule, &ir);
+    let _ = format_tokens(&ts_v);
 }
 
 #[test]
-fn w4_flat_detector_returns_none_for_all_w3_fixtures() {
-    let (ir, _) = build_json_ir();
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Flat),
-        0,
-        "W4 Flat detector stubbed — no W3 rule may carry the Flat tag",
-    );
+fn w4_flat_emitter_produces_parsable_tokens() {
+    let (ir, rules) = build_json_ir();
+    let rule = &ir.rules[rules.pair as usize];
+    let ts = flat::emit_parse_flat("JsonFixture", rule, &ir);
+    let _ = format_tokens(&ts);
+    let ts_v = flat::emit_parse_flat_visitor("JsonFixture", rule, &ir);
+    let _ = format_tokens(&ts_v);
 }
 
 #[test]
-fn w4_wrap_detector_returns_none_for_all_w3_fixtures() {
-    let (ir, _) = build_json_ir();
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::Wrap),
-        0,
-        "W4 Wrap detector stubbed — no W3 rule may carry the Wrap tag",
-    );
+fn w4_wrap_emitter_produces_parsable_tokens() {
+    let (ir, rules) = build_json_ir();
+    let rule = &ir.rules[rules.value as usize];
+    let ts = wrap::emit_parse_wrap("JsonFixture", rule, &ir);
+    let _ = format_tokens(&ts);
+    let ts_v = wrap::emit_parse_wrap_visitor("JsonFixture", rule, &ir);
+    let _ = format_tokens(&ts_v);
 }
 
 #[test]
-fn w4_hregex_detector_returns_none_for_all_w3_fixtures() {
-    let (ir, _) = build_json_ir();
-    assert_eq!(
-        ir.shape_assignments.count_of(ShapeTag::HRegex),
-        0,
-        "W4 HRegex detector stubbed — no W3 rule may carry the HRegex \
-         tag",
-    );
+fn w4_hregex_emitter_produces_parsable_tokens() {
+    let (ir, rules) = build_json_ir();
+    let rule = &ir.rules[rules.string as usize];
+    let ts = hregex::emit_parse_hregex("JsonFixture", rule, &ir);
+    let _ = format_tokens(&ts);
+    let ts_v = hregex::emit_parse_hregex_visitor("JsonFixture", rule, &ir);
+    let _ = format_tokens(&ts_v);
 }
 
 // ─── Wire-contract invariants ───────────────────────────────────────
@@ -340,28 +385,26 @@ fn shape_dispatch_is_idempotent() {
 }
 
 #[test]
-fn w3_active_tags_are_only_w3_shapes() {
-    // The shape_assignments map should contain no W4 tags — W4
-    // detectors are stubbed. Every classified rule carries one of
-    // the six W3-active tags.
+fn classified_tags_match_their_category_check() {
+    // Every rule in `shape_assignments` carries either a W3 or a W4
+    // tag. `None` is absent by construction (the dispatch orchestrator
+    // skips None tags when populating the map).
     let (ir, _) = build_json_ir();
     for (rule_id, tag) in &ir.shape_assignments.per_rule {
         assert!(
-            tag.is_w3_classified(),
-            "rule {rule_id} classified as {tag:?} — only W3 tags may \
-             appear in shape_assignments until W4 lands",
+            tag.is_classified(),
+            "rule {rule_id} classified as {tag:?} — only W3 or W4 tags \
+             may appear in shape_assignments",
         );
     }
 }
 
-// The bodies-are-classified invariant: every rule that can be
-// classified by structural inspection alone (no miner output
-// dependency) should resolve to a W3 tag for the JSON fixture.
+// The primary six — object / array / string / number / bool /
+// null — are the W3.1 hard-gate rules, all W3-classified regardless
+// of W4 activation (Wrap / HRegex etc. don't claim them first).
 #[test]
 fn json_fixture_structural_rules_all_classified() {
     let (ir, rules) = build_json_ir();
-    // The primary six — object / array / string / number / bool /
-    // null — are the W3.1 hard-gate rules.
     for rid in [
         rules.object,
         rules.array,
@@ -379,24 +422,23 @@ fn json_fixture_structural_rules_all_classified() {
     }
 }
 
-/// The `pair` and `value` rules defer to the walker in W3 — `pair`
-/// is W4's Flat shape (typed Seq), `value` is W4's Wrap shape
-/// (transparent Alt-of-Refs dispatcher). Both must carry
-/// [`ShapeTag::None`] until the W4 detectors fire.
+/// The `value` rule classifies as Wrap under W4. `pair` has a Ref
+/// head (not a Literal) so Flat rejects it; it stays unclassified.
 #[test]
-fn json_fixture_pair_and_value_defer_to_walker() {
+fn json_fixture_value_is_wrap_pair_stays_unclassified() {
     let (ir, rules) = build_json_ir();
     let _ = matches!(&ir.rules[rules.pair as usize].body, IrNode::Seq(_));
     let _ = matches!(&ir.rules[rules.value as usize].body, IrNode::Alt(..));
     assert_eq!(
         ir.shape_assignments.get(rules.pair),
         ShapeTag::None,
-        "`pair` is W4's Flat shape; W3 must route it to the walker",
+        "`pair` has a Ref head; Flat requires a Literal head so it \
+         stays unclassified",
     );
     assert_eq!(
         ir.shape_assignments.get(rules.value),
-        ShapeTag::None,
-        "`value` is W4's Wrap shape; W3 must route it to the walker",
+        ShapeTag::Wrap,
+        "`value` is W4's Wrap shape (Alt of Refs)",
     );
 }
 

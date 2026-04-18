@@ -68,6 +68,7 @@ mod identifier;
 pub mod kernel_shape;
 pub mod key_dispatch;
 pub mod keyword_stats;
+pub mod list_rules;
 mod node_facts;
 pub mod operator_chain;
 pub mod pattern_alphabet;
@@ -101,6 +102,7 @@ pub use identifier::IdentifierMiner;
 pub use kernel_shape::{KernelShape, KernelStrategy, select_kernel_strategy};
 pub use key_dispatch::KeyDispatchMiner;
 pub use keyword_stats::{KeywordBranch, KeywordBranchMap, KeywordStatsMiner};
+pub use list_rules::mine_list_rules;
 pub use operator_chain::{
     collect_operator_chains, OperatorArity, OperatorChainEntry, OperatorChainFacts,
 };

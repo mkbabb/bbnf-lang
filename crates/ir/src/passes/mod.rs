@@ -63,6 +63,7 @@ pub use recognizers::dta::{
     DtaTable, FrameKind, LiteralPayload, PrecedenceEntry, PrecedenceTable, RegexPayloadKind,
     SeqPromote, StateId, summarise as summarise_dta,
 };
+pub use recognizers::mine_list_rules;
 pub use recognizers::mine_recognizers;
 pub use recognizers::operator_chain::{
     collect_operator_chains, OperatorArity, OperatorChainEntry, OperatorChainFacts,

@@ -43,6 +43,8 @@ fn literal_is_span_eligible() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -92,6 +94,8 @@ fn map_not_span_eligible() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -140,6 +144,8 @@ fn transitive_span_eligibility() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -193,6 +199,8 @@ fn cyclic_not_span_eligible() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -239,6 +247,8 @@ fn seq_of_literals_span_eligible() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),

@@ -62,6 +62,8 @@ fn dispatch_for_disjoint_branches() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -138,6 +140,8 @@ fn no_dispatch_for_overlapping_branches() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -212,6 +216,8 @@ fn dispatch_for_nested_alt() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -294,6 +300,8 @@ fn dispatch_with_nullable_branch_via_follow() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -378,6 +386,8 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -472,6 +482,8 @@ fn fallback_dispatch_typed_plus_catchall() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -558,6 +570,8 @@ fn fallback_dispatch_not_superset() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -632,6 +646,8 @@ fn fallback_dispatch_too_few_branches() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),

@@ -32,6 +32,8 @@ fn make_ir(rules: Vec<IrRule>) -> GrammarIR {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -296,6 +298,8 @@ fn map_enum_wrap() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -345,6 +349,8 @@ fn map_box_wrap() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -395,6 +401,8 @@ fn make_ir_with_fns(rules: Vec<IrRule>, fns: Vec<FnDescriptor>, strings: Vec<Str
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),

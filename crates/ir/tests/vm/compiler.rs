@@ -39,6 +39,8 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -177,6 +179,8 @@ fn compile_memo_rule() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -248,6 +252,8 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -413,6 +419,8 @@ fn compile_token_dispatch_emits_dispatch_token() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -503,6 +511,8 @@ fn compile_call() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),

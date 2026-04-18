@@ -53,6 +53,8 @@ fn prune_removes_unreachable() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -105,6 +107,8 @@ fn prune_keeps_all_when_all_reachable() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),
@@ -177,6 +181,8 @@ fn prune_follows_alt_branches() {
         structural_alphabet: None,
         push_fingerprint: None,
             dedup_eligible_rules: Vec::new(),
+
+            shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),

@@ -61,15 +61,27 @@
 //!
 //! Flat rejects:
 //!
-//! - Structural-wrap bodies (`Skip(Next(open, middle), close)`) —
-//!   those are Object / Array / Wrap territory.
-//! - Single-position bodies (covered by Scalar / Keyword / String /
-//!   HRegex / Number).
-//! - Alt-rooted bodies — those are Keyword / Wrap.
-//! - Repeat-rooted bodies EXCEPT the optional-Seq (`lo=0, hi=1`)
-//!   special case — multi-iter Repeats are Unordered / Array.
-//! - Bodies whose first structural byte is `(`, `[`, `{`, `"`, `'`
-//!   — those are ArgList / Wrap / Object / String.
+//! - Structural-wrap bodies — left to Object / Array detectors which
+//!   check for pair-shaped or homogeneous-repeat middles. Flat admits
+//!   every other `Wrap(open, body, close)` shape by treating the
+//!   open / middle / close bytes as three sequential positions.
+//! - Single-position bodies that reduce to a plain leaf — covered by
+//!   Scalar / Keyword / String / HRegex / Number.
+//! - Alt-rooted bodies — those are Keyword / Wrap / AltDispatch.
+//!
+//! Post AX.W0a.2.b, Flat admits broader Seq shapes:
+//!
+//! - **Repeat-rooted bodies** where the body is a single `Repeat` —
+//!   covers BBNF / EBNF / BNF `alternation = (concat "|"?) +` and
+//!   other Kleene-plus bodies. The Flat emitter's generic Repeat
+//!   branch iterates over the inner.
+//! - **Delimiter-opening heads** (`(`, `[`, `{`, `"`, `'`). Earlier
+//!   detectors (Object / Array / ArgList / Wrap / String) run first
+//!   and claim their narrow shapes; anything that reaches Flat with
+//!   such a head is a structural Seq the earlier detectors rejected
+//!   (CSS `attrSelector = "[" ?w, …, "]"`, `mediaFeature = "(" ?w,
+//!   …, ")"`, `ruleBlock = "{" >> … << "}"`, BBNF `import_items`,
+//!   `import_path`, BNF `nonterminal = "<" … ">"`).
 //!
 //! # Projection
 //!
@@ -79,7 +91,7 @@
 //! have already rejected the rule before Flat fires; the detector
 //! therefore admits any *remaining* typed Seq body.
 
-use crate::passes::inspect::{single_byte_literal, unwrap_map_ow, unwrap_wrap};
+use crate::passes::inspect::unwrap_map_ow;
 use crate::types::{GrammarIR, IrNode, RuleId};
 
 /// Detect Flat-shape: typed Seq (or optional typed Seq) with admissible
@@ -101,27 +113,25 @@ fn classify_flat(node: &IrNode, ir: &GrammarIR) -> bool {
         _ => {}
     }
 
-    // Reject Wrap-shape first: a `Wrap(open, body, close)` at the
-    // outer level is Object / Array / Wrap territory.
-    if unwrap_wrap(node).is_some() {
-        return false;
-    }
-
-    // Special-case: `Repeat { lo = 0, hi = 1, inner = Seq(...) }` —
-    // an optional typed Seq. Lowered from BBNF's `(…) ?` postfix
-    // over a Seq body (CSS `importantSuffix = ("!" ?w, "important") ?`).
-    // Delegate to the inner Seq's flat predicate.
-    if let IrNode::Repeat { inner, lo, hi } = node {
-        if *lo == 0 && *hi == 1 {
-            let inner_body = unwrap_map_ow(inner);
-            // Only admit when the inner is a multi-position Seq —
-            // `Repeat(0, 1, Literal(...))` is a degenerate case better
-            // classified as Scalar.
-            if matches!(inner_body, IrNode::Seq(_)) {
-                return classify_flat(inner_body, ir);
-            }
-        }
-        return false;
+    // AX.W0a.2.b: admit Repeat-rooted bodies (any lo / hi). The Flat
+    // emitter's generic Repeat branch iterates the inner greedily.
+    //
+    // Canonical sources:
+    //   - BBNF `alternation = ( concat ?w , "|" ? ) +` —
+    //     `Repeat(1, MAX, Seq(..))`.
+    //   - EBNF `alternation = ( S , concat , S , "|" ? ) +`.
+    //   - BNF `alternation = expr , ( /\s*/ , "|" , /\s*/ , expr )*` —
+    //     still Seq-rooted; this is handled by the Seq path below.
+    //   - CSS `importantSuffix = ("!" ?w, "important") ?` —
+    //     `Repeat(0, 1, Seq(..))`.
+    //
+    // The admission constraint: the inner must be a non-trivial
+    // structural body (Seq / Next / Skip / Ref / Literal / Regex /
+    // Alt / nested Repeat / Map-wrap thereof). A plain `Epsilon`
+    // inner would be a degenerate `()` body; reject.
+    if let IrNode::Repeat { inner, .. } = node {
+        let inner_body = unwrap_map_ow(inner);
+        return !matches!(inner_body, IrNode::Epsilon);
     }
 
     // Flatten the Seq / Next / Skip chain.
@@ -131,17 +141,11 @@ fn classify_flat(node: &IrNode, ir: &GrammarIR) -> bool {
         return false;
     }
 
-    // Head must not be a structural-opening delimiter — those would
-    // have matched Object / Array / ArgList / Wrap / String earlier.
+    // Head must be a shape-admissible leaf or Ref — no bare Alt heads
+    // (those would suggest Wrap / AltDispatch). Repeat heads are
+    // admitted per AX.W0a.2.b for rules like
+    // `unary_expr = unary_prefix * , postfix_expr`.
     let head = unwrap_map_ow(positions[0]);
-    if let Some(byte) = single_byte_literal(head, ir) {
-        if matches!(byte, b'(' | b'[' | b'{' | b'"' | b'\'') {
-            return false;
-        }
-    }
-
-    // Head must be a shape-admissible leaf or Ref — no bare Repeat /
-    // Alt heads (those would suggest Unordered / Wrap).
     if !head_is_admissible(head, ir) {
         return false;
     }
@@ -174,9 +178,9 @@ fn flatten_seq<'a>(node: &'a IrNode, out: &mut Vec<&'a IrNode>) {
 /// Return true when `node` is an admissible Flat head — any node that
 /// starts a typed structural sequence.
 ///
-/// Literal / Regex / Ref / Alt-of-Literal / Repeat-of-optional heads
-/// pass. Bare `Alt` / `Repeat { lo > 0 }` heads do not — those would
-/// have been claimed by Wrap / Unordered / Keyword detectors earlier.
+/// Literal / Regex / Ref / Alt-of-Literal / Repeat heads pass. Bare
+/// `Alt` with non-literal branches does not — those would have been
+/// claimed by Wrap / AltDispatch / Keyword detectors earlier.
 fn head_is_admissible(node: &IrNode, ir: &GrammarIR) -> bool {
     let _ = ir;
     match unwrap_map_ow(node) {
@@ -191,19 +195,17 @@ fn head_is_admissible(node: &IrNode, ir: &GrammarIR) -> bool {
                 .iter()
                 .all(|b| matches!(unwrap_map_ow(&b.node), IrNode::Literal(_)))
         }
-        // `Repeat { lo = 0, hi = 1, ... }` as head position — CSS
-        // `mediaQuery = (mediaQualifier)?, (mediaType)?, …`. The
-        // optional head is admissible when its inner is a Ref /
-        // Literal leaf.
-        IrNode::Repeat { inner, lo, hi } => {
-            if *lo == 0 && *hi == 1 {
-                matches!(
-                    unwrap_map_ow(inner),
-                    IrNode::Ref(_) | IrNode::Literal(_) | IrNode::Regex(_)
-                )
-            } else {
-                false
-            }
+        // AX.W0a.2.b: admit any `Repeat` head whose inner is a
+        // Literal / Ref / Regex leaf — covers Sheets
+        // `unary_expr = unary_prefix * , postfix_expr`
+        // (Repeat(0, MAX) head) as well as the older optional-head
+        // case (CSS `mediaQuery = (mediaQualifier)?, (mediaType)?,
+        // …`).
+        IrNode::Repeat { inner, .. } => {
+            matches!(
+                unwrap_map_ow(inner),
+                IrNode::Ref(_) | IrNode::Literal(_) | IrNode::Regex(_)
+            )
         }
         _ => false,
     }

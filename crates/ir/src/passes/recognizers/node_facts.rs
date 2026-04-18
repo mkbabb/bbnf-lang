@@ -105,6 +105,17 @@ pub(super) fn recognize_tree(
 }
 
 /// Check operator chain: `Seq([head, Repeat(Seq([op, rhs]), 0, MAX)])`.
+///
+/// Also admits `Seq([head, Repeat(Next(op, rhs), 0, MAX)])` and
+/// `Seq([head, Repeat(Skip(op, rhs), 0, MAX)])` — the `Next` / `Skip`
+/// combinators project onto the same 2-child Seq shape via the
+/// identity `a >> b ≡ Seq([a, b])` / `a << b ≡ Seq([a, b])` that
+/// `collect_precedence_chain`'s `strip_transparent_owned` unwraps at
+/// DTA-lift time. CSS's `mathProduct = mathValue , (("*"|"/") >> mathValue) *`
+/// and `mathExpr = mathProduct , (("+"|"-") >> mathProduct) *` rely on
+/// this admission; without it the Pratt-shape detector rejects every
+/// CSS math operator chain because their `(op >> operand)` body lowers
+/// to `Next` rather than a bare `Seq`.
 fn check_operator_chain(children: &[IrNode]) -> bool {
     if children.len() != 2 {
         return false;
@@ -115,9 +126,7 @@ fn check_operator_chain(children: &[IrNode]) -> bool {
 fn is_operator_chain_tail(tail: &IrNode) -> bool {
     if let IrNode::Repeat { inner, lo: 0, hi } = tail {
         if *hi == u32::MAX {
-            if let IrNode::Seq(inner_children) = inner.as_ref() {
-                return inner_children.len() == 2;
-            }
+            return is_operator_chain_repeat_body(inner);
         }
     }
     // Also check through OptionalWhitespace wrapper.
@@ -125,6 +134,26 @@ fn is_operator_chain_tail(tail: &IrNode) -> bool {
         return is_operator_chain_tail(inner);
     }
     false
+}
+
+/// Admit the Repeat's inner body as `(op, rhs)` pair. Accepts the
+/// canonical `Seq([op, rhs])` shape plus the `Next` / `Skip`
+/// projections — `a >> b` and `a << b` are the parse-that combinator
+/// encodings of a 2-element sequence where only one side contributes
+/// to the value. `strip_transparent_owned` at DTA-lift time unwraps
+/// them into `Seq`; the per-node structural predicate mirrors that
+/// unwrap so `pattern_annotations.is_operator_chain` stays in sync
+/// with the DTA lift's chain-admission contract.
+fn is_operator_chain_repeat_body(inner: &IrNode) -> bool {
+    match inner {
+        IrNode::Seq(inner_children) => inner_children.len() == 2,
+        IrNode::Next(_, _) | IrNode::Skip(_, _) => true,
+        // Map / OptionalWhitespace over the same shape are transparent.
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+            is_operator_chain_repeat_body(inner)
+        }
+        _ => false,
+    }
 }
 
 /// Check sep_by: `Repeat(separator, 0, 1)`.

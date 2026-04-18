@@ -39,7 +39,9 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::dispatcher::{dispatcher_fn_ident, shape_fn_ident};
+use super::dispatcher::{
+    dispatcher_fn_ident, shape_fn_ident, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
+};
 use super::root_rule_name;
 
 /// Emit `pub fn parse_array_<grammar>_<rule>(input, p, state, builder)
@@ -307,6 +309,100 @@ pub fn emit_parse_array(
                             offset: *p as u32,
                         });
                     }
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AW-V.W3-bench-fix — visitor-path Array emitter.
+//
+// Mirrors the prototype's `bbnf_json_prototype::parse_array::<V>`
+// (crates/bbnf-json-prototype/src/lib.rs:308). Bypasses the tape;
+// `visitor.begin_array()` / `visitor.end_array()` replace the compound
+// + leaf record pushes the tape-path emits.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit `pub fn parse_array_visitor_<grammar>_<rule><V: JsonVisitor>(...)
+/// -> Result<(), ParseErr>`.
+pub fn emit_parse_array_visitor(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = visitor_shape_fn_ident("array", grammar_suffix, rule_name);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+
+    let dispatcher_ident = match root_rule_name(ir) {
+        Some(root) => {
+            let root_disp = visitor_dispatcher_fn_ident(grammar_suffix, &root);
+            format_ident!("{}__value", root_disp)
+        }
+        None => return quote! {},
+    };
+
+    quote! {
+        /// AW-V.W3-bench-fix — visitor-path Array-shape parse function.
+        ///
+        /// Mirrors `bbnf_json_prototype::parse_array::<V>`. Bypasses
+        /// the tape entirely.
+        #[inline(always)]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        pub fn #fn_ident<V>(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut #support_mod::ScanState,
+            visitor: &mut V,
+        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        where
+            V: ::bbnf::runtime::tape::ObjectVisitor
+                + ::bbnf::runtime::tape::ArrayVisitor
+                + ::bbnf::runtime::tape::StringVisitor
+                + ::bbnf::runtime::tape::NumberVisitor
+                + ::bbnf::runtime::tape::KeywordVisitor,
+        {
+            let begin_at = *p;
+            if input.get(*p).copied() != Some(b'[') {
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: begin_at as u32, rule: None,
+                });
+            }
+            *p += 1;
+            visitor.begin_array().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                offset: begin_at as u32, rule: None,
+            })?;
+            // Fast-empty check: `]` immediately closes.
+            if let Some(b) = #support_mod::skip_space(input, p, state) {
+                if b == b']' {
+                    *p += 1;
+                    return visitor.end_array().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32, rule: None,
+                    });
+                }
+            } else {
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32, rule: None,
+                });
+            }
+            loop {
+                // Value position — recurse through the visitor dispatcher.
+                #dispatcher_ident(input, p, state, visitor)?;
+                match #support_mod::skip_space(input, p, state) {
+                    Some(b']') => {
+                        *p += 1;
+                        return visitor.end_array().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: *p as u32, rule: None,
+                        });
+                    }
+                    Some(b',') => {
+                        *p += 1;
+                        let _ = #support_mod::skip_space(input, p, state);
+                    }
+                    _ => return Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32, rule: None,
+                    }),
                 }
             }
         }

@@ -25,7 +25,7 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::dispatcher::shape_fn_ident;
+use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
 
 /// Emit `pub fn parse_scalar_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>`.
@@ -100,5 +100,64 @@ fn unwrap_trivia(node: &IrNode) -> &IrNode {
         IrNode::Map { inner, .. } => unwrap_trivia(inner.as_ref()),
         IrNode::OptionalWhitespace(inner) => unwrap_trivia(inner.as_ref()),
         _ => node,
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AW-V.W3-bench-fix — visitor-path Scalar emitter.
+//
+// Scalar-shape rules at dispatch position are rare (JSON has comma /
+// colon marker rules that get consumed inline). The visitor-path
+// emits a no-op that advances past the literal — no visitor method
+// fires because the scalar is a structural separator, not a value.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit `pub fn parse_scalar_visitor_<grammar>_<rule><V>(input, p, state,
+/// visitor) -> Result<(), ParseErr>`.
+pub fn emit_parse_scalar_visitor(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = visitor_shape_fn_ident("scalar", grammar_suffix, rule_name);
+
+    let body = unwrap_trivia(&rule.body);
+    let IrNode::Literal(sid) = body else {
+        return quote! {};
+    };
+    let bytes = ir.get_string(*sid).as_bytes();
+    let len = bytes.len();
+    let byte_lits: Vec<TokenStream> = bytes
+        .iter()
+        .map(|b| {
+            let lit = *b;
+            quote! { #lit }
+        })
+        .collect();
+    let support_mod = quote::format_ident!("__shape_support_{}", grammar_suffix);
+    quote! {
+        /// AW-V.W3-bench-fix — visitor-path Scalar-shape parse function.
+        #[inline(always)]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        pub fn #fn_ident<V>(
+            input: &[u8],
+            p: &mut usize,
+            _state: &mut #support_mod::ScanState,
+            _visitor: &mut V,
+        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        where
+            V: ::bbnf::runtime::tape::KeywordVisitor,
+        {
+            let at = *p;
+            let end = at + #len;
+            if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: at as u32, rule: None,
+                });
+            }
+            *p = end;
+            Ok(())
+        }
     }
 }

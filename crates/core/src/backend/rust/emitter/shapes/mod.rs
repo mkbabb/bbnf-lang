@@ -52,7 +52,7 @@ use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-pub use dispatcher::dispatcher_fn_ident;
+pub use dispatcher::{dispatcher_fn_ident, visitor_dispatcher_fn_ident};
 
 /// Sanitise a grammar identifier into a Rust ident fragment.
 ///
@@ -102,6 +102,7 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
 
     let grammar_suffix = sanitise_grammar(grammar_ident_str);
     let mut per_rule: Vec<TokenStream> = Vec::new();
+    let mut per_rule_visitor: Vec<TokenStream> = Vec::new();
 
     for rule in &ir.rules {
         if rule.meta.is_transparent {
@@ -121,6 +122,18 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
             _ => continue,
         };
         per_rule.push(fragment);
+
+        // AW-V.W3-bench-fix — visitor-path per-shape fns.
+        let visitor_fragment = match tag {
+            ShapeTag::Object => object::emit_parse_object_visitor(&grammar_suffix, rule, ir),
+            ShapeTag::Array => array::emit_parse_array_visitor(&grammar_suffix, rule, ir),
+            ShapeTag::String => string::emit_parse_string_visitor(&grammar_suffix, rule, ir),
+            ShapeTag::Number => number::emit_parse_number_visitor(&grammar_suffix, rule, ir),
+            ShapeTag::Keyword => keyword::emit_parse_keyword_visitor(&grammar_suffix, rule, ir),
+            ShapeTag::Scalar => scalar::emit_parse_scalar_visitor(&grammar_suffix, rule, ir),
+            _ => quote! {},
+        };
+        per_rule_visitor.push(visitor_fragment);
     }
 
     if per_rule.is_empty() {
@@ -129,10 +142,13 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
 
     let support = dispatcher::emit_support_module(&grammar_suffix);
     let dispatcher_fn = dispatcher::emit_dispatcher(&grammar_suffix, ir);
+    let visitor_dispatcher_fn = dispatcher::emit_visitor_dispatcher(&grammar_suffix, ir);
     quote! {
         #support
         #(#per_rule)*
+        #(#per_rule_visitor)*
         #dispatcher_fn
+        #visitor_dispatcher_fn
     }
 }
 

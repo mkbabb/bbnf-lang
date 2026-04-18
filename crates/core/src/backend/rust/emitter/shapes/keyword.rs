@@ -29,7 +29,7 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::dispatcher::shape_fn_ident;
+use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
 
 /// Emit `pub fn parse_keyword_<grammar>_<rule>(input, p, first_byte,
 /// builder) -> Result<TapeOffset, DtaError>`.
@@ -275,5 +275,167 @@ fn unwrap_trivia(node: &IrNode) -> &IrNode {
         IrNode::Map { inner, .. } => unwrap_trivia(inner.as_ref()),
         IrNode::OptionalWhitespace(inner) => unwrap_trivia(inner.as_ref()),
         _ => node,
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AW-V.W3-bench-fix — visitor-path Keyword emitter.
+//
+// Mirrors the prototype's `expect_keyword` + `visitor.bool(...)` /
+// `visitor.null()` invocations at the dispatcher arm. Two sub-cases:
+//
+// - `null = "null" -> 0u8` → `visitor.null()`
+// - `bool = "true" -> true | "false" -> false` →
+//   `visitor.bool(true)` / `visitor.bool(false)` per branch.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit `pub fn parse_keyword_visitor_<grammar>_<rule><V: JsonVisitor>(
+/// input, p, first_byte, visitor) -> Result<(), ParseErr>`.
+pub fn emit_parse_keyword_visitor(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = visitor_shape_fn_ident("keyword", grammar_suffix, rule_name);
+
+    let body = unwrap_trivia(&rule.body);
+    match body {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> = bytes
+                .iter()
+                .map(|b| {
+                    let lit = *b;
+                    quote! { #lit }
+                })
+                .collect();
+            // For `null = "null"` the semantic is `visitor.null()`.
+            // Single-literal keyword emit: if the literal is `null`
+            // call `visitor.null()`; if it's `true` / `false` the
+            // bool visitor method; otherwise default to `null()`
+            // (best-effort — rules without a `-> const` lose the
+            // discriminator).
+            let literal_str = std::str::from_utf8(bytes).unwrap_or("");
+            let emit = match literal_str {
+                "true" => quote! {
+                    visitor.bool(true).map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                        offset: at as u32, rule: None,
+                    })
+                },
+                "false" => quote! {
+                    visitor.bool(false).map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                        offset: at as u32, rule: None,
+                    })
+                },
+                _ => quote! {
+                    visitor.null().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                        offset: at as u32, rule: None,
+                    })
+                },
+            };
+            quote! {
+                /// AW-V.W3-bench-fix — visitor-path Keyword-shape parse
+                /// function (single-literal body).
+                #[inline(always)]
+                #[allow(non_snake_case, clippy::too_many_arguments)]
+                pub fn #fn_ident<V>(
+                    input: &[u8],
+                    p: &mut usize,
+                    _first_byte: u8,
+                    visitor: &mut V,
+                ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+                where
+                    V: ::bbnf::runtime::tape::KeywordVisitor,
+                {
+                    let at = *p;
+                    let end = at + #len;
+                    if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32, rule: None,
+                        });
+                    }
+                    *p = end;
+                    #emit
+                }
+            }
+        }
+        IrNode::Alt(branches, _) => {
+            let arms: Vec<TokenStream> = branches
+                .iter()
+                .filter_map(|branch| {
+                    let body = unwrap_trivia(&branch.node);
+                    let IrNode::Literal(sid) = body else { return None };
+                    let bytes = ir.get_string(*sid).as_bytes();
+                    if bytes.is_empty() { return None; }
+                    let first = bytes[0];
+                    let len = bytes.len();
+                    let byte_lits: Vec<TokenStream> = bytes
+                        .iter()
+                        .map(|b| {
+                            let lit = *b;
+                            quote! { #lit }
+                        })
+                        .collect();
+                    let literal_str = std::str::from_utf8(bytes).unwrap_or("");
+                    let emit = match literal_str {
+                        "true" => quote! {
+                            visitor.bool(true).map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                                offset: at as u32, rule: None,
+                            })
+                        },
+                        "false" => quote! {
+                            visitor.bool(false).map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                                offset: at as u32, rule: None,
+                            })
+                        },
+                        _ => quote! {
+                            visitor.null().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                                offset: at as u32, rule: None,
+                            })
+                        },
+                    };
+                    Some(quote! {
+                        #first => {
+                            let at = *p;
+                            let end = at + #len;
+                            if input.len() < end
+                                || input[at..end] != [#(#byte_lits),*]
+                            {
+                                return Err(::bbnf::runtime::ParseErr::Syntax {
+                                    offset: at as u32, rule: None,
+                                });
+                            }
+                            *p = end;
+                            #emit
+                        }
+                    })
+                })
+                .collect();
+            quote! {
+                /// AW-V.W3-bench-fix — visitor-path Keyword-shape parse
+                /// function (Alt of literal-led branches).
+                #[inline(always)]
+                #[allow(non_snake_case, clippy::too_many_arguments)]
+                pub fn #fn_ident<V>(
+                    input: &[u8],
+                    p: &mut usize,
+                    first_byte: u8,
+                    visitor: &mut V,
+                ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+                where
+                    V: ::bbnf::runtime::tape::KeywordVisitor,
+                {
+                    match first_byte {
+                        #(#arms)*
+                        _ => Err(::bbnf::runtime::ParseErr::Syntax {
+                            offset: *p as u32, rule: None,
+                        }),
+                    }
+                }
+            }
+        }
+        _ => quote! {},
     }
 }

@@ -31,7 +31,7 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::dispatcher::shape_fn_ident;
+use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
 
 /// Emit `pub fn parse_string_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>`.
@@ -324,5 +324,266 @@ pub fn emit_escape_helper(grammar_suffix: &str) -> TokenStream {
         const __SHAPE_ESCAPE_HELPER_MARKER: () = {
             use #support_mod as _;
         };
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AW-V.W3-bench-fix — visitor-path String emitter.
+//
+// Mirrors the prototype's
+// `bbnf_json_prototype::string::parse_string_body::<V>`. Borrow-path
+// fast: `visitor.string(&input[body_start..end])` / `visitor.key(...)`
+// without tape / arena copy. Escape-path cold: decodes into a local
+// buffer and emits `visitor.string(&buf)` / `visitor.key(&buf)`.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit `pub fn parse_string_visitor_<grammar>_<rule><V: JsonVisitor>(
+/// input, p, state, visitor, is_key) -> Result<(), ParseErr>`.
+///
+/// `is_key: bool` selects between `visitor.string(bytes)` and
+/// `visitor.key(bytes)` — sonic-rs's `visit_borrowed_str` /
+/// `visit_borrowed_key` split done at the call site.
+pub fn emit_parse_string_visitor(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = visitor_shape_fn_ident("string", grammar_suffix, rule_name);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let escaped_fn =
+        format_ident!("parse_string_visitor_escaped_{}", grammar_suffix);
+
+    quote! {
+        /// AW-V.W3-bench-fix — visitor-path String-shape parse function.
+        ///
+        /// Mirrors `bbnf_json_prototype::string::parse_string_body::<V>`.
+        /// `"` must NOT be consumed by the caller. Borrow-path reads
+        /// the full span from input; escape-path decodes into a local
+        /// buffer.
+        #[inline(always)]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        pub fn #fn_ident<V>(
+            input: &[u8],
+            p: &mut usize,
+            _state: &mut #support_mod::ScanState,
+            visitor: &mut V,
+            is_key: bool,
+        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        where
+            V: ::bbnf::runtime::tape::StringVisitor
+                + ::bbnf::runtime::tape::ObjectVisitor,
+        {
+            let open = *p;
+            if input.get(open).copied() != Some(b'"') {
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: open as u32, rule: None,
+                });
+            }
+            let body_start = open + 1;
+            let tail = match input.get(body_start..) {
+                Some(t) => t,
+                None => {
+                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: open as u32, rule: None,
+                    });
+                }
+            };
+            match #support_mod::first_quote_or_backslash(tail) {
+                Some((off, b'"')) => {
+                    let end = body_start + off;
+                    let body = &input[body_start..end];
+                    *p = end + 1;
+                    if is_key {
+                        visitor.key(body)
+                            .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                                offset: open as u32, rule: None,
+                            })
+                    } else {
+                        visitor.string(body)
+                            .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                                offset: open as u32, rule: None,
+                            })
+                    }
+                }
+                Some((off, b'\\')) => {
+                    let esc_start = body_start + off;
+                    #escaped_fn(input, p, body_start, esc_start, visitor, is_key, open)
+                }
+                Some(_) => unreachable!(),
+                None => Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: open as u32, rule: None,
+                }),
+            }
+        }
+    }
+}
+
+/// Pre-emitted visitor-path escape helper fn — one per grammar.
+///
+/// Mirrors `bbnf_json_prototype::string::parse_string_escaped::<V>`.
+/// Decodes RFC 8259 escapes into a fresh buffer and emits the decoded
+/// bytes via `visitor.string` / `visitor.key`. Cold path by design —
+/// `#[cold]` + `#[inline(never)]`.
+pub fn emit_visitor_escape_helper(grammar_suffix: &str) -> TokenStream {
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let helper_ident =
+        format_ident!("parse_string_visitor_escaped_{}", grammar_suffix);
+    quote! {
+        /// AW-V.W3-bench-fix — visitor-path escape decoder. Cold path.
+        #[cold]
+        #[inline(never)]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        fn #helper_ident<V>(
+            input: &[u8],
+            p: &mut usize,
+            body_start: usize,
+            mut cur: usize,
+            visitor: &mut V,
+            is_key: bool,
+            open: usize,
+        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        where
+            V: ::bbnf::runtime::tape::StringVisitor
+                + ::bbnf::runtime::tape::ObjectVisitor,
+        {
+            let mut buf: Vec<u8> = Vec::with_capacity(cur - body_start + 16);
+            buf.extend_from_slice(&input[body_start..cur]);
+            while cur < input.len() {
+                let b = input[cur];
+                match b {
+                    b'"' => {
+                        *p = cur + 1;
+                        return if is_key {
+                            visitor.key(&buf)
+                                .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                                    offset: open as u32, rule: None,
+                                })
+                        } else {
+                            visitor.string(&buf)
+                                .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                                    offset: open as u32, rule: None,
+                                })
+                        };
+                    }
+                    b'\\' => {
+                        if cur + 1 >= input.len() {
+                            return Err(::bbnf::runtime::ParseErr::Syntax {
+                                offset: cur as u32, rule: None,
+                            });
+                        }
+                        let esc = input[cur + 1];
+                        match esc {
+                            b'"' => buf.push(b'"'),
+                            b'\\' => buf.push(b'\\'),
+                            b'/' => buf.push(b'/'),
+                            b'b' => buf.push(0x08),
+                            b'f' => buf.push(0x0C),
+                            b'n' => buf.push(b'\n'),
+                            b'r' => buf.push(b'\r'),
+                            b't' => buf.push(b'\t'),
+                            b'u' => {
+                                if cur + 6 > input.len() {
+                                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                                        offset: cur as u32, rule: None,
+                                    });
+                                }
+                                let cp = __parse_u4_v(&input[cur + 2..cur + 6])
+                                    .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                        offset: cur as u32, rule: None,
+                                    })?;
+                                let code = if (0xD800..=0xDBFF).contains(&cp) {
+                                    if cur + 12 > input.len()
+                                        || input[cur + 6] != b'\\'
+                                        || input[cur + 7] != b'u'
+                                    {
+                                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                                            offset: cur as u32, rule: None,
+                                        });
+                                    }
+                                    let lo = __parse_u4_v(&input[cur + 8..cur + 12])
+                                        .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                            offset: cur as u32, rule: None,
+                                        })?;
+                                    if !(0xDC00..=0xDFFF).contains(&lo) {
+                                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                                            offset: cur as u32, rule: None,
+                                        });
+                                    }
+                                    cur += 6;
+                                    0x10000
+                                        + (((cp - 0xD800) as u32) << 10)
+                                        + (lo - 0xDC00) as u32
+                                } else if (0xDC00..=0xDFFF).contains(&cp) {
+                                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                                        offset: cur as u32, rule: None,
+                                    });
+                                } else {
+                                    cp as u32
+                                };
+                                __encode_utf8_to_v(&mut buf, code);
+                                cur += 6;
+                                continue;
+                            }
+                            _ => return Err(::bbnf::runtime::ParseErr::Syntax {
+                                offset: cur as u32, rule: None,
+                            }),
+                        }
+                        cur += 2;
+                    }
+                    _ => {
+                        let tail = &input[cur..];
+                        match #support_mod::first_quote_or_backslash(tail) {
+                            Some((off, _)) => {
+                                buf.extend_from_slice(&tail[..off]);
+                                cur += off;
+                            }
+                            None => return Err(::bbnf::runtime::ParseErr::Syntax {
+                                offset: open as u32, rule: None,
+                            }),
+                        }
+                    }
+                }
+            }
+            Err(::bbnf::runtime::ParseErr::Syntax {
+                offset: open as u32, rule: None,
+            })
+        }
+
+        #[inline]
+        #[allow(non_snake_case)]
+        fn __parse_u4_v(bytes: &[u8]) -> ::core::option::Option<u16> {
+            if bytes.len() != 4 { return None; }
+            let mut out: u16 = 0;
+            for &b in bytes {
+                let v = match b {
+                    b'0'..=b'9' => b - b'0',
+                    b'a'..=b'f' => b - b'a' + 10,
+                    b'A'..=b'F' => b - b'A' + 10,
+                    _ => return None,
+                };
+                out = out.wrapping_shl(4) | (v as u16);
+            }
+            Some(out)
+        }
+
+        #[inline]
+        #[allow(non_snake_case)]
+        fn __encode_utf8_to_v(buf: &mut Vec<u8>, code: u32) {
+            if code < 0x80 { buf.push(code as u8); }
+            else if code < 0x800 {
+                buf.push(0xC0 | (code >> 6) as u8);
+                buf.push(0x80 | (code & 0x3F) as u8);
+            } else if code < 0x10000 {
+                buf.push(0xE0 | (code >> 12) as u8);
+                buf.push(0x80 | ((code >> 6) & 0x3F) as u8);
+                buf.push(0x80 | (code & 0x3F) as u8);
+            } else {
+                buf.push(0xF0 | (code >> 18) as u8);
+                buf.push(0x80 | ((code >> 12) & 0x3F) as u8);
+                buf.push(0x80 | ((code >> 6) & 0x3F) as u8);
+                buf.push(0x80 | (code & 0x3F) as u8);
+            }
+        }
     }
 }

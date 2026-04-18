@@ -19,7 +19,7 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::dispatcher::shape_fn_ident;
+use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
 
 /// Emit `pub fn parse_number_<grammar>_<rule>(input, p, first_byte,
 /// builder) -> Result<TapeOffset, DtaError>`.
@@ -177,6 +177,142 @@ pub fn emit_number_fallback_helper() -> TokenStream {
         fn parse_number_fallback(bytes: &[u8]) -> f64 {
             let s = unsafe { ::core::str::from_utf8_unchecked(bytes) };
             s.parse::<f64>().unwrap_or(f64::NAN)
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AW-V.W3-bench-fix — visitor-path Number emitter.
+//
+// Mirrors the prototype's
+// `bbnf_json_prototype::number::parse_number_body::<V>`. Bypasses the
+// tape; `visitor.number_f64(value)` replaces the Span + WideScalar
+// payload push the tape-path emits.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit `pub fn parse_number_visitor_<grammar>_<rule><V: JsonVisitor>(
+/// input, p, first_byte, visitor) -> Result<(), ParseErr>`.
+pub fn emit_parse_number_visitor(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = visitor_shape_fn_ident("number", grammar_suffix, rule_name);
+    let _ = grammar_suffix;
+
+    quote! {
+        /// AW-V.W3-bench-fix — visitor-path Number-shape parse function.
+        ///
+        /// Mirrors `bbnf_json_prototype::number::parse_number_body::<V>`.
+        #[inline(always)]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        pub fn #fn_ident<V>(
+            input: &[u8],
+            p: &mut usize,
+            first_byte: u8,
+            visitor: &mut V,
+        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        where
+            V: ::bbnf::runtime::tape::NumberVisitor,
+        {
+            const POW10_U64: [u64; 17] = [
+                1, 10, 100, 1_000, 10_000, 100_000, 1_000_000,
+                10_000_000, 100_000_000, 1_000_000_000,
+                10_000_000_000, 100_000_000_000, 1_000_000_000_000,
+                10_000_000_000_000, 100_000_000_000_000,
+                1_000_000_000_000_000, 10_000_000_000_000_000,
+            ];
+            let _ = POW10_U64;
+            let start = *p;
+            let len = input.len();
+            let negative = first_byte == b'-';
+            if negative { *p += 1; }
+
+            let int_start = *p;
+            let mut mantissa: u64 = 0;
+            let mut many_digits = false;
+            while *p < len {
+                let b = input[*p];
+                if b.is_ascii_digit() {
+                    mantissa = mantissa.wrapping_mul(10)
+                        .wrapping_add((b - b'0') as u64);
+                    *p += 1;
+                } else { break; }
+            }
+            if *p == int_start {
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: start as u32, rule: None,
+                });
+            }
+            let int_digit_count = *p - int_start;
+            if int_digit_count > 19 { many_digits = true; }
+
+            let mut fractional_digit_count: i64 = 0;
+            if input.get(*p) == Some(&b'.') {
+                *p += 1;
+                let frac_start = *p;
+                while *p < len {
+                    let b = input[*p];
+                    if b.is_ascii_digit() {
+                        mantissa = mantissa.wrapping_mul(10)
+                            .wrapping_add((b - b'0') as u64);
+                        *p += 1;
+                    } else { break; }
+                }
+                fractional_digit_count = (*p - frac_start) as i64;
+                if fractional_digit_count == 0 {
+                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: start as u32, rule: None,
+                    });
+                }
+                if int_digit_count as i64 + fractional_digit_count > 19 {
+                    many_digits = true;
+                }
+            }
+
+            let mut exponent: i64 = -fractional_digit_count;
+            if matches!(input.get(*p), Some(b'e') | Some(b'E')) {
+                *p += 1;
+                let exp_negative = match input.get(*p) {
+                    Some(b'+') => { *p += 1; false }
+                    Some(b'-') => { *p += 1; true }
+                    _ => false,
+                };
+                let exp_start = *p;
+                let mut exp_val: i64 = 0;
+                while *p < len {
+                    let b = input[*p];
+                    if b.is_ascii_digit() {
+                        exp_val = exp_val.saturating_mul(10)
+                            .saturating_add((b - b'0') as i64);
+                        *p += 1;
+                    } else { break; }
+                }
+                if *p == exp_start {
+                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: start as u32, rule: None,
+                    });
+                }
+                exponent += if exp_negative { -exp_val } else { exp_val };
+            }
+
+            let end = *p;
+            let bytes = &input[start..end];
+            let value = if many_digits {
+                parse_number_fallback(bytes)
+            } else {
+                match ::parse_that::parsers::eisel_lemire::compute_f64(
+                    exponent, mantissa, negative,
+                ) {
+                    Some(v) => v,
+                    None => parse_number_fallback(bytes),
+                }
+            };
+            visitor.number_f64(value)
+                .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                    offset: start as u32, rule: None,
+                })
         }
     }
 }

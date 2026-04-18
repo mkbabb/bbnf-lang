@@ -138,6 +138,12 @@ fn emit_shape_helpers(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
         .any(|r| matches!(ir.shape_assignments.get(r.id), ShapeTag::String))
     {
         helpers.push(super::shapes::string::emit_escape_helper(&grammar_suffix));
+        // AW-V.W3-bench-fix — visitor-path escape helper (separate fn
+        // so visitor-generic instantiation lives alongside the tape
+        // path without reusing the monomorphised tape-path body).
+        helpers.push(super::shapes::string::emit_visitor_escape_helper(
+            &grammar_suffix,
+        ));
     }
     // Number fallback helper — emit when the grammar has any
     // Number-shape rule.
@@ -496,6 +502,13 @@ impl RustEmitter {
         let shape_dispatcher_ident = super::shapes::root_rule_name(ir).map(|root| {
             super::shapes::dispatcher_fn_ident(ident.to_string().as_str(), &root)
         });
+        // AW-V.W3-bench-fix — visitor-path dispatcher ident.
+        let visitor_dispatcher_ident = super::shapes::root_rule_name(ir).map(|root| {
+            super::shapes::visitor_dispatcher_fn_ident(
+                ident.to_string().as_str(),
+                &root,
+            )
+        });
 
         // AW-I.W3: `parse()` dispatches through `dta_run` wholesale.
         // The per-rule `rule_functions` stream and the trailing_ws /
@@ -676,6 +689,64 @@ impl RustEmitter {
             }
         };
 
+        // AW-V.W3-bench-fix — `parse_with_visitor::<V>` method body.
+        // When the grammar has full shape coverage, expose a
+        // visitor-generic parse entry that bypasses the tape entirely.
+        // The visitor is monomorphised at the call site; per-shape
+        // bodies inline into one tight dispatcher, matching the
+        // prototype's perf shape.
+        let parse_with_visitor_body = if use_shape_dispatch {
+            let visitor_dispatcher = visitor_dispatcher_ident
+                .as_ref()
+                .expect("use_shape_dispatch gated on root_rule_name");
+            let support_mod_ident = quote::format_ident!(
+                "__shape_support_{}",
+                super::shapes::sanitise_grammar(ident.to_string().as_str()),
+            );
+            Some(quote! {
+                /// AW-V.W3-bench-fix — visitor-generic parse entry.
+                ///
+                /// Bypasses the tape entirely; `V` is monomorphised at
+                /// the call site so the per-shape parse bodies inline
+                /// into one tight dispatcher. Matches the shape of
+                /// `bbnf_json_prototype::parse_json::<V>`.
+                ///
+                /// `V` must implement every per-shape visitor sub-trait
+                /// the grammar drives (`ObjectVisitor`, `ArrayVisitor`,
+                /// `StringVisitor`, `NumberVisitor`, `KeywordVisitor`)
+                /// so each method invocation resolves statically at
+                /// monomorphisation time. See `bbnf-tape::visitor` for
+                /// the trait hierarchy and the shipped `TapeVisitor` /
+                /// `ValueVisitor` implementations.
+                pub fn parse_with_visitor<V>(
+                    input: &str,
+                    visitor: &mut V,
+                ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+                where
+                    V: ::bbnf::runtime::tape::ObjectVisitor
+                        + ::bbnf::runtime::tape::ArrayVisitor
+                        + ::bbnf::runtime::tape::StringVisitor
+                        + ::bbnf::runtime::tape::NumberVisitor
+                        + ::bbnf::runtime::tape::KeywordVisitor,
+                {
+                    let bytes = input.as_bytes();
+                    let mut pos: usize = 0;
+                    let mut state = #support_mod_ident::ScanState::new();
+                    #visitor_dispatcher(bytes, &mut pos, &mut state, visitor)?;
+                    // Trailing whitespace tolerant.
+                    let _ = #support_mod_ident::skip_space(bytes, &mut pos, &mut state);
+                    if pos != input.len() {
+                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                            offset: pos as u32, rule: None,
+                        });
+                    }
+                    Ok(())
+                }
+            })
+        } else {
+            None
+        };
+
         quote! {
             use ::parse_that::*;
 
@@ -765,6 +836,8 @@ impl RustEmitter {
                 > {
                     #parse_body
                 }
+
+                #parse_with_visitor_body
             }
         }
     }

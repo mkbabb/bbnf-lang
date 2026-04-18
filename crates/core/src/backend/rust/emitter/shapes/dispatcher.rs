@@ -43,6 +43,35 @@ pub fn shape_fn_ident(shape: &str, grammar_suffix: &str, rule_name: &str) -> pro
     format_ident!("parse_{}_{}_{}", shape, grammar_suffix, rule)
 }
 
+/// Compose the per-shape visitor-path fn ident for a rule —
+/// `parse_<shape>_visitor_<grammar>_<rule>`.
+///
+/// The visitor-path family mirrors the tape-path per-shape functions
+/// but takes `&mut V: JsonVisitor` instead of `&mut TapeBuilder`,
+/// emitting visitor method calls (`begin_object`, `key`, `string`,
+/// `number_f64`, etc.) in place of tape record pushes. Monomorphised
+/// per visitor at the call site; zero structural / PSI overhead on
+/// the hot path. Matches `bbnf-json-prototype`'s perf shape.
+pub fn visitor_shape_fn_ident(
+    shape: &str,
+    grammar_suffix: &str,
+    rule_name: &str,
+) -> proc_macro2::Ident {
+    let rule = sanitise_grammar(rule_name);
+    format_ident!("parse_{}_visitor_{}_{}", shape, grammar_suffix, rule)
+}
+
+/// Compose the visitor-path dispatcher symbol —
+/// `parse_<grammar>_<root>_visitor`.
+pub fn visitor_dispatcher_fn_ident(
+    grammar_ident_str: &str,
+    root_rule: &str,
+) -> proc_macro2::Ident {
+    let grammar = sanitise_grammar(grammar_ident_str);
+    let root = sanitise_grammar(root_rule);
+    format_ident!("parse_{}_{}_visitor", grammar, root)
+}
+
 /// Per-grammar SIMD support module. Emitted once per grammar with
 /// shape dispatch. Contains the `ScanState`, `skip_space`, and SIMD
 /// primitives every shape fn inlines.
@@ -637,4 +666,224 @@ fn rule_is_single_null_keyword(rule: &bbnf_ir::IrRule, ir: &GrammarIR) -> bool {
     }
     matches!(unwrap(&rule.body), IrNode::Literal(sid)
         if ir.get_string(*sid) == "null")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AW-V.W3-bench-fix — visitor-path dispatcher.
+//
+// Mirrors the tape-path dispatcher (`parse_<grammar>_<root>`) but with
+// a generic `V: JsonVisitor` parameter driving visitor method calls
+// instead of tape records. Emitted alongside the tape-path so the
+// per-shape visitor fns composing into the dispatcher each participate
+// in the same monomorphisation at the call site.
+//
+// `parse_with_visitor::<V>` on the grammar struct routes here; the
+// shape fns below call back into this dispatcher for value-position
+// recursion.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit the visitor-path dispatcher — `parse_<grammar>_<root>_visitor`.
+///
+/// The visitor-path dispatcher is isomorphic to the tape-path
+/// [`emit_dispatcher`] but generic over a visitor type `V: JsonVisitor`.
+/// It bypasses the tape entirely: visitor method calls (`begin_object`,
+/// `key`, `string`, `number_f64`, etc.) replace the tape record pushes.
+/// The prototype's `bbnf_json_prototype::parse_value::<V>` shape is the
+/// reference — one monomorphic dispatcher per visitor type, all
+/// per-shape bodies inlined.
+pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
+    let Some(root_name) = root_rule_name(ir) else {
+        return quote! {};
+    };
+    let entry = ir.entry;
+    let Some(entry_rule) = ir.rules.iter().find(|r| r.id == entry) else {
+        return quote! {};
+    };
+
+    let dispatcher_ident = visitor_dispatcher_fn_ident(grammar_suffix, &root_name);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+
+    let root_tag = ir.shape_assignments.get(entry);
+
+    let dispatch_body = if matches!(root_tag, ShapeTag::None) && has_shape_dispatch(ir) {
+        emit_visitor_alt_dispatch_body(grammar_suffix, entry_rule, ir)
+    } else if root_tag.is_w3_classified() {
+        let shape_name = shape_tag_name(root_tag);
+        let target_ident = visitor_shape_fn_ident(shape_name, grammar_suffix, &root_name);
+        match root_tag {
+            ShapeTag::Number | ShapeTag::Keyword => quote! {
+                let first = #support_mod::skip_space(input, p, state)
+                    .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32, rule: None,
+                    })?;
+                #target_ident(input, p, first, visitor)
+            },
+            _ => quote! {
+                let _ = #support_mod::skip_space(input, p, state);
+                #target_ident(input, p, state, visitor)
+            },
+        }
+    } else {
+        quote! {
+            Err(::bbnf::runtime::ParseErr::Syntax {
+                offset: *p as u32, rule: None,
+            })
+        }
+    };
+
+    let nonroot_ident = format_ident!("{}__value", dispatcher_ident);
+    quote! {
+        /// AW-V.W3-bench-fix — top-level visitor-path dispatcher.
+        ///
+        /// Generic over the visitor type; `V: JsonVisitor` composes all
+        /// per-shape sub-trait bounds (`ObjectVisitor`, `ArrayVisitor`,
+        /// `StringVisitor`, `NumberVisitor`, `KeywordVisitor`) so every
+        /// per-shape method invocation resolves statically at the
+        /// monomorphisation site. Bypasses the tape entirely.
+        #[inline(always)]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        pub fn #dispatcher_ident<V>(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut #support_mod::ScanState,
+            visitor: &mut V,
+        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        where
+            V: ::bbnf::runtime::tape::ObjectVisitor
+                + ::bbnf::runtime::tape::ArrayVisitor
+                + ::bbnf::runtime::tape::StringVisitor
+                + ::bbnf::runtime::tape::NumberVisitor
+                + ::bbnf::runtime::tape::KeywordVisitor,
+        {
+            #nonroot_ident(input, p, state, visitor)
+        }
+
+        /// AW-V.W3-bench-fix — value-position visitor-path dispatcher.
+        /// Called both at the grammar root and from the object / array
+        /// shape fns' value-position recursion.
+        #[inline(always)]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        pub fn #nonroot_ident<V>(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut #support_mod::ScanState,
+            visitor: &mut V,
+        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        where
+            V: ::bbnf::runtime::tape::ObjectVisitor
+                + ::bbnf::runtime::tape::ArrayVisitor
+                + ::bbnf::runtime::tape::StringVisitor
+                + ::bbnf::runtime::tape::NumberVisitor
+                + ::bbnf::runtime::tape::KeywordVisitor,
+        {
+            #dispatch_body
+        }
+    }
+}
+
+/// Visitor-path Alt-dispatch body — byte-matches the next non-
+/// whitespace byte and invokes the matching visitor-path shape fn.
+fn emit_visitor_alt_dispatch_body(
+    grammar_suffix: &str,
+    root_rule: &bbnf_ir::IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    use bbnf_ir::IrNode;
+
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+
+    let branches = match &root_rule.body {
+        IrNode::Alt(bs, _) => bs.as_slice(),
+        _ => {
+            return quote! {
+                Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32, rule: None,
+                })
+            };
+        }
+    };
+
+    let mut object_fn: Option<proc_macro2::Ident> = None;
+    let mut array_fn: Option<proc_macro2::Ident> = None;
+    let mut string_fn: Option<proc_macro2::Ident> = None;
+    let mut number_fn: Option<proc_macro2::Ident> = None;
+    let mut keyword_bool_fn: Option<proc_macro2::Ident> = None;
+    let mut keyword_null_fn: Option<proc_macro2::Ident> = None;
+
+    for branch in branches {
+        let IrNode::Ref(rid) = &branch.node else { continue };
+        let Some(rule) = ir.rules.iter().find(|r| r.id == *rid) else {
+            continue;
+        };
+        let name = ir.get_string(rule.name);
+        let tag = ir.shape_assignments.get(*rid);
+        match tag {
+            ShapeTag::Object => {
+                object_fn = Some(visitor_shape_fn_ident("object", grammar_suffix, name));
+            }
+            ShapeTag::Array => {
+                array_fn = Some(visitor_shape_fn_ident("array", grammar_suffix, name));
+            }
+            ShapeTag::String => {
+                string_fn = Some(visitor_shape_fn_ident("string", grammar_suffix, name));
+            }
+            ShapeTag::Number => {
+                number_fn = Some(visitor_shape_fn_ident("number", grammar_suffix, name));
+            }
+            ShapeTag::Keyword => {
+                let is_null = rule_is_single_null_keyword(rule, ir);
+                if is_null {
+                    keyword_null_fn =
+                        Some(visitor_shape_fn_ident("keyword", grammar_suffix, name));
+                } else {
+                    keyword_bool_fn =
+                        Some(visitor_shape_fn_ident("keyword", grammar_suffix, name));
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let object_arm = object_fn
+        .as_ref()
+        .map(|f| quote! { b'{' => { #f(input, p, state, visitor) } })
+        .unwrap_or_else(|| quote! {});
+    let array_arm = array_fn
+        .as_ref()
+        .map(|f| quote! { b'[' => { #f(input, p, state, visitor) } })
+        .unwrap_or_else(|| quote! {});
+    let string_arm = string_fn
+        .as_ref()
+        .map(|f| quote! { b'"' => { #f(input, p, state, visitor, /*is_key=*/ false) } })
+        .unwrap_or_else(|| quote! {});
+    let number_arm = number_fn
+        .as_ref()
+        .map(|f| quote! { b'-' | b'0'..=b'9' => { #f(input, p, first, visitor) } })
+        .unwrap_or_else(|| quote! {});
+    let true_arm = keyword_bool_fn
+        .as_ref()
+        .map(|f| quote! { b't' | b'f' => { #f(input, p, first, visitor) } })
+        .unwrap_or_else(|| quote! {});
+    let null_arm = keyword_null_fn
+        .as_ref()
+        .map(|f| quote! { b'n' => { #f(input, p, first, visitor) } })
+        .unwrap_or_else(|| quote! {});
+
+    quote! {
+        let first = #support_mod::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                offset: *p as u32, rule: None,
+            })?;
+        match first {
+            #object_arm
+            #array_arm
+            #string_arm
+            #number_arm
+            #true_arm
+            #null_arm
+            _ => Err(::bbnf::runtime::ParseErr::Syntax {
+                offset: *p as u32, rule: None,
+            }),
+        }
+    }
 }

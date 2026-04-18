@@ -38,7 +38,9 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::dispatcher::{dispatcher_fn_ident, shape_fn_ident};
+use super::dispatcher::{
+    dispatcher_fn_ident, shape_fn_ident, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
+};
 use super::root_rule_name;
 
 /// Emit `pub fn parse_object_<grammar>_<rule>(input, p, state, builder)
@@ -397,4 +399,124 @@ fn resolve_pair_context(
     let pair_variant = pair_rule.map(|r| (r.id & 0xFF) as u8).unwrap_or(0);
 
     (string_fn, string_variant, pair_variant)
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AW-V.W3-bench-fix — visitor-path Object emitter.
+//
+// Mirrors the prototype's `bbnf_json_prototype::parse_object::<V>`
+// (crates/bbnf-json-prototype/src/lib.rs:258). Bypasses the tape
+// entirely: `visitor.begin_object()` / `visitor.key()` /
+// `visitor.end_object()` replace the compound + leaf record pushes
+// the tape-path emits.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Resolve the grammar's String-shape visitor-path fn ident for key
+/// parsing.
+fn resolve_visitor_pair_context(
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> proc_macro2::Ident {
+    use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
+
+    let string_rule = ir
+        .rules
+        .iter()
+        .find(|r| matches!(ir.shape_assignments.get(r.id), ShapeTag::String))
+        .expect("object-shape admission requires a String-shape sibling rule");
+    let string_name = ir.get_string(string_rule.name);
+    visitor_shape_fn_ident("string", grammar_suffix, string_name)
+}
+
+/// Emit `pub fn parse_object_visitor_<grammar>_<rule><V: JsonVisitor>(...)
+/// -> Result<(), ParseErr>`.
+pub fn emit_parse_object_visitor(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = visitor_shape_fn_ident("object", grammar_suffix, rule_name);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+
+    let dispatcher_ident = match root_rule_name(ir) {
+        Some(root) => {
+            let root_disp = visitor_dispatcher_fn_ident(grammar_suffix, &root);
+            format_ident!("{}__value", root_disp)
+        }
+        None => return quote! {},
+    };
+
+    let string_fn = resolve_visitor_pair_context(grammar_suffix, ir);
+
+    quote! {
+        /// AW-V.W3-bench-fix — visitor-path Object-shape parse function.
+        ///
+        /// Mirrors `bbnf_json_prototype::parse_object::<V>`. Bypasses
+        /// the tape entirely; visitor method calls drive materialisation.
+        #[inline(always)]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        pub fn #fn_ident<V>(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut #support_mod::ScanState,
+            visitor: &mut V,
+        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        where
+            V: ::bbnf::runtime::tape::ObjectVisitor
+                + ::bbnf::runtime::tape::ArrayVisitor
+                + ::bbnf::runtime::tape::StringVisitor
+                + ::bbnf::runtime::tape::NumberVisitor
+                + ::bbnf::runtime::tape::KeywordVisitor,
+        {
+            let begin_at = *p;
+            if input.get(*p).copied() != Some(b'{') {
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: begin_at as u32, rule: None,
+                });
+            }
+            *p += 1;
+            visitor.begin_object().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                offset: begin_at as u32, rule: None,
+            })?;
+            let mut cur = #support_mod::skip_space(input, p, state);
+            if cur == Some(b'}') {
+                *p += 1;
+                return visitor.end_object().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32, rule: None,
+                });
+            }
+            loop {
+                if cur != Some(b'"') {
+                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32, rule: None,
+                    });
+                }
+                #string_fn(input, p, state, visitor, /*is_key=*/ true)?;
+                if #support_mod::skip_space(input, p, state) != Some(b':') {
+                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32, rule: None,
+                    });
+                }
+                *p += 1;
+                let _ = #support_mod::skip_space(input, p, state);
+                #dispatcher_ident(input, p, state, visitor)?;
+                match #support_mod::skip_space(input, p, state) {
+                    Some(b'}') => {
+                        *p += 1;
+                        return visitor.end_object().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: *p as u32, rule: None,
+                        });
+                    }
+                    Some(b',') => {
+                        *p += 1;
+                        cur = #support_mod::skip_space(input, p, state);
+                    }
+                    _ => return Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32, rule: None,
+                    }),
+                }
+            }
+        }
+    }
 }

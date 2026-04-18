@@ -1,0 +1,91 @@
+    }
+    /// AX.W0a.2.a — per-grammar Array-shape parse function
+    /// (Shape 2 — OW-wrapped entry-rule list,
+    /// **walker-tape-identical**).
+    ///
+    /// Emits `Seq[Rule]` matching the walker's lowering of
+    /// `OptionalWhitespace(Repeat(...))` where the outer Seq
+    /// carries the rule's variant stamp and the inner Rule
+    /// compound carries the per-iteration children.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_array_CssL4Parser_stylesheet(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssL4Parser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let span_lo = *p as u32;
+        let outer_child = builder.mark_children();
+        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+        let repeat_open = *p as u32;
+        let repeat_child = builder.mark_children();
+        loop {
+            let iter_save_p = *p;
+            if input.get(*p).is_none() {
+                break;
+            }
+            let iter_result: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                let iter_open = *p as u32;
+                let iter_child = builder.mark_children();
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                let _value_off = ({
+                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                    parse_wrap_CssL4Parser_ruleItem(input, p, state, builder)
+                })?;
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                let iter_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_open,
+                    iter_close,
+                    0,
+                    0,
+                );
+                Ok(())
+            })(
+            );
+            match iter_result {
+                Ok(()) => {
+                    if *p == iter_save_p {
+                        break;
+                    }
+                }
+                Err(_) => {
+                    *p = iter_save_p;
+                    break;
+                }
+            }
+        }
+        let repeat_close = *p as u32;
+        let _ = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            repeat_child,
+            repeat_open,
+            repeat_close,
+            0,
+            0,
+        );
+        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+        let outer_close = *p as u32;
+        let outer_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            outer_child,
+            span_lo,
+            outer_close,
+            148u8,
+            0,
+        );
+        Ok(outer_off)
+    }
+    /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
+    ///
+    /// Transparent dispatcher — skip leading ws, byte-dispatch
+    /// to the chosen branch's shape fn, return that shape fn's
+    /// offset unchanged. No outer compound emission; the
+    /// branch's own shape fn owns the tape record.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_wrap_CssL4Parser___pattern_db1e96a7fb6ccf5d(

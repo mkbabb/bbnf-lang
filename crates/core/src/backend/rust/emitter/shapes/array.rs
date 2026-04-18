@@ -1,24 +1,45 @@
 //! Array-shape emitter — `parse_array_<grammar>_<rule>`.
 //!
-//! # Role — AW-V.W3.2
+//! # Role — AW-V.W3.2 / AX.W0a.2.a
 //!
 //! Emits the per-grammar Array-shape parse function with **walker-
-//! identical tape emission**. The walker lowers the canonical JSON
-//! array rule
+//! identical tape emission**. The Array detector admits two structural
+//! shapes:
 //!
-//! ```text
-//! array = "[" >> ((value << comma?)*)?w << "]"
-//! ```
+//! 1. **Shape 1 — wrapped homogeneous repeat** (JSON `array`):
 //!
-//! to a nested Seq/Seq/Repeat/Seq compound tree; each structural IR
-//! production becomes a `push_compound` record. Downstream view
-//! derives (`arrayView`, `valueView`, typed-field projections) and the
-//! `tape_parity` golden fixtures navigate that exact record sequence,
-//! so the shape emitter must reproduce it byte-for-byte — only the
-//! **dispatch** is inlined (no `dispatch_one` / `try_branch` / cross-
-//! crate helper chain), not the **records**.
+//!    ```text
+//!    array = "[" >> ((value << comma?)*)?w << "]"
+//!    ```
 //!
-//! # Emitted tape shape (for `[v1, v2]`)
+//!    The body unwraps to `Wrap(open_byte, Repeat, close_byte)` where
+//!    `open` and `close` are concrete single-byte literals.
+//!    [`emit_parse_array_wrapped`] emits the nested Seq/Seq/Repeat/Seq
+//!    compound tree with the bracket literals as Literal leaves.
+//!
+//! 2. **Shape 2 — entry-rule list** (CSS `stylesheet`, BBNF `grammar`):
+//!
+//!    ```text
+//!    stylesheet = ruleList ?w          // OW(Repeat(...)) after inline
+//!    grammar    = ( grammar_item ?w )* // direct Repeat
+//!    ```
+//!
+//!    The body has no bracket wrap — the rule body is either a direct
+//!    `Repeat` or an `OptionalWhitespace(Repeat(...))`. No close-
+//!    delimiter sentinel exists; iteration terminates when the inner
+//!    value's first-byte dispatch rejects (end-of-input or a byte not
+//!    in the element's first set). [`emit_parse_array_list`] emits the
+//!    matching Seq/Rule compound tree — outer Seq when an OW wrapper
+//!    is present, otherwise the Repeat's Rule compound directly.
+//!
+//! Each structural IR production becomes a `push_compound` record.
+//! Downstream view derives (`arrayView`, `valueView`, typed-field
+//! projections) and the `tape_parity` golden fixtures navigate that
+//! exact record sequence, so the shape emitter must reproduce it byte-
+//! for-byte — only the **dispatch** is inlined (no `dispatch_one` /
+//! `try_branch` / cross-crate helper chain), not the **records**.
+//!
+//! # Emitted tape shape — Shape 1 (for `[v1, v2]`)
 //!
 //! ```text
 //! [ 0] Seq     variant=<array_id>  span=0..N   child=1  has_children=true
@@ -34,8 +55,28 @@
 //!             Literal variant=0                                              <- ","
 //! [ N] Literal variant=0           span=N-1..N                               <- "]"
 //! ```
+//!
+//! # Emitted tape shape — Shape 2 (CSS stylesheet `OW(Repeat(OW(Ref)))`)
+//!
+//! ```text
+//! [ 0] Seq     variant=<rule_id>  span=0..N   child=1  has_children=true   <- OW(Repeat)
+//! [ 1] Rule    variant=0          span=L..R   child=2  has_children=true   <- Repeat
+//!     per-iteration:
+//!       Seq     variant=0          child=... has_children=true              <- OW(Ref)
+//!         ...value records via Ref dispatch...
+//! ```
+//!
+//! # Emitted tape shape — Shape 2 (BBNF grammar, direct Repeat)
+//!
+//! ```text
+//! [ 0] Rule    variant=<rule_id>  span=0..N   child=1  has_children=true   <- Repeat
+//!     per-iteration:
+//!       Seq     variant=0          child=... has_children=true              <- OW(Ref)
+//!         ...value records via Ref dispatch...
+//! ```
 
-use bbnf_ir::{GrammarIR, IrRule};
+use bbnf_ir::passes::inspect::{single_byte_literal, unwrap_map_ow, unwrap_wrap};
+use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -47,7 +88,40 @@ use super::root_rule_name;
 
 /// Emit `pub fn parse_array_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>`.
+///
+/// Dispatches on rule body structure:
+///
+/// - **Shape 1** — body unwraps to `Wrap(open, middle, close)` with
+///   concrete single-byte open/close literals → [`emit_parse_array_wrapped`].
+/// - **Shape 2** — body is a `Repeat` (direct) or `OptionalWhitespace(Repeat)`
+///   with no delimiter wrap → [`emit_parse_array_list`].
+///
+/// The two variants share the function identity (`parse_array_<grammar>_<rule>`)
+/// and the outer signature; only the body differs per shape.
 pub fn emit_parse_array(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let body = unwrap_map_ow(&rule.body);
+    if let Some((open, _middle, close)) = unwrap_wrap(body) {
+        if single_byte_literal(open, ir).is_some()
+            && single_byte_literal(close, ir).is_some()
+        {
+            return emit_parse_array_wrapped(grammar_suffix, rule, ir);
+        }
+    }
+    emit_parse_array_list(grammar_suffix, rule, ir)
+}
+
+/// Emit the Shape 1 body — wrapped homogeneous repeat
+/// (`"[" >> ((value << comma?)*)?w << "]"`, canonical JSON `array`).
+///
+/// Emission is walker-tape-identical: outer Seq compound (the rule
+/// compound) wrapping a Next-Seq (open-literal + rest), wrapping an
+/// OW-Seq (leading/trailing ws), wrapping the Repeat Rule compound,
+/// wrapping per-iter Seqs with comma-repeat Rules.
+fn emit_parse_array_wrapped(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
@@ -389,6 +463,370 @@ pub fn emit_parse_array(
                 // leading ws-skip before byte-dispatching the value.
             }
         }
+    }
+}
+
+/// Emit the Shape 2 body — entry-rule list with no bracket wrap
+/// (CSS `stylesheet`, BBNF `grammar`).
+///
+/// Admitted bodies (after inlining) carry one of two structural shapes:
+///
+/// 1. **Direct Repeat** — `rule.body = Repeat { inner, lo, hi }`.
+///    Walker pushes one Rule compound (the Repeat frame); emission
+///    matches.
+/// 2. **OW-wrapped Repeat** — `rule.body = OptionalWhitespace(Repeat)`.
+///    Walker lowers OW to `Seq[WsTrim, Repeat state, WsTrim]` pushing
+///    an outer Seq compound whose single meaningful child is the Rule
+///    compound (WsTrim emits no record). Emission matches: outer Seq
+///    compound with leading/trailing ws skips and the Repeat Rule
+///    inside.
+///
+/// Per iteration: if the Repeat's inner is itself an
+/// `OptionalWhitespace(value)` the walker pushes a per-iter Seq
+/// compound (from the inner OW's Seq lowering) with a single
+/// meaningful child from the value dispatch. Emission matches. If the
+/// Repeat's inner is a bare value with no OW wrapper, no per-iter
+/// compound is pushed — the iteration produces the value records
+/// directly as children of the Rule compound.
+///
+/// Termination: the loop exits when `input.get(*p)` is out of the
+/// Repeat-inner's first-set. The value's dispatcher fn rejects at
+/// its own byte-dispatch (the same hook the Shape 1 inner uses),
+/// which rolls back the iter's savepoint and closes the Rule
+/// compound.
+fn emit_parse_array_list(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = shape_fn_ident("array", grammar_suffix, rule_name);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let variant_idx = (rule.id & 0xFF) as u8;
+
+    // Non-root dispatcher fallback — used when the value-position Ref
+    // target can't be classified at emit time. Shape 2 entry rules
+    // always have a classified target under the predicate that admits
+    // them; the fallback closes the emission contract for completeness.
+    let dispatcher_ident = match root_rule_name(ir) {
+        Some(root) => {
+            let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
+            format_ident!("{}__value", root_disp)
+        }
+        None => return quote! {},
+    };
+
+    // Pattern-match the body structure. The rule body is either a
+    // `Repeat` directly (BBNF grammar) or an `OptionalWhitespace`
+    // wrapping a `Repeat` (CSS stylesheet post-inline).
+    let (has_outer_ow, repeat_inner) = match &rule.body {
+        IrNode::OptionalWhitespace(inner) => match inner.as_ref() {
+            IrNode::Repeat { inner: r_inner, .. } => (true, r_inner.as_ref()),
+            _ => return quote! {},
+        },
+        IrNode::Repeat { inner, .. } => (false, inner.as_ref()),
+        IrNode::Map { inner, .. } => match inner.as_ref() {
+            IrNode::OptionalWhitespace(ow_inner) => match ow_inner.as_ref() {
+                IrNode::Repeat { inner: r_inner, .. } => (true, r_inner.as_ref()),
+                _ => return quote! {},
+            },
+            IrNode::Repeat { inner: r_inner, .. } => (false, r_inner.as_ref()),
+            _ => return quote! {},
+        },
+        _ => return quote! {},
+    };
+
+    // Does the Repeat's inner element carry an `OptionalWhitespace`
+    // wrapper? Present in both `(grammar_item ?w)*` (BBNF) and
+    // `(ruleItem ?w)*` (CSS post-inline). When present, each iteration
+    // pushes a Seq compound (from the inner OW's Seq lowering) whose
+    // single meaningful child is the value-dispatch result.
+    let has_iter_ow = matches!(repeat_inner, IrNode::OptionalWhitespace(_));
+
+    // Element-value Ref extraction. Walk past any OW / Map / Seq
+    // wrappers to the first value-position Ref; use the per-Ref
+    // direct-call emitter when the target is classified, else fall
+    // back to the `__value` dispatcher.
+    let element_ref = extract_element_ref(repeat_inner, ir);
+    let value_call = element_ref
+        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+        .map(|call| quote! { let _value_off = (#call)?; })
+        .unwrap_or_else(|| {
+            quote! {
+                let _value_off = #dispatcher_ident(input, p, state, builder)?;
+            }
+        });
+
+    // First-set byte check for termination. When the dispatcher's byte
+    // dispatch would reject the current `*p`, the Repeat closes. Today
+    // this is a structural guard on end-of-input; the per-Ref
+    // dispatcher carries its own byte check that rolls back the iter
+    // savepoint and surfaces the failure. The outer loop intercepts
+    // that failure via a try-iter pattern below.
+    //
+    // For robustness under walker parity: capture `*p` before each
+    // iter, call the value, and on iter-body failure roll back `*p`
+    // and exit the loop. The walker's `handle_repeat_failure` is
+    // functionally identical.
+
+    // Per-iter body. Two structural variants depending on whether the
+    // Repeat's inner carries an OW wrapper:
+    //
+    // - `has_iter_ow == true` — push per-iter Seq compound; leading
+    //   WsTrim (silent skip_space); value dispatch; trailing WsTrim;
+    //   close Seq.
+    // - `has_iter_ow == false` — no per-iter compound; just the value
+    //   dispatch. The walker emits no Seq for a bare Ref inside
+    //   Repeat.
+    let iter_body = if has_iter_ow {
+        quote! {
+            let iter_open = *p as u32;
+            let iter_child = builder.mark_children();
+
+            // Leading WsTrim (silent — emits no record).
+            let _ = #support_mod::skip_space(input, p, state);
+
+            // Value dispatch. Failure surfaces through `?` and
+            // unwinds to the caller; the outer loop treats the
+            // partial-iter Seq compound as uncommitted (mark_children
+            // is a read-only length marker) so the tape state rolls
+            // back naturally on error.
+            #value_call
+
+            // Trailing WsTrim.
+            let _ = #support_mod::skip_space(input, p, state);
+
+            let iter_close = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_child,
+                iter_open,
+                iter_close,
+                0,
+                0,
+            );
+        }
+    } else {
+        quote! {
+            #value_call
+        }
+    };
+
+    // Outer-OW wrap emission. When `rule.body` is `OW(Repeat)`, the
+    // walker pushes an outer Seq compound (from OW's
+    // `Seq[WsTrim, Repeat, WsTrim]` lowering) wrapping the Rule
+    // compound. Emission matches: outer Seq open; leading ws skip;
+    // Rule compound with the iterations; trailing ws skip; close
+    // outer Seq.
+    //
+    // Variant_idx on the outer compound comes from the rule id — the
+    // rule's variant stamp propagates through the OW's Seq (walker
+    // parity).
+    if has_outer_ow {
+        quote! {
+            /// AX.W0a.2.a — per-grammar Array-shape parse function
+            /// (Shape 2 — OW-wrapped entry-rule list,
+            /// **walker-tape-identical**).
+            ///
+            /// Emits `Seq[Rule]` matching the walker's lowering of
+            /// `OptionalWhitespace(Repeat(...))` where the outer Seq
+            /// carries the rule's variant stamp and the inner Rule
+            /// compound carries the per-iteration children.
+            #[inline(always)]
+            #[allow(non_snake_case, clippy::too_many_arguments)]
+            pub fn #fn_ident(
+                input: &[u8],
+                p: &mut usize,
+                state: &mut #support_mod::ScanState,
+                builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            ) -> ::core::result::Result<
+                ::bbnf::runtime::tape::TapeOffset,
+                ::bbnf::runtime::tape::DtaError,
+            > {
+                let span_lo = *p as u32;
+
+                // Outer Seq compound (OW lowering: Seq[WsTrim, Repeat, WsTrim]).
+                let outer_child = builder.mark_children();
+
+                // Leading WsTrim (silent).
+                let _ = #support_mod::skip_space(input, p, state);
+
+                // Rule compound (the Repeat frame).
+                let repeat_open = *p as u32;
+                let repeat_child = builder.mark_children();
+
+                // Iterate until the value dispatcher rejects or EOF.
+                loop {
+                    let iter_save_p = *p;
+                    // Peek the current byte; EOF or a byte outside
+                    // the dispatcher's first set terminates the loop.
+                    // The dispatcher's own byte-dispatch performs the
+                    // first-set check; on reject it returns Err which
+                    // we intercept below.
+                    if input.get(*p).is_none() {
+                        break;
+                    }
+                    // Attempt one iteration. On success, continue;
+                    // on failure, roll back `*p` and exit. The walker
+                    // performs the same rollback via
+                    // `handle_repeat_failure`.
+                    let iter_result: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError>
+                        = (|| {
+                            #iter_body
+                            Ok(())
+                        })();
+                    match iter_result {
+                        Ok(()) => {
+                            // Guard against zero-width iteration
+                            // (infinite loop protection): if `*p` did
+                            // not advance, treat as terminator.
+                            if *p == iter_save_p {
+                                break;
+                            }
+                        }
+                        Err(_) => {
+                            *p = iter_save_p;
+                            break;
+                        }
+                    }
+                }
+
+                let repeat_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    repeat_child,
+                    repeat_open,
+                    repeat_close,
+                    0,
+                    0,
+                );
+
+                // Trailing WsTrim (silent).
+                let _ = #support_mod::skip_space(input, p, state);
+
+                let outer_close = *p as u32;
+                let outer_off = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    outer_child,
+                    span_lo,
+                    outer_close,
+                    #variant_idx,
+                    0,
+                );
+                Ok(outer_off)
+            }
+        }
+    } else {
+        quote! {
+            /// AX.W0a.2.a — per-grammar Array-shape parse function
+            /// (Shape 2 — direct-Repeat entry-rule list,
+            /// **walker-tape-identical**).
+            ///
+            /// Emits a single Rule compound (the Repeat frame)
+            /// carrying the per-iteration children. Matches the
+            /// walker's direct lowering of a `Repeat { .. }` body
+            /// where the rule's variant stamp lands on the Rule
+            /// compound itself (no outer Seq wrapper).
+            #[inline(always)]
+            #[allow(non_snake_case, clippy::too_many_arguments)]
+            pub fn #fn_ident(
+                input: &[u8],
+                p: &mut usize,
+                state: &mut #support_mod::ScanState,
+                builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            ) -> ::core::result::Result<
+                ::bbnf::runtime::tape::TapeOffset,
+                ::bbnf::runtime::tape::DtaError,
+            > {
+                let repeat_open = *p as u32;
+                let repeat_child = builder.mark_children();
+
+                loop {
+                    let iter_save_p = *p;
+                    if input.get(*p).is_none() {
+                        break;
+                    }
+                    let iter_result: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError>
+                        = (|| {
+                            #iter_body
+                            Ok(())
+                        })();
+                    match iter_result {
+                        Ok(()) => {
+                            if *p == iter_save_p {
+                                break;
+                            }
+                        }
+                        Err(_) => {
+                            *p = iter_save_p;
+                            break;
+                        }
+                    }
+                }
+
+                let repeat_close = *p as u32;
+                let repeat_off = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    repeat_child,
+                    repeat_open,
+                    repeat_close,
+                    #variant_idx,
+                    0,
+                );
+                Ok(repeat_off)
+            }
+        }
+    }
+}
+
+/// Walk past transparent IR wrappers inside a Repeat's inner to find
+/// the first value-position `Ref` target. Mirrors the Shape 1
+/// [`extract_array_value_ref`] strategy but doesn't chase past the
+/// outer Repeat (the caller has already positioned on the inner).
+///
+/// Returns `None` when the inner carries no Ref target the per-Ref
+/// router can resolve (bare literal, inline regex, etc.) — the caller
+/// falls back to the `__value` dispatcher in that case.
+fn extract_element_ref(
+    node: &bbnf_ir::IrNode,
+    ir: &GrammarIR,
+) -> Option<bbnf_ir::RuleId> {
+    fn is_punct(rid: bbnf_ir::RuleId, ir: &GrammarIR) -> bool {
+        let Some(rule) = ir.rules.iter().find(|r| r.id == rid) else {
+            return false;
+        };
+        fn unwrap<'a>(n: &'a IrNode) -> &'a IrNode {
+            match n {
+                IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+                    unwrap(inner)
+                }
+                _ => n,
+            }
+        }
+        matches!(unwrap(&rule.body), IrNode::Literal(_))
+    }
+    match node {
+        IrNode::Ref(rid) => {
+            if is_punct(*rid, ir) {
+                None
+            } else {
+                Some(*rid)
+            }
+        }
+        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+            extract_element_ref(inner, ir)
+        }
+        IrNode::Seq(children) => children.iter().find_map(|c| extract_element_ref(c, ir)),
+        IrNode::Skip(lhs, _) => extract_element_ref(lhs, ir),
+        IrNode::Next(lhs, rhs) => {
+            extract_element_ref(lhs, ir).or_else(|| extract_element_ref(rhs, ir))
+        }
+        // Alt at the element position routes through the dispatcher —
+        // each branch may target a different classified rule. Return
+        // None so the caller emits the `__value` fallback which byte-
+        // dispatches through the Alt.
+        IrNode::Alt(_, _) => None,
+        _ => None,
     }
 }
 

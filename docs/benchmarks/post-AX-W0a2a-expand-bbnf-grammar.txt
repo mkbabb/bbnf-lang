@@ -1,0 +1,70 @@
+    /// (Shape 2 — direct-Repeat entry-rule list,
+    /// **walker-tape-identical**).
+    ///
+    /// Emits a single Rule compound (the Repeat frame)
+    /// carrying the per-iteration children. Matches the
+    /// walker's direct lowering of a `Repeat { .. }` body
+    /// where the rule's variant stamp lands on the Rule
+    /// compound itself (no outer Seq wrapper).
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_array_BbnfGenerated_grammar(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_BbnfGenerated::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
+    {
+        let repeat_open = *p as u32;
+        let repeat_child = builder.mark_children();
+        loop {
+            let iter_save_p = *p;
+            if input.get(*p).is_none() {
+                break;
+            }
+            let iter_result: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                let iter_open = *p as u32;
+                let iter_child = builder.mark_children();
+                let _ = __shape_support_BbnfGenerated::skip_space(input, p, state);
+                let _value_off = parse_BbnfGenerated_grammar__value(input, p, state, builder)?;
+                let _ = __shape_support_BbnfGenerated::skip_space(input, p, state);
+                let iter_close = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_open,
+                    iter_close,
+                    0,
+                    0,
+                );
+                Ok(())
+            })(
+            );
+            match iter_result {
+                Ok(()) => {
+                    if *p == iter_save_p {
+                        break;
+                    }
+                }
+                Err(_) => {
+                    *p = iter_save_p;
+                    break;
+                }
+            }
+        }
+        let repeat_close = *p as u32;
+        let repeat_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            repeat_child,
+            repeat_open,
+            repeat_close,
+            44u8,
+            0,
+        );
+        Ok(repeat_off)
+    }
+    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
+    /// (Alt of literal-led branches).
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_BbnfGenerated___pattern_6454fdf5a63906f1(

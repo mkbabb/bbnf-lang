@@ -120,7 +120,7 @@ pub(super) fn emit_state_dispatch_arms(
                     #id_lit => {
                         #cold_ident(
                             input, idx, columns, psi, frame_depth,
-                            stack, pos, slot,
+                            stack, pos, slot, bloom_dedup,
                         )
                     }
                 }
@@ -181,6 +181,7 @@ pub(super) fn emit_cold_siblings(
                     stack: &mut ::bbnf::runtime::tape::FrameStack,
                     pos: &mut u32,
                     slot: &mut u32,
+                    bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
                 ) -> ::core::result::Result<
                     ::bbnf::runtime::tape::StepResult,
                     ::bbnf::runtime::tape::DtaError,
@@ -968,6 +969,58 @@ fn emit_seq_arm(
     // path.
     let shape_ref_prologue = emit_shape_ref_prologue(ir, table, children);
 
+    // AW-IV.W4.3 — runtime dedup probe. If this Seq state is the
+    // entry of a dedup-eligible rule, emit a post-close probe that
+    // runs `BloomDedup::try_dedup` over the just-emitted compound's
+    // structural rows. On a hit, rewind the columns and emit a
+    // single `push_compound_referring` record pointing at the existing
+    // skeleton. No-op when the Seq is not dedup-eligible.
+    let dedup_rule_id = dedup_eligible_rule_for_state(ir, table, idx);
+
+    // Probe at open: snapshot the starting row index so the close-time
+    // probe knows how many rows this compound occupies.
+    let dedup_open = if dedup_rule_id.is_some() {
+        quote! {
+            let __dedup_start: u32 = columns.len() as u32;
+        }
+    } else {
+        quote! {}
+    };
+
+    // Post-close probe for the empty-children branch. When the Seq's
+    // children list is empty the close_compound body splices inline
+    // above this probe; at that point the compound occupies rows
+    // [__dedup_start..columns.len()]. The non-empty-children path
+    // closes via `advance_or_pop_with` in a downstream arm; AW-V's
+    // frame-kind extension wires the probe through there.
+    let dedup_close_empty = match dedup_rule_id {
+        ::core::option::Option::Some(rid) => {
+            let rid_lit = Literal::u32_unsuffixed(rid);
+            quote! {
+                let __rec_count: u32 = (columns.len() as u32) - __dedup_start;
+                if __rec_count > 0 {
+                    if let ::core::option::Option::Some(__existing) =
+                        bloom_dedup.try_dedup(columns, __dedup_start, __rec_count)
+                    {
+                        let __span_lo = columns.span_lo[__dedup_start as usize];
+                        let __span_hi = *pos;
+                        columns.truncate(__dedup_start as usize);
+                        frame_depth.truncate(__dedup_start as usize);
+                        ::bbnf::runtime::tape::push_compound_referring(
+                            columns,
+                            tape_kind,
+                            #rid_lit,
+                            __existing,
+                            (__span_lo, __span_hi),
+                        );
+                        frame_depth.push(stack.depth());
+                    }
+                }
+            }
+        }
+        ::core::option::Option::None => quote! {},
+    };
+
     quote! {
         let children: &'static [::bbnf::runtime::tape::DtaStateId] = &#children_ident;
         let frame: ::bbnf::runtime::tape::DtaFrameKind = #frame_tok;
@@ -979,6 +1032,10 @@ fn emit_seq_arm(
         // replay surface) uses the marker to collapse the compound
         // subtree to one synthetic ShapeRef leaf at view time.
         #shape_ref_prologue
+        // AW-IV.W4.3 — open-side dedup snapshot. Captures the starting
+        // row index so the close-time probe can delimit the just-
+        // emitted compound.
+        #dedup_open
         // AW-III.W5.c — fused compound write replaces reserve_compound's
         // 7-Vec::push tax with one bounds-check + 7 unchecked stores.
         let parent_rec = columns.push_compound_fused(tape_kind, *pos);
@@ -1005,6 +1062,11 @@ fn emit_seq_arm(
         if children.is_empty() {
             // AW-IV.W2.1 — close_compound body spliced inline.
             #close
+            // AW-IV.W4.3 — post-close dedup probe for the empty-
+            // children path. Runs `BloomDedup::try_dedup` over the
+            // just-emitted compound's row range; on a hit, rewind
+            // columns and emit a single `push_compound_referring`.
+            #dedup_close_empty
             #advance
         } else {
             ::core::result::Result::Ok(
@@ -1012,6 +1074,33 @@ fn emit_seq_arm(
             )
         }
     }
+}
+
+/// AW-IV.W4.3 — look up the dedup-eligible rule id for a Seq state.
+///
+/// Returns `Some(rule_id)` when the Seq state is the entry point of a
+/// rule whose id appears in `GrammarIR::dedup_eligible_rules`; `None`
+/// otherwise. The emitter uses this to decide whether to emit the
+/// dedup probe at this Seq arm.
+fn dedup_eligible_rule_for_state(
+    ir: &GrammarIR,
+    table: &DtaTable,
+    state_idx: usize,
+) -> Option<u32> {
+    if ir.dedup_eligible_rules.is_empty() {
+        return None;
+    }
+    // Find the rule whose entry state id equals `state_idx`. For
+    // grammars with many rules this is O(|dedup_eligible_rules|)
+    // lookups against a HashMap read per dedup-eligible rule — cheap
+    // at codegen time.
+    let state_id = StateId(state_idx as u16);
+    for &rid in &ir.dedup_eligible_rules {
+        if table.rule_entries.get(&rid).copied() == Some(state_id) {
+            return Some(rid);
+        }
+    }
+    None
 }
 
 /// AW-IV.W3.1 — emit the ShapeRef consumer prologue for a Seq arm.

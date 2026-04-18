@@ -282,6 +282,20 @@ pub fn emit_specialised_walker(
                 let mut slot_owned: u32 = 0;
                 let slot: &mut u32 = &mut slot_owned;
 
+                // AW-IV.W4.3 — runtime bloom + GADT dedup cache. Per-
+                // parse state; the Seq arm for dedup-eligible rules
+                // consults it at compound-close time via
+                // `BloomDedup::try_dedup`, collapsing duplicate
+                // skeletons to a single referring record. The cache
+                // is stack-local — no cross-parse leakage — and
+                // defaults to all-zeros bloom + empty HashMap; a
+                // grammar with zero dedup-eligible rules pays only
+                // the stack-reserve cost (128 `u64` words).
+                let mut bloom_dedup_owned: ::bbnf::runtime::tape::BloomDedup =
+                    ::bbnf::runtime::tape::BloomDedup::new();
+                let bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup =
+                    &mut bloom_dedup_owned;
+
                 // AW-IV.W1.α — boundary trim is a codegen-time
                 // decision: the emitter scans `table.states` for the
                 // first `DtaState::WsTrim`, emits a direct DFA match

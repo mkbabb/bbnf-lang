@@ -34,6 +34,7 @@ dhat-heap = ["dep:dhat"]
 quote = "1"
 regex = "1"
 tempfile = "3"
+prettyplease = "0.2"
 bbnf_derive = { version = "0.2", path = "../derive" }
 pprint = "0.3"
 gorgeous = { version = "0.1", features = ["vm"] }

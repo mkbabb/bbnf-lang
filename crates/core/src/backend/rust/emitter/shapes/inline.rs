@@ -1,0 +1,1239 @@
+//! Inline-position emitters — AX.W0a.2.d.
+//!
+//! # Role
+//!
+//! Every shape emitter (`flat`, `wrap`, `arglist`, `unordered`, `pratt`,
+//! `array`, `object`, `scalar`) walks a rule body and encounters
+//! structural positions — `IrNode::Literal`, `IrNode::Ref`,
+//! `IrNode::Alt`, `IrNode::Regex`, `IrNode::Negate`, `IrNode::Minus`,
+//! `IrNode::TokenDispatch`. Literal / Ref positions are directly
+//! emitted: Literal byte-matches, Ref dispatches via
+//! [`super::dispatcher::emit_ref_call_tape`] (per-Ref routing, W5.2).
+//!
+//! The remaining five — `Alt`, `Regex`, `Negate`, `Minus`,
+//! `TokenDispatch` — historically fell back to the grammar's
+//! `#dispatcher_ident` (aka `__value`). For JSON that dispatcher byte-
+//! dispatches over value's Alt-of-Refs; for non-Alt-rooted grammars
+//! (CSS `stylesheet`, Sheets `formula`, BBNF `grammar`) the dispatcher
+//! IS the root's shape fn, so the fallback loops. Closing the W0a hard
+//! gate #2 — "every grammar's `parse()` routes through the shape
+//! dispatcher" — requires every inline position to emit node-specific
+//! dispatch, no cross-rule recursion into the root.
+//!
+//! # Wire contract
+//!
+//! This module exports two entry points consumed by every shape
+//! emitter's position-core walker:
+//!
+//! - [`emit_inline_position_tape`] — tape-path emission; produces the
+//!   walker-identical record stream for the position (Alt compound +
+//!   branch records for `IrNode::Alt`, `TapeKind::Span` leaf for
+//!   `IrNode::Regex`, guard-only for `Negate` / `Minus`, TokenDispatch
+//!   compound + matched-arm records for `IrNode::TokenDispatch`).
+//! - [`emit_inline_position_visitor`] — visitor-path emission; mirrors
+//!   the tape path structurally with visitor method calls replacing
+//!   tape pushes.
+//!
+//! Both share per-branch first-byte computation, trivia stripping, and
+//! the "try-each-branch" fallback (`'try_branches: loop { match first
+//! { ... } }`) the AltDispatch emitter pioneered.
+//!
+//! # Walker parity
+//!
+//! Record shape per `IrNode`:
+//!
+//! - `Alt(branches, _)` — one `TapeKind::Alt` compound wrapping the
+//!   winning branch's records. Branch selection via byte-dispatch over
+//!   each branch's first-byte set (port of
+//!   [`super::alt_dispatch::emit_dispatch_arms`]), falling back to
+//!   linear retry on overlap. Ref branches call the target's shape fn
+//!   via [`super::dispatcher::emit_ref_call_tape`]; Literal branches
+//!   byte-match and push a `Literal` leaf; Regex branches scan the
+//!   grammar's regex adapter and push a `Span` leaf; Seq branches
+//!   match a flattened literal sequence. Mirrors the walker's
+//!   `emit_alt_linear_arm`.
+//!
+//! - `Regex(pattern)` — one `TapeKind::Span` leaf covering the scan
+//!   match. Scan via the per-grammar regex adapter (same entry point
+//!   the HRegex emitter uses). Mirrors the walker's
+//!   `emit_regex_arm` (sans PSI payload scheduling — inline positions
+//!   don't carry host decoders; when they do, the rule carrying the
+//!   Regex is classified as HRegex and doesn't hit this path).
+//!
+//! - `Negate(inner)` — guard-only. Try the inner's attempt; on success
+//!   return `Err`. No tape record. Mirrors the walker's NotFollowedBy
+//!   pattern.
+//!
+//! - `Minus(primary, excluded)` — first attempt the excluded pattern;
+//!   on success fail with `Syntax`; otherwise attempt primary. Matches
+//!   the walker's `emit_minus_arm`.
+//!
+//! - `TokenDispatch { token, arms, fallback }` — one
+//!   `TapeKind::TokenDispatch` compound. Emit the token's Span leaf,
+//!   then byte-dispatch over arm tokens with each arm emitting its
+//!   `continuation`; on no match, emit the fallback.
+
+use bbnf_ir::{AltBranch, GrammarIR, IrNode};
+use proc_macro2::TokenStream;
+use quote::quote;
+
+use super::super::dta_walker::regex_scan_adapter_ident;
+use super::dispatcher::emit_ref_call_tape;
+use super::sanitise_grammar;
+
+// ─────────────────────────────────────────────────────────────────────
+// Tape-path entry point.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit tape-path dispatch for an inline structural position (Alt /
+/// Regex / Negate / Minus / TokenDispatch).
+///
+/// The emitted TokenStream is a block producing no expression value
+/// (the caller threads it into a larger body). On error the block
+/// propagates via `?` to the enclosing shape fn's Result signature.
+///
+/// `variant_idx` is inherited from the owning rule; every compound
+/// push stamps it onto the outer record so downstream view accessors
+/// see the owning rule's discriminant.
+pub(super) fn emit_inline_position_tape(
+    node: &IrNode,
+    variant_idx: u8,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    match node {
+        IrNode::Alt(branches, _) => {
+            emit_alt_tape(branches, variant_idx, support_mod, grammar_suffix, ir)
+        }
+        IrNode::Regex(sid) => emit_regex_tape(*sid, variant_idx, grammar_suffix, ir),
+        IrNode::Negate(inner) => emit_negate_tape(inner, support_mod, grammar_suffix, ir),
+        IrNode::Minus(primary, excluded) => {
+            emit_minus_tape(primary, excluded, variant_idx, support_mod, grammar_suffix, ir)
+        }
+        IrNode::TokenDispatch { token, arms, fallback } => emit_token_dispatch_tape(
+            token,
+            arms,
+            fallback,
+            variant_idx,
+            support_mod,
+            grammar_suffix,
+            ir,
+        ),
+        _ => unreachable!(
+            "emit_inline_position_tape called on non-dispatch node: \
+             {:?}",
+            std::mem::discriminant(node),
+        ),
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Visitor-path entry point.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Visitor-path analog of [`emit_inline_position_tape`]. Emits the
+/// same structural dispatch with visitor method calls replacing tape
+/// pushes. Negate / Minus produce guard-only emission; Alt / Regex /
+/// TokenDispatch emit matching dispatch that calls through to
+/// visitor-path Ref calls.
+pub(super) fn emit_inline_position_visitor(
+    node: &IrNode,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    match node {
+        IrNode::Alt(branches, _) => {
+            emit_alt_visitor(branches, support_mod, grammar_suffix, ir)
+        }
+        IrNode::Regex(sid) => emit_regex_visitor(*sid, grammar_suffix, ir),
+        IrNode::Negate(inner) => {
+            emit_negate_visitor(inner, support_mod, grammar_suffix, ir)
+        }
+        IrNode::Minus(primary, excluded) => emit_minus_visitor(
+            primary,
+            excluded,
+            support_mod,
+            grammar_suffix,
+            ir,
+        ),
+        IrNode::TokenDispatch { token, arms, fallback } => emit_token_dispatch_visitor(
+            token,
+            arms,
+            fallback,
+            support_mod,
+            grammar_suffix,
+            ir,
+        ),
+        _ => unreachable!(
+            "emit_inline_position_visitor called on non-dispatch node: \
+             {:?}",
+            std::mem::discriminant(node),
+        ),
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Alt — tape path.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit an inline Alt dispatch producing a `TapeKind::Alt` compound
+/// wrapping the winning branch's records. Byte-dispatches over each
+/// branch's first-byte set; falls back to linear retry when no arm
+/// matches. The implementation composes
+/// [`super::alt_dispatch::emit_dispatch_arms`]'s per-branch
+/// projection with an outer Alt compound push / close.
+fn emit_alt_tape(
+    branches: &[AltBranch],
+    variant_idx: u8,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    // Precompute (first-byte-set, branch-body) pairs.
+    let mut enumerated: Vec<(Vec<u8>, TokenStream)> = Vec::with_capacity(branches.len());
+    for branch in branches {
+        let first_bytes = branch_first_bytes(&branch.node, ir);
+        let body = emit_alt_branch_body_tape(&branch.node, grammar_suffix, ir);
+        enumerated.push((first_bytes, body));
+    }
+
+    let mut per_byte_arms: std::collections::BTreeMap<u8, Vec<TokenStream>> =
+        Default::default();
+    let mut fallback_arms: Vec<TokenStream> = Vec::new();
+
+    for (first_bytes, body) in &enumerated {
+        if first_bytes.is_empty() || first_bytes.len() > 16 {
+            fallback_arms.push(body.clone());
+        } else {
+            for &b in first_bytes {
+                per_byte_arms.entry(b).or_default().push(body.clone());
+            }
+        }
+    }
+
+    let byte_arms: Vec<TokenStream> = per_byte_arms
+        .into_iter()
+        .map(|(byte, bodies)| {
+            let byte_lit = byte;
+            quote! {
+                #byte_lit => {
+                    #(#bodies)*
+                }
+            }
+        })
+        .collect();
+
+    let variant_lit = variant_idx;
+    quote! {
+        {
+            // AX.W0a.2.d — inline Alt position, walker-parity
+            // `TapeKind::Alt` compound + per-branch byte dispatch.
+            let first = #support_mod::skip_space(input, p, state)
+                .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                    offset: *p as u32,
+                })?;
+            let alt_lo = *p as u32;
+            let alt_child = builder.mark_children();
+            'try_branches: loop {
+                match first {
+                    #(#byte_arms)*
+                    _ => {}
+                }
+                #(#fallback_arms)*
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    },
+                );
+            }
+            let alt_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Alt,
+                alt_child,
+                alt_lo,
+                alt_hi,
+                #variant_lit,
+                0,
+            );
+        }
+    }
+}
+
+/// Emit the body of a single Alt-branch tape-path attempt. The body
+/// either `break 'try_branches`es on success or falls through to the
+/// next candidate.
+fn emit_alt_branch_body_tape(
+    node: &IrNode,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let inner = unwrap_trivia(node);
+    match inner {
+        IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+            Some(call) => quote! {
+                {
+                    let attempt_p = *p;
+                    match #call {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => { *p = attempt_p; }
+                    }
+                }
+            },
+            None => quote! {},
+        },
+        IrNode::Literal(sid) => emit_literal_branch_tape(*sid, ir),
+        IrNode::Regex(_) => emit_regex_branch_tape(),
+        IrNode::Seq(_) | IrNode::Next(_, _) | IrNode::Skip(_, _) => {
+            emit_seq_branch_tape(inner, ir)
+        }
+        _ => quote! {},
+    }
+}
+
+/// Literal-branch attempt — byte-match and commit. Matches the
+/// walker's Literal state emission: `TapeKind::Literal` leaf with
+/// variant = 0 (the owning Alt compound carries the rule's variant).
+fn emit_literal_branch_tape(sid: u32, ir: &GrammarIR) -> TokenStream {
+    let bytes = ir.get_string(sid).as_bytes();
+    let len = bytes.len();
+    let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
+    quote! {
+        {
+            let at = *p;
+            let end = at + #len;
+            if input.len() >= end && input[at..end] == [#(#byte_lits),*] {
+                *p = end;
+                let _ = builder.push_leaf(
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    at as u32,
+                    end as u32,
+                    0,
+                    0,
+                );
+                break 'try_branches;
+            }
+        }
+    }
+}
+
+/// Regex-branch attempt — canonical non-whitespace scan (fallback
+/// pattern for CSS `/[^\s;!}]+/` and similar). Matches the walker's
+/// Regex state emission: `TapeKind::Span` leaf, span-only payload.
+fn emit_regex_branch_tape() -> TokenStream {
+    quote! {
+        {
+            let at = *p;
+            let mut q = at;
+            while q < input.len() {
+                let b = input[q];
+                if b == b' ' || b == b'\t' || b == b'\n' || b == b'\r'
+                    || b == b';' || b == b'}' || b == b'!'
+                    || b == b',' || b == b'{' || b == b')'
+                {
+                    break;
+                }
+                q += 1;
+            }
+            if q > at {
+                *p = q;
+                let _ = builder.push_leaf(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    q as u32,
+                    0,
+                    0,
+                );
+                break 'try_branches;
+            }
+        }
+    }
+}
+
+/// Seq-branch attempt — flatten literal/alt/regex positions into a
+/// byte-sequence match. Used for prefix-tree-factored keyword chains.
+fn emit_seq_branch_tape(seq: &IrNode, ir: &GrammarIR) -> TokenStream {
+    let mut positions: Vec<&IrNode> = Vec::new();
+    flatten(seq, &mut positions);
+    let per_position: Vec<TokenStream> = positions
+        .iter()
+        .map(|pos| emit_seq_position(pos, ir))
+        .collect();
+    quote! {
+        {
+            let save_p = *p;
+            let attempt = (|| -> ::core::result::Result<(), ()> {
+                #(#per_position)*
+                Ok(())
+            })();
+            match attempt {
+                Ok(_) => {
+                    let seq_lo = save_p as u32;
+                    let seq_hi = *p as u32;
+                    let _ = builder.push_leaf(
+                        ::bbnf::runtime::tape::TapeKind::Literal,
+                        seq_lo,
+                        seq_hi,
+                        0,
+                        0,
+                    );
+                    break 'try_branches;
+                }
+                Err(_) => { *p = save_p; }
+            }
+        }
+    }
+}
+
+fn emit_seq_position(node: &IrNode, ir: &GrammarIR) -> TokenStream {
+    match unwrap_trivia(node) {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> =
+                bytes.iter().map(|b| quote! { #b }).collect();
+            quote! {
+                let at = *p;
+                let end = at + #len;
+                if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                    return Err(());
+                }
+                *p = end;
+            }
+        }
+        IrNode::Alt(branches, _) => {
+            let alt_arms: Vec<TokenStream> = branches
+                .iter()
+                .filter_map(|b| match unwrap_trivia(&b.node) {
+                    IrNode::Literal(sid) => {
+                        let bytes = ir.get_string(*sid).as_bytes();
+                        let len = bytes.len();
+                        let byte_lits: Vec<TokenStream> =
+                            bytes.iter().map(|byte| quote! { #byte }).collect();
+                        Some(quote! {
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + #len;
+                                if input.len() >= end
+                                    && input[at..end] == [#(#byte_lits),*]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
+                            }
+                        })
+                    }
+                    _ => None,
+                })
+                .collect();
+            quote! {
+                {
+                    let mut alt_hit = false;
+                    #(#alt_arms)*
+                    if !alt_hit {
+                        return Err(());
+                    }
+                }
+            }
+        }
+        IrNode::Regex(_) => quote! {
+            let at = *p;
+            let mut q = at;
+            while q < input.len() {
+                let b = input[q];
+                if b.is_ascii_alphanumeric() || b == b'_' {
+                    q += 1;
+                } else {
+                    break;
+                }
+            }
+            if q == at {
+                return Err(());
+            }
+            *p = q;
+        },
+        IrNode::Epsilon => quote! {},
+        _ => quote! { return Err(()); },
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Alt — visitor path.
+// ─────────────────────────────────────────────────────────────────────
+
+fn emit_alt_visitor(
+    branches: &[AltBranch],
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let mut enumerated: Vec<(Vec<u8>, TokenStream)> = Vec::with_capacity(branches.len());
+    for branch in branches {
+        let first_bytes = branch_first_bytes(&branch.node, ir);
+        let body = emit_alt_branch_body_visitor(&branch.node, grammar_suffix, ir);
+        enumerated.push((first_bytes, body));
+    }
+
+    let mut per_byte_arms: std::collections::BTreeMap<u8, Vec<TokenStream>> =
+        Default::default();
+    let mut fallback_arms: Vec<TokenStream> = Vec::new();
+
+    for (first_bytes, body) in &enumerated {
+        if first_bytes.is_empty() || first_bytes.len() > 16 {
+            fallback_arms.push(body.clone());
+        } else {
+            for &b in first_bytes {
+                per_byte_arms.entry(b).or_default().push(body.clone());
+            }
+        }
+    }
+
+    let byte_arms: Vec<TokenStream> = per_byte_arms
+        .into_iter()
+        .map(|(byte, bodies)| {
+            let byte_lit = byte;
+            quote! {
+                #byte_lit => {
+                    #(#bodies)*
+                }
+            }
+        })
+        .collect();
+
+    quote! {
+        {
+            let first = #support_mod::skip_space(input, p, state)
+                .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32, rule: None,
+                })?;
+            'try_branches: loop {
+                match first {
+                    #(#byte_arms)*
+                    _ => {}
+                }
+                #(#fallback_arms)*
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32, rule: None,
+                    },
+                );
+            }
+        }
+    }
+}
+
+fn emit_alt_branch_body_visitor(
+    node: &IrNode,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    use super::dispatcher::emit_ref_call_visitor;
+    let inner = unwrap_trivia(node);
+    match inner {
+        IrNode::Ref(rid) => match emit_ref_call_visitor(grammar_suffix, *rid, ir) {
+            Some(call) => quote! {
+                {
+                    let attempt_p = *p;
+                    match #call {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => { *p = attempt_p; }
+                    }
+                }
+            },
+            None => quote! {},
+        },
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> =
+                bytes.iter().map(|b| quote! { #b }).collect();
+            quote! {
+                {
+                    let at = *p;
+                    let end = at + #len;
+                    if input.len() >= end && input[at..end] == [#(#byte_lits),*] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+            }
+        }
+        IrNode::Regex(_) => quote! {
+            {
+                let at = *p;
+                let mut q = at;
+                while q < input.len() {
+                    let b = input[q];
+                    if b == b' ' || b == b'\t' || b == b'\n' || b == b'\r'
+                        || b == b';' || b == b'}' || b == b'!'
+                        || b == b',' || b == b'{' || b == b')'
+                    {
+                        break;
+                    }
+                    q += 1;
+                }
+                if q > at {
+                    *p = q;
+                    break 'try_branches;
+                }
+            }
+        },
+        IrNode::Seq(_) | IrNode::Next(_, _) | IrNode::Skip(_, _) => {
+            emit_seq_branch_visitor(inner, ir)
+        }
+        _ => quote! {},
+    }
+}
+
+fn emit_seq_branch_visitor(seq: &IrNode, ir: &GrammarIR) -> TokenStream {
+    let mut positions: Vec<&IrNode> = Vec::new();
+    flatten(seq, &mut positions);
+    let per_position: Vec<TokenStream> = positions
+        .iter()
+        .map(|pos| emit_seq_position(pos, ir))
+        .collect();
+    quote! {
+        {
+            let save_p = *p;
+            let attempt = (|| -> ::core::result::Result<(), ()> {
+                #(#per_position)*
+                Ok(())
+            })();
+            match attempt {
+                Ok(_) => break 'try_branches,
+                Err(_) => { *p = save_p; }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Regex — tape + visitor paths.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit an inline Regex scan producing a `TapeKind::Span` leaf.
+/// Uses the per-grammar regex adapter shared with the HRegex emitter.
+fn emit_regex_tape(
+    pattern_sid: u32,
+    variant_idx: u8,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let pattern = ir.get_string(pattern_sid);
+    let pattern_lit = pattern.to_string();
+    let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+    let variant_lit = variant_idx;
+    quote! {
+        {
+            let span_lo = *p as u32;
+            let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: span_lo,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    },
+                );
+            };
+            *p += match_len as usize;
+            let span_hi = *p as u32;
+            let _ = builder.push_leaf_with(
+                ::bbnf::runtime::tape::TapeKind::Span,
+                span_lo,
+                span_hi,
+                #variant_lit,
+                0,
+                ::bbnf::runtime::tape::PayloadData::None,
+            );
+        }
+    }
+}
+
+fn emit_regex_visitor(
+    pattern_sid: u32,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let pattern = ir.get_string(pattern_sid);
+    let pattern_lit = pattern.to_string();
+    let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+    quote! {
+        {
+            let span_lo = *p;
+            let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::ParseErr::Syntax {
+                        offset: span_lo as u32, rule: None,
+                    },
+                );
+            };
+            *p = span_lo + match_len as usize;
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Negate / Minus — guard-only.
+// ─────────────────────────────────────────────────────────────────────
+
+/// `Negate(inner)` — try inner; on success, fail with Syntax. No tape
+/// record pushed. Mirrors walker's NotFollowedBy. On inner failure,
+/// preserve `*p` and continue.
+fn emit_negate_tape(
+    inner: &IrNode,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let inner_attempt = emit_guard_attempt_tape(inner, support_mod, grammar_suffix, ir);
+    quote! {
+        {
+            let save_p = *p;
+            let attempt: ::core::result::Result<(), ()> = (|| {
+                #inner_attempt
+                Ok(())
+            })();
+            *p = save_p;
+            if attempt.is_ok() {
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    },
+                );
+            }
+        }
+    }
+}
+
+fn emit_negate_visitor(
+    inner: &IrNode,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let inner_attempt =
+        emit_guard_attempt_visitor(inner, support_mod, grammar_suffix, ir);
+    quote! {
+        {
+            let save_p = *p;
+            let attempt: ::core::result::Result<(), ()> = (|| {
+                #inner_attempt
+                Ok(())
+            })();
+            *p = save_p;
+            if attempt.is_ok() {
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32, rule: None,
+                    },
+                );
+            }
+        }
+    }
+}
+
+/// `Minus(primary, excluded)` — first check the excluded pattern; if
+/// it would succeed at `*p`, fail. Otherwise parse the primary,
+/// emitting its records. Mirrors walker's `emit_minus_arm`.
+fn emit_minus_tape(
+    primary: &IrNode,
+    excluded: &IrNode,
+    variant_idx: u8,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let excluded_attempt =
+        emit_guard_attempt_tape(excluded, support_mod, grammar_suffix, ir);
+    let primary_emit =
+        emit_primary_tape(primary, variant_idx, support_mod, grammar_suffix, ir);
+    quote! {
+        {
+            let save_p = *p;
+            let excluded_result: ::core::result::Result<(), ()> = (|| {
+                #excluded_attempt
+                Ok(())
+            })();
+            *p = save_p;
+            if excluded_result.is_ok() {
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: save_p as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    },
+                );
+            }
+            #primary_emit
+        }
+    }
+}
+
+fn emit_minus_visitor(
+    primary: &IrNode,
+    excluded: &IrNode,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let excluded_attempt =
+        emit_guard_attempt_visitor(excluded, support_mod, grammar_suffix, ir);
+    let primary_emit =
+        emit_primary_visitor(primary, support_mod, grammar_suffix, ir);
+    quote! {
+        {
+            let save_p = *p;
+            let excluded_result: ::core::result::Result<(), ()> = (|| {
+                #excluded_attempt
+                Ok(())
+            })();
+            *p = save_p;
+            if excluded_result.is_ok() {
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::ParseErr::Syntax {
+                        offset: save_p as u32, rule: None,
+                    },
+                );
+            }
+            #primary_emit
+        }
+    }
+}
+
+/// Emit a guard-mode attempt for a node — returns `Ok(())` on match,
+/// `Err(())` on failure. Used by Negate / Minus. No tape records are
+/// committed; the caller wraps this in a rewind block.
+fn emit_guard_attempt_tape(
+    node: &IrNode,
+    _support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    match unwrap_trivia(node) {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> =
+                bytes.iter().map(|b| quote! { #b }).collect();
+            quote! {
+                let at = *p;
+                let end = at + #len;
+                if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                    return Err(());
+                }
+                *p = end;
+            }
+        }
+        IrNode::Regex(sid) => {
+            let pattern = ir.get_string(*sid).to_string();
+            let regex_scan_ident =
+                regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+            quote! {
+                let Some(match_len) = #regex_scan_ident(#pattern, input, *p) else {
+                    return Err(());
+                };
+                *p += match_len as usize;
+            }
+        }
+        IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+            Some(call) => quote! {
+                if (#call).is_err() {
+                    return Err(());
+                }
+            },
+            None => quote! { return Err(()); },
+        },
+        _ => quote! { return Err(()); },
+    }
+}
+
+fn emit_guard_attempt_visitor(
+    node: &IrNode,
+    _support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    use super::dispatcher::emit_ref_call_visitor;
+    match unwrap_trivia(node) {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> =
+                bytes.iter().map(|b| quote! { #b }).collect();
+            quote! {
+                let at = *p;
+                let end = at + #len;
+                if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                    return Err(());
+                }
+                *p = end;
+            }
+        }
+        IrNode::Regex(sid) => {
+            let pattern = ir.get_string(*sid).to_string();
+            let regex_scan_ident =
+                regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+            quote! {
+                let Some(match_len) = #regex_scan_ident(#pattern, input, *p) else {
+                    return Err(());
+                };
+                *p += match_len as usize;
+            }
+        }
+        IrNode::Ref(rid) => match emit_ref_call_visitor(grammar_suffix, *rid, ir) {
+            Some(call) => quote! {
+                if (#call).is_err() {
+                    return Err(());
+                }
+            },
+            None => quote! { return Err(()); },
+        },
+        _ => quote! { return Err(()); },
+    }
+}
+
+/// Emit the primary-side of a Minus — a full-record-producing inline
+/// position. Delegates back through [`emit_inline_position_tape`] for
+/// non-leaf nodes (Alt / Regex / …) or emits direct byte matches for
+/// Literal / Ref leaves.
+fn emit_primary_tape(
+    node: &IrNode,
+    variant_idx: u8,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    match unwrap_trivia(node) {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> =
+                bytes.iter().map(|b| quote! { #b }).collect();
+            let variant_lit = variant_idx;
+            quote! {
+                let at = *p;
+                let end = at + #len;
+                if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                    return ::core::result::Result::Err(
+                        ::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: at as u32,
+                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        },
+                    );
+                }
+                *p = end;
+                let _ = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    at as u32,
+                    end as u32,
+                    #variant_lit,
+                    0,
+                    ::bbnf::runtime::tape::PayloadData::None,
+                );
+            }
+        }
+        IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+            Some(call) => quote! { let _ = (#call)?; },
+            None => quote! {
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    },
+                );
+            },
+        },
+        IrNode::Regex(sid) => emit_regex_tape(*sid, variant_idx, grammar_suffix, ir),
+        inner @ (IrNode::Alt(_, _) | IrNode::Negate(_) | IrNode::Minus(_, _) | IrNode::TokenDispatch { .. }) => {
+            emit_inline_position_tape(inner, variant_idx, support_mod, grammar_suffix, ir)
+        }
+        _ => quote! {},
+    }
+}
+
+fn emit_primary_visitor(
+    node: &IrNode,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    use super::dispatcher::emit_ref_call_visitor;
+    match unwrap_trivia(node) {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> =
+                bytes.iter().map(|b| quote! { #b }).collect();
+            quote! {
+                let at = *p;
+                let end = at + #len;
+                if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                    return ::core::result::Result::Err(
+                        ::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32, rule: None,
+                        },
+                    );
+                }
+                *p = end;
+            }
+        }
+        IrNode::Ref(rid) => match emit_ref_call_visitor(grammar_suffix, *rid, ir) {
+            Some(call) => quote! { (#call)?; },
+            None => quote! {
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32, rule: None,
+                    },
+                );
+            },
+        },
+        IrNode::Regex(sid) => emit_regex_visitor(*sid, grammar_suffix, ir),
+        inner @ (IrNode::Alt(_, _) | IrNode::Negate(_) | IrNode::Minus(_, _) | IrNode::TokenDispatch { .. }) => {
+            emit_inline_position_visitor(inner, support_mod, grammar_suffix, ir)
+        }
+        _ => quote! {},
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// TokenDispatch.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit `TokenDispatch { token, arms, fallback }` as a
+/// `TapeKind::TokenDispatch` compound with the token's records
+/// followed by the winning arm's continuation (or the fallback on no
+/// match).
+///
+/// Dispatch semantics follow the VM interpreter:
+///
+/// 1. Parse `token` — capture the span via `save_p .. *p`.
+/// 2. For each arm, test whether the span's bytes match any of the
+///    arm's `patterns` (each a `StringId` keyword). If `guard_byte`
+///    is set, also require `input[*p] == guard`.
+/// 3. On match, emit the arm's continuation.
+/// 4. On no arm match, emit the `fallback` continuation.
+fn emit_token_dispatch_tape(
+    token: &IrNode,
+    arms: &[bbnf_ir::TokenDispatchArm],
+    fallback: &IrNode,
+    variant_idx: u8,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let token_emit =
+        emit_primary_tape(token, variant_idx, support_mod, grammar_suffix, ir);
+
+    let mut per_arm: Vec<TokenStream> = Vec::with_capacity(arms.len());
+    for arm in arms {
+        let cont = emit_primary_tape(
+            &arm.continuation,
+            variant_idx,
+            support_mod,
+            grammar_suffix,
+            ir,
+        );
+        let pattern_literals: Vec<TokenStream> = arm
+            .patterns
+            .iter()
+            .map(|sid| {
+                let bytes = ir.get_string(*sid).as_bytes();
+                let byte_lits: Vec<TokenStream> =
+                    bytes.iter().map(|b| quote! { #b }).collect();
+                quote! { &[#(#byte_lits),*][..] }
+            })
+            .collect();
+        let guard_check = if let Some(g) = arm.guard_byte {
+            quote! { && input.get(*p).copied() == ::core::option::Option::Some(#g) }
+        } else {
+            quote! {}
+        };
+        per_arm.push(quote! {
+            if !td_match
+                && (#(token_span == #pattern_literals)||*)
+                #guard_check
+            {
+                #cont
+                td_match = true;
+            }
+        });
+    }
+
+    let fallback_emit = emit_primary_tape(
+        fallback,
+        variant_idx,
+        support_mod,
+        grammar_suffix,
+        ir,
+    );
+    let variant_lit = variant_idx;
+
+    quote! {
+        {
+            let td_lo = *p as u32;
+            let td_child = builder.mark_children();
+            let token_lo = *p;
+            #token_emit
+            let token_span: &[u8] = &input[token_lo..*p];
+            let mut td_match = false;
+            #(#per_arm)*
+            if !td_match {
+                #fallback_emit
+            }
+            let td_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::TokenDispatch,
+                td_child,
+                td_lo,
+                td_hi,
+                #variant_lit,
+                0,
+            );
+        }
+    }
+}
+
+fn emit_token_dispatch_visitor(
+    token: &IrNode,
+    arms: &[bbnf_ir::TokenDispatchArm],
+    fallback: &IrNode,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let token_emit = emit_primary_visitor(token, support_mod, grammar_suffix, ir);
+    let mut per_arm: Vec<TokenStream> = Vec::with_capacity(arms.len());
+    for arm in arms {
+        let cont = emit_primary_visitor(
+            &arm.continuation,
+            support_mod,
+            grammar_suffix,
+            ir,
+        );
+        let pattern_literals: Vec<TokenStream> = arm
+            .patterns
+            .iter()
+            .map(|sid| {
+                let bytes = ir.get_string(*sid).as_bytes();
+                let byte_lits: Vec<TokenStream> =
+                    bytes.iter().map(|b| quote! { #b }).collect();
+                quote! { &[#(#byte_lits),*][..] }
+            })
+            .collect();
+        let guard_check = if let Some(g) = arm.guard_byte {
+            quote! { && input.get(*p).copied() == ::core::option::Option::Some(#g) }
+        } else {
+            quote! {}
+        };
+        per_arm.push(quote! {
+            if !td_match
+                && (#(token_span == #pattern_literals)||*)
+                #guard_check
+            {
+                #cont
+                td_match = true;
+            }
+        });
+    }
+    let fallback_emit =
+        emit_primary_visitor(fallback, support_mod, grammar_suffix, ir);
+    quote! {
+        {
+            let token_lo = *p;
+            #token_emit
+            let token_span: &[u8] = &input[token_lo..*p];
+            let mut td_match = false;
+            #(#per_arm)*
+            if !td_match {
+                #fallback_emit
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Helpers — first-byte projection, trivia stripping, Seq flattening.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Compute the first-byte set for a branch body. Returns an empty
+/// Vec when the set is unbounded (Regex branches without
+/// classification, Refs without `meta.first_set`).
+///
+/// Mirrors [`super::alt_dispatch::branch_first_bytes`] verbatim so the
+/// inline Alt dispatcher and the top-level AltDispatch emitter agree
+/// on byte-set projection.
+fn branch_first_bytes(node: &IrNode, ir: &GrammarIR) -> Vec<u8> {
+    match unwrap_trivia(node) {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            if bytes.is_empty() {
+                Vec::new()
+            } else {
+                vec![bytes[0]]
+            }
+        }
+        IrNode::Ref(rid) => {
+            let target = match ir.rules.iter().find(|r| r.id == *rid) {
+                Some(r) => r,
+                None => return Vec::new(),
+            };
+            target.meta.first_set.iter().collect()
+        }
+        IrNode::Regex(_) => Vec::new(),
+        IrNode::Seq(children) => children
+            .first()
+            .map(|c| branch_first_bytes(c, ir))
+            .unwrap_or_default(),
+        IrNode::Next(lhs, _) => branch_first_bytes(lhs, ir),
+        IrNode::Skip(lhs, _) => branch_first_bytes(lhs, ir),
+        IrNode::Alt(inner_branches, _) => {
+            let mut out: std::collections::BTreeSet<u8> = Default::default();
+            for b in inner_branches {
+                for byte in branch_first_bytes(&b.node, ir) {
+                    out.insert(byte);
+                }
+            }
+            out.into_iter().collect()
+        }
+        _ => Vec::new(),
+    }
+}
+
+/// Strip Map / OptionalWhitespace trivia.
+fn unwrap_trivia(node: &IrNode) -> &IrNode {
+    match node {
+        IrNode::Map { inner, .. } => unwrap_trivia(inner.as_ref()),
+        IrNode::OptionalWhitespace(inner) => unwrap_trivia(inner.as_ref()),
+        _ => node,
+    }
+}
+
+/// Flatten a Seq / Next / Skip chain into its structural children.
+/// Used to project a Seq-branch into a sequence of byte-match
+/// positions for the prefix-tree-factored keyword pattern.
+fn flatten<'a>(node: &'a IrNode, out: &mut Vec<&'a IrNode>) {
+    match node {
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+            flatten(inner, out);
+        }
+        IrNode::Seq(children) => {
+            for c in children {
+                flatten(c, out);
+            }
+        }
+        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+            flatten(lhs, out);
+            flatten(rhs, out);
+        }
+        IrNode::Epsilon => {}
+        other => out.push(other),
+    }
+}
+

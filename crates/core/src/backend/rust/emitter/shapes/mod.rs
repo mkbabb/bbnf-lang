@@ -70,6 +70,7 @@ pub mod array;
 pub mod dispatcher;
 pub mod flat;
 pub mod hregex;
+pub(crate) mod inline;
 pub mod keyword;
 pub mod number;
 pub mod object;

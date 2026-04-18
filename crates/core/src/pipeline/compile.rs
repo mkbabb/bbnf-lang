@@ -661,34 +661,78 @@ fn compile_ast_common<'a>(
     // used by downstream codegen (regex engine decisions, regex info cache).
     ir.build_string_index();
 
+    // AW-V.W5.1 — profile-populating mining passes.
+    //
+    // The four passes in this block (`compute_regex_info`,
+    // `compute_structural_alphabet`, `mine_recognizers`,
+    // `solve_shape_dict_selection`) are purely non-mutating fact
+    // collectors: they read the stable DAG and populate sidecar
+    // slots on `GrammarIR` (`regex_info`, `structural_alphabet`,
+    // `keyword_branches`, `shape_dict_templates`,
+    // `shape_dict_selection`, etc.). They touch neither rule
+    // bodies nor rule identities, so they compose with
+    // `structural` mode verbatim — the `preserve_identity` flag
+    // set upstream still holds.
+    //
+    // Pre-W5.1 the entire block below (profile-populating + codegen-
+    // decision) was gated on `!options.structural`, which silently
+    // dropped every mined `GrammarProfile` slot for the BBNF
+    // bootstrap (`#[parser(path=..., structural)]`). The emitter
+    // consumed `GrammarIR::profile()` and lowered `&[]` for
+    // `structural_alphabet`, `structural_digraphs`, `quote_classes`,
+    // `keyword_tables`, and `shape_dict` — the wire-contract P4
+    // samply observation from AW-IV. W5.1 splits the gate: the
+    // non-mutating fact passes run unconditionally, the codegen-
+    // decision passes remain gated on optimizer output.
+    //
+    // AW-IV.W1.δ — `compute_regex_info` precedes
+    // `compute_structural_alphabet` so the latter's quote-class
+    // mining can read the `RegexClass::QuotedString` classification
+    // off `ir.regex_info`. Pre-AW-IV the order was inverted, which
+    // left `structural_quote_classes` empty for every non-bootstrap
+    // grammar — the wire-contract pipeline carried `&[]` through
+    // for that slot. Reordering activates it without touching
+    // either pass body.
+    timer.span("compute_regex_info", || {
+        bbnf_ir::passes::compute_regex_info(&mut ir);
+    });
+    // Tranche AU.2.7 — grammar-parameterised structural alphabet.
+    // The alphabet is read at codegen time by the scanner-kernel
+    // emitters in `crates/core/src/generate/regex/emit/simd.rs`,
+    // and by the runtime `GrammarProfile` consumer in
+    // `bbnf-simd-scan::StructuralAlphabet::from_profile`.
+    timer.span("compute_structural_alphabet", || {
+        bbnf_ir::passes::sets::compute_structural_alphabet(&mut ir);
+    });
+    timer.span("mine_recognizers", || {
+        bbnf_ir::passes::mine_recognizers(&mut ir);
+    });
+    // Tranche AV.5.3 — shape-dictionary admission solve. Selects
+    // up to MAX_SHAPE_DICT_ENTRIES candidates from the
+    // `mine_recognizers`-emitted pool by greedy maximisation of
+    // `freq × savings - static_entry_cost`. The result indexes
+    // into `ir.shape_dict_templates`; the codegen emitter walks
+    // the selection to bake `GrammarProfile::shape_dict`.
+    timer.span("solve_shape_dict_selection", || {
+        ir.shape_dict_selection =
+            bbnf_ir::passes::csp_strategy::constraints::shape_dict::solve_shape_dict_selection(
+                &ir,
+            );
+    });
+
     if !options.structural {
-        // Non-mutating facts on the stable DAG. Gated on !structural
-        // because they depend on optimizer output.
+        // Codegen-decision passes. Gated on `!structural` because
+        // they produce per-NodeId dispatch tables, materialization
+        // classes, engine choices, and recognizer decisions that
+        // the downstream codegen consumes — those decisions
+        // presuppose the optimized rule graph (inlined wrappers,
+        // fused token dispatch, normalized body shapes). The
+        // bootstrap and analysis callers that set `structural =
+        // true` preserve the raw rule graph for self-hosting /
+        // diagnostics, so the codegen-decision passes are
+        // inapplicable to their downstream uses.
         timer.span("generate_dispatch_tables", || {
             bbnf_ir::passes::generate_dispatch_tables(&mut ir);
-        });
-        // Tranche AU.2.7 — grammar-parameterised structural alphabet.
-        // Runs immediately after `generate_dispatch_tables` because
-        // the dispatch tables are the canonical source of Alt-branch
-        // first-byte data. The alphabet is read at codegen time by
-        // the scanner-kernel emitters in
-        // `crates/core/src/generate/regex/emit/simd.rs`.
-        // AW-IV.W1.δ — `compute_regex_info` precedes
-        // `compute_structural_alphabet` so the latter's quote-class
-        // mining can read the `RegexClass::QuotedString` classification
-        // off `ir.regex_info`. Pre-AW-IV the order was inverted, which
-        // left `structural_quote_classes` empty for every non-bootstrap
-        // grammar — the wire-contract pipeline carried `&[]` through
-        // for that slot. Reordering activates it without touching
-        // either pass body.
-        timer.span("compute_regex_info", || {
-            bbnf_ir::passes::compute_regex_info(&mut ir);
-        });
-        timer.span("compute_structural_alphabet", || {
-            bbnf_ir::passes::sets::compute_structural_alphabet(&mut ir);
-        });
-        timer.span("mine_recognizers", || {
-            bbnf_ir::passes::mine_recognizers(&mut ir);
         });
         // Tranche AB.0 — bottom-up materialization classification.
         // Runs before the strategy CSP so the joint solve can consult
@@ -722,20 +766,6 @@ fn compile_ast_common<'a>(
             ir.regex_engine_decisions =
                 bbnf_ir::passes::extract_regex_engine_decisions(&ir, &ir.recognizer_decisions);
         });
-
-        // Tranche AV.5.3 — shape-dictionary admission solve. Selects
-        // up to MAX_SHAPE_DICT_ENTRIES candidates from the
-        // `mine_recognizers`-emitted pool by greedy maximisation of
-        // `freq × savings - static_entry_cost`. The result indexes
-        // into `ir.shape_dict_templates`; the codegen emitter walks
-        // the selection to bake `GrammarProfile::shape_dict`.
-        timer.span("solve_shape_dict_selection", || {
-            ir.shape_dict_selection =
-                bbnf_ir::passes::csp_strategy::constraints::shape_dict::solve_shape_dict_selection(
-                    &ir,
-                );
-        });
-
     }
 
     // Emit the per-pass CSV report when BBNF_PIPELINE_REPORT=1.

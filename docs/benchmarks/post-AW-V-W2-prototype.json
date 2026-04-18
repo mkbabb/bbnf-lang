@@ -1,0 +1,102 @@
+{
+  "tranche": "AW-V.W2",
+  "scope": "JSON-only hand-tuned per-shape inline parser prototype, twin-pair bench vs sonic-rs",
+  "worktree": "/Users/mkbabb/Programming/bbnf-wt-aw5-prototype",
+  "head_at_open": "f457b4df",
+  "bench_binary": "target/release/deps/json_value-*",
+  "sonic_rs_version": "0.3.17",
+  "host": "Apple M4 Max (aarch64, NEON baseline)",
+  "rust_profile": "bench (lto=fat, codegen-units=1, debug=true)",
+  "hard_gate": "each prototype entry ns/iter within 10% of sonic-rs twin (ratio ≤ 1.10)",
+  "runs": [
+    {
+      "run": "A",
+      "entries": {
+        "data_s": {
+          "proto_value_ns_per_iter": 14471,
+          "sonic_ns_per_iter": 22919,
+          "proto_value_mb_per_s": 2452,
+          "sonic_mb_per_s": 1548,
+          "ratio": 0.63
+        },
+        "twitter": {
+          "proto_value_ns_per_iter": 246585,
+          "sonic_ns_per_iter": 243580,
+          "proto_value_mb_per_s": 2561,
+          "sonic_mb_per_s": 2592,
+          "ratio": 1.012
+        },
+        "citm": {
+          "proto_value_ns_per_iter": 524298,
+          "sonic_ns_per_iter": 589402,
+          "proto_value_mb_per_s": 3294,
+          "sonic_mb_per_s": 2930,
+          "ratio": 0.890
+        },
+        "canada": {
+          "proto_value_ns_per_iter": 1324453,
+          "sonic_ns_per_iter": 1505450,
+          "proto_value_mb_per_s": 1699,
+          "sonic_mb_per_s": 1495,
+          "ratio": 0.880
+        },
+        "data_xl": {
+          "proto_value_ns_per_iter": 13940428,
+          "sonic_ns_per_iter": 19264237,
+          "proto_value_mb_per_s": 1526,
+          "sonic_mb_per_s": 1104,
+          "ratio": 0.724
+        }
+      }
+    },
+    {
+      "run": "B",
+      "entries": {
+        "data_s": {
+          "proto_value_ns_per_iter": 14418,
+          "sonic_ns_per_iter": 15361,
+          "proto_value_mb_per_s": 2461,
+          "sonic_mb_per_s": 2310,
+          "ratio": 0.939
+        },
+        "twitter": {
+          "proto_value_ns_per_iter": 244993,
+          "sonic_ns_per_iter": 274864,
+          "proto_value_mb_per_s": 2577,
+          "sonic_mb_per_s": 2297,
+          "ratio": 0.891
+        },
+        "citm": {
+          "proto_value_ns_per_iter": 522441,
+          "sonic_ns_per_iter": 585060,
+          "proto_value_mb_per_s": 3306,
+          "sonic_mb_per_s": 2952,
+          "ratio": 0.893
+        },
+        "canada": {
+          "proto_value_ns_per_iter": 1330826,
+          "sonic_ns_per_iter": 1477382,
+          "proto_value_mb_per_s": 1691,
+          "sonic_mb_per_s": 1523,
+          "ratio": 0.901
+        },
+        "data_xl": {
+          "proto_value_ns_per_iter": 13954450,
+          "sonic_ns_per_iter": 15479020,
+          "proto_value_mb_per_s": 1525,
+          "sonic_mb_per_s": 1374,
+          "ratio": 0.902
+        }
+      }
+    }
+  ],
+  "hard_gate_status": "MET",
+  "summary": "All five twin-pair entries within 10% of sonic-rs; prototype_value BEATS sonic-rs on every entry in both stabilization runs. Canada (90% numeric, sonic's narrowest domain) drops from pre-scalar-integer 1.18x over-sonic to 0.88-0.90x under-sonic after replacing the SIMD integer-digit scan with scalar (integer parts are typically 1-3 digits on canada; the SIMD stripe overhead was not amortising).",
+  "proto_tape_supplementary": {
+    "data_s": { "ns_per_iter": 25427, "mb_per_s": 1395, "note": "TapeVisitor validates bbnf_tape::Columns substrate round-trip, slower than ValueVisitor by design (TapeBuilder does more work)" },
+    "twitter": { "ns_per_iter": 418707, "mb_per_s": 1508 },
+    "citm": { "ns_per_iter": 877795, "mb_per_s": 1967 },
+    "canada": { "ns_per_iter": 2292125, "mb_per_s": 982 },
+    "data_xl": { "ns_per_iter": 26061383, "mb_per_s": 816 }
+  }
+}

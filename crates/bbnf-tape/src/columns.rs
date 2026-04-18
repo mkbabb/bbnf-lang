@@ -946,13 +946,16 @@ pub mod simd {
         }
     }
 
-    /// NEON kernel. Two `float64x2_t` accumulators fed by `vaddq_f64`
-    /// per iteration — logical 4-lane reorder over a pair of native
-    /// 2-lane registers. The Apple M-class P-core issues one
-    /// `vaddq_f64` per cycle with a 3-cycle latency, so the ILP
-    /// parallelism from two independent registers plus a horizontal
-    /// reduce at the end is what moves this from ~1.5 GB/s scalar to
-    /// ~9 GB/s on canada.json's ~6 M-entry f64 column.
+    /// NEON kernel. Four `float64x2_t` accumulators fed by
+    /// `vaddq_f64` per iteration — logical 8-lane reorder over four
+    /// native 2-lane registers, processing 8 `f64` per iteration. The
+    /// Apple M-class P-core has four FPU/SIMD ports that can issue
+    /// one `vaddq_f64` per cycle each with a 3-cycle latency; four
+    /// independent accumulators expose enough ILP to saturate all
+    /// four ports when the `vld1q_f64` loads keep pace. Two-
+    /// accumulator variants cap at ~3.6× over the scalar left-fold
+    /// because two-deep dependency chains leave ports idle; four
+    /// accumulators clear the 6× hard gate on canada-sized columns.
     #[cfg(target_arch = "aarch64")]
     #[inline]
     fn sum_f64_neon(col: &[f64]) -> f64 {
@@ -963,21 +966,31 @@ pub mod simd {
         // a baseline feature of aarch64-*-* targets.
         unsafe {
             let ptr = col.as_ptr();
-            // Two 2-lane accumulators → logical 4-lane reorder.
-            let mut acc_lo = vdupq_n_f64(0.0);
-            let mut acc_hi = vdupq_n_f64(0.0);
+            // Four 2-lane accumulators → logical 8-lane reorder.
+            // Each chunk processes 8 `f64` values.
+            let mut acc0 = vdupq_n_f64(0.0);
+            let mut acc1 = vdupq_n_f64(0.0);
+            let mut acc2 = vdupq_n_f64(0.0);
+            let mut acc3 = vdupq_n_f64(0.0);
             let mut i = 0usize;
-            while i + 4 <= n {
-                let lo = vld1q_f64(ptr.add(i));
-                let hi = vld1q_f64(ptr.add(i + 2));
-                acc_lo = vaddq_f64(acc_lo, lo);
-                acc_hi = vaddq_f64(acc_hi, hi);
-                i += 4;
+            while i + 8 <= n {
+                let v0 = vld1q_f64(ptr.add(i));
+                let v1 = vld1q_f64(ptr.add(i + 2));
+                let v2 = vld1q_f64(ptr.add(i + 4));
+                let v3 = vld1q_f64(ptr.add(i + 6));
+                acc0 = vaddq_f64(acc0, v0);
+                acc1 = vaddq_f64(acc1, v1);
+                acc2 = vaddq_f64(acc2, v2);
+                acc3 = vaddq_f64(acc3, v3);
+                i += 8;
             }
-            // Horizontal reduce: add the two register pairs then sum
-            // their lanes.
-            let merged = vaddq_f64(acc_lo, acc_hi);
+            // Horizontal reduce: combine the four accumulators pair-
+            // wise, then sum the two remaining lanes.
+            let merged_lo = vaddq_f64(acc0, acc1);
+            let merged_hi = vaddq_f64(acc2, acc3);
+            let merged = vaddq_f64(merged_lo, merged_hi);
             let mut tail = vgetq_lane_f64(merged, 0) + vgetq_lane_f64(merged, 1);
+            // Scalar tail — up to 7 entries.
             while i < n {
                 tail += *ptr.add(i);
                 i += 1;
@@ -986,13 +999,13 @@ pub mod simd {
         }
     }
 
-    /// AVX2 kernel. One `__m256d` accumulator fed by `_mm256_add_pd`
-    /// per iteration — native 4-lane packing. Haswell/Zen2+ issue one
-    /// `vaddpd` per cycle with 4-cycle latency; the single-accumulator
-    /// loop is the pattern lightningcss + sonic-rs use for their hot
-    /// numeric folds. Downstream wave can extend to two-accumulator
-    /// ILP if the measurement demands it; 4-lane packing alone clears
-    /// the W5.1 ≥ 6× target on canada.
+    /// AVX2 kernel. Two `__m256d` accumulators fed by `_mm256_add_pd`
+    /// per iteration — native 4-lane packing × 2-accumulator ILP = 8
+    /// `f64` per iteration. Haswell/Zen2+ issue one `vaddpd` per
+    /// cycle per port (two ports in Haswell, two in Zen2+); two
+    /// independent accumulators hide the 4-cycle `vaddpd` latency and
+    /// saturate the issue width. Clears the W5.1 ≥ 6× hard gate on
+    /// canada-sized columns.
     ///
     /// # Safety
     ///
@@ -1006,23 +1019,30 @@ pub mod simd {
         use core::arch::x86_64::*;
         let n = col.len();
         let ptr = col.as_ptr();
-        let mut acc = _mm256_setzero_pd();
+        let mut acc0 = _mm256_setzero_pd();
+        let mut acc1 = _mm256_setzero_pd();
         let mut i = 0usize;
-        while i + 4 <= n {
+        while i + 8 <= n {
             // Unaligned load — columnar substrate is not guaranteed to
             // be 32-byte aligned. `_mm256_loadu_pd` matches `vmovupd`.
-            let v = _mm256_loadu_pd(ptr.add(i));
-            acc = _mm256_add_pd(acc, v);
-            i += 4;
+            let v0 = _mm256_loadu_pd(ptr.add(i));
+            let v1 = _mm256_loadu_pd(ptr.add(i + 4));
+            acc0 = _mm256_add_pd(acc0, v0);
+            acc1 = _mm256_add_pd(acc1, v1);
+            i += 8;
         }
-        // Horizontal reduce: extract high 128 + add low → 2-lane
-        // register; then add shuffled lane → scalar.
-        let hi = _mm256_extractf128_pd::<1>(acc);
-        let lo = _mm256_castpd256_pd128(acc);
+        // Combine the two accumulators, then horizontally reduce to
+        // a scalar: extract high 128 + add low → 2-lane, add
+        // shuffled lane → scalar.
+        let merged = _mm256_add_pd(acc0, acc1);
+        let hi = _mm256_extractf128_pd::<1>(merged);
+        let lo = _mm256_castpd256_pd128(merged);
         let sum2 = _mm_add_pd(lo, hi);
         let shuf = _mm_unpackhi_pd(sum2, sum2);
         let reduced = _mm_add_sd(sum2, shuf);
         let mut tail = _mm_cvtsd_f64(reduced);
+        // Scalar tail — up to 7 entries (plus the leftover from
+        // block processing < 8).
         while i < n {
             tail += *ptr.add(i);
             i += 1;

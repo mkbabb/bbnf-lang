@@ -20,3 +20,10 @@ rayon = { version = "1", optional = true }
 
 [lib]
 crate-type = ["lib"]
+
+# AW-IV.W5.1 — reduce_column scalar-vs-SIMD bench on canada.json-sized
+# f64 column. Hard gate: ≥ 6× SIMD speedup over scalar left-fold OR
+# per-arch rationale.
+[[bench]]
+name = "reduce_column"
+harness = false

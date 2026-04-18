@@ -140,7 +140,10 @@ pub fn parse_object_JsonFixture_object(
                 0,
                 0,
             );
-        let _value_off = parse_JsonFixture_value__value(input, p, state, builder)?;
+        let _value_off = ({
+            let _ = __shape_support_JsonFixture::skip_space(input, p, state);
+            parse_wrap_JsonFixture_value(input, p, state, builder)
+        })?;
         let colon_next_close = *p as u32;
         let _ = builder
             .push_compound(

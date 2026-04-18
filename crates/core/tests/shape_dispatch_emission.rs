@@ -452,3 +452,4 @@ fn _fixtures_type_touch() {
     let _: RuleId = 0;
     let _ = IrNode::Epsilon;
 }
+

@@ -351,8 +351,15 @@ pub fn emit_regex_scan_adapter(
 
     let dispatch_arms = states.into_iter().map(|(_idx, pattern, pat_ident)| {
         let body = emit_dfa_body_for_pattern(pattern);
+        // Pointer-equality fast path first (hot from walker-emit call
+        // sites that hand over the interned `__DTA_REGEX_N` static).
+        // Byte-equality fallback covers the HRegex shape emitter's
+        // call site, which stringifies the rule-body pattern as a raw
+        // literal — `ptr::eq` misses but `==` resolves.
         quote! {
-            if ::core::ptr::eq(pattern.as_ptr(), #pat_ident.as_ptr()) {
+            if ::core::ptr::eq(pattern.as_ptr(), #pat_ident.as_ptr())
+                || pattern == #pat_ident
+            {
                 return #body;
             }
         }

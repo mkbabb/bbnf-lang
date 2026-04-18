@@ -103,7 +103,10 @@ pub fn parse_array_JsonFixture_array(
     loop {
         let iter_open = *p as u32;
         let iter_child = builder.mark_children();
-        let _value_off = parse_JsonFixture_value__value(input, p, state, builder)?;
+        let _value_off = ({
+            let _ = __shape_support_JsonFixture::skip_space(input, p, state);
+            parse_wrap_JsonFixture_value(input, p, state, builder)
+        })?;
         let comma_repeat_open = *p as u32;
         let comma_repeat_child = builder.mark_children();
         let comma_iter_save_p = *p;

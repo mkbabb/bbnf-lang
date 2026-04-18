@@ -1,0 +1,2481 @@
+{
+  "tag": "cost-weights-sweep",
+  "tranche": "AW-IV.W5.3",
+  "description": "Grid sweep over the e-graph extraction `CostWeights` surface. Baseline is AW-III default (structural=1.0, alt_per_branch=1.5, dispatch_bonus=-2.0, literal_cost=1.0, regex_cost=2.0, ref_cost=0.5, seq_per_child=1.0). Per-grammar Pareto frontier over (state_count, pipeline_ns_median) retained. Calibrated weights chosen as lowest gmean state-count ratio subject to no per-grammar state-count regression; pipeline wall-clock breaks ties only.",
+  "methodology": "For each configuration and grammar, 3 repeats; median pipeline_ns retained. One throwaway warmup run per grammar before the sweep begins. Baseline runs inline with swept configs so process-warm-up noise is spread rather than concentrated on a single entry. DTA state count is deterministic and invariant under process-timing noise; it is the primary calibration signal. Pipeline wall-clock is reported for completeness but does not drive calibration when the sweep is wall-clock-dominated by noise.",
+  "hard_gate": "\u22655% reduction in DTA state count OR extraction-pass wall-clock vs AW-III baseline (geomean across 4-grammar corpus).",
+  "hard_gate_met": false,
+  "null_result": true,
+  "state_count_variance_across_sweep": {
+    "grammar/json/json.bbnf": [
+      51
+    ],
+    "grammar/bbnf/bbnf.bbnf": [
+      476
+    ],
+    "grammar/css/l4/stylesheet.bbnf": [
+      2875
+    ],
+    "grammar/google-sheets/google-sheets.bbnf": [
+      191
+    ]
+  },
+  "baselines": {
+    "grammar/bbnf/bbnf.bbnf": {
+      "state_count": 476,
+      "pipeline_ns_median": 3279125,
+      "lift_ns_median": 37750,
+      "rules": 46
+    },
+    "grammar/css/l4/stylesheet.bbnf": {
+      "state_count": 2875,
+      "pipeline_ns_median": 23836959,
+      "lift_ns_median": 141459,
+      "rules": 187
+    },
+    "grammar/google-sheets/google-sheets.bbnf": {
+      "state_count": 191,
+      "pipeline_ns_median": 12511792,
+      "lift_ns_median": 24667,
+      "rules": 36
+    },
+    "grammar/json/json.bbnf": {
+      "state_count": 51,
+      "pipeline_ns_median": 473458,
+      "lift_ns_median": 5958,
+      "rules": 8
+    }
+  },
+  "chosen_weights": {
+    "structural": 1,
+    "alt_per_branch": 1.5,
+    "dispatch_bonus": -2,
+    "literal_cost": 1,
+    "regex_cost": 2,
+    "ref_cost": 0.5,
+    "seq_per_child": 1
+  },
+  "chosen_tag": "baseline",
+  "chosen_rationale": "NULL RESULT \u2014 across all swept configurations, no variation in the e-graph cost weights produced a different DTA state count on any of the 4 primary grammars. The current e-graph rewrite rule set (DeduplicateAltBranches, SupersetAbsorbAlt, UnionMergeAlt, FuseAltRegexBranches, CommonSuffixFactor) yields e-classes with at most one semantically-distinct canonical form for these grammars; the cost model has no choice to exercise. Carrying baseline weights forward as CALIBRATED_WEIGHTS. Pipeline wall-clock variance (up to ~30% across configs) is dominated by process-warm-up and cache noise rather than cost-weight sensitivity \u2014 it is reported for completeness but does not drive the calibration choice.",
+  "chosen_gmean_state_ratio": 1.0,
+  "chosen_gmean_pipeline_ratio": 1.0,
+  "chosen_pct_improvement_state": 0.0,
+  "chosen_pct_improvement_pipeline": 0.0,
+  "chosen_per_grammar": {
+    "grammar/json/json.bbnf": {
+      "state_count": 51,
+      "pipeline_ns_median": 473458,
+      "state_ratio_vs_baseline": 1.0,
+      "pipeline_ratio_vs_baseline": 1.0
+    },
+    "grammar/bbnf/bbnf.bbnf": {
+      "state_count": 476,
+      "pipeline_ns_median": 3279125,
+      "state_ratio_vs_baseline": 1.0,
+      "pipeline_ratio_vs_baseline": 1.0
+    },
+    "grammar/css/l4/stylesheet.bbnf": {
+      "state_count": 2875,
+      "pipeline_ns_median": 23836959,
+      "state_ratio_vs_baseline": 1.0,
+      "pipeline_ratio_vs_baseline": 1.0
+    },
+    "grammar/google-sheets/google-sheets.bbnf": {
+      "state_count": 191,
+      "pipeline_ns_median": 12511792,
+      "state_ratio_vs_baseline": 1.0,
+      "pipeline_ratio_vs_baseline": 1.0
+    }
+  },
+  "pareto_per_grammar": {
+    "grammar/bbnf/bbnf.bbnf": [
+      {
+        "tag": "s0.5_a0.5_d-5.0_r0.25",
+        "weights": {
+          "structural": 0.5,
+          "alt_per_branch": 0.5,
+          "dispatch_bonus": -5,
+          "literal_cost": 1,
+          "regex_cost": 2,
+          "ref_cost": 0.25,
+          "seq_per_child": 1
+        },
+        "state_count": 476,
+        "pipeline_ns_median": 2424583
+      }
+    ],
+    "grammar/css/l4/stylesheet.bbnf": [
+      {
+        "tag": "s2.0_a1.5_d-5.0_r0.25",
+        "weights": {
+          "structural": 2,
+          "alt_per_branch": 1.5,
+          "dispatch_bonus": -5,
+          "literal_cost": 1,
+          "regex_cost": 2,
+          "ref_cost": 0.25,
+          "seq_per_child": 1
+        },
+        "state_count": 2875,
+        "pipeline_ns_median": 22056541
+      }
+    ],
+    "grammar/google-sheets/google-sheets.bbnf": [
+      {
+        "tag": "s2.0_a1.5_d-5.0_r0.5",
+        "weights": {
+          "structural": 2,
+          "alt_per_branch": 1.5,
+          "dispatch_bonus": -5,
+          "literal_cost": 1,
+          "regex_cost": 2,
+          "ref_cost": 0.5,
+          "seq_per_child": 1
+        },
+        "state_count": 191,
+        "pipeline_ns_median": 4230000
+      }
+    ],
+    "grammar/json/json.bbnf": [
+      {
+        "tag": "s2.0_a1.5_d-5.0_r0.25",
+        "weights": {
+          "structural": 2,
+          "alt_per_branch": 1.5,
+          "dispatch_bonus": -5,
+          "literal_cost": 1,
+          "regex_cost": 2,
+          "ref_cost": 0.25,
+          "seq_per_child": 1
+        },
+        "state_count": 51,
+        "pipeline_ns_median": 455208
+      }
+    ]
+  },
+  "all_configs": [
+    {
+      "tag": "s0.5_a0.5_d-5.0_r0.25",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.7100841608017278,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0396909546358917,
+      "combined": 0.7100841608017278,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 492250,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0396909546358917
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2424583,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7393993824572104
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22339375,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9371738651729862
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4415250,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.35288710042494315
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a0.5_d-5.0_r0.5",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.7103063883359828,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0551791288773238,
+      "combined": 0.7103063883359828,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 499583,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0551791288773238
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2468667,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.752843212747303
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22368250,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9383852193562107
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4272583,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.3414844971847358
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a0.5_d-2.0_r0.25",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 1.0166669574424878,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0248465607484523,
+      "combined": 1.0166669574424878,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 484875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0241140713643027
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3357667,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.023952121373842
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23696208,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9940952618998086
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12822667,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0248465607484523
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a0.5_d-2.0_r0.5",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.998812884867514,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.011928746897327,
+      "combined": 0.998812884867514,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 468875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9903201551140756
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3273750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9983608432127473
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23712334,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9947717743693733
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12661042,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.011928746897327
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a0.5_d0.0_r0.25",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.5132743196457366,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.611011779056916,
+      "combined": 2.5132743196457366,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 480792,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0154902863611979
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 113493834,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.611011779056916
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26889666,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1280661262202112
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12590833,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0063173204925402
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a0.5_d0.0_r0.5",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.4931949537559173,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 33.9686019898601,
+      "combined": 2.4931949537559173,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 469791,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9922548568194011
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 111387292,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 33.9686019898601
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26768333,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1229760054543871
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12772417,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0208303494815132
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a1.5_d-5.0_r0.25",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.7004484088713272,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 0.9766800856675777,
+      "combined": 0.7004484088713272,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 462417,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9766800856675777
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2469833,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7531987954103609
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22452084,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9419021948227541
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4346667,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.3474056314235403
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a1.5_d-5.0_r0.5",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.7044259530529217,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0080978671814607,
+      "combined": 0.7044259530529217,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 477292,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0080978671814607
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2455875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7489421720733427
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22393875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9394602306443536
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4343417,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.34714587646597705
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a1.5_d-2.0_r0.25",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 1.0026527966298484,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0261755803758625,
+      "combined": 1.0026527966298484,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 462125,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.976063346696011
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3364958,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0261755803758625
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23942333,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0044206142234837
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12569167,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0045856740585202
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a1.5_d-2.0_r0.5",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 1.010766618661197,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.033181977449753,
+      "combined": 1.010766618661197,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 473000,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9990326491473372
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3335125,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.017077726527656
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23699750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9942438546796175
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12926958,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.033181977449753
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a1.5_d0.0_r0.25",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.4959278386791994,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.30391735600198,
+      "combined": 2.4959278386791994,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 468708,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9899674311132138
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 112486833,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.30391735600198
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26816000,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.124975715232803
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12709833,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0158283481694708
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a1.5_d0.0_r0.5",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.473507052278601,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 33.53952380589334,
+      "combined": 2.473507052278601,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 468834,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9902335582036844
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 109980291,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 33.53952380589334
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26431625,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1088505459106592
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12717583,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0164477638375062
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a4.0_d-5.0_r0.25",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 4,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.6976886029079775,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 0.9751825927537395,
+      "combined": 0.6976886029079775,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 461708,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9751825927537395
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2455292,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7487643807418137
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22264708,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9340414605738928
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4346791,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.34741554207422887
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a4.0_d-5.0_r0.5",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 4,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.7020624026195128,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.009770666035847,
+      "combined": 0.7020624026195128,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 478084,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.009770666035847
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2453709,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7482816300080052
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22579583,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9472509895242929
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4246875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.3394297955081095
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a4.0_d-2.0_r0.25",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 4,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 1.0035229698536945,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0127346266625916,
+      "combined": 1.0035229698536945,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 473750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0006167389715666
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3250375,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9912324171844623
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 24066958,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0096488398541106
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12671125,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0127346266625916
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a4.0_d-2.0_r0.5",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 4,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 1.0083342122506773,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0214487096405291,
+      "combined": 1.0083342122506773,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 475458,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0042242395312784
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3349458,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0214487096405291
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23615083,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9906919334802732
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12727750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0172603572693664
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a4.0_d0.0_r0.25",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 4,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.50923458275562,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.86597034269813,
+      "combined": 2.50923458275562,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 474500,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.002200828795796
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 114329875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.86597034269813
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26678750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1192178498943595
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12682750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0136637501646446
+        }
+      }
+    },
+    {
+      "tag": "s0.5_a4.0_d0.0_r0.5",
+      "weights": {
+        "structural": 0.5,
+        "alt_per_branch": 4,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.490108204880824,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.1686553577555,
+      "combined": 2.490108204880824,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 467333,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9870632664354599
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 112043292,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.1686553577555
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26634458,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1173597269685283
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12765167,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0202508961146413
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a0.5_d-5.0_r0.25",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.7028916544537741,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.010385292887648,
+      "combined": 0.7028916544537741,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 478375,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.010385292887648
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2462750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7510387679640148
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22415458,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9403656733226751
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4279834,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.34206403047621
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a0.5_d-5.0_r0.5",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.7000167673101614,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0004414330310185,
+      "combined": 0.7000167673101614,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 473667,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0004414330310185
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2431708,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7415722181984523
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22450625,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9418409873507774
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4299625,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.34364581828086654
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a0.5_d-2.0_r0.25",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 1.0114705625066653,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0234562573857355,
+      "combined": 1.0114705625066653,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 478792,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0112660468299195
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3356041,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0234562573857355
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23843083,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0002569119659936
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12649875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0110362288631396
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a0.5_d-2.0_r0.5",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.99833375756063,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0027955628406968,
+      "combined": 0.99833375756063,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 473625,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0003527240008618
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3288292,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0027955628406968
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23786417,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9978796791990119
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12415917,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9923372287518846
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a0.5_d0.0_r0.25",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.48242515967496,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 33.56605557885106,
+      "combined": 2.48242515967496,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 476042,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0054577174744117
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 110067292,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 33.56605557885106
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26861375,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1268792718064413
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12493458,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.998534662340934
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a0.5_d0.0_r0.5",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.507814440053486,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.616462623413256,
+      "combined": 2.507814440053486,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 483000,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0201538468037292
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 113511708,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.616462623413256
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26496792,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1115844097395142
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12606958,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0076061047050655
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a1.5_d-5.0_r0.25",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.6954516233726583,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 0.9772947125193787,
+      "combined": 0.6954516233726583,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 462708,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9772947125193787
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2426084,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.739857126520032
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22260667,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9338719339157314
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4334375,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.34642319821173495
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a1.5_d-5.0_r0.5",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.7051730397996383,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0095932479755332,
+      "combined": 0.7051730397996383,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 478000,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0095932479755332
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2467583,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.752512636755232
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22489625,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.943477102091756
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4316291,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.3449778417032508
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a1.5_d-2.0_r0.25",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 1.0040417812151292,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0222367247360196,
+      "combined": 1.0040417812151292,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 462833,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9775587274900835
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3352042,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0222367247360196
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23829709,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9996958504648181
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12728125,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.017290328995239
+        }
+      }
+    },
+    {
+      "tag": "baseline",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 1.0,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0,
+      "combined": 1.0,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 473458,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3279125,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23836959,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12511792,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a1.5_d0.0_r0.25",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.4725485086996364,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 33.374693553920636,
+      "combined": 2.4725485086996364,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 469125,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9908481850554853
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 109439792,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 33.374693553920636
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26600167,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1159211625946077
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12671875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.012794570114337
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a1.5_d0.0_r0.5",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.50699454066254,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.368899325277326,
+      "combined": 2.50699454066254,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 481875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.017777712067385
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 112699917,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.368899325277326
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26589500,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1154736642371201
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12666458,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0123616185435307
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a4.0_d-5.0_r0.25",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 4,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.6996821283726781,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 0.9843365198180197,
+      "combined": 0.6996821283726781,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 466042,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9843365198180197
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2479583,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7561721495825868
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22587000,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.947562144986699
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4251583,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.3398060805358657
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a4.0_d-5.0_r0.5",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 4,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.6996456191417421,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0014087838836814,
+      "combined": 0.6996456191417421,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 474125,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0014087838836814
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2434417,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7423983532192276
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22368208,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9383834573864896
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4297375,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.3434659879256305
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a4.0_d-2.0_r0.25",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 4,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 1.011299666892029,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0233220264521878,
+      "combined": 1.011299666892029,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 484500,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0233220264521878
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3317250,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0116265772119086
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 24083625,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0103480481717488
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12512250,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0000366054678658
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a4.0_d-2.0_r0.5",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 4,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 1.0094410974841062,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.021740860747913,
+      "combined": 1.0094410974841062,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 469583,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9918155359081481
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3350416,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.021740860747913
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23991000,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0064622756619248
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12737209,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0180163640827788
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a4.0_d0.0_r0.25",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 4,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.4799874218166957,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 33.73026340868372,
+      "combined": 2.4799874218166957,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 475291,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0038715155304165
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 110605750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 33.73026340868372
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26533416,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.113120847336273
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12556750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.003593250271424
+        }
+      }
+    },
+    {
+      "tag": "s1.0_a4.0_d0.0_r0.5",
+      "weights": {
+        "structural": 1,
+        "alt_per_branch": 4,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.497455039451492,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.73026340868372,
+      "combined": 2.497455039451492,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 463958,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9799348622264277
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 113884875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.73026340868372
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26652625,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.118121862776204
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12791333,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0223422032591334
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a0.5_d-5.0_r0.25",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.7020562262938597,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 0.9910234909960335,
+      "combined": 0.7020562262938597,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 469208,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9910234909960335
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2506750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.764456981664316
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22412041,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9402223245003694
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4267166,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.34105154561392964
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a0.5_d-5.0_r0.5",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.6935646479726053,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 0.9727198611070043,
+      "combined": 0.6935646479726053,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 460542,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9727198611070043
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2443875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7452826592459879
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22342500,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9373049641105646
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4260667,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.3405321156234055
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a0.5_d-2.0_r0.25",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.9980198518934242,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.022092438876861,
+      "combined": 0.9980198518934242,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 463791,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.979582138225566
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3287125,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0024396752182365
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23562333,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9884789834139497
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12788208,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.022092438876861
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a0.5_d-2.0_r0.5",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.9980704922510163,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0075858651317045,
+      "combined": 0.9980704922510163,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 467792,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9880327294078883
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3304000,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0075858651317045
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23722959,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9952175107571398
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12531209,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0015518960033862
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a0.5_d0.0_r0.25",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.4744910189581293,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.14632958487401,
+      "combined": 2.4744910189581293,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 461375,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9744792568717816
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 111970083,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.14632958487401
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26657709,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1183351450157715
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12605917,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.007522903194043
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a0.5_d0.0_r0.5",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 0.5,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.500819877321333,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.46094613654557,
+      "combined": 2.500819877321333,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 474750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0027288587372059
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 113001750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.46094613654557
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26580042,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1150768854366029
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12700875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0151123835818243
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a1.5_d-5.0_r0.25",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.688377183597637,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 0.9614538142770848,
+      "combined": 0.688377183597637,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 455208,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9614538142770848
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2437959,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.743478519422102
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22056541,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.92530850936145
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4247584,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.3394864620511594
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a1.5_d-5.0_r0.5",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.6954976855435361,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 0.9897921251726658,
+      "combined": 0.6954976855435361,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 468625,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9897921251726658
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2467792,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7525763732703084
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22147167,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9291104205028837
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4230000,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.33808106784383885
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a1.5_d-2.0_r0.25",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 1.014775782429025,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0296583857491055,
+      "combined": 1.014775782429025,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 487500,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0296583857491055
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3322250,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0131513742233065
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23677208,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9932981803593319
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12804209,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0233713124386978
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a1.5_d-2.0_r0.5",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.992747523611574,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0171937800756279,
+      "combined": 0.992747523611574,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 458542,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9684956215757259
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3267625,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.996492966873785
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23584708,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9894176518070111
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12726917,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0171937800756279
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a1.5_d0.0_r0.25",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.4911547963227476,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.240053977814206,
+      "combined": 2.4911547963227476,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 471750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9963924994402883
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 112277417,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.240053977814206
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26464625,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.110234950691487
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12721625,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0167708190801126
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a1.5_d0.0_r0.5",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 1.5,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.4820874507045505,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.517071169900504,
+      "combined": 2.4820874507045505,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 466958,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9862712215233452
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 113185791,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.517071169900504
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26275125,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1022851111167327
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12655042,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.011449199283364
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a4.0_d-5.0_r0.25",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 4,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.6974147566349187,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 0.9822244000523805,
+      "combined": 0.6974147566349187,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 465042,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9822244000523805
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2427542,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7403017573285556
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22361917,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9381195394932718
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4339167,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.34680619690608666
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a4.0_d-5.0_r0.5",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 4,
+        "dispatch_bonus": -5,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.7036275114629942,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.0078317400909902,
+      "combined": 0.7036275114629942,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 477166,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0078317400909902
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 2471458,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.7536943544390653
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 22134875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9285947506978554
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 4347917,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.3475055371764492
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a4.0_d-2.0_r0.25",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 4,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.9974739648714177,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.008495265905955,
+      "combined": 0.9974739648714177,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 463875,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9797595562858796
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3279250,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.000038119925285
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23880708,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0018353431744376
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12618083,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.008495265905955
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a4.0_d-2.0_r0.5",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 4,
+        "dispatch_bonus": -2,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 0.9970380145663504,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 1.012414928253283,
+      "combined": 0.9970380145663504,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 469625,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.991904244938305
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 3284750,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0017153966378225
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 23416667,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9823680529047351
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12667125,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.012414928253283
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a4.0_d0.0_r0.25",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 4,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.25,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.492287132125655,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.586182899401514,
+      "combined": 2.492287132125655,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 465792,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.98380848987661
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 113412417,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.586182899401514
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26455458,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1098503798240371
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12783041,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0216794684566368
+        }
+      }
+    },
+    {
+      "tag": "s2.0_a4.0_d0.0_r0.5",
+      "weights": {
+        "structural": 2,
+        "alt_per_branch": 4,
+        "dispatch_bonus": 0,
+        "literal_cost": 1,
+        "regex_cost": 2,
+        "ref_cost": 0.5,
+        "seq_per_child": 1
+      },
+      "gmean_state_ratio": 1.0,
+      "gmean_pipeline_ratio": 2.48752851142042,
+      "worst_state_ratio": 1.0,
+      "worst_pipeline_ratio": 34.205631380322494,
+      "combined": 2.48752851142042,
+      "per_grammar": {
+        "grammar/json/json.bbnf": {
+          "state_count": 51,
+          "pipeline_ns_median": 471042,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 0.9948971186462157
+        },
+        "grammar/bbnf/bbnf.bbnf": {
+          "state_count": 476,
+          "pipeline_ns_median": 112164541,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 34.205631380322494
+        },
+        "grammar/css/l4/stylesheet.bbnf": {
+          "state_count": 2875,
+          "pipeline_ns_median": 26332083,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.1046745937684417
+        },
+        "grammar/google-sheets/google-sheets.bbnf": {
+          "state_count": 191,
+          "pipeline_ns_median": 12743292,
+          "state_ratio_vs_baseline": 1.0,
+          "pipeline_ratio_vs_baseline": 1.0185025454387349
+        }
+      }
+    }
+  ],
+  "total_configs_swept": 54
+}

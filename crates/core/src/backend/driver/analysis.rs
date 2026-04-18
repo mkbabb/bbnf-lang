@@ -161,6 +161,16 @@ pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> B
     // are already in place at this point in `analyze_grammar`.
     bbnf_ir::passes::compute_push_fingerprint(ir);
 
+    // AW-IV.W4.3 — dedup-eligibility mining. Identifies rules whose
+    // body shape qualifies for runtime bloom + GADT compound-record
+    // dedup (fixed-width skeleton, ≤ MAX_DEDUP_ROWS records, likely
+    // repeated payloads). The admitted set lands in
+    // `ir.dedup_eligible_rules`; the IR projection folds it into
+    // `GrammarProfile::dedup_eligible_rules` which the emitter reads
+    // at codegen time and the walker consumes at parse time.
+    ir.dedup_eligible_rules =
+        bbnf_ir::passes::recognizers::dedup_eligibility::mine_dedup_eligible_rules(ir);
+
     let sp_method_rules = ir
         .rules
         .iter()

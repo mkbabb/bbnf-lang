@@ -459,7 +459,7 @@ impl GrammarIR {
             entries
         };
 
-        // AW-IV.W1.δ — V2/V4/V6/V8 slots whose upstream mining has
+        // AW-IV.W1.δ — V2/V4/V6 slots whose upstream mining has
         // not yet wired. The projection carries empty Vecs so the
         // const-literal emission is always well-formed; when W3 or
         // W4 lands the mining pass, the projection composes without
@@ -467,7 +467,15 @@ impl GrammarIR {
         let active_columns: Vec<u16> = Vec::new();
         let list_rules: Vec<u32> = Vec::new();
         let branch_priors: Vec<BranchPriorIr> = Vec::new();
-        let dedup_eligible_rules: Vec<u32> = Vec::new();
+
+        // AW-IV.W4.3 — dedup-eligible rules projection. Read from the
+        // IR slot populated by
+        // `passes::recognizers::dedup_eligibility::mine_dedup_eligible_rules`.
+        // The mining pass runs in `analyze_grammar` before this
+        // accessor is called; when the mining has not yet executed
+        // (tests constructing IR directly) the slot is empty and the
+        // projection flows an empty Vec without panicking.
+        let dedup_eligible_rules: Vec<u32> = self.dedup_eligible_rules.clone();
 
         GrammarProfile {
             push_compound_count,

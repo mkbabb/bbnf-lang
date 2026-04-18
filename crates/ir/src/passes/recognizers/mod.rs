@@ -60,6 +60,7 @@ mod balanced_wrap;
 mod comment_ws;
 pub mod consume_to_next_structural;
 mod context_facts_miner;
+pub mod dedup_eligibility;
 pub mod delim_scan;
 pub mod disjoint_first;
 pub mod dta;

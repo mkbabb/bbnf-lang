@@ -238,6 +238,7 @@ pub fn lower_to_ir<'a>(
         string_index: HashMap::new(),
         structural_alphabet: None,
         push_fingerprint: None,
+        dedup_eligible_rules: Vec::new(),
     }
 }
 

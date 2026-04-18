@@ -341,6 +341,19 @@ pub struct GrammarIR {
     /// Not serialized: every compile rebuilds it from scratch.
     #[serde(skip, default)]
     pub push_fingerprint: Option<passes::sets::PushFingerprint>,
+
+    /// AW-IV.W4.3 — rules admitted to runtime bloom + GADT dedup.
+    ///
+    /// Populated by
+    /// [`passes::recognizers::dedup_eligibility::mine_dedup_eligible_rules`].
+    /// The IR projection at [`GrammarIR::profile`] folds this Vec into
+    /// [`passes::profile::GrammarProfile::dedup_eligible_rules`]; the
+    /// emitter lowers that to the runtime
+    /// `GRAMMAR_PROFILE.dedup_eligible_rules` slot; the walker's
+    /// compound-emit arm consults the slot at parse time.
+    /// Not serialized: every compile rebuilds it from scratch.
+    #[serde(skip, default)]
+    pub dedup_eligible_rules: Vec<u32>,
 }
 
 impl GrammarIR {

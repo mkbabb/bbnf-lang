@@ -567,6 +567,290 @@ impl Columns {
         idx as u32
     }
 
+    // ── AW-V.W1.3 — scalar-payload direct-write fused API ────────────
+    //
+    // Per AW-V.md §W1.3 + B2 §3: the per-shape emitter's leaf-emission
+    // arms know the scalar payload statically; the hot path writes the
+    // decoded value directly into `pay_agg` alongside the structural
+    // slot, bypassing PSI's Stage-A `push` / Stage-B rayon fan-out. The
+    // byte layout mirrors `psi::write_decoded` so readers that consult
+    // `pay_agg` via `TapeRec::PAYLOAD_IN_ARENA_BIT` + `child_off` see
+    // bit-identical output to the scheduled path — interpreter replay
+    // remains drop-in compatible at the column level.
+    //
+    // Each method writes:
+    //
+    // 1. The scalar value's bytes into `pay_agg` at the `child_off`-
+    //    indicated offset (8 B for `f64` / `i64`, 4 B for the hex
+    //    `u32`, 1 B for `u8` / `bool` — same byte widths PSI uses
+    //    via `PayloadKind::arena_byte_width`).
+    // 2. The structural slot (`kinds` / `flags` / `extra` / `span_lo`
+    //    / `span_hi` / `sib_skip` / `child_off`), with `extra`'s
+    //    `PAYLOAD_IN_ARENA_BIT` set so readers know `child_off` is a
+    //    `pay_agg` byte offset, not a column rank.
+    //
+    // The `child_off` parameter is the pre-computed `pay_agg` byte
+    // offset — callers advance their arena cursor monotonically per
+    // record, matching the `PayloadStream`'s `arena_offset` allocation
+    // in Stage A. Writing to a pre-reserved slot is the contract every
+    // emitter leaf arm follows; the fused methods are one step fewer
+    // than `pay_agg.extend_from_slice(...)` + `push_leaf_fused(...)`.
+    //
+    // `#[inline(always)]` everywhere: the per-shape leaf arms consume
+    // these via `#[body_fragment]` splices in W3.2's emitter, and the
+    // call site disappears into the emitter's hand-written parser
+    // skeleton under monomorphisation.
+
+    /// Write a scalar `f64` payload into `pay_agg` at `child_off` (8 B
+    /// little-endian via `f64::to_bits().to_le_bytes()`) and append the
+    /// structural slot for the leaf record.
+    ///
+    /// The caller supplies:
+    ///
+    /// - `kind` — the [`TapeKind`] for the leaf (`Regex` for JSON
+    ///   numbers; whichever leaf kind the per-shape emitter assigns).
+    /// - `span_lo` / `span_hi` — source-byte bounds.
+    /// - `sib_skip` — post-finaliser stride (usually `0` at parse
+    ///   time; finalise derives it later).
+    /// - `child_off` — the `pay_agg` byte offset to write the 8 scalar
+    ///   bytes to. The arena MUST have at least 8 bytes available at
+    ///   that offset; the emitter's leaf arm resizes `pay_agg`
+    ///   monotonically before calling this method.
+    /// - `value` — the `f64` payload itself.
+    ///
+    /// Returns the leaf record's index in the structural columns.
+    ///
+    /// # PSI parity
+    ///
+    /// Bit-identical to `psi::write_decoded` on `PayloadKind::F64`:
+    /// `s.parse::<f64>().unwrap_or(0.0).to_bits().to_le_bytes()` becomes
+    /// a compile-time-known constant when the emitter already decoded
+    /// the value via Eisel-Lemire; the PSI path is the `#[cold]`
+    /// fallback that the per-shape emitter's scalar arm skips.
+    #[inline(always)]
+    pub fn push_scalar_payload_f64(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        sib_skip: u32,
+        child_off: u32,
+        value: f64,
+    ) -> u32 {
+        let dst_off = child_off as usize;
+        debug_assert!(
+            dst_off + 8 <= self.pay_agg.len(),
+            "push_scalar_payload_f64: arena offset {} + 8 exceeds pay_agg len {}",
+            child_off,
+            self.pay_agg.len(),
+        );
+        let bytes = value.to_bits().to_le_bytes();
+        // SAFETY: the `debug_assert!` above (enforced in debug builds;
+        // the emitter's monotonic arena-cursor pre-condition in release
+        // builds) guarantees the 8-byte range `[dst_off, dst_off+8)` is
+        // in-bounds of `pay_agg`'s initialised region.
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                bytes.as_ptr(),
+                self.pay_agg.as_mut_ptr().add(dst_off),
+                8,
+            );
+        }
+        let idx = self.push_leaf_fused(
+            kind,
+            0,
+            TapeRec::PAYLOAD_IN_ARENA_BIT,
+            span_lo,
+            span_hi,
+            TapeOffset(child_off),
+        );
+        // `push_leaf_fused` stamps `sib_skip = 0`; overwrite only when
+        // the caller provides a non-zero stride (the post-AV finaliser
+        // passes `0` at parse time and back-fills later, so this is
+        // the cold path for manual-stride callers).
+        if sib_skip != 0 {
+            self.sib_skip[idx as usize] = sib_skip;
+        }
+        idx
+    }
+
+    /// Write a scalar `u8` payload into `pay_agg` at `child_off` (1 B)
+    /// and append the structural slot for the leaf record.
+    ///
+    /// Bit-identical to `psi::write_decoded` on `PayloadKind::U8`.
+    /// See [`Self::push_scalar_payload_f64`] for the full contract.
+    #[inline(always)]
+    pub fn push_scalar_payload_u8(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        sib_skip: u32,
+        child_off: u32,
+        value: u8,
+    ) -> u32 {
+        let dst_off = child_off as usize;
+        debug_assert!(
+            dst_off + 1 <= self.pay_agg.len(),
+            "push_scalar_payload_u8: arena offset {} + 1 exceeds pay_agg len {}",
+            child_off,
+            self.pay_agg.len(),
+        );
+        // SAFETY: see `push_scalar_payload_f64`.
+        unsafe {
+            *self.pay_agg.as_mut_ptr().add(dst_off) = value;
+        }
+        let idx = self.push_leaf_fused(
+            kind,
+            0,
+            TapeRec::PAYLOAD_IN_ARENA_BIT,
+            span_lo,
+            span_hi,
+            TapeOffset(child_off),
+        );
+        if sib_skip != 0 {
+            self.sib_skip[idx as usize] = sib_skip;
+        }
+        idx
+    }
+
+    /// Write a scalar `bool` payload into `pay_agg` at `child_off` (1 B
+    /// — `0` for `false`, `1` for `true`) and append the structural
+    /// slot for the leaf record.
+    ///
+    /// Bit-identical to `psi::write_decoded` on `PayloadKind::Bool`.
+    /// See [`Self::push_scalar_payload_f64`] for the full contract.
+    #[inline(always)]
+    pub fn push_scalar_payload_bool(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        sib_skip: u32,
+        child_off: u32,
+        value: bool,
+    ) -> u32 {
+        let dst_off = child_off as usize;
+        debug_assert!(
+            dst_off + 1 <= self.pay_agg.len(),
+            "push_scalar_payload_bool: arena offset {} + 1 exceeds pay_agg len {}",
+            child_off,
+            self.pay_agg.len(),
+        );
+        // SAFETY: see `push_scalar_payload_f64`.
+        unsafe {
+            *self.pay_agg.as_mut_ptr().add(dst_off) = value as u8;
+        }
+        let idx = self.push_leaf_fused(
+            kind,
+            0,
+            TapeRec::PAYLOAD_IN_ARENA_BIT,
+            span_lo,
+            span_hi,
+            TapeOffset(child_off),
+        );
+        if sib_skip != 0 {
+            self.sib_skip[idx as usize] = sib_skip;
+        }
+        idx
+    }
+
+    /// Write a scalar hex `u32` payload into `pay_agg` at `child_off`
+    /// (4 B little-endian) and append the structural slot for the
+    /// leaf record.
+    ///
+    /// Bit-identical to `psi::write_decoded` on `PayloadKind::HexU32`.
+    /// See [`Self::push_scalar_payload_f64`] for the full contract.
+    /// CSS hex colours pass the pre-decoded `#rrggbbaa` u32 from the
+    /// emitter's `parse_hex_u32` inline body.
+    #[inline(always)]
+    pub fn push_scalar_payload_hex_u32(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        sib_skip: u32,
+        child_off: u32,
+        value: u32,
+    ) -> u32 {
+        let dst_off = child_off as usize;
+        debug_assert!(
+            dst_off + 4 <= self.pay_agg.len(),
+            "push_scalar_payload_hex_u32: arena offset {} + 4 exceeds pay_agg len {}",
+            child_off,
+            self.pay_agg.len(),
+        );
+        let bytes = value.to_le_bytes();
+        // SAFETY: see `push_scalar_payload_f64`.
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                bytes.as_ptr(),
+                self.pay_agg.as_mut_ptr().add(dst_off),
+                4,
+            );
+        }
+        let idx = self.push_leaf_fused(
+            kind,
+            0,
+            TapeRec::PAYLOAD_IN_ARENA_BIT,
+            span_lo,
+            span_hi,
+            TapeOffset(child_off),
+        );
+        if sib_skip != 0 {
+            self.sib_skip[idx as usize] = sib_skip;
+        }
+        idx
+    }
+
+    /// Write a scalar `i64` payload into `pay_agg` at `child_off` (8 B
+    /// little-endian via `(value as u64).to_le_bytes()`) and append
+    /// the structural slot for the leaf record.
+    ///
+    /// Bit-identical to `psi::write_decoded` on `PayloadKind::I64`
+    /// (two's-complement wrap; `to_le_bytes` on `i64` emits the same
+    /// byte pattern as on the reinterpreted `u64`). See
+    /// [`Self::push_scalar_payload_f64`] for the full contract.
+    #[inline(always)]
+    pub fn push_scalar_payload_i64(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        sib_skip: u32,
+        child_off: u32,
+        value: i64,
+    ) -> u32 {
+        let dst_off = child_off as usize;
+        debug_assert!(
+            dst_off + 8 <= self.pay_agg.len(),
+            "push_scalar_payload_i64: arena offset {} + 8 exceeds pay_agg len {}",
+            child_off,
+            self.pay_agg.len(),
+        );
+        let bytes = (value as u64).to_le_bytes();
+        // SAFETY: see `push_scalar_payload_f64`.
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                bytes.as_ptr(),
+                self.pay_agg.as_mut_ptr().add(dst_off),
+                8,
+            );
+        }
+        let idx = self.push_leaf_fused(
+            kind,
+            0,
+            TapeRec::PAYLOAD_IN_ARENA_BIT,
+            span_lo,
+            span_hi,
+            TapeOffset(child_off),
+        );
+        if sib_skip != 0 {
+            self.sib_skip[idx as usize] = sib_skip;
+        }
+        idx
+    }
+
     // ── AW-IV.W5.1 — reduce_column<C, R> consumer API ────────────────
     //
     // AV.2.5 shipped 4-lane reordered-unrolling visitor kernels as

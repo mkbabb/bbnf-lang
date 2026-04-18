@@ -580,13 +580,55 @@ impl RustEmitter {
                         // no fn-pointer plumbing reaches the hot
                         // path, and no separately-emitted
                         // `__dfa_match_*` fn exists.
-                        #walker_fn_ident(
-                            input.as_bytes(),
-                            &idx,
-                            columns,
-                            &mut psi,
-                            frame_depth,
-                        )
+                        //
+                        // AW-IV.W4.4 — document-parallel fork.
+                        // Routes through `dta_run_parallel` when
+                        // the grammar's entry rule is a top-level
+                        // list (`GRAMMAR_PROFILE.list_rules` non-
+                        // empty) AND the input crosses the
+                        // `parallel_break_even_bytes` threshold.
+                        // Workers run the same per-grammar walker
+                        // (`#walker_fn_ident`) over disjoint byte
+                        // sub-slices; the driver's join phase
+                        // memcpy-concatenates the per-worker
+                        // columns + PSI + frame_depth and rewrites
+                        // cross-worker `child_off` / `span_*` /
+                        // PSI references. Worker count is capped
+                        // at 4 per the AW-IV.W4.4 canonical bench
+                        // (tailwind.css 4c hard gate).
+                        if !GRAMMAR_PROFILE.list_rules.is_empty()
+                            && (input.as_bytes().len() as u32)
+                                > GRAMMAR_PROFILE.parallel_break_even_bytes
+                            && GRAMMAR_PROFILE.parallel_break_even_bytes > 0
+                        {
+                            let n_workers = ::core::cmp::min(
+                                4usize,
+                                ::core::cmp::max(
+                                    1usize,
+                                    ::bbnf::runtime::tape::rayon_num_threads(),
+                                ),
+                            );
+                            let list_rule_id =
+                                GRAMMAR_PROFILE.list_rules[0].0;
+                            ::bbnf::runtime::tape::dta_run_parallel(
+                                input.as_bytes(),
+                                &idx,
+                                list_rule_id,
+                                n_workers,
+                                #walker_fn_ident,
+                                columns,
+                                &mut psi,
+                                frame_depth,
+                            )
+                        } else {
+                            #walker_fn_ident(
+                                input.as_bytes(),
+                                &idx,
+                                columns,
+                                &mut psi,
+                                frame_depth,
+                            )
+                        }
                     }
                         .map_err(|e| match e {
                             ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {

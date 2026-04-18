@@ -1,9 +1,14 @@
-//! AX.W0a.2.b — diagnostic BFS probe (one-off).
+//! AX.W0a.2.b — entry-reachable Ref classification probe.
 //!
-//! Walks the entry-reachable Ref graph for each grammar collecting the
-//! full set of entry-reachable unclassified Refs. Output dumped to
-//! stdout; orchestrator captures to
-//! `docs/benchmarks/post-AX-W0a2b-refs.md`.
+//! Walks every grammar's entry-reachable Ref graph and emits the
+//! per-target classification state. Captures the zero-unclassified-
+//! Refs outcome the detector widening wave produced; serves as the
+//! verification artefact for hard gate 1 ("every diagnostic-listed
+//! Ref is now classified").
+//!
+//! The output is deterministic; dumping to stdout via `--nocapture`
+//! is the recipe the orchestrator uses to regenerate
+//! `docs/benchmarks/post-AX-W0a2b-refs-after.md`.
 
 use bbnf::backend::rust::emitter::shapes::dispatcher::collect_value_refs;
 use bbnf::pipeline::{
@@ -33,8 +38,8 @@ fn compile(rel: &str, structural: bool) -> GrammarIR {
 }
 
 /// BFS from entry through classified rule bodies; collect every
-/// (parent_rule_name, child_rule_name) pair where parent is classified
-/// but child is unclassified.
+/// (parent, child, child_tag) triple where parent is classified but
+/// child is unclassified.
 fn entry_unclassified_refs(ir: &GrammarIR) -> Vec<(String, String, ShapeTag)> {
     let mut out: Vec<(String, String, ShapeTag)> = Vec::new();
     let mut visited: std::collections::HashSet<bbnf_ir::RuleId> = Default::default();
@@ -45,12 +50,7 @@ fn entry_unclassified_refs(ir: &GrammarIR) -> Vec<(String, String, ShapeTag)> {
         let Some(rule) = ir.rules.iter().find(|r| r.id == rid) else {
             continue;
         };
-        // Transparent rules: the emitter skips, but the reachability
-        // walk must traverse their Refs.
         let parent_name = ir.get_string(rule.name).to_string();
-        // Skip BFS-walking from an unclassified entry — the gate
-        // already rejects. But if the entry is Alt-of-Refs (JSON) the
-        // entry is transparent and its Refs are the true entry points.
         let parent_tag = ir.shape_assignments.get(rid);
         let is_alt_root = rid == ir.entry
             && matches!(&rule.body, IrNode::Alt(_, _));
@@ -93,91 +93,13 @@ fn dump(label: &str, rel: &str, structural: bool) {
     if refs.is_empty() {
         println!("_(none)_");
     } else {
-        println!("| Parent | Target | Target body shape |");
-        println!("|---|---|---|");
-        let mut seen_targets: std::collections::BTreeSet<&str> = Default::default();
+        println!("| Parent | Target |");
+        println!("|---|---|");
         for (parent, target, _tag) in &refs {
-            // Inspect target body to label its structural shape.
-            let target_rule = ir.rules.iter().find(|r| ir.get_string(r.name) == *target).unwrap();
-            let shape = describe_body(&target_rule.body);
-            println!("| `{parent}` | `{target}` | {shape} |");
-            seen_targets.insert(target.as_str());
-        }
-        // For each unique target, dump per-branch classification detail.
-        println!();
-        println!("### Per-target branch classifications");
-        println!();
-        for target in &seen_targets {
-            let target_rule = ir.rules.iter().find(|r| ir.get_string(r.name) == *target).unwrap();
-            let body_stripped = match &target_rule.body {
-                IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => inner.as_ref(),
-                other => other,
-            };
-            if let IrNode::Alt(branches, _) = body_stripped {
-                println!("**`{target}`** (Alt, {} branches):", branches.len());
-                for (i, b) in branches.iter().enumerate() {
-                    let detail = describe_branch(&b.node, &ir);
-                    println!("  - [{i}] {detail}");
-                }
-                println!();
-            }
+            println!("| `{parent}` | `{target}` |");
         }
     }
     println!();
-}
-
-fn describe_branch(node: &IrNode, ir: &GrammarIR) -> String {
-    match node {
-        IrNode::Ref(rid) => {
-            let target = &ir.rules[*rid as usize];
-            let name = ir.get_string(target.name);
-            let tag = ir.shape_assignments.get(*rid);
-            format!("Ref({name}) → {tag:?}")
-        }
-        IrNode::Map { inner, .. } => format!("Map({})", describe_branch(inner, ir)),
-        IrNode::OptionalWhitespace(inner) => format!("OW({})", describe_branch(inner, ir)),
-        IrNode::Literal(_) => "Literal".to_string(),
-        IrNode::Regex(_) => "Regex".to_string(),
-        IrNode::Seq(children) => format!("Seq({})", children.len()),
-        IrNode::Alt(bs, _) => format!("Alt({})", bs.len()),
-        IrNode::Next(..) => "Next(..)".to_string(),
-        IrNode::Skip(..) => "Skip(..)".to_string(),
-        IrNode::Repeat { .. } => "Repeat(..)".to_string(),
-        _ => "Other".to_string(),
-    }
-}
-
-/// A one-line structural description of `node` for the report.
-fn describe_body(node: &IrNode) -> String {
-    match node {
-        IrNode::Alt(bs, _) => {
-            let branch_kinds: Vec<&str> = bs
-                .iter()
-                .map(|b| match &b.node {
-                    IrNode::Ref(_) => "Ref",
-                    IrNode::Regex(_) => "Regex",
-                    IrNode::Literal(_) => "Literal",
-                    IrNode::Seq(_) => "Seq",
-                    IrNode::Alt(_, _) => "Alt",
-                    _ => "Other",
-                })
-                .collect();
-            format!("Alt({})", branch_kinds.join(" \\| "))
-        }
-        IrNode::Seq(children) => format!("Seq(len={})", children.len()),
-        IrNode::Next(..) => "Next(..)".to_string(),
-        IrNode::Skip(..) => "Skip(..)".to_string(),
-        IrNode::Repeat { lo, hi, .. } => format!("Repeat({lo},{hi})"),
-        IrNode::Ref(_) => "Ref".to_string(),
-        IrNode::Regex(_) => "Regex".to_string(),
-        IrNode::Literal(_) => "Literal".to_string(),
-        IrNode::Map { inner, .. } => format!("Map({})", describe_body(inner)),
-        IrNode::OptionalWhitespace(inner) => format!("OW({})", describe_body(inner)),
-        IrNode::Epsilon => "Epsilon".to_string(),
-        IrNode::Minus(..) => "Minus(..)".to_string(),
-        IrNode::Negate(_) => "Negate(..)".to_string(),
-        IrNode::TokenDispatch { .. } => "TokenDispatch".to_string(),
-    }
 }
 
 #[test]
@@ -194,23 +116,8 @@ fn probe_all_grammars() {
 }
 
 #[test]
-fn dump_css_alignDecl() {
-    let ir = compile("../../grammar/css/l4/stylesheet.bbnf", false);
-    // Dump a few unclassified rules' bodies in detail.
-    for name in ["alignDecl", "flexNumDecl", "typeSelector"] {
-        if let Some(rule) = ir.rules.iter().find(|r| ir.get_string(r.name) == name) {
-            let tag = ir.shape_assignments.get(rule.id);
-            println!("### `{name}` tag={tag:?}");
-            println!("body = {:#?}", &rule.body);
-            println!();
-        }
-    }
-}
-
-#[test]
-fn dump_has_shape_dispatcher_entrypoint_outcome() {
-    use bbnf::backend::rust::emitter::shapes::has_shape_dispatcher_entrypoint;
-    for (label, path, structural) in [
+fn all_grammars_have_zero_entry_reachable_unclassified_refs() {
+    for (label, rel, structural) in [
         ("JSON", "../../grammar/json/json.bbnf", false),
         ("CSS L4", "../../grammar/css/l4/stylesheet.bbnf", false),
         ("Sheets", "../../grammar/google-sheets/google-sheets.bbnf", false),
@@ -219,91 +126,13 @@ fn dump_has_shape_dispatcher_entrypoint_outcome() {
         ("BNF", "../../grammar/bnf/bnf.bbnf", false),
         ("BbnfBootstrap", "../../grammar/bbnf/bbnf.bbnf", true),
     ] {
-        let ir = compile(path, structural);
-        let out = has_shape_dispatcher_entrypoint(&ir);
-        println!("  {label:16} has_shape_dispatcher_entrypoint = {out}");
-    }
-}
-
-#[test]
-fn dump_remaining_unclassified() {
-    for (label, path, structural) in [
-        ("Sheets", "../../grammar/google-sheets/google-sheets.bbnf", false),
-        ("BNF", "../../grammar/bnf/bnf.bbnf", false),
-    ] {
-        let ir = compile(path, structural);
-        println!("### {label}");
-        for name in ["let_args", "alternation", "expression", "term", "let_binding", "let_call"] {
-            if let Some(rule) = ir.rules.iter().find(|r| ir.get_string(r.name) == name) {
-                let tag = ir.shape_assignments.get(rule.id);
-                println!("  `{name}` tag={tag:?}");
-                let body_stripped = match &rule.body {
-                    IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-                        inner.as_ref()
-                    }
-                    other => other,
-                };
-                let brief = describe_body(body_stripped);
-                println!("    body = {brief}");
-                // If Seq, dump child shapes.
-                if let IrNode::Seq(children) = body_stripped {
-                    for (i, c) in children.iter().enumerate() {
-                        let cs = match c {
-                            IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-                                inner.as_ref()
-                            }
-                            other => other,
-                        };
-                        println!("    pos {i}: {}", describe_branch(cs, &ir));
-                    }
-                }
-            }
-        }
-        println!();
-    }
-}
-
-#[test]
-fn dump_bbnf_value_atom() {
-    let ir = compile("../../grammar/bbnf/bbnf.bbnf", false);
-    for name in ["value_atom", "value_unary", "string_lit", "lhs", "alternation", "let_args"] {
-        if let Some(rule) = ir.rules.iter().find(|r| ir.get_string(r.name) == name) {
-            let tag = ir.shape_assignments.get(rule.id);
-            println!("### `{name}` tag={tag:?}");
-            println!("body first-byte set = {:?}", rule.meta.first_set);
-            // Dump a short body summary without the full tree.
-            let body_stripped = match &rule.body {
-                IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-                    inner.as_ref()
-                }
-                other => other,
-            };
-            match body_stripped {
-                IrNode::Alt(bs, _) => {
-                    for (i, b) in bs.iter().enumerate() {
-                        let stripped = match &b.node {
-                            IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-                                inner.as_ref()
-                            }
-                            other => other,
-                        };
-                        println!("  branch {i}: {}", describe_branch(stripped, &ir));
-                    }
-                }
-                IrNode::Seq(c) => {
-                    for (i, child) in c.iter().enumerate() {
-                        let stripped = match child {
-                            IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-                                inner.as_ref()
-                            }
-                            other => other,
-                        };
-                        println!("  pos {i}: {}", describe_branch(stripped, &ir));
-                    }
-                }
-                other => println!("  body = {}", describe_branch(other, &ir)),
-            }
-            println!();
-        }
+        let ir = compile(rel, structural);
+        let refs = entry_unclassified_refs(&ir);
+        assert!(
+            refs.is_empty(),
+            "{label}: {} entry-reachable unclassified Refs: {:?}",
+            refs.len(),
+            refs,
+        );
     }
 }

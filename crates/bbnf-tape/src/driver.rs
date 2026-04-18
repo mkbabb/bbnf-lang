@@ -2980,85 +2980,166 @@ fn dta_run_parallel_rayon(
 
     // ── Partitioning ────────────────────────────────────────────────
     //
-    // `idx.positions` carries the byte offsets of every structural
-    // boundary. Partition the byte range `[0, input.len())` into
-    // `effective_workers` contiguous sub-ranges whose breakpoints
-    // land on structural positions. Every worker starts at a
-    // structural byte; the list-rule's items' extents are fully
-    // contained within one worker's range by construction.
-    let positions_per_worker =
-        (idx.positions.len() + effective_workers - 1) / effective_workers;
+    // The naive "partition idx.positions evenly" strategy is wrong
+    // for nested grammars like CSS: an even split lands shards mid-
+    // rule, which fails the per-worker `stylesheet` parse (the walker
+    // enforces full input consumption against the entry rule).
+    //
+    // The fix: walk `idx.kinds` once tracking brace depth (`{` opens,
+    // `}` closes) and emit a cut-point every time depth transitions
+    // from `1` to `0`. A `}` at depth 0 is the boundary between two
+    // top-level items — `rule1 { ... } rule2 { ... }` in CSS terms.
+    // Each worker's byte-range spans from one such boundary to the
+    // next, so its sub-input is a valid sequence of complete top-level
+    // rules (the walker's leading `?w` DFA absorbs any inter-rule
+    // whitespace/comments inside the shard).
+    //
+    // For grammars whose structural alphabet does not include the
+    // balanced brace pair (`{` = 123, `}` = 125) the cut set is empty
+    // and the parallel fork falls back to the single-thread worker.
+    // JSON, BBNF, and Sheets fall into this category at present —
+    // their document-parallel entry points admit through a different
+    // invariant (separator bytes, not brace nesting) that is not yet
+    // modelled here; `list_rules` admission is gated accordingly.
+    let alphabet_has_braces = idx.kinds.iter().any(|&k| k == b'{')
+        && idx.kinds.iter().any(|&k| k == b'}');
+    if !alphabet_has_braces {
+        return worker_fn(input, idx, columns, psi, frame_depth);
+    }
+
+    // Walk the structural index once; collect every slot whose `}`
+    // close transitioned depth from 1 to 0. Those slots are the legal
+    // shard-end boundaries. The byte immediately after each such `}`
+    // is a valid shard-start.
+    let mut depth_0_close_slots: Vec<usize> = Vec::new();
+    {
+        let mut depth: i32 = 0;
+        for slot in 0..idx.kinds.len() {
+            match idx.kinds[slot] {
+                b'{' => {
+                    depth = depth.saturating_add(1);
+                }
+                b'}' => {
+                    depth = depth.saturating_sub(1);
+                    if depth == 0 {
+                        depth_0_close_slots.push(slot);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    // Need at least `effective_workers` top-level items to partition
+    // into that many worker shards; below that, single-thread is the
+    // right answer.
+    if depth_0_close_slots.len() < effective_workers {
+        return worker_fn(input, idx, columns, psi, frame_depth);
+    }
+
+    // Pick `effective_workers - 1` cut points from the depth-0 close
+    // slots. Balance on BYTES (not top-level item count) so workers
+    // receive roughly-equal slices of input — top-level items vary
+    // wildly in size (tailwind.css has short custom-property rules
+    // early and huge @keyframes / @media rules later), so
+    // item-count balance produces lopsided shards.
+    //
+    // For worker `w >= 1`, target byte `w * input.len() /
+    // effective_workers`; find the depth-0 close slot whose position
+    // is closest to that target (either direction). The `+1` after
+    // the close byte is a valid shard start (walker's leading `?w`
+    // absorbs inter-rule whitespace).
+    //
+    // Shard `w` covers bytes `[shard_start[w], shard_start[w+1])` with
+    // `shard_start[0] = 0` and `shard_start[effective_workers] =
+    // input.len()`.
+    let mut shard_starts: Vec<u32> = Vec::with_capacity(effective_workers + 1);
+    shard_starts.push(0);
+    let mut min_next_idx: usize = 1;
+    for w in 1..effective_workers {
+        let target_byte = (w as u64 * input.len() as u64 / effective_workers as u64) as u32;
+        // `after_idx` is the first close-slot position strictly
+        // greater than `target_byte`. Compare it to its predecessor
+        // (if any) and pick whichever is closer to `target_byte`.
+        let after_idx = depth_0_close_slots
+            .partition_point(|&slot| idx.positions[slot] <= target_byte);
+        let candidate = if after_idx == 0 {
+            0
+        } else if after_idx >= depth_0_close_slots.len() {
+            depth_0_close_slots.len() - 1
+        } else {
+            let before = after_idx - 1;
+            let after = after_idx;
+            let before_dist =
+                target_byte - idx.positions[depth_0_close_slots[before]];
+            let after_dist =
+                idx.positions[depth_0_close_slots[after]] - target_byte;
+            if after_dist < before_dist { after } else { before }
+        };
+        // Enforce monotonic progression: each shard must end after
+        // the previous shard's end. When the candidate collides, push
+        // to the next available close slot.
+        let candidate = candidate.max(min_next_idx);
+        if candidate >= depth_0_close_slots.len() {
+            // Not enough distinct close slots; fall back.
+            return worker_fn(input, idx, columns, psi, frame_depth);
+        }
+        min_next_idx = candidate + 1;
+        let close_slot = depth_0_close_slots[candidate];
+        let byte_after_close = idx.positions[close_slot] + 1;
+        shard_starts.push(byte_after_close);
+    }
+    shard_starts.push(input.len() as u32);
+
+    // Deduplicate adjacent equal starts (can happen when two cut
+    // points pick the same close_slot_idx on degenerate input). Below
+    // `effective_workers` unique boundaries collapse to single-thread.
+    shard_starts.dedup();
+    if shard_starts.len() < effective_workers + 1 {
+        return worker_fn(input, idx, columns, psi, frame_depth);
+    }
+
+    // Map each shard to its slot range in the structural index. A
+    // slot belongs to shard `w` iff `shard_starts[w] <= idx.positions[
+    // slot] < shard_starts[w+1]`. `idx.positions` is monotonic, so
+    // binary-search the boundary transitions.
     let mut ranges: Vec<(usize, usize)> = Vec::with_capacity(effective_workers);
     let mut range_byte_bounds: Vec<(u32, u32)> = Vec::with_capacity(effective_workers);
-
-    let mut cursor_pos = 0usize;
     for w in 0..effective_workers {
-        let start_slot = cursor_pos;
-        let mut end_slot = start_slot + positions_per_worker;
-        if end_slot > idx.positions.len() {
-            end_slot = idx.positions.len();
-        }
-        // Worker byte start: the first position at or after this
-        // worker's slot range. For worker 0, always byte 0 so the
-        // input's leading bytes (e.g., BOM, leading whitespace
-        // before the first structural byte) are owned by worker 0.
-        let byte_start = if w == 0 {
-            0u32
-        } else {
-            idx.positions[start_slot]
-        };
-        // Worker byte end: the first position after the end_slot,
-        // or `input.len()` for the last worker so trailing bytes
-        // (comments, whitespace, EOF padding) are owned by the
-        // last worker.
-        let byte_end = if w == effective_workers - 1 || end_slot >= idx.positions.len() {
-            input.len() as u32
-        } else {
-            idx.positions[end_slot]
-        };
+        let byte_start = shard_starts[w];
+        let byte_end = shard_starts[w + 1];
+        let start_slot = idx
+            .positions
+            .partition_point(|&p| p < byte_start);
+        let end_slot = idx.positions.partition_point(|&p| p < byte_end);
         ranges.push((start_slot, end_slot));
         range_byte_bounds.push((byte_start, byte_end));
-        cursor_pos = end_slot;
-        if cursor_pos >= idx.positions.len() {
-            // Remaining workers get empty ranges; they exit early
-            // after the worker-loop's empty-range guard.
-            for _ in (w + 1)..effective_workers {
-                ranges.push((idx.positions.len(), idx.positions.len()));
-                range_byte_bounds.push((input.len() as u32, input.len() as u32));
-            }
-            break;
-        }
     }
 
     // ── Worker dispatch ─────────────────────────────────────────────
     //
     // `into_par_iter` over `0..effective_workers` so each worker
-    // owns a disjoint index. Each worker builds its own sub-index
-    // (positions rebased to `0`-origin + kinds cloned) and calls
-    // `worker_fn` over its byte sub-slice.
-    let worker_inputs: Vec<(Vec<u32>, Vec<u8>, u32, u32)> = (0..effective_workers)
+    // owns a disjoint index. Each worker materialises its sub-index
+    // (positions rebased to `0`-origin + kinds sliced) in parallel,
+    // avoiding serial pre-materialisation that would dominate the
+    // wall-clock on large inputs.
+    let worker_results: Vec<Result<WorkerOutput, DtaError>> = (0..effective_workers)
+        .into_par_iter()
         .map(|w| {
             let (start_slot, end_slot) = ranges[w];
             let (byte_start, byte_end) = range_byte_bounds[w];
+            // Build the worker's sub-index with positions rebased to
+            // 0-origin. The clone is parallel work.
             let sub_positions: Vec<u32> = idx.positions[start_slot..end_slot]
                 .iter()
                 .map(|&p| p.saturating_sub(byte_start))
                 .collect();
             let sub_kinds: Vec<u8> = idx.kinds[start_slot..end_slot].to_vec();
-            (sub_positions, sub_kinds, byte_start, byte_end)
-        })
-        .collect();
-
-    let worker_results: Vec<Result<WorkerOutput, DtaError>> = (0..effective_workers)
-        .into_par_iter()
-        .map(|w| {
-            let (sub_positions, sub_kinds, byte_start, byte_end) = &worker_inputs[w];
-            // Sub-index with positions rebased to 0-origin.
             let sub_idx = StructuralIndex {
-                positions: sub_positions.clone(),
-                kinds: sub_kinds.clone(),
+                positions: sub_positions,
+                kinds: sub_kinds,
             };
-            let sub_input = &input[*byte_start as usize..*byte_end as usize];
+            let sub_input = &input[byte_start as usize..byte_end as usize];
             let mut local_columns = Columns::with_capacity(sub_input.len() / 2 + 2);
             let mut local_psi = PayloadStream::new();
             let mut local_frame_depth: Vec<u8> = Vec::with_capacity(sub_input.len() / 2 + 2);
@@ -3074,7 +3155,7 @@ fn dta_run_parallel_rayon(
                 psi: local_psi,
                 frame_depth: local_frame_depth,
                 root,
-                byte_start: *byte_start,
+                byte_start,
             })
         })
         .collect();

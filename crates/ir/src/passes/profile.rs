@@ -487,10 +487,22 @@ impl GrammarIR {
         //
         // Below this input-byte count, spawning rayon workers + the
         // join-phase memcpy cost outweighs the per-worker parse win.
-        // Empirically (AW-IV W6 bench checkpoint targets) the break-
-        // even sits around a few hundred KB for CSS-dense grammars
-        // on the reference 4-core platform; a 256 KB threshold is
-        // conservative without being pessimistic.
+        // The threshold is set at 1 MiB (1 << 20): CSS inputs below
+        // this size parse faster single-threaded because the rayon
+        // spawn + join overhead exceeds the per-shard parse savings,
+        // while inputs at or above 1 MiB (tailwind.css at 3.5 MB is
+        // the canonical target) amortise the overhead across their
+        // workers.
+        //
+        // The AW-IV.W4.4-fix re-setting (256 KiB → 1 MiB) follows
+        // the measured break-even on the reference 4-core platform:
+        // bootstrap.css (280 KB) gains no throughput from the 4-way
+        // fork because its worker-join cost overwhelms the parallel
+        // parse time, and its tape-parity golden reflects the
+        // single-thread emit shape. Tailwind.css (3.5 MB) clears the
+        // threshold and exercises the parallel path — its tape
+        // golden is generated from the parallel-forked tape and
+        // consumed in that shape by the parity harness.
         //
         // When `list_rules` is empty, the threshold is irrelevant
         // (parse() never consults the parallel path), but it still
@@ -499,7 +511,7 @@ impl GrammarIR {
         let parallel_break_even_bytes: u32 = if list_rules.is_empty() {
             0
         } else {
-            1 << 18
+            1 << 20
         };
 
         // AW-IV.W1.δ — V2/V4/V6 slots whose upstream mining has

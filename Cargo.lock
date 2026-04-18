@@ -138,6 +138,7 @@ name = "bbnf"
 version = "0.2.11"
 dependencies = [
  "bbnf-ir",
+ "bbnf-json-prototype",
  "bbnf-ser",
  "bbnf-simd-scan",
  "bbnf-tape",

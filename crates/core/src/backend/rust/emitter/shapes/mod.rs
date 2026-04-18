@@ -200,16 +200,24 @@ pub fn has_shape_dispatch(ir: &GrammarIR) -> bool {
 }
 
 /// Returns `true` when `ir` admits full shape dispatch — every non-
-/// transparent rule classifies to a W3 shape OR the root rule is a
-/// JSON-style Alt whose branches all resolve to shape fns. The JSON
-/// grammar satisfies the latter (the `value` rule is Alt of 6 Refs,
-/// each of which classifies as a shape; `pair` is Seq of Ref+Ref+Ref
-/// and stays unshaped but is consumed inside the Object shape's
-/// inline-key-value loop).
+/// transparent rule classifies to a W3 shape OR the root rule is an
+/// Alt whose branches all resolve to W3 shape fns.
 ///
-/// When this holds, `parse()` routes the entire grammar through the
-/// shape dispatcher; unshaped grammars (BBNF / CSS / Sheets until W4
-/// extends the detectors) keep the walker fallback.
+/// The JSON grammar satisfies the Alt branch: `value = object | array
+/// | string | number | bool | null` — six Refs, each landing on a W3
+/// shape (`pair` is Seq of Ref+Ref+Ref and stays unshaped but is
+/// consumed inside the Object shape's inline-key-value loop).
+///
+/// W4 shapes (Pratt / Unordered / ArgList / Flat / Wrap / HRegex)
+/// are EXCLUDED from this admission predicate. The W4 emitter
+/// scaffolding landed in W4.1 but the per-grammar consumer wiring
+/// lands in W4.2 (CSS L4) and W4.3 (Sheets + BBNF); until that
+/// wiring is in place, grammars carrying W4-classified rules stay
+/// on the walker fallback. This preserves the substrate-with-
+/// consumer landing rule declared in AW-V.md §invariants.
+///
+/// When this returns `false`, `parse()` routes through the existing
+/// `dta_run_<grammar>` walker — the cold-path AX replay surface.
 pub fn has_full_shape_coverage(ir: &GrammarIR) -> bool {
     // Find the entry rule. When it's a 6-arm Alt over shape-bearing
     // Refs (the JSON `value = object|array|string|number|bool|null`

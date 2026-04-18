@@ -135,7 +135,14 @@ pub fn emit_parse_keyword(
                         })
                         .collect();
                     let branch_payload = alt_branch_payload(rule, branch, branch_idx, ir);
-                    let branch_meta = branch_idx as u8;
+                    // AW-V.W3-fix (cursor parity): walker emits meta_idx=0
+                    // for every leaf — `push_leaf_fused` packs
+                    // `kind_meta = kind & 0x0F` with no meta_idx slot, and
+                    // the Alt frame's `cursor` (the branch index) is only
+                    // stamped into the COMPOUND's `flags` by close_compound,
+                    // not into leaf meta_idx. Using `branch_idx` here
+                    // diverges from the walker; stamp 0 to match.
+                    let _ = branch_idx;
                     Some(quote! {
                         #first => {
                             let at = *p;
@@ -156,7 +163,7 @@ pub fn emit_parse_keyword(
                                 at as u32,
                                 end as u32,
                                 #variant_idx,
-                                #branch_meta,
+                                0u8,
                                 #branch_payload,
                             );
                             Ok(off)

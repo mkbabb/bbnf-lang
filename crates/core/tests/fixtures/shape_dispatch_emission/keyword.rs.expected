@@ -52,7 +52,7 @@ pub fn parse_keyword_JsonFixture_bool(
                     at as u32,
                     end as u32,
                     1u8,
-                    1u8,
+                    0u8,
                     ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
                 );
             Ok(off)

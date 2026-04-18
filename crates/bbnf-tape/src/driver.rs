@@ -2910,7 +2910,14 @@ pub type WalkerFn = fn(
 /// Returns the first worker's [`DtaError`] if any worker fails. The
 /// join phase is skipped on failure — the destination buffers stay
 /// in the pre-parallel state.
-#[cfg(feature = "rayon")]
+///
+/// # Non-rayon builds
+///
+/// When the `rayon` feature is disabled, this function forwards
+/// unconditionally to `worker_fn` (single-thread fallback). The
+/// emitted `parse()` entry stays compilable; its break-even gate
+/// still executes but the parallel branch reduces to the same
+/// sequential call the single-thread branch makes.
 #[allow(clippy::too_many_arguments)]
 pub fn dta_run_parallel(
     input: &[u8],
@@ -2922,14 +2929,45 @@ pub fn dta_run_parallel(
     psi: &mut PayloadStream,
     frame_depth: &mut Vec<u8>,
 ) -> Result<TapeOffset, DtaError> {
-    use rayon::iter::{IntoParallelIterator, ParallelIterator};
-
     // `list_rule_id` is carried in the signature per the W4.4 plan
     // but the emitted walker's entry state is already `table.entry`
     // (the grammar's entry rule, which IS the list rule under the
     // W4.4 admission invariant). The id is useful for diagnostics
     // and forward-compat with fork-at-sub-rule (AX successor).
     let _ = list_rule_id;
+
+    // Non-rayon fallback: the emitted parse() entry routes here when
+    // its break-even gate fires, but without rayon the worker dispatch
+    // can't run. Forward directly to the single-thread walker so the
+    // call is semantically equivalent to the sequential branch.
+    #[cfg(not(feature = "rayon"))]
+    {
+        let _ = n_workers;
+        return worker_fn(input, idx, columns, psi, frame_depth);
+    }
+
+    #[cfg(feature = "rayon")]
+    {
+        dta_run_parallel_rayon(
+            input, idx, n_workers, worker_fn, columns, psi, frame_depth,
+        )
+    }
+}
+
+/// AW-IV.W4.4 — rayon-specific body of [`dta_run_parallel`]. Extracted
+/// so the outer function stays compileable on non-rayon builds.
+#[cfg(feature = "rayon")]
+#[allow(clippy::too_many_arguments)]
+fn dta_run_parallel_rayon(
+    input: &[u8],
+    idx: &StructuralIndex,
+    n_workers: usize,
+    worker_fn: WalkerFn,
+    columns: &mut Columns,
+    psi: &mut PayloadStream,
+    frame_depth: &mut Vec<u8>,
+) -> Result<TapeOffset, DtaError> {
+    use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
     // Fall back to single-thread when worker count collapses to one
     // or the structural index is empty (no boundaries to partition

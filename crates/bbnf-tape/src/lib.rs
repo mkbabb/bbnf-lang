@@ -89,12 +89,17 @@ pub use driver::{
     COUNTER_INLINE_SLOTS, STACK_INLINE_DEPTH,
 };
 
-// AW-IV.W4.4 — document-parallel fork substrate. Gated on the
-// `rayon` feature; when disabled the per-grammar parse() routes
-// through the single-thread walker unconditionally (the emitter's
-// `list_rules` check is a no-op because `dta_run_parallel` isn't
-// linked).
-#[cfg(feature = "rayon")]
+// AW-IV.W4.4 — document-parallel fork substrate.
+//
+// `WalkerFn` + `dta_run_parallel` + `rayon_num_threads` are always
+// exported — `dta_run_parallel` has a rayon-feature-gated body and a
+// single-thread fallback when rayon is disabled. This keeps the
+// emitted `parse()` entry compilable regardless of the tape crate's
+// feature-flag state; when rayon is off, the fallback forwards to
+// the single-thread walker so the parallel branch collapses to the
+// sequential path. The emitter's break-even gate + worker-count
+// clamp do the same thing at runtime when `rayon_num_threads()`
+// returns 1.
 pub use driver::{dta_run_parallel, WalkerFn};
 
 /// AW-IV.W4.4 — rayon worker-count accessor for the emitted parse()

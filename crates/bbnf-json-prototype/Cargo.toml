@@ -1,0 +1,29 @@
+[package]
+name = "bbnf-json-prototype"
+version = "0.1.0"
+edition = "2024"
+description = "JSON-only hand-tuned per-shape inline parser prototype. AW-V.W2 speed-ceiling validation against sonic-rs via twin-pair benches."
+
+[lib]
+crate-type = ["lib"]
+
+[dependencies]
+# AW-V.W2 substrate dependencies per B1 §1.
+bbnf-tape = { path = "../bbnf-tape" }
+bbnf-simd-scan = { path = "../bbnf-simd-scan" }
+# Inline Eisel-Lemire via `parse_that::parsers::eisel_lemire::compute_f64`.
+# The function is `#[inline]`; workspace LTO + `codegen-units = 1` resolve
+# it into the prototype's `parse_number` body.
+parse_that = "0.4"
+
+[dev-dependencies]
+# sonic-rs is the speed-ceiling comparator for the twin-pair bench.
+# Same major.minor the main core JSON value bench pins.
+sonic-rs = "0.3"
+bencher = "0.1"
+mimalloc = "0.1"
+serde_json = "1"
+
+[[bench]]
+name = "json_value"
+harness = false

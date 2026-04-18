@@ -216,6 +216,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "bbnf-json-prototype"
+version = "0.1.0"
+dependencies = [
+ "bbnf-simd-scan",
+ "bbnf-tape",
+ "bencher",
+ "mimalloc",
+ "parse_that",
+ "serde_json",
+ "sonic-rs",
+]
+
+[[package]]
 name = "bbnf-lsp"
 version = "0.1.0"
 dependencies = [

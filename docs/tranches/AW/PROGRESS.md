@@ -2942,3 +2942,107 @@ Substrate is in place. W3 opens with the shape-dispatch IR pass (`crates/ir/src/
 - `bbnf-tape::TapeVisitor` → tape-substrate consumer; `bbnf-tape::ValueVisitor` placeholder → per-grammar type-resolver expansion site for W3.2.
 
 The W2.1 prototype crate (`crates/bbnf-json-prototype/`) remains as the parity reference — W3.2's emitter-produced JSON parser must come within ±5% of its bench numbers.
+
+## 2026-04-18 — AW-V W3 landed (shape-dispatch classifier + emitter + JSON parity, 18 commits)
+
+W3 ships the per-shape emitter that consumes the W3.1 IR pass's `ShapeAssignments` and produces sonic-rs-class JSON parsers via the `parse_with_visitor` API path. The wave decomposed into three sub-waves: 3.1 (classifier), 3.2 (per-shape emitters + JSON wiring), 3.3+3.4 (regression + parity tests), with two follow-up fix sub-waves for cursor-parity + bench-parity gaps surfaced under contact.
+
+### W3.1 — `shape_dispatch.rs` IR pass (5 commits)
+
+- `7d1dc9fb` feat(ir/recognizers/shape_dispatch): scaffold + ShapeTag + ShapeAssignments
+- `2dd7a6c4` feat(ir/recognizers/shape_dispatch): pair-seq detector follows Ref-to-single-byte
+- `8046ccf3` test(bbnf-ir): thread shape_assignments through existing test fixtures
+- `0f69e08d` test(bbnf-ir): JSON six-rule shape-dispatch classification
+- `86e0151b` test: initialise shape_assignments in 2 cross-crate fixtures
+
+`ShapeTag` enum with 12 variants (6 W3-active + 6 W4-stub + None) + `ShapeAssignments` map. Six per-shape detectors (Object/Array/String/Number/Keyword/Scalar) ground in existing recognizer outputs (`disjoint_first`, `pattern_alphabet`, `keyword_branches`, etc.). 17/17 W3.1 tests pass.
+
+### W3.2 — Per-shape emitter modules + JSON wiring (3 commits)
+
+- `23543065` feat(emitter/shapes): scaffold + per-shape + dispatcher emitters (initial cut, retired by 12f58870)
+- `292f201b` feat(emitter/shapes): TapeKind::Span + correct payload shapes (initial cut, retired)
+- `a7f4017b` fix(emitter/shapes): walker-identical JSON tape emission (consolidated W3.2 + tape-shape fix)
+
+Initial W3.2 emitted a compact tape that diverged structurally from the walker's output (single Rule per JSON value vs walker's nested Seq/Seq/Repeat/Seq tree). The W3.2-fix-agent restored walker-shape-identical record emission so existing typed views, `serialize_compact`, and `tape_parity` golden fixtures resolve verbatim. The dispatch is inlined (no `dispatch_one` / `try_branch` / cross-crate helper boundaries) but the record stream matches the walker byte-for-byte.
+
+The Scalar detector was tightened to Literal-only (commit `a404cfb2`) — Math grammar's `number = /(\d+)?(\.\d+)?.../` regex was admitted as Scalar by the original detector and routed through a stub Scalar emitter arm returning Err. Tightening prevents Regex/Ref bodies from reaching Scalar (HRegex/Wrap shapes are W4 territory; they stay None and route through walker).
+
+### W3.3 — `cargo expand` regression tests (5 commits)
+
+- `27d1519f` test(bbnf): shape_dispatch_emission scaffold + fixtures helpers
+- `7c5c051c` test(bbnf): object + array shape classify + emit goldens
+- `ed50c4d5` test(bbnf): string + number shape classify + emit goldens
+- `59b2a70b` test(bbnf): keyword + scalar shape classify + emit goldens
+- `dc88792c` test(bbnf): W4 shape detector deferral assertions
+
+23 tests: 12 W3-active (6 classify + 6 emit golden) + 6 W4 deferral assertions + 5 wire-contract invariants. Goldens captured one-shot via `prettyplease::unparse` and committed; future regen requires deliberate intent. 23/23 pass.
+
+### W3.4 — JSON parity shape-emit integration (1 commit)
+
+- `c34cbf7a` test(bbnf): json_parity_shape_emit — walker vs shape cursor parity
+
+5 tests asserting walker and shape cursor walks are byte-identical for every JSON corpus fixture. Initial commit exposed wire-contract divergences:
+1. **Repeat compound `span_hi`** off by +1 byte (trailing whitespace bleed).
+2. **Inner Seq spans** off by various amounts (comma-OW absorption).
+3. **Keyword leaf `meta_idx`** stamped branch_idx instead of walker's `0u8`.
+
+### W3-fix-cursor — Walker-parity span semantics (3 commits)
+
+- `945fea67` fix(emitter/shapes/array): walker-parity cursor spans on Repeat + iter Seq + comma
+- `d33ebe3e` fix(emitter/shapes/object): walker-parity cursor spans on Repeat + iter Seq + colon + comma
+- `8bbd82be` fix(emitter/shapes/keyword): walker-parity leaf meta_idx=0 for Alt-of-literal branches
+
+Per-record alignment between walker and shape emitter:
+- Repeat span_hi captured at iter-end BEFORE the close-arbitration ws-skip (matches walker's `handle_repeat_failure` rollback).
+- Comma/colon OW Seqs absorb both leading + trailing ws via inline ws-skip inside the Seq body (matches walker's WsTrim emission).
+- Close-bracket Literal stamps `#variant_idx` from the enclosing rule (matches walker's `nearest_variant_frame`).
+- Keyword leaf `meta_idx` stamps `0u8` (matches walker's `push_leaf_fused` `kind_meta = kind & 0x0F` packing — no meta_idx slot).
+
+5/5 cursor parity tests pass post-fix.
+
+### W3-fix-bench — `parse_with_visitor` API for prototype-parity throughput (3 commits)
+
+- `76f77379` feat(emitter/shapes/visitor): dual-family per-shape visitor-path scaffold
+- `80b4cc8a` bench(json/value): add parse_with_visitor lane + prototype reference
+- `c1e86ab3` perf(emitter/shapes/number/visitor): aarch64 SIMD fraction accumulator
+
+W3.2's tape-path is correct but ~2× slower than the hand-tuned `bbnf-json-prototype` because `parse()` builds a tape (PSI bookkeeping + structural compound emission). The fix adds a sibling visitor-generic API:
+
+```rust
+JsonParser::parse_with_visitor::<V: JsonVisitor>(input, &mut visitor) -> Result<(), ParseErr>
+```
+
+Dual-family per-shape emission: existing `parse_<shape>_<grammar>_<rule>` (TapeBuilder) kept verbatim; new sibling `parse_<shape>_visitor_<grammar>_<rule><V>` (visitor-generic) added. The visitor-path drops all structural compound emission — visitor methods inline directly into the per-shape parse function via `#[inline(always)]` + workspace LTO. Number-shape ports the prototype's NEON `simd_str2int` 16-digit fraction accumulator for canada-class fraction-heavy workloads.
+
+### Hard-gate verification ledger
+
+| Gate | Verification artefact |
+|---|---|
+| `cargo test -p bbnf-ir --test shape_dispatch` → 17 passed | W3.1 |
+| `cargo test -p bbnf --test shape_dispatch_emission` → 23 passed | W3.3 |
+| `cargo test -p bbnf --test json_parity_shape_emit` → 5 passed | W3.4 + cursor-fix |
+| `cargo test -p bbnf --test tape_parity` → 22 passed (5 JSON + 4 CSS + 3 BBNF + 3 Sheets + 3 EBNF + 4 sanity) | W3.2 + cursor-fix |
+| `cargo test -p bbnf` → 677 passed, 0 failed | post-W3 close |
+| `cargo test --workspace` → 1500 passed, 0 failed | post-W3 close |
+| `nm target/release/deps/json_monolithic_value-*` — zero `dispatch_one` / `try_branch` / `advance_or_pop_with` / `__dta_walker_inline` / `DtaState` / `FrameStack` symbols | post-W3 close (`/tmp/aw5-bench-final.txt`) |
+| `cargo bench -p bbnf --bench json_monolithic_value` — visitor-path within ±5% of prototype on every entry, beats sonic-rs on every entry | bench-fix |
+
+### Bench numbers — JSON value materialisation (cold per-parse, single-thread NEON, mimalloc)
+
+| entry | bbnf_visitor ns/iter | proto ns/iter | bbnf vs proto | sonic ns/iter | bbnf vs sonic | gate |
+|---|---:|---:|:---:|---:|:---:|:---:|
+| data_s   |     14,001 |     13,940 | 1.0044× |     14,586 | 0.96× | **PASS** |
+| twitter  |    238,379 |    239,539 | 0.9952× |    241,692 | 0.99× | **PASS** |
+| citm     |    508,020 |    507,041 | 1.0019× |    568,349 | 0.89× | **PASS** |
+| canada   |  1,298,217 |  1,313,963 | 0.9880× |  1,440,574 | 0.90× | **PASS** |
+| data_xl  | 13,193,095 | 13,421,341 | 0.9830× | 14,325,441 | 0.92× | **PASS** |
+
+Visitor-path matches prototype within 0.4–1.7% on every entry. Beats sonic-rs single-thread NEON by 1.01–1.13× on every entry. The tape-path benches (`bbnf_canada`, `bbnf_twitter`, etc.) sit ~10× slower than the visitor-path because they build the full structural tape; that is the existing `parse()` API for tape consumers, preserved verbatim.
+
+### W3 → W4 hand-off
+
+W3 closes green. The shape-dispatch + per-shape emitter substrate is in place for JSON; W4 extends it to CSS L4 + Sheets via Pratt + Unordered + ArgList shapes. Carry-forwards:
+
+1. **CSS / BBNF / Sheets currently route through walker fallback** because `has_full_shape_coverage` requires full classification and W4's detectors (Pratt / Unordered / ArgList / Flat / Wrap / HRegex) haven't landed. JSON is the only grammar exercising the shape dispatcher; W4 enables CSS shape coverage per AW-V.md §W4.
+2. **`parse_with_visitor` is JSON-emitted only** (gated on full shape coverage). W4's CSS / Sheets shape coverage will trigger the same emission for those grammars.
+3. **AW-V invariant preserved**: cold-path `dispatch_one` + `__dta_walker_inline::run` survive verbatim for AX replay; the AX cold-path replay surface is intact.

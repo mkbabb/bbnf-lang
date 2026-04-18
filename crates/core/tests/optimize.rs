@@ -66,6 +66,8 @@ fn make_ir(rules: Vec<(&str, IrNode, Option<u32>, bool)>) -> GrammarIR {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         dedup_eligible_rules: Vec::new(),
+
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
     }
 }
 

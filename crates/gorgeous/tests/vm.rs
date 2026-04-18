@@ -57,6 +57,8 @@ fn make_ir(hints: PrettyHints) -> GrammarIR {
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
         dedup_eligible_rules: Vec::new(),
+
+        shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
         string_index: std::collections::HashMap::new(),
     }
 }

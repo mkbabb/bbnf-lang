@@ -25,8 +25,12 @@
 //! landing can't silently claim coverage the mechanism hasn't
 //! produced.
 
-use bbnf::backend::rust::emitter::shapes::{array, number, object, string};
-use bbnf_ir::passes::recognizers::shape_dispatch::{shape_dispatch, ShapeTag};
+use bbnf::backend::rust::emitter::shapes::{
+    array, keyword, number, object, scalar, string,
+};
+use bbnf_ir::passes::recognizers::shape_dispatch::{
+    scalar as scalar_detect, shape_dispatch, ShapeTag,
+};
 use bbnf_ir::{IrNode, RuleId};
 
 #[path = "shape_dispatch_emission/fixtures.rs"]
@@ -140,6 +144,95 @@ fn number_shape_emit_matches_golden() {
         "fixtures/shape_dispatch_emission/number.rs.expected"
     );
     assert_matches_golden(&actual, expected, "number.rs");
+}
+
+// ─── Classify + emit — Keyword ──────────────────────────────────────
+
+#[test]
+fn keyword_shape_classifies_correctly() {
+    let (ir, rules) = build_json_ir();
+    // JSON's `bool = "true" | "false"` classifies as Keyword (Alt of
+    // literal-led branches).
+    assert_eq!(ir.shape_assignments.get(rules.bool_rule), ShapeTag::Keyword);
+    // JSON's `null = "null"` also classifies as Keyword (single-literal
+    // body).
+    assert_eq!(ir.shape_assignments.get(rules.null), ShapeTag::Keyword);
+}
+
+#[test]
+fn keyword_shape_emit_matches_golden() {
+    let (ir, rules) = build_json_ir();
+    let rule = &ir.rules[rules.bool_rule as usize];
+    let ts = keyword::emit_parse_keyword("JsonFixture", rule, &ir);
+    let actual = format_tokens(&ts);
+    let expected = include_str!(
+        "fixtures/shape_dispatch_emission/keyword.rs.expected"
+    );
+    assert_matches_golden(&actual, expected, "keyword.rs");
+}
+
+// ─── Classify + emit — Scalar ───────────────────────────────────────
+//
+// The Scalar detector admits single-Literal bodies, but so does the
+// Keyword detector (Case 1 in `shape_dispatch/keyword.rs`), and
+// Keyword precedes Scalar in the dispatch order. So under
+// [`shape_dispatch`] a bare Literal rule classifies as [`ShapeTag::Keyword`]
+// — Scalar is a defensive catch-all for single-Literal bodies a
+// future Keyword-detector refinement might reject (e.g. if Keyword
+// adds a `-> payload` requirement). The tag-assertion test here
+// invokes [`scalar_detect::detect_scalar`] directly so we still
+// exercise the shape-admission contract, and separately asserts that
+// the dispatch orchestration routes the rule to Keyword — exactly
+// what the wire contract requires for W3's inclusion ordering.
+
+#[test]
+fn scalar_shape_detector_admits_literal_body() {
+    // The Scalar detector admits any Literal body after stripping Map
+    // / OptionalWhitespace wrappers — this is the shape's invariant.
+    let (ir, rules) = build_json_ir();
+    assert!(
+        scalar_detect::detect_scalar(rules.comma, &ir),
+        "Scalar detector must admit the `comma = \",\" ?w` rule body",
+    );
+    assert!(
+        scalar_detect::detect_scalar(rules.colon, &ir),
+        "Scalar detector must admit the `colon = \":\" ?w` rule body",
+    );
+}
+
+#[test]
+fn scalar_shape_classifier_routes_literal_to_keyword() {
+    // Keyword precedes Scalar in `shape_dispatch`, so bare Literal
+    // bodies route to Keyword — this test documents the dispatch
+    // ordering and guarantees Scalar is reserved for future detector
+    // refinements without breaking the W3 wire contract.
+    let (ir, rules) = build_json_ir();
+    assert_eq!(
+        ir.shape_assignments.get(rules.comma),
+        ShapeTag::Keyword,
+        "Keyword precedes Scalar — `comma` routes to Keyword under the \
+         dispatch ordering",
+    );
+    assert_eq!(
+        ir.shape_assignments.get(rules.colon),
+        ShapeTag::Keyword,
+    );
+}
+
+#[test]
+fn scalar_shape_emit_matches_golden() {
+    // The Scalar emitter is reached via direct invocation (W3
+    // dispatch routes single-Literal bodies to Keyword per the
+    // precedence). The emitted shape is the Literal-only byte
+    // match + push_leaf(Literal) path.
+    let (ir, rules) = build_json_ir();
+    let rule = &ir.rules[rules.comma as usize];
+    let ts = scalar::emit_parse_scalar("JsonFixture", rule, &ir);
+    let actual = format_tokens(&ts);
+    let expected = include_str!(
+        "fixtures/shape_dispatch_emission/scalar.rs.expected"
+    );
+    assert_matches_golden(&actual, expected, "scalar.rs");
 }
 
 // ─── Wire-contract invariants ───────────────────────────────────────

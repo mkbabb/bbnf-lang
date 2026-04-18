@@ -1,0 +1,68 @@
+/// AW-V.W3.2 — per-grammar Keyword-shape parse function
+/// (Alt of literal-led branches).
+#[inline(always)]
+#[allow(non_snake_case, clippy::too_many_arguments)]
+pub fn parse_keyword_JsonFixture_bool(
+    input: &[u8],
+    p: &mut usize,
+    first_byte: u8,
+    builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+) -> ::core::result::Result<
+    ::bbnf::runtime::tape::TapeOffset,
+    ::bbnf::runtime::tape::DtaError,
+> {
+    match first_byte {
+        116u8 => {
+            let at = *p;
+            let end = at + 4usize;
+            if input.len() < end || input[at..end] != [116u8, 114u8, 117u8, 101u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let off = builder
+                .push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    1u8,
+                    0u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(1u32) as u8]),
+                );
+            Ok(off)
+        }
+        102u8 => {
+            let at = *p;
+            let end = at + 5usize;
+            if input.len() < end || input[at..end] != [102u8, 97u8, 108u8, 115u8, 101u8]
+            {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let off = builder
+                .push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    at as u32,
+                    end as u32,
+                    1u8,
+                    1u8,
+                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                );
+            Ok(off)
+        }
+        _ => {
+            Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            })
+        }
+    }
+}

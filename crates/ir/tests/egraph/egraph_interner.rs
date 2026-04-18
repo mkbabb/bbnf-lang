@@ -41,6 +41,7 @@ fn empty_ir(strings: Vec<&str>) -> GrammarIR {
         string_index: Default::default(),
         structural_alphabet: None,
         push_fingerprint: None,
+            dedup_eligible_rules: Vec::new(),
         eclass_facts: std::collections::HashMap::new(),
         shape_dict_templates: Vec::new(),
         shape_dict_selection: Vec::new(),

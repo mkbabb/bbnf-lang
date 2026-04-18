@@ -569,6 +569,18 @@ fn compile_ast_common<'a>(
             }
         });
 
+        // AW-IV.W4.3.c — grammar-level pattern dedup (AP.4.2 chronic).
+        // Hoists recurring Seq/Alt sub-patterns (e.g. `ws + ':' + ws`
+        // across CSS L4 declarations; `!important` across every
+        // pretty-aware rule) into synthesised non-terminals, rewriting
+        // each occurrence to `Ref(__pattern_<hash>)`. Pre-egraph
+        // because the egraph saturation then operates on a simpler
+        // IR (already-factored commonality lets
+        // DeduplicateAltBranches + UnionMergeAlt converge faster).
+        timer.span("hoist_recurring_patterns", || {
+            bbnf_ir::passes::transform::hoist_recurring_patterns(&mut ir);
+        });
+
         // Layer 1b — equivalence discovery. Single e-graph saturation
         // on the normalized IR. Retained rules target ordering-
         // independent equivalences and regex-algebra rewrites the

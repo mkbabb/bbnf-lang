@@ -20,6 +20,7 @@ mod fuse;
 mod fuse_token;
 mod inline;
 mod optimize;
+pub mod pattern_dedup;
 mod prune;
 
 pub use alias::canonicalize_aliases;
@@ -27,4 +28,5 @@ pub use fuse::fuse_single_use;
 pub use fuse_token::fuse_token_dispatch;
 pub use inline::inline_acyclic;
 pub use optimize::{eliminate_epsilon, merge_literals};
+pub use pattern_dedup::{hoist_recurring_patterns, MAX_PATTERN_NODES, MIN_OCCURRENCES, MIN_PATTERN_NODES};
 pub use prune::prune_unreachable;

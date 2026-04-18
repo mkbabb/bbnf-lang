@@ -3142,3 +3142,61 @@ Resolution: activation agent split `has_full_shape_coverage` (substrate-emission
 This is an architectural refactor beyond W4's natural scope — carries forward to W6 honest assessment or a successor tranche (AW-VI). The pattern mirrors AW-IV's honest W6 throughput miss: substrate correct and verified, but perf compounding blocked by a deeper architectural gap the plan didn't fully anticipate.
 
 W5 opens next — BBNF shape coverage detection confirmed (31/46 classified pre-W4-fix, 36/46 after) + `GRAMMAR_PROFILE` wire-contract fix per AW-V.md §W5.
+
+## 2026-04-18 — AW-V W5 landed (BBNF GRAMMAR_PROFILE wire-contract + per-Ref dispatcher refactor)
+
+W5 ships two parallel sub-agents addressing the twin residuals from W4 close: BBNF's GRAMMAR_PROFILE silent drop (AW-IV P4 carry-forward) + the per-Ref dispatcher routing refactor needed to activate shape dispatch on non-Alt-rooted grammars. 7 commits total.
+
+### W5.1 — BBNF GRAMMAR_PROFILE wire-contract fix (4 commits)
+
+- `53da1bb9` fix(pipeline/compile): run profile-miner passes in structural mode
+- `09d7b1fa` fix(emitter): stable-compatible byte checks in generated code
+- `60418d7a` test(bbnf): GRAMMAR_PROFILE wire-contract end-to-end
+- `98edad19` chore(generated): regen post BBNF profile fix
+
+**Root cause**: `crates/core/src/pipeline/compile.rs:664` gated ALL miner passes behind `!options.structural`. The BBNF bootstrap caller uses `#[parser(path = "...", structural)]` to preserve rule identity for self-hosting roundtrip; that flag silently elided `compute_regex_info`, `compute_structural_alphabet`, `mine_recognizers`, `solve_shape_dict_selection` — leaving `ir.structural_alphabet`, `ir.keyword_branches`, `ir.shape_dict_templates`, `ir.shape_dict_selection` empty, so `profile()` returned empty Vecs and the emitter carried `&[]` into the `pub const GRAMMAR_PROFILE`.
+
+**Fix**: split the gate — profile-populating passes (pure fact collectors) run unconditionally; codegen-decision passes stay `!structural`-gated. Activating `mine_recognizers` also enabled disjoint_first → DTA lifter's ClassifyByte states; the emitter for those used `matches!()` macro calls whose nightly expansion decorates the inner match with an unstable `#[allow]` attribute-on-expression that `cargo expand` surfaces into broken stable-Rust code. Replaced 5 `matches!` sites with `==` / explicit `match`.
+
+**Slot population delta** (in BBNF's `GRAMMAR_PROFILE`):
+- `structural_alphabet`: `&[]` → 28 bytes
+- `structural_digraphs`: `&[]` → 17 pairs (`->`, `/*`, `*/`, `//`, `::`, `==`, `!=`, `<=`, `>=`, `<<`, `>>`, `&&`, `||`, `@{`, `u8`, `λ`, `??`)
+- `structural_digraph_mask`: `[0,0,0,0]` → populated
+- `keyword_tables`: `&[]` → 13 tables
+- `shape_dict`: `&[]` → 10 compound-collapse entries
+- (Slots still empty per legitimate design: `structural_quote_classes`, `active_columns`, `branch_priors`, `reorder_unroll_visitors`)
+
+### W5.2 — Per-Ref dispatcher refactor + CSS/Sheets/BBNF activation (2 commits)
+
+- `7be00844` refactor(emitter/shapes/dispatcher): per-Ref value-position routing
+- `a5860c89` test(bbnf): update CSS/Sheets admission assertions for W5.2
+
+W4-activation's finding: the shape dispatcher's `__value` body can't route per-Ref recursion for non-Alt-rooted grammars. W5.2 refactors — per-shape emitters now inline the Ref-recursion call by resolving the target rule's shape at codegen time and emitting a direct call (approach B per the W4-activation gap analysis). `has_shape_dispatcher_entrypoint` extended to admit classified-entry grammars (Criterion 2).
+
+### W5.2-fix — Regex adapter byte-eq fallback + golden regen (1 commit)
+
+- `5f29621f` fix(emitter/dfa_codegen,tests): regex adapter byte-eq fallback + regen goldens
+
+W5.2 exposed a latent bug in the HRegex emitter: `__regex_scan_<grammar>` dispatched on `ptr::eq`, but the HRegex emitter passed a raw string literal instead of the interned `__DTA_REGEX_N` constant. Pre-W5.2, Math's `number` wasn't routed through shape dispatch; W5.2's Criterion 2 admitted it → `ptr::eq` miss → parse failed. Extended each adapter arm with byte-equality fallback: `ptr::eq(...)  ||  pattern == #pat_ident`. Walker sites keep the fast pointer path; HRegex sites resolve via byte comparison.
+
+Also regenerated the object.rs + array.rs emit goldens — W5.2's Ref-recursion refactor shifted the emit shape from `parse_<grammar>_value__value` dispatcher delegation to inline `parse_wrap_<grammar>_value` call with skip_space prelude.
+
+### Hard-gate verification ledger
+
+| Gate | Status | Artefact |
+|---|:---:|---|
+| BBNF `GRAMMAR_PROFILE` populated for every slot where IR mining produces data | MET | `crates/core/tests/bbnf_profile_wire_contract.rs` — 9/9 pass |
+| Wire-contract end-to-end test (IR → emitter → const → runtime) exists | MET | Above |
+| No regression in CSS/JSON/Sheets profiles | MET | 19/19 grammar_profile_wire_contract tests pass |
+| Bootstrap regen idempotent | MET | Two successive `scripts/bootstrap-bbnf.sh` runs produce byte-identical `generated.rs` |
+| Per-Ref dispatcher admits CSS/Sheets/BBNF | MET | `has_shape_dispatcher_entrypoint` Criterion 2 |
+| Math `number_shape` doesn't break roundtrip | MET | `cargo test -p bbnf --test serialize_roundtrip math_num` passes after dfa adapter fix |
+| `cargo test -p bbnf` | MET | 751 passed, 0 failed |
+| `cargo test --workspace` | MET | 1591 passed, 0 failed |
+
+### W5 → W6 hand-off
+
+W5 closes green on the substrate side: BBNF profile drop fixed with full wire-contract coverage; per-Ref dispatcher refactor lands architecturally to enable CSS/Sheets/BBNF parse() routing through shape dispatch.
+
+Carry-forward to W6 / honest assessment:
+- Parse-bench throughput for CSS/Sheets/BBNF through the shape dispatcher hasn't been measured post-W5.2. W6 runs the 19-entry matrix and records actual numbers; whether the activation translates to the AW-V.md projected MB/s remains to be seen.

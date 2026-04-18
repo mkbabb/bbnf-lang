@@ -73,4 +73,6 @@
 //! splice in an `unsafe` block at its call site.
 
 pub mod advance;
+pub mod decoded;
+pub mod finalise;
 pub mod frame;

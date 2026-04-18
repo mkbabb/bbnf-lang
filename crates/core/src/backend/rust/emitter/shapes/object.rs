@@ -39,7 +39,8 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::dispatcher::{
-    dispatcher_fn_ident, shape_fn_ident, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
+    dispatcher_fn_ident, emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident,
+    visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
 use super::root_rule_name;
 
@@ -65,7 +66,20 @@ pub fn emit_parse_object(
 
     // Locate the string rule and its variant_idx so we can call its
     // shape fn + stamp the pair's `Ref(string)` correctly.
-    let (string_fn, string_variant, pair_variant) = resolve_pair_context(grammar_suffix, ir);
+    let (string_fn, string_variant, pair_variant, value_ref) =
+        resolve_pair_context(grammar_suffix, ir);
+
+    // AW-V.W5.2 — per-Ref value-position routing. If the pair rule has a
+    // classified value Ref target, emit a direct call to that target's
+    // shape fn; otherwise fall back to the dispatcher (__value).
+    let value_call = value_ref
+        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+        .map(|call| quote! { let _value_off = (#call)?; })
+        .unwrap_or_else(|| {
+            quote! {
+                let _value_off = #dispatcher_ident(input, p, state, builder)?;
+            }
+        });
 
     quote! {
         /// AW-V.W3.2 — per-grammar Object-shape parse function,
@@ -246,10 +260,9 @@ pub fn emit_parse_object(
                     0,
                 );
 
-                // Ref(value) — recurse through dispatcher. The dispatcher
-                // does its own leading ws-skip, but after colon's trailing
-                // WsTrim there is typically no ws left to skip.
-                let _value_off = #dispatcher_ident(input, p, state, builder)?;
+                // Ref(value) — AW-V.W5.2 per-Ref direct call when the
+                // target is classified, else fall back to the dispatcher.
+                #value_call
 
                 // Close Next(colon, value) Seq compound.
                 let colon_next_close = *p as u32;
@@ -409,16 +422,23 @@ pub fn emit_parse_object(
     }
 }
 
-/// Resolve the grammar's String-shape rule (for key parsing) and the
-/// pair rule's variant_idx. Returns `(string_fn_ident, string_variant_idx, pair_variant_idx)`.
+/// Resolve the grammar's String-shape rule (for key parsing), the
+/// pair rule's variant_idx, and the pair rule's value-position Ref
+/// target. Returns `(string_fn_ident, string_variant_idx,
+/// pair_variant_idx, value_ref)`.
 ///
 /// The pair rule is the one whose body is `Seq(Ref(string), ...)`; per
 /// JSON's canonical shape `pair = string, colon >> value`, walking the
 /// rule list for a Seq-bodied rule with a Ref-to-string head yields it.
+///
+/// AW-V.W5.2 — `value_ref` is the pair rule's value-position Ref
+/// target, extracted from the pair body's post-colon recursion. Used
+/// by the Object emitter to emit a direct call to that target's shape
+/// fn (per-Ref routing).
 fn resolve_pair_context(
     grammar_suffix: &str,
     ir: &GrammarIR,
-) -> (proc_macro2::Ident, u8, u8) {
+) -> (proc_macro2::Ident, u8, u8, Option<bbnf_ir::RuleId>) {
     use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
     use bbnf_ir::IrNode;
 
@@ -442,7 +462,75 @@ fn resolve_pair_context(
     });
     let pair_variant = pair_rule.map(|r| (r.id & 0xFF) as u8).unwrap_or(0);
 
-    (string_fn, string_variant, pair_variant)
+    // AW-V.W5.2 — extract the value-position Ref target from the pair
+    // body. Canonical JSON pair body:
+    //   Seq[Ref(string), Next(Ref(colon), Ref(value))]
+    // Walk to find the non-string, non-colon Ref — that's the value.
+    let value_ref = pair_rule.and_then(|pair| {
+        extract_value_ref_from_pair_body(&pair.body, string_rule.id, ir)
+    });
+
+    (string_fn, string_variant, pair_variant, value_ref)
+}
+
+/// Extract the value-position Ref target from a pair rule body.
+/// Skips the string-key Ref (head) and colon-related nodes; returns
+/// the first Ref whose target is NOT the string rule and NOT a
+/// punctuation rule (a rule whose body is a single-char Literal).
+fn extract_value_ref_from_pair_body(
+    node: &bbnf_ir::IrNode,
+    string_rid: bbnf_ir::RuleId,
+    ir: &GrammarIR,
+) -> Option<bbnf_ir::RuleId> {
+    use bbnf_ir::IrNode;
+    fn is_punctuation_rule(rid: bbnf_ir::RuleId, ir: &GrammarIR) -> bool {
+        // A "punctuation" rule body is a single literal (colon ":" ?w,
+        // comma "," ?w). Unwrap OW + Map to reach the core node.
+        let rule = match ir.rules.iter().find(|r| r.id == rid) {
+            Some(r) => r,
+            None => return false,
+        };
+        fn unwrap<'a>(n: &'a IrNode) -> &'a IrNode {
+            match n {
+                IrNode::OptionalWhitespace(i) | IrNode::Map { inner: i, .. } => unwrap(i),
+                _ => n,
+            }
+        }
+        matches!(unwrap(&rule.body), IrNode::Literal(_))
+    }
+    fn walk(
+        node: &IrNode,
+        string_rid: bbnf_ir::RuleId,
+        ir: &GrammarIR,
+    ) -> Option<bbnf_ir::RuleId> {
+        match node {
+            IrNode::Ref(rid) => {
+                if *rid == string_rid {
+                    return None;
+                }
+                if is_punctuation_rule(*rid, ir) {
+                    return None;
+                }
+                Some(*rid)
+            }
+            IrNode::Seq(children) => {
+                for c in children {
+                    if let Some(v) = walk(c, string_rid, ir) {
+                        return Some(v);
+                    }
+                }
+                None
+            }
+            IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+                walk(lhs, string_rid, ir).or_else(|| walk(rhs, string_rid, ir))
+            }
+            IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+                walk(inner, string_rid, ir)
+            }
+            _ => None,
+        }
+    }
+    walk(node, string_rid, ir)
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -492,6 +580,17 @@ pub fn emit_parse_object_visitor(
     };
 
     let string_fn = resolve_visitor_pair_context(grammar_suffix, ir);
+
+    // AW-V.W5.2 — resolve value-position Ref for visitor path.
+    let (_, _, _, value_ref) = resolve_pair_context(grammar_suffix, ir);
+    let value_call = value_ref
+        .and_then(|rid| emit_ref_call_visitor(grammar_suffix, rid, ir))
+        .map(|call| quote! { (#call)?; })
+        .unwrap_or_else(|| {
+            quote! {
+                #dispatcher_ident(input, p, state, visitor)?;
+            }
+        });
 
     quote! {
         /// AW-V.W3-bench-fix — visitor-path Object-shape parse function.
@@ -544,7 +643,8 @@ pub fn emit_parse_object_visitor(
                 }
                 *p += 1;
                 let _ = #support_mod::skip_space(input, p, state);
-                #dispatcher_ident(input, p, state, visitor)?;
+                // AW-V.W5.2 — per-Ref direct call when classified.
+                #value_call
                 match #support_mod::skip_space(input, p, state) {
                     Some(b'}') => {
                         *p += 1;

@@ -46,7 +46,8 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::dispatcher::{
-    dispatcher_fn_ident, shape_fn_ident, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
+    dispatcher_fn_ident, emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident,
+    visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
 use super::root_rule_name;
 
@@ -88,6 +89,27 @@ pub fn emit_parse_pratt(
         }
         None => return quote! {},
     };
+
+    // AW-V.W5.2 — resolve the operand Ref from the Pratt body.
+    // Canonical body shape: `operand (op operand)*` — the first Ref in
+    // the body is the operand rule. Used for per-Ref direct calls.
+    let operand_ref = extract_first_ref(&rule.body);
+    let operand_call = operand_ref
+        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+        .map(|call| quote! { let _operand_off = (#call)?; })
+        .unwrap_or_else(|| {
+            quote! {
+                let _operand_off = #dispatcher_ident(input, p, state, builder)?;
+            }
+        });
+    let rhs_call = operand_ref
+        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+        .map(|call| quote! { let _rhs_off = (#call)?; })
+        .unwrap_or_else(|| {
+            quote! {
+                let _rhs_off = #dispatcher_ident(input, p, state, builder)?;
+            }
+        });
 
     quote! {
         /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
@@ -166,7 +188,8 @@ pub fn emit_parse_pratt(
             // (= index of the first child after the outer compound's
             // reserved slot — the operand's root record lands here).
             let mut this_operand_root: u32 = outer_child_mark_idx;
-            let _operand_off = #dispatcher_ident(input, p, state, builder)?;
+            // AW-V.W5.2 — per-Ref operand call.
+            #operand_call
             // The dispatcher returns the operand's root TapeOffset;
             // the walker's SY arm uses the child_mark directly (the
             // first-child position) rather than the dispatcher's
@@ -301,7 +324,8 @@ pub fn emit_parse_pratt(
 
                 // ── RHS operand ─────────────────────────────────────
                 let _ = #support_mod::skip_space(input, p, state);
-                let _rhs_off = #dispatcher_ident(input, p, state, builder)?;
+                // AW-V.W5.2 — per-Ref RHS call.
+                #rhs_call
                 // Re-point `this_operand_root` at the RHS root (first
                 // record the RHS emitted). The `push_leaf_with_arena_frame`
                 // above sits at this_operand_root + 1 when the operand
@@ -375,6 +399,18 @@ pub fn emit_parse_pratt_visitor(
         None => return quote! {},
     };
 
+    // AW-V.W5.2 — per-Ref operand calls for visitor path.
+    let operand_ref = extract_first_ref(&rule.body);
+    let operand_call = operand_ref
+        .and_then(|rid| emit_ref_call_visitor(grammar_suffix, rid, ir))
+        .map(|call| quote! { (#call)?; })
+        .unwrap_or_else(|| {
+            quote! {
+                #visitor_dispatcher_ident(input, p, state, visitor)?;
+            }
+        });
+    let rhs_call = operand_call.clone();
+
     quote! {
         /// AW-V.W4.1 — visitor-path Pratt-shape parse function.
         ///
@@ -426,8 +462,8 @@ pub fn emit_parse_pratt_visitor(
                 offset: *p as u32, rule: None,
             })?;
 
-            // Leftmost operand.
-            #visitor_dispatcher_ident(input, p, state, visitor)?;
+            // Leftmost operand — AW-V.W5.2 per-Ref direct call.
+            #operand_call
             visitor.operand_end().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
                 offset: *p as u32, rule: None,
             })?;
@@ -512,7 +548,8 @@ pub fn emit_parse_pratt_visitor(
                 });
 
                 let _ = #support_mod::skip_space(input, p, state);
-                #visitor_dispatcher_ident(input, p, state, visitor)?;
+                // AW-V.W5.2 — per-Ref RHS operand call.
+                #rhs_call
                 visitor.operand_end().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
                     offset: *p as u32, rule: None,
                 })?;
@@ -523,5 +560,26 @@ pub fn emit_parse_pratt_visitor(
             })?;
             Ok(())
         }
+    }
+}
+
+/// Extract the first value-position Ref from a Pratt rule body.
+///
+/// AW-V.W5.2 — canonical Pratt body is `operand (op operand)*` which
+/// lowers through Seq / Next / Repeat to place the operand Ref at
+/// the head of the body. Walks left-most to find the first Ref.
+fn extract_first_ref(node: &bbnf_ir::IrNode) -> Option<bbnf_ir::RuleId> {
+    use bbnf_ir::IrNode;
+    match node {
+        IrNode::Ref(rid) => Some(*rid),
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+            extract_first_ref(inner)
+        }
+        IrNode::Seq(children) => children.iter().find_map(extract_first_ref),
+        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+            extract_first_ref(lhs).or_else(|| extract_first_ref(rhs))
+        }
+        IrNode::Repeat { inner, .. } => extract_first_ref(inner),
+        _ => None,
     }
 }

@@ -53,7 +53,8 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::dispatcher::{
-    dispatcher_fn_ident, shape_fn_ident, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
+    dispatcher_fn_ident, emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident,
+    visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
 use super::root_rule_name;
 
@@ -229,9 +230,30 @@ fn emit_tape_position_core(
     dispatcher_ident: &proc_macro2::Ident,
     ir: &GrammarIR,
 ) -> TokenStream {
+    // AW-V.W5.2 — per-Ref routing. Extract grammar_suffix from the
+    // support_mod ident ("__shape_support_<grammar>").
+    let grammar_suffix = support_mod
+        .to_string()
+        .strip_prefix("__shape_support_")
+        .unwrap_or("")
+        .to_string();
     match node {
         IrNode::Literal(sid) => emit_literal_match(*sid, variant_idx, ir),
-        IrNode::Regex(_) | IrNode::Ref(_) | IrNode::Alt(_, _)
+        IrNode::Ref(rid) => {
+            // AW-V.W5.2 — direct per-Ref routing. Resolve the target's
+            // shape at codegen time and emit a direct call.
+            if let Some(call) = emit_ref_call_tape(&grammar_suffix, *rid, ir) {
+                quote! { let _ = (#call)?; }
+            } else {
+                // Unclassified target — fall back to the dispatcher (which
+                // will resolve to __value's Alt dispatch if Alt-rooted, or
+                // trip the admission gate otherwise).
+                quote! {
+                    let _ = #dispatcher_ident(input, p, state, builder)?;
+                }
+            }
+        }
+        IrNode::Alt(_, _) | IrNode::Regex(_)
         | IrNode::Negate(_) | IrNode::Minus(_, _)
         | IrNode::TokenDispatch { .. } => {
             // Delegate to the dispatcher's value-position routine —
@@ -581,6 +603,12 @@ fn emit_visitor_position_core(
     dispatcher_ident: &proc_macro2::Ident,
     ir: &GrammarIR,
 ) -> TokenStream {
+    // AW-V.W5.2 — per-Ref routing. Extract grammar_suffix from support_mod.
+    let grammar_suffix = support_mod
+        .to_string()
+        .strip_prefix("__shape_support_")
+        .unwrap_or("")
+        .to_string();
     match node {
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
@@ -598,7 +626,17 @@ fn emit_visitor_position_core(
                 *p = end;
             }
         }
-        IrNode::Regex(_) | IrNode::Ref(_) | IrNode::Alt(_, _)
+        IrNode::Ref(rid) => {
+            // AW-V.W5.2 — direct per-Ref routing for visitor path.
+            if let Some(call) = emit_ref_call_visitor(&grammar_suffix, *rid, ir) {
+                quote! { (#call)?; }
+            } else {
+                quote! {
+                    #dispatcher_ident(input, p, state, visitor)?;
+                }
+            }
+        }
+        IrNode::Regex(_) | IrNode::Alt(_, _)
         | IrNode::Negate(_) | IrNode::Minus(_, _)
         | IrNode::TokenDispatch { .. } => {
             quote! {

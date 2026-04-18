@@ -40,7 +40,8 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::dispatcher::{
-    dispatcher_fn_ident, shape_fn_ident, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
+    dispatcher_fn_ident, emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident,
+    visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
 use super::root_rule_name;
 
@@ -67,6 +68,18 @@ pub fn emit_parse_array(
         }
         None => return quote! {},
     };
+
+    // AW-V.W5.2 — resolve the value-position Ref from the array body
+    // (`"[" >> ((value << comma?)*)?w << "]"` → the `value` Ref).
+    let value_ref = extract_array_value_ref(&rule.body, ir);
+    let value_call = value_ref
+        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+        .map(|call| quote! { let _value_off = (#call)?; })
+        .unwrap_or_else(|| {
+            quote! {
+                let _value_off = #dispatcher_ident(input, p, state, builder)?;
+            }
+        });
 
     quote! {
         /// AW-V.W3.2 — per-grammar Array-shape parse function,
@@ -211,10 +224,8 @@ pub fn emit_parse_array(
                 let iter_open = *p as u32;
                 let iter_child = builder.mark_children();
 
-                // Value position — recurse through the shape dispatcher.
-                // The dispatcher does its own leading `skip_space`, so no
-                // pre-skip is needed here.
-                let _value_off = #dispatcher_ident(input, p, state, builder)?;
+                // AW-V.W5.2 — per-Ref direct call when classified.
+                #value_call
 
                 // comma_repeat Rule — span_lo captured AT `*p` immediately
                 // after the value parse, BEFORE any leading ws the
@@ -381,6 +392,83 @@ pub fn emit_parse_array(
     }
 }
 
+/// Extract the value-position Ref target from an array rule body.
+///
+/// AW-V.W5.2 — the canonical JSON array body is
+/// `"[" >> ((value << comma?)*)?w << "]"`, which lowers to
+/// `Skip(Next("[", OW(Repeat(Skip(value, Repeat(comma, 0..=1))))), "]")`.
+/// The value Ref sits inside the outer Repeat. The list-rule entry
+/// variant (CSS `stylesheet = ruleList ?w`, BBNF `grammar = (item ?w)*`)
+/// has a simpler shape: `Repeat(ref_or_alt, lo, hi)` with OW wrappers.
+///
+/// Strategy: walk the body, find the outer `Repeat`, then find the
+/// first value-position Ref inside the iteration body.
+fn extract_array_value_ref(
+    node: &bbnf_ir::IrNode,
+    ir: &GrammarIR,
+) -> Option<bbnf_ir::RuleId> {
+    use bbnf_ir::IrNode;
+    fn find_repeat_inner<'a>(n: &'a IrNode) -> Option<&'a IrNode> {
+        match n {
+            IrNode::Repeat { inner, .. } => Some(inner),
+            IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+                find_repeat_inner(inner)
+            }
+            IrNode::Seq(children) => children.iter().find_map(find_repeat_inner),
+            IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+                find_repeat_inner(lhs).or_else(|| find_repeat_inner(rhs))
+            }
+            _ => None,
+        }
+    }
+    fn first_value_ref(n: &IrNode, ir: &GrammarIR) -> Option<bbnf_ir::RuleId> {
+        // Punctuation-rule predicate: a rule whose body is a single literal.
+        fn is_punct(rid: bbnf_ir::RuleId, ir: &GrammarIR) -> bool {
+            let rule = match ir.rules.iter().find(|r| r.id == rid) {
+                Some(r) => r,
+                None => return false,
+            };
+            fn unwrap<'a>(n: &'a IrNode) -> &'a IrNode {
+                match n {
+                    IrNode::OptionalWhitespace(i) | IrNode::Map { inner: i, .. } => {
+                        unwrap(i)
+                    }
+                    _ => n,
+                }
+            }
+            matches!(unwrap(&rule.body), IrNode::Literal(_))
+        }
+        match n {
+            IrNode::Ref(rid) => {
+                if is_punct(*rid, ir) {
+                    None
+                } else {
+                    Some(*rid)
+                }
+            }
+            IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+                first_value_ref(inner, ir)
+            }
+            IrNode::Seq(children) => children.iter().find_map(|c| first_value_ref(c, ir)),
+            IrNode::Skip(lhs, _) => first_value_ref(lhs, ir),
+            IrNode::Next(lhs, rhs) => {
+                first_value_ref(lhs, ir).or_else(|| first_value_ref(rhs, ir))
+            }
+            IrNode::Alt(branches, _) => {
+                // For Alt-of-Refs at the value position (uncommon but
+                // legal), route through the dispatcher — return None.
+                // A single-Ref Alt could be unwrapped, but that's not the
+                // canonical shape.
+                let _ = branches;
+                None
+            }
+            _ => None,
+        }
+    }
+    let repeat_inner = find_repeat_inner(node)?;
+    first_value_ref(repeat_inner, ir)
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // AW-V.W3-bench-fix — visitor-path Array emitter.
 //
@@ -408,6 +496,17 @@ pub fn emit_parse_array_visitor(
         }
         None => return quote! {},
     };
+
+    // AW-V.W5.2 — resolve value-position Ref for visitor path.
+    let value_ref = extract_array_value_ref(&rule.body, ir);
+    let value_call = value_ref
+        .and_then(|rid| emit_ref_call_visitor(grammar_suffix, rid, ir))
+        .map(|call| quote! { (#call)?; })
+        .unwrap_or_else(|| {
+            quote! {
+                #dispatcher_ident(input, p, state, visitor)?;
+            }
+        });
 
     quote! {
         /// AW-V.W3-bench-fix — visitor-path Array-shape parse function.
@@ -453,8 +552,8 @@ pub fn emit_parse_array_visitor(
                 });
             }
             loop {
-                // Value position — recurse through the visitor dispatcher.
-                #dispatcher_ident(input, p, state, visitor)?;
+                // AW-V.W5.2 — per-Ref direct call when classified.
+                #value_call
                 match #support_mod::skip_space(input, p, state) {
                     Some(b']') => {
                         *p += 1;

@@ -42,7 +42,8 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::dispatcher::{
-    dispatcher_fn_ident, shape_fn_ident, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
+    dispatcher_fn_ident, emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident,
+    visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
 use super::root_rule_name;
 
@@ -60,6 +61,10 @@ struct UnorderedBody {
     /// Per-Alt-branch FIRST byte sets. Every set is non-empty and
     /// pairwise-disjoint — the detector's admission invariant.
     first_sets: Vec<CharSet128>,
+    /// Per-Alt-branch target Ref (when the branch is a Ref node).
+    /// `None` for non-Ref branches (e.g. inline Literal / Regex /
+    /// Seq). Used by AW-V.W5.2 per-Ref routing to emit direct calls.
+    branch_refs: Vec<Option<RuleId>>,
     /// Minimum iteration count from the Repeat's `lo` field (≥ 1 per
     /// the detector admission).
     iters_lo: u32,
@@ -82,6 +87,7 @@ fn introspect_unordered(rule: &IrRule, ir: &GrammarIR) -> Option<UnorderedBody> 
         return None;
     };
     let mut first_sets = Vec::with_capacity(branches.len());
+    let mut branch_refs: Vec<Option<RuleId>> = Vec::with_capacity(branches.len());
     let mut visited: HashSet<RuleId> = HashSet::new();
     for branch in branches {
         let fs = node_first(&branch.node, ir, &mut visited)?;
@@ -89,8 +95,18 @@ fn introspect_unordered(rule: &IrRule, ir: &GrammarIR) -> Option<UnorderedBody> 
             return None;
         }
         first_sets.push(fs);
+        // AW-V.W5.2 — capture the branch's target Ref if present.
+        let branch_ref = match unwrap_map_ow(&branch.node) {
+            IrNode::Ref(rid) => Some(*rid),
+            _ => None,
+        };
+        branch_refs.push(branch_ref);
     }
-    Some(UnorderedBody { first_sets, iters_lo: lo })
+    Some(UnorderedBody {
+        first_sets,
+        branch_refs,
+        iters_lo: lo,
+    })
 }
 
 /// Mirror of [`bbnf_ir::passes::inspect::unwrap_map_ow`] — strips
@@ -255,18 +271,29 @@ pub fn emit_parse_unordered(
         return emit_parse_unordered_fallback(grammar_suffix, rule, ir);
     };
 
-    // Build per-branch byte-match arms. A match hit routes into the
-    // per-grammar value-position dispatcher — same call site the W3
-    // Array / Object shape emitters use for nested dispatch. The
-    // dispatcher byte-dispatches on the same input byte and routes
-    // to the target rule's shape fn; the chosen target emits its own
-    // compound tree as walker-parity.
+    // Build per-branch byte-match arms. AW-V.W5.2 — when the branch is
+    // a Ref to a classified target, emit a direct call to that
+    // target's shape fn; otherwise fall back to the grammar's
+    // value-position dispatcher. This produces tight monomorphic
+    // dispatch without per-byte cross-crate boundaries for the hot
+    // path while preserving walker-parity fallback when a branch's
+    // target is unclassified.
     let mut branch_arms = Vec::with_capacity(body_info.first_sets.len());
-    for first_set in &body_info.first_sets {
+    for (first_set, branch_ref) in body_info
+        .first_sets
+        .iter()
+        .zip(body_info.branch_refs.iter())
+    {
         let pattern = emit_byte_match_arm(first_set);
+        let call = branch_ref
+            .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+            .map(|call| quote! { let _ = (#call)?; })
+            .unwrap_or_else(|| {
+                quote! { let _ = #dispatcher_ident(input, p, state, builder)?; }
+            });
         branch_arms.push(quote! {
             #pattern => {
-                let _ = #dispatcher_ident(input, p, state, builder)?;
+                #call
                 iters += 1;
             }
         });
@@ -426,11 +453,21 @@ pub fn emit_parse_unordered_visitor(
     };
 
     let mut branch_arms = Vec::with_capacity(body_info.first_sets.len());
-    for first_set in &body_info.first_sets {
+    for (first_set, branch_ref) in body_info
+        .first_sets
+        .iter()
+        .zip(body_info.branch_refs.iter())
+    {
         let pattern = emit_byte_match_arm(first_set);
+        let call = branch_ref
+            .and_then(|rid| emit_ref_call_visitor(grammar_suffix, rid, ir))
+            .map(|call| quote! { (#call)?; })
+            .unwrap_or_else(|| {
+                quote! { #dispatcher_ident(input, p, state, visitor)?; }
+            });
         branch_arms.push(quote! {
             #pattern => {
-                #dispatcher_ident(input, p, state, visitor)?;
+                #call
                 iters += 1;
             }
         });

@@ -285,33 +285,80 @@ pub fn has_full_shape_coverage(ir: &GrammarIR) -> bool {
 /// Returns `true` when `parse()` should route through the shape
 /// dispatcher as its top-level entrypoint.
 ///
-/// Today this is strictly narrower than [`has_full_shape_coverage`] —
-/// only the Alt-of-Refs entry pattern (JSON's `value`) admits shape-
-/// dispatched `parse()`. Grammars that satisfy
-/// [`has_full_shape_coverage`] via the classified-entry criterion
-/// (CSS L4 / Sheets / BBNF with non-Alt roots) emit per-shape fn
-/// substrate but continue to route `parse()` through the walker —
-/// the `__value` dispatcher's per-Ref routing table hasn't landed
-/// yet, so calling shape fns whose internal Ref recursion reaches
-/// `__value` would cycle back into the root shape fn for non-Alt
-/// roots.
+/// # AW-V.W5.2 — per-Ref routing
 ///
-/// The split preserves the substrate-with-consumer invariant at the
-/// emitter level (shape fns compile, link, and are reachable from the
-/// per-grammar `generated.rs`) while deferring top-level hot-path
-/// activation to the follow-on wave that lands the per-Ref dispatcher.
+/// With the per-Ref routing refactor (W5.2), admission extends beyond
+/// Alt-of-Refs entries. A grammar is admissible when:
+///
+/// 1. **Entry is classified.** The entry rule itself has a shape tag
+///    (W3 or W4 — not `None`). This means the entry's per-shape fn is
+///    emitted by [`emit_shapes_for_grammar`].
+///
+/// 2. **Every value-position Ref transitively reachable from the
+///    entry's classified shape fns resolves to a classified rule.**
+///    Per-Ref routing emits direct calls to each Ref target's shape
+///    fn; if any Ref target is unclassified, the emitter has no shape
+///    fn to call, so the grammar must fall back to the walker.
+///
+/// JSON's Alt-of-Refs entry is a special case of the general rule —
+/// the entry rule itself doesn't need a shape tag (it's transparent
+/// and emits NO compound); the Alt branches must all be classified.
+/// The dispatcher emits a byte-dispatch over the Alt branches (see
+/// [`dispatcher::emit_alt_dispatch_body`]).
+///
+/// Non-Alt roots (CSS `stylesheet`, Sheets `formula`, BBNF `grammar`)
+/// emit a direct delegation from the dispatcher to the root's shape
+/// fn — the root's per-shape body then recurses via per-Ref routing
+/// (emitted inline via [`dispatcher::emit_ref_call_tape`]).
 pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
     let Some(entry_rule) = ir.rules.iter().find(|r| r.id == ir.entry) else {
         return false;
     };
     use bbnf_ir::IrNode;
+
+    // Criterion 1 — Alt-of-Refs entry (JSON). Every branch must
+    // resolve to a classified rule.
     if let IrNode::Alt(branches, _) = &entry_rule.body {
         return branches.iter().all(|b| match &b.node {
             IrNode::Ref(rid) => ir.shape_assignments.get(*rid).is_classified(),
             _ => false,
         });
     }
-    false
+
+    // Criterion 2 — classified entry with per-Ref-routable body.
+    // Entry is classified AND every value-position Ref transitively
+    // reachable from any classified rule's body resolves to a
+    // classified rule (so emit_ref_call_tape returns Some at every
+    // recursion site).
+    let entry_tag = ir.shape_assignments.get(entry_rule.id);
+    if !entry_tag.is_classified() {
+        return false;
+    }
+    // Verify every value-position Ref in every classified rule's body
+    // resolves to a classified target. Walk the full body of each
+    // classified rule to collect all Refs; any Ref to an unclassified
+    // target means a per-Ref-routed call site would have no shape fn
+    // to invoke. The per-shape emitters filter Refs at shape-specific
+    // points (e.g. `string_fn` for Object's key, `value_ref` for
+    // Object's value), so the admission check must be conservative:
+    // EVERY Ref in every classified body must resolve to a classified
+    // rule.
+    for rule in &ir.rules {
+        if rule.meta.is_transparent {
+            continue;
+        }
+        let tag = ir.shape_assignments.get(rule.id);
+        if !tag.is_classified() {
+            continue;
+        }
+        let refs = dispatcher::collect_value_refs(&rule.body);
+        for target_rid in refs {
+            if !ir.shape_assignments.get(target_rid).is_classified() {
+                return false;
+            }
+        }
+    }
+    true
 }
 
 /// Resolve the grammar's root rule per [`GrammarIR::entry`]. Returns

@@ -39,75 +39,57 @@ pub fn emit_parse_scalar(
     let variant_idx = (rule.id & 0xFF) as u8;
 
     let body = unwrap_trivia(&rule.body);
-    match body {
-        IrNode::Literal(sid) => {
-            let bytes = ir.get_string(*sid).as_bytes();
-            let len = bytes.len();
-            let byte_lits: Vec<TokenStream> = bytes
-                .iter()
-                .map(|b| {
-                    let lit = *b;
-                    quote! { #lit }
-                })
-                .collect();
-            let support_mod = quote::format_ident!("__shape_support_{}", grammar_suffix);
-            quote! {
-                /// AW-V.W3.2 — per-grammar Scalar-shape parse function.
-                #[inline(always)]
-                #[allow(non_snake_case, clippy::too_many_arguments)]
-                pub fn #fn_ident(
-                    input: &[u8],
-                    p: &mut usize,
-                    _state: &mut #support_mod::ScanState,
-                    builder: &mut ::bbnf::runtime::tape::TapeBuilder,
-                ) -> ::core::result::Result<
-                    ::bbnf::runtime::tape::TapeOffset,
-                    ::bbnf::runtime::tape::DtaError,
-                > {
-                    let at = *p;
-                    let end = at + #len;
-                    if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                            offset: at as u32,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    }
-                    *p = end;
-                    let off = builder.push_leaf(
-                        ::bbnf::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        #variant_idx,
-                        0,
-                    );
-                    Ok(off)
-                }
+    let IrNode::Literal(sid) = body else {
+        unreachable!(
+            "Scalar-shape emitter invoked on non-Literal body for rule {}; the \
+             Scalar detector at \
+             crates/ir/src/passes/recognizers/shape_dispatch/scalar.rs admits \
+             Literal-only — Regex/Ref bodies belong to W4 HRegex/Wrap shapes \
+             and stay ShapeTag::None in W3.",
+            rule_name,
+        );
+    };
+    let bytes = ir.get_string(*sid).as_bytes();
+    let len = bytes.len();
+    let byte_lits: Vec<TokenStream> = bytes
+        .iter()
+        .map(|b| {
+            let lit = *b;
+            quote! { #lit }
+        })
+        .collect();
+    let support_mod = quote::format_ident!("__shape_support_{}", grammar_suffix);
+    quote! {
+        /// AW-V.W3.2 — per-grammar Scalar-shape parse function.
+        #[inline(always)]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        pub fn #fn_ident(
+            input: &[u8],
+            p: &mut usize,
+            _state: &mut #support_mod::ScanState,
+            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        ) -> ::core::result::Result<
+            ::bbnf::runtime::tape::TapeOffset,
+            ::bbnf::runtime::tape::DtaError,
+        > {
+            let at = *p;
+            let end = at + #len;
+            if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-        }
-        _ => {
-            // Non-literal Scalar — rare; emit an empty stub so the
-            // emitter's fn reference compiles, but route through the
-            // walker fallback at the call site. W4 may extend this
-            // with Regex / Ref lowering per detector extension.
-            let support_mod = quote::format_ident!("__shape_support_{}", grammar_suffix);
-            quote! {
-                #[inline(always)]
-                #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-                pub fn #fn_ident(
-                    input: &[u8],
-                    p: &mut usize,
-                    _state: &mut #support_mod::ScanState,
-                    _builder: &mut ::bbnf::runtime::tape::TapeBuilder,
-                ) -> ::core::result::Result<
-                    ::bbnf::runtime::tape::TapeOffset,
-                    ::bbnf::runtime::tape::DtaError,
-                > {
-                    Err(::bbnf::runtime::tape::DtaError::InvalidState {
-                        state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    })
-                }
-            }
+            *p = end;
+            let off = builder.push_leaf(
+                ::bbnf::runtime::tape::TapeKind::Literal,
+                at as u32,
+                end as u32,
+                #variant_idx,
+                0,
+            );
+            Ok(off)
         }
     }
 }

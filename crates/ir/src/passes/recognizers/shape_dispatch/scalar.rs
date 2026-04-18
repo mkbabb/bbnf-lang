@@ -1,48 +1,38 @@
-//! Scalar-shape detector — single typed leaf not admitted by the
-//! primary shape detectors.
+//! Scalar-shape detector — single typed Literal leaf not admitted by
+//! the primary shape detectors.
 //!
 //! # Predicate
 //!
-//! A rule is Scalar-shaped when its body is a single typed leaf —
-//! e.g. a single literal or regex wrapped in a `Map` producing a
-//! primitive scalar (`u8`, `i64`, `bool`, `f64`-not-covered-by-
-//! Number, etc.) — and it was NOT admitted by the more specific
-//! Object / Array / String / Number / Keyword detectors.
+//! A rule is Scalar-shaped when its body is a single [`IrNode::Literal`]
+//! after stripping trivial wrappers — typically a single-byte
+//! structural separator the surrounding shape consumes inline (JSON's
+//! `comma = "," ?w` / `colon = ":" ?w`).
 //!
-//! Canonical sources:
-//!
-//! - Single-char structural rules like JSON's `comma = "," ?w`
-//!   (though these are typically caught by Keyword first).
-//! - Typed regex leaves not matching QuotedString / Numeric:
-//!   `Sheets boolean = "TRUE" -> true | "FALSE" -> false` — but
-//!   that's Alt-of-Literal, Keyword-shaped.
-//! - Rule bodies that reduce to a single non-Alt leaf after
-//!   stripping trivial wrappers.
+//! Regex bodies that fail Number- and String-detectors and Ref bodies
+//! to other rules are HRegex- / Wrap-shaped (W4 detectors); they stay
+//! [`super::ShapeTag::None`] in W3 and route through the walker.
+//! Admitting them here would route through the [`super::scalar`]
+//! emitter's Literal-only path, which has no Regex / Ref lowering.
 //!
 //! # Projection
 //!
-//! The detector is structural — it inspects the rule body's IR shape
-//! directly. No miner output is consulted because Scalar is the
-//! catch-all for single-leaf rules the primary detectors don't
-//! admit.
+//! Pure structural inspection of the rule body — no miner output.
 
 use crate::passes::inspect::unwrap_map_ow;
 use crate::types::{GrammarIR, IrNode, RuleId};
 
-/// Detect Scalar-shape: a single-leaf body (Literal / Regex / Ref)
-/// after stripping trivial wrappers.
+/// Detect Scalar-shape: a single [`IrNode::Literal`] leaf after
+/// stripping trivial wrappers.
 ///
 /// # Precedence
 ///
 /// This detector runs AFTER the primary detectors (Object / Array /
 /// String / Number / Keyword) per the dispatch order in
-/// [`super::classify_rule`]; its job is to catch the residual single-
-/// leaf rules those did not admit.
+/// [`super::classify_rule`]; its job is to catch single-Literal rules
+/// the Keyword detector did not admit (e.g. structural separators
+/// without an Alt branch context).
 pub fn detect_scalar(rule_id: RuleId, ir: &GrammarIR) -> bool {
     let rule = &ir.rules[rule_id as usize];
     let body = unwrap_map_ow(&rule.body);
-    matches!(
-        body,
-        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Ref(_)
-    )
+    matches!(body, IrNode::Literal(_))
 }

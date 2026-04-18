@@ -267,7 +267,10 @@ name = "bbnf-simd-scan"
 version = "0.1.0"
 dependencies = [
  "bbnf-tape",
+ "proc-macro2",
  "proptest",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]

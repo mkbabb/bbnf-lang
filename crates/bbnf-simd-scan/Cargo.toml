@@ -9,6 +9,9 @@ crate-type = ["lib"]
 
 [dependencies]
 bbnf-tape = { path = "../bbnf-tape", default-features = false }
+proc-macro2 = "1"
+syn = { version = "2", features = ["full", "parsing"] }
+quote = "1"
 
 [dev-dependencies]
 proptest = "1"

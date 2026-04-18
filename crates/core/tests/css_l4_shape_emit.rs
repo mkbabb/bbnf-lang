@@ -607,6 +607,11 @@ fn css_l4_unclassified_rules_enumerated() {
     unclassified.sort();
     let total = ir.rules.iter().filter(|r| !r.meta.is_transparent).count();
     let count = unclassified.len();
+    // Emit the list under `--nocapture` so tranche audits can read
+    // the set without re-running the classifier.
+    println!(
+        "CSS L4 unclassified rules ({count}/{total}): {unclassified:?}"
+    );
     // W4.1 post-close: 57 unclassified (187 non-transparent - 130
     // classified). The cap is the current figure; when detectors
     // improve this should drop — the test surfaces the drop as a

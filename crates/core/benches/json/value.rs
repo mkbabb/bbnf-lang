@@ -16,12 +16,25 @@
 //! AU.6.6: the small-variant benches are named `*_data_s` so
 //! `bencher`'s substring filter doesn't conflate `data` with
 //! `data_xl` in per-entry profile attribution.
+//!
+//! AW-V.W3-bench-fix: the shape-emitter `parse()` path builds a tape
+//! + walks it — the tape construction's structural + PSI bookkeeping
+//! adds ~2× overhead vs the prototype's visitor-direct path. This
+//! bench adds the visitor lane (`bbnf_visitor_*`) that exercises
+//! `JsonParser::parse_with_visitor::<V>` — bypasses the tape entirely,
+//! materialising into a packed `ValueVisitor` that mirrors the
+//! prototype's `bbnf_json_prototype::ValueVisitor` shape. Gate: within
+//! ±5% of prototype's `proto_value_*` on every entry.
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bbnf::runtime::tape::{Tape, TapeCursor, TapeKind, TapeOffset};
+use bbnf::runtime::tape::{
+    ArrayVisitor, GrammarVisitor, KeywordVisitor, NumberVisitor, ObjectVisitor, StringVisitor,
+    Tape, TapeCursor, TapeKind, TapeOffset,
+};
 use bbnf_derive::Parser;
+use bbnf_json_prototype::{self as proto, parse_json};
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 #[path = "../common/timeout.rs"]
@@ -167,6 +180,254 @@ bench_sonic!(sonic_citm, "citm_catalog.json");
 bench_sonic!(sonic_canada, "canada.json");
 bench_sonic!(sonic_data_xl, "data_xl.json");
 
+// ── BBNF visitor-path (AW-V.W3-bench-fix) ──────────────────────────────────
+//
+// The shape-emitter-produced `JsonParser::parse_with_visitor::<V>`
+// entry bypasses the tape entirely; visitor method calls materialise
+// directly into a packed `ValueVisitor` whose layout mirrors
+// `bbnf_json_prototype::ValueVisitor`. Gate: within ±5% of the
+// prototype's `proto_value_*` on every entry.
+
+/// Local packed `ValueVisitor` mirroring
+/// `bbnf_json_prototype::ValueVisitor`'s shape while implementing the
+/// `bbnf_tape` per-shape visitor trait hierarchy. Borrow-path strings
+/// reference the input directly when pointer identity resolves inside
+/// the registered window; escape-decoded strings copy into the
+/// document arena. Compound slot pre-reservation + in-place
+/// back-patch matches sonic-rs's `DocumentVisitor`.
+struct ValueVisitor {
+    doc: proto::Document,
+    input_lo: usize,
+    input_hi: usize,
+    compounds: Vec<CompoundMark>,
+}
+
+#[derive(Copy, Clone)]
+struct CompoundMark {
+    kind: CompoundKind,
+    slot_idx: u32,
+}
+
+#[derive(Copy, Clone)]
+enum CompoundKind {
+    Array,
+    Object,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct ValueVisitorError;
+
+impl ValueVisitor {
+    #[inline]
+    fn with_input(input: &[u8]) -> Self {
+        let input_lo = input.as_ptr() as usize;
+        let input_hi = input_lo + input.len();
+        Self {
+            doc: proto::Document::with_input_len(input.len()),
+            input_lo,
+            input_hi,
+            compounds: Vec::new(),
+        }
+    }
+
+    #[inline]
+    fn finish(self) -> proto::Document {
+        self.doc
+    }
+
+    #[inline(always)]
+    fn intern_str(&mut self, bytes: &[u8]) -> proto::StringSpan {
+        let ptr = bytes.as_ptr() as usize;
+        if ptr >= self.input_lo && ptr + bytes.len() <= self.input_hi {
+            proto::StringSpan::borrowed(bytes.as_ptr(), bytes.len())
+        } else {
+            let offset = self.doc.arena.len() as u32;
+            self.doc.arena.extend_from_slice(bytes);
+            proto::StringSpan::arena(offset, bytes.len())
+        }
+    }
+
+    #[inline(always)]
+    fn emit(&mut self, v: proto::Value) {
+        if self.compounds.is_empty() {
+            self.doc.root = Some(v);
+        } else {
+            self.doc.nodes.push(v);
+        }
+    }
+}
+
+impl GrammarVisitor for ValueVisitor {
+    type Error = ValueVisitorError;
+}
+
+impl ObjectVisitor for ValueVisitor {
+    #[inline(always)]
+    fn begin_object(&mut self) -> Result<(), Self::Error> {
+        let slot_idx = self.doc.nodes.len() as u32;
+        self.doc.nodes.push(proto::Value::Null);
+        self.compounds.push(CompoundMark {
+            kind: CompoundKind::Object,
+            slot_idx,
+        });
+        Ok(())
+    }
+
+    #[inline(always)]
+    fn key(&mut self, bytes: &[u8]) -> Result<(), Self::Error> {
+        let span = self.intern_str(bytes);
+        self.doc.nodes.push(proto::Value::String(span));
+        Ok(())
+    }
+
+    #[inline(always)]
+    fn end_object(&mut self) -> Result<(), Self::Error> {
+        let frame = self.compounds.pop().ok_or(ValueVisitorError)?;
+        debug_assert!(matches!(frame.kind, CompoundKind::Object));
+        let slot_idx = frame.slot_idx as usize;
+        let child_start = slot_idx + 1;
+        let subtree_len = self.doc.nodes.len() - child_start;
+        let value = proto::Value::Object(proto::NodeSpan {
+            start: child_start as u32,
+            subtree_len: subtree_len as u32,
+            entries: 0,
+        });
+        self.doc.nodes[slot_idx] = value;
+        if self.compounds.is_empty() {
+            self.doc.root = Some(value);
+        }
+        Ok(())
+    }
+}
+
+impl ArrayVisitor for ValueVisitor {
+    #[inline(always)]
+    fn begin_array(&mut self) -> Result<(), Self::Error> {
+        let slot_idx = self.doc.nodes.len() as u32;
+        self.doc.nodes.push(proto::Value::Null);
+        self.compounds.push(CompoundMark {
+            kind: CompoundKind::Array,
+            slot_idx,
+        });
+        Ok(())
+    }
+
+    #[inline(always)]
+    fn end_array(&mut self) -> Result<(), Self::Error> {
+        let frame = self.compounds.pop().ok_or(ValueVisitorError)?;
+        debug_assert!(matches!(frame.kind, CompoundKind::Array));
+        let slot_idx = frame.slot_idx as usize;
+        let child_start = slot_idx + 1;
+        let subtree_len = self.doc.nodes.len() - child_start;
+        let value = proto::Value::Array(proto::NodeSpan {
+            start: child_start as u32,
+            subtree_len: subtree_len as u32,
+            entries: 0,
+        });
+        self.doc.nodes[slot_idx] = value;
+        if self.compounds.is_empty() {
+            self.doc.root = Some(value);
+        }
+        Ok(())
+    }
+}
+
+impl StringVisitor for ValueVisitor {
+    #[inline(always)]
+    fn string(&mut self, bytes: &[u8]) -> Result<(), Self::Error> {
+        let span = self.intern_str(bytes);
+        self.emit(proto::Value::String(span));
+        Ok(())
+    }
+}
+
+impl NumberVisitor for ValueVisitor {
+    #[inline(always)]
+    fn number_f64(&mut self, value: f64) -> Result<(), Self::Error> {
+        self.emit(proto::Value::Number(proto::Number(value)));
+        Ok(())
+    }
+}
+
+impl KeywordVisitor for ValueVisitor {
+    #[inline(always)]
+    fn bool(&mut self, value: bool) -> Result<(), Self::Error> {
+        self.emit(proto::Value::Bool(value));
+        Ok(())
+    }
+
+    #[inline(always)]
+    fn null(&mut self) -> Result<(), Self::Error> {
+        self.emit(proto::Value::Null);
+        Ok(())
+    }
+}
+
+macro_rules! bench_bbnf_visitor {
+    ($name:ident, $file:expr) => {
+        fn $name(b: &mut Bencher) {
+            let input = load($file);
+            b.bytes = input.len() as u64;
+            {
+                let mut visitor = ValueVisitor::with_input(input.as_bytes());
+                JsonParser::parse_with_visitor(&input, &mut visitor)
+                    .unwrap_or_else(|e| {
+                        panic!(concat!($file, ": parse_with_visitor failed: {:?}"), e)
+                    });
+                black_box(visitor.finish());
+            }
+            bench_with_timeout(b, limits::JSON_PARSE, || {
+                let mut visitor =
+                    ValueVisitor::with_input(black_box(input.as_bytes()));
+                JsonParser::parse_with_visitor(black_box(&input), &mut visitor)
+                    .unwrap();
+                let doc: proto::Document = visitor.finish();
+                black_box(doc);
+            });
+        }
+    };
+}
+
+bench_bbnf_visitor!(bbnf_visitor_data_s, "data.json");
+bench_bbnf_visitor!(bbnf_visitor_twitter, "twitter.json");
+bench_bbnf_visitor!(bbnf_visitor_citm, "citm_catalog.json");
+bench_bbnf_visitor!(bbnf_visitor_canada, "canada.json");
+bench_bbnf_visitor!(bbnf_visitor_data_xl, "data_xl.json");
+
+// ── Prototype lane (reference) ──────────────────────────────────────────────
+//
+// Runs the prototype's `parse_json::<ValueVisitor>` in the same
+// binary so the orchestrator can compute per-entry ratios vs
+// `bbnf_visitor_*` from one `cargo bench` invocation.
+
+macro_rules! bench_proto_value {
+    ($name:ident, $file:expr) => {
+        fn $name(b: &mut Bencher) {
+            let input = load($file);
+            b.bytes = input.len() as u64;
+            {
+                let mut visitor = proto::ValueVisitor::with_input(input.as_bytes());
+                parse_json(input.as_bytes(), &mut visitor)
+                    .unwrap_or_else(|e| panic!(concat!($file, ": proto parse failed: {:?}"), e));
+                black_box(visitor.finish());
+            }
+            b.iter(|| {
+                let mut visitor =
+                    proto::ValueVisitor::with_input(black_box(input.as_bytes()));
+                parse_json(black_box(input.as_bytes()), &mut visitor).unwrap();
+                let doc: proto::Document = visitor.finish();
+                black_box(doc);
+            });
+        }
+    };
+}
+
+bench_proto_value!(proto_value_data_s, "data.json");
+bench_proto_value!(proto_value_twitter, "twitter.json");
+bench_proto_value!(proto_value_citm, "citm_catalog.json");
+bench_proto_value!(proto_value_canada, "canada.json");
+bench_proto_value!(proto_value_data_xl, "data_xl.json");
+
 // ── Groups ──────────────────────────────────────────────────────────────────
 
 benchmark_group!(
@@ -185,5 +446,21 @@ benchmark_group!(
     sonic_canada,
     sonic_data_xl,
 );
+benchmark_group!(
+    bench_bbnf_visitor,
+    bbnf_visitor_data_s,
+    bbnf_visitor_twitter,
+    bbnf_visitor_citm,
+    bbnf_visitor_canada,
+    bbnf_visitor_data_xl,
+);
+benchmark_group!(
+    bench_proto_value,
+    proto_value_data_s,
+    proto_value_twitter,
+    proto_value_citm,
+    proto_value_canada,
+    proto_value_data_xl,
+);
 
-benchmark_main!(bench_bbnf, bench_sonic);
+benchmark_main!(bench_bbnf, bench_sonic, bench_bbnf_visitor, bench_proto_value);

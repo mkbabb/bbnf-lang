@@ -3200,3 +3200,92 @@ W5 closes green on the substrate side: BBNF profile drop fixed with full wire-co
 
 Carry-forward to W6 / honest assessment:
 - Parse-bench throughput for CSS/Sheets/BBNF through the shape dispatcher hasn't been measured post-W5.2. W6 runs the 19-entry matrix and records actual numbers; whether the activation translates to the AW-V.md projected MB/s remains to be seen.
+
+## 2026-04-18 — AW-V W6 close (FINAL-V + post-AW-V.json); AW-V arc closed honestly
+
+W6 runs the 17-entry parse-bench matrix sequentially, verifies the AW-IV.W5.2 parity harnesses still pass, and composes the tranche-close artefacts. The architectural substrate across W1–W5 held; the throughput gate (every parse entry exceeds post-AU) **missed at 0/17** — the honest assessment records substrate correctness + activation-gap diagnosis rather than reshaping the narrative.
+
+### Bench matrix (cold per-parse, single-thread NEON, mimalloc)
+
+Five bench suites run sequentially with `.bbnf-cache` cleared between each. 17 parse entries:
+
+| Entry                   | post-AU | post-AW-IV | post-AW-V | v/AU   | v/IV   | exceeds AU |
+|-------------------------|--------:|-----------:|----------:|-------:|-------:|:----------:|
+| json twitter            |    1967 |        288 |       486 | 0.247× | 1.688× | ✗          |
+| json citm               |    2438 |        297 |       490 | 0.201× | 1.650× | ✗          |
+| json canada             |    1231 |        141 |       227 | 0.184× | 1.610× | ✗          |
+| json data_xl            |    1179 |        203 |       343 | 0.291× | 1.690× | ✗          |
+| json data_s             |    1746 |        280 |       484 | 0.277× | 1.729× | ✗          |
+| css normalize           |     735 |         25 |        24 | 0.033× | 0.960× | ✗          |
+| css bootstrap           |     454 |         15 |        14 | 0.031× | 0.933× | ✗          |
+| css tailwind            |     496 |         37 |        36 | 0.073× | 0.973× | ✗          |
+| sheets parse_simple     |      95 |          6 |         6 | 0.063× | 1.000× | ✗          |
+| sheets parse_nested     |     128 |          7 |         7 | 0.055× | 1.000× | ✗          |
+| sheets parse_stress     |     121 |          6 |         6 | 0.050× | 1.000× | ✗          |
+| bbnf json               |     283 |         15 |        16 | 0.057× | 1.067× | ✗          |
+| bbnf ebnf               |     223 |         10 |        11 | 0.049× | 1.100× | ✗          |
+| bbnf css_pretty         |     647 |         33 |        35 | 0.054× | 1.061× | ✗          |
+| bbnf google_sheets      |     858 |         49 |        52 | 0.061× | 1.061× | ✗          |
+| bbnf bbnf_self          |     394 |         20 |        22 | 0.056× | 1.100× | ✗          |
+| bbnf css_l4_grammar     |     496 |         31 |        33 | 0.067× | 1.065× | ✗          |
+
+Geomean vs post-AU: **0.082**. Geomean vs post-AW-IV: **1.184** (+18% across 17 parse entries). JSON +61-73% (tape-path benefits from W5.2's per-Ref dispatcher substrate); CSS/Sheets/BBNF -7% to +10% (walker fallback persists).
+
+### json_monolithic_value (W3 visitor-path bench): DID NOT COMPILE
+
+`cargo bench -p bbnf --bench json_monolithic_value` failed to compile with `no associated function or constant named parse_with_visitor found for struct JsonParser`. Root cause traced: W4-fix-rest's detector widening (commits `569c17e4` / `ce2fd9f6`) admitted JSON's `pair` rule as Flat-shape and `value` rule as Wrap-shape. The `has_w4_classified` gate (`crates/core/src/backend/rust/emitter/grammar.rs:718` and `crates/core/src/backend/rust/emitter/shapes/dispatcher.rs:836`) returns true for any W4 classification and disables visitor-path emission — intended to protect the dispatcher's narrow W3 trait bounds from W4 visitor traits (e.g. `PrattVisitor`) the dispatcher doesn't bound. JSON's W3 visitor traits are sufficient for its own Flat/Wrap classifications, but the gate's coarseness produces false-positive protection.
+
+This is a regression against the W3 close state. At W3 close (commit `c1e86ab3`), the json_monolithic_value bench matched the prototype within 0.4-1.7% and beat sonic-rs 1.01-1.13× on every entry. At W6, the emission is gated off.
+
+Remediation bounded: narrow `has_w4_classified` to detect whether the emitted code invokes visitor methods outside the W3 set; admit visitor emission when not. Deferred to AW-VI per the no-workarounds-within-tranche invariant (the source modification is beyond W6's file bounds and architecturally belongs in the shape-dispatcher's gate refactor).
+
+### Parity harnesses (AW-IV.W5.2 preserved)
+
+Both harnesses still pass at AW-V W6 close:
+
+- **sonic-rs parity** — `cargo test -p bbnf --release --test sonic_rs_parity`: **5/5 PASS** (data, twitter, citm, canada, data_xl). 260 ms total. Commits `86424b39` + `73828e16`; CI gate `95b819f0`.
+- **lightningcss parity** — `cargo test -p bbnf --release --test lightningcss_parity`: **4/4 PASS** (normalize, bootstrap, tailwind, color-channel-rgb-family). 220 ms total.
+
+### Workspace state
+
+`cargo test --workspace --release`: **1597 passed, 0 failed, 36 ignored**. Exit 0. Bootstrap idempotent across consecutive clean-cache regens.
+
+### Hard-gate verification ledger
+
+| Gate | Target | Status | Evidence |
+|------|--------|--------|----------|
+| Every parse entry exceeds post-AU | 17/17 | **MISS (0/17)** | Bench matrix above; geomean 0.082 vs AU |
+| Every JSON entry exceeds sonic-rs by ≥ 1.07× | 5/5 on emitter-parser | **MISS (emitter) / MET (prototype)** | Prototype 0.89-0.94× sonic ns/iter on 5/5; emitter tape-path ~25% of sonic |
+| GRAMMAR_PROFILE wire-contract end-to-end | MET | **MET (W5.1)** | `bbnf_profile_wire_contract` 9/9 pass; BBNF slots populate (28 B alphabet, 17 digraphs, 13 keyword tables, 10 shape_dict) |
+| Shape dispatch for all grammars | 4/4 | **PARTIAL** | JSON activates at W3; CSS/Sheets/BBNF admission at W5.2 but routing gap persists |
+| sonic-rs parity CI-gated | MET | **MET** | 5/5 PASS |
+| lightningcss parity CI-gated | MET | **MET** | 4/4 PASS |
+| Workspace tests pass | MET | **MET** | 1597 / 0 / 36 |
+| Bootstrap idempotent | MET | **MET** | Byte-identical across consecutive regens |
+| `docs/benchmarks/post-AW-V.json` artefact | MET | **MET (W6)** | 17-entry matrix + parity status + prototype comparison |
+| `docs/tranches/AW/FINAL-V.md` | MET | **MET (W6)** | Per-wave recap + honest hard-gate assessment |
+
+### Architectural findings
+
+The W6 close affirms three architectural findings:
+
+1. **Substrate is viable.** The W2.1 prototype beats sonic-rs on every JSON entry with zero AW-III/AW-IV interpretive symbols reachable. The architecture the plan invoked (shape-mining + per-shape inline emission + monomorphic visitors) is correct; it produces a parser that beats hand-tuned sonic-rs when applied to JSON.
+
+2. **Emitter matches prototype at W3 close.** Before W4's detector widening, the emitter-produced JSON parser on json_monolithic_value bench matched the prototype within 0.4-1.7% and beat sonic-rs 1.01-1.13× on every entry. The emitter knows how to produce the sonic-exceed shape from a BBNF grammar.
+
+3. **Compounding activation is a single bounded follow-on.** The W4 detector widening that admitted JSON's `pair`/`value` to Flat/Wrap, combined with the coarse `has_w4_classified` gate, produced a regression from the W3-close state. CSS/Sheets/BBNF parse() routing is a separate bounded piece (entry-shape dispatch at the top-level `parse()`). Both are narrow refactors with diagnosed root causes; neither is an architectural reversal.
+
+### W6 commits
+
+- `docs(AW-V): FINAL-V.md + post-AW-V.json (AW-V.W6)` — FINAL-V.md + post-AW-V.json + composite FINAL.md AW-V summary section.
+- `docs(AW-V/PROGRESS): W6 close (AW-V.W6)` — this entry.
+
+### AW-V → AW-VI hand-off
+
+AW-V closes honestly. AW-VI opens on three bounded pieces:
+
+1. Narrow `has_w4_classified` to admit W3-visitor-compatible W4 classifications (re-enables JSON json_monolithic_value bench; likely re-establishes W3-close's prototype-matching parity).
+2. `parse()` entry-shape dispatch for non-Alt-rooted grammars (CSS/Sheets/BBNF root-shape direct delegation; walker fallback demoted to true unclassified-rule cold path).
+3. Lever-4 consumer activation + remaining AW-IV-carry-forwards (ShapeRef dedup in `close_compound`; Pratt LUT cold-path shadow deletion; CTNS / Bounded-Regex sound admission).
+
+AX preserved unchanged. AW-V's W1 substrate is additive — `bbnf-tape-codegen` exports helper bodies as fragments; runtime helpers remain for cold-path replay.

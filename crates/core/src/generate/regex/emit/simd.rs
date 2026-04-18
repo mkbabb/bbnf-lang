@@ -82,10 +82,27 @@ pub fn build_nibble_luts(targets: &[u8]) -> ([u8; 16], [u8; 16]) {
 /// the relative offset from the scan start (i.e. the number of
 /// bytes consumed, not the absolute position).
 ///
-/// Uses `parse_that::find_next_structural_from` — one SIMD
-/// nibble-LUT classification per 16 bytes, CTZ-driven termination,
-/// no cursor state on `ParserState`. Replaces the deleted
-/// `emit_memchr1/2/3` + `emit_nibble_lut_scan` family.
+/// ## Arch-gated widening
+///
+/// On `#[cfg(target_feature = "avx2")]` targets, the emitted scan uses
+/// `_mm256_loadu_si256` + `_mm256_shuffle_epi8` (nibble-LUT) +
+/// `_mm256_movemask_epi8` — 32 bytes classified per SIMD iteration.
+/// Tail loop falls through the same nibble-LUT LUT expansion as the
+/// u8x16 path for ≤ 31 residual bytes.
+///
+/// Otherwise (aarch64, wasm32, non-AVX2 x86_64), the emitted scan
+/// routes through `parse_that::find_next_structural_from` — one
+/// `std::simd::u8x16` nibble-LUT classification per 16 bytes.
+///
+/// The gate is compile-time (`target_feature`), not runtime: end-user
+/// binaries that enable AVX2 via cargo profile / RUSTFLAGS get the
+/// wider scan; cross-compilation to x86_64 without AVX2 falls back
+/// without a runtime dispatch cost.
+///
+/// Both paths produce byte-identical output (the correctness tests in
+/// `bbnf-simd-scan::tests::correctness` enforce cross-arch parity for
+/// the scanner side; this emitter side shares the nibble-LUT
+/// expansion semantics with the u8x16 path via `build_nibble_luts`).
 ///
 /// `targets` must contain 1..=8 bytes (the nibble-LUT window).
 /// Empty or >8-byte sets return `None`.
@@ -98,21 +115,112 @@ pub fn emit_structural_bitmap_kernel(targets: &[u8]) -> Option<TokenStream> {
     let lo_bytes: Vec<Literal> = lo.iter().map(|b| Literal::u8_unsuffixed(*b)).collect();
     let hi_bytes: Vec<Literal> = hi.iter().map(|b| Literal::u8_unsuffixed(*b)).collect();
 
+    // The emitted block evaluates to `Option<usize>` — the relative
+    // offset from `__start`, or `None` if no target byte is found
+    // before end-of-input. Both arch arms use the same nibble-LUT
+    // static tables, so per-grammar LUT data is shared across paths.
+    //
+    // AVX2 path: 32-byte chunks via `_mm256_shuffle_epi8` nibble-LUT.
+    // The 128-bit LUT is broadcast into both halves of a `__m256i`
+    // via `_mm256_broadcastsi128_si256`; `_mm256_shuffle_epi8`
+    // operates lane-locally (each 16-byte half shuffles independently
+    // against the same LUT), so one broadcast suffices for both
+    // halves. The stripe loop classifies 32 bytes per iteration; tail
+    // falls through to a scalar byte-LUT loop built from the same
+    // nibble tables (the 256-byte LUT expansion mirrors
+    // `parse_that::scan::structural_bitmap::expand_byte_lut`).
+    //
+    // The gate is compile-time; the non-AVX2 arm is the
+    // `#[cfg(not(...))]` complement that routes through
+    // `parse_that::find_next_structural_from` (portable u8x16).
     Some(quote! {
         {
             static __LO_LUT: [u8; 16] = [#(#lo_bytes),*];
             static __HI_LUT: [u8; 16] = [#(#hi_bytes),*];
-            // AW-IV.W4.2.a — PaddedView pass-through. `state.padded()`
-            // carries the 64-byte trailing zero pad at the type level
-            // so the SIMD stripe loop drops the per-stripe tail guard
-            // and the scalar tail epilogue that the unpadded entry
-            // previously required.
-            ::parse_that::find_next_structural_from(
-                state.padded(),
-                __start,
-                &__LO_LUT,
-                &__HI_LUT,
-            ).map(|(pos, _)| pos - __start)
+            #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+            let __result: ::core::option::Option<usize> = 'avx2_scan: {
+                use ::core::arch::x86_64::*;
+                // SAFETY: gated by `target_feature = "avx2"`; every load
+                // is bounded by the `__i + 32 <= __len` loop guard or
+                // by the scalar tail's `__i < __len` check.
+                unsafe {
+                    let __bytes = state.src_bytes.as_slice();
+                    let __len = __bytes.len();
+                    let __ptr = __bytes.as_ptr();
+                    // Broadcast the 16-byte LUT into both 128-bit halves
+                    // of a 256-bit register. `_mm256_shuffle_epi8`
+                    // operates lane-locally, so each half uses the same
+                    // LUT against its 16 input bytes.
+                    let __lo_v = _mm256_broadcastsi128_si256(
+                        _mm_loadu_si128(__LO_LUT.as_ptr() as *const __m128i),
+                    );
+                    let __hi_v = _mm256_broadcastsi128_si256(
+                        _mm_loadu_si128(__HI_LUT.as_ptr() as *const __m128i),
+                    );
+                    let __lo_mask = _mm256_set1_epi8(0x0F);
+                    let __zero = _mm256_setzero_si256();
+                    let mut __i = __start;
+                    while __i + 32 <= __len {
+                        let __chunk = _mm256_loadu_si256(
+                            __ptr.add(__i) as *const __m256i,
+                        );
+                        let __lo_n = _mm256_and_si256(__chunk, __lo_mask);
+                        let __hi_n = _mm256_and_si256(
+                            _mm256_srli_epi16(__chunk, 4),
+                            __lo_mask,
+                        );
+                        let __lo_r = _mm256_shuffle_epi8(__lo_v, __lo_n);
+                        let __hi_r = _mm256_shuffle_epi8(__hi_v, __hi_n);
+                        let __matched = _mm256_and_si256(__lo_r, __hi_r);
+                        let __nz = _mm256_cmpgt_epi8(__matched, __zero);
+                        let __mask = _mm256_movemask_epi8(__nz) as u32;
+                        if __mask != 0 {
+                            let __rel = __mask.trailing_zeros() as usize;
+                            break 'avx2_scan ::core::option::Option::Some(
+                                (__i + __rel) - __start,
+                            );
+                        }
+                        __i += 32;
+                    }
+                    // Scalar tail: rebuild the 256-byte LUT from the
+                    // nibble tables and walk the residual byte-by-byte.
+                    let mut __byte_lut = [false; 256];
+                    {
+                        let mut __b: u16 = 0;
+                        while __b < 256 {
+                            let __blo = __LO_LUT[(__b & 0x0F) as usize];
+                            let __bhi = __HI_LUT[(__b >> 4) as usize];
+                            __byte_lut[__b as usize] = (__blo & __bhi) != 0;
+                            __b += 1;
+                        }
+                    }
+                    while __i < __len {
+                        let __b = *__ptr.add(__i);
+                        if __byte_lut[__b as usize] {
+                            break 'avx2_scan ::core::option::Option::Some(
+                                __i - __start,
+                            );
+                        }
+                        __i += 1;
+                    }
+                    ::core::option::Option::None
+                }
+            };
+            // AW-IV.W4.2.a — PaddedView pass-through on the non-AVX2
+            // fallback. `state.padded()` carries the 64-byte trailing
+            // zero pad at the type level so the SIMD stripe loop drops
+            // the per-stripe tail guard and the scalar tail epilogue
+            // that the unpadded entry previously required.
+            #[cfg(not(all(target_arch = "x86_64", target_feature = "avx2")))]
+            let __result: ::core::option::Option<usize> =
+                ::parse_that::find_next_structural_from(
+                    state.padded(),
+                    __start,
+                    &__LO_LUT,
+                    &__HI_LUT,
+                )
+                .map(|(pos, _)| pos - __start);
+            __result
         }
     })
 }

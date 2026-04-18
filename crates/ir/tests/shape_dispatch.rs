@@ -409,25 +409,28 @@ fn json_six_primary_rules_cover_hard_gate() {
 }
 
 #[test]
-fn json_value_dispatcher_defers_to_walker_in_w3() {
-    // The `value` rule's Wrap-over-Refs dispatcher is W4's `Wrap`
-    // shape; W3 leaves it as `None` so it routes through the walker.
+fn json_value_classifies_as_wrap_under_w4() {
+    // The `value` rule's Alt-of-Refs dispatcher is W4's `Wrap` shape.
+    // W4.1 activates the detector; the classifier now admits it.
     let (ir, rules) = build_json_ir();
     assert_eq!(
         ir.shape_assignments.get(rules.value),
-        ShapeTag::None,
-        "`value` is W4's Wrap shape; W3 defers to walker fallback"
+        ShapeTag::Wrap,
+        "`value` is W4's Wrap shape (Alt of Refs to shape rules)"
     );
 }
 
 #[test]
-fn json_pair_defers_to_walker_in_w3() {
-    // The `pair` rule's `key, pivot, value` Seq is W4's `Flat` shape.
+fn json_pair_defers_to_walker_under_w4() {
+    // The `pair` rule's body is `Seq(string_ref, Next(colon_ref,
+    // value_ref))` — no literal-led head, so Flat rejects it. The
+    // three-Ref Seq shape isn't admitted by the 11-shape taxonomy;
+    // the rule stays on the walker fallback.
     let (ir, rules) = build_json_ir();
     assert_eq!(
         ir.shape_assignments.get(rules.pair),
         ShapeTag::None,
-        "`pair` is W4's Flat shape; W3 defers to walker fallback"
+        "`pair` has no literal head; stays on walker fallback"
     );
 }
 
@@ -449,60 +452,70 @@ fn json_structural_separators_classify_as_keyword_or_scalar() {
     );
 }
 
-// ─── W4 deferral markers ─────────────────────────────────────────────
+// ─── W4 detector activation markers ──────────────────────────────────
 //
-// These tests document the W4 detectors' deferred status: the
-// detectors exist in the taxonomy but their bodies are stubs today.
-// When W4 lands, these tests get replaced by shape-positive
-// assertions; today they guard the stub contract so a partial W4
-// landing doesn't silently claim coverage the mechanism hasn't
-// produced.
+// JSON exercises Wrap via its `value = object | array | ...`
+// dispatcher; it has no Pratt / Unordered / ArgList / Flat / HRegex
+// rules. These tests assert the W4 detectors fire (or not) per the
+// JSON grammar's shape. Per-grammar coverage for Sheets / CSS / BBNF
+// lands in the bbnf crate's parity tests.
 
 #[test]
-fn w4_pratt_stub_returns_none_for_w3_inputs() {
+fn w4_pratt_no_hits_on_json_grammar() {
     // An operator-chain head is W4's `Pratt` shape. The JSON grammar
-    // has none, so this is vacuously true; W4 ships concrete tests
-    // against Sheets / CSS math towers.
+    // has no operator chains.
     let (ir, _) = build_json_ir();
     assert_eq!(
         ir.shape_assignments.count_of(ShapeTag::Pratt),
         0,
-        "JSON grammar has no Pratt rules; W3 must not emit `Pratt` tags"
+        "JSON grammar has no Pratt rules"
     );
 }
 
 #[test]
-fn w4_unordered_stub_returns_none_for_w3_inputs() {
+fn w4_unordered_no_hits_on_json_grammar() {
     // CSS `compoundSelector`-shaped Repeat-over-disjoint-FIRST-Alt
     // is `Unordered`. JSON has none.
     let (ir, _) = build_json_ir();
     assert_eq!(
         ir.shape_assignments.count_of(ShapeTag::Unordered),
         0,
-        "JSON grammar has no Unordered rules; W3 must not emit `Unordered` tags"
+        "JSON grammar has no Unordered rules"
     );
 }
 
 #[test]
-fn w4_arglist_stub_returns_none_for_w3_inputs() {
+fn w4_arglist_no_hits_on_json_grammar() {
     let (ir, _) = build_json_ir();
     assert_eq!(ir.shape_assignments.count_of(ShapeTag::ArgList), 0);
 }
 
 #[test]
-fn w4_flat_stub_returns_none_for_w3_inputs() {
+fn w4_flat_no_hits_on_json_grammar() {
+    // JSON's `pair` is a Seq but its head is a Ref to `string` (not a
+    // literal). Flat requires a literal / keyword head, so JSON's
+    // only multi-position Seq-bodied rule stays unclassified.
     let (ir, _) = build_json_ir();
     assert_eq!(ir.shape_assignments.count_of(ShapeTag::Flat), 0);
 }
 
 #[test]
-fn w4_wrap_stub_returns_none_for_w3_inputs() {
-    let (ir, _) = build_json_ir();
-    assert_eq!(ir.shape_assignments.count_of(ShapeTag::Wrap), 0);
+fn w4_wrap_classifies_json_value_dispatcher() {
+    // JSON's `value = object | array | string | number | bool | null`
+    // is the canonical Wrap shape — exactly one rule in the grammar.
+    let (ir, rules) = build_json_ir();
+    assert_eq!(ir.shape_assignments.count_of(ShapeTag::Wrap), 1);
+    assert_eq!(
+        ir.shape_assignments.get(rules.value),
+        ShapeTag::Wrap,
+        "`value` classifies as Wrap"
+    );
 }
 
 #[test]
-fn w4_hregex_stub_returns_none_for_w3_inputs() {
+fn w4_hregex_no_hits_on_json_grammar() {
+    // JSON's sole Regex leaves are `string` (QuotedString → String
+    // shape) and `number` (Numeric → Number shape). No HRegex.
     let (ir, _) = build_json_ir();
     assert_eq!(ir.shape_assignments.count_of(ShapeTag::HRegex), 0);
 }
@@ -525,4 +538,262 @@ fn shape_dispatch_is_idempotent() {
             Some(tag)
         );
     }
+}
+
+// ─── W4 per-shape synthetic fixtures ─────────────────────────────────
+//
+// Each test builds a minimal IR with one rule of the canonical shape
+// and asserts the classifier tags it correctly. Synthetic fixtures
+// mirror the grammar sources cited in the per-shape detector modules'
+// doc-comments.
+
+/// Build a Pratt-shape IR: one rule whose body matches the canonical
+/// operator-chain rung `Seq(operand_ref, Repeat(Seq(op_ref, operand_ref)))`
+/// — mined by [`node_facts::recognize_tree`] as `operator_chain: true`.
+fn build_pratt_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    let op_body = IrNode::Alt(
+        vec![
+            AltBranch { node: lit(&mut ir, "+"), first_set: None },
+            AltBranch { node: lit(&mut ir, "-"), first_set: None },
+        ],
+        None,
+    );
+    let op_rule = push_rule(&mut ir, "op", op_body);
+    let operand_body = mapped(regex(&mut ir, r"[0-9]+"));
+    let operand_rule = push_rule(&mut ir, "operand", operand_body);
+    // expr = operand, (op, operand)*
+    let repeat_inner = IrNode::Seq(vec![
+        IrNode::Ref(op_rule),
+        IrNode::Ref(operand_rule),
+    ]);
+    let expr_body = IrNode::Seq(vec![
+        IrNode::Ref(operand_rule),
+        IrNode::Repeat {
+            inner: Box::new(repeat_inner),
+            lo: 0,
+            hi: u32::MAX,
+        },
+    ]);
+    let expr_rule = push_rule(&mut ir, "expr", expr_body);
+    ir.entry = expr_rule;
+    finalise_and_classify(&mut ir);
+    (ir, expr_rule)
+}
+
+#[test]
+fn w4_pratt_detector_admits_operator_chain_rung() {
+    let (ir, expr_rule) = build_pratt_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(expr_rule),
+        ShapeTag::Pratt,
+        "operator-chain rung body must classify as Pratt"
+    );
+}
+
+/// Build an Unordered-shape IR: `Repeat(lo: 1)` over an Alt whose
+/// branches have disjoint FIRST byte sets (mirrors CSS
+/// `compoundSelector`).
+///
+/// The compound is a non-entry rule so the Array detector's entry-list
+/// admission (mine_list_rules) doesn't fire. An outer entry rule
+/// references the compound.
+fn build_unordered_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    // Five "branches" each a Ref to a rule starting with a distinct
+    // literal. Each branch rule's body is a Literal so
+    // DisjointFirstMiner computes disjoint FIRST sets trivially.
+    let branch_rules: Vec<RuleId> = ["a", "b", "c", "d", "e"]
+        .iter()
+        .map(|&s| {
+            let body = lit(&mut ir, s);
+            push_rule(&mut ir, &format!("{s}_rule"), body)
+        })
+        .collect();
+    let alt = IrNode::Alt(
+        branch_rules
+            .iter()
+            .map(|&rid| AltBranch {
+                node: IrNode::Ref(rid),
+                first_set: None,
+            })
+            .collect(),
+        None,
+    );
+    let compound_body = IrNode::Repeat {
+        inner: Box::new(alt),
+        lo: 1,
+        hi: u32::MAX,
+    };
+    let compound = push_rule(&mut ir, "compound", compound_body);
+    // Outer entry — non-list structural wrapper so the Array detector's
+    // entry-list admission doesn't fire on `compound`.
+    let entry_body = IrNode::Seq(vec![
+        lit(&mut ir, "("),
+        IrNode::Ref(compound),
+        lit(&mut ir, ")"),
+    ]);
+    let entry = push_rule(&mut ir, "entry", entry_body);
+    ir.entry = entry;
+    finalise_and_classify(&mut ir);
+    (ir, compound)
+}
+
+#[test]
+fn w4_unordered_detector_admits_kleene_plus_over_disjoint_alt() {
+    let (ir, compound) = build_unordered_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(compound),
+        ShapeTag::Unordered,
+        "Repeat(lo: 1) over disjoint-FIRST Alt must classify as Unordered"
+    );
+}
+
+/// Build an ArgList-shape IR: `"calc" , "(" >> inner << ")"` — the
+/// canonical CSS-style function-call shape.
+fn build_arglist_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    let inner_body = mapped(regex(&mut ir, r"[0-9]+"));
+    let inner = push_rule(&mut ir, "inner", inner_body);
+    // calcFunction = "calc", "(", Ref(inner), ")"
+    let calc_body = IrNode::Seq(vec![
+        lit(&mut ir, "calc"),
+        lit(&mut ir, "("),
+        IrNode::Ref(inner),
+        lit(&mut ir, ")"),
+    ]);
+    let calc = push_rule(&mut ir, "calcFunction", calc_body);
+    ir.entry = calc;
+    finalise_and_classify(&mut ir);
+    (ir, calc)
+}
+
+#[test]
+fn w4_arglist_detector_admits_name_paren_body_paren() {
+    let (ir, calc) = build_arglist_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(calc),
+        ShapeTag::ArgList,
+        "`calc(...)` shape must classify as ArgList"
+    );
+}
+
+/// Build a Flat-shape IR: typed Seq with a literal head — mirrors CSS
+/// `displayDecl = "display" , ":" ?w , value , ";"?`.
+fn build_flat_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    let value_body = mapped(regex(&mut ir, r"[a-z]+"));
+    let value = push_rule(&mut ir, "value", value_body);
+    // displayDecl = "display", ":", value, ";"
+    let decl_body = IrNode::Seq(vec![
+        lit(&mut ir, "display"),
+        lit(&mut ir, ":"),
+        IrNode::Ref(value),
+        lit(&mut ir, ";"),
+    ]);
+    let decl = push_rule(&mut ir, "displayDecl", decl_body);
+    ir.entry = decl;
+    finalise_and_classify(&mut ir);
+    (ir, decl)
+}
+
+#[test]
+fn w4_flat_detector_admits_literal_headed_typed_seq() {
+    let (ir, decl) = build_flat_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(decl),
+        ShapeTag::Flat,
+        "`\"display\" , \":\" , value , \";\"` shape must classify as Flat"
+    );
+}
+
+/// Build a Wrap-shape IR: `Alt(Ref, Ref, Ref)` transparent dispatcher
+/// whose branches resolve to *compound* shape rules (not bare
+/// literals — those would classify as Keyword first).
+///
+/// Mirrors JSON's `value = object | array | string | number | bool |
+/// null` where every branch is a Ref to a compound / regex rule.
+fn build_wrap_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    // Three Ref targets: a number regex (non-literal), a string regex
+    // (non-literal), and an array (Wrap) compound.
+    let num_body = mapped(regex(&mut ir, r"[0-9]+"));
+    let num_rule = push_rule(&mut ir, "num", num_body);
+    let str_body = mapped(regex(&mut ir, r#""[^"]*""#));
+    let str_rule = push_rule(&mut ir, "str", str_body);
+    // arr = "[" >> num << "]" — a delimited Wrap shape.
+    let arr_body = IrNode::Next(
+        Box::new(lit(&mut ir, "[")),
+        Box::new(IrNode::Skip(
+            Box::new(IrNode::Ref(num_rule)),
+            Box::new(lit(&mut ir, "]")),
+        )),
+    );
+    let arr_rule = push_rule(&mut ir, "arr", arr_body);
+    // dispatcher = num | str | arr
+    let disp_body = IrNode::Alt(
+        vec![
+            AltBranch { node: IrNode::Ref(num_rule), first_set: None },
+            AltBranch { node: IrNode::Ref(str_rule), first_set: None },
+            AltBranch { node: IrNode::Ref(arr_rule), first_set: None },
+        ],
+        None,
+    );
+    let disp = push_rule(&mut ir, "dispatcher", disp_body);
+    ir.entry = disp;
+    finalise_and_classify(&mut ir);
+    (ir, disp)
+}
+
+#[test]
+fn w4_wrap_detector_admits_all_ref_alt() {
+    let (ir, disp) = build_wrap_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(disp),
+        ShapeTag::Wrap,
+        "Alt of Refs must classify as Wrap"
+    );
+}
+
+/// Build an HRegex-shape IR: a single regex leaf whose class is NOT
+/// QuotedString / Numeric — an Identifier-class regex is the
+/// canonical case.
+fn build_hregex_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    // identifier = /[A-Za-z_][A-Za-z0-9_]*/ -> Span
+    let ident_body = mapped(regex(&mut ir, r"[A-Za-z_][A-Za-z0-9_]*"));
+    let ident = push_rule(&mut ir, "identifier", ident_body);
+    ir.entry = ident;
+    finalise_and_classify(&mut ir);
+    (ir, ident)
+}
+
+#[test]
+fn w4_hregex_detector_admits_identifier_regex_leaf() {
+    let (ir, ident) = build_hregex_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(ident),
+        ShapeTag::HRegex,
+        "identifier regex leaf must classify as HRegex"
+    );
+}
+
+#[test]
+fn w4_hregex_rejects_quoted_string_regex_leaf() {
+    // A QuotedString-class regex must route to String, not HRegex.
+    let mut ir = base_ir();
+    let str_body = mapped(regex(&mut ir, r#""(?:[^"\\]|\\[\s\S])*""#));
+    let string_rule = push_rule(&mut ir, "string", str_body);
+    ir.entry = string_rule;
+    finalise_and_classify(&mut ir);
+    assert_eq!(
+        ir.shape_assignments.get(string_rule),
+        ShapeTag::String,
+        "QuotedString regex must classify as String, not HRegex"
+    );
+    assert_eq!(
+        ir.shape_assignments.count_of(ShapeTag::HRegex),
+        0,
+        "no HRegex tags when all regex leaves are typed"
+    );
 }

@@ -18,10 +18,6 @@
 //! shape detector stay [`ShapeTag::None`] and route through
 //! `__dta_walker_inline::run` per the AX cold-path replay contract.
 //!
-//! The W4 detectors are defined here with stub bodies returning
-//! `false` so the wire contract is in place for W3.2's emitter lift;
-//! full bodies land W4 alongside the corresponding emitter modules.
-//!
 //! # Outputs
 //!
 //! [`shape_dispatch`] returns a [`ShapeAssignments`] mapping every
@@ -43,17 +39,33 @@
 //! - [`number::detect_number`]
 //! - [`keyword::detect_keyword`]
 //! - [`scalar::detect_scalar`]
+//! - [`pratt::detect_pratt`]
+//! - [`unordered::detect_unordered`]
+//! - [`arglist::detect_arglist`]
+//! - [`flat::detect_flat`]
+//! - [`wrap::detect_wrap`]
+//! - [`hregex::detect_hregex`]
 //!
 //! Precedence is by specificity: the more specific shape wins. The
 //! dispatch order (Object → Array → String → Number → Keyword →
-//! Scalar) matches the AW-V.md §"Shape taxonomy" table order.
+//! HRegex → Pratt → Unordered → ArgList → Flat → Wrap → Scalar)
+//! enforces that compound-shaped detectors match before leaf-like
+//! detectors, and that String / Number / Keyword (specific regex
+//! classes + literal-Alt bodies) claim their regex / literal leaves
+//! ahead of HRegex / Scalar (the fallthrough leaf families).
 
+pub mod arglist;
 pub mod array;
+pub mod flat;
+pub mod hregex;
 pub mod keyword;
 pub mod number;
 pub mod object;
+pub mod pratt;
 pub mod scalar;
 pub mod string;
+pub mod unordered;
+pub mod wrap;
 
 use std::collections::HashMap;
 
@@ -183,18 +195,37 @@ impl ShapeTag {
                 | ShapeTag::Scalar
         )
     }
+
+    /// Returns true when this tag represents a W4-actively-classified
+    /// shape (Pratt / Unordered / ArgList / Flat / Wrap / HRegex).
+    /// W3 shapes and `None` return false.
+    #[inline]
+    pub fn is_w4_classified(self) -> bool {
+        matches!(
+            self,
+            ShapeTag::Pratt
+                | ShapeTag::Unordered
+                | ShapeTag::ArgList
+                | ShapeTag::Flat
+                | ShapeTag::Wrap
+                | ShapeTag::HRegex
+        )
+    }
+
+    /// Returns true when this tag represents ANY actively-classified
+    /// shape (W3 + W4). `None` is the only excluded tag.
+    #[inline]
+    pub fn is_classified(self) -> bool {
+        self.is_w3_classified() || self.is_w4_classified()
+    }
 }
 
 /// Run shape classification over every rule in `ir`.
 ///
-/// Dispatch order (most specific first): Object → Array → String →
-/// Number → Keyword → Scalar. W4 detectors (Pratt / Unordered /
-/// ArgList / Flat / Wrap / HRegex) are stubs returning `false` until
-/// W4 ships; W3 ignores them and lets unmatched rules fall to
-/// [`ShapeTag::None`].
-///
-/// Every detector is a pure projection from existing recognizer-
-/// miner outputs committed on `ir` by
+/// Dispatch order: Object → Array → String → Number → Keyword →
+/// HRegex → Pratt → Unordered → ArgList → Flat → Wrap → Scalar. Every
+/// detector is a pure projection from existing recognizer-miner
+/// outputs committed on `ir` by
 /// [`crate::passes::recognizers::mine_recognizers`]; this function
 /// must run AFTER that pass completes.
 pub fn shape_dispatch(ir: &GrammarIR) -> ShapeAssignments {
@@ -209,15 +240,43 @@ pub fn shape_dispatch(ir: &GrammarIR) -> ShapeAssignments {
 }
 
 /// Classify a single rule. First matching detector (by the precedence
-/// order Object → Array → String → Number → Keyword → Scalar) wins;
-/// rules that match no detector return [`ShapeTag::None`] to route
-/// through the walker.
+/// order Object → Array → String → Number → Keyword → HRegex → Pratt
+/// → Unordered → ArgList → Flat → Wrap → Scalar) wins; rules that
+/// match no detector return [`ShapeTag::None`] to route through the
+/// walker.
+///
+/// # Ordering rationale
+///
+/// - **Compound-closed shapes first** (Object / Array) — they alone
+///   claim their Wrap+Repeat-of-pair / Wrap+Repeat-of-value bodies.
+/// - **Typed leaves** (String / Number) — regex bodies classified
+///   via `regex_info`; they must run before HRegex (the regex-leaf
+///   fallthrough) so a JSON `string` / `number` doesn't land on
+///   HRegex by accident.
+/// - **Keyword** — literal-led Alt bodies and single literals; must
+///   run before Wrap (a pure Alt-of-Ref dispatcher) and ArgList (a
+///   literal-led Seq).
+/// - **HRegex** — regex leaves the String / Number classifiers
+///   rejected (Identifier / HexDigits / PrefixThenClass /
+///   CharClassQuantified / Unknown). Runs after String / Number.
+/// - **Pratt** — operator-chain Seq bodies. Must run before Flat
+///   because Pratt-shape is a typed Seq with specific recursion
+///   structure; Flat would claim it otherwise.
+/// - **Unordered** — Repeat-over-disjoint-FIRST-Alt. Runs before
+///   Flat because a Flat-Seq might contain a Repeat-over-Alt at its
+///   tail, but the head-literal requirement of Flat excludes
+///   Repeat-rooted bodies.
+/// - **ArgList** — `name(args)` function-call Seq. Runs before Flat
+///   because its specific parenthesised-args shape is a subset of
+///   generic Flat Seqs.
+/// - **Flat** — literal-led typed Seq (after compound / Pratt /
+///   Unordered / ArgList claim theirs). Runs before Wrap.
+/// - **Wrap** — transparent Alt-of-Ref dispatcher. Runs last among
+///   compound shapes so Keyword (literal-led Alt) claims its Alts
+///   first.
+/// - **Scalar** — single-Literal body fallthrough. Runs last so the
+///   Keyword single-literal path wins on named keywords.
 fn classify_rule(rule_id: RuleId, ir: &GrammarIR) -> ShapeTag {
-    // Precedence: most specific shape first. Object / Array are
-    // compound-shaped and exclude the leaf detectors; String / Number
-    // match only on regex leaves; Keyword matches literal-led Alt or
-    // single literal; Scalar catches a single typed leaf not picked
-    // by the above.
     if object::detect_object(rule_id, ir) {
         return ShapeTag::Object;
     }
@@ -232,6 +291,24 @@ fn classify_rule(rule_id: RuleId, ir: &GrammarIR) -> ShapeTag {
     }
     if keyword::detect_keyword(rule_id, ir) {
         return ShapeTag::Keyword;
+    }
+    if hregex::detect_hregex(rule_id, ir) {
+        return ShapeTag::HRegex;
+    }
+    if pratt::detect_pratt(rule_id, ir) {
+        return ShapeTag::Pratt;
+    }
+    if unordered::detect_unordered(rule_id, ir) {
+        return ShapeTag::Unordered;
+    }
+    if arglist::detect_arglist(rule_id, ir) {
+        return ShapeTag::ArgList;
+    }
+    if flat::detect_flat(rule_id, ir) {
+        return ShapeTag::Flat;
+    }
+    if wrap::detect_wrap(rule_id, ir) {
+        return ShapeTag::Wrap;
     }
     if scalar::detect_scalar(rule_id, ir) {
         return ShapeTag::Scalar;

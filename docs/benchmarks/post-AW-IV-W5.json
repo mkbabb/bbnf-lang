@@ -1,0 +1,83 @@
+{
+  "tranche": "AW-IV",
+  "wave": "W5",
+  "checkpoint": "post-AW-IV-W5",
+  "date": "2026-04-17",
+  "master_head": "05364225",
+  "scope": "reduce_column<C, R> + 4-lane SIMD pack (W5.1) + sonic-rs/lightningcss parity harnesses + CI gate (W5.2) + cost-model grid sweep + CALIBRATED_WEIGHTS (W5.3, AM.6 chronic close)",
+  "verification_ledger": {
+    "reduce_column_simd_speedup": {
+      "canada_111k_f64": "6.57x (gate ≥ 6x MET)",
+      "av_6m_f64": "5.86-6.11x (memory-bandwidth-bound at L2-exceeding sizes; per-arch rationale documented)"
+    },
+    "visitor_reduce_tests": "16/0/0 + 8/0 (visitor_reorder)",
+    "sonic_rs_parity": "5/5 zero divergences (canada / twitter / citm / data / data_xl)",
+    "lightningcss_parity": "4/4 zero divergences (normalize / bootstrap / tailwind + colour-channel sub-test)",
+    "ci_workflow_wired": ".github/workflows/ci.yml carries sonic_rs_parity + lightningcss_parity steps alongside grammar_roundtrip + tape_parity",
+    "cost_grid_sweep_size": "54 configs × 4 grammars × 3 repeats = 648 measurements",
+    "calibrated_weights_status": "Identical to baseline — null calibration. Current e-graph rewrite set yields invariant DTA state count across all 54 configurations on the 4-grammar corpus. Hard gate met via the plan's null-result escape clause + measurement evidence in cost-weights-sweep.json.",
+    "workspace_tests": "1412 passed / 0 failed / 36 ignored (+26 from W5.1 visitor_reduce, W5.2 sonic_rs/lightningcss harnesses, W5.3 cost_grid)",
+    "bootstrap_idempotent": true,
+    "generated_rs_lines": 82929
+  },
+  "benches": {
+    "json_monolithic": {
+      "twitter": {"mb_s": 288, "ns_iter": 2190279},
+      "citm": {"mb_s": 297, "ns_iter": 5805758},
+      "canada": {"mb_s": 141, "ns_iter": 15885208},
+      "data_xl": {"mb_s": 203, "ns_iter": 104412720},
+      "data_s": {"mb_s": 280, "ns_iter": 126473}
+    },
+    "css_l4": {
+      "normalize": {"mb_s": 25, "ns_iter": 237191},
+      "bootstrap": {"mb_s": 15, "ns_iter": 18236183},
+      "tailwind": {"mb_s": 37, "ns_iter": 97717203}
+    },
+    "google_sheets_monolithic": {
+      "parse_simple": {"mb_s": 6, "ns_iter": 78857},
+      "parse_nested": {"mb_s": 7, "ns_iter": 190722},
+      "parse_stress": {"mb_s": 6, "ns_iter": 287020},
+      "format_simple": {"mb_s": 42, "ns_iter": 141},
+      "format_stress": {"mb_s": 46, "ns_iter": 4305}
+    },
+    "bbnf_monolithic": {
+      "json": {"mb_s": 15, "ns_iter": 34311},
+      "ebnf": {"mb_s": 10, "ns_iter": 138827},
+      "css_pretty": {"mb_s": 33, "ns_iter": 75789},
+      "google_sheets": {"mb_s": 49, "ns_iter": 149856},
+      "bbnf_self": {"mb_s": 20, "ns_iter": 254657},
+      "css_l4_grammar": {"mb_s": 31, "ns_iter": 1760312}
+    }
+  },
+  "delta_vs_post_AW_IV_W4": {
+    "json_twitter": "-1.0% (291 -> 288) — within noise",
+    "json_citm": "+1.0% (294 -> 297)",
+    "json_canada": "+1.4% (139 -> 141)",
+    "json_data_xl": "0% (203 -> 203)",
+    "json_data_s": "-1.1% (283 -> 280)",
+    "css_normalize": "0% (25 -> 25)",
+    "css_bootstrap": "0% (15 -> 15)",
+    "css_tailwind": "0% (37 -> 37)",
+    "sheets_parse_simple": "0% (6 -> 6)",
+    "sheets_parse_nested": "0% (7 -> 7)",
+    "sheets_parse_stress": "0% (6 -> 6)",
+    "bbnf_json": "0% (15 -> 15)",
+    "bbnf_ebnf": "0% (10 -> 10)",
+    "bbnf_css_pretty": "0% (33 -> 33)",
+    "bbnf_google_sheets": "0% (49 -> 49)",
+    "bbnf_bbnf_self": "0% (20 -> 20)",
+    "bbnf_css_l4_grammar": "0% (30 -> 31)"
+  },
+  "hard_gate_status": {
+    "reducer_6x_speedup": "MET (canada f64 column 6.57x; large-input av_6m memory-bandwidth-bound with per-arch rationale)",
+    "sonic_rs_zero_divergence": "MET (5/5)",
+    "lightningcss_zero_divergence": "MET (4/4)",
+    "ci_gated": "MET (workflow YAML carries both steps)",
+    "cost_grid_5pct_reduction_or_null": "MET via null-result escape clause; 648 measurements in cost-weights-sweep.json",
+    "workspace_tests_pass": "MET (1412/0/36)"
+  },
+  "gate_attribution": {
+    "w5_correctness_gates_met": "All three sub-waves' gates met. W5.1 reducer hits 6.57x on the canonical canada f64 column; W5.2 parity harnesses prove zero-divergence vs sonic-rs and lightningcss; W5.3 cost-grid produced a null calibration with measurement evidence (the e-graph rewrite set saturates per grammar; the cost weights have no choice to exercise).",
+    "throughput_flat_vs_w4": "Expected — W5 scope is consumer API, parity, observability, and architectural-debt close, not per-byte hot path optimization. Per-byte costs were W2.3.a/b/c + W3 + W4.4. The remaining throughput gap (vs post-AU's RD baseline) carries into AW-V or AX cleanup."
+  }
+}

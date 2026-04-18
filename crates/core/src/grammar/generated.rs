@@ -63,7 +63,7 @@ mod __bbnfbootstrap_emit_impl {
             leaves_per_input_byte: 0f32,
             payload_bytes_per_input_byte: 0f32,
             expected_ns_per_byte: 0f32,
-            parallel_break_even_bytes: 262144u32,
+            parallel_break_even_bytes: 1048576u32,
             structural_alphabet: &[],
             structural_digraphs: &[],
             structural_digraph_mask: [0, 0, 0, 0],

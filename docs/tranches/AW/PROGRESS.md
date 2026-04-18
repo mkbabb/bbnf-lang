@@ -103,10 +103,10 @@ surface — emit hot logic directly into the per-grammar walker; keep
 |------|-------|--------|--------|
 | W1 | Interpreter abrogation core: hoist DtaState into arm bodies + structural-alphabet mining fix + wire-contract emission fix + DFA codegen with direct named calls + scanner-trait deletion | 4 parallel | ✓ landed (workspace **1345 / 0 / 36**; substrate verified by `nm` on JSON; throughput gate missed pending W2 helper inlining — ledger below) |
 | W2 | Per-grammar inline emission of hot helpers (W2.1 helpers + W2.2 LTO config) **+ W1.4-aggressive (DFA loop body inline)** **+ W2.3 (Eisel-Lemire f64 + NEON string-scan + capacity pre-allocation + PSI elision docs)** — re-scoped mid-execution per the user's binding-rule revision; strategy is *emit the body inline*, not hope LTO inlines cross-crate | 2 + 1 + 3 sub-waves | ✓ landed (workspace **1345 / 0 / 36**; CSS/Sheets/BBNF +40-60%; JSON +14% twitter — throughput gate missed; `advance_or_pop_with` + alloc-growth + non-scalar PSI residual carries forward) |
-| W3 | Five emitter-mined consumer activations (ShapeRef + PHF + ClassifyByte + Pratt LUT consumer + direct-to-struct view wiring) + CTNS lifter + bounded Regex via inverse-alphabet — gated on W1 + W2 closed | 5 parallel | pending |
-| W4 | Granular SIMD widening (AVX2 u8x32, NEON 17-digit, scanner cluster) + bloom/GADT dedup + grammar-level pattern hoisting + document-parallel fork over stage-1 index | 4 parallel | pending |
-| W5 | `Tape::reduce_column<C,R>` + 4-lane SIMD pack + sonic-rs/lightningcss parity harnesses + cost-model grid sweep | 3 parallel | pending |
-| W6 | FINAL + 19-entry bench matrix + multi-wave aggregator | 1 serial | pending |
+| W3 | Five emitter-mined consumer activations (ShapeRef + PHF + ClassifyByte + Pratt LUT consumer + direct-to-struct view wiring) + CTNS lifter + bounded Regex via inverse-alphabet — gated on W1 + W2 closed | 5 parallel | ✓ landed (workspace **1348 / 0 / 36**; substrate landed across all 5 sub-waves; throughput translation deferred per substrate-without-consumer audit) |
+| W4 | Granular SIMD widening (AVX2 u8x32, NEON 17-digit, scanner cluster) + bloom/GADT dedup + grammar-level pattern hoisting + document-parallel fork over stage-1 index | 4 parallel | ✓ landed (workspace **1386 / 0 / 36**; **tailwind +131% breakthrough via W4.4 parallel fork**; W4.4-fix follow-on resolved tape-parity regression) |
+| W5 | `Tape::reduce_column<C,R>` + 4-lane SIMD pack + sonic-rs/lightningcss parity harnesses + cost-model grid sweep | 3 parallel | ✓ landed (workspace **1412 / 0 / 36**; reducer 6.57× speedup; both parity harnesses CI-gated; cost-grid null-result close per escape clause) |
+| W6 | FINAL + 19-entry bench matrix + multi-wave aggregator | 1 serial | ✓ landed (FINAL-IV.md + post-AW-IV.json; **0/17 parse entries exceed post-AU**; recorded honestly with carry-forward) |
 
 Bench schedule: per-wave cold run at W1–W5 close →
 `docs/benchmarks/post-AW-IV-W{N}.json`. W6 composes the AW-IV close
@@ -2800,3 +2800,86 @@ W5 opens on the W4 substrate. Three parallel agents:
 - W5.3 — Cost-model grid sweep (AM.6 chronic close)
 
 Hard gate: reducer ≥ 6× scalar baseline OR per-arch rationale; both parity harnesses zero-divergence + CI-gated; ≥ 5% reduction in DTA state count from cost-grid sweep.
+
+## 2026-04-17 — AW-IV W5 landed (reduce_column + parity harnesses + cost-grid); throughput flat
+
+Master HEAD `05364225`. Workspace **1412 / 0 / 36** (+26 vs W4 — W5.1 visitor_reduce 16 + W5.2 parity 9 + W5.3 cost-grid bin compile). Three parallel agents, 12 commits.
+
+### W5.1 — reduce_column<C, R> + 4-lane SIMD pack (4 commits)
+
+`bbnf-wt-aw4-w5-reduce`.
+
+- `d3fa4526` — `feat(bbnf-tape/columns): reduce_column<C, R> API + 4-lane SIMD pack`. ColumnTag trait + Reducer trait + simd::sum_f64 (NEON 4-acc / AVX2 2-acc / scalar fallback).
+- `1853148f` — `feat(emitter/visitor): emit reduce_<name> wrapper per descriptor`.
+- `76b1b37b` — `test(core): visitor_reduce parity + SIMD correctness`. 16 tests.
+- `b1d12510` — `bench(bbnf-tape): reduce_column scalar-vs-SIMD gate`. canada f64 column **6.57×** speedup; av_6m memory-bandwidth-bound at 5.86–6.11× (per-arch rationale documented).
+
+### W5.2 — sonic-rs + lightningcss parity harnesses (4 commits)
+
+`bbnf-wt-aw4-w5-parity`.
+
+- `f61c45a2` — `chore(core/Cargo.toml): bump sonic-rs 0.3 → 0.5 + lightningcss alpha.70 → alpha.71`.
+- `0097b4e1` — `test(core): sonic-rs JSON parity harness`. 5/5 zero divergences.
+- `b155cce1` — `test(core): lightningcss CSS parity harness`. 4/4 zero divergences (corpus admission + colour-channel sub-test).
+- `bd1fbaff` — `ci(github/workflows): wire sonic-rs + lightningcss parity gates`.
+
+### W5.3 — Cost-model grid sweep (4 commits, AM.6 chronic close)
+
+`bbnf-wt-aw4-w5-costgrid`.
+
+- `5a2eedc2` — `feat(scripts,bootstrap): cost-grid-sweep.sh + cost_grid_sweep bin`.
+- `b58e9d4c` — `feat(egraph/cost): CALIBRATED_WEIGHTS pub const from grid sweep`.
+- `21d986ec` — `feat(egraph/cost_config): consume CALIBRATED_WEIGHTS`.
+- `ef9b2e25` — `docs(benchmarks): cost-weights-sweep.json — null-result calibration`. 648 measurements; current e-graph rewrite set yields invariant DTA state count across all 54 configs; null calibration with measurement evidence per the plan's escape clause.
+
+### Hard-gate verification ledger
+
+| Gate | Status |
+|------|--------|
+| Reducer ≥ 6× scalar baseline | ✓ MET (canada 6.57×) |
+| sonic-rs zero-divergence | ✓ MET (5/5) |
+| lightningcss zero-divergence | ✓ MET (4/4 + colour-channel sub-test) |
+| Both parity harnesses CI-gated | ✓ MET |
+| Cost-grid 5% reduction OR null-result with evidence | ✓ MET (null + 648 measurements) |
+| Workspace tests pass | ✓ MET (1412/0/36) |
+
+### Per-bench post-W5 numbers (essentially flat vs W4)
+
+`docs/benchmarks/post-AW-IV-W5.json`. JSON family within ±1% of W4; CSS / Sheets / BBNF flat. Expected — W5's scope is correctness gates + observability + architectural-debt close, not per-byte hot path.
+
+### W5 → W6 hand-off
+
+W6 closes AW-IV. The serial close composes the multi-wave aggregator + FINAL-IV.md + composite FINAL.md update. The throughput W6 hard gate ("every parse entry exceeds post-AU") is missed — recorded honestly in FINAL-IV.md.
+
+## 2026-04-17 — AW-IV W6 close (FINAL-IV + post-AW-IV.json); throughput W6 gate missed
+
+Master HEAD `(this commit)`. Workspace **1412 / 0 / 36**. Bootstrap idempotent at 82929 lines.
+
+### Artefacts landed
+
+- `docs/benchmarks/post-AW-IV.json` — 19-entry parse-bench matrix (17 parse + 2 format) + multi-wave history (post-AU → post-AW-III → W1 → W2 → W3 → W4 → W5 sidecar references).
+- `docs/tranches/AW/FINAL-IV.md` — full per-wave recapitulation + verification ledger summary + W6 hard-gate honest assessment + cross-tranche debt closed/carried + carry-forward into AW-V/AX.
+- This PROGRESS entry.
+
+### W6 hard-gate status
+
+| Gate | Status |
+|------|--------|
+| Workspace tests pass | ✓ MET (1412/0/36) |
+| Bootstrap idempotent | ✓ MET (82929 lines, gen1 == gen2) |
+| post-AW-IV.json exists | ✓ |
+| FINAL-IV.md exists | ✓ |
+| Per-wave verification ledger complete | ✓ (W1-W5 ledgers + this composite) |
+| **Every parse entry exceeds post-AU** | ✗ MISS (0/17 — geomean 0.071 vs RD baseline) |
+
+The throughput W6 gate is missed unconditionally. Per the operational protocol no-deferrals invariant, this is recorded as a miss; the substrate-with-consumer rule is met for every wave's substrate landing (verification per `nm`, samply, wire-contract tests), so the architectural transposition closes — but the multi-wave throughput-compounding model the AW plan projected didn't materialise. Three load-bearing residuals carry into AW-V / AX:
+
+1. `advance_or_pop_with` per-arm splice (W2.1's deliberate ≤20%-minority retention conflicts with the binding-rule revision).
+2. PSI elision for string payloads (residual `psi.push` + `PayloadJob::grow_one` alloc churn).
+3. W3 substrate-without-consumer triplet (ShapeRef SeqPromote, Pratt LUT cold-path shadow, CTNS/bounded-Regex sound admission).
+
+The W4.4 tailwind +131% breakthrough demonstrates the hot-path-flat-at-source-level binding rule's correctness when fully realised on a workload above the parallel-fork threshold.
+
+### Tranche close
+
+AW-IV closes substantially-correct: the architectural transposition the plan invoked landed verifiably across W1-W5; the throughput W6 gate missed. The user's parallel AW-V planning (`docs/tranches/AW/AW-V.md`, committed during AW-IV execution) anticipates the carry-forward; the AW-V research artefacts are the design substrate for the next pass.

@@ -360,3 +360,52 @@ Workspace: **1050 passed / 50 failed / 67 ignored**. Bootstrap
 idempotent. 14 of 19 bench entries measured. AW-II closes honestly on
 what landed; AW-III opens to close the correctness residuals and
 answer the viability question.
+
+---
+
+## AW-IV close — Interpreter Abrogation
+
+AW-IV set out to abrogate every remaining runtime dispatch surface that the AW-III scaffold left interpreted: emit hot logic directly into the per-grammar walker, keep `bbnf-tape` only as the cold-path replay surface for AX, and recover throughput past the post-AU RD baseline on every parse entry. The architectural transposition the plan invoked landed verifiably across six waves; the throughput recovery missed.
+
+### Verification ledger summary
+
+| Wave | Scope | Workspace tests | Hard-gate (sub-points) | Hard-gate (throughput) |
+|------|-------|-----------------|------------------------|------------------------|
+| W1 | Interpreter abrogation core | 1345/0/36 | 4/5 | ✗ JSON twitter 246 vs 600 |
+| W2 (incl. W1.4-aggro + W2.3) | Helper inline-emission | 1345/0/36 | 5/6 | ✗ JSON twitter 280 vs 1100 |
+| W3 | 5 emitter-mined consumer activations | 1348/0/36 | 6/8 | ✗ JSON twitter 277 vs 2000 |
+| W4 (incl. W4.4-fix) | SIMD widening + scanner cluster + bloom + document-parallel | 1386/0/36 | 9/9; **tailwind +131%** | tailwind 37 MB/s (4-thread 2.24×) |
+| W5 | reduce_column + parity harnesses + cost-grid | 1412/0/36 | 4/4 | flat (W5 scope is correctness/observability/debt-close) |
+| W6 | FINAL + bench matrix | 1412/0/36 | 5/6 | ✗ **0/17 parse entries exceed post-AU** |
+
+### Symbol-absence (JSON bench binary)
+
+`dispatch_one`, `RegexScanner`, `DtaDfaScanner`, `find_at`, `cached_dfa`, `try_branch`, `__dfa_match_*`, `compute_f64`, `scan_quoted_string_simd`, `parse_number_f64`, `emit_leaf`, `push_compound_fused`, `push_leaf_fused`, `close_compound`, `handle_repeat_failure` — all 0 occurrences.
+
+`advance_or_pop_with` — 1 occurrence (W2.1's deliberate cold-call retention; conflicts with later binding-rule revision; carry-forward).
+
+### Tailwind breakthrough
+
+W4.4 parallel fork on tailwind.css: 16 MB/s (1-thread) → 37 MB/s (4-thread) = **2.24× speedup**, exceeding the W4.4 ≥ 2× hard gate. Depth-0 brace partitioning + byte-balanced cuts + 1 MiB threshold.
+
+### W6 hard-gate honest assessment
+
+| Entry | post-AU | post-AW-IV | ratio | exceeds AU |
+|---|---:|---:|---:|:---:|
+| (full table in `docs/benchmarks/post-AW-IV.json`) | | | | 0/17 |
+
+Geomean ratio vs post-AU: 0.071 (~7%). Geomean vs post-AW-III: 1.83× (+83% recovery from the AW-III broken state but stays an order of magnitude below RD baseline).
+
+### Carry-forward into AW-V / AX
+
+Three load-bearing residuals:
+
+1. `advance_or_pop_with` per-arm splice (W2.1's ≤20%-minority retention conflicts with binding-rule revision).
+2. PSI elision for string payloads (residual `psi.push` + `PayloadJob::grow_one` alloc churn on cold per-parse benchmarking).
+3. W3 substrate-without-consumer triplet (ShapeRef SeqPromote in `close_compound`; Pratt LUT cold-path shadow in `advance_or_pop_with`'s SY arm; CTNS / bounded-Regex sound admission via per-run DFA state analysis).
+
+The user's parallel AW-V planning (`docs/tranches/AW/AW-V.md`, committed during AW-IV execution) anticipates this carry-forward; the AW-V research artefacts (H1/H2/N1/N2 + 11-shape taxonomy + visitor monomorphisation analysis) are the design substrate for the next pass. AX retains the cold-path replay subsystem unchanged (`dispatch_one` + `try_branch` + `handle_repeat_failure*` + `lookup_precedence` survive; their fn-pointer signature is the AW-IV W1.β shape).
+
+### AW-IV HEAD
+
+Commit `(this commit)` at tranche close. Workspace: **1412 passed / 0 failed / 36 ignored**. Bootstrap idempotent at 82929 lines (gen1 == gen2). 17 parse benches + 2 format benches measured. AW-IV closes honestly: architectural transposition complete and verifiable; throughput recovery deferred to AW-V / AX.

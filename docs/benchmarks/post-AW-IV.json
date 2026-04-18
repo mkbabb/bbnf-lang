@@ -1,0 +1,91 @@
+{
+  "tranche": "AW-IV",
+  "checkpoint": "post-AW-IV",
+  "date": "2026-04-17",
+  "master_head": "(W6 close commit)",
+  "scope": "Interpreter Abrogation — six waves (W1 + W2/W1.4-aggro/W2.3 + W3 + W4 + W5 + W6 close)",
+  "multi_wave_history": [
+    {"checkpoint": "post-AU", "source": "docs/benchmarks/post-AU.json", "context": "RD baseline"},
+    {"checkpoint": "post-AW-III", "source": "docs/benchmarks/post-AW-III.json", "context": "DTA scaffold landed; throughput gate missed (0 of 17 entries beat post-AU)"},
+    {"checkpoint": "post-AW-IV-W1", "source": "docs/benchmarks/post-AW-IV-W1.json", "context": "Interpreter abrogation core"},
+    {"checkpoint": "post-AW-IV-W2", "source": "docs/benchmarks/post-AW-IV-W2.json", "context": "Helper inline-emission + W1.4-aggressive DFA inline + W2.3 Eisel-Lemire/NEON/PSI"},
+    {"checkpoint": "post-AW-IV-W3", "source": "docs/benchmarks/post-AW-IV-W3.json", "context": "Five emitter-mined consumer activations"},
+    {"checkpoint": "post-AW-IV-W4", "source": "docs/benchmarks/post-AW-IV-W4.json", "context": "SIMD widening + scanner cluster + bloom + document-parallel; tailwind +131%"},
+    {"checkpoint": "post-AW-IV-W5", "source": "docs/benchmarks/post-AW-IV-W5.json", "context": "reduce_column + parity harnesses + cost-grid"}
+  ],
+  "benches": {
+    "json_monolithic": {
+      "twitter": {"mb_s": 288, "ns_iter": 2190279},
+      "citm": {"mb_s": 297, "ns_iter": 5805758},
+      "canada": {"mb_s": 141, "ns_iter": 15885208},
+      "data_xl": {"mb_s": 203, "ns_iter": 104412720},
+      "data_s": {"mb_s": 280, "ns_iter": 126473}
+    },
+    "css_l4": {
+      "normalize": {"mb_s": 25, "ns_iter": 237191},
+      "bootstrap": {"mb_s": 15, "ns_iter": 18236183},
+      "tailwind": {"mb_s": 37, "ns_iter": 97717203}
+    },
+    "google_sheets_monolithic": {
+      "parse_simple": {"mb_s": 6, "ns_iter": 78857},
+      "parse_nested": {"mb_s": 7, "ns_iter": 190722},
+      "parse_stress": {"mb_s": 6, "ns_iter": 287020},
+      "format_simple": {"mb_s": 42, "ns_iter": 141},
+      "format_stress": {"mb_s": 46, "ns_iter": 4305}
+    },
+    "bbnf_monolithic": {
+      "json": {"mb_s": 15, "ns_iter": 34311},
+      "ebnf": {"mb_s": 10, "ns_iter": 138827},
+      "css_pretty": {"mb_s": 33, "ns_iter": 75789},
+      "google_sheets": {"mb_s": 49, "ns_iter": 149856},
+      "bbnf_self": {"mb_s": 20, "ns_iter": 254657},
+      "css_l4_grammar": {"mb_s": 31, "ns_iter": 1760312}
+    }
+  },
+  "delta_vs_post_AU_per_entry": {
+    "json_twitter": {"post_au": 1967, "post_aw_iv": 288, "ratio": 0.146, "exceeds_au": false},
+    "json_citm": {"post_au": 2438, "post_aw_iv": 297, "ratio": 0.122, "exceeds_au": false},
+    "json_canada": {"post_au": 1231, "post_aw_iv": 141, "ratio": 0.115, "exceeds_au": false},
+    "json_data_xl": {"post_au": 1179, "post_aw_iv": 203, "ratio": 0.172, "exceeds_au": false},
+    "json_data_s": {"post_au": 1746, "post_aw_iv": 280, "ratio": 0.160, "exceeds_au": false},
+    "css_normalize": {"post_au": 735, "post_aw_iv": 25, "ratio": 0.034, "exceeds_au": false},
+    "css_bootstrap": {"post_au": 454, "post_aw_iv": 15, "ratio": 0.033, "exceeds_au": false},
+    "css_tailwind": {"post_au": 496, "post_aw_iv": 37, "ratio": 0.075, "exceeds_au": false},
+    "sheets_parse_simple": {"post_au": 95, "post_aw_iv": 6, "ratio": 0.063, "exceeds_au": false},
+    "sheets_parse_nested": {"post_au": 128, "post_aw_iv": 7, "ratio": 0.055, "exceeds_au": false},
+    "sheets_parse_stress": {"post_au": 121, "post_aw_iv": 6, "ratio": 0.050, "exceeds_au": false},
+    "bbnf_json": {"post_au": 283, "post_aw_iv": 15, "ratio": 0.053, "exceeds_au": false},
+    "bbnf_ebnf": {"post_au": 223, "post_aw_iv": 10, "ratio": 0.045, "exceeds_au": false},
+    "bbnf_css_pretty": {"post_au": 647, "post_aw_iv": 33, "ratio": 0.051, "exceeds_au": false},
+    "bbnf_google_sheets": {"post_au": 858, "post_aw_iv": 49, "ratio": 0.057, "exceeds_au": false},
+    "bbnf_bbnf_self": {"post_au": 394, "post_aw_iv": 20, "ratio": 0.051, "exceeds_au": false},
+    "bbnf_css_l4_grammar": {"post_au": 496, "post_aw_iv": 31, "ratio": 0.063, "exceeds_au": false}
+  },
+  "delta_vs_post_AW_III": {
+    "json_twitter": "+69.4% (170 -> 288)",
+    "json_citm": "+39.4% (213 -> 297)",
+    "json_canada": "+43.9% (98 -> 141)",
+    "json_data_xl": "+48.2% (137 -> 203)",
+    "json_data_s": "+70.7% (164 -> 280)",
+    "css_normalize": "+78.6% (14 -> 25)",
+    "css_bootstrap": "+87.5% (8 -> 15)",
+    "css_tailwind": "+311% (9 -> 37) — W4.4 parallel fork",
+    "sheets_parse_simple": "+50% (4 -> 6)",
+    "sheets_parse_nested": "+75% (4 -> 7)",
+    "sheets_parse_stress": "+100% (3 -> 6)",
+    "bbnf_json": "+66.7% (9 -> 15)",
+    "bbnf_ebnf": "+66.7% (6 -> 10)",
+    "bbnf_css_pretty": "+65% (20 -> 33)",
+    "bbnf_google_sheets": "+69% (29 -> 49)",
+    "bbnf_bbnf_self": "+66.7% (12 -> 20)",
+    "bbnf_css_l4_grammar": "+63.2% (19 -> 31)"
+  },
+  "summary": {
+    "entries_exceeding_post_AU": 0,
+    "entries_total": 17,
+    "geomean_ratio_vs_post_AU": "0.071 (~7% of post-AU baseline)",
+    "geomean_ratio_vs_post_AW_III": "1.83x (+83% across the 17 parse entries)",
+    "tailwind_breakthrough": "+311% via W4.4 parallel fork (16 → 37 MB/s) at 4-thread scaling 2.24x",
+    "honest_assessment": "AW-IV closes substantially-correct (1412/0/36 workspace tests; bootstrap idempotent; all sub-wave verification ledgers met) but the throughput W6 gate (every parse entry exceeds post-AU) is missed: 0 of 17 entries reach RD baseline. The architectural transposition the AW plan invoked landed verifiably across W1-W5; the throughput translation requires more work than W2-W5 absorbed. Carry-forward into AW-V / AX detailed in FINAL-IV.md."
+  }
+}

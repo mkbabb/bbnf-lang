@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/core", "crates/derive", "crates/analysis", "crates/ir", "crates/lsp", "crates/ser", "crates/gorgeous", "crates/bootstrap", "crates/egraph", "crates/egraph-derive", "crates/csp-solver", "crates/bbnf-tape", "crates/bbnf-simd-scan", "crates/bbnf-json-prototype"]
+members = ["crates/core", "crates/derive", "crates/analysis", "crates/ir", "crates/lsp", "crates/ser", "crates/gorgeous", "crates/bootstrap", "crates/egraph", "crates/egraph-derive", "crates/csp-solver", "crates/bbnf-tape", "crates/bbnf-tape-codegen", "crates/bbnf-simd-scan", "crates/bbnf-json-prototype"]
 exclude = ["wasm"]
 resolver = "2"
 

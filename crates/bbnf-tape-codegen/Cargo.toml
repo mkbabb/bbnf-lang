@@ -1,0 +1,13 @@
+[package]
+name = "bbnf-tape-codegen"
+version = "0.1.0"
+edition = "2021"
+description = "TokenStream body fragments for the four residual bbnf-tape helpers (advance_or_pop_with, nearest_variant_frame, write_decoded, finalise). The per-shape inline emitter splices these fragments into its generated parse loops, eliminating the cross-crate function-call boundary at each hot-path helper call. The runtime helpers in bbnf-tape survive verbatim as the AX cold-path replay surface."
+
+[lib]
+crate-type = ["lib"]
+
+[dependencies]
+proc-macro2 = "1"
+syn = { version = "2", features = ["full", "parsing"] }
+quote = "1"

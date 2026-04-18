@@ -44,7 +44,7 @@ mimalloc = "0.1"
 # JSON competitor parsers
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }
-sonic-rs = "0.3"
+sonic-rs = "0.5"
 simd-json = "0.14"
 jiter = "0.8"
 serde_json_borrow = "0.9"
@@ -59,7 +59,7 @@ tree-sitter-json = "0.24"
 
 # CSS competitor parsers
 cssparser = "0.34"
-lightningcss = "1.0.0-alpha.70"
+lightningcss = "1.0.0-alpha.71"
 
 # WASM runtime for benchmarks
 wasmtime = "29"

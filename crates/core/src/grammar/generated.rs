@@ -7668,7 +7668,7 @@ mod __bbnfbootstrap_emit_impl {
         input: &[u8],
         pos: usize,
     ) -> ::core::option::Option<u32> {
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_0.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_0.as_ptr()) || pattern == __DTA_REGEX_0 {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -7704,7 +7704,7 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1.as_ptr()) || pattern == __DTA_REGEX_1 {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -7771,7 +7771,7 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_6.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_6.as_ptr()) || pattern == __DTA_REGEX_6 {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -7845,7 +7845,7 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_9.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_9.as_ptr()) || pattern == __DTA_REGEX_9 {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -7885,7 +7885,8 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_141.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_141.as_ptr()) || pattern == __DTA_REGEX_141
+        {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -7925,7 +7926,8 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_143.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_143.as_ptr()) || pattern == __DTA_REGEX_143
+        {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -7965,7 +7967,8 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_145.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_145.as_ptr()) || pattern == __DTA_REGEX_145
+        {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -8039,7 +8042,8 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_149.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_149.as_ptr()) || pattern == __DTA_REGEX_149
+        {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -8113,7 +8117,8 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_153.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_153.as_ptr()) || pattern == __DTA_REGEX_153
+        {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -8187,7 +8192,8 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_158.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_158.as_ptr()) || pattern == __DTA_REGEX_158
+        {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -8288,7 +8294,8 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_162.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_162.as_ptr()) || pattern == __DTA_REGEX_162
+        {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -8336,7 +8343,8 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_169.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_169.as_ptr()) || pattern == __DTA_REGEX_169
+        {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -8384,7 +8392,8 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_325.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_325.as_ptr()) || pattern == __DTA_REGEX_325
+        {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -8458,7 +8467,8 @@ mod __bbnfbootstrap_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_389.as_ptr()) {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_389.as_ptr()) || pattern == __DTA_REGEX_389
+        {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -71539,7 +71549,10 @@ mod __bbnfbootstrap_emit_impl {
         let outer_child_mark = builder.mark_children();
         let outer_child_mark_idx: u32 = outer_child_mark.0;
         let mut this_operand_root: u32 = outer_child_mark_idx;
-        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _operand_off = ({
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
+        })?;
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
@@ -71633,7 +71646,10 @@ mod __bbnfbootstrap_emit_impl {
                 lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _rhs_off = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
+            })?;
             this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
@@ -71709,7 +71725,10 @@ mod __bbnfbootstrap_emit_impl {
         let outer_child_mark = builder.mark_children();
         let outer_child_mark_idx: u32 = outer_child_mark.0;
         let mut this_operand_root: u32 = outer_child_mark_idx;
-        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _operand_off = ({
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
+        })?;
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
@@ -71803,7 +71822,10 @@ mod __bbnfbootstrap_emit_impl {
                 lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _rhs_off = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
+            })?;
             this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
@@ -71840,7 +71862,10 @@ mod __bbnfbootstrap_emit_impl {
         let span_lo = *p as u32;
         let outer_child = builder.mark_children();
         {
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_pratt_BbnfBootstrap_value_path(input, p, state, builder)
+            })?;
         }
         {
             let at = *p;
@@ -71869,7 +71894,10 @@ mod __bbnfbootstrap_emit_impl {
             let attempt = (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
                 let seq_lo = *p as u32;
                 let seq_child = builder.mark_children();
-                let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+                let _ = ({
+                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                    parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder)
+                })?;
                 let repeat_lo = *p as u32;
                 let repeat_child = builder.mark_children();
                 let mut iter_count: u32 = 0;
@@ -71901,7 +71929,10 @@ mod __bbnfbootstrap_emit_impl {
                                 ::bbnf::runtime::tape::PayloadData::None,
                             );
                             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+                            let _ = ({
+                                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                                parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder)
+                            })?;
                             let seq_hi = *p as u32;
                             let _ = builder.push_compound(
                                 ::bbnf::runtime::tape::TapeKind::Seq,
@@ -72523,7 +72554,10 @@ mod __bbnfbootstrap_emit_impl {
         let outer_child_mark = builder.mark_children();
         let outer_child_mark_idx: u32 = outer_child_mark.0;
         let mut this_operand_root: u32 = outer_child_mark_idx;
-        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _operand_off = ({
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder)
+        })?;
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
@@ -72617,7 +72651,10 @@ mod __bbnfbootstrap_emit_impl {
                 lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _rhs_off = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder)
+            })?;
             this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
@@ -72693,7 +72730,10 @@ mod __bbnfbootstrap_emit_impl {
         let outer_child_mark = builder.mark_children();
         let outer_child_mark_idx: u32 = outer_child_mark.0;
         let mut this_operand_root: u32 = outer_child_mark_idx;
-        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _operand_off = ({
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            parse_pratt_BbnfBootstrap_value_add(input, p, state, builder)
+        })?;
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
@@ -72787,7 +72827,10 @@ mod __bbnfbootstrap_emit_impl {
                 lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _rhs_off = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_pratt_BbnfBootstrap_value_add(input, p, state, builder)
+            })?;
             this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
@@ -72863,7 +72906,10 @@ mod __bbnfbootstrap_emit_impl {
         let outer_child_mark = builder.mark_children();
         let outer_child_mark_idx: u32 = outer_child_mark.0;
         let mut this_operand_root: u32 = outer_child_mark_idx;
-        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _operand_off = ({
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder)
+        })?;
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
@@ -72957,7 +73003,10 @@ mod __bbnfbootstrap_emit_impl {
                 lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _rhs_off = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder)
+            })?;
             this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
@@ -73033,7 +73082,10 @@ mod __bbnfbootstrap_emit_impl {
         let outer_child_mark = builder.mark_children();
         let outer_child_mark_idx: u32 = outer_child_mark.0;
         let mut this_operand_root: u32 = outer_child_mark_idx;
-        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _operand_off = ({
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            parse_pratt_BbnfBootstrap_value_and(input, p, state, builder)
+        })?;
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
@@ -73127,7 +73179,10 @@ mod __bbnfbootstrap_emit_impl {
                 lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _rhs_off = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_pratt_BbnfBootstrap_value_and(input, p, state, builder)
+            })?;
             this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
@@ -73185,7 +73240,10 @@ mod __bbnfbootstrap_emit_impl {
             );
         }
         {
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
+            })?;
         }
         {
             let repeat_lo = *p as u32;
@@ -73219,7 +73277,10 @@ mod __bbnfbootstrap_emit_impl {
                             ::bbnf::runtime::tape::PayloadData::None,
                         );
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                        let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+                        let _ = ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
+                        })?;
                         let seq_hi = *p as u32;
                         let _ = builder.push_compound(
                             ::bbnf::runtime::tape::TapeKind::Seq,
@@ -73287,7 +73348,10 @@ mod __bbnfbootstrap_emit_impl {
             );
         }
         {
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder)
+            })?;
         }
         let span_hi = *p as u32;
         let outer_off = builder.push_compound(
@@ -73788,7 +73852,10 @@ mod __bbnfbootstrap_emit_impl {
             let repeat_child = builder.mark_children();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_flat_BbnfBootstrap_big_comment(input, p, state, builder)
+            })?;
             let iter_hi = *p as u32;
             let _ = builder.push_compound(
                 ::bbnf::runtime::tape::TapeKind::Seq,
@@ -73818,7 +73885,11 @@ mod __bbnfbootstrap_emit_impl {
             let repeat_child = builder.mark_children();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let __first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
+                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+                parse_keyword_BbnfBootstrap_modifier(input, p, __first, builder)
+            })?;
             let iter_hi = *p as u32;
             let _ = builder.push_compound(
                 ::bbnf::runtime::tape::TapeKind::Seq,
@@ -73843,7 +73914,10 @@ mod __bbnfbootstrap_emit_impl {
             let repeat_child = builder.mark_children();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_flat_BbnfBootstrap_big_comment(input, p, state, builder)
+            })?;
             let iter_hi = *p as u32;
             let _ = builder.push_compound(
                 ::bbnf::runtime::tape::TapeKind::Seq,
@@ -73898,7 +73972,10 @@ mod __bbnfbootstrap_emit_impl {
         let span_lo = *p as u32;
         let outer_child = builder.mark_children();
         {
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_flat_BbnfBootstrap_factor(input, p, state, builder)
+            })?;
         }
         {
             let repeat_lo = *p as u32;
@@ -73929,12 +74006,18 @@ mod __bbnfbootstrap_emit_impl {
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let seq_lo = *p as u32;
             let seq_child = builder.mark_children();
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder)
+            })?;
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_flat_BbnfBootstrap_type_annotation(input, p, state, builder)
+            })?;
             let iter_hi = *p as u32;
             let _ = builder.push_compound(
                 ::bbnf::runtime::tape::TapeKind::Seq,
@@ -74145,7 +74228,10 @@ mod __bbnfbootstrap_emit_impl {
         let outer_child_mark = builder.mark_children();
         let outer_child_mark_idx: u32 = outer_child_mark.0;
         let mut this_operand_root: u32 = outer_child_mark_idx;
-        let _operand_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+        let _operand_off = ({
+            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+            parse_flat_BbnfBootstrap_mapped_factor(input, p, state, builder)
+        })?;
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
@@ -74239,7 +74325,10 @@ mod __bbnfbootstrap_emit_impl {
                 lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _rhs_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _rhs_off = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_flat_BbnfBootstrap_mapped_factor(input, p, state, builder)
+            })?;
             this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
@@ -74297,7 +74386,10 @@ mod __bbnfbootstrap_emit_impl {
             );
         }
         {
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+            })?;
         }
         {
             let repeat_lo = *p as u32;
@@ -74331,7 +74423,10 @@ mod __bbnfbootstrap_emit_impl {
                             ::bbnf::runtime::tape::PayloadData::None,
                         );
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                        let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+                        let _ = ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+                        })?;
                         let seq_hi = *p as u32;
                         let _ = builder.push_compound(
                             ::bbnf::runtime::tape::TapeKind::Seq,
@@ -74401,7 +74496,10 @@ mod __bbnfbootstrap_emit_impl {
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         }
         {
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+            })?;
         }
         let span_hi = *p as u32;
         let outer_off = builder.push_compound(
@@ -74486,7 +74584,10 @@ mod __bbnfbootstrap_emit_impl {
         }
         {
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+            })?;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         }
         {
@@ -74640,12 +74741,18 @@ mod __bbnfbootstrap_emit_impl {
         }
         {
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+            })?;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         }
         {
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+            })?;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         }
         {
@@ -74708,7 +74815,10 @@ mod __bbnfbootstrap_emit_impl {
         let span_lo = *p as u32;
         let outer_child = builder.mark_children();
         {
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+            })?;
         }
         {
             let repeat_lo = *p as u32;
@@ -74856,7 +74966,10 @@ mod __bbnfbootstrap_emit_impl {
                 let attempt =
                     (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                        let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+                        let _ = ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            parse_flat_BbnfBootstrap_pretty_hint(input, p, state, builder)
+                        })?;
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         Ok(())
                     })();
@@ -74978,7 +75091,10 @@ mod __bbnfbootstrap_emit_impl {
         }
         {
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_flat_BbnfBootstrap_regex(input, p, state, builder)
+            })?;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         }
         {
@@ -75064,7 +75180,10 @@ mod __bbnfbootstrap_emit_impl {
         }
         {
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+            })?;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         }
         {
@@ -75236,7 +75355,10 @@ mod __bbnfbootstrap_emit_impl {
         }
         {
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _ = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _ = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+            })?;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         }
         {
@@ -75472,7 +75594,10 @@ mod __bbnfbootstrap_emit_impl {
         loop {
             let iter_open = *p as u32;
             let iter_child = builder.mark_children();
-            let _value_off = parse_BbnfBootstrap_grammar__value(input, p, state, builder)?;
+            let _value_off = ({
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                parse_wrap_BbnfBootstrap_grammar_item(input, p, state, builder)
+            })?;
             let comma_repeat_open = *p as u32;
             let comma_repeat_child = builder.mark_children();
             let comma_iter_save_p = *p;

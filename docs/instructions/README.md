@@ -5,6 +5,16 @@ auditing, benchmarking, profiling, testing, documentation. They are
 non-negotiable. An agent that violates them produces debt, not progress.
 Internalise them before beginning any task.
 
+Companion documents:
+
+- `PROFILING.md` — samply workflow, profile artefact discipline.
+- `tranche/` — tranche authoring + execution:
+  - `tranche/SPEC.md` — tranche creation specification.
+  - `tranche/START.md` — orchestrator invocation prompt.
+  - `tranche/RESEARCH.md` — research wave protocol.
+  - `tranche/WAVE_SPEC.md` — per-wave sub-document format.
+  - `tranche/README.md` — subdir index + invocation order.
+
 ## Tranche structure
 
 Every tranche lives in `docs/tranches/{LETTER}/` as a directory:
@@ -442,7 +452,7 @@ bash scripts/bootstrap-bbnf.sh
 # 4. Commit the new generated.rs. Idempotency check follows
 #    (gen1 == gen2). If the second bootstrap emits a truncated
 #    stub, the parser-consumer contract still has gaps — follow
-#    the TRANCHE_SPEC §Root-cause discipline walk-through.
+#    the tranche/SPEC.md §Root-cause discipline walk-through.
 ```
 
 Commits `87f65214` (transient entry patch) and `49656fd4` (one-shot

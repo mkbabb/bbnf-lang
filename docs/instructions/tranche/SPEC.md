@@ -1,10 +1,11 @@
 # Tranche Creation Specification
 
 Normative rules for authoring and executing a tranche plan. Composes
-`README.md`, `PROFILING.md`, and `RESEARCH.md` into a single
-tranche-authoring workflow. Applies to every tranche from
-introduction forward. Earlier tranches are not retroactively
-conformed.
+`../README.md` (operational directives), `../PROFILING.md` (profiling
+workflow), `RESEARCH.md` (research wave protocol), and `WAVE_SPEC.md`
+(per-wave sub-document format) into a single tranche-authoring
+workflow. Applies to every tranche from introduction forward.
+Earlier tranches are not retroactively conformed.
 
 Grounded in the 12-tranche retrospective corpus at
 `docs/tranches/AW/audit/{AK,AL,AM,AN,AO,AP,AQ,AR,AS,AT,AU,AV}-retro.md`

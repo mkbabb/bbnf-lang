@@ -10,12 +10,15 @@ and every directive below that looks terse expands there.
 Begin the current tranche, `docs/tranches/{LETTER}/{LETTER}.md`.
 
 You are the orchestrator. Read `docs/instructions/README.md` and
-the tranche document in full before dispatching any sub-agent —
-they hold the operational protocol, the invariants, and the
-tranche's wave schedule. If the tranche includes profiling work,
-read `docs/instructions/PROFILING.md` as well. If the tranche
-starts with a research wave, read
-`docs/instructions/RESEARCH.md`.
+`docs/instructions/tranche/SPEC.md` and the tranche document in full
+before dispatching any sub-agent — they hold the operational
+protocol, the invariants, and the tranche's wave schedule. If the
+tranche includes profiling work, read `docs/instructions/PROFILING.md`
+as well. If the tranche starts with a research wave, read
+`docs/instructions/tranche/RESEARCH.md`. If the tranche carries
+per-wave specs under `docs/tranches/{LETTER}/waves/`, dispatch per
+`docs/instructions/tranche/WAVE_SPEC.md` — the wave spec is the
+orchestrator's input, the parent `{LETTER}.md` the index.
 
 The wave schedule in the tranche document is the canonical
 parallelisation plan. Delegate fastidiously to worktree-isolated
@@ -25,7 +28,7 @@ before integrating. Commit with `/commit` at every milestone —
 yours and theirs. Update `PROGRESS.md` at every wave boundary.
 
 Do not relinquish control until the tranche-completion
-requirements in `README.md` are met: `FINAL.md`,
+requirements in `docs/instructions/README.md` are met: `FINAL.md`,
 `docs/benchmarks/post-{LETTER}.json` over the four parse-benches,
 and a clean `cargo test --workspace`. A multi-phase escape clause
 must be declared at plan time in `{LETTER}.md`, never invoked

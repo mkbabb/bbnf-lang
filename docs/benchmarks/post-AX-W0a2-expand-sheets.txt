@@ -1,0 +1,62 @@
+        pub fn parse(
+            input: &str,
+        ) -> ::core::result::Result<::bbnf::runtime::Parsed<'_, Self>, ::bbnf::runtime::ParseErr>
+        {
+            let mut builder = ::bbnf::runtime::tape::TapeBuilder::with_capacity(
+                GRAMMAR_PROFILE.capacity_for(input.len()),
+            );
+            builder.enable_inline_frame_depth();
+            let mut psi = psi_with_capacity(input.len());
+            const STRUCTURAL_ALPHABET: ::bbnf::runtime::scan::StructuralAlphabet =
+                ::bbnf::runtime::scan::StructuralAlphabet::from_profile(&GRAMMAR_PROFILE);
+            let idx =
+                ::bbnf::runtime::scan::scan_structural(input.as_bytes(), &STRUCTURAL_ALPHABET);
+            let root_off = {
+                let (columns, frame_depth) = builder.columns_and_frame_depth_mut();
+                if !GRAMMAR_PROFILE.list_rules.is_empty()
+                    && (input.as_bytes().len() as u32) > GRAMMAR_PROFILE.parallel_break_even_bytes
+                    && GRAMMAR_PROFILE.parallel_break_even_bytes > 0
+                {
+                    let n_workers = ::core::cmp::min(
+                        4usize,
+                        ::core::cmp::max(1usize, ::bbnf::runtime::tape::rayon_num_threads()),
+                    );
+                    let list_rule_id = GRAMMAR_PROFILE.list_rules[0].0;
+                    ::bbnf::runtime::tape::dta_run_parallel(
+                        input.as_bytes(),
+                        &idx,
+                        list_rule_id,
+                        n_workers,
+                        dta_run_GoogleSheetsParser,
+                        columns,
+                        &mut psi,
+                        frame_depth,
+                    )
+                } else {
+                    dta_run_GoogleSheetsParser(
+                        input.as_bytes(),
+                        &idx,
+                        columns,
+                        &mut psi,
+                        frame_depth,
+                    )
+                }
+            }
+            .map_err(|e| match e {
+                ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
+                    ::bbnf::runtime::ParseErr::Syntax { offset, rule: None }
+                }
+                ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                    ::bbnf::runtime::ParseErr::Syntax { offset, rule: None }
+                }
+                ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
+                    ::bbnf::runtime::ParseErr::Syntax {
+                        offset: 0,
+                        rule: None,
+                    }
+                }
+            })?;
+            psi.fill_columns(input.as_bytes(), builder.columns_mut(), &GRAMMAR_PROFILE);
+            let tape = builder.finish().map_err(::bbnf::runtime::ParseErr::Tape)?;
+            ::core::result::Result::Ok(::bbnf::runtime::Parsed::new(tape, input, root_off))
+        }

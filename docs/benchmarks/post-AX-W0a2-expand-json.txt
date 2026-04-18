@@ -1,0 +1,39 @@
+        pub fn parse(
+            input: &str,
+        ) -> ::core::result::Result<::bbnf::runtime::Parsed<'_, Self>, ::bbnf::runtime::ParseErr>
+        {
+            let mut builder = ::bbnf::runtime::tape::TapeBuilder::with_capacity(
+                GRAMMAR_PROFILE.capacity_for(input.len()),
+            );
+            let root_off = {
+                let mut pos: usize = 0;
+                let mut state = __shape_support_JsonParser::ScanState::new();
+                let off =
+                    parse_JsonParser_value(input.as_bytes(), &mut pos, &mut state, &mut builder)
+                        .map_err(|e| match e {
+                            ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
+                                ::bbnf::runtime::ParseErr::Syntax { offset, rule: None }
+                            }
+                            ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                                ::bbnf::runtime::ParseErr::Syntax { offset, rule: None }
+                            }
+                            ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
+                                ::bbnf::runtime::ParseErr::Syntax {
+                                    offset: 0,
+                                    rule: None,
+                                }
+                            }
+                        })?;
+                let _ =
+                    __shape_support_JsonParser::skip_space(input.as_bytes(), &mut pos, &mut state);
+                if pos != input.len() {
+                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: pos as u32,
+                        rule: None,
+                    });
+                }
+                off
+            };
+            let tape = builder.finish().map_err(::bbnf::runtime::ParseErr::Tape)?;
+            ::core::result::Result::Ok(::bbnf::runtime::Parsed::new(tape, input, root_off))
+        }

@@ -735,6 +735,197 @@ fn w4_unordered_detector_admits_kleene_plus_over_disjoint_alt() {
     );
 }
 
+/// Build an Unordered fixture mimicking CSS `compoundSelector`:
+/// `Repeat(lo=1)` over an Alt whose branches are Refs to Alt-bodied
+/// rules. The [`bbnf_ir::passes::recognizers::disjoint_first::
+/// DisjointFirstMiner`]'s `branch_first_bytes` rejects Alt targets,
+/// so a W4.1 detector keyed on [`DisjointFirstTable`] never fires;
+/// the W4-fix detector admits via structural FIRST walk.
+///
+/// Four branches:
+/// - `a_chain = "a" | "A"` — Alt-bodied rule, FIRST ⊆ {'a', 'A'}.
+/// - `b_chain = "b" | "B"` — Alt-bodied rule, FIRST ⊆ {'b', 'B'}.
+/// - `c_lit   = "c"`       — Literal-bodied rule, FIRST = {'c'}.
+/// - `d_lit   = "d"`       — Literal-bodied rule, FIRST = {'d'}.
+fn build_unordered_alt_branch_fixture() -> (GrammarIR, RuleId) {
+    let mut ir = base_ir();
+    let a_lo = lit(&mut ir, "a");
+    let a_up = lit(&mut ir, "A");
+    let a_chain_body = IrNode::Alt(
+        vec![
+            AltBranch { node: a_lo, first_set: None },
+            AltBranch { node: a_up, first_set: None },
+        ],
+        None,
+    );
+    let a_chain = push_rule(&mut ir, "a_chain", a_chain_body);
+
+    let b_lo = lit(&mut ir, "b");
+    let b_up = lit(&mut ir, "B");
+    let b_chain_body = IrNode::Alt(
+        vec![
+            AltBranch { node: b_lo, first_set: None },
+            AltBranch { node: b_up, first_set: None },
+        ],
+        None,
+    );
+    let b_chain = push_rule(&mut ir, "b_chain", b_chain_body);
+
+    let c_body = lit(&mut ir, "c");
+    let c_lit = push_rule(&mut ir, "c_lit", c_body);
+    let d_body = lit(&mut ir, "d");
+    let d_lit = push_rule(&mut ir, "d_lit", d_body);
+
+    // compound = (a_chain | b_chain | c_lit | d_lit)+
+    let alt = IrNode::Alt(
+        vec![
+            AltBranch { node: IrNode::Ref(a_chain), first_set: None },
+            AltBranch { node: IrNode::Ref(b_chain), first_set: None },
+            AltBranch { node: IrNode::Ref(c_lit), first_set: None },
+            AltBranch { node: IrNode::Ref(d_lit), first_set: None },
+        ],
+        None,
+    );
+    let compound_body = IrNode::Repeat {
+        inner: Box::new(alt),
+        lo: 1,
+        hi: u32::MAX,
+    };
+    let compound = push_rule(&mut ir, "compound", compound_body);
+    let entry_body = IrNode::Seq(vec![
+        lit(&mut ir, "("),
+        IrNode::Ref(compound),
+        lit(&mut ir, ")"),
+    ]);
+    let entry = push_rule(&mut ir, "entry", entry_body);
+    ir.entry = entry;
+    finalise_and_classify(&mut ir);
+    (ir, compound)
+}
+
+#[test]
+fn w4_unordered_admits_alt_branch_rules() {
+    // Mirrors CSS compoundSelector: Alt branches reference Alt-bodied
+    // rules (typeSelector / colonSelector). The W4.1 detector rejected
+    // the pattern because `DisjointFirstMiner::branch_first_bytes`
+    // returns `None` on `IrNode::Alt`. The W4-fix structural walk
+    // admits it.
+    let (ir, compound) = build_unordered_alt_branch_fixture();
+    assert_eq!(
+        ir.shape_assignments.get(compound),
+        ShapeTag::Unordered,
+        "Repeat over Alt-of-Refs-to-Alt-bodied-rules must classify as Unordered"
+    );
+}
+
+#[test]
+fn w4_unordered_rejects_overlapping_first_alt() {
+    // Two branches start with the same byte — disjointness fails.
+    let mut ir = base_ir();
+    let a_body = lit(&mut ir, "a");
+    let a_rule = push_rule(&mut ir, "a_rule", a_body);
+    // `aa_rule` also starts with 'a' — its FIRST overlaps `a_rule`'s.
+    let aa_body = lit(&mut ir, "ab");
+    let aa_rule = push_rule(&mut ir, "aa_rule", aa_body);
+    let alt = IrNode::Alt(
+        vec![
+            AltBranch { node: IrNode::Ref(a_rule), first_set: None },
+            AltBranch { node: IrNode::Ref(aa_rule), first_set: None },
+        ],
+        None,
+    );
+    let compound_body = IrNode::Repeat {
+        inner: Box::new(alt),
+        lo: 1,
+        hi: u32::MAX,
+    };
+    let compound = push_rule(&mut ir, "compound", compound_body);
+    let entry_body = IrNode::Seq(vec![
+        lit(&mut ir, "("),
+        IrNode::Ref(compound),
+        lit(&mut ir, ")"),
+    ]);
+    let entry = push_rule(&mut ir, "entry", entry_body);
+    ir.entry = entry;
+    finalise_and_classify(&mut ir);
+    assert_ne!(
+        ir.shape_assignments.get(compound),
+        ShapeTag::Unordered,
+        "Alt branches with overlapping FIRST bytes must NOT classify as Unordered"
+    );
+}
+
+#[test]
+fn w4_unordered_rejects_optional_repeat() {
+    // Repeat lo = 0 — the Unordered emitter's iteration-floor
+    // invariant (≥ 1 iter) rejects this as an optional pattern.
+    let mut ir = base_ir();
+    let a_body = lit(&mut ir, "a");
+    let a_rule = push_rule(&mut ir, "a_rule", a_body);
+    let b_body = lit(&mut ir, "b");
+    let b_rule = push_rule(&mut ir, "b_rule", b_body);
+    let alt = IrNode::Alt(
+        vec![
+            AltBranch { node: IrNode::Ref(a_rule), first_set: None },
+            AltBranch { node: IrNode::Ref(b_rule), first_set: None },
+        ],
+        None,
+    );
+    // Repeat{lo=0} — Kleene-star, not plus.
+    let compound_body = IrNode::Repeat {
+        inner: Box::new(alt),
+        lo: 0,
+        hi: u32::MAX,
+    };
+    let compound = push_rule(&mut ir, "compound", compound_body);
+    let entry_body = IrNode::Seq(vec![
+        lit(&mut ir, "("),
+        IrNode::Ref(compound),
+        lit(&mut ir, ")"),
+    ]);
+    let entry = push_rule(&mut ir, "entry", entry_body);
+    ir.entry = entry;
+    finalise_and_classify(&mut ir);
+    assert_ne!(
+        ir.shape_assignments.get(compound),
+        ShapeTag::Unordered,
+        "Repeat{{lo: 0}} over disjoint-FIRST Alt must NOT classify as Unordered"
+    );
+}
+
+#[test]
+fn w4_unordered_rejects_single_branch_alt() {
+    // Single-branch Alt degenerates into a structural wrapper; the
+    // detector rejects it so the classifier doesn't emit pointless
+    // Unordered tags.
+    let mut ir = base_ir();
+    let a_body = lit(&mut ir, "a");
+    let a_rule = push_rule(&mut ir, "a_rule", a_body);
+    let alt = IrNode::Alt(
+        vec![AltBranch { node: IrNode::Ref(a_rule), first_set: None }],
+        None,
+    );
+    let compound_body = IrNode::Repeat {
+        inner: Box::new(alt),
+        lo: 1,
+        hi: u32::MAX,
+    };
+    let compound = push_rule(&mut ir, "compound", compound_body);
+    let entry_body = IrNode::Seq(vec![
+        lit(&mut ir, "("),
+        IrNode::Ref(compound),
+        lit(&mut ir, ")"),
+    ]);
+    let entry = push_rule(&mut ir, "entry", entry_body);
+    ir.entry = entry;
+    finalise_and_classify(&mut ir);
+    assert_ne!(
+        ir.shape_assignments.get(compound),
+        ShapeTag::Unordered,
+        "Single-branch Alt must NOT classify as Unordered"
+    );
+}
+
 /// Build an ArgList-shape IR: `"calc" , "(" >> inner << ")"` — the
 /// canonical CSS-style function-call shape.
 fn build_arglist_fixture() -> (GrammarIR, RuleId) {

@@ -154,6 +154,59 @@ fn css_math_product_classified_as_pratt() {
     assert_shape(&ir, "mathProduct", ShapeTag::Pratt);
 }
 
+// ─── Unordered: CSS compoundSelector — the H1-named canonical case ───
+
+/// `compoundSelector = (classSelector | idSelector | attrSelector |
+/// colonSelector | typeSelector) +` at
+/// `grammar/css/l4/selectors.bbnf:87-88` — 5-way `Repeat { lo: 1 }`
+/// over an Alt of Refs. The H1 shape-taxonomy audit (§A.2) names this
+/// the canonical Unordered-shape rule; the W4-fix detector admits it
+/// via a structural-walk FIRST projection that sees through the Ref
+/// chain into `typeSelector`'s `Alt(wqName, Seq(nsPrefix?, "*"))` and
+/// `colonSelector`'s `Alt(pseudoElement, pseudoClass)` bodies.
+///
+/// W4.1's placeholder detector keyed on `DisjointFirstTable`, which
+/// the `DisjointFirstMiner` never populates for this rule because
+/// its `branch_first_bytes` helper returns `None` on `IrNode::Alt`
+/// — so the W4.1 classifier left `compoundSelector` in the walker-
+/// fallback set.
+#[test]
+fn css_compound_selector_classified_as_unordered() {
+    let Some(ir) = compile_css_l4() else {
+        return;
+    };
+    assert_shape(&ir, "compoundSelector", ShapeTag::Unordered);
+}
+
+/// Aggregate Unordered coverage: CSS L4 has at least the canonical
+/// `compoundSelector` rule per the H1 audit. The detector must return
+/// at least one tag on CSS L4 post the W4-fix; any additional hits
+/// signal further Unordered admissions that tranche audits should
+/// surface.
+#[test]
+fn css_l4_unordered_count_covers_compound_selector() {
+    let Some(ir) = compile_css_l4() else {
+        return;
+    };
+    let unordered = ir.shape_assignments.count_of(ShapeTag::Unordered);
+    assert!(
+        unordered >= 1,
+        "CSS L4 Unordered count {unordered} < 1; H1 audit names \
+         `compoundSelector` as the canonical Unordered rule — the \
+         detector must admit it"
+    );
+    // Surface the set for tranche-audit visibility so any new
+    // admission is noted via the `--nocapture` channel without
+    // tripping the count assertion immediately.
+    let names: Vec<&str> = ir
+        .rules
+        .iter()
+        .filter(|r| ir.shape_assignments.get(r.id) == ShapeTag::Unordered)
+        .map(|r| ir.get_string(r.name))
+        .collect();
+    println!("CSS L4 Unordered rules ({unordered}): {names:?}");
+}
+
 // ─── ArgList: CSS function-call family ───────────────────────────────
 
 /// `calcFunction = "calc" , "(" >> mathExpr << ")"` at

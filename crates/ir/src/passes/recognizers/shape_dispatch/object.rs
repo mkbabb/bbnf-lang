@@ -100,41 +100,114 @@ pub(super) fn is_pair_seq(
     }
 }
 
-/// A Seq admits the Object-pair shape when it has at least three
-/// non-trivial children: a key-class leaf, a pivot literal (one byte
-/// such as `:` or `;`), and a value-class node. Non-structural
-/// children (whitespace placeholders) don't count against the
-/// position budget.
+/// A Seq admits the Object-pair shape when it has at least two
+/// structural positions where somewhere in the Seq's descent there
+/// is a single-byte pivot literal (e.g. `:` or `;`) AND at least two
+/// distinct non-literal value positions (the key and the value).
+///
+/// The pivot may be:
+///
+/// - A direct Literal child of the Seq.
+/// - A Ref child whose target rule resolves to a single-byte Literal
+///   (JSON's `colon = ":" ?w` and CSS's `":"` before values).
+/// - Wrapped in `Next` / `Skip` chains.
 fn seq_has_key_pivot_value(children: &[IrNode], ir: &GrammarIR) -> bool {
-    // Count structurally-meaningful children and look for a
-    // single-byte literal pivot somewhere in the middle.
-    let mut saw_key = false;
-    let mut saw_pivot = false;
-    let mut saw_value = false;
-    for child in children {
-        match unwrap_map_ow(child) {
-            IrNode::Epsilon | IrNode::OptionalWhitespace(_) => continue,
-            IrNode::Literal(_) if !saw_key => {
-                // Leading literal without a key first — not pair-
-                // shaped (that's a keyword head, not a key → value).
-                return false;
-            }
-            IrNode::Literal(sid) => {
-                let bytes = ir.get_string(*sid).as_bytes();
-                if bytes.len() == 1 && !saw_pivot {
-                    saw_pivot = true;
-                }
-            }
-            other if !saw_key => {
-                // First non-literal child is the key.
-                let _ = other;
-                saw_key = true;
-            }
-            _ if saw_pivot && !saw_value => {
-                saw_value = true;
-            }
-            _ => {}
+    let positions: Vec<&IrNode> = children
+        .iter()
+        .map(unwrap_map_ow)
+        .filter(|c| {
+            !matches!(
+                c,
+                IrNode::Epsilon | IrNode::OptionalWhitespace(_)
+            )
+        })
+        .collect();
+    if positions.len() < 2 {
+        return false;
+    }
+    // Leading single-byte literal = keyword head, not pair.
+    if let IrNode::Literal(sid) = positions[0] {
+        let bytes = ir.get_string(*sid).as_bytes();
+        if bytes.len() == 1 {
+            return false;
         }
     }
-    saw_key && saw_pivot && saw_value
+    // Count distinct value (Ref/Regex/compound) and pivot (single-
+    // byte literal or single-byte ref) occurrences across the
+    // Seq's flattened tree.
+    let mut value_count = 0usize;
+    let mut pivot_count = 0usize;
+    let mut seen_refs: HashSet<RuleId> = HashSet::new();
+    for pos in &positions {
+        let (pivot, value) = scan_tree(pos, ir, &mut seen_refs);
+        pivot_count += pivot;
+        value_count += value;
+    }
+    // Object pair shape: ≥ 1 pivot byte and ≥ 2 value positions
+    // (key + value).
+    pivot_count >= 1 && value_count >= 2
+}
+
+/// Walk a tree and count (pivots, values). Pivots are single-byte
+/// literals (either direct or resolved through a single Ref hop).
+/// Values are Refs to non-single-byte rules, Regexes, Alts, or
+/// Seqs.
+fn scan_tree(
+    node: &IrNode,
+    ir: &GrammarIR,
+    visited: &mut HashSet<RuleId>,
+) -> (usize, usize) {
+    match unwrap_map_ow(node) {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            if bytes.len() == 1 {
+                (1, 0)
+            } else {
+                (0, 0)
+            }
+        }
+        IrNode::Regex(_) => (0, 1),
+        IrNode::Ref(rid) => {
+            if !visited.insert(*rid) {
+                return (0, 1); // cyclic — treat as value leaf
+            }
+            let rule = &ir.rules[*rid as usize];
+            let resolved_body = unwrap_map_ow(&rule.body);
+            // Check if this Ref resolves (through trivial wrappers)
+            // to a single-byte literal — that makes it a pivot-
+            // carrier. JSON's `colon = ":" ?w` lowers to
+            // `OptionalWhitespace(Literal(":"))` or
+            // `Skip(Literal(":"), ...)`; strip wrappers to check.
+            let result = if is_single_byte_literal_rule(resolved_body, ir) {
+                (1, 0)
+            } else {
+                (0, 1)
+            };
+            visited.remove(rid);
+            result
+        }
+        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+            let (lp, lv) = scan_tree(lhs, ir, visited);
+            let (rp, rv) = scan_tree(rhs, ir, visited);
+            (lp + rp, lv + rv)
+        }
+        IrNode::Alt(_, _) | IrNode::Seq(_) => (0, 1),
+        IrNode::Repeat { inner, .. } => scan_tree(inner, ir, visited),
+        _ => (0, 0),
+    }
+}
+
+/// Returns `true` when `body` ultimately resolves to a single-byte
+/// literal, possibly wrapped in OptionalWhitespace / Map / Skip /
+/// Next trivia or bridged through a single Ref.
+fn is_single_byte_literal_rule(body: &IrNode, ir: &GrammarIR) -> bool {
+    match unwrap_map_ow(body) {
+        IrNode::Literal(sid) => {
+            ir.get_string(*sid).as_bytes().len() == 1
+        }
+        IrNode::Skip(lhs, _) | IrNode::Next(lhs, _) => {
+            is_single_byte_literal_rule(lhs, ir)
+        }
+        _ => false,
+    }
 }

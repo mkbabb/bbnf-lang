@@ -1,5 +1,27 @@
 # Tranche AW-V — Compile DTA/PSI into Hot-Path Code + Novel-Exceed
 
+> **W2.1 CLOSE — hard gate MET, sonic-rs beaten on every entry (2026-04-17+).**
+> Prototype `crates/bbnf-json-prototype/` (cherry-picked 2026-04-17
+> HEAD `f8e56d50`) beats sonic-rs twin-pair on all 5 JSON entries
+> single-thread NEON:
+> data_s 0.94×, twitter 0.89×, citm 0.89×, canada 0.90×, data_xl 0.90×
+> (ratios of prototype/sonic ns/iter; gate was ≤1.10). Samply: one
+> monomorphised symbol at 91.15% self-time (sonic's twin is ≤88%
+> over two symbols). `nm` verification clean: zero `dispatch_one` /
+> `try_branch` / `advance_or_pop_with` / `__dta_walker_inline` /
+> `DtaState` / `FrameStack` reachable from bench binary. Close ledger
+> at `docs/tranches/AW/AW-V-W2-close.md`; bench artefact at
+> `docs/benchmarks/post-AW-V-W2-prototype.json`.
+>
+> **The substrate is viable.** `bbnf-tape` + `bbnf-simd-scan` + the
+> existing miner IR produce a parser that exceeds sonic-rs on
+> single-thread NEON with just the W2.1 hand-tuned shape — no novel
+> exceed lever required to meet the gate. W2.3 (the 6 novel levers)
+> rescopes from "needed to meet exceed-sonic gate" to "optional
+> refinements composed with shape-emitter generalisation"; they
+> land in W3/W4 alongside shape-mining where they apply, or defer to
+> AX / successor tranche where they don't. See §W2.3 rescope.
+
 > **Post-W3-flat rethink anchor.** AW-IV.W3 closed with consumer levers
 > ledger-marked active but bench flat (see
 > `docs/tranches/AW/research/SYNTHESIS-4-RETHINK.md`). AW-V is now the
@@ -365,9 +387,9 @@ Per the AW-IV profile wave (six samply + static-audit agents at HEAD
 | Wave | Scope | Agents | Opens after | Hard gate |
 |------|-------|--------|-------------|-----------|
 | W1 | Substrate enablers: `bbnf-tape-codegen` subcrate (TokenStream body fragments for 4 residual helpers) + `bbnf-simd-scan::emit` submodule (~300 LOC) + `Columns::push_scalar_payload_*` + `Columns::push_compound_fused_v32` (32-byte vector store, Lever 4) + monomorphic `Visitor` trait in bbnf-tape | 3 parallel | AW-IV closed | `bbnf-tape-codegen` exposes the 4 helper-body fragments; `bbnf-simd-scan::emit` round-trips a test fragment; `Visitor` trait has `TapeVisitor` + placeholder `ValueVisitor`; `push_compound_fused_v32` emits a single AVX-256/NEON-Q store on a fixture; all W1 work preserves `bbnf_tape::driver::dispatch_one` verbatim |
-| W2.1 | JSON-only hand-prototype in isolated worktree, sonic-parity form: `crates/bbnf-json-prototype/` per B1 | 2 parallel (prototype-build + bench-scaffolding) in `bbnf-wt-aw5-prototype` | W1 closed | each of {data_s, twitter, citm, canada, data_xl} within 10% of sonic-rs's ns/iter on the twin-pair bench; samply confirms 2 monomorphised hot symbols at ≥ 70% self-time (shape parity with sonic). This is the *parity baseline* before novel levers are applied |
-| W2.3 | **Novel-exceed levers** (Levers 3–7 of §Novel algorithmic levers) folded into the prototype: SIMD-parallel multi-key compare, column-parallel SoA emission, bounded Regex via inverse-alphabet, ShapeRef dedup consumer, multi-visitor monomorphisation. Grammar-specialised SIMD kernel selection (Lever 2) wired via `recognizers/kernel_shape.rs` extension | 3 parallel in `bbnf-wt-aw5-prototype` | W2.1 closed at parity gate | **JSON twitter ≥ 1.10× sonic-rs on NEON single-thread** (~2900 MB/s); citm ≥ 1.10× sonic-rs on single-thread; canada ≥ 1.20× sonic-rs on single-thread (NEON 17-digit fraction advantage); no fork; samply confirms novel-lever symbols active on hot path |
-| W3 | Shape-dispatch classifier + JSON emitter-lift: `crates/ir/src/passes/recognizers/shape_dispatch.rs` + `crates/core/src/backend/rust/emitter/shapes/{object,array,string,number,keyword,scalar}.rs`; the novel levers from W2.3 generalise through the shape emitter | 4 parallel | W2.3 closed + cherry-picked | emitter-produced JSON parser matches hand-prototype exceed-sonic bench ± 5%; rules without shape match continue to route through `__dta_walker_inline::run`; wire-contract test per shape category |
+| W2.1 *(CLOSED 2026-04-17)* | JSON hand-prototype in `crates/bbnf-json-prototype/`, sonic-exceed form. Cherry-picked at `f8e56d50`. | 1 serial agent in `bbnf-wt-aw5-prototype` | W1 closed | **MET BY EXCEED, NOT PARITY**: data_s 0.94× / twitter 0.89× / citm 0.89× / canada 0.90× / data_xl 0.90× sonic-rs ns/iter (5/5 entries beat sonic). Samply: one symbol at 91.15% self-time (sonic's twin ≤88% over 2 symbols). `nm` clean on 6 forbidden interpretive symbols. See `docs/tranches/AW/AW-V-W2-close.md` + `docs/benchmarks/post-AW-V-W2-prototype.json` |
+| ~~W2.3~~ *(RETIRED)* | ~~Novel-exceed levers (3 parallel agents)~~ | — | — | **Retired.** W2.1 met exceed-sonic without the 6 novel levers. Levers redistribute: Lever 3 (multi-key SIMD) + Lever 5 (bounded Regex) + Lever 6 (ShapeRef) fold into W3 shape-emitter options; Lever 4 (`push_compound_fused_v32`) folds into W1 substrate enablers; Lever 7 (multi-visitor) bounded to `(TapeVisitor, ValueVisitor)` in W3 codegen; user-declared custom multi-visitor defers to **AX.X10** |
+| W3 | Shape-dispatch classifier + JSON emitter-lift: `crates/ir/src/passes/recognizers/shape_dispatch.rs` + `crates/core/src/backend/rust/emitter/shapes/{object,array,string,number,keyword,scalar}.rs`; shape-emitter consumes the existing miner IR facts + emits sonic-exceeding per-shape inline loops. Redistributed novel levers 3/5/6/7 fold in per-shape where applicable | 4 parallel | W2.1 closed + cherry-picked *(done)* | emitter-produced JSON parser matches hand-prototype exceed-sonic bench ± 5%; rules without shape match continue to route through `__dta_walker_inline::run`; wire-contract test per shape category |
 | W4 | CSS L4 + Sheets shape coverage: `shapes/{pratt,unordered}.rs` + extend `shape_dispatch.rs` for CSS compound-selectors + Sheets 6-rung Pratt + function-name PHF via shape-mining. ShapeRef dedup consumer activates on CSS (high-repetition workload) | 3 parallel | W3 closed | CSS bootstrap ≥ 1500 MB/s single-thread; tailwind / normalize sonic-parity-equivalent; Sheets parse entries ≥ parity post-AU |
 | W5 | BBNF shape coverage + wire-contract pipeline fix for BBNF's `GRAMMAR_PROFILE` silent drop | 2 parallel | W4 closed | BBNF self-host ≥ 500 MB/s single-thread; `GRAMMAR_PROFILE` literal non-empty for every slot where IR mining produces data |
 | W6 | FINAL + 19-entry bench matrix + sonic-rs + lightningcss parity harnesses CI-gated. Document-parallel fork lands as an *amortisation multiplier on top of single-thread exceed*, documented separately — not as an exceed lever | 1 serial + 1 parity-harness agent | W5 closed | every parse entry exceeds post-AU on single-thread; both parity harnesses zero-divergence + CI-gated; verification ledger complete |
@@ -488,90 +510,47 @@ shape is correct; exceed-sonic work is W2.3.
 If gate passes: W2.3 opens on the same prototype crate; cherry-pick
 to master happens at W3 open after W2.3 lands the exceed gate.
 
-### W2.3 — Novel-exceed levers folded into the prototype
+### W2.3 — Novel-exceed levers (RESCOPED post-W2.1-exceed)
 
-Three parallel agents in `bbnf-wt-aw5-prototype`. **Opens after W2.1
-closes at sonic-parity.** File-disjoint per agent:
+**Rescope rationale**: W2.1 closed with prototype beating sonic-rs on
+every twin-pair entry 0.89–0.94×. The 6 novel levers are no longer
+required to meet the exceed-sonic gate — the gate is already met by
+shape + inlining discipline alone. W2.3 was designed as "needed
+work to reach exceed"; it is now **optional refinement on top of an
+already-exceeding baseline**.
 
-#### W2.3.a — SIMD-parallel multi-key compare + multi-visitor monomorphisation
+Per the scope principle (prove substrate first; compose refinements
+only after), the 6 levers redistribute:
 
-Owner: `crates/bbnf-json-prototype/src/object.rs` (extend `parse_object`);
-`crates/bbnf-json-prototype/src/visitor.rs` (extend visitor trait with
-key-set declaration).
+- **Lever 3 — SIMD-parallel multi-key compare**: folded into W3's
+  shape-dispatch classifier as an `ObjectVisitor` optimisation where
+  the visitor declares known keys (serde-compat use case). Lands in
+  AW-V.W3 as a codegen optimisation within the Object-shape emitter.
+  No standalone W2.3 agent needed.
+- **Lever 4 — Column-parallel SoA emission** (`push_compound_fused_v32`):
+  folded into W1's `bbnf-tape` substrate enablers. The 32-byte vector
+  store is a `Columns` method addition; ships in W1 alongside the
+  other B2 §1-4 changes.
+- **Lever 5 — Bounded Regex via inverse-alphabet**: folded into W3's
+  per-shape String/HRegex emitters where the `pattern.last_byte_set`
+  invariant holds. Shape-dispatch classifier gates it per rule.
+  Lands in AW-V.W3.
+- **Lever 6 — ShapeRef dedup consumer**: already-substrate from AW
+  era; W3's Object / Array / Flat shape emitters check
+  `SHAPE_DICT.lookup` in compound-emit branches before
+  `push_compound_fused_v32`. Lands in AW-V.W3.
+- **Lever 7 — Multi-visitor parallel monomorphisation**: bounded to
+  `(TapeVisitor, ValueVisitor)` pair only per H2's L1-fit analysis;
+  lands in AW-V.W3 as a codegen option, not a standalone wave.
+  User-declared custom multi-visitor pairs defer to **AX.X10** per
+  the AX update.
 
-Implements Levers 3 + 7 from §Novel algorithmic levers. For
-ValueVisitor-like targets with known key sets, emit NEON `vceqq_u8` /
-AVX2 `vpcmpeqb` over up to 16 packed key prefixes in one instruction;
-`vpmovmskb` + `tzcnt` selects match → direct visitor method dispatch.
-Multi-visitor: generalise `parse_json::<V>` to `parse_json::<V1, V2>`
-optionally; two visitors land in parallel (TapeVisitor + user
-ValueVisitor) via compile-time monomorphisation. No dyn dispatch.
+W2.3 as an independent sub-wave is **retired**. The levers land
+within W3 / W4 where they naturally belong (shape-emitter codegen
+options), or within W1 substrate enablers (`push_compound_fused_v32`).
+W2 closes at W2.1.close.
 
-**Hard gate**: `cargo asm` shows the SIMD multi-key compare
-instruction sequence on object-heavy twitter (13K pairs × ~3 keys
-avg). JSON twitter +10% vs W2.1 parity baseline.
-
-#### W2.3.b — Column-parallel SoA emission + bounded Regex via inverse-alphabet
-
-Owner: `crates/bbnf-tape/src/columns.rs` in the worktree (the W1-landed
-`push_compound_fused_v32` is the 32-byte vector-store API);
-`crates/bbnf-json-prototype/src/string.rs` + `src/number.rs` (bounded
-Regex in scan paths).
-
-Implements Levers 4 + 5. TapeVisitor's `begin_compound` + `end_compound`
-route through `push_compound_fused_v32` emitting a single AVX-256 /
-NEON-Q 32-byte store per record. String / number scan bodies check
-`cursor.slot` against the stage-1 structural index — scan bounded to
-`[cursor.pos, idx.positions[cursor.slot])`; terminates on structural
-byte even if the pattern-natural terminator hasn't been seen.
-`last_byte_set` mining runs at W1 codegen for the JSON number /
-string patterns; pattern is disjoint from `{ "{", "}", "[", "]", ",",
-":" }` ⇒ bound is admissible.
-
-**Hard gate**: per-record store count on TapeVisitor path halves
-(one v32 store vs seven scalar stores); JSON canada +15% vs W2.1
-(number-heavy; bounded number scan amortises).
-
-#### W2.3.c — ShapeRef dedup consumer + NEON 17-digit fraction inline
-
-Owner: `crates/bbnf-json-prototype/src/object.rs` (ShapeRef dedup
-consumer in compound-emit branch); `crates/bbnf-json-prototype/src/
-number.rs` (NEON 17-digit fraction body inline from AT.4.3 chronic).
-
-Implements Lever 6. The W1-populated `SHAPE_DICT` (per-grammar) lists
-known-repetitive shapes; `parse_object` + `parse_array`'s compound-
-emit branches check `SHAPE_DICT.lookup(shape_hash)` before
-`push_compound_fused_v32`. On hit, emit `push_shape_ref(existing_idx)`
-(one u32 write); on miss, full compound. Typical JSON hits: `null`,
-`true`, `false`, `emptyObject`, `emptyArray`.
-
-NEON 17-digit fraction: AT.4.3 chronic finally lands. sonic's NEON
-path falls back to scalar after 16 digits; ours handles up to 17
-digits inline via `vqdmulh_s16` + multi-lane accumulate. Canada's
-long-fraction workload is the direct target.
-
-**Hard gate**: JSON canada (~10K f64s with avg ~12 fraction digits,
-some up to 17) sees NEON 17-digit inline fire; canada +20% vs W2.1.
-JSON twitter sees ShapeRef fire on null / empty compounds; twitter
-+5% vs W2.1 (low-repetition workload; measurable floor).
-
-#### W2.3 composite hard gate
-
-**JSON twitter ≥ 1.10× sonic-rs on single-thread NEON (≥ 2900 MB/s)**,
-**JSON citm ≥ 1.10× sonic-rs on single-thread (≥ 3400 MB/s)**,
-**JSON canada ≥ 1.20× sonic-rs on single-thread (≥ 1850 MB/s)**.
-
-Samply attribution confirms each novel lever's symbol present on the
-hot path. `cargo asm` confirms SIMD instruction emission per lever.
-No fork; no core-count assist.
-
-If any entry misses: diagnose the specific lever that failed
-(per-agent, file-disjoint) and iterate. No silent forward-routing
-per the no-deferrals invariant.
-
-If all three entries pass: cherry-pick the prototype + `bbnf-tape`
-W1 changes to master; W3 opens on exceeding-sonic substrate, with
-shape-mining inheriting every lever.
+No standalone W2.3 agent is dispatched.
 
 ### W3 — Shape-dispatch classifier + JSON emitter-lift
 

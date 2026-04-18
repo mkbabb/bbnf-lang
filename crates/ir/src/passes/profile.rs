@@ -23,6 +23,7 @@
 //! [`EClassFacts`]: crate::egraph::analysis::EClassFacts
 
 use crate::GrammarIR;
+use crate::passes::recognizers::list_rules::mine_list_rules;
 use crate::passes::recognizers::shape_dict::TemplatePiece;
 use crate::passes::recognizers::shape_dict_bbnf::{
     mine_bbnf_shape_templates, BbnfShapeTemplate,
@@ -216,12 +217,18 @@ pub struct GrammarProfile {
     /// W3 wires the mining; the projection does not change.
     pub active_columns: Vec<u16>,
 
-    // ── Document-level parallel parse (V6, AW-IV.W1.δ wire-contract) ─
+    // ── Document-level parallel parse (V6, AW-IV.W4.4 wired) ────────
 
     /// Rules eligible for chunked parallel parse (top-level lists).
-    /// V6 substrate; empty today — the `list_rules` recogniser is
-    /// scheduled in W4.4. The projection flows so the runtime const
-    /// carries a valid reference.
+    /// Populated by
+    /// [`mine_list_rules`](crate::passes::recognizers::list_rules::mine_list_rules):
+    /// admits the grammar's entry rule when its body (stripped of
+    /// transparent wrappers) is a `Repeat` over an `Alt` / `Ref` /
+    /// `Seq`. Non-empty for CSS L4 (`stylesheet = rule*`), BBNF
+    /// (`grammar = directive* rule*`), Sheets (`file = cell*`);
+    /// empty for JSON (entry `value` is an Alt). When non-empty
+    /// AND `input.len() > parallel_break_even_bytes`, the runtime
+    /// parse() routes through `dta_run_parallel`.
     pub list_rules: Vec<u32>,
 
     // ── Keyword dispatch (V7, AW-IV.W1.δ wire-contract) ──────────────
@@ -459,13 +466,48 @@ impl GrammarIR {
             entries
         };
 
+        // AW-IV.W4.4 — list_rules projection.
+        //
+        // `mine_list_rules` admits the grammar's entry rule when its
+        // body (after stripping transparent wrappers) is a Repeat
+        // over an Alt / Ref / Seq — the canonical fork-candidate
+        // shape. For targets where the entry is a top-level list
+        // (CSS `stylesheet`, BBNF `grammar`, Sheets `file`), the
+        // projection carries a single rule id; for grammars whose
+        // entry is not list-shaped (JSON `value` Alt), the slot is
+        // empty and parse() routes through the single-thread walker.
+        //
+        // The emitter lowers this Vec to `&'static [RuleId]`; the
+        // runtime parse() entry consults the slot plus
+        // `parallel_break_even_bytes` to decide whether to route
+        // through `dta_run_parallel`.
+        let list_rules: Vec<u32> = mine_list_rules(self);
+
+        // AW-IV.W4.4 — parallel break-even threshold.
+        //
+        // Below this input-byte count, spawning rayon workers + the
+        // join-phase memcpy cost outweighs the per-worker parse win.
+        // Empirically (AW-IV W6 bench checkpoint targets) the break-
+        // even sits around a few hundred KB for CSS-dense grammars
+        // on the reference 4-core platform; a 256 KB threshold is
+        // conservative without being pessimistic.
+        //
+        // When `list_rules` is empty, the threshold is irrelevant
+        // (parse() never consults the parallel path), but it still
+        // populates the const literal uniformly so the projection
+        // is always well-formed.
+        let parallel_break_even_bytes: u32 = if list_rules.is_empty() {
+            0
+        } else {
+            1 << 18
+        };
+
         // AW-IV.W1.δ — V2/V4/V6 slots whose upstream mining has
         // not yet wired. The projection carries empty Vecs so the
         // const-literal emission is always well-formed; when W3 or
         // W4 lands the mining pass, the projection composes without
         // further emitter changes.
         let active_columns: Vec<u16> = Vec::new();
-        let list_rules: Vec<u32> = Vec::new();
         let branch_priors: Vec<BranchPriorIr> = Vec::new();
 
         // AW-IV.W4.3 — dedup-eligible rules projection. Read from the
@@ -485,7 +527,7 @@ impl GrammarIR {
             leaves_per_input_byte,
             payload_bytes_per_input_byte,
             expected_ns_per_byte: 0.0,
-            parallel_break_even_bytes: 0,
+            parallel_break_even_bytes,
             structural_alphabet,
             structural_digraphs,
             structural_digraph_mask,

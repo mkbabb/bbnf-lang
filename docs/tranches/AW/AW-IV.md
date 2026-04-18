@@ -20,7 +20,44 @@ levers compound multiplicatively (R3 §5; SYNTHESIS-2 §7; the post-AW-III
 samply attribution); JSON projects to 2200–4200 MB/s on twitter, CSS to
 1500–2500 MB/s on bootstrap, the corpus geomean above post-AU.
 
-## Architectural thesis
+## Post-W3-flat rethink (2026-04-17+)
+
+AW-IV.W3 closed with consumer levers ledger-marked active but bench
+functionally flat (`docs/benchmarks/post-AW-IV-W3.json`: twitter
+280→277, citm 289→287, css bootstrap 14→14, tailwind 16→16, Sheets
+unchanged, BBNF small bumps only). Diagnosis per
+`docs/tranches/AW/research/SYNTHESIS-4-RETHINK.md`: the hot path is
+at the wrong granularity; more mined levers cannot fix an
+interpreter-shaped walker. `try_branch` still loops through
+`dispatch_one` on every AltLinear probe (CSS 70.9–78.9% self-time);
+consumer activations cannot shift this floor.
+
+**AW-IV is now a cleanup tranche, not the primary recovery path.**
+W4 finishes in-flight per the current plan. W5 + W6 narrow to only
+work that directly removes cross-crate boundaries on the existing
+hot path (helper inlining, parity harness CI-gating, FINAL). No new
+architectural levers in W5/W6. AW-V is the real performance path:
+per-shape inline emission under a narrowed scope (JSON prototype
+first, one-pass parse + monomorphic visitor, no second tape walk,
+DTA kept only as cold replay). See
+`docs/tranches/AW/AW-V.md` + `SYNTHESIS-4-RETHINK.md`.
+
+Items deferred out of AW-IV W5/W6 scope (move to AW-VI / successor
+tranche / AX per scope principle): AVX2 u8x32 widening, scanner
+cluster consolidation, NEON 17-digit fractional scan, bloom + GADT
+dedup, grammar-level pattern hoisting, document-parallel fork,
+cost-model grid sweep. These are multipliers over an
+interpreter-shaped hot path; applying them here changes nothing
+structural. They land where the hot path is already flat.
+
+Retained in W5/W6 scope: `reduce_column<C, R>` + 4-lane SIMD pack
+(consumer API over the tape, parity-harness-ready), sonic-rs +
+lightningcss parity harnesses (correctness CI-gate, not throughput
+lever), helper-call-boundary removal (the 4 P1-flagged helpers:
+`advance_or_pop_with`, `finaliser::finalise`, `psi::write_decoded`,
+`FrameStack::nearest_variant_frame`), FINAL + honest `post-AW-IV.json`.
+
+## Architectural thesis (pre-rethink; retained for context)
 
 The post-AW-III samply on JSON twitter, sample count 4173:
 
@@ -148,8 +185,8 @@ verifies nothing.
 | W2 | Per-grammar inline emission of hot helpers (helper bodies emitted directly into walker arms; LTO is verification cover, not strategy) | 2 parallel | W1 closed | `emit_leaf`, `push_compound_fused`, `push_leaf_fused`, `advance_or_pop_with`, `close_compound`, `trim_with_pattern`, `psi*push` symbols absent from per-grammar walker `nm`; `cargo asm` confirms no `bl`/`call` to helper symbols in walker disassembly; samply confirms zero cross-crate self-time on hot path; JSON twitter ≥ 1100 MB/s |
 | W3 | Five emitter-mined consumer activations + CTNS lifter + bounded Regex via `pattern.last_byte_set ⊆ structural_alphabet` | 5 parallel | W2 closed (consumers wire into a flat hot path; firing them onto indirected substrate defeats them) | every `GRAMMAR_PROFILE` slot non-empty for grammars where the IR has mineable data; samply confirms each consumer symbol present (or its prior dispatcher absent); wire-contract end-to-end tests pass for every slot; JSON twitter ≥ 2000 MB/s |
 | W4 | Granular SIMD widening + scanner cluster + bloom + GADT dedup + grammar-level pattern hoisting + document-parallel fork over stage-1 index | 4 parallel | W3 closed (multipliers stack onto consumer-active flat path; on indirected substrate they produce no measurable gain) | AVX2 scan ≥ 15% drop on x86_64; tailwind 4c sub-linear-to-linear scaling; `GRAMMAR_PROFILE.list_rules` non-empty for CSS L4 |
-| W5 | `reduce_column<C, R>` + 4-lane SIMD pack + sonic-rs + lightningcss parity harnesses + cost-model grid sweep | 3 parallel | W4 closed | reducer ≥ 6× scalar baseline OR per-arch rationale; both parity harnesses zero-divergence + CI-gated |
-| W6 | FINAL + 19-entry bench matrix + multi-wave aggregator | 1 serial | W5 closed | **every parse entry exceeds post-AU**; `post-AW-IV.json` exists; `FINAL-IV.md` exists; verification ledger complete per wave |
+| W5 *(post-rethink)* | **Cleanup-only**: inline-emit bodies for the 4 P1-flagged helpers (`advance_or_pop_with`, `finaliser::finalise`, `psi::write_decoded`, `FrameStack::nearest_variant_frame`) into walker arms; `reduce_column<C, R>` consumer API + 4-lane SIMD pack; sonic-rs + lightningcss parity harnesses CI-gated. AVX2 widening / scanner cluster / NEON 17-digit / bloom + GADT / document-parallel fork / cost-model grid **all defer** to AW-V / successor tranche | 2 parallel | W4 closed | helper symbols absent from `nm` on all 4 bench binaries; reducer ≥ 6× scalar baseline OR per-arch rationale; both parity harnesses zero-divergence + CI-gated |
+| W6 *(post-rethink)* | FINAL + 19-entry bench matrix + multi-wave aggregator. **Honest close** — no throughput gate on AltLinear-dominated grammars (CSS / BBNF / Sheets); FINAL records the flat-bench as the rationale for AW-V as remediation path | 1 serial | W5 closed | `post-AW-IV.json` exists with honest per-entry numbers; `FINAL-IV.md` exists citing AW-V as the remediation path for AltLinear-dominated grammars; verification ledger complete per wave |
 
 ## Phases
 

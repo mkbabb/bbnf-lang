@@ -1,5 +1,32 @@
 # Tranche AW-V — Compile DTA/PSI into Hot-Path Code + Novel-Exceed
 
+> **Post-W3-flat rethink anchor.** AW-IV.W3 closed with consumer levers
+> ledger-marked active but bench flat (see
+> `docs/tranches/AW/research/SYNTHESIS-4-RETHINK.md`). AW-V is now the
+> **primary performance path**, no longer just a future tranche. AW-IV
+> freezes as a cleanup tranche post-W4 close. AW-V.W1 opens
+> immediately after AW-IV.W6 close. Narrowing per the rethink:
+>
+> - **JSON prototype first** — hand-tuned `crates/bbnf-json-prototype/`
+>   validates substrate viability before the emitter generalises.
+> - **One-pass parse + monomorphic visitor.** `ValueVisitor` path skips
+>   the tape entirely; no second `walk_cursor` materialisation pass.
+> - **`TapeVisitor` path retained for AX.** Tape is AX substrate, not
+>   the value-benchmark path.
+> - **`DTA_TABLE` + `dispatch_one` live only as cold replay.** Hot path
+>   never reaches them.
+> - **N1 / N2 novel-exceed layer stays OUT of critical path.**
+>   Speculative parsing, JIT, PMC feedback, e-graph rewrite codegen
+>   defer to AX / successor tranche.
+> - **11-shape taxonomy** (H1 audit), not 7. CSS L4 hot/cold
+>   partitioning mandatory from W4.1 opening per H2's L1-fit
+>   projection.
+> - **Governance rule applied across tranches**: IR decisions must be
+>   authoritative consumers (compile-time code), not advisory
+>   substrate the backend can bypass (runtime advice). Substrate-
+>   without-authoritative-consumer rejected at wave close per
+>   `docs/instructions/README.md` §Wave-verification-ledger.
+
 AW-V **compiles the DTA IR into hot-path code** via per-shape
 emitter dispatch + novel algorithmic levers that exceed sonic-rs on
 single-thread — not via fork, not via parallelism, not by abandoning

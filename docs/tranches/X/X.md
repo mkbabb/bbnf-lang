@@ -148,6 +148,18 @@ These rules govern what lands and what does not. They are not aspirational; they
 
 26. **CSS recognizer family expansion is a tranche deliverable.** Three new family classes land in X (Phase 10): function-heads (`rgb(`, `rgba(`, `hsl(`, `hsla(`, `calc(`, `var(`, `url(`, `attr(`), hash-prefix tails (`#abcdef` color literals), and unit-tail families (`12px`, `1.5em`, `100%`, etc.). Each lives as a recognizer family module under `crates/ir/src/passes/recognizers/` with a corresponding kernel under `crates/core/src/backend/kernels/`. These exercise the §3 rule 21 unification bridge and earn part of the `css_l4::tailwind` parse improvement. The kernel consumer count rises from 8/8 (post-9b) to 11/11 after Phase 10.
 
+27. **IR decisions are authoritative consumers on the hot path, not advisory substrate the backend can bypass.** *(Cross-cutting governance rule; folded in from AW-V post-W3-flat rethink per `docs/tranches/AW/research/SYNTHESIS-4-RETHINK.md`. Same failure pattern observed across W, AW-I, AW-II, AW-III, AW-IV.W3 — ledger-marked "activation" leaves real consumers bypassed.)*
+
+    Concrete application to Tranche X's open items:
+
+    - **§2 item 1** (`backend/patterns/{delim_scan,key_dispatch,cache}.rs` still in workspace). Deletion is a §8 commitment AND a §3 rule 9 commitment — the migration path must close inside X, not be deferred as a substrate gesture. The detection halves move into the recognizer mining pass; the lookup maps build from `ir.recognizer_decisions` directly; the `alt_strategy::decide_alt_strategy` structural fallback deletes. Wave-close grep gate per §3 rule 24 is non-reversible.
+    - **§2 item 2** (`prefix_class.rs` 17-line stub; `sep_list.rs` 23-line lookup). Close or delete within X. No more "wired-but-not-consulted" kernels. Each kernel declared active has a real production caller verified by `grep` at Tranche X close.
+    - **§2 item 3** (`seq/repeat/ref/wrap_strategy.rs` standalone classifiers). Either consume `ir.recognizer_decisions` or document explicitly in §10 why the smaller decision spaces don't warrant CSP consumption. Gestalt asymmetry (one solver reads the CSP, four don't) is a smell that needs either closure or stated rationale.
+    - **§2 item 4** (cross-tier cost coordination non-existent). The grammar-tier doesn't see HIR-tier engine choice; the HIR-tier doesn't see Alt parent's TokenDispatch constraint. Tranche X's cost-config threading is substrate; the authoritative-consumer rule means the feedback loop must activate (`ImplicationConstraint` post-hoc enforcement is substrate; joint cost minimisation is the consumer). Either land the joint path or document why post-hoc enforcement is sufficient.
+    - **§2 item 5** (three other CSPs are feasibility-only: `dispatch/eligibility.rs`, `passes/types/mod.rs`, `egraph/csp_scheduler.rs`). Each models a domain where cost weights could distinguish feasible solutions. Tranche X upgrades at least one to cost-minimising per §3 rule 10 (strategy CSP already global); the other two either upgrade or document why feasibility is the right semantic for their domain.
+
+    **Wave-close verification per §3 rule 24 + `docs/instructions/README.md` §Wave-verification-ledger**: `grep`-confirmed zero independent structural detection in `backend/` for any decision family declared activated in §3 rules 13, 14, 17, 19, 20. Substrate-without-authoritative-consumer is rejected at Tranche X close.
+
 ---
 
 ## 4. What lands — thirteen phases, one tranche

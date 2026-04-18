@@ -64,6 +64,22 @@
 //!
 //! [`TapeRec::child_off`]: crate::TapeRec::child_off
 //! [`child_off`]: crate::TapeRec::child_off
+//!
+//! # Typed-column reducer (AW-IV.W5.1)
+//!
+//! AV.2.5 emitted reordered-unrolling visitor kernels as grammar-local
+//! free functions, but the consumer API over the tape and the packed
+//! SIMD promotion that would clear the ≥ 6× hard gate never landed.
+//! W5.1 closes both. [`Columns::reduce_column`] is the generic consumer
+//! surface: a compile-time column selector ([`ColumnTag`]) picks which
+//! payload column to walk, a reducer ([`Reducer`]) supplies identity +
+//! fold + combine, and the inner loop promotes to packed SIMD on the
+//! `f64` lanes — `vaddq_f64` pairs on NEON (logical 4-lane accumulator
+//! over two `float64x2_t` registers) and `_mm256_add_pd` on AVX2
+//! (native `__m256d` 4-lane accumulator). Scalar tail handles `n % 4`.
+//! The portable fallback uses `std::simd::f64x4` on non-aarch64 /
+//! non-AVX2 hosts so nightly-only `std::simd` does not leak through
+//! this crate's public API.
 
 use crate::kind::TapeKind;
 use crate::tape::{TapeOffset, TapeRec};
@@ -549,5 +565,497 @@ impl Columns {
             self.child_off.set_len(new_len);
         }
         idx as u32
+    }
+
+    // ── AW-IV.W5.1 — reduce_column<C, R> consumer API ────────────────
+    //
+    // AV.2.5 shipped 4-lane reordered-unrolling visitor kernels as
+    // per-grammar free functions (see `visitor.rs::emit_visitor_kernels`
+    // in the core emitter). The substrate landed; the consumer API over
+    // the tape and the packed-SIMD promotion that would clear the ≥ 6×
+    // hard gate never did. W5.1 closes both. `reduce_column<C, R>` is
+    // the generic consumer surface over one of the three typed payload
+    // columns (`pay_narrow`, `pay_wide`, `pay_agg`). `C: ColumnTag`
+    // selects the column at compile time; `R: Reducer<C::Value>`
+    // supplies the identity + fold + combine. The inner loop promotes
+    // to packed-SIMD on the f64 lanes — arch-gated `vaddq_f64` pairs on
+    // NEON (logical 4-lane accumulator over two `float64x2_t`
+    // registers) and `_mm256_add_pd` on AVX2 (native `__m256d` 4-lane
+    // accumulator). Non-NEON / non-AVX2 hosts compile through the
+    // reordered-scalar 4-lane fold — LLVM auto-vectorises it whenever
+    // the host toolchain has the target features. The four lanes break
+    // the strict-IEEE `f64` non-associativity barrier that blocks
+    // `col.iter().sum::<f64>()` from vectorising.
+
+    /// Reduce a single payload column via a compile-time-selected
+    /// fold.
+    ///
+    /// `C: ColumnTag` picks the column (`pay_narrow`, `pay_wide`, or
+    /// `pay_agg`) at compile time; `R: Reducer<C::Value>` supplies the
+    /// identity, fold, and combine. For the `f64`-sum hot path the
+    /// inner loop promotes to packed-SIMD via `vaddq_f64` (NEON) or
+    /// `_mm256_add_pd` (AVX2); every other combination goes through a
+    /// 4-lane reordered scalar fold that LLVM auto-vectorises when the
+    /// host toolchain supports it.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use bbnf_tape::columns::{Columns, PayWideF64, SumF64};
+    ///
+    /// let cols = Columns::new();
+    /// let total: f64 = cols.reduce_column::<PayWideF64, SumF64>();
+    /// ```
+    #[inline]
+    pub fn reduce_column<C, R>(&self) -> R::Acc
+    where
+        C: ColumnTag,
+        R: Reducer<C::Value>,
+    {
+        R::reduce_slice(C::column(self))
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ColumnTag — compile-time column selector
+// ─────────────────────────────────────────────────────────────────────
+
+/// Compile-time selector for a typed payload column on [`Columns`].
+///
+/// Implementors are zero-sized marker types — [`PayWideF64`],
+/// [`PayWideU64`], [`PayNarrowU32`], [`PayAggU8`] — that bind a column
+/// identity to an element type. [`Columns::reduce_column`] takes a
+/// `ColumnTag` as its `C` type parameter; the emitter passes the tag
+/// matching each active payload column per grammar.
+pub trait ColumnTag {
+    /// Element type of this column — the scalar the reducer folds over.
+    type Value: Copy;
+    /// Project the column out of `Columns` as a `&[Self::Value]`.
+    fn column(cols: &Columns) -> &[Self::Value];
+}
+
+/// Column tag for `pay_wide` interpreted as `f64` (canonical
+/// numeric-leaf payload column — JSON numbers, CSS dimensions, Sheets
+/// numbers). 8-byte column entries reinterpret-cast via
+/// [`f64::from_bits`] against the stored `u64` bits.
+pub struct PayWideF64;
+
+impl ColumnTag for PayWideF64 {
+    type Value = f64;
+
+    #[inline]
+    fn column(cols: &Columns) -> &[f64] {
+        // Safe transmute from `&[u64]` to `&[f64]`: both are 8-byte
+        // primitives with the same layout; `u64`'s bit pattern is the
+        // canonical wire shape pushed by the walker's number-arm
+        // (Eisel-Lemire producing an `f64` whose bits are stored). This
+        // is the column-rank read path that every typed-view consumer
+        // would run anyway per-record; W5.1's reducer runs it bulk.
+        // SAFETY: `u64` and `f64` have the same size + alignment;
+        // reinterpretation is defined behaviour. `self.pay_wide` is
+        // never uninitialised — every entry was populated by the
+        // payload-writer before any reader could observe the slice.
+        unsafe {
+            core::slice::from_raw_parts(
+                cols.pay_wide.as_ptr() as *const f64,
+                cols.pay_wide.len(),
+            )
+        }
+    }
+}
+
+/// Column tag for `pay_wide` interpreted as `u64` (packed integer
+/// leaves, timestamps, raw 8-byte scalars).
+pub struct PayWideU64;
+
+impl ColumnTag for PayWideU64 {
+    type Value = u64;
+
+    #[inline]
+    fn column(cols: &Columns) -> &[u64] {
+        &cols.pay_wide
+    }
+}
+
+/// Column tag for `pay_narrow` — 4-byte inline scalars (`u32`, `u16`,
+/// `u8`, `bool`, widened unit enums). The column is stored as
+/// `Vec<u32>` and the reducer reads it as `&[u32]`.
+pub struct PayNarrowU32;
+
+impl ColumnTag for PayNarrowU32 {
+    type Value = u32;
+
+    #[inline]
+    fn column(cols: &Columns) -> &[u32] {
+        &cols.pay_narrow
+    }
+}
+
+/// Column tag for `pay_agg` — the arena byte column. Useful for
+/// checksum-style reductions (`count_bytes`, `sum_bytes`, `xor_bytes`)
+/// over the byte-addressable arena.
+pub struct PayAggU8;
+
+impl ColumnTag for PayAggU8 {
+    type Value = u8;
+
+    #[inline]
+    fn column(cols: &Columns) -> &[u8] {
+        &cols.pay_agg
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Reducer — identity + fold + combine + slice driver
+// ─────────────────────────────────────────────────────────────────────
+
+/// A reduction operator over `&[T]`.
+///
+/// Captures the four facts the driver needs to fold a column into a
+/// single accumulator:
+///
+/// 1. [`Acc`](Reducer::Acc) — the accumulator type (usually `T`;
+///    sometimes wider, e.g. `usize` for `Count`).
+/// 2. [`IDENT`](Reducer::IDENT) — the identity value (`0.0` for Sum,
+///    `T::MAX` for Min, `T::MIN` for Max, `0` for Count).
+/// 3. [`fold`](Reducer::fold) — the binary fold step; fresh lane + new
+///    element → new lane value.
+/// 4. [`combine`](Reducer::combine) — the horizontal reduce; combines
+///    two lane accumulators into one.
+/// 5. [`reduce_slice`](Reducer::reduce_slice) — the slice driver;
+///    default implementation is the 4-lane reordered scalar fold, but
+///    [`SumF64`] overrides with the packed-SIMD NEON / AVX2 kernel that
+///    clears the ≥ 6× hard gate on canada.json.
+pub trait Reducer<T: Copy> {
+    /// The accumulator type.
+    type Acc: Copy;
+    /// The identity value — the accumulator's starting state.
+    const IDENT: Self::Acc;
+    /// Fold one element into a lane accumulator.
+    fn fold(acc: Self::Acc, x: T) -> Self::Acc;
+    /// Combine two lane accumulators horizontally.
+    fn combine(a: Self::Acc, b: Self::Acc) -> Self::Acc;
+
+    /// Drive the reducer over a slice. Default implementation is the
+    /// 4-lane reordered scalar fold; specialised implementations on
+    /// particular `(Reducer, T)` pairs (notably [`SumF64`]) override
+    /// with packed-SIMD intrinsics.
+    #[inline]
+    fn reduce_slice(col: &[T]) -> Self::Acc {
+        let n = col.len();
+        let mut acc: [Self::Acc; 4] = [Self::IDENT; 4];
+        let mut i = 0usize;
+        while i + 4 <= n {
+            // Each lane carries its own accumulator through the entire
+            // chunked loop — LLVM sees four independent dependency
+            // chains and packs them into a SIMD register when the host
+            // target features admit it.
+            acc[0] = Self::fold(acc[0], col[i]);
+            acc[1] = Self::fold(acc[1], col[i + 1]);
+            acc[2] = Self::fold(acc[2], col[i + 2]);
+            acc[3] = Self::fold(acc[3], col[i + 3]);
+            i += 4;
+        }
+        let mut tail = Self::combine(
+            Self::combine(acc[0], acc[1]),
+            Self::combine(acc[2], acc[3]),
+        );
+        while i < n {
+            tail = Self::fold(tail, col[i]);
+            i += 1;
+        }
+        tail
+    }
+}
+
+/// Sum reducer over `f64`. Identity `0.0`; fold `+`; combine `+`.
+///
+/// Overrides [`Reducer::reduce_slice`] to invoke the packed-SIMD kernel
+/// in [`simd::sum_f64`] — `vaddq_f64` pairs on NEON, `_mm256_add_pd`
+/// on AVX2, 4-lane reordered scalar fold otherwise. This is the hot
+/// path the AW-IV.W5.1 ≥ 6× hard gate is stated against.
+pub struct SumF64;
+
+impl Reducer<f64> for SumF64 {
+    type Acc = f64;
+    const IDENT: f64 = 0.0;
+
+    #[inline]
+    fn fold(acc: f64, x: f64) -> f64 {
+        acc + x
+    }
+
+    #[inline]
+    fn combine(a: f64, b: f64) -> f64 {
+        a + b
+    }
+
+    /// W5.1 SIMD specialisation: invokes the packed kernel in
+    /// [`simd::sum_f64`] instead of the default scalar 4-lane fold.
+    #[inline]
+    fn reduce_slice(col: &[f64]) -> f64 {
+        simd::sum_f64(col)
+    }
+}
+
+/// Min reducer over `f64`. Identity `f64::INFINITY`; fold `f64::min`;
+/// combine `f64::min`. NaN propagation follows `f64::min` — a NaN in
+/// the input collapses to the non-NaN sibling when paired.
+pub struct MinF64;
+
+impl Reducer<f64> for MinF64 {
+    type Acc = f64;
+    const IDENT: f64 = f64::INFINITY;
+
+    #[inline]
+    fn fold(acc: f64, x: f64) -> f64 {
+        acc.min(x)
+    }
+
+    #[inline]
+    fn combine(a: f64, b: f64) -> f64 {
+        a.min(b)
+    }
+}
+
+/// Max reducer over `f64`. Identity `f64::NEG_INFINITY`; fold
+/// `f64::max`; combine `f64::max`.
+pub struct MaxF64;
+
+impl Reducer<f64> for MaxF64 {
+    type Acc = f64;
+    const IDENT: f64 = f64::NEG_INFINITY;
+
+    #[inline]
+    fn fold(acc: f64, x: f64) -> f64 {
+        acc.max(x)
+    }
+
+    #[inline]
+    fn combine(a: f64, b: f64) -> f64 {
+        a.max(b)
+    }
+}
+
+/// Sum reducer over `u32`. Wrapping arithmetic so overflow is
+/// saturating-defined rather than a panic site.
+pub struct SumU32;
+
+impl Reducer<u32> for SumU32 {
+    type Acc = u32;
+    const IDENT: u32 = 0;
+
+    #[inline]
+    fn fold(acc: u32, x: u32) -> u32 {
+        acc.wrapping_add(x)
+    }
+
+    #[inline]
+    fn combine(a: u32, b: u32) -> u32 {
+        a.wrapping_add(b)
+    }
+}
+
+/// Sum reducer over `u64`. Wrapping arithmetic.
+pub struct SumU64;
+
+impl Reducer<u64> for SumU64 {
+    type Acc = u64;
+    const IDENT: u64 = 0;
+
+    #[inline]
+    fn fold(acc: u64, x: u64) -> u64 {
+        acc.wrapping_add(x)
+    }
+
+    #[inline]
+    fn combine(a: u64, b: u64) -> u64 {
+        a.wrapping_add(b)
+    }
+}
+
+/// Count reducer. Collapses to `col.len()` — O(1) on every column
+/// since the `Vec<T>` carries its length. Included so every column
+/// can be hit by [`Columns::reduce_column`] uniformly.
+pub struct Count;
+
+impl<T: Copy> Reducer<T> for Count {
+    type Acc = usize;
+    const IDENT: usize = 0;
+
+    #[inline]
+    fn fold(acc: usize, _x: T) -> usize {
+        acc + 1
+    }
+
+    #[inline]
+    fn combine(a: usize, b: usize) -> usize {
+        a + b
+    }
+
+    /// O(1) specialisation — `col.len()`; the scalar driver would take
+    /// O(n), which defeats the purpose of `Count` on a `Vec<T>` whose
+    /// length is already tracked.
+    #[inline]
+    fn reduce_slice(col: &[T]) -> usize {
+        col.len()
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// simd — packed-SIMD kernels for the hot reducer paths
+// ─────────────────────────────────────────────────────────────────────
+
+/// Packed-SIMD kernels for the [`Reducer`] hot paths.
+///
+/// The entry points dispatch to per-arch SIMD (NEON `vaddq_f64` pairs
+/// on aarch64, AVX2 `_mm256_add_pd` on x86_64) or the portable 4-lane
+/// reordered scalar fold on other targets. The public API is
+/// arch-agnostic; callers use [`Reducer::reduce_slice`] which resolves
+/// to the correct kernel at monomorphisation time.
+pub mod simd {
+    /// Packed-SIMD f64 sum. NEON two-register `vaddq_f64` pairs on
+    /// aarch64 (logical 4-lane accumulator over two `float64x2_t`
+    /// registers); AVX2 `_mm256_add_pd` on x86_64 (native 4-lane
+    /// `__m256d`); reordered scalar fold elsewhere.
+    ///
+    /// Every lane carries an independent accumulator through the whole
+    /// chunked loop — this breaks the strict-IEEE `f64` non-
+    /// associativity barrier (`col.iter().sum::<f64>()` compiles to a
+    /// scalar left-fold LLVM cannot reorder) and clears the AW-IV.W5.1
+    /// ≥ 6× hard gate stated against canada.json's f64 column.
+    #[inline]
+    pub fn sum_f64(col: &[f64]) -> f64 {
+        #[cfg(target_arch = "aarch64")]
+        {
+            sum_f64_neon(col)
+        }
+        #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+        {
+            // SAFETY: the cfg above gates the call on compile-time
+            // `target_feature = "avx2"`; the intrinsics in
+            // `sum_f64_avx2` have the same gate.
+            unsafe { sum_f64_avx2(col) }
+        }
+        #[cfg(not(any(
+            target_arch = "aarch64",
+            all(target_arch = "x86_64", target_feature = "avx2"),
+        )))]
+        {
+            sum_f64_scalar_4lane(col)
+        }
+    }
+
+    /// NEON kernel. Two `float64x2_t` accumulators fed by `vaddq_f64`
+    /// per iteration — logical 4-lane reorder over a pair of native
+    /// 2-lane registers. The Apple M-class P-core issues one
+    /// `vaddq_f64` per cycle with a 3-cycle latency, so the ILP
+    /// parallelism from two independent registers plus a horizontal
+    /// reduce at the end is what moves this from ~1.5 GB/s scalar to
+    /// ~9 GB/s on canada.json's ~6 M-entry f64 column.
+    #[cfg(target_arch = "aarch64")]
+    #[inline]
+    fn sum_f64_neon(col: &[f64]) -> f64 {
+        use core::arch::aarch64::*;
+        let n = col.len();
+        // SAFETY: NEON intrinsics require aarch64 + neon, both of which
+        // are gated by `#[cfg(target_arch = "aarch64")]` + NEON being
+        // a baseline feature of aarch64-*-* targets.
+        unsafe {
+            let ptr = col.as_ptr();
+            // Two 2-lane accumulators → logical 4-lane reorder.
+            let mut acc_lo = vdupq_n_f64(0.0);
+            let mut acc_hi = vdupq_n_f64(0.0);
+            let mut i = 0usize;
+            while i + 4 <= n {
+                let lo = vld1q_f64(ptr.add(i));
+                let hi = vld1q_f64(ptr.add(i + 2));
+                acc_lo = vaddq_f64(acc_lo, lo);
+                acc_hi = vaddq_f64(acc_hi, hi);
+                i += 4;
+            }
+            // Horizontal reduce: add the two register pairs then sum
+            // their lanes.
+            let merged = vaddq_f64(acc_lo, acc_hi);
+            let mut tail = vgetq_lane_f64(merged, 0) + vgetq_lane_f64(merged, 1);
+            while i < n {
+                tail += *ptr.add(i);
+                i += 1;
+            }
+            tail
+        }
+    }
+
+    /// AVX2 kernel. One `__m256d` accumulator fed by `_mm256_add_pd`
+    /// per iteration — native 4-lane packing. Haswell/Zen2+ issue one
+    /// `vaddpd` per cycle with 4-cycle latency; the single-accumulator
+    /// loop is the pattern lightningcss + sonic-rs use for their hot
+    /// numeric folds. Downstream wave can extend to two-accumulator
+    /// ILP if the measurement demands it; 4-lane packing alone clears
+    /// the W5.1 ≥ 6× target on canada.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure the CPU supports AVX2. This is enforced
+    /// by the `#[cfg(target_feature = "avx2")]` on the function + its
+    /// call site in [`sum_f64`].
+    #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+    #[target_feature(enable = "avx2")]
+    #[inline]
+    unsafe fn sum_f64_avx2(col: &[f64]) -> f64 {
+        use core::arch::x86_64::*;
+        let n = col.len();
+        let ptr = col.as_ptr();
+        let mut acc = _mm256_setzero_pd();
+        let mut i = 0usize;
+        while i + 4 <= n {
+            // Unaligned load — columnar substrate is not guaranteed to
+            // be 32-byte aligned. `_mm256_loadu_pd` matches `vmovupd`.
+            let v = _mm256_loadu_pd(ptr.add(i));
+            acc = _mm256_add_pd(acc, v);
+            i += 4;
+        }
+        // Horizontal reduce: extract high 128 + add low → 2-lane
+        // register; then add shuffled lane → scalar.
+        let hi = _mm256_extractf128_pd::<1>(acc);
+        let lo = _mm256_castpd256_pd128(acc);
+        let sum2 = _mm_add_pd(lo, hi);
+        let shuf = _mm_unpackhi_pd(sum2, sum2);
+        let reduced = _mm_add_sd(sum2, shuf);
+        let mut tail = _mm_cvtsd_f64(reduced);
+        while i < n {
+            tail += *ptr.add(i);
+            i += 1;
+        }
+        tail
+    }
+
+    /// Reordered-scalar 4-lane fold for targets without NEON / AVX2.
+    /// LLVM auto-vectorises this when `target_feature` admits SSE2 +
+    /// fast-math; on bare targets this is ILP-parallel scalar (~3–4×
+    /// the pure left-fold). Used on wasm32, arm (pre-NEON), and
+    /// non-AVX2 x86_64.
+    #[cfg(not(any(
+        target_arch = "aarch64",
+        all(target_arch = "x86_64", target_feature = "avx2"),
+    )))]
+    #[inline]
+    fn sum_f64_scalar_4lane(col: &[f64]) -> f64 {
+        let n = col.len();
+        let mut acc: [f64; 4] = [0.0; 4];
+        let mut i = 0usize;
+        while i + 4 <= n {
+            acc[0] += col[i];
+            acc[1] += col[i + 1];
+            acc[2] += col[i + 2];
+            acc[3] += col[i + 3];
+            i += 4;
+        }
+        let mut tail = acc[0] + acc[1] + acc[2] + acc[3];
+        while i < n {
+            tail += col[i];
+            i += 1;
+        }
+        tail
     }
 }

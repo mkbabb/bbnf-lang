@@ -61,7 +61,10 @@ pub mod stage1;
 pub mod tape;
 
 pub use builder::{PayloadData, TapeBuildError, TapeBuilder};
-pub use columns::Columns;
+pub use columns::{
+    ColumnTag, Columns, Count, MaxF64, MinF64, PayAggU8, PayNarrowU32, PayWideF64, PayWideU64,
+    Reducer, SumF64, SumU32, SumU64,
+};
 pub use cursor::{ChildIter, ColumnRank, ShapeRefChildIter, ShapeRefSyntheticChild, TapeCursor};
 pub use dedup::{columns_range_eq, push_compound_referring, BloomDedup, N_WORDS};
 // AW-III.W4.c — driver hot/cold split.

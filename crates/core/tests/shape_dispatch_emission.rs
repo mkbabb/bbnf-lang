@@ -235,6 +235,85 @@ fn scalar_shape_emit_matches_golden() {
     assert_matches_golden(&actual, expected, "scalar.rs");
 }
 
+// ─── W4 deferral assertions ─────────────────────────────────────────
+//
+// The W4 detectors (Pratt / Unordered / ArgList / Flat / Wrap /
+// HRegex) are defined in [`ShapeTag`] today but their detector
+// bodies return `false` — W3.1 stubbed them so the wire contract was
+// in place for W3.2's emitter lift. These tests document that
+// status: no rule in the JSON fixture receives any of the W4 tags.
+//
+// When W4 lands, each assertion below gets replaced by a
+// shape-positive test over a grammar that exercises the detector.
+// Today they guard the stub contract so a partial W4 landing doesn't
+// silently claim coverage the mechanism hasn't produced.
+
+#[test]
+fn w4_pratt_detector_returns_none_for_all_w3_fixtures() {
+    // Sheets operator towers / CSS math bodies — the W3 fixture has
+    // no operator chains, so every rule stays out of Pratt.
+    let (ir, _) = build_json_ir();
+    assert_eq!(
+        ir.shape_assignments.count_of(ShapeTag::Pratt),
+        0,
+        "W4 Pratt detector stubbed — no W3 rule may carry the Pratt \
+         tag until the detector body lands",
+    );
+}
+
+#[test]
+fn w4_unordered_detector_returns_none_for_all_w3_fixtures() {
+    let (ir, _) = build_json_ir();
+    assert_eq!(
+        ir.shape_assignments.count_of(ShapeTag::Unordered),
+        0,
+        "W4 Unordered detector stubbed — no W3 rule may carry the \
+         Unordered tag",
+    );
+}
+
+#[test]
+fn w4_arglist_detector_returns_none_for_all_w3_fixtures() {
+    let (ir, _) = build_json_ir();
+    assert_eq!(
+        ir.shape_assignments.count_of(ShapeTag::ArgList),
+        0,
+        "W4 ArgList detector stubbed — no W3 rule may carry the \
+         ArgList tag",
+    );
+}
+
+#[test]
+fn w4_flat_detector_returns_none_for_all_w3_fixtures() {
+    let (ir, _) = build_json_ir();
+    assert_eq!(
+        ir.shape_assignments.count_of(ShapeTag::Flat),
+        0,
+        "W4 Flat detector stubbed — no W3 rule may carry the Flat tag",
+    );
+}
+
+#[test]
+fn w4_wrap_detector_returns_none_for_all_w3_fixtures() {
+    let (ir, _) = build_json_ir();
+    assert_eq!(
+        ir.shape_assignments.count_of(ShapeTag::Wrap),
+        0,
+        "W4 Wrap detector stubbed — no W3 rule may carry the Wrap tag",
+    );
+}
+
+#[test]
+fn w4_hregex_detector_returns_none_for_all_w3_fixtures() {
+    let (ir, _) = build_json_ir();
+    assert_eq!(
+        ir.shape_assignments.count_of(ShapeTag::HRegex),
+        0,
+        "W4 HRegex detector stubbed — no W3 rule may carry the HRegex \
+         tag",
+    );
+}
+
 // ─── Wire-contract invariants ───────────────────────────────────────
 
 #[test]

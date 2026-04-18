@@ -88,6 +88,35 @@ pub use driver::{
     OpStackEntry, RepeatAbsorbResult, StepResult,
     COUNTER_INLINE_SLOTS, STACK_INLINE_DEPTH,
 };
+
+// AW-IV.W4.4 — document-parallel fork substrate. Gated on the
+// `rayon` feature; when disabled the per-grammar parse() routes
+// through the single-thread walker unconditionally (the emitter's
+// `list_rules` check is a no-op because `dta_run_parallel` isn't
+// linked).
+#[cfg(feature = "rayon")]
+pub use driver::{dta_run_parallel, WalkerFn};
+
+/// AW-IV.W4.4 — rayon worker-count accessor for the emitted parse()
+/// entry.
+///
+/// The emitted `parse()` caps the parallel fork at 4 workers per the
+/// canonical AW-IV.W4.4 bench gate (tailwind.css 4c sub-linear-to-
+/// linear scaling); this accessor returns `rayon::current_num_threads()`
+/// when the feature is enabled and `1` when it isn't (the emitter's
+/// break-even gate + worker-count clamp both collapse to the single-
+/// thread path on `1`).
+#[inline]
+pub fn rayon_num_threads() -> usize {
+    #[cfg(feature = "rayon")]
+    {
+        ::rayon::current_num_threads()
+    }
+    #[cfg(not(feature = "rayon"))]
+    {
+        1
+    }
+}
 #[cfg(feature = "dta-replay")]
 pub use driver::{dta_run_with_replay, DtaSnapshot};
 pub use dta::{

@@ -182,9 +182,16 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
         per_rule.push(fragment);
 
         if emit_visitor_path {
-            // W3-pure grammar — visitor-path fns compose via the
-            // visitor dispatcher's narrow bound. Emit the sibling
-            // visitor fns.
+            // AX.W0a.1 — emit visitor-path fns for every shape whose
+            // body stays within the visitor dispatcher's W3 bound set
+            // (`ObjectVisitor + ArrayVisitor + StringVisitor +
+            // NumberVisitor + KeywordVisitor`). Flat / Wrap / ArgList /
+            // HRegex visitor emitters declare bounds that are a strict
+            // subset of that union; only Pratt / Unordered carry W4-
+            // specific bounds (`PrattVisitor` and similar) that would
+            // require widening the dispatcher's generic `V` — and
+            // grammars with those rules gate the visitor path off
+            // wholesale via [`dispatcher::has_w4_classified`].
             let visitor_fragment = match tag {
                 ShapeTag::Object => object::emit_parse_object_visitor(&grammar_suffix, rule, ir),
                 ShapeTag::Array => array::emit_parse_array_visitor(&grammar_suffix, rule, ir),
@@ -194,7 +201,18 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
                     keyword::emit_parse_keyword_visitor(&grammar_suffix, rule, ir)
                 }
                 ShapeTag::Scalar => scalar::emit_parse_scalar_visitor(&grammar_suffix, rule, ir),
-                _ => quote! {},
+                ShapeTag::Flat => flat::emit_parse_flat_visitor(&grammar_suffix, rule, ir),
+                ShapeTag::Wrap => wrap::emit_parse_wrap_visitor(&grammar_suffix, rule, ir),
+                ShapeTag::ArgList => {
+                    arglist::emit_parse_arglist_visitor(&grammar_suffix, rule, ir)
+                }
+                ShapeTag::HRegex => hregex::emit_parse_hregex_visitor(&grammar_suffix, rule, ir),
+                // Pratt / Unordered need W4-specific trait bounds outside
+                // the dispatcher's W3 union; `has_w4_classified` gates
+                // the entire visitor path off before we reach this arm
+                // for grammars with those rules. The `_` is a defensive
+                // guard, not an active code path.
+                ShapeTag::Pratt | ShapeTag::Unordered | ShapeTag::None => quote! {},
             };
             per_rule_visitor.push(visitor_fragment);
         }

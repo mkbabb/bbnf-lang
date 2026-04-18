@@ -1,0 +1,61 @@
+        /// Bypasses the tape entirely; `V` is monomorphised at
+        /// the call site so the per-shape parse bodies inline
+        /// into one tight dispatcher. Matches the shape of
+        /// `bbnf_json_prototype::parse_json::<V>`.
+        ///
+        /// `V` must implement every per-shape visitor sub-trait
+        /// the grammar drives (`ObjectVisitor`, `ArrayVisitor`,
+        /// `StringVisitor`, `NumberVisitor`, `KeywordVisitor`)
+        /// so each method invocation resolves statically at
+        /// monomorphisation time. See `bbnf-tape::visitor` for
+        /// the trait hierarchy and the shipped `TapeVisitor` /
+        /// `ValueVisitor` implementations.
+        pub fn parse_with_visitor<V>(
+            input: &str,
+            visitor: &mut V,
+        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        where
+            V: ::bbnf::runtime::tape::ObjectVisitor
+                + ::bbnf::runtime::tape::ArrayVisitor
+                + ::bbnf::runtime::tape::StringVisitor
+                + ::bbnf::runtime::tape::NumberVisitor
+                + ::bbnf::runtime::tape::KeywordVisitor,
+        {
+            let bytes = input.as_bytes();
+            let mut pos: usize = 0;
+            let mut state = __shape_support_JsonParser::ScanState::new();
+            parse_JsonParser_value_visitor(bytes, &mut pos, &mut state, visitor)?;
+            let _ = __shape_support_JsonParser::skip_space(bytes, &mut pos, &mut state);
+            if pos != input.len() {
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: pos as u32,
+                    rule: None,
+                });
+            }
+            Ok(())
+        }
+    }
+    #[inline]
+    pub(crate) fn cst_identifier_text<'p>(
+        _cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        _input: &'p str,
+    ) -> &'p str {
+        ""
+    }
+    #[inline]
+    pub(crate) fn cst_identifier_span<'p>(
+        _cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        _input: &'p str,
+    ) -> (u32, u32) {
+        (0, 0)
+    }
+}
+pub use __jsonparser_emit_impl::*;
+fn load(name: &str) -> String {
+    let path = ::alloc::__export::must_use({
+        ::alloc::fmt::format(format_args!("../../data/json/{0}", name))
+    });
+    std::fs::read_to_string(&path).unwrap_or_else(|e| {
+        ::core::panicking::panic_fmt(format_args!("{0}: {1}", path, e));
+    })
+}

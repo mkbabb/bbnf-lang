@@ -826,16 +826,28 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
     }
 }
 
-/// Returns `true` when `ir` has any W4-classified rule. Used by
-/// [`emit_shapes_for_grammar`] + `grammar::emit_grammar_impl` to gate
-/// visitor-path emission: the W4 visitor traits (e.g. `PrattVisitor`)
-/// don't compose cleanly with the dispatcher's narrow W3 bounds, so
-/// grammars carrying W4 rules emit the tape path only. The visitor
-/// path for such grammars waits on the per-Ref `__value` dispatcher
-/// refactor (a follow-on wave).
+/// Returns `true` when `ir` has any `ShapeTag::Pratt` or
+/// `ShapeTag::Unordered` rule — the shapes whose emitted bodies invoke
+/// visitor methods (`PrattVisitor`, bespoke) *outside* the dispatcher's
+/// W3 bound set (`ObjectVisitor + ArrayVisitor + StringVisitor +
+/// NumberVisitor + KeywordVisitor`). Used by [`emit_shapes_for_grammar`]
+/// + `grammar::emit_grammar_impl` to gate visitor-path emission:
+/// Pratt/Unordered need trait bounds the dispatcher does not carry, so
+/// grammars with those rules emit the tape path only.
+///
+/// Flat / Wrap / ArgList / HRegex are *not* W4-trait-bound — their
+/// emitted bodies invoke only `.begin_*` / `.end_*` / `.string` /
+/// `.number` / delegate-to-Ref, all of which are W3-bound visitor
+/// methods. Those shapes do not trip the visitor-path trait-bound
+/// mismatch, so they do not gate off the visitor path (AX.W0a.1 —
+/// `docs/tranches/AW/audit/V-audit-overfit.md` §Gate-pathology).
 pub fn has_w4_classified(ir: &GrammarIR) -> bool {
     ir.rules.iter().any(|r| {
-        !r.meta.is_transparent && ir.shape_assignments.get(r.id).is_w4_classified()
+        !r.meta.is_transparent
+            && matches!(
+                ir.shape_assignments.get(r.id),
+                ShapeTag::Pratt | ShapeTag::Unordered,
+            )
     })
 }
 

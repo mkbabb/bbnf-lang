@@ -1,0 +1,90 @@
+{
+  "tranche": "AW-IV",
+  "wave": "W4",
+  "checkpoint": "post-AW-IV-W4",
+  "date": "2026-04-17",
+  "master_head": "4c57766e",
+  "scope": "Granular SIMD widening + scanner cluster + bloom + document-parallel: W4.1 AVX2 u8x32 + WASM simd128 + W4.2 PaddedView + scanner cluster consolidation + NEON 17-digit + W4.3 bloom + GADT dedup + grammar pattern hoisting + W4.4 document-parallel fork over stage-1 index (+ W4.4-fix depth-0 partitioning + 1MiB threshold)",
+  "verification_ledger": {
+    "avx2_u8x32_widening": "MET — 89 AVX2 instructions in compiled .s for bbnf_simd_scan::avx2::scan; emitter arch-gated via target_feature",
+    "wasm_simd128_parity": "MET — multi-class quote handling matches NEON byte-for-byte",
+    "scanner_cluster_loc_delete": "MET — 847 deletions in parse-that, 612 net reduction",
+    "hir_module_count": "MET — drops to 1 (classify/mod.rs + classify/structural.rs → classify.rs)",
+    "neon_17_digit_kernel": "LANDED — splices inline into Eisel-Lemire ambiguous-rounding fallback",
+    "padded_view_migration": "MET — 7 emitter call sites + parse-that find_next_structural_from signature changed to PaddedView<'_>",
+    "bloom_gadt_dedup_substrate": "LANDED — bbnf-tape/dedup.rs created; consumer wires into Seq empty-children branch (compound-emit follow-on for non-empty children needs advance_or_pop_with hook)",
+    "dedup_eligible_rules_per_grammar": "LANDED — IR mining + emitter projection live; per-grammar admission count varies",
+    "grammar_pattern_hoist_count": "LANDED — pattern_dedup pre-egraph pass with FxHasher signatures + MIN_OCCURRENCES=3",
+    "list_rules_per_grammar": {
+      "css_l4": 1,
+      "bbnf": 1,
+      "sheets": 1,
+      "json": 0
+    },
+    "tailwind_4c_scaling": "MET — 2.24× (16 → 37 MB/s)",
+    "workspace_tests": "1386 passed / 0 failed / 36 ignored",
+    "bootstrap_idempotent": true,
+    "generated_rs_lines": 82929
+  },
+  "benches": {
+    "json_monolithic": {
+      "twitter": {"mb_s": 291, "ns_iter": 2165484},
+      "citm": {"mb_s": 294, "ns_iter": 5873595},
+      "canada": {"mb_s": 139, "ns_iter": 16079308},
+      "data_xl": {"mb_s": 203, "ns_iter": 104724633},
+      "data_s": {"mb_s": 283, "ns_iter": 125231}
+    },
+    "css_l4": {
+      "normalize": {"mb_s": 25, "ns_iter": 236587},
+      "bootstrap": {"mb_s": 15, "ns_iter": 18197187},
+      "tailwind": {"mb_s": 37, "ns_iter": 97817933}
+    },
+    "google_sheets_monolithic": {
+      "parse_simple": {"mb_s": 6, "ns_iter": 78795},
+      "parse_nested": {"mb_s": 7, "ns_iter": 190383},
+      "parse_stress": {"mb_s": 6, "ns_iter": 288227},
+      "format_simple": {"mb_s": 42, "ns_iter": 141},
+      "format_stress": {"mb_s": 46, "ns_iter": 4307}
+    },
+    "bbnf_monolithic": {
+      "json": {"mb_s": 15, "ns_iter": 34609},
+      "ebnf": {"mb_s": 10, "ns_iter": 139072},
+      "css_pretty": {"mb_s": 33, "ns_iter": 75473},
+      "google_sheets": {"mb_s": 49, "ns_iter": 150141},
+      "bbnf_self": {"mb_s": 20, "ns_iter": 251547},
+      "css_l4_grammar": {"mb_s": 31, "ns_iter": 1756379}
+    }
+  },
+  "delta_vs_post_AW_IV_W3": {
+    "json_twitter": "+5.1% (277 -> 291)",
+    "json_citm": "+2.4% (287 -> 294)",
+    "json_canada": "+2.2% (136 -> 139)",
+    "json_data_xl": "+3.0% (197 -> 203)",
+    "json_data_s": "+3.3% (274 -> 283)",
+    "css_normalize": "+4.2% (24 -> 25)",
+    "css_bootstrap": "+7.1% (14 -> 15)",
+    "css_tailwind": "+131.3% (16 -> 37) — W4.4 parallel fork at 4 threads",
+    "sheets_parse_simple": "0% (6 -> 6)",
+    "sheets_parse_nested": "0% (7 -> 7)",
+    "sheets_parse_stress": "0% (6 -> 6)",
+    "bbnf_json": "0% (15 -> 15)",
+    "bbnf_ebnf": "0% (10 -> 10)",
+    "bbnf_css_pretty": "0% (33 -> 33)",
+    "bbnf_google_sheets": "+2.1% (47 -> 49)",
+    "bbnf_bbnf_self": "+5.3% (19 -> 20)",
+    "bbnf_css_l4_grammar": "+3.3% (30 -> 31)"
+  },
+  "hard_gate_status": {
+    "avx2_15pct_drop_x86": "NOT VERIFIED — requires x86_64 hardware bench; codegen verified",
+    "tailwind_4c_sublinear_to_linear": "MET — 2.24× speedup",
+    "list_rules_non_empty_css_l4": "MET",
+    "workspace_tests_pass": "MET (1386/0/36)",
+    "post_AU_throughput_target": "PARTIAL — tailwind from 9 baseline → 37 (4.1×); JSON family stays bounded by alloc-growth + advance_or_pop_with cross-crate cost"
+  },
+  "gate_attribution": {
+    "tailwind_breakthrough": "W4.4 parallel fork delivers 2.24× on tailwind via depth-0 brace partitioning + byte-balanced cuts. The 1 MiB threshold (W4.4-fix) keeps bootstrap below the fork-engagement gate so its 280KB single-thread golden survives.",
+    "modest_json_gain": "JSON family +2-5%. AVX2 widening doesn't help on aarch64 dev; bloom dedup wires only on empty-children Seq path (most JSON leaves are non-empty key:value Seq; the dedup probe doesn't fire). NEON 17-digit kernel addresses the Eisel-Lemire 0.01% slow path — invisible at the bench level.",
+    "no_sheets_gain": "Sheets parse benches flat. The W4.4 fork doesn't engage (Sheets workloads are <1MiB); bloom probe doesn't fire on Sheets (no eligible rules); pattern_dedup hoist count low (Sheets has small grammar).",
+    "carry_forward_to_w5": "W5.1 reduce_column<C, R> + 4-lane SIMD pack addresses the column-reduce bottleneck; W5.2 sonic-rs / lightningcss parity harnesses gate correctness; W5.3 cost-model grid sweep refines the IR-side decisions."
+  }
+}

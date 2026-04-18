@@ -23,6 +23,26 @@ mod __bbnfbootstrap_emit_impl {
         use super::*;
     pub const GRAMMAR_BbnfBootstrap: [&'static str; 1usize] =
         ["// BBNF \u{2014} Better Backus-Naur Form\n// Self-hosted grammar definition.\n\n@import { value_expr, type_annotation } from \"expressions\" ;\n@import { type_name } from \"types\" ;\n\n// \u{2500}\u{2500}\u{2500} Terminals \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nidentifier = /[_a-zA-Z][_a-zA-Z0-9-]*/ -> Span ;\n\nliteral = ( \"\\\"\" , /(\\\\.|[^\"\\\\])*/  , \"\\\"\"\n        | \"\'\"  , /(\\\\.|[^\'\\\\])*/  , \"\'\"\n        | \"`\"  , /(\\\\.|[^`\\\\])*/  , \"`\" ) -> Span ;\n\nregex = ( \"/\" , /(\\\\.|[^\\/])+/ , \"/\" ) -> Span ;\n\nbig_comment = ( \"/*\" , /[^\\*]*/ , \"*/\" ) ?w -> Span ;\ncomment = ( \"//\" , /.*/ ) ?w -> Span ;\n\n// \u{2500}\u{2500}\u{2500} Expressions \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nlhs = identifier ;\n\n// Grammar function call args: each arg is a single binary_factor\n// (alternation of binary_factors, no comma-concatenation).\n// This avoids ambiguity between call arg commas and concatenation commas.\ncall_arg = ( binary_factor ?w , \"|\" ? ) + ;\n\nterm = \"\u{3b5}\" | \"epsilon\"\n     | identifier , ( \"(\" , call_arg ?w , ( \",\" ?w , call_arg ?w ) * , \")\" ) ?\n     | literal\n     | regex\n     | \"@{\" , rhs ?w , \"}\"\n     | \"(\" , rhs ?w , \")\"\n     | \"[\" , rhs ?w , \"]\"\n     | \"{\" , rhs ?w , \"}\" ;\n\nmodifier = \"?w\" | \"?\" | \"*\" | \"+\" ;\nfactor = big_comment ? , term ?w , modifier ? , big_comment ? ;\n\n// Map syntax: factor -> value_expr : type\nmapped_factor = factor , ( \"->\" ?w , ( value_expr , type_annotation ? ) ) ? ;\n\nbinary_operators = \"<<\" | \">>\" | \"-\" ;\nbinary_factor = mapped_factor , ( binary_operators ?w , mapped_factor ) * ;\n\nconcatenation = ( binary_factor ?w , \",\" ? ) + ;\nalternation = ( concatenation ?w , \"|\" ? ) + ;\n\n// Closures at rule level: |params| rhs (grammar functions)\nclosure = \"|\" , identifier , ( \",\" ?w , identifier ) * , \"|\" ?w , rhs ;\nrhs = closure | alternation ;\n\n// \u{2500}\u{2500}\u{2500} Rules and Directives \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nrule = lhs , \"=\" ?w , rhs ?w , ( \";\" | \".\" ) ;\n\nimport_path = \"\\\"\" , /(\\\\.|[^\"\\\\])*/ , \"\\\"\" ;\nimport_items = \"{\" ?w , ( identifier , ( \",\" ?w , identifier ) * ) ?w , \"}\" ;\nimport_directive = \"@import\" ?w , (\n      import_items ?w , \"from\" ?w , import_path\n    | import_path\n) ?w , ( \";\" | \".\" ) ? ;\n\nrecover_directive = \"@recover\" ?w , identifier ?w , rhs ?w , ( \";\" | \".\" ) ? ;\n\npretty_hint = identifier , ( \"(\" , /[^)]*/ , \")\" ) ? ;\npretty_directive = \"@pretty\" ?w , ( \"*\" | identifier ) ?w , ( pretty_hint ?w ) + , ( \";\" | \".\" ) ? ;\n\nws_directive = \"@ws\" ?w , regex ?w , ( \";\" | \".\" ) ? ;\ntoken_directive = \"@token\" ?w , identifier ?w , ( \";\" | \".\" ) ? ;\ndebug_directive = \"@debug\" ?w , ( \"*\" | identifier ) ?w , ( \";\" | \".\" ) ? ;\nhost_directive = \"@host\" ?w , identifier ?w , ( \":\" ?w , type_name ?w ) ? , ( \";\" | \".\" ) ? ;\n\ndirective = import_directive\n          | recover_directive\n          | pretty_directive\n          | ws_directive\n          | token_directive\n          | debug_directive\n          | host_directive ;\n\n// Grammar: top-level items in any order.\ngrammar_item = comment | big_comment | directive | rule ;\ngrammar = ( grammar_item ?w ) * ;\n\n@pretty grammar block ;\n@pretty rule group ;\n@pretty alternation group ;\n"];
+    static __GRAMMAR_PROFILE_LIST_RULES: [::bbnf::runtime::tape::RuleId; 1usize] =
+        [::bbnf::runtime::tape::RuleId(52)];
+    static __GRAMMAR_PROFILE_DEDUP_RULES: [::bbnf::runtime::tape::RuleId; 16usize] = [
+        ::bbnf::runtime::tape::RuleId(0),
+        ::bbnf::runtime::tape::RuleId(1),
+        ::bbnf::runtime::tape::RuleId(2),
+        ::bbnf::runtime::tape::RuleId(3),
+        ::bbnf::runtime::tape::RuleId(4),
+        ::bbnf::runtime::tape::RuleId(9),
+        ::bbnf::runtime::tape::RuleId(10),
+        ::bbnf::runtime::tape::RuleId(11),
+        ::bbnf::runtime::tape::RuleId(22),
+        ::bbnf::runtime::tape::RuleId(24),
+        ::bbnf::runtime::tape::RuleId(25),
+        ::bbnf::runtime::tape::RuleId(26),
+        ::bbnf::runtime::tape::RuleId(27),
+        ::bbnf::runtime::tape::RuleId(30),
+        ::bbnf::runtime::tape::RuleId(33),
+        ::bbnf::runtime::tape::RuleId(40),
+    ];
     /// Per-grammar codegen fingerprint — consolidated static
     /// profile emitted by Tranche AV Phase 1. Every downstream
     /// consumer (tape capacity, scanner dispatch, column-set
@@ -43,17 +63,17 @@ mod __bbnfbootstrap_emit_impl {
             leaves_per_input_byte: 0f32,
             payload_bytes_per_input_byte: 0f32,
             expected_ns_per_byte: 0f32,
-            parallel_break_even_bytes: 0u32,
+            parallel_break_even_bytes: 262144u32,
             structural_alphabet: &[],
             structural_digraphs: &[],
             structural_digraph_mask: [0, 0, 0, 0],
             structural_quote_classes: &[],
             active_columns: &[],
-            list_rules: &[],
+            list_rules: &__GRAMMAR_PROFILE_LIST_RULES,
             keyword_tables: &[],
             shape_dict: &[],
             branch_priors: &[],
-            dedup_eligible_rules: &[],
+            dedup_eligible_rules: &__GRAMMAR_PROFILE_DEDUP_RULES,
             reorder_unroll_visitors: &[],
         };
     static __DTA_REGEX_0: &str = "0[xX][0-9a-fA-F]+\\w*|[0-9]+\\w*";
@@ -4171,6 +4191,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4274,6 +4295,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4377,6 +4399,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4480,6 +4503,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4661,6 +4685,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4764,6 +4789,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -4867,6 +4893,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5048,6 +5075,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5088,6 +5116,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5128,6 +5157,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5186,6 +5216,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5244,6 +5275,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5426,6 +5458,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5466,6 +5499,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5648,6 +5682,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -5855,6 +5890,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6037,6 +6073,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6077,6 +6114,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6284,6 +6322,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6467,6 +6506,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6570,6 +6610,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6610,6 +6651,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6817,6 +6859,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6920,6 +6963,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -6960,6 +7004,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7143,6 +7188,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7183,6 +7229,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7223,6 +7270,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7404,6 +7452,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7507,6 +7556,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7565,6 +7615,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7623,6 +7674,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7806,6 +7858,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -7846,6 +7899,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8029,6 +8083,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8132,6 +8187,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8235,6 +8291,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8338,6 +8395,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8441,6 +8499,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8544,6 +8603,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8647,6 +8707,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8750,6 +8811,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8853,6 +8915,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -8956,6 +9019,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9059,6 +9123,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9206,6 +9271,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9387,6 +9453,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9536,6 +9603,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9719,6 +9787,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -9902,6 +9971,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10005,6 +10075,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10188,6 +10259,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10369,6 +10441,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10472,6 +10545,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10684,6 +10758,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10787,6 +10862,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -10801,6 +10877,7 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::KvPair;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                let __dedup_start: u32 = columns.len() as u32;
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -10917,6 +10994,25 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                     }
+                    let __rec_count: u32 = (columns.len() as u32) - __dedup_start;
+                    if __rec_count > 0 {
+                        if let ::core::option::Option::Some(__existing) =
+                            bloom_dedup.try_dedup(columns, __dedup_start, __rec_count)
+                        {
+                            let __span_lo = columns.span_lo[__dedup_start as usize];
+                            let __span_hi = *pos;
+                            columns.truncate(__dedup_start as usize);
+                            frame_depth.truncate(__dedup_start as usize);
+                            ::bbnf::runtime::tape::push_compound_referring(
+                                columns,
+                                tape_kind,
+                                24,
+                                __existing,
+                                (__span_lo, __span_hi),
+                            );
+                            frame_depth.push(stack.depth());
+                        }
+                    }
                     {
                         let __fast: ::core::option::Option<::bbnf::runtime::tape::StepResult> = 'fast: {
                             let __top = match stack.top_mut() {
@@ -10970,6 +11066,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11153,6 +11250,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11211,6 +11309,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11269,6 +11368,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11283,6 +11383,7 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::KvPair;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                let __dedup_start: u32 = columns.len() as u32;
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -11399,6 +11500,25 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                     }
+                    let __rec_count: u32 = (columns.len() as u32) - __dedup_start;
+                    if __rec_count > 0 {
+                        if let ::core::option::Option::Some(__existing) =
+                            bloom_dedup.try_dedup(columns, __dedup_start, __rec_count)
+                        {
+                            let __span_lo = columns.span_lo[__dedup_start as usize];
+                            let __span_hi = *pos;
+                            columns.truncate(__dedup_start as usize);
+                            frame_depth.truncate(__dedup_start as usize);
+                            ::bbnf::runtime::tape::push_compound_referring(
+                                columns,
+                                tape_kind,
+                                25,
+                                __existing,
+                                (__span_lo, __span_hi),
+                            );
+                            frame_depth.push(stack.depth());
+                        }
+                    }
                     {
                         let __fast: ::core::option::Option<::bbnf::runtime::tape::StepResult> = 'fast: {
                             let __top = match stack.top_mut() {
@@ -11452,6 +11572,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11555,6 +11676,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11710,6 +11832,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11893,6 +12016,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -11951,6 +12075,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12009,6 +12134,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12023,6 +12149,7 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::KvPair;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                let __dedup_start: u32 = columns.len() as u32;
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -12139,6 +12266,25 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                     }
+                    let __rec_count: u32 = (columns.len() as u32) - __dedup_start;
+                    if __rec_count > 0 {
+                        if let ::core::option::Option::Some(__existing) =
+                            bloom_dedup.try_dedup(columns, __dedup_start, __rec_count)
+                        {
+                            let __span_lo = columns.span_lo[__dedup_start as usize];
+                            let __span_hi = *pos;
+                            columns.truncate(__dedup_start as usize);
+                            frame_depth.truncate(__dedup_start as usize);
+                            ::bbnf::runtime::tape::push_compound_referring(
+                                columns,
+                                tape_kind,
+                                26,
+                                __existing,
+                                (__span_lo, __span_hi),
+                            );
+                            frame_depth.push(stack.depth());
+                        }
+                    }
                     {
                         let __fast: ::core::option::Option<::bbnf::runtime::tape::StepResult> = 'fast: {
                             let __top = match stack.top_mut() {
@@ -12192,6 +12338,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12232,6 +12379,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12335,6 +12483,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12438,6 +12587,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12478,6 +12628,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12581,6 +12732,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12764,6 +12916,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -12971,6 +13124,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13074,6 +13228,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13257,6 +13412,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13464,6 +13620,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13647,6 +13804,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13687,6 +13845,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13727,6 +13886,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13830,6 +13990,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13870,6 +14031,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13928,6 +14090,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -13986,6 +14149,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14169,6 +14333,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14272,6 +14437,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14455,6 +14621,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14558,6 +14725,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14598,6 +14766,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14656,6 +14825,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14714,6 +14884,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -14897,6 +15068,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15000,6 +15172,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15183,6 +15356,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15286,6 +15460,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15326,6 +15501,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15384,6 +15560,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15442,6 +15619,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15625,6 +15803,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15728,6 +15907,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -15911,6 +16091,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16014,6 +16195,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16054,6 +16236,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16112,6 +16295,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16170,6 +16354,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16353,6 +16538,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16456,6 +16642,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16639,6 +16826,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16820,6 +17008,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -16923,6 +17112,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17026,6 +17216,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17129,6 +17320,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17232,6 +17424,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17413,6 +17606,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17453,6 +17647,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17660,6 +17855,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17700,6 +17896,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17758,6 +17955,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17816,6 +18014,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -17999,6 +18198,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18039,6 +18239,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18246,6 +18447,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18286,6 +18488,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18493,6 +18696,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18676,6 +18880,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18716,6 +18921,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18819,6 +19025,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18877,6 +19084,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -18935,6 +19143,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19118,6 +19327,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19158,6 +19368,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19198,6 +19409,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19405,6 +19617,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19588,6 +19801,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19771,6 +19985,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -19978,6 +20193,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20161,6 +20377,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20264,6 +20481,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20367,6 +20585,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20470,6 +20689,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20651,6 +20871,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20691,6 +20912,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20731,6 +20953,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20789,6 +21012,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -20847,6 +21071,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21030,6 +21255,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21070,6 +21296,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21253,6 +21480,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21460,6 +21688,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21643,6 +21872,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21683,6 +21913,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21741,6 +21972,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21799,6 +22031,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -21982,6 +22215,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22085,6 +22319,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22292,6 +22527,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22475,6 +22711,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22682,6 +22919,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22722,6 +22960,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22780,6 +23019,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -22838,6 +23078,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23021,6 +23262,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23124,6 +23366,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23331,6 +23574,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23514,6 +23758,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23721,6 +23966,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23824,6 +24070,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23864,6 +24111,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -23967,6 +24215,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24025,6 +24274,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24083,6 +24333,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24266,6 +24517,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24306,6 +24558,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24489,6 +24742,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24696,6 +24950,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24799,6 +25054,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24857,6 +25113,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -24915,6 +25172,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25098,6 +25356,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25138,6 +25397,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25321,6 +25581,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25361,6 +25622,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25401,6 +25663,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25582,6 +25845,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25622,6 +25886,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25725,6 +25990,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25783,6 +26049,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -25841,6 +26108,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26024,6 +26292,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26064,6 +26333,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26122,6 +26392,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26180,6 +26451,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26363,6 +26635,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26466,6 +26739,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26569,6 +26843,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26750,6 +27025,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -26933,6 +27209,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -27036,6 +27313,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -27219,6 +27497,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -27322,6 +27601,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -27336,6 +27616,7 @@ mod __bbnfbootstrap_emit_impl {
                 let promote: ::bbnf::runtime::tape::SeqPromote =
                     ::bbnf::runtime::tape::SeqPromote::KvPair;
                 let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                let __dedup_start: u32 = columns.len() as u32;
                 let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                 frame_depth.push(stack.depth());
                 let child_mark = columns.len() as u32;
@@ -27452,6 +27733,25 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                     }
+                    let __rec_count: u32 = (columns.len() as u32) - __dedup_start;
+                    if __rec_count > 0 {
+                        if let ::core::option::Option::Some(__existing) =
+                            bloom_dedup.try_dedup(columns, __dedup_start, __rec_count)
+                        {
+                            let __span_lo = columns.span_lo[__dedup_start as usize];
+                            let __span_hi = *pos;
+                            columns.truncate(__dedup_start as usize);
+                            frame_depth.truncate(__dedup_start as usize);
+                            ::bbnf::runtime::tape::push_compound_referring(
+                                columns,
+                                tape_kind,
+                                40,
+                                __existing,
+                                (__span_lo, __span_hi),
+                            );
+                            frame_depth.push(stack.depth());
+                        }
+                    }
                     {
                         let __fast: ::core::option::Option<::bbnf::runtime::tape::StepResult> = 'fast: {
                             let __top = match stack.top_mut() {
@@ -27505,6 +27805,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -27608,6 +27909,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -27666,6 +27968,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -27724,6 +28027,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -27907,6 +28211,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -27947,6 +28252,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -28050,6 +28356,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -28108,6 +28415,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -28166,6 +28474,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -28349,6 +28658,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -28389,6 +28699,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -28572,6 +28883,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -28779,6 +29091,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -28962,6 +29275,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -29020,6 +29334,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -29078,6 +29393,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -29261,6 +29577,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -29364,6 +29681,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -29547,6 +29865,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -29650,6 +29969,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -29708,6 +30028,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -29766,6 +30087,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -29949,6 +30271,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -29989,6 +30312,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -30047,6 +30371,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -30105,6 +30430,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -30288,6 +30614,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -30391,6 +30718,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -30449,6 +30777,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -30507,6 +30836,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -30690,6 +31020,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -30730,6 +31061,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -30913,6 +31245,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -30953,6 +31286,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -31134,6 +31468,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -31192,6 +31527,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -31250,6 +31586,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -31433,6 +31770,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -31536,6 +31874,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -31639,6 +31978,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -31820,6 +32160,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -32027,6 +32368,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -32210,6 +32552,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -32313,6 +32656,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -32371,6 +32715,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -32429,6 +32774,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -32612,6 +32958,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -32652,6 +32999,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -32710,6 +33058,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -32768,6 +33117,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -32951,6 +33301,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -32991,6 +33342,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -33049,6 +33401,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -33107,6 +33460,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -33290,6 +33644,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -33393,6 +33748,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -33496,6 +33852,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -33677,6 +34034,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -33884,6 +34242,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -34067,6 +34426,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -34107,6 +34467,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -34210,6 +34571,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -34365,6 +34727,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -34468,6 +34831,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -34651,6 +35015,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -34858,6 +35223,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -35041,6 +35407,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -35144,6 +35511,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -35202,6 +35570,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -35260,6 +35629,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -35443,6 +35813,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -35546,6 +35917,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -35586,6 +35958,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -35767,6 +36140,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -35825,6 +36199,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -35883,6 +36258,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -36066,6 +36442,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -36106,6 +36483,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -36164,6 +36542,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -36222,6 +36601,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -36405,6 +36785,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -36612,6 +36993,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -36715,6 +37097,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -36818,6 +37201,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -36999,6 +37383,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -37206,6 +37591,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -37389,6 +37775,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -37492,6 +37879,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -37550,6 +37938,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -37608,6 +37997,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -37791,6 +38181,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -37831,6 +38222,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -37889,6 +38281,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -37947,6 +38340,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -38130,6 +38524,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -38233,6 +38628,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -38336,6 +38732,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -38517,6 +38914,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -38724,6 +39122,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -38907,6 +39306,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -39010,6 +39410,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -39068,6 +39469,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -39126,6 +39528,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -39309,6 +39712,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -39349,6 +39753,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -39407,6 +39812,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -39465,6 +39871,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -39648,6 +40055,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -39751,6 +40159,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -39854,6 +40263,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -40035,6 +40445,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -40242,6 +40653,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -40425,6 +40837,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -40528,6 +40941,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -40586,6 +41000,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -40644,6 +41059,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -40827,6 +41243,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -40930,6 +41347,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -40970,6 +41388,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -41151,6 +41570,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -41209,6 +41629,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -41267,6 +41688,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -41450,6 +41872,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -41553,6 +41976,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -41656,6 +42080,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -41837,6 +42262,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -42044,6 +42470,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -42227,6 +42654,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -42330,6 +42758,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -42388,6 +42817,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -42446,6 +42876,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -42629,6 +43060,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -42669,6 +43101,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -42727,6 +43160,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -42785,6 +43219,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -42968,6 +43403,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -43071,6 +43507,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -43129,6 +43566,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -43187,6 +43625,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -43370,6 +43809,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -43410,6 +43850,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -43468,6 +43909,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -43526,6 +43968,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -43709,6 +44152,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -43892,6 +44336,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -44099,6 +44544,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -44202,6 +44648,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -44305,6 +44752,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -44486,6 +44934,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -44693,6 +45142,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -44876,6 +45326,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -44916,6 +45367,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -44956,6 +45408,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -44996,6 +45449,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45036,6 +45490,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45076,6 +45531,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45116,6 +45572,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45156,6 +45613,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45337,6 +45795,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45377,6 +45836,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45417,6 +45877,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45457,6 +45918,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45497,6 +45959,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45678,6 +46141,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45718,6 +46182,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45776,6 +46241,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -45834,6 +46300,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -46017,6 +46484,7 @@ mod __bbnfbootstrap_emit_impl {
             stack: &mut ::bbnf::runtime::tape::FrameStack,
             pos: &mut u32,
             slot: &mut u32,
+            bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::StepResult,
             ::bbnf::runtime::tape::DtaError,
@@ -46266,6 +46734,9 @@ mod __bbnfbootstrap_emit_impl {
             let pos: &mut u32 = &mut pos_owned;
             let mut slot_owned: u32 = 0;
             let slot: &mut u32 = &mut slot_owned;
+            let mut bloom_dedup_owned: ::bbnf::runtime::tape::BloomDedup =
+                ::bbnf::runtime::tape::BloomDedup::new();
+            let bloom_dedup: &mut ::bbnf::runtime::tape::BloomDedup = &mut bloom_dedup_owned;
             ::bbnf::runtime::tape::trim_ascii_ws(input, pos);
             let mut cur: u16 = {
                 let s = table.rule_entry_for(table.entry);
@@ -47779,6 +48250,7 @@ mod __bbnfbootstrap_emit_impl {
                             let promote: ::bbnf::runtime::tape::SeqPromote =
                                 ::bbnf::runtime::tape::SeqPromote::KvPair;
                             let tape_kind = ::bbnf::runtime::tape::frame_to_tape_kind(frame);
+                            let __dedup_start: u32 = columns.len() as u32;
                             let parent_rec = columns.push_compound_fused(tape_kind, *pos);
                             frame_depth.push(stack.depth());
                             let child_mark = columns.len() as u32;
@@ -47901,6 +48373,25 @@ mod __bbnfbootstrap_emit_impl {
                                                 columns.flags[__parent] = __frame.cursor as u8;
                                             }
                                         }
+                                    }
+                                }
+                                let __rec_count: u32 = (columns.len() as u32) - __dedup_start;
+                                if __rec_count > 0 {
+                                    if let ::core::option::Option::Some(__existing) =
+                                        bloom_dedup.try_dedup(columns, __dedup_start, __rec_count)
+                                    {
+                                        let __span_lo = columns.span_lo[__dedup_start as usize];
+                                        let __span_hi = *pos;
+                                        columns.truncate(__dedup_start as usize);
+                                        frame_depth.truncate(__dedup_start as usize);
+                                        ::bbnf::runtime::tape::push_compound_referring(
+                                            columns,
+                                            tape_kind,
+                                            3,
+                                            __existing,
+                                            (__span_lo, __span_hi),
+                                        );
+                                        frame_depth.push(stack.depth());
                                     }
                                 }
                                 {
@@ -52058,27 +52549,83 @@ mod __bbnfbootstrap_emit_impl {
                                 ))
                             }
                         }
-                        51 => {
-                            __cold_state_51(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        52 => {
-                            __cold_state_52(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        53 => {
-                            __cold_state_53(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        54 => {
-                            __cold_state_54(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        55 => {
-                            __cold_state_55(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        56 => {
-                            __cold_state_56(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        57 => {
-                            __cold_state_57(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
+                        51 => __cold_state_51(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        52 => __cold_state_52(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        53 => __cold_state_53(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        54 => __cold_state_54(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        55 => __cold_state_55(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        56 => __cold_state_56(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        57 => __cold_state_57(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
                         58 => {
                             let _ = "literal";
                             let text: &'static str = __DTA_LITERAL_58;
@@ -53510,33 +54057,105 @@ mod __bbnfbootstrap_emit_impl {
                                 ))
                             }
                         }
-                        72 => {
-                            __cold_state_72(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        73 => {
-                            __cold_state_73(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        74 => {
-                            __cold_state_74(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        75 => {
-                            __cold_state_75(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        76 => {
-                            __cold_state_76(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        77 => {
-                            __cold_state_77(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        78 => {
-                            __cold_state_78(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        79 => {
-                            __cold_state_79(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
-                        80 => {
-                            __cold_state_80(input, idx, columns, psi, frame_depth, stack, pos, slot)
-                        }
+                        72 => __cold_state_72(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        73 => __cold_state_73(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        74 => __cold_state_74(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        75 => __cold_state_75(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        76 => __cold_state_76(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        77 => __cold_state_77(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        78 => __cold_state_78(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        79 => __cold_state_79(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
+                        80 => __cold_state_80(
+                            input,
+                            idx,
+                            columns,
+                            psi,
+                            frame_depth,
+                            stack,
+                            pos,
+                            slot,
+                            bloom_dedup,
+                        ),
                         81 => {
                             let _ = "ref_target";
                             let rule: ::bbnf::runtime::tape::DtaRuleId =
@@ -55657,6 +56276,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         102 => {
                             let _ = "literal";
@@ -56223,6 +56843,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         109 => __cold_state_109(
                             input,
@@ -56233,6 +56854,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         110 => __cold_state_110(
                             input,
@@ -56243,6 +56865,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         111 => __cold_state_111(
                             input,
@@ -56253,6 +56876,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         112 => {
                             let _ = "literal";
@@ -56819,6 +57443,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         119 => __cold_state_119(
                             input,
@@ -56829,6 +57454,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         120 => __cold_state_120(
                             input,
@@ -56839,6 +57465,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         121 => __cold_state_121(
                             input,
@@ -56849,6 +57476,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         122 => __cold_state_122(
                             input,
@@ -56859,6 +57487,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         123 => __cold_state_123(
                             input,
@@ -56869,6 +57498,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         124 => __cold_state_124(
                             input,
@@ -56879,6 +57509,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         125 => __cold_state_125(
                             input,
@@ -56889,6 +57520,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         126 => __cold_state_126(
                             input,
@@ -56899,6 +57531,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         127 => __cold_state_127(
                             input,
@@ -56909,6 +57542,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         128 => __cold_state_128(
                             input,
@@ -56919,6 +57553,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         129 => __cold_state_129(
                             input,
@@ -56929,6 +57564,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         130 => __cold_state_130(
                             input,
@@ -56939,6 +57575,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         131 => __cold_state_131(
                             input,
@@ -56949,6 +57586,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         132 => __cold_state_132(
                             input,
@@ -56959,6 +57597,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         133 => __cold_state_133(
                             input,
@@ -56969,6 +57608,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         134 => __cold_state_134(
                             input,
@@ -56979,6 +57619,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         135 => __cold_state_135(
                             input,
@@ -56989,6 +57630,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         136 => __cold_state_136(
                             input,
@@ -56999,6 +57641,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         137 => __cold_state_137(
                             input,
@@ -57009,6 +57652,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         138 => __cold_state_138(
                             input,
@@ -57019,6 +57663,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         139 => __cold_state_139(
                             input,
@@ -57029,6 +57674,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         140 => __cold_state_140(
                             input,
@@ -57039,6 +57685,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         141 => __cold_state_141(
                             input,
@@ -57049,6 +57696,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         142 => __cold_state_142(
                             input,
@@ -57059,6 +57707,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         143 => __cold_state_143(
                             input,
@@ -57069,6 +57718,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         144 => {
                             let _ = "literal";
@@ -57444,6 +58094,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         148 => {
                             let _ = "literal";
@@ -57819,6 +58470,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         152 => {
                             let _ = "literal";
@@ -58105,6 +58757,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         155 => __cold_state_155(
                             input,
@@ -58115,6 +58768,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         156 => __cold_state_156(
                             input,
@@ -58125,6 +58779,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         157 => __cold_state_157(
                             input,
@@ -58135,6 +58790,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         158 => __cold_state_158(
                             input,
@@ -58145,6 +58801,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         159 => __cold_state_159(
                             input,
@@ -58155,6 +58812,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         160 => __cold_state_160(
                             input,
@@ -58165,6 +58823,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         161 => {
                             let _ = "literal";
@@ -58505,6 +59164,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         165 => __cold_state_165(
                             input,
@@ -58515,6 +59175,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         166 => __cold_state_166(
                             input,
@@ -58525,6 +59186,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         167 => __cold_state_167(
                             input,
@@ -58535,6 +59197,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         168 => __cold_state_168(
                             input,
@@ -58545,6 +59208,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         169 => __cold_state_169(
                             input,
@@ -58555,6 +59219,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         170 => __cold_state_170(
                             input,
@@ -58565,6 +59230,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         171 => __cold_state_171(
                             input,
@@ -58575,6 +59241,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         172 => __cold_state_172(
                             input,
@@ -58585,6 +59252,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         173 => __cold_state_173(
                             input,
@@ -58595,6 +59263,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         174 => __cold_state_174(
                             input,
@@ -58605,6 +59274,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         175 => {
                             let _ = "ref_target";
@@ -59575,6 +60245,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         184 => __cold_state_184(
                             input,
@@ -59585,6 +60256,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         185 => __cold_state_185(
                             input,
@@ -59595,6 +60267,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         186 => __cold_state_186(
                             input,
@@ -59605,6 +60278,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         187 => {
                             let _ = "ref_target";
@@ -59726,6 +60400,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         191 => {
                             let _ = "literal";
@@ -60554,6 +61229,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         201 => __cold_state_201(
                             input,
@@ -60564,6 +61240,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         202 => __cold_state_202(
                             input,
@@ -60574,6 +61251,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         203 => __cold_state_203(
                             input,
@@ -60584,6 +61262,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         204 => __cold_state_204(
                             input,
@@ -60594,6 +61273,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         205 => __cold_state_205(
                             input,
@@ -60604,6 +61284,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         206 => __cold_state_206(
                             input,
@@ -60614,6 +61295,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         207 => __cold_state_207(
                             input,
@@ -60624,6 +61306,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         208 => __cold_state_208(
                             input,
@@ -60634,6 +61317,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         209 => __cold_state_209(
                             input,
@@ -60644,6 +61328,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         210 => __cold_state_210(
                             input,
@@ -60654,6 +61339,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         211 => __cold_state_211(
                             input,
@@ -60664,6 +61350,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         212 => __cold_state_212(
                             input,
@@ -60674,6 +61361,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         213 => __cold_state_213(
                             input,
@@ -60684,6 +61372,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         214 => __cold_state_214(
                             input,
@@ -60694,6 +61383,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         215 => __cold_state_215(
                             input,
@@ -60704,6 +61394,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         216 => __cold_state_216(
                             input,
@@ -60714,6 +61405,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         217 => __cold_state_217(
                             input,
@@ -60724,6 +61416,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         218 => __cold_state_218(
                             input,
@@ -60734,6 +61427,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         219 => __cold_state_219(
                             input,
@@ -60744,6 +61438,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         220 => __cold_state_220(
                             input,
@@ -60754,6 +61449,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         221 => __cold_state_221(
                             input,
@@ -60764,6 +61460,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         222 => __cold_state_222(
                             input,
@@ -60774,6 +61471,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         223 => __cold_state_223(
                             input,
@@ -60784,6 +61482,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         224 => __cold_state_224(
                             input,
@@ -60794,6 +61493,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         225 => __cold_state_225(
                             input,
@@ -60804,6 +61504,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         226 => __cold_state_226(
                             input,
@@ -60814,6 +61515,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         227 => __cold_state_227(
                             input,
@@ -60824,6 +61526,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         228 => __cold_state_228(
                             input,
@@ -60834,6 +61537,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         229 => __cold_state_229(
                             input,
@@ -60844,6 +61548,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         230 => __cold_state_230(
                             input,
@@ -60854,6 +61559,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         231 => __cold_state_231(
                             input,
@@ -60864,6 +61570,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         232 => __cold_state_232(
                             input,
@@ -60874,6 +61581,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         233 => __cold_state_233(
                             input,
@@ -60884,6 +61592,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         234 => __cold_state_234(
                             input,
@@ -60894,6 +61603,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         235 => __cold_state_235(
                             input,
@@ -60904,6 +61614,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         236 => __cold_state_236(
                             input,
@@ -60914,6 +61625,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         237 => __cold_state_237(
                             input,
@@ -60924,6 +61636,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         238 => __cold_state_238(
                             input,
@@ -60934,6 +61647,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         239 => __cold_state_239(
                             input,
@@ -60944,6 +61658,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         240 => __cold_state_240(
                             input,
@@ -60954,6 +61669,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         241 => __cold_state_241(
                             input,
@@ -60964,6 +61680,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         242 => __cold_state_242(
                             input,
@@ -60974,6 +61691,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         243 => __cold_state_243(
                             input,
@@ -60984,6 +61702,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         244 => __cold_state_244(
                             input,
@@ -60994,6 +61713,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         245 => __cold_state_245(
                             input,
@@ -61004,6 +61724,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         246 => __cold_state_246(
                             input,
@@ -61014,6 +61735,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         247 => __cold_state_247(
                             input,
@@ -61024,6 +61746,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         248 => __cold_state_248(
                             input,
@@ -61034,6 +61757,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         249 => __cold_state_249(
                             input,
@@ -61044,6 +61768,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         250 => __cold_state_250(
                             input,
@@ -61054,6 +61779,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         251 => __cold_state_251(
                             input,
@@ -61064,6 +61790,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         252 => __cold_state_252(
                             input,
@@ -61074,6 +61801,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         253 => __cold_state_253(
                             input,
@@ -61084,6 +61812,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         254 => __cold_state_254(
                             input,
@@ -61094,6 +61823,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         255 => __cold_state_255(
                             input,
@@ -61104,6 +61834,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         256 => __cold_state_256(
                             input,
@@ -61114,6 +61845,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         257 => __cold_state_257(
                             input,
@@ -61124,6 +61856,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         258 => __cold_state_258(
                             input,
@@ -61134,6 +61867,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         259 => __cold_state_259(
                             input,
@@ -61144,6 +61878,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         260 => __cold_state_260(
                             input,
@@ -61154,6 +61889,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         261 => __cold_state_261(
                             input,
@@ -61164,6 +61900,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         262 => __cold_state_262(
                             input,
@@ -61174,6 +61911,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         263 => __cold_state_263(
                             input,
@@ -61184,6 +61922,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         264 => __cold_state_264(
                             input,
@@ -61194,6 +61933,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         265 => __cold_state_265(
                             input,
@@ -61204,6 +61944,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         266 => __cold_state_266(
                             input,
@@ -61214,6 +61955,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         267 => __cold_state_267(
                             input,
@@ -61224,6 +61966,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         268 => __cold_state_268(
                             input,
@@ -61234,6 +61977,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         269 => __cold_state_269(
                             input,
@@ -61244,6 +61988,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         270 => __cold_state_270(
                             input,
@@ -61254,6 +61999,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         271 => __cold_state_271(
                             input,
@@ -61264,6 +62010,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         272 => __cold_state_272(
                             input,
@@ -61274,6 +62021,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         273 => __cold_state_273(
                             input,
@@ -61284,6 +62032,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         274 => __cold_state_274(
                             input,
@@ -61294,6 +62043,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         275 => __cold_state_275(
                             input,
@@ -61304,6 +62054,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         276 => __cold_state_276(
                             input,
@@ -61314,6 +62065,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         277 => __cold_state_277(
                             input,
@@ -61324,6 +62076,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         278 => __cold_state_278(
                             input,
@@ -61334,6 +62087,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         279 => __cold_state_279(
                             input,
@@ -61344,6 +62098,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         280 => __cold_state_280(
                             input,
@@ -61354,6 +62109,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         281 => __cold_state_281(
                             input,
@@ -61364,6 +62120,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         282 => __cold_state_282(
                             input,
@@ -61374,6 +62131,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         283 => __cold_state_283(
                             input,
@@ -61384,6 +62142,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         284 => __cold_state_284(
                             input,
@@ -61394,6 +62153,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         285 => __cold_state_285(
                             input,
@@ -61404,6 +62164,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         286 => __cold_state_286(
                             input,
@@ -61414,6 +62175,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         287 => __cold_state_287(
                             input,
@@ -61424,6 +62186,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         288 => __cold_state_288(
                             input,
@@ -61434,6 +62197,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         289 => __cold_state_289(
                             input,
@@ -61444,6 +62208,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         290 => __cold_state_290(
                             input,
@@ -61454,6 +62219,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         291 => __cold_state_291(
                             input,
@@ -61464,6 +62230,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         292 => __cold_state_292(
                             input,
@@ -61474,6 +62241,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         293 => __cold_state_293(
                             input,
@@ -61484,6 +62252,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         294 => __cold_state_294(
                             input,
@@ -61494,6 +62263,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         295 => __cold_state_295(
                             input,
@@ -61504,6 +62274,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         296 => __cold_state_296(
                             input,
@@ -61514,6 +62285,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         297 => __cold_state_297(
                             input,
@@ -61524,6 +62296,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         298 => __cold_state_298(
                             input,
@@ -61534,6 +62307,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         299 => __cold_state_299(
                             input,
@@ -61544,6 +62318,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         300 => __cold_state_300(
                             input,
@@ -61554,6 +62329,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         301 => __cold_state_301(
                             input,
@@ -61564,6 +62340,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         302 => __cold_state_302(
                             input,
@@ -61574,6 +62351,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         303 => __cold_state_303(
                             input,
@@ -61584,6 +62362,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         304 => __cold_state_304(
                             input,
@@ -61594,6 +62373,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         305 => __cold_state_305(
                             input,
@@ -61604,6 +62384,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         306 => __cold_state_306(
                             input,
@@ -61614,6 +62395,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         307 => __cold_state_307(
                             input,
@@ -61624,6 +62406,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         308 => __cold_state_308(
                             input,
@@ -61634,6 +62417,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         309 => __cold_state_309(
                             input,
@@ -61644,6 +62428,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         310 => __cold_state_310(
                             input,
@@ -61654,6 +62439,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         311 => __cold_state_311(
                             input,
@@ -61664,6 +62450,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         312 => __cold_state_312(
                             input,
@@ -61674,6 +62461,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         313 => __cold_state_313(
                             input,
@@ -61684,6 +62472,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         314 => __cold_state_314(
                             input,
@@ -61694,6 +62483,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         315 => __cold_state_315(
                             input,
@@ -61704,6 +62494,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         316 => __cold_state_316(
                             input,
@@ -61714,6 +62505,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         317 => __cold_state_317(
                             input,
@@ -61724,6 +62516,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         318 => __cold_state_318(
                             input,
@@ -61734,6 +62527,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         319 => __cold_state_319(
                             input,
@@ -61744,6 +62538,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         320 => __cold_state_320(
                             input,
@@ -61754,6 +62549,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         321 => __cold_state_321(
                             input,
@@ -61764,6 +62560,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         322 => __cold_state_322(
                             input,
@@ -61774,6 +62571,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         323 => __cold_state_323(
                             input,
@@ -61784,6 +62582,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         324 => __cold_state_324(
                             input,
@@ -61794,6 +62593,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         325 => __cold_state_325(
                             input,
@@ -61804,6 +62604,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         326 => __cold_state_326(
                             input,
@@ -61814,6 +62615,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         327 => __cold_state_327(
                             input,
@@ -61824,6 +62626,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         328 => __cold_state_328(
                             input,
@@ -61834,6 +62637,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         329 => __cold_state_329(
                             input,
@@ -61844,6 +62648,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         330 => __cold_state_330(
                             input,
@@ -61854,6 +62659,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         331 => __cold_state_331(
                             input,
@@ -61864,6 +62670,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         332 => __cold_state_332(
                             input,
@@ -61874,6 +62681,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         333 => __cold_state_333(
                             input,
@@ -61884,6 +62692,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         334 => __cold_state_334(
                             input,
@@ -61894,6 +62703,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         335 => __cold_state_335(
                             input,
@@ -61904,6 +62714,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         336 => __cold_state_336(
                             input,
@@ -61914,6 +62725,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         337 => __cold_state_337(
                             input,
@@ -61924,6 +62736,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         338 => __cold_state_338(
                             input,
@@ -61934,6 +62747,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         339 => __cold_state_339(
                             input,
@@ -61944,6 +62758,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         340 => __cold_state_340(
                             input,
@@ -61954,6 +62769,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         341 => __cold_state_341(
                             input,
@@ -61964,6 +62780,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         342 => __cold_state_342(
                             input,
@@ -61974,6 +62791,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         343 => __cold_state_343(
                             input,
@@ -61984,6 +62802,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         344 => __cold_state_344(
                             input,
@@ -61994,6 +62813,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         345 => __cold_state_345(
                             input,
@@ -62004,6 +62824,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         346 => __cold_state_346(
                             input,
@@ -62014,6 +62835,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         347 => __cold_state_347(
                             input,
@@ -62024,6 +62846,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         348 => __cold_state_348(
                             input,
@@ -62034,6 +62857,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         349 => __cold_state_349(
                             input,
@@ -62044,6 +62868,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         350 => __cold_state_350(
                             input,
@@ -62054,6 +62879,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         351 => __cold_state_351(
                             input,
@@ -62064,6 +62890,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         352 => __cold_state_352(
                             input,
@@ -62074,6 +62901,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         353 => __cold_state_353(
                             input,
@@ -62084,6 +62912,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         354 => __cold_state_354(
                             input,
@@ -62094,6 +62923,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         355 => __cold_state_355(
                             input,
@@ -62104,6 +62934,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         356 => __cold_state_356(
                             input,
@@ -62114,6 +62945,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         357 => __cold_state_357(
                             input,
@@ -62124,6 +62956,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         358 => __cold_state_358(
                             input,
@@ -62134,6 +62967,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         359 => __cold_state_359(
                             input,
@@ -62144,6 +62978,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         360 => __cold_state_360(
                             input,
@@ -62154,6 +62989,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         361 => __cold_state_361(
                             input,
@@ -62164,6 +63000,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         362 => __cold_state_362(
                             input,
@@ -62174,6 +63011,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         363 => __cold_state_363(
                             input,
@@ -62184,6 +63022,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         364 => __cold_state_364(
                             input,
@@ -62194,6 +63033,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         365 => __cold_state_365(
                             input,
@@ -62204,6 +63044,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         366 => __cold_state_366(
                             input,
@@ -62214,6 +63055,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         367 => __cold_state_367(
                             input,
@@ -62224,6 +63066,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         368 => __cold_state_368(
                             input,
@@ -62234,6 +63077,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         369 => __cold_state_369(
                             input,
@@ -62244,6 +63088,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         370 => __cold_state_370(
                             input,
@@ -62254,6 +63099,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         371 => __cold_state_371(
                             input,
@@ -62264,6 +63110,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         372 => __cold_state_372(
                             input,
@@ -62274,6 +63121,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         373 => __cold_state_373(
                             input,
@@ -62284,6 +63132,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         374 => __cold_state_374(
                             input,
@@ -62294,6 +63143,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         375 => __cold_state_375(
                             input,
@@ -62304,6 +63154,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         376 => __cold_state_376(
                             input,
@@ -62314,6 +63165,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         377 => __cold_state_377(
                             input,
@@ -62324,6 +63176,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         378 => __cold_state_378(
                             input,
@@ -62334,6 +63187,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         379 => __cold_state_379(
                             input,
@@ -62344,6 +63198,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         380 => __cold_state_380(
                             input,
@@ -62354,6 +63209,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         381 => __cold_state_381(
                             input,
@@ -62364,6 +63220,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         382 => __cold_state_382(
                             input,
@@ -62374,6 +63231,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         383 => __cold_state_383(
                             input,
@@ -62384,6 +63242,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         384 => __cold_state_384(
                             input,
@@ -62394,6 +63253,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         385 => __cold_state_385(
                             input,
@@ -62404,6 +63264,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         386 => __cold_state_386(
                             input,
@@ -62414,6 +63275,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         387 => __cold_state_387(
                             input,
@@ -62424,6 +63286,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         388 => __cold_state_388(
                             input,
@@ -62434,6 +63297,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         389 => __cold_state_389(
                             input,
@@ -62444,6 +63308,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         390 => __cold_state_390(
                             input,
@@ -62454,6 +63319,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         391 => __cold_state_391(
                             input,
@@ -62464,6 +63330,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         392 => __cold_state_392(
                             input,
@@ -62474,6 +63341,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         393 => __cold_state_393(
                             input,
@@ -62484,6 +63352,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         394 => __cold_state_394(
                             input,
@@ -62494,6 +63363,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         395 => __cold_state_395(
                             input,
@@ -62504,6 +63374,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         396 => __cold_state_396(
                             input,
@@ -62514,6 +63385,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         397 => __cold_state_397(
                             input,
@@ -62524,6 +63396,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         398 => __cold_state_398(
                             input,
@@ -62534,6 +63407,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         399 => __cold_state_399(
                             input,
@@ -62544,6 +63418,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         400 => __cold_state_400(
                             input,
@@ -62554,6 +63429,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         401 => __cold_state_401(
                             input,
@@ -62564,6 +63440,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         402 => __cold_state_402(
                             input,
@@ -62574,6 +63451,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         403 => __cold_state_403(
                             input,
@@ -62584,6 +63462,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         404 => __cold_state_404(
                             input,
@@ -62594,6 +63473,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         405 => __cold_state_405(
                             input,
@@ -62604,6 +63484,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         406 => __cold_state_406(
                             input,
@@ -62614,6 +63495,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         407 => __cold_state_407(
                             input,
@@ -62624,6 +63506,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         408 => __cold_state_408(
                             input,
@@ -62634,6 +63517,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         409 => __cold_state_409(
                             input,
@@ -62644,6 +63528,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         410 => __cold_state_410(
                             input,
@@ -62654,6 +63539,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         411 => __cold_state_411(
                             input,
@@ -62664,6 +63550,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         412 => __cold_state_412(
                             input,
@@ -62674,6 +63561,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         413 => __cold_state_413(
                             input,
@@ -62684,6 +63572,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         414 => __cold_state_414(
                             input,
@@ -62694,6 +63583,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         415 => __cold_state_415(
                             input,
@@ -62704,6 +63594,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         416 => __cold_state_416(
                             input,
@@ -62714,6 +63605,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         417 => __cold_state_417(
                             input,
@@ -62724,6 +63616,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         418 => __cold_state_418(
                             input,
@@ -62734,6 +63627,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         419 => __cold_state_419(
                             input,
@@ -62744,6 +63638,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         420 => __cold_state_420(
                             input,
@@ -62754,6 +63649,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         421 => __cold_state_421(
                             input,
@@ -62764,6 +63660,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         422 => __cold_state_422(
                             input,
@@ -62774,6 +63671,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         423 => __cold_state_423(
                             input,
@@ -62784,6 +63682,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         424 => __cold_state_424(
                             input,
@@ -62794,6 +63693,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         425 => __cold_state_425(
                             input,
@@ -62804,6 +63704,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         426 => __cold_state_426(
                             input,
@@ -62814,6 +63715,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         427 => __cold_state_427(
                             input,
@@ -62824,6 +63726,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         428 => __cold_state_428(
                             input,
@@ -62834,6 +63737,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         429 => __cold_state_429(
                             input,
@@ -62844,6 +63748,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         430 => __cold_state_430(
                             input,
@@ -62854,6 +63759,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         431 => __cold_state_431(
                             input,
@@ -62864,6 +63770,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         432 => __cold_state_432(
                             input,
@@ -62874,6 +63781,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         433 => __cold_state_433(
                             input,
@@ -62884,6 +63792,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         434 => __cold_state_434(
                             input,
@@ -62894,6 +63803,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         435 => __cold_state_435(
                             input,
@@ -62904,6 +63814,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         436 => __cold_state_436(
                             input,
@@ -62914,6 +63825,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         437 => __cold_state_437(
                             input,
@@ -62924,6 +63836,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         438 => __cold_state_438(
                             input,
@@ -62934,6 +63847,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         439 => __cold_state_439(
                             input,
@@ -62944,6 +63858,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         440 => __cold_state_440(
                             input,
@@ -62954,6 +63869,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         441 => __cold_state_441(
                             input,
@@ -62964,6 +63880,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         442 => __cold_state_442(
                             input,
@@ -62974,6 +63891,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         443 => __cold_state_443(
                             input,
@@ -62984,6 +63902,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         444 => __cold_state_444(
                             input,
@@ -62994,6 +63913,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         445 => __cold_state_445(
                             input,
@@ -63004,6 +63924,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         446 => __cold_state_446(
                             input,
@@ -63014,6 +63935,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         447 => __cold_state_447(
                             input,
@@ -63024,6 +63946,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         448 => __cold_state_448(
                             input,
@@ -63034,6 +63957,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         449 => __cold_state_449(
                             input,
@@ -63044,6 +63968,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         450 => __cold_state_450(
                             input,
@@ -63054,6 +63979,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         451 => __cold_state_451(
                             input,
@@ -63064,6 +63990,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         452 => __cold_state_452(
                             input,
@@ -63074,6 +64001,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         453 => __cold_state_453(
                             input,
@@ -63084,6 +64012,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         454 => __cold_state_454(
                             input,
@@ -63094,6 +64023,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         455 => __cold_state_455(
                             input,
@@ -63104,6 +64034,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         456 => __cold_state_456(
                             input,
@@ -63114,6 +64045,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         457 => __cold_state_457(
                             input,
@@ -63124,6 +64056,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         458 => __cold_state_458(
                             input,
@@ -63134,6 +64067,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         459 => __cold_state_459(
                             input,
@@ -63144,6 +64078,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         460 => __cold_state_460(
                             input,
@@ -63154,6 +64089,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         461 => __cold_state_461(
                             input,
@@ -63164,6 +64100,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         462 => __cold_state_462(
                             input,
@@ -63174,6 +64111,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         463 => __cold_state_463(
                             input,
@@ -63184,6 +64122,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         464 => __cold_state_464(
                             input,
@@ -63194,6 +64133,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         465 => __cold_state_465(
                             input,
@@ -63204,6 +64144,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         466 => __cold_state_466(
                             input,
@@ -63214,6 +64155,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         467 => __cold_state_467(
                             input,
@@ -63224,6 +64166,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         468 => __cold_state_468(
                             input,
@@ -63234,6 +64177,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         469 => __cold_state_469(
                             input,
@@ -63244,6 +64188,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         470 => __cold_state_470(
                             input,
@@ -63254,6 +64199,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         471 => __cold_state_471(
                             input,
@@ -63264,6 +64210,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         472 => __cold_state_472(
                             input,
@@ -63274,6 +64221,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         473 => __cold_state_473(
                             input,
@@ -63284,6 +64232,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         474 => __cold_state_474(
                             input,
@@ -63294,6 +64243,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         475 => __cold_state_475(
                             input,
@@ -63304,6 +64254,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         476 => __cold_state_476(
                             input,
@@ -63314,6 +64265,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         477 => __cold_state_477(
                             input,
@@ -63324,6 +64276,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         478 => __cold_state_478(
                             input,
@@ -63334,6 +64287,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         479 => __cold_state_479(
                             input,
@@ -63344,6 +64298,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         480 => __cold_state_480(
                             input,
@@ -63354,6 +64309,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         481 => __cold_state_481(
                             input,
@@ -63364,6 +64320,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         482 => __cold_state_482(
                             input,
@@ -63374,6 +64331,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         483 => __cold_state_483(
                             input,
@@ -63384,6 +64342,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         484 => __cold_state_484(
                             input,
@@ -63394,6 +64353,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         485 => __cold_state_485(
                             input,
@@ -63404,6 +64364,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         486 => __cold_state_486(
                             input,
@@ -63414,6 +64375,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         487 => __cold_state_487(
                             input,
@@ -63424,6 +64386,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         488 => __cold_state_488(
                             input,
@@ -63434,6 +64397,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         489 => __cold_state_489(
                             input,
@@ -63444,6 +64408,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         490 => __cold_state_490(
                             input,
@@ -63454,6 +64419,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         491 => __cold_state_491(
                             input,
@@ -63464,6 +64430,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         492 => __cold_state_492(
                             input,
@@ -63474,6 +64441,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         493 => __cold_state_493(
                             input,
@@ -63484,6 +64452,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         494 => __cold_state_494(
                             input,
@@ -63494,6 +64463,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         495 => __cold_state_495(
                             input,
@@ -63504,6 +64474,7 @@ mod __bbnfbootstrap_emit_impl {
                             stack,
                             pos,
                             slot,
+                            bloom_dedup,
                         ),
                         _ => {
                             return ::core::result::Result::Err(
@@ -77761,13 +78732,15 @@ mod __bbnfbootstrap_emit_impl {
                                                         0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                         0, 0,
                                                     ];
-                                                    ::parse_that::find_next_structural_from(
-                                                        state.padded(),
-                                                        __start,
-                                                        &__LO_LUT,
-                                                        &__HI_LUT,
-                                                    )
-                                                    .map(|(pos, _)| pos - __start)
+                                                    let __result: ::core::option::Option<usize> =
+                                                        ::parse_that::find_next_structural_from(
+                                                            state.padded(),
+                                                            __start,
+                                                            &__LO_LUT,
+                                                            &__HI_LUT,
+                                                        )
+                                                        .map(|(pos, _)| pos - __start);
+                                                    __result
                                                 })
                                                 .unwrap_or(state.src_bytes.len() - __start)
                                             };
@@ -77875,13 +78848,15 @@ mod __bbnfbootstrap_emit_impl {
                                                         1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                         0, 0,
                                                     ];
-                                                    ::parse_that::find_next_structural_from(
-                                                        state.padded(),
-                                                        __start,
-                                                        &__LO_LUT,
-                                                        &__HI_LUT,
-                                                    )
-                                                    .map(|(pos, _)| pos - __start)
+                                                    let __result: ::core::option::Option<usize> =
+                                                        ::parse_that::find_next_structural_from(
+                                                            state.padded(),
+                                                            __start,
+                                                            &__LO_LUT,
+                                                            &__HI_LUT,
+                                                        )
+                                                        .map(|(pos, _)| pos - __start);
+                                                    __result
                                                 })
                                                 .unwrap_or(state.src_bytes.len() - __start)
                                             };
@@ -80334,13 +81309,15 @@ mod __bbnfbootstrap_emit_impl {
                                                         0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                         0, 0,
                                                     ];
-                                                    ::parse_that::find_next_structural_from(
-                                                        state.padded(),
-                                                        __start,
-                                                        &__LO_LUT,
-                                                        &__HI_LUT,
-                                                    )
-                                                    .map(|(pos, _)| pos - __start)
+                                                    let __result: ::core::option::Option<usize> =
+                                                        ::parse_that::find_next_structural_from(
+                                                            state.padded(),
+                                                            __start,
+                                                            &__LO_LUT,
+                                                            &__HI_LUT,
+                                                        )
+                                                        .map(|(pos, _)| pos - __start);
+                                                    __result
                                                 })
                                                 .unwrap_or(state.src_bytes.len() - __start)
                                             };
@@ -81382,8 +82359,11 @@ mod __bbnfbootstrap_emit_impl {
                                                                                                                                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0];
                                                                                                                                     static __HI_LUT: [u8; 16] =
                                                                                                                                         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-                                                                                                                                    ::parse_that::find_next_structural_from(state.padded(),
-                                                                                                                                            __start, &__LO_LUT, &__HI_LUT).map(|(pos, _)| pos - __start)
+                                                                                                                                    let __result: ::core::option::Option<usize> =
+                                                                                                                                        ::parse_that::find_next_structural_from(state.padded(),
+                                                                                                                                                __start, &__LO_LUT,
+                                                                                                                                                &__HI_LUT).map(|(pos, _)| pos - __start);
+                                                                                                                                    __result
                                                                                                                                 }).unwrap_or(state.src_bytes.len() - __start)
                                                                                                                     };
                                                                                                                 state.offset = __start + __scan;
@@ -81623,7 +82603,28 @@ mod __bbnfbootstrap_emit_impl {
                 ::bbnf::runtime::scan::scan_structural(input.as_bytes(), &STRUCTURAL_ALPHABET);
             let root_off = {
                 let (columns, frame_depth) = builder.columns_and_frame_depth_mut();
-                dta_run_BbnfBootstrap(input.as_bytes(), &idx, columns, &mut psi, frame_depth)
+                if !GRAMMAR_PROFILE.list_rules.is_empty()
+                    && (input.as_bytes().len() as u32) > GRAMMAR_PROFILE.parallel_break_even_bytes
+                    && GRAMMAR_PROFILE.parallel_break_even_bytes > 0
+                {
+                    let n_workers = ::core::cmp::min(
+                        4usize,
+                        ::core::cmp::max(1usize, ::bbnf::runtime::tape::rayon_num_threads()),
+                    );
+                    let list_rule_id = GRAMMAR_PROFILE.list_rules[0].0;
+                    ::bbnf::runtime::tape::dta_run_parallel(
+                        input.as_bytes(),
+                        &idx,
+                        list_rule_id,
+                        n_workers,
+                        dta_run_BbnfBootstrap,
+                        columns,
+                        &mut psi,
+                        frame_depth,
+                    )
+                } else {
+                    dta_run_BbnfBootstrap(input.as_bytes(), &idx, columns, &mut psi, frame_depth)
+                }
             }
             .map_err(|e| match e {
                 ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {

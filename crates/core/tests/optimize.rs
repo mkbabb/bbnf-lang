@@ -65,6 +65,7 @@ fn make_ir(rules: Vec<(&str, IrNode, Option<u32>, bool)>) -> GrammarIR {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        dedup_eligible_rules: Vec::new(),
     }
 }
 

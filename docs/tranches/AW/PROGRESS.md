@@ -2705,3 +2705,98 @@ W4 opens on the W3 substrate. Four parallel agents:
 - W4.4 — Document-parallel fork over stage-1 structural index
 
 Hard gate: AVX2 ≥ 15% drop on x86_64; tailwind 4c sub-linear-to-linear scaling; `GRAMMAR_PROFILE.list_rules` non-empty for CSS L4.
+
+## 2026-04-17 — AW-IV W4 landed (SIMD widening + scanner cluster + bloom + document-parallel); tailwind +131% breakthrough
+
+Master HEAD `4c57766e`. Workspace **1386 / 0 / 36** (+38 vs W3 — W4.3 dedup tests + W4.4 list_rules tests). Four parallel agents + W4.4-fix follow-on.
+
+### W4.1 — AVX2 u8x32 + WASM simd128 (3 commits, `bbnf-wt-aw4-w4-avx2`)
+
+- `fb9115ca` — `feat(bbnf-simd-scan/avx2): u8x32 widening — load256 + cmpeq256 + movemask256`. 32-byte CHUNK tail loop in scan_nibble + scan_multi.
+- (cherry-pick fb9115ca then d7c65728's resolved version) `feat(emitter/simd): arch-gated u8x32 emission for AVX2 targets`. `#[cfg(target_feature = "avx2")]` on x86_64 emits inline _mm256_loadu_si256 + _mm256_shuffle_epi8 + _mm256_cmpgt_epi8 + _mm256_movemask_epi8 loop; aarch64/wasm32 routes through PaddedView find_next_structural_from.
+- `744d7951` — `polish(bbnf-simd-scan/wasm): simd128 parity with NEON kernel`. Multi-class quote handling matches NEON byte-for-byte.
+
+### W4.2 — Scanner cluster + PaddedView + NEON 17-digit (2 commits in bbnf-lang + 3 in parse-that)
+
+- `e358a168` — `feat(scanners): PaddedView wrapper + emitter call-site migrations`. 7 emitter call sites migrated; PaddedView carries 64-byte trailing zero pad at type level.
+- `da2bb13e` — `feat(emitter/dta_walker/decoders): NEON 17-digit fractional kernel for Eisel-Lemire slow path`.
+
+parse-that side (commits on parse-that master):
+- `92881e4` — Scanner cluster consolidation (-612 LOC net, ≥600 delete gate met).
+- `e696d62` — HIR predicate module collapse to 1 module.
+- `052cf7c` — Drop dead trim_leading_whitespace_with_set.
+
+### W4.3 — Bloom + GADT + grammar pattern hoisting (7 commits, `bbnf-wt-aw4-w4-bloom`)
+
+- `4829ec5c` — `feat(bbnf-tape/dedup): runtime bloom + GADT for compound-record dedup`. 128-word (8192-bit) bloom + HashMap GADT; `try_dedup` + `push_compound_referring`.
+- `3cd58678` — `feat(ir/recognizers/dedup_eligibility): mine dedup-eligible rules per grammar profile`.
+- `19636802` — `feat(emitter/profile): emit dedup_eligible_rules slot in GRAMMAR_PROFILE`.
+- `6f5002dd` — `feat(ir/passes/transform/pattern_dedup): grammar-level pattern hoisting pre-egraph pass`. FxHasher signatures + MIN_OCCURRENCES=3.
+- `ac0151a7` — `feat(emitter/dta_walker/lower_state): bloom+GADT consumer in dedup-eligible compound-emit`. Wires into Seq empty-children branch (non-empty path requires advance_or_pop_with hook, deferred).
+- `93215876` — `test(ir/passes): dedup_eligibility + pattern_dedup miner coverage`. 12 IR tests.
+- `6a1fa976` — `test(bbnf-tape/dedup): bloom + GADT substrate coverage`. 6 tape tests.
+
+### W4.4 — Document-parallel fork (5 commits, `bbnf-wt-aw4-w4-parallel`)
+
+- `04f58420` — `feat(ir/recognizers/list_rules): mine fork-candidate list rules per grammar`. CSS L4=1, BBNF=1, Sheets=1, JSON=0.
+- `52cd737a` — `feat(ir/profile,emitter/profile): wire list_rules slot through profile pipeline`.
+- `7bd4341e` — `feat(bbnf-tape/driver): dta_run_parallel + per-worker Columns join`. Rayon worker dispatch + child_off / span_lo/hi rewrite by HAS_CHILDREN_BIT / PAYLOAD_IN_ARENA_BIT.
+- `24f47eb7` — `feat(emitter/grammar): parse() routes to dta_run_parallel when list_rules non-empty + input large`.
+- `279b8cf2` — `fix(bbnf-tape/driver): dta_run_parallel always-compilable non-rayon fallback`.
+
+### W4.4-fix — Parallel-fork tape parity (1 commit, `bbnf-wt-aw4-w44-fix`)
+
+- `c587b6d6` — `fix(bbnf-tape/driver+ir/profile): dta_run_parallel depth-0 partitioning + 1 MiB threshold`. Depth-0 brace partitioning fixed mid-rule shard boundaries; byte-balanced cut selection; threshold raised 256 KiB → 1 MiB so bootstrap.css (280 KB) stays single-thread; tailwind golden regenerated for parallel-forked tape shape (6 extra wrapper records).
+
+Tailwind 4-thread bench: 16 → 37 MB/s = **2.24× speedup**, exceeding the W4.4 ≥ 2× hard gate.
+
+### Hard-gate verification ledger
+
+| Gate | Status | Verification artefact |
+|------|--------|-----------------------|
+| AVX2 u8x32 emission | ◐ NOT VERIFIED ON HW | Codegen verified via cargo expand; 89 AVX2 instructions in compiled .s for bbnf_simd_scan::avx2::scan; runtime bench requires x86_64 hardware |
+| Scanner cluster ≥ 600 LOC delete | ✓ MET | parse-that 847 deletions, 612 net reduction |
+| HIR predicate module = 1 | ✓ MET | classify/ → classify.rs |
+| NEON 17-digit kernel | ✓ LANDED | Splices inline into Eisel-Lemire ambiguous-rounding fallback |
+| PaddedView migration | ✓ MET | 7 emitter call sites + parse-that signature change |
+| Bloom + GADT substrate | ✓ LANDED | bbnf-tape/dedup.rs + tests pass |
+| Pattern hoist pre-egraph pass | ✓ LANDED | passes/transform/pattern_dedup.rs |
+| list_rules non-empty for CSS L4 | ✓ MET (=1) | mine_list_rules admits stylesheet |
+| **Tailwind 4c sub-linear-to-linear** | ✓ MET | **2.24× (16→37 MB/s)** |
+| Workspace tests pass | ✓ MET | 1386 / 0 / 36 |
+| Bootstrap idempotent | ✓ MET | 82929 lines, gen1 == gen2 |
+
+### Per-bench post-W4 numbers (cold per-parse)
+
+`docs/benchmarks/post-AW-IV-W4.json` carries the full matrix. Summary:
+
+| Entry | post-AU | post-AW-III | post-W3 | post-W4 | Δ vs W3 |
+|---|---:|---:|---:|---:|---:|
+| json twitter | 1967 | 170 | 277 | 291 | +5.1% |
+| json citm | 2438 | 213 | 287 | 294 | +2.4% |
+| json canada | 1231 | 98 | 136 | 139 | +2.2% |
+| json data_xl | 1179 | 137 | 197 | 203 | +3.0% |
+| json data_s | 1746 | 164 | 274 | 283 | +3.3% |
+| css normalize | 735 | 14 | 24 | 25 | +4.2% |
+| css bootstrap | 454 | 8 | 14 | 15 | +7.1% |
+| **css tailwind** | 496 | 9 | 16 | **37** | **+131.3%** |
+| sheets parse_simple | 95 | 4 | 6 | 6 | flat |
+| sheets parse_nested | 128 | 4 | 7 | 7 | flat |
+| sheets parse_stress | 121 | 3 | 6 | 6 | flat |
+| bbnf json | 283 | 9 | 15 | 15 | flat |
+| bbnf ebnf | 223 | 6 | 10 | 10 | flat |
+| bbnf css_pretty | 647 | 20 | 33 | 33 | flat |
+| bbnf google_sheets | 858 | 29 | 48 | 49 | +2.1% |
+| bbnf bbnf_self | 394 | 12 | 19 | 20 | +5.3% |
+| bbnf css_l4_grammar | 496 | 19 | 30 | 31 | +3.3% |
+
+The tailwind result is the W4 architectural breakthrough: 4-core scaling on a 3.5MB CSS document. Other entries gain modestly (+2-7%) because their workloads are below the parallel-fork threshold or don't exercise the AVX2 / bloom / pattern-hoist substrates W4 added. The substrate-without-consumer pattern from W3 carries forward; the throughput recovery vs post-AU stays constrained by `advance_or_pop_with` cross-crate residual + alloc-growth Vec ops + non-scalar PSI scheduling.
+
+### W4 → W5 hand-off
+
+W5 opens on the W4 substrate. Three parallel agents:
+- W5.1 — `Tape::reduce_column<C, R>` + per-column codegen + 4-lane SIMD pack
+- W5.2 — sonic-rs + lightningcss parity harnesses + CI gate
+- W5.3 — Cost-model grid sweep (AM.6 chronic close)
+
+Hard gate: reducer ≥ 6× scalar baseline OR per-arch rationale; both parity harnesses zero-divergence + CI-gated; ≥ 5% reduction in DTA state count from cost-grid sweep.

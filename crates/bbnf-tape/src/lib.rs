@@ -142,8 +142,8 @@ pub use shape_dict::{BbnfShapeEntry, BbnfShapeKind};
 pub use stage1::StructuralIndex;
 pub use tape::{Tape, TapeIter, TapeOffset, TapeRec};
 pub use visitor::{
-    ArrayVisitor, GrammarVisitor, KeywordVisitor, NumberVisitor, ObjectVisitor, StringVisitor,
-    TapeVisitor, TapeVisitorError, Value, ValueVisitor, ValueVisitorError,
+    ArrayVisitor, GrammarVisitor, KeywordVisitor, NumberVisitor, ObjectVisitor, PrattVisitor,
+    StringVisitor, TapeVisitor, TapeVisitorError, Value, ValueVisitor, ValueVisitorError,
 };
 
 /// Inline-aggregate payload budget (in bytes).

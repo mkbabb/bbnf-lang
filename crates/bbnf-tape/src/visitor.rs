@@ -154,6 +154,59 @@ pub trait KeywordVisitor: GrammarVisitor {
     fn null(&mut self) -> Result<(), Self::Error>;
 }
 
+/// Visitor surface for Pratt-shape rules — Sheets operator tower,
+/// CSS `calc` / `min` / `max` / `clamp` body math expressions, BBNF
+/// `value_or → value_unary` tower.
+///
+/// The emitter's Pratt-shape arm drives the shunting-yard reducer:
+/// [`Self::begin_pratt`] opens the enclosing operator chain compound,
+/// [`Self::operator`] / [`Self::operand_end`] fire per reduction
+/// step, and [`Self::end_pratt`] closes after the final operand. The
+/// operand values themselves dispatch through the visitor's other
+/// per-shape sub-trait bounds (numbers via [`NumberVisitor`],
+/// nested calls via [`ObjectVisitor`] / [`ArrayVisitor`], etc.) —
+/// Pratt carries only the *operator* thread.
+///
+/// # Method sequence per reducer step
+///
+/// For `a + b * c` with left-assoc `+` prec=1, `*` prec=2:
+///
+/// ```text
+/// begin_pratt
+///   parse operand `a` → operand_end
+///   peek `+`; push op onto visitor-side op stack
+///   parse operand `b` → operand_end
+///   peek `*`; stack top `+` has lower prec — push `*`
+///   parse operand `c` → operand_end
+///   no more ops; reduce (b * c) via operator(mul_disc)
+///                    reduce (a + (b * c)) via operator(add_disc)
+/// end_pratt
+/// ```
+///
+/// The `op` byte carries the grammar-emitted [`op_discriminant`](
+/// crate::dta::DtaPrecedenceEntry::op_discriminant) (the `-> 0u8`
+/// / `-> 1u8` annotation on each operator rule); `prec` is the
+/// packed precedence the `PRECEDENCE_LUT` stamps for the byte
+/// (`lut_byte & 0x0F`). The visitor decides whether to materialise
+/// a binary-operator AST node, a flat postfix stream, or discard —
+/// the tape-path visitor emits a reducer compound; the value-path
+/// visitor (W5 per-grammar) constructs a typed AST node.
+pub trait PrattVisitor: GrammarVisitor {
+    /// Called once before the leftmost operand of a Pratt compound.
+    fn begin_pratt(&mut self) -> Result<(), Self::Error>;
+    /// Called after each operand position completes. Pairs with
+    /// the preceding [`Self::operator`] call for RHS operands; the
+    /// leftmost operand has no preceding operator.
+    fn operand_end(&mut self) -> Result<(), Self::Error>;
+    /// Called when the reducer emits a binary-operator node. `op` is
+    /// the operator's byte discriminant (mirrors `op_discriminant`
+    /// on [`DtaPrecedenceEntry`](crate::dta::DtaPrecedenceEntry));
+    /// `prec` is the packed precedence (`PRECEDENCE_LUT[byte] & 0x0F`).
+    fn operator(&mut self, op: u8, prec: u8) -> Result<(), Self::Error>;
+    /// Called once after the final operand of a Pratt compound.
+    fn end_pratt(&mut self) -> Result<(), Self::Error>;
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // TapeVisitor — default impl that emits into Columns / TapeBuilder
 // ─────────────────────────────────────────────────────────────────────
@@ -391,6 +444,72 @@ impl<'input> KeywordVisitor for TapeVisitor<'input> {
     }
 }
 
+impl<'input> PrattVisitor for TapeVisitor<'input> {
+    #[inline(always)]
+    fn begin_pratt(&mut self) -> Result<(), Self::Error> {
+        // Outer Pratt compound mirrors `DtaState::ShuntingYard`'s
+        // entry-mode `push_compound_fused(TapeKind::Rule)` plus a
+        // `mark_children` — the enclosing compound brackets the
+        // operator chain's records.
+        let child_off = self.builder.mark_children();
+        self.compounds.push(CompoundFrame {
+            kind: TapeKind::Rule,
+            span_lo: 0,
+            child_off,
+        });
+        Ok(())
+    }
+
+    #[inline(always)]
+    fn operand_end(&mut self) -> Result<(), Self::Error> {
+        // Operand boundary markers carry no visitor-side state on the
+        // tape path — the operand's own records are already on the
+        // tape when this fires (String / Number / Keyword / Object /
+        // Array visitors emitted them). The reducer's op-stack lives
+        // on the emitter side; the tape visitor's `operator` callback
+        // stamps the reducer compound when the reducer decides.
+        Ok(())
+    }
+
+    #[inline(always)]
+    fn operator(&mut self, op: u8, _prec: u8) -> Result<(), Self::Error> {
+        // Mirrors the walker's `advance_or_pop_with` SY reducer
+        // `columns.pay_agg.push(entry.op_discriminant)` +
+        // `emit_leaf_with_payload(TapeKind::Span, ..)` pair: stages
+        // the operator's u8 discriminant into the arena + emits a
+        // payload-bearing Span leaf so downstream walkers can surface
+        // every consumed operator. The RHS operand's `operand_end`
+        // fires AFTER `operator` — the visitor sees the sequence
+        // `(lhs-operand, operator, rhs-operand)` flat, matching the
+        // walker's tape layout. Reducer compound emission is the
+        // emitter's responsibility via `builder.push_compound` at
+        // the per-arm reduce point.
+        let arena = self.builder.arena_mut();
+        let arena_off = arena.len() as u32;
+        arena.push(op);
+        self.builder.push_leaf_with_arena_frame(
+            TapeKind::Span,
+            0,
+            0,
+            0,
+            0,
+            arena_off,
+        );
+        Ok(())
+    }
+
+    #[inline(always)]
+    fn end_pratt(&mut self) -> Result<(), Self::Error> {
+        let frame = self
+            .compounds
+            .pop()
+            .ok_or(TapeVisitorError::UnbalancedCompound)?;
+        self.builder
+            .push_compound(frame.kind, frame.child_off, frame.span_lo, 0, 0, 0);
+        Ok(())
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // ValueVisitor — placeholder for the per-grammar type resolver (W3.2)
 // ─────────────────────────────────────────────────────────────────────
@@ -587,5 +706,39 @@ impl KeywordVisitor for ValueVisitor {
     #[inline(always)]
     fn null(&mut self) -> Result<(), Self::Error> {
         self.emit(Value::Null)
+    }
+}
+
+impl PrattVisitor for ValueVisitor {
+    /// The W1.3 [`Value`] enum carries no binary-operator variant —
+    /// this placeholder visitor collects the operator-chain operands
+    /// as an `Array` so the materialised shape surfaces via the same
+    /// downstream accessors that handle JSON arrays. W3.2's per-
+    /// grammar `ValueVisitor` replaces this with a typed binary-tree
+    /// AST.
+    #[inline(always)]
+    fn begin_pratt(&mut self) -> Result<(), Self::Error> {
+        self.stack.push(Value::Array(Vec::new()));
+        Ok(())
+    }
+
+    #[inline(always)]
+    fn operand_end(&mut self) -> Result<(), Self::Error> {
+        // Operand value already landed on the top-of-stack Array via
+        // the operand's own visitor method (emit pushes into the
+        // surrounding Array); no additional work required here.
+        Ok(())
+    }
+
+    #[inline(always)]
+    fn operator(&mut self, op: u8, _prec: u8) -> Result<(), Self::Error> {
+        // Surface the operator byte as a Number so the placeholder
+        // materialisation is self-describing.
+        self.emit(Value::Number(op as f64))
+    }
+
+    #[inline(always)]
+    fn end_pratt(&mut self) -> Result<(), Self::Error> {
+        self.pop_frame()
     }
 }

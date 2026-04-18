@@ -95,14 +95,56 @@ fn dump(label: &str, rel: &str, structural: bool) {
     } else {
         println!("| Parent | Target | Target body shape |");
         println!("|---|---|---|");
+        let mut seen_targets: std::collections::BTreeSet<&str> = Default::default();
         for (parent, target, _tag) in &refs {
             // Inspect target body to label its structural shape.
             let target_rule = ir.rules.iter().find(|r| ir.get_string(r.name) == *target).unwrap();
             let shape = describe_body(&target_rule.body);
             println!("| `{parent}` | `{target}` | {shape} |");
+            seen_targets.insert(target.as_str());
+        }
+        // For each unique target, dump per-branch classification detail.
+        println!();
+        println!("### Per-target branch classifications");
+        println!();
+        for target in &seen_targets {
+            let target_rule = ir.rules.iter().find(|r| ir.get_string(r.name) == *target).unwrap();
+            let body_stripped = match &target_rule.body {
+                IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => inner.as_ref(),
+                other => other,
+            };
+            if let IrNode::Alt(branches, _) = body_stripped {
+                println!("**`{target}`** (Alt, {} branches):", branches.len());
+                for (i, b) in branches.iter().enumerate() {
+                    let detail = describe_branch(&b.node, &ir);
+                    println!("  - [{i}] {detail}");
+                }
+                println!();
+            }
         }
     }
     println!();
+}
+
+fn describe_branch(node: &IrNode, ir: &GrammarIR) -> String {
+    match node {
+        IrNode::Ref(rid) => {
+            let target = &ir.rules[*rid as usize];
+            let name = ir.get_string(target.name);
+            let tag = ir.shape_assignments.get(*rid);
+            format!("Ref({name}) → {tag:?}")
+        }
+        IrNode::Map { inner, .. } => format!("Map({})", describe_branch(inner, ir)),
+        IrNode::OptionalWhitespace(inner) => format!("OW({})", describe_branch(inner, ir)),
+        IrNode::Literal(_) => "Literal".to_string(),
+        IrNode::Regex(_) => "Regex".to_string(),
+        IrNode::Seq(children) => format!("Seq({})", children.len()),
+        IrNode::Alt(bs, _) => format!("Alt({})", bs.len()),
+        IrNode::Next(..) => "Next(..)".to_string(),
+        IrNode::Skip(..) => "Skip(..)".to_string(),
+        IrNode::Repeat { .. } => "Repeat(..)".to_string(),
+        _ => "Other".to_string(),
+    }
 }
 
 /// A one-line structural description of `node` for the report.
@@ -149,4 +191,101 @@ fn probe_all_grammars() {
     dump("EBNF", "../../grammar/ebnf/ebnf.bbnf", false);
     dump("BNF", "../../grammar/bnf/bnf.bbnf", false);
     dump("BbnfBootstrap", "../../grammar/bbnf/bbnf.bbnf", true);
+}
+
+#[test]
+fn dump_css_alignDecl() {
+    let ir = compile("../../grammar/css/l4/stylesheet.bbnf", false);
+    // Dump a few unclassified rules' bodies in detail.
+    for name in ["alignDecl", "flexNumDecl", "typeSelector"] {
+        if let Some(rule) = ir.rules.iter().find(|r| ir.get_string(r.name) == name) {
+            let tag = ir.shape_assignments.get(rule.id);
+            println!("### `{name}` tag={tag:?}");
+            println!("body = {:#?}", &rule.body);
+            println!();
+        }
+    }
+}
+
+#[test]
+fn dump_remaining_unclassified() {
+    for (label, path, structural) in [
+        ("Sheets", "../../grammar/google-sheets/google-sheets.bbnf", false),
+        ("BNF", "../../grammar/bnf/bnf.bbnf", false),
+    ] {
+        let ir = compile(path, structural);
+        println!("### {label}");
+        for name in ["let_args", "alternation", "expression", "term", "let_binding", "let_call"] {
+            if let Some(rule) = ir.rules.iter().find(|r| ir.get_string(r.name) == name) {
+                let tag = ir.shape_assignments.get(rule.id);
+                println!("  `{name}` tag={tag:?}");
+                let body_stripped = match &rule.body {
+                    IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+                        inner.as_ref()
+                    }
+                    other => other,
+                };
+                let brief = describe_body(body_stripped);
+                println!("    body = {brief}");
+                // If Seq, dump child shapes.
+                if let IrNode::Seq(children) = body_stripped {
+                    for (i, c) in children.iter().enumerate() {
+                        let cs = match c {
+                            IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+                                inner.as_ref()
+                            }
+                            other => other,
+                        };
+                        println!("    pos {i}: {}", describe_branch(cs, &ir));
+                    }
+                }
+            }
+        }
+        println!();
+    }
+}
+
+#[test]
+fn dump_bbnf_value_atom() {
+    let ir = compile("../../grammar/bbnf/bbnf.bbnf", false);
+    for name in ["value_atom", "value_unary", "string_lit", "lhs", "alternation", "let_args"] {
+        if let Some(rule) = ir.rules.iter().find(|r| ir.get_string(r.name) == name) {
+            let tag = ir.shape_assignments.get(rule.id);
+            println!("### `{name}` tag={tag:?}");
+            println!("body first-byte set = {:?}", rule.meta.first_set);
+            // Dump a short body summary without the full tree.
+            let body_stripped = match &rule.body {
+                IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+                    inner.as_ref()
+                }
+                other => other,
+            };
+            match body_stripped {
+                IrNode::Alt(bs, _) => {
+                    for (i, b) in bs.iter().enumerate() {
+                        let stripped = match &b.node {
+                            IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+                                inner.as_ref()
+                            }
+                            other => other,
+                        };
+                        println!("  branch {i}: {}", describe_branch(stripped, &ir));
+                    }
+                }
+                IrNode::Seq(c) => {
+                    for (i, child) in c.iter().enumerate() {
+                        let stripped = match child {
+                            IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+                                inner.as_ref()
+                            }
+                            other => other,
+                        };
+                        println!("  pos {i}: {}", describe_branch(stripped, &ir));
+                    }
+                }
+                other => println!("  body = {}", describe_branch(other, &ir)),
+            }
+            println!();
+        }
+    }
 }

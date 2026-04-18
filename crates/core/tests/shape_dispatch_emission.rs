@@ -368,8 +368,8 @@ fn w4_hregex_emitter_produces_parsable_tokens() {
 fn shape_dispatch_is_idempotent() {
     // Running the classifier twice over the same IR yields identical
     // assignments — it is a pure projection.
-    let (ir, _) = build_json_ir();
-    let direct = shape_dispatch(&ir);
+    let (mut ir, _) = build_json_ir();
+    let direct = shape_dispatch(&mut ir);
     assert_eq!(
         direct.per_rule.len(),
         ir.shape_assignments.per_rule.len(),

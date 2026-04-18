@@ -1344,7 +1344,13 @@ fn emit_byte_dispatch_arm(
             #fallback_arm
         };
         if let ::core::option::Option::Some(top) = stack.top_mut() {
-            if matches!(top.kind, ::bbnf::runtime::tape::DtaFrameKind::Alt) {
+            // Direct equality rather than `matches!` macro: nightly's
+            // `matches!` expansion decorates the inner `match` with
+            // `#[allow(non_exhaustive_omitted_patterns)]` — an
+            // attribute on an expression (unstable, E0658) — which
+            // `cargo expand` surfaces in the bootstrap-emitted
+            // `generated.rs`. `DtaFrameKind` derives `PartialEq`.
+            if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
                 top.cursor = chosen.0;
             }
         }

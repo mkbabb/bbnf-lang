@@ -110,7 +110,14 @@ pub fn emit_parse_number(
             }
 
             let mut exponent: i64 = -fractional_digit_count;
-            if matches!(input.get(*p), Some(b'e') | Some(b'E')) {
+            // Direct equality rather than `matches!`: nightly's
+            // `matches!` expansion decorates the inner `match` with
+            // `#[allow(non_exhaustive_omitted_patterns)]` — an
+            // attribute on an expression (unstable, E0658) — which
+            // `cargo expand` surfaces in the bootstrap-emitted
+            // `generated.rs`.
+            let exp_byte = input.get(*p).copied();
+            if exp_byte == Some(b'e') || exp_byte == Some(b'E') {
                 *p += 1;
                 let exp_negative = match input.get(*p) {
                     Some(b'+') => { *p += 1; false }
@@ -289,7 +296,14 @@ pub fn emit_parse_number_visitor(
             }
 
             let mut exponent: i64 = -fractional_digit_count;
-            if matches!(input.get(*p), Some(b'e') | Some(b'E')) {
+            // Direct equality rather than `matches!`: nightly's
+            // `matches!` expansion decorates the inner `match` with
+            // `#[allow(non_exhaustive_omitted_patterns)]` — an
+            // attribute on an expression (unstable, E0658) — which
+            // `cargo expand` surfaces in the bootstrap-emitted
+            // `generated.rs`.
+            let exp_byte = input.get(*p).copied();
+            if exp_byte == Some(b'e') || exp_byte == Some(b'E') {
                 *p += 1;
                 let exp_negative = match input.get(*p) {
                     Some(b'+') => { *p += 1; false }

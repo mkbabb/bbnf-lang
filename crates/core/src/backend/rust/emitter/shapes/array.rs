@@ -296,10 +296,16 @@ pub fn emit_parse_array(
                 // closes Repeat at `*pos = sp.pos` (= `iter_close` captured
                 // above). Any trailing ws between the last iter and `]`
                 // belongs to the OW-Seq's trailing WsTrim, NOT the Repeat.
-                let is_value_start = matches!(
-                    input.get(*p).copied(),
-                    Some(b'{' | b'[' | b'"' | b'-' | b'0'..=b'9' | b't' | b'f' | b'n'),
-                );
+                // Direct boolean form rather than `matches!`: nightly's
+                // `matches!` expansion decorates the inner `match` with
+                // `#[allow(non_exhaustive_omitted_patterns)]` — an
+                // attribute on an expression (unstable, E0658) —
+                // surfaced by the bootstrap's `cargo expand` step.
+                let is_value_start = match input.get(*p).copied() {
+                    Some(b'{') | Some(b'[') | Some(b'"') | Some(b'-')
+                    | Some(b'0'..=b'9') | Some(b't') | Some(b'f') | Some(b'n') => true,
+                    _ => false,
+                };
                 if !is_value_start {
                     // Close Repeat at current *p (BEFORE OW-Seq trailing ws).
                     let repeat_close = *p as u32;

@@ -74,13 +74,21 @@ use quote::{format_ident, quote};
 ///     /* fallback handling — route to fallback_state or raise Syntax */
 /// } else {
 ///     if let Some(top) = stack.top_mut() {
-///         if matches!(top.kind, DtaFrameKind::Alt) {
+///         if top.kind == DtaFrameKind::Alt {
 ///             top.cursor = __next.0;
 ///         }
 ///     }
 ///     Ok(StepResult::Next(__next))
 /// }
 /// ```
+///
+/// Note: the frame-kind check uses `==` rather than the `matches!`
+/// macro because the `generated.rs` file is produced via `cargo
+/// expand`, and nightly's `matches!` expansion decorates the inner
+/// `match` with `#[allow(non_exhaustive_omitted_patterns)]` — an
+/// attribute on an expression, which is unstable (E0658). The
+/// `DtaFrameKind` enum derives `PartialEq`, so direct equality is
+/// equivalent and emits stable-compatible code.
 pub fn emit_classify_byte_arm(
     idx: usize,
     disp: &[StateId],
@@ -146,7 +154,7 @@ pub fn emit_classify_byte_arm(
             __next
         };
         if let ::core::option::Option::Some(top) = stack.top_mut() {
-            if matches!(top.kind, ::bbnf::runtime::tape::DtaFrameKind::Alt) {
+            if top.kind == ::bbnf::runtime::tape::DtaFrameKind::Alt {
                 top.cursor = chosen.0;
             }
         }

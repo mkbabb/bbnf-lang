@@ -158,10 +158,17 @@ pub fn parse_array_JsonFixture_array(
                 0,
                 0,
             );
-        let is_value_start = matches!(
-            input.get(* p).copied(), Some(b'{' | b'[' | b'"' | b'-' | b'0'..= b'9' | b't'
-            | b'f' | b'n'),
-        );
+        let is_value_start = match input.get(*p).copied() {
+            Some(b'{')
+            | Some(b'[')
+            | Some(b'"')
+            | Some(b'-')
+            | Some(b'0'..=b'9')
+            | Some(b't')
+            | Some(b'f')
+            | Some(b'n') => true,
+            _ => false,
+        };
         if !is_value_start {
             let repeat_close = *p as u32;
             let _ = builder

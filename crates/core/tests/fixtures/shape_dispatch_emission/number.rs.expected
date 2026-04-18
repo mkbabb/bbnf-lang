@@ -76,7 +76,8 @@ pub fn parse_number_JsonFixture_number(
         }
     }
     let mut exponent: i64 = -fractional_digit_count;
-    if matches!(input.get(* p), Some(b'e') | Some(b'E')) {
+    let exp_byte = input.get(*p).copied();
+    if exp_byte == Some(b'e') || exp_byte == Some(b'E') {
         *p += 1;
         let exp_negative = match input.get(*p) {
             Some(b'+') => {

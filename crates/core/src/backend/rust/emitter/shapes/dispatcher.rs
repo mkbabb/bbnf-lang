@@ -117,8 +117,13 @@ pub fn emit_support_module(grammar_suffix: &str) -> TokenStream {
                 p: &mut usize,
                 state: &mut ScanState,
             ) -> Option<u8> {
+                // Direct boolean form rather than `matches!`: nightly's
+                // `matches!` expansion decorates the inner `match` with
+                // `#[allow(non_exhaustive_omitted_patterns)]` — an
+                // attribute on an expression (unstable, E0658) —
+                // surfaced by the bootstrap's `cargo expand` step.
                 match input.get(*p) {
-                    Some(&b) if !matches!(b, b' ' | b'\t' | b'\n' | b'\r') => Some(b),
+                    Some(&b) if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' => Some(b),
                     None => None,
                     _ => {
                         skip_space_slow(input, p, state);
@@ -149,7 +154,8 @@ pub fn emit_support_module(grammar_suffix: &str) -> TokenStream {
                     }
                     if *p + 64 > input.len() {
                         while let Some(&b) = input.get(*p) {
-                            if !matches!(b, b' ' | b'\t' | b'\n' | b'\r') {
+                            // Direct boolean form (see `skip_space`).
+                            if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
                                 return;
                             }
                             *p += 1;
@@ -267,7 +273,8 @@ pub fn emit_support_module(grammar_suffix: &str) -> TokenStream {
             pub(crate) fn nospace_bitmap_64_scalar(stripe: &[u8]) -> u64 {
                 let mut out = 0u64;
                 for (i, &b) in stripe.iter().enumerate() {
-                    if !matches!(b, b' ' | b'\t' | b'\n' | b'\r') {
+                    // Direct boolean form (see `skip_space`).
+                    if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
                         out |= 1u64 << i;
                     }
                 }

@@ -190,22 +190,55 @@ pub fn emit_parse_array(
 
             // Non-empty loop: parse iterations. Each iteration emits:
             //   Seq (iter) { value_records; Rule (comma_repeat) { maybe: Seq { Literal "," } } }
+            //
+            // Walker-parity decomposition of `(value << comma?) *`:
+            //  - Iter body: `Seq[value, Repeat(comma, 0..1)]`. No OW
+            //    between `value` and `Repeat(comma)`.
+            //  - `comma = "," ?w` lowers to `OptionalWhitespace(Literal(","))`,
+            //    which lowers to DTA `Seq[WsTrim, ",", WsTrim]` (leading
+            //    + trailing ws absorbed into the Seq's span).
+            //  - Repeat(comma, 0..1) fires at most once per iter; when the
+            //    "," is absent, the comma iter Seq rolls back via
+            //    `handle_repeat_failure` with `*pos = sp.pos` = iter entry.
+            //  - Outer Repeat closes when the value Ref's ByteDispatch
+            //    rejects `*pos` (e.g. `*pos` at `]` or at ws-before-`]`);
+            //    on that absorb, `*pos = sp.pos` = position at which the
+            //    last iter body ended (BEFORE the OW-Seq's trailing WsTrim).
+            //  - Trailing ws between the last iter and `]` lives in the
+            //    OW-Seq (outer OptionalWhitespace(Repeat)) trailing WsTrim,
+            //    NOT in the Repeat compound span, NOT in any iter Seq span.
             loop {
                 let iter_open = *p as u32;
                 let iter_child = builder.mark_children();
 
                 // Value position — recurse through the shape dispatcher.
+                // The dispatcher does its own leading `skip_space`, so no
+                // pre-skip is needed here.
                 let _value_off = #dispatcher_ident(input, p, state, builder)?;
 
-                // Comma-optional Repeat compound — always one per iteration.
-                let _ = #support_mod::skip_space(input, p, state);
+                // comma_repeat Rule — span_lo captured AT `*p` immediately
+                // after the value parse, BEFORE any leading ws the
+                // comma rule's OW wrapper would consume. The walker's
+                // Repeat arm captures `*pos` via `push_compound_fused`
+                // at arm entry; there is no OW between `value` and
+                // `Repeat(comma)` in the iter-body IR.
                 let comma_repeat_open = *p as u32;
                 let comma_repeat_child = builder.mark_children();
+
+                // Attempt one iter of comma_repeat. Iter body is
+                // `Seq[leading WsTrim, Literal(","), trailing WsTrim]`.
+                // On failure (no `,` after leading ws), handle_repeat_failure
+                // rolls back `*pos` to the iter's saved entry.
+                let comma_iter_save_p = *p;
+                let _ = #support_mod::skip_space(input, p, state);
                 let has_comma = input.get(*p).copied() == Some(b',');
                 if has_comma {
-                    // OptionalWhitespace(",") — Seq with Literal ","
-                    let opt_comma_open = *p as u32;
-                    let opt_comma_child = builder.mark_children();
+                    // Comma iter Seq — span_lo at the iter entry (BEFORE
+                    // the leading WsTrim), span_hi after the trailing
+                    // WsTrim (same shape as the walker's Seq-wrapper for
+                    // `OptionalWhitespace(Literal(","))`).
+                    let comma_iter_open = comma_iter_save_p as u32;
+                    let comma_iter_child = builder.mark_children();
                     let comma_lo = *p as u32;
                     *p += 1;
                     let comma_hi = *p as u32;
@@ -217,18 +250,27 @@ pub fn emit_parse_array(
                         0,
                         ::bbnf::runtime::tape::PayloadData::None,
                     );
-                    let opt_comma_close = *p as u32;
-                    let _opt_comma_off = builder.push_compound(
+                    // Trailing WsTrim inside the comma Seq.
+                    let _ = #support_mod::skip_space(input, p, state);
+                    let comma_iter_close = *p as u32;
+                    let _ = builder.push_compound(
                         ::bbnf::runtime::tape::TapeKind::Seq,
-                        opt_comma_child,
-                        opt_comma_open,
-                        opt_comma_close,
+                        comma_iter_child,
+                        comma_iter_open,
+                        comma_iter_close,
                         0,
                         0,
                     );
+                } else {
+                    // Walker-parity rollback: on comma-iter failure,
+                    // handle_repeat_failure restores `*pos = sp.pos` = the
+                    // iter's saved entry position. No records have been
+                    // pushed (mark_children is just a length marker, not
+                    // a commit), so just reset `*p`.
+                    *p = comma_iter_save_p;
                 }
                 let comma_repeat_close = *p as u32;
-                let _comma_repeat_off = builder.push_compound(
+                let _ = builder.push_compound(
                     ::bbnf::runtime::tape::TapeKind::Rule,
                     comma_repeat_child,
                     comma_repeat_open,
@@ -238,7 +280,7 @@ pub fn emit_parse_array(
                 );
 
                 let iter_close = *p as u32;
-                let _iter_off = builder.push_compound(
+                let _ = builder.push_compound(
                     ::bbnf::runtime::tape::TapeKind::Seq,
                     iter_child,
                     iter_open,
@@ -247,69 +289,87 @@ pub fn emit_parse_array(
                     0,
                 );
 
-                // Peek: continue loop or close all.
-                let _ = #support_mod::skip_space(input, p, state);
-                match input.get(*p).copied() {
-                    Some(b']') => {
-                        // Close Repeat, OptionalWhitespace, Next, outer, emit "]".
-                        let repeat_close = *p as u32;
-                        let _repeat_off = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Rule,
-                            repeat_child,
-                            repeat_open,
-                            repeat_close,
-                            0,
-                            0,
-                        );
-                        let opt_ws_close = *p as u32;
-                        let _opt_ws_off = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
-                            opt_ws_child,
-                            opt_ws_open,
-                            opt_ws_close,
-                            0,
-                            0,
-                        );
-                        let next_close = *p as u32;
-                        let _next_off = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
-                            next_child,
-                            lbracket_open,
-                            next_close,
-                            0,
-                            0,
-                        );
-                        // Consume "]".
-                        *p += 1;
-                        let rbracket_hi = *p as u32;
-                        let _ = builder.push_leaf_with(
-                            ::bbnf::runtime::tape::TapeKind::Literal,
-                            next_close,
-                            rbracket_hi,
-                            #variant_idx,
-                            0,
-                            ::bbnf::runtime::tape::PayloadData::None,
-                        );
-                        let outer_close = *p as u32;
-                        let outer_off = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
-                            outer_child,
-                            span_lo,
-                            outer_close,
-                            #variant_idx,
-                            0,
-                        );
-                        return Ok(outer_off);
-                    }
-                    Some(_) => {
-                        // Continue: caller emitted a trailing comma already via the iter.
-                    }
-                    None => {
-                        return Err(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
+                // Decide continue vs close without consuming ws. The walker's
+                // outer Repeat re-enters the value Ref; its ByteDispatch fails
+                // when `*pos` is NOT a JSON value-start byte ({ / [ / " / -
+                // / 0–9 / t / f / n), triggering handle_repeat_failure which
+                // closes Repeat at `*pos = sp.pos` (= `iter_close` captured
+                // above). Any trailing ws between the last iter and `]`
+                // belongs to the OW-Seq's trailing WsTrim, NOT the Repeat.
+                let is_value_start = matches!(
+                    input.get(*p).copied(),
+                    Some(b'{' | b'[' | b'"' | b'-' | b'0'..=b'9' | b't' | b'f' | b'n'),
+                );
+                if !is_value_start {
+                    // Close Repeat at current *p (BEFORE OW-Seq trailing ws).
+                    let repeat_close = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        repeat_child,
+                        repeat_open,
+                        repeat_close,
+                        0,
+                        0,
+                    );
+                    // OW-Seq trailing WsTrim: advance past ws.
+                    let _ = #support_mod::skip_space(input, p, state);
+                    let opt_ws_close = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        opt_ws_child,
+                        opt_ws_open,
+                        opt_ws_close,
+                        0,
+                        0,
+                    );
+                    // Expect "]"; anything else (EOF, garbage) is a
+                    // well-formed error identical to the walker's path
+                    // (Skip's RHS literal mismatches).
+                    if input.get(*p).copied() != Some(b']') {
+                        return Err(match input.get(*p).copied() {
+                            None => ::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            },
+                            _ => ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
                         });
                     }
+                    let next_close = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        next_child,
+                        lbracket_open,
+                        next_close,
+                        0,
+                        0,
+                    );
+                    // Consume "]".
+                    *p += 1;
+                    let rbracket_hi = *p as u32;
+                    let _ = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Literal,
+                        next_close,
+                        rbracket_hi,
+                        #variant_idx,
+                        0,
+                        ::bbnf::runtime::tape::PayloadData::None,
+                    );
+                    let outer_close = *p as u32;
+                    let outer_off = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        outer_child,
+                        span_lo,
+                        outer_close,
+                        #variant_idx,
+                        0,
+                    );
+                    return Ok(outer_off);
                 }
+                // Continue: next iter's dispatcher call handles its own
+                // leading ws-skip before byte-dispatching the value.
             }
         }
     }

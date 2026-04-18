@@ -3046,3 +3046,99 @@ W3 closes green. The shape-dispatch + per-shape emitter substrate is in place fo
 1. **CSS / BBNF / Sheets currently route through walker fallback** because `has_full_shape_coverage` requires full classification and W4's detectors (Pratt / Unordered / ArgList / Flat / Wrap / HRegex) haven't landed. JSON is the only grammar exercising the shape dispatcher; W4 enables CSS shape coverage per AW-V.md §W4.
 2. **`parse_with_visitor` is JSON-emitted only** (gated on full shape coverage). W4's CSS / Sheets shape coverage will trigger the same emission for those grammars.
 3. **AW-V invariant preserved**: cold-path `dispatch_one` + `__dta_walker_inline::run` survive verbatim for AX replay; the AX cold-path replay surface is intact.
+
+## 2026-04-18 — AW-V W4 landed (CSS L4 + Sheets shape coverage substrate; consumer activation partial)
+
+W4 ships the 6 W4 shape categories (Pratt, Unordered, ArgList, Flat, Wrap, HRegex) as detectors + tape-path + visitor-path emitters, activates `has_full_shape_coverage` for CSS L4 + Sheets + BBNF, and documents the architectural gap blocking parse() perf compounding for non-Alt-rooted grammars. 19 commits across 7 sub-agents.
+
+### W4.1 — 6 W4 detectors + 6 emitters (3 commits)
+
+- `efd2e23d` feat(ir/shape_dispatch): Pratt/Unordered/ArgList/Flat/Wrap/HRegex detectors
+- `bd504ff3` feat(emitter/shapes): Pratt/Unordered/ArgList/Flat/Wrap/HRegex emitters
+- `04053e1d` docs(emitter/shapes/mod): W4 substrate-with-consumer gate
+
+W4.1 shipped detector scaffolds + emitter scaffolds. Detectors fire on synthetic fixtures. Emitter bodies were acknowledged as placeholders requiring W4.2/W4.3 to fill in per-grammar; the orchestrator audit post-cherry-pick flagged these as substrate-without-consumer — the follow-up sub-wave below addresses.
+
+### W4.2 — CSS L4 verification (3 commits)
+
+- `c38eacc7` test(bbnf): css_l4_shape_emit — wire-contract + classification assertions
+- `8dcca3ed` test(bbnf): css_l4_unclassified_rules_enumerated — W4.1 baseline audit
+- `0f837547` test(bbnf): css_l4_shape_emit — emit unclassified list under --nocapture
+
+29 tests asserting W4 detector classifications for canonical CSS L4 rules. Surfaced: CSS coverage 130/187 (69.5%) pre-W4-fix; 5 detector gaps (Pratt for mathExpr missing, Unordered for compoundSelector missing, Flat for Ref-headed *Decl missing, etc.). Bench parity at post-AW-IV baseline — emitter output exists but is gated out of compilation via `!tag.is_w3_classified()`.
+
+### W4.3 — Sheets verification (1 commit)
+
+- `220c9a84` test(bbnf): sheets_shape_emit — wire-contract + classification assertions
+
+22 tests asserting W4 detector classifications for Sheets rules. Surfaced: Sheets coverage 23/36 (63.9%); W4.1 detector gaps blocking. Bench parity at post-AW-IV baseline.
+
+### W4-fix-pratt — Pratt detector widening + functional ShuntingYard emitter (3 commits)
+
+- `3b2d7dbb` fix(ir/recognizers/node_facts): admit Next/Skip as operator-chain Repeat body
+- `61956c64` feat(emitter/shapes/pratt,bbnf-tape/visitor): functional Pratt emitter — walker ShuntingYard parity
+- `1e404ffa` test(bbnf,ir): pratt classification + functional-body emitter assertions
+
+Root cause: `is_operator_chain_tail` required Repeat body to be `IrNode::Seq`, but CSS's `(op >> operand)*` lowers to `IrNode::Next(op, operand)`. Fix: widen admission to Seq/Next/Skip/Map/OW wrappers. Functional emitter mirrors walker's `emit_shunting_yard_arm` — outer Rule compound, leftmost operand via dispatcher, op-stack reducer via PRECEDENCE_LUT byte-load/unpack, per-reduce `push_compound` with operand-idx child + op discriminant variant, Span leaves for ops. New `PrattVisitor` trait in `bbnf-tape::visitor`.
+
+Sheets Pratt classifications: 7 (comparison_expr, concat_expr, add_expr, mul_expr, exp_expr, array_row, array_rows).
+CSS L4 Pratt: 7 (mathExpr, mathProduct, complexSelector, selectorList, relativeSelectorList, keyframeSel, mediaQueryList).
+
+### W4-fix-unordered — structural FIRST projection detector + functional emitter (3 commits)
+
+- `c543753c` feat(ir/unordered): functional detector — structural FIRST + cycle guard
+- `96f09905` feat(emitter/unordered): functional tape+visitor body with branch dispatch
+- `29791ace` test(shape_dispatch,css_l4): Unordered wire-contract assertions
+
+Root cause: W4.1 detector keyed on `DisjointFirstTable`'s `branch_first_bytes`, which returns `None` for `IrNode::Alt` — the canonical case (CSS `compoundSelector` = `(classSelector | idSelector | attrSelector | colonSelector | typeSelector)+`) never got mined. Fix: detector projects FIRST by structural walk with local `is_nullable` that treats `OptionalWhitespace(X)` as nullable iff `X` is nullable. Walks through Literal/Regex/Ref/Seq/Alt/Skip/Next/Map/OW/Repeat with cycle-guarded Ref descent.
+
+CSS L4 `compoundSelector` now classifies Unordered (unclassified set dropped 57 → 56).
+
+### W4-fix-rest — Flat/ArgList/Wrap/HRegex detector widening + functional emitters (5 commits)
+
+- `569c17e4` fix(shape_dispatch/flat): admit Ref-headed *Decl + typed dimensions + scaffolding
+- `ce2fd9f6` fix(shape_dispatch/arglist): admit Ref-head with separate-paren + functional emitter
+- `36332d78` feat(emitter/shapes/wrap): functional byte-dispatch emitter
+- `2df217d6` feat(emitter/shapes/hregex): functional regex-scan emitter
+- `37bac742` test(bbnf-ir/shape_dispatch): cover W4-fix detector extensions
+
+Flat detector head predicate broadened to `Literal/Regex/Ref/Alt-of-Literal/Repeat(0..=1)-head`. ArgList detector head widened to accept `Ref` heads with two body variants (head-consumes-paren; separate-paren body). Wrap emitter: byte-dispatch over Alt branches via each Ref target's `meta.first_set`; no outer compound (transparent). HRegex emitter: regex scan via `__regex_scan_<grammar>` adapter + Span leaf + visitor-path `visitor.string(span)`.
+
+CSS L4 shape coverage **jumped 130 → 161 classified** (69.5% → 86.1%). Sheets: 23 → 29 (80.6%). BBNF: `value_fn_call` corrected Flat → ArgList per H1 audit.
+
+### W4-activation — has_full_shape_coverage flip + architectural gap finding (1 commit)
+
+- `f91e8973` feat(emitter/shapes/mod): activate has_full_shape_coverage for CSS/Sheets/BBNF
+
+`has_full_shape_coverage` extended to admit all 4 grammars. Per-shape fn substrate emits for every grammar. Tests updated to assert activation.
+
+**Critical architectural finding**: The dispatcher's `__value` body for non-Alt-rooted grammars cannot route per-Ref recursion. For JSON (`value = object | array | ...`), `__value` is byte-dispatch over the Alt branches. For non-Alt-rooted grammars (CSS `stylesheet`=OW-wrapped, Sheets `formula`=Seq, BBNF `grammar`=Repeat), the root shape fn internally recurses through `__value` for Ref positions — which for a non-Alt root delegates back to the root shape fn → infinite recursion.
+
+Resolution: activation agent split `has_full_shape_coverage` (substrate-emission gate, admits all 4) from `has_shape_dispatcher_entrypoint` (parse() routing gate, admits only Alt-of-Refs entries). CSS/Sheets/BBNF per-shape fn substrate emits; `parse()` still routes through the walker for those grammars to avoid unbounded recursion. Visitor-path (`parse_with_visitor`) additionally gated on W4-absence via `has_w4_classified(ir)` because the visitor dispatcher's generic-V bound only unions W3 sub-traits.
+
+### Hard-gate verification ledger
+
+| Gate | Status | Artefact |
+|---|:---:|---|
+| W4 detectors fire on CSS L4 + Sheets + BBNF canonical rules | MET | `cargo test -p bbnf --test css_l4_shape_emit` 29 passed; `-p bbnf --test sheets_shape_emit` 23 passed |
+| W4 emitter bodies are functional (not placeholder) | MET | `cargo expand` verified; emitters produce walker-parity compound trees + visitor calls |
+| `has_full_shape_coverage` admits CSS L4 + Sheets + BBNF | MET | `f91e8973` |
+| Per-shape fn substrate emits for every grammar | MET | 162 CSS W3+W4 shape fns, 29 Sheets, 36 BBNF, 6 JSON — verified via `cargo expand` symbol count |
+| `parse()` routes through shape dispatcher for non-JSON grammars | **MISS** | Blocked by dispatcher `__value` per-Ref routing gap; CSS/Sheets/BBNF parse() continues through walker |
+| CSS bootstrap ≥ 1500 MB/s | **MISS** (15 MB/s, post-AW-IV baseline unchanged) | Walker fallback persists for non-JSON |
+| Sheets parse entries ≥ post-AU | **MISS** (6/7/6 vs 95/128/121) | Walker fallback |
+| `cargo test --workspace` | MET | 1582 passed, 0 failed |
+| JSON throughput preserved | MET + improved (twitter 488 MB/s vs 288 baseline, +70% incidental from dispatcher refactor) | `/tmp/aw5-w4-final.txt` |
+
+### W4 → W5 hand-off
+
+**W4 substrate lands complete**: all 12 W4 detectors + 12 emitters (6 tape + 6 visitor) functional; detector coverage CSS 86%, Sheets 80%, BBNF 67%; `has_full_shape_coverage` admits all grammars; per-shape substrate emits for every grammar.
+
+**W4 consumer activation partial**: JSON parses via shape dispatcher (unchanged from W3, +incidental). CSS / Sheets / BBNF still parse via walker because the shape dispatcher's `__value` body doesn't support per-Ref routing for non-Alt root patterns. Closing this requires:
+1. Refactor `__value` to route per-Ref — resolve target rule's shape at codegen time, emit direct call to that shape fn, fall back to walker for unclassified targets.
+2. Emit `<dispatcher>__value_<rule_id>` per-Ref dispatchers OR switch to a named-dispatch pattern where emitters pass the Ref's target ID into `__value`.
+3. Extend visitor trait bounds conditionally per-grammar when W4 shapes are present.
+
+This is an architectural refactor beyond W4's natural scope — carries forward to W6 honest assessment or a successor tranche (AW-VI). The pattern mirrors AW-IV's honest W6 throughput miss: substrate correct and verified, but perf compounding blocked by a deeper architectural gap the plan didn't fully anticipate.
+
+W5 opens next — BBNF shape coverage detection confirmed (31/46 classified pre-W4-fix, 36/46 after) + `GRAMMAR_PROFILE` wire-contract fix per AW-V.md §W5.

@@ -49,6 +49,7 @@ pub mod builder;
 pub mod columns;
 pub mod cursor;
 pub mod decoders;
+pub mod dedup;
 pub mod driver;
 pub mod dta;
 pub mod finaliser;
@@ -62,6 +63,7 @@ pub mod tape;
 pub use builder::{PayloadData, TapeBuildError, TapeBuilder};
 pub use columns::Columns;
 pub use cursor::{ChildIter, ColumnRank, ShapeRefChildIter, ShapeRefSyntheticChild, TapeCursor};
+pub use dedup::{columns_range_eq, push_compound_referring, BloomDedup, N_WORDS};
 // AW-III.W4.c — driver hot/cold split.
 //
 // Hot path: per-grammar `dta_run_<grammar>` emitted by W4.b's

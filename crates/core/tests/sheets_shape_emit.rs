@@ -341,14 +341,14 @@ fn sheets_classification_totals_match_w4_projection() {
 /// Admission drives per-shape substrate emission (every classified
 /// rule gets `parse_<shape>_SheetsShapeParser_<rule>` compiled).
 ///
-/// `parse()` routing is decoupled: the companion gate
-/// `has_shape_dispatcher_entrypoint` is narrower, admitting only the
-/// Alt-of-Refs entry pattern. Sheets's `formula = Seq(/=?/,
-/// expression)` does not satisfy that gate, so `parse()` continues
-/// through the walker until the per-Ref `__value` dispatcher refactor
-/// lands in a follow-on wave.
+/// Post AW-V.W5.2, `has_shape_dispatcher_entrypoint` is broader: a
+/// grammar is admitted when its classified entry + every value-
+/// position Ref in every classified rule resolves to a classified
+/// rule. Sheets's `formula = Seq(/=?/, expression)` satisfies the
+/// gate when Sheets reaches full value-Ref coverage; until then, the
+/// gate reports whatever coverage the current detectors achieve.
 #[test]
-fn sheets_admits_shape_substrate_but_walker_routes_parse() {
+fn sheets_admits_shape_substrate() {
     let ir = sheets_ir();
     assert!(
         has_shape_dispatch(&ir),
@@ -360,13 +360,8 @@ fn sheets_admits_shape_substrate_but_walker_routes_parse() {
          `formula` is classified as Flat and the per-shape emitter \
          substrate lands",
     );
-    assert!(
-        !bbnf::backend::rust::emitter::shapes::has_shape_dispatcher_entrypoint(&ir),
-        "Sheets's entry rule `formula` has a Seq body, not Alt-of-Refs; \
-         `parse()` continues routing through `__dta_walker_inline::run` \
-         until the per-Ref `__value` dispatcher refactor lands",
-    );
 }
+
 
 /// Double-check: `formula` is Sheets's entry rule and has body kind
 /// Seq — not the six-Ref Alt dispatcher JSON uses. The coverage gate

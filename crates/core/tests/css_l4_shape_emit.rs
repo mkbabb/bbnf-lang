@@ -712,12 +712,12 @@ fn css_l4_unclassified_rules_enumerated() {
 /// rule.
 ///
 /// Top-level `parse()` routing is decoupled through the companion gate
-/// [`has_shape_dispatcher_entrypoint`]. That gate is narrower: only
-/// the Alt-of-Refs entry pattern (JSON's `value`) admits shape-
-/// dispatched `parse()`. CSS L4's non-Alt root stays on the walker
-/// until the per-Ref `__value` dispatcher refactor lands in a follow-
-/// on wave — the current `__value` body would recursively call the
-/// root shape fn for non-Alt roots, producing unbounded recursion.
+/// [`has_shape_dispatcher_entrypoint`]. Post AW-V.W5.2 that gate is
+/// broader: a grammar is admitted when its entry is classified AND
+/// every value-position Ref in every classified rule resolves to a
+/// classified rule. CSS L4 admits when its shape coverage is deep
+/// enough to reach that fixed-point; until then the walker fallback
+/// remains active for the rules with unclassified Ref targets.
 #[test]
 fn css_l4_shape_coverage_admits_under_w4_activation() {
     let Some(ir) = compile_css_l4() else { return };
@@ -727,14 +727,6 @@ fn css_l4_shape_coverage_admits_under_w4_activation() {
         "AW-V.W4-activation — `has_full_shape_coverage` must admit CSS L4; \
          `stylesheet` is classified as Array via the list-rule detector, \
          so the per-shape emitter substrate lands"
-    );
-    let entrypoint =
-        bbnf::backend::rust::emitter::shapes::has_shape_dispatcher_entrypoint(&ir);
-    assert!(
-        !entrypoint,
-        "CSS L4's entry rule `stylesheet` has a non-Alt body; `parse()` \
-         continues routing through `__dta_walker_inline::run` until the \
-         per-Ref `__value` dispatcher refactor lands"
     );
 }
 

@@ -24,7 +24,7 @@
 //! | keyword_tables | V7 (AW-III.W6.2 mining; AW-IV.W1.δ projection) |
 //! | shape_dict | V5 (AV.5.4 mining; AW-IV.W1.δ projection) |
 //! | branch_priors | V4 (AW-IV.W1.δ projection live; mining later) |
-//! | dedup_eligible_rules | V8 (AW-IV.W1.δ projection live; mining in W4.3) |
+//! | dedup_eligible_rules | V8 (AW-IV.W1.δ projection live; AW-IV.W4.3 mining active) |
 //! | reorder_unroll_visitors | V2 (AV.2.5) |
 //!
 //! # AW-IV.W1.δ — wire-contract closure
@@ -188,8 +188,11 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
     // (speculative Alt dispatch); IR-side empty today.
     let (branch_priors_decl, branch_priors_ref) = emit_branch_priors(&profile.branch_priors);
 
-    // AW-IV.W1.δ — `dedup_eligible_rules` projection. Mining lands
-    // in W4.3 (bloom + GADT runtime dedup); IR-side empty today.
+    // AW-IV.W1.δ wire + AW-IV.W4.3 mining active — the emitter now
+    // lowers `GrammarProfile::dedup_eligible_rules` to the per-grammar
+    // `__GRAMMAR_PROFILE_DEDUP_RULES: [RuleId; N]` static array.
+    // Consumed at parse time by the walker's compound-emit arm for
+    // dedup-eligible rules via `BloomDedup::try_dedup`.
     let (dedup_decl, dedup_ref) = emit_dedup_eligible_rules(&profile.dedup_eligible_rules);
 
     quote! {

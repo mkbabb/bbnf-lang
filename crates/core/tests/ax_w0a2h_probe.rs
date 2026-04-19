@@ -11,8 +11,58 @@
 
 use bbnf::grammar::generated::BbnfBootstrap;
 
+/// AX.W0a.2.k — json.bbnf parse probe. Verifies the per-rule Pratt
+/// LUT + flat tape emission handles json.bbnf's `<<`/`>>` meta-ops
+/// correctly.
 #[test]
-#[ignore]
+fn probe_json_bbnf_parse() {
+    let manifest = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let json_path = manifest
+        .join("../../grammar/json/json.bbnf");
+    let input = std::fs::read_to_string(&json_path)
+        .expect("json.bbnf must load");
+    match BbnfBootstrap::parse(&input) {
+        Ok(parsed) => {
+            let extract = bbnf::grammar::host::extract_observational(&parsed);
+            println!(
+                "json.bbnf: OK (len={}; rules={}; imports={})",
+                input.len(),
+                extract.rules.len(),
+                extract.imports.len(),
+            );
+        }
+        Err(e) => {
+            panic!("json.bbnf parse failed: {:?}", e);
+        }
+    }
+}
+
+/// AX.W0a.2.k — bnf.bbnf parse probe. Verifies per-rule Pratt LUT +
+/// flat tape emission.
+#[test]
+fn probe_bnf_bbnf_parse() {
+    let manifest = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let bnf_path = manifest
+        .join("../../grammar/bnf/bnf.bbnf");
+    let input = std::fs::read_to_string(&bnf_path)
+        .expect("bnf.bbnf must load");
+    match BbnfBootstrap::parse(&input) {
+        Ok(parsed) => {
+            let extract = bbnf::grammar::host::extract_observational(&parsed);
+            println!(
+                "bnf.bbnf: OK (len={}; rules={}; imports={})",
+                input.len(),
+                extract.rules.len(),
+                extract.imports.len(),
+            );
+        }
+        Err(e) => {
+            panic!("bnf.bbnf parse failed: {:?}", e);
+        }
+    }
+}
+
+#[test]
 fn probe_bbnf_parse_snippets() {
     let tests: &[(&str, &str)] = &[
         ("empty", ""),

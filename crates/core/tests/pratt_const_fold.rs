@@ -24,7 +24,7 @@ use bbnf::pipeline::{
 };
 use bbnf_ir::passes::{
     collect_operator_chains, Associativity, OperatorArity, OperatorChainEntry,
-    OperatorChainFacts,
+    OperatorChainFacts, OperatorChainRule,
 };
 use bbnf_ir::RuleId;
 
@@ -114,7 +114,7 @@ fn emit_empty_facts_produces_zeroed_lut() {
     // Every byte is 0.
     assert!(text.contains("const PRECEDENCE_LUT"));
     assert!(text.contains("[u8 ; 256]") || text.contains("[u8; 256]"));
-    // Zero entry count.
+    // Zero aggregate entry count.
     assert!(text.contains("PRECEDENCE_OPERATOR_COUNT : usize = 0"));
 }
 
@@ -126,8 +126,12 @@ fn emit_populated_facts_produces_nonzero_bytes() {
         mk_entry(b'^', None, 7, Associativity::Right, OperatorArity::Binary),
     ];
     let facts = OperatorChainFacts {
-        entries,
-        chain_heads: vec![],
+        rules: vec![OperatorChainRule {
+            rule: 0,
+            rule_name: "test_rule".to_string(),
+            entries,
+        }],
+        chain_heads: vec![0],
     };
     let emitted = emit_precedence_lut("TestGrammar", &facts);
     let text = emitted.to_string();
@@ -135,6 +139,9 @@ fn emit_populated_facts_produces_nonzero_bytes() {
     assert!(text.contains("PRECEDENCE_OPERATOR_COUNT : usize = 3"));
     // Sparse slice non-empty.
     assert!(text.contains("DtaPrecedenceEntry"));
+    // Per-rule LUT landed for `test_rule`.
+    assert!(text.contains("PRECEDENCE_LUT_test_rule"));
+    assert!(text.contains("PRECEDENCE_ENTRIES_test_rule"));
 }
 
 // ─── Per-grammar mining smoke ──────────────────────────────────────
@@ -151,7 +158,7 @@ fn compile_and_mine(path: &str) -> OperatorChainFacts {
         _ => panic!("expected Vm output"),
     };
     let dta = bbnf_ir::passes::lift_dta(&ir);
-    collect_operator_chains(&dta)
+    collect_operator_chains(&ir, &dta)
 }
 
 #[test]
@@ -174,20 +181,19 @@ fn sheets_mines_operators() {
         facts.operator_count() >= 6,
         "Sheets must mine ≥ 6 operators (&, +, -, *, /, ^), got {}: {:?}",
         facts.operator_count(),
-        facts.entries.iter().map(|e| e.byte as char).collect::<Vec<_>>(),
+        facts.entries_flat().map(|e| e.byte as char).collect::<Vec<_>>(),
     );
     // Verify the key arithmetic operators are captured.
     for expected in &[b'+', b'-', b'*', b'/', b'^', b'&'] {
         assert!(
-            facts.entries.iter().any(|e| e.byte == *expected),
+            facts.entries_flat().any(|e| e.byte == *expected),
             "Sheets must mine operator {:?}",
             *expected as char,
         );
     }
     // `^` must be right-associative.
     let caret = facts
-        .entries
-        .iter()
+        .entries_flat()
         .find(|e| e.byte == b'^')
         .expect("`^` must be mined");
     assert_eq!(caret.associativity, Associativity::Right);
@@ -213,11 +219,11 @@ fn bbnf_mines_operators() {
         facts.operator_count() >= 4,
         "BBNF must mine ≥ 4 arithmetic operators, got {}: {:?}",
         facts.operator_count(),
-        facts.entries.iter().map(|e| e.byte as char).collect::<Vec<_>>(),
+        facts.entries_flat().map(|e| e.byte as char).collect::<Vec<_>>(),
     );
     for expected in &[b'+', b'-', b'*', b'/'] {
         assert!(
-            facts.entries.iter().any(|e| e.byte == *expected),
+            facts.entries_flat().any(|e| e.byte == *expected),
             "BBNF must mine operator {:?}",
             *expected as char,
         );
@@ -242,11 +248,11 @@ fn css_l4_mines_math_expr_operators() {
         facts.operator_count() >= 4,
         "CSS L4 must mine ≥ 4 math operators, got {}: {:?}",
         facts.operator_count(),
-        facts.entries.iter().map(|e| e.byte as char).collect::<Vec<_>>(),
+        facts.entries_flat().map(|e| e.byte as char).collect::<Vec<_>>(),
     );
     for expected in &[b'+', b'-', b'*', b'/'] {
         assert!(
-            facts.entries.iter().any(|e| e.byte == *expected),
+            facts.entries_flat().any(|e| e.byte == *expected),
             "CSS must mine operator {:?}",
             *expected as char,
         );
@@ -288,15 +294,17 @@ fn emitted_lut_packs_non_operator_bytes_as_zero() {
         mk_entry(b'+', None, 5, Associativity::Left, OperatorArity::Binary),
     ];
     let facts = OperatorChainFacts {
-        entries,
-        chain_heads: vec![],
+        rules: vec![OperatorChainRule {
+            rule: 0,
+            rule_name: "test".to_string(),
+            entries,
+        }],
+        chain_heads: vec![0],
     };
     let emitted = emit_precedence_lut("Test", &facts);
     let text = emitted.to_string();
-    // 255 zero bytes + 1 non-zero byte for `+`. `proc_macro2`
-    // renders `0u8` as `0u8` (with suffix) in the slice literal;
-    // we count those occurrences. One 5u8 for the `+` entry, plus
-    // 255 0u8s.
+    // Two LUT emissions (aggregate + per-rule) × 255 zero bytes +
+    // 1 non-zero byte each = ≥ 400 zero occurrences.
     let zero_occurrences = text.matches("0u8").count();
     assert!(
         zero_occurrences >= 200,
@@ -308,25 +316,26 @@ fn emitted_lut_packs_non_operator_bytes_as_zero() {
 
 #[test]
 fn pack_overlap_byte_unique_in_lut() {
-    // When two entries share the same first byte (shouldn't
-    // happen; the chain detector enforces pairwise disjointness
-    // within a chain), the LUT's final value is the last entry's
-    // packing. Test that this overlap is deterministic in the
-    // emitter's iteration order.
+    // When two entries share the same first byte within a single
+    // rule, the LUT's byte reflects the last entry's packing (and
+    // the aggregate LUT dedupes at emit time). The sparse slice
+    // carries both entries either way.
     let entries = vec![
         mk_entry(b'+', None, 5, Associativity::Left, OperatorArity::Binary),
         mk_entry(b'+', None, 3, Associativity::Right, OperatorArity::Binary),
     ];
     let facts = OperatorChainFacts {
-        entries,
-        chain_heads: vec![],
+        rules: vec![OperatorChainRule {
+            rule: 0,
+            rule_name: "test".to_string(),
+            entries,
+        }],
+        chain_heads: vec![0],
     };
     let emitted = emit_precedence_lut("Test", &facts);
     let text = emitted.to_string();
-    // PRECEDENCE_OPERATOR_COUNT captures the second-entry-win
-    // semantics — both entries land in the sparse slice; the
-    // dense LUT byte reflects the LAST write.
-    assert!(text.contains("PRECEDENCE_OPERATOR_COUNT : usize = 2"));
+    // Aggregate count dedupes by byte; per-rule `*_test` is 2.
+    assert!(text.contains("PRECEDENCE_OPERATOR_COUNT_test : usize = 2"));
 }
 
 // ─── Healing test_let_parses_as_let_call ──────────────────────────
@@ -371,7 +380,7 @@ fn let_call_dispatch_reachable_via_view() {
 /// a full grammar compile. Binary arity, no second byte, op_rule
 /// 0, op_discriminant 0.
 fn mk_facts(ops: &[(u8, u8, Associativity)]) -> OperatorChainFacts {
-    let entries = ops
+    let entries: Vec<OperatorChainEntry> = ops
         .iter()
         .map(|(b, p, a)| OperatorChainEntry {
             byte: *b,
@@ -384,8 +393,12 @@ fn mk_facts(ops: &[(u8, u8, Associativity)]) -> OperatorChainFacts {
         })
         .collect();
     OperatorChainFacts {
-        entries,
-        chain_heads: vec![],
+        rules: vec![OperatorChainRule {
+            rule: 0,
+            rule_name: "test".to_string(),
+            entries,
+        }],
+        chain_heads: vec![0],
     }
 }
 

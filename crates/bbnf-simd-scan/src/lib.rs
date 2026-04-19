@@ -49,7 +49,6 @@
 
 pub mod alphabet;
 pub mod compaction;
-pub mod emit;
 pub mod parity;
 pub mod scalar;
 

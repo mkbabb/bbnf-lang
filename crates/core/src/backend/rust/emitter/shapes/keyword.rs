@@ -52,7 +52,18 @@ pub fn emit_parse_keyword(
     let fn_ident = shape_fn_ident("keyword", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let variant_idx = (rule.id & 0xFF) as u8;
-    let _ = ir;
+
+    // AX.W0a.2.p — rule-type-driven leaf-kind selection.
+    //
+    // U8 scalar rules (`-> Nu8`) emit `TapeKind::KvPair` on typed
+    // payloads so the walker-parity `Tuple([Span, U8])` reader
+    // (CSS `dir_pseudo_*`, Sheets `compare_op`) sees the same kind
+    // the walker would have emitted post-Seq-promotion. `Bool`
+    // scalar rules (JSON `bool`) keep `TapeKind::Span` because
+    // json_parity's `every_declared_leaf_reaches_the_tape` asserts
+    // typed-bool leaves are Span-kinded. Payload-less branches keep
+    // Span in both cases.
+    let leaf_kind = rule_keyword_leaf_kind(rule, ir);
 
     // Detect the two sub-cases by body shape.
     let body = unwrap_trivia(&rule.body);
@@ -65,19 +76,23 @@ pub fn emit_parse_keyword(
             // the rule doesn't carry a `-> const` payload, fall back
             // to pushing an empty Literal leaf (no payload).
             let payload = literal_payload_for(rule, ir);
-            // Payload: Aggregate(&[byte]) for 1-byte arena slot; the
-            // reader's `payload_bytes(rec, 1)` pulls the byte back
-            // out. For a missing annotation we default to 0.
-            let payload_byte = match payload.as_ref() {
-                Some(_) => {
-                    // Cast the u32 literal to u8 for the 1-byte arena
-                    // slot. `payload` is always 0 / 1 for bool/null.
-                    quote! { #payload }
-                }
-                None => quote! { 0u32 },
-            };
-            let payload_push = quote! {
-                ::bbnf::runtime::tape::PayloadData::Aggregate(&[(#payload_byte) as u8])
+            // AX.W0a.2.p — payload lands via push_leaf_with_arena_payload
+            // so the record carries TapeRec::PAYLOAD_IN_ARENA_BIT.
+            // payload_u8 / payload_inline scalar readers slice the
+            // arena at `arena_off`; payload_bytes(rec, 1) continues
+            // to work unchanged. Pre-W0a.2.p the push_leaf_with
+            // Aggregate path stored the byte in pay_agg but left the
+            // bit clear, so the scalar readers mistook child_off for
+            // a pay_narrow rank and returned junk.
+            let (arena_emit, payload_width) = match payload.as_ref() {
+                Some(_) => (
+                    quote! {
+                        let __arena_off: u32 = builder.arena_mut().len() as u32;
+                        builder.arena_mut().push((#payload) as u8);
+                    },
+                    1u32,
+                ),
+                None => (quote! {}, 0u32),
             };
             let byte_lits: Vec<TokenStream> = bytes
                 .iter()
@@ -86,6 +101,40 @@ pub fn emit_parse_keyword(
                     quote! { #lit }
                 })
                 .collect();
+            let push_stmt = if payload_width == 0 {
+                quote! {
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        #variant_idx,
+                        0,
+                        ::bbnf::runtime::tape::PayloadData::None,
+                    );
+                }
+            } else {
+                // AX.W0a.2.p — single-literal Keyword with typed payload
+                // lands on a Span leaf. The PAYLOAD_IN_ARENA_BIT fires
+                // so payload_u8 / payload_inline scalar readers slice
+                // the arena at `__arena_off`; payload_bytes(rec, 1)
+                // continues to work unchanged. KvPair emission is
+                // reserved for the Alt-of-literal-branches arm below
+                // (walker-parity for typed-enum rules like CSS
+                // `dirKeyword`, Sheets `add_op`); JSON's single-literal
+                // `null = "null" -> 0u8` keeps Span per json_parity's
+                // declared-leaf-reaches-the-tape contract.
+                quote! {
+                    let off = builder.push_leaf_with_arena_payload(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        #variant_idx,
+                        0,
+                        __arena_off,
+                        #payload_width,
+                    );
+                }
+            };
             quote! {
                 /// AW-V.W3.2 — per-grammar Keyword-shape parse function
                 /// (single-literal body).
@@ -116,18 +165,8 @@ pub fn emit_parse_keyword(
                         });
                     }
                     *p = end;
-                    // Span kind + Aggregate(&[byte]) matches the
-                    // existing walker's emission — the bench's
-                    // `tape.payload_bytes(rec, 1)` reader consumes
-                    // the 1-byte arena slot.
-                    let off = builder.push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Span,
-                        at as u32,
-                        end as u32,
-                        #variant_idx,
-                        0,
-                        #payload_push,
-                    );
+                    #arena_emit
+                    #push_stmt
                     Ok(off)
                 }
             }
@@ -281,27 +320,60 @@ pub fn emit_parse_keyword(
                                     }
                                 }
                                 BranchKind::Literal => {
-                                    // Literal branch — byte-match + Literal leaf.
-                                    let branch_payload =
-                                        alt_branch_payload(rule, branch, *branch_idx, ir);
-                                    quote! {
-                                        if input.len() >= *p + #len
-                                            && input[*p..*p + #len] == [#(#byte_lits),*]
-                                        {
-                                            let at = *p;
-                                            let end = at + #len;
-                                            *p = end;
-                                            let off = builder.push_leaf_with(
-                                                ::bbnf::runtime::tape::TapeKind::Span,
-                                                at as u32,
-                                                end as u32,
-                                                #variant_idx,
-                                                0u8,
-                                                #branch_payload,
-                                            );
-                                            return Ok(off);
-                                        }
-                                    }
+                                    // Literal branch — byte-match + leaf.
+                                    // AX.W0a.2.p — typed Alt-of-literal
+                                    // payloads land on `leaf_kind`
+                                    // (KvPair for U8 rules, Span for
+                                    // Bool rules). The
+                                    // PAYLOAD_IN_ARENA_BIT fires and
+                                    // scalar readers slice the arena.
+                                    let _ = branch_idx;
+                                    let branch_emit = match
+                                        alt_branch_payload_value(branch, ir)
+                                    {
+                                        Some(value) => quote! {
+                                            if input.len() >= *p + #len
+                                                && input[*p..*p + #len] == [#(#byte_lits),*]
+                                            {
+                                                let at = *p;
+                                                let end = at + #len;
+                                                *p = end;
+                                                let __arena_off: u32 =
+                                                    builder.arena_mut().len() as u32;
+                                                builder.arena_mut().push((#value) as u8);
+                                                let off = builder
+                                                    .push_leaf_with_arena_payload(
+                                                        #leaf_kind,
+                                                        at as u32,
+                                                        end as u32,
+                                                        #variant_idx,
+                                                        0u8,
+                                                        __arena_off,
+                                                        1u32,
+                                                    );
+                                                return Ok(off);
+                                            }
+                                        },
+                                        None => quote! {
+                                            if input.len() >= *p + #len
+                                                && input[*p..*p + #len] == [#(#byte_lits),*]
+                                            {
+                                                let at = *p;
+                                                let end = at + #len;
+                                                *p = end;
+                                                let off = builder.push_leaf_with(
+                                                    ::bbnf::runtime::tape::TapeKind::Span,
+                                                    at as u32,
+                                                    end as u32,
+                                                    #variant_idx,
+                                                    0u8,
+                                                    ::bbnf::runtime::tape::PayloadData::None,
+                                                );
+                                                return Ok(off);
+                                            }
+                                        },
+                                    };
+                                    branch_emit
                                 }
                                 BranchKind::Seq(seq_body) => {
                                     // Seq branch — structural per-position
@@ -481,13 +553,53 @@ fn literal_payload_for(rule: &IrRule, ir: &GrammarIR) -> Option<TokenStream> {
 
 /// Per-branch payload for an Alt-of-literals. Branch index is passed
 /// so we can discriminate (e.g. `true`→1, `false`→0).
-fn alt_branch_payload(
-    _rule: &IrRule,
+/// AX.W0a.2.p — extract the branch's typed-byte payload (if any) from
+/// its `Map { fn_id }` annotation.
+///
+/// AX.W0a.2.p — choose the leaf `TapeKind` for a Keyword rule's
+/// payload-bearing emission.
+///
+/// Policy:
+///
+/// - `TypeDesc::U8` scalar rules emit `TapeKind::KvPair`. Matches the
+///   walker's Seq-promotion output for `Tuple([Span, U8])`-shaped
+///   rules (CSS `dir_pseudo_*`, Sheets `compare_op` / `add_op` /
+///   `mul_op` in parent context).
+/// - Every other admissible type (chiefly `Bool`) emits
+///   `TapeKind::Span`. JSON's `bool`/`null` rules ride this branch;
+///   `json_parity::every_declared_leaf_reaches_the_tape` asserts
+///   typed-bool leaves are Span-kinded.
+///
+/// Non-typed rules (no `->` annotation) never hit the payload-bearing
+/// branch here; their emission stays on a payload-less Span leaf.
+fn rule_keyword_leaf_kind(rule: &IrRule, ir: &GrammarIR) -> TokenStream {
+    use bbnf_ir::TypeDesc;
+    let ty = ir.types.iter().find_map(|(rid, t)| {
+        if *rid == rule.id {
+            Some(t.clone())
+        } else {
+            None
+        }
+    });
+    match ty {
+        Some(TypeDesc::U8) => quote! { ::bbnf::runtime::tape::TapeKind::KvPair },
+        _ => quote! { ::bbnf::runtime::tape::TapeKind::Span },
+    }
+}
+
+/// Returns the `u32` literal value the `-> Nu8` / `-> bool` produces,
+/// or `None` when the branch has no payload. Callers emit the arena
+/// staging + `push_leaf_with_arena_payload` when `Some`, and a raw
+/// `push_leaf_with(.., PayloadData::None)` when `None`.
+fn alt_branch_payload_value(
     branch: &bbnf_ir::AltBranch,
-    _branch_idx: usize,
     ir: &GrammarIR,
-) -> TokenStream {
-    // Walk the branch body for a Map { fn_id } annotation.
+) -> Option<TokenStream> {
+    // Walk the branch body for a Map { fn_id } annotation. Descends
+    // through OptionalWhitespace / Map chains; Seq branches take the
+    // outermost Map — post-factoring the annotation rides the branch
+    // root even when the branch body is a Seq prefix-factored down
+    // to one residual.
     fn find_map_fn(node: &IrNode) -> Option<u32> {
         match node {
             IrNode::Map { fn_id, .. } => Some(*fn_id),
@@ -495,16 +607,9 @@ fn alt_branch_payload(
             _ => None,
         }
     }
-    let payload = find_map_fn(&branch.node)
+    find_map_fn(&branch.node)
         .and_then(|fid| ir.fns.get(fid as usize))
-        .and_then(|fd| payload_from_fn(fd, ir));
-    let payload_byte = match payload {
-        Some(value) => quote! { #value },
-        None => quote! { 0u32 },
-    };
-    quote! {
-        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(#payload_byte) as u8])
-    }
+        .and_then(|fd| payload_from_fn(fd, ir))
 }
 
 /// Extract a `u32` payload value from a `FnDescriptor` when possible.

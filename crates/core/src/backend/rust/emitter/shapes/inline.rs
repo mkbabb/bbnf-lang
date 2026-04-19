@@ -389,7 +389,7 @@ fn emit_alt_branch_body_tape(
             None => quote! {},
         },
         IrNode::Literal(sid) => emit_literal_branch_tape(*sid, ir),
-        IrNode::Regex(_) => emit_regex_branch_tape(),
+        IrNode::Regex(sid) => emit_regex_branch_tape(*sid, grammar_suffix, ir),
         IrNode::Seq(_) | IrNode::Next(_, _) | IrNode::Skip(_, _) => {
             // AX.W0a.2.h — Seq Alt-branch emission splits on content.
             // Pure literal-chain branches (prefix-tree factored keywords)
@@ -666,30 +666,37 @@ fn emit_literal_branch_tape(sid: u32, ir: &GrammarIR) -> TokenStream {
     }
 }
 
-/// Regex-branch attempt — canonical non-whitespace scan (fallback
-/// pattern for CSS `/[^\s;!}]+/` and similar). Matches the walker's
-/// Regex state emission: `TapeKind::Span` leaf, span-only payload.
-fn emit_regex_branch_tape() -> TokenStream {
+/// Regex-branch attempt — pattern-aware scan via the per-grammar
+/// `__regex_scan_<grammar>` adapter. Matches the walker's Regex state
+/// emission: `TapeKind::Span` leaf, span-only payload.
+///
+/// AX.W0a.2.r — previously used a hard-coded non-whitespace scanner
+/// (`[^\s;!}…]+`) that ignored the branch's actual pattern. For
+/// Sheets `range_end = cell_ref | /\$?[A-Za-z]{1,3}/ | /\$?\d+/`
+/// inlined into `range_ref = sheet_prefix?, range_end, ":", range_end`
+/// and the input `=A:A`, the scanner did not stop at `:` and consumed
+/// `A:A` wholesale, failing the subsequent `Literal(":")`. Now the
+/// branch honours the IR's pattern SID via the grammar-specific
+/// regex-scan adapter, mirroring the
+/// [`super::alt_dispatch::emit_regex_pattern_attempt`] contract.
+fn emit_regex_branch_tape(
+    sid: u32,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let pattern = ir.get_string(sid).to_string();
+    let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
     quote! {
         {
-            let at = *p;
-            let mut q = at;
-            while q < input.len() {
-                let b = input[q];
-                if b == b' ' || b == b'\t' || b == b'\n' || b == b'\r'
-                    || b == b';' || b == b'}' || b == b'!'
-                    || b == b',' || b == b'{' || b == b')'
-                {
-                    break;
-                }
-                q += 1;
-            }
-            if q > at {
-                *p = q;
+            let span_lo = *p as u32;
+            if let ::core::option::Option::Some(match_len) =
+                #regex_scan_ident(#pattern, input, *p)
+            {
+                *p += match_len as usize;
                 let _ = builder.push_leaf(
                     ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    q as u32,
+                    span_lo,
+                    *p as u32,
                     0,
                     0,
                 );

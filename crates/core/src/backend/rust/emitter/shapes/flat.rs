@@ -456,7 +456,13 @@ fn emit_tape_repeat(
             }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                // AX.W0a.2.j — use `TapeKind::Repeat` (not `Rule`)
+                // for the Repeat-frame wrapper so downstream IR-
+                // lowering's `iter_rep_children` peels it (the walker
+                // equivalent also types Repeat-frame Rule compounds
+                // identically under `frame_to_tape_kind` — but the
+                // lowering keys on TapeKind, not on variant_idx).
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -518,7 +524,13 @@ fn emit_tape_repeat(
             }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                // AX.W0a.2.j — use `TapeKind::Repeat` (not `Rule`)
+                // for the Repeat-frame wrapper so downstream IR-
+                // lowering's `iter_rep_children` peels it (the walker
+                // equivalent also types Repeat-frame Rule compounds
+                // identically under `frame_to_tape_kind` — but the
+                // lowering keys on TapeKind, not on variant_idx).
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,

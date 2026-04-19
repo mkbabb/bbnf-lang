@@ -57,6 +57,7 @@ pub fn emit_parse_wrap(
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("wrap", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let rule_variant_idx = (rule.id & 0xFF) as u8;
 
     let dispatcher_ident = match root_rule_name(ir) {
         Some(root) => {
@@ -73,6 +74,7 @@ pub fn emit_parse_wrap(
             grammar_suffix,
             &dispatcher_ident,
             ir,
+            rule_variant_idx,
         ),
         IrNode::Ref(rid) => {
             // Non-Alt Wrap body — single Ref transparent alias. Resolve
@@ -178,9 +180,27 @@ fn emit_alt_tape_dispatch(
     grammar_suffix: &str,
     dispatcher_ident: &proc_macro2::Ident,
     ir: &GrammarIR,
+    rule_variant_idx: u8,
 ) -> TokenStream {
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let _ = dispatcher_ident; // retained for trait-level compat; not emitted.
+
+    // AX.W0a.2.j — Wrap emission must push a parent `Rule` compound
+    // enclosing the chosen branch's compound so downstream IR-lowering
+    // sees `Alt(Ref, Ref, …)` structural identity on re-parse (the
+    // bootstrap self-host cycle). The compound's `variant_idx` carries
+    // the **owning rule's id** so `TapeCursor::rule_kind()` resolves to
+    // the Wrap rule's kind (`grammar_item`, `term`, `directive`,
+    // `value_atom` for bbnf.bbnf). `meta_idx` carries the chosen
+    // branch ordinal (0..3) so downstream sub-variant projection can
+    // distinguish branches per-record.
+    //
+    // Walker-era parity pushed an analogous compound; the shape-
+    // authoritative emission restores it here without reintroducing
+    // walker code paths. The nested branch compound pushes its own
+    // leaf/compound children into the Wrap's children run, so lowering
+    // walks `Rule(grammar_item) → Rule(comment | big_comment | …)` the
+    // way walker tape did.
 
     // Partition branches into byte-dispatch and linear-try sets. The
     // split mirrors `alt_dispatch.rs`'s treatment: a branch whose
@@ -195,7 +215,7 @@ fn emit_alt_tape_dispatch(
     let mut per_byte: std::collections::BTreeMap<u8, Vec<TokenStream>> = Default::default();
     let mut linear_arms: Vec<TokenStream> = Vec::new();
 
-    for branch in branches {
+    for (ord, branch) in branches.iter().enumerate() {
         let inner = unwrap_outer(&branch.node);
         let body_call = emit_wrap_branch_call_tape(inner, grammar_suffix, ir);
         let Some((call, first_bytes)) = body_call else {
@@ -206,7 +226,8 @@ fn emit_alt_tape_dispatch(
             // grammars which reject during classification.
             continue;
         };
-        let linear_body = emit_wrap_linear_body_tape(&call);
+        let branch_ord = (ord & 0x1F) as u8; // meta_idx is 5 bits (0..=31).
+        let linear_body = emit_wrap_linear_body_tape(&call, branch_ord);
         if first_bytes.is_empty() {
             linear_arms.push(linear_body);
         } else {
@@ -229,6 +250,9 @@ fn emit_alt_tape_dispatch(
         .collect();
 
     quote! {
+        let __wrap_enter_p = *p as u32;
+        let __wrap_enter_child = builder.mark_children();
+        let mut __wrap_chosen_meta: u8 = 0;
         let first = #support_mod::skip_space(input, p, state)
             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -247,25 +271,37 @@ fn emit_alt_tape_dispatch(
                 },
             );
         }
-        // Reaching here means one branch succeeded; its call already
-        // produced the tape record + advanced `*p`. Return an
-        // unspecified offset placeholder — Wrap is transparent so
-        // callers ignore the returned offset (they read the last-pushed
-        // compound from the tape directly).
-        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+        // AX.W0a.2.j — push the Wrap rule's parent compound so the
+        // downstream IR-lowering re-sees the `Alt(...)` structure on
+        // self-host cycle-N+1. `variant_idx = rule.id` drives
+        // `rule_kind()` to the Wrap rule's kind; `meta_idx = branch
+        // ordinal` lets sub-variant projection distinguish branches.
+        let __wrap_exit_p = *p as u32;
+        let __wrap_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            __wrap_enter_child,
+            __wrap_enter_p,
+            __wrap_exit_p,
+            #rule_variant_idx,
+            __wrap_chosen_meta,
+        );
+        Ok(__wrap_off)
     }
 }
 
 /// Emit the guts of a Wrap-branch attempt: save `*p` + column length,
 /// invoke `call`, on failure restore both + fall through; on success
-/// `break 'try_branches`.
-fn emit_wrap_linear_body_tape(call: &TokenStream) -> TokenStream {
+/// write branch ordinal + `break 'try_branches`.
+fn emit_wrap_linear_body_tape(call: &TokenStream, branch_ord: u8) -> TokenStream {
     quote! {
         {
             let attempt_p = *p;
             let attempt_len = builder.columns_mut().len();
             match #call {
-                Ok(_) => break 'try_branches,
+                Ok(_) => {
+                    __wrap_chosen_meta = #branch_ord;
+                    break 'try_branches;
+                }
                 Err(_) => {
                     *p = attempt_p;
                     builder.columns_mut().truncate(attempt_len);

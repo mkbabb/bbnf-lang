@@ -47,6 +47,72 @@ use super::dispatcher::{
 };
 use super::root_rule_name;
 
+/// AX.W0a.2.q — rule-type-driven leaf-kind selection for Wrap's
+/// typed-payload Alt branches. Mirrors
+/// [`super::keyword::rule_keyword_leaf_kind`]'s policy so the
+/// walker-parity readers see the same kind regardless of whether the
+/// rule routes through Keyword (literal-led) or Wrap (regex-led).
+///
+/// - `TypeDesc::U8` rules → `TapeKind::KvPair` (CSS `dir_pseudo_*`,
+///   Sheets `compare_op` / `add_op` / `mul_op` context match).
+/// - `TypeDesc::Bool` rules → `TapeKind::Span` (JSON `bool`, Sheets
+///   `boolean`).
+/// - Other typed rules → `TapeKind::Span` (conservative default;
+///   HRegex f64/u32 payloads follow this branch).
+fn wrap_rule_leaf_kind(rule: &IrRule, ir: &GrammarIR) -> TokenStream {
+    use bbnf_ir::TypeDesc;
+    let ty = ir.types.iter().find_map(|(rid, t)| {
+        if *rid == rule.id {
+            Some(t.clone())
+        } else {
+            None
+        }
+    });
+    match ty {
+        Some(TypeDesc::U8) => quote! { ::bbnf::runtime::tape::TapeKind::KvPair },
+        _ => quote! { ::bbnf::runtime::tape::TapeKind::Span },
+    }
+}
+
+/// AX.W0a.2.q — extract the `u32` payload value from a Wrap Alt
+/// branch's `Map { fn_id }` annotation, if present. Handles `IntLit`
+/// and `BoolLit` MapExpr forms via the shared
+/// [`super::keyword::alt_branch_payload_value`] helper (re-exported as
+/// a module-local helper so wrap and keyword agree on encoding).
+///
+/// Returns `Some(token)` with the u32 literal when the branch is
+/// Map-annotated with a scalar constant; `None` otherwise (structural
+/// emission without typed payload).
+fn alt_branch_payload_value_for_wrap(
+    branch: &bbnf_ir::AltBranch,
+    ir: &GrammarIR,
+) -> Option<TokenStream> {
+    use bbnf_ir::{FnDescriptor, MapExpr};
+    fn find_map_fn(node: &IrNode) -> Option<u32> {
+        match node {
+            IrNode::Map { fn_id, .. } => Some(*fn_id),
+            IrNode::OptionalWhitespace(inner) => find_map_fn(inner),
+            _ => None,
+        }
+    }
+    let fn_id = find_map_fn(&branch.node)?;
+    let fd = ir.fns.get(fn_id as usize)?;
+    let FnDescriptor::Expr { expr, .. } = fd else {
+        return None;
+    };
+    match expr {
+        MapExpr::BoolLit(b) => {
+            let v = if *b { 1u32 } else { 0u32 };
+            Some(quote! { #v })
+        }
+        MapExpr::IntLit(n) => {
+            let v = *n as u32;
+            Some(quote! { #v })
+        }
+        _ => None,
+    }
+}
+
 /// Emit `pub fn parse_wrap_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>`.
 pub fn emit_parse_wrap(
@@ -75,6 +141,7 @@ pub fn emit_parse_wrap(
             &dispatcher_ident,
             ir,
             rule_variant_idx,
+            rule,
         ),
         IrNode::Ref(rid) => {
             // Non-Alt Wrap body — single Ref transparent alias. Resolve
@@ -181,9 +248,17 @@ fn emit_alt_tape_dispatch(
     dispatcher_ident: &proc_macro2::Ident,
     ir: &GrammarIR,
     rule_variant_idx: u8,
+    rule: &IrRule,
 ) -> TokenStream {
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let _ = dispatcher_ident; // retained for trait-level compat; not emitted.
+    // AX.W0a.2.q — rule-type-driven leaf kind; Wrap Alt branches
+    // that carry typed `-> Nu8` / `-> bool` payloads push a leaf
+    // whose kind matches the Keyword emitter's policy so walker-
+    // parity readers see identical record shapes regardless of
+    // whether the rule is Keyword-led (literal branches) or
+    // Wrap-led (regex branches).
+    let leaf_kind = wrap_rule_leaf_kind(rule, ir);
 
     // AX.W0a.2.j — Wrap emission must push a parent `Rule` compound
     // enclosing the chosen branch's compound so downstream IR-lowering
@@ -217,7 +292,18 @@ fn emit_alt_tape_dispatch(
 
     for (ord, branch) in branches.iter().enumerate() {
         let inner = unwrap_outer(&branch.node);
-        let body_call = emit_wrap_branch_call_tape(inner, grammar_suffix, ir);
+        // AX.W0a.2.q — pass the full branch so Regex-branch emission
+        // can inspect the outer `Map { Regex, BoolLit | IntLit }`
+        // annotation and write the typed-byte payload into the arena
+        // (Sheets `boolean` canonical case; CSS `boolean`-like analogues).
+        let body_call = emit_wrap_branch_call_tape(
+            inner,
+            branch,
+            rule_variant_idx,
+            &leaf_kind,
+            grammar_suffix,
+            ir,
+        );
         let Some((call, first_bytes)) = body_call else {
             // Branch is not emitter-routable (unclassified or structurally
             // unsupported). Skip — under `has_shape_dispatcher_entrypoint`
@@ -317,6 +403,9 @@ fn emit_wrap_linear_body_tape(call: &TokenStream, branch_ord: u8) -> TokenStream
 /// unbounded first set — the branch routes as a linear-try fallback.
 fn emit_wrap_branch_call_tape(
     inner: &IrNode,
+    branch: &bbnf_ir::AltBranch,
+    rule_variant_idx: u8,
+    leaf_kind: &TokenStream,
     grammar_suffix: &str,
     ir: &GrammarIR,
 ) -> Option<(TokenStream, Vec<u8>)> {
@@ -348,41 +437,108 @@ fn emit_wrap_branch_call_tape(
             }
         }
         IrNode::Regex(sid) => {
-            // Inline regex scan — emit via the per-grammar adapter the
-            // inline module uses. No shape fn; wrap the scan directly.
+            // AX.W0a.2.q — when the Regex branch carries a typed `Map {
+            // Regex, BoolLit | IntLit }` annotation (Sheets
+            // `boolean = /TRUE/i -> true | /FALSE/i -> false`, and
+            // structurally-analogous u8-tagged Alt rules), emit the
+            // scan + arena payload push with the same kind policy the
+            // Keyword emitter uses for typed-Alt leaves. This closes
+            // the `boolean_first_branch_fires_true_payload` parity test
+            // without reintroducing walker code paths.
+            //
+            // Pre-W0a.2.q emission pushed `PayloadData::None` with a
+            // `Literal`-kind leaf; the `typed_u8_payloads` reader
+            // (Span or KvPair + `has_payload()` + `payload_bytes(rec,
+            // 1)`) saw nothing, and the rule's `-> Nu8` discriminant
+            // never reached the tape.
             let pattern = ir.get_string(*sid).to_string();
             let regex_scan_ident = super::super::dta_walker::regex_scan_adapter_ident(
                 &super::sanitise_grammar(grammar_suffix),
             );
-            let call = quote! {
-                {
-                    let span_lo = *p as u32;
-                    match #regex_scan_ident(#pattern, input, *p) {
-                        ::core::option::Option::Some(len) => {
-                            *p += len as usize;
-                            let _ = builder.push_leaf_with(
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                span_lo,
-                                *p as u32,
-                                0,
-                                0,
-                                ::bbnf::runtime::tape::PayloadData::None,
-                            );
-                            ::core::result::Result::<
-                                ::bbnf::runtime::tape::TapeOffset,
-                                ::bbnf::runtime::tape::DtaError,
-                            >::Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+            let typed_payload = alt_branch_payload_value_for_wrap(branch, ir);
+            let call = match typed_payload {
+                Some(payload_u32) => {
+                    // AX.W0a.2.q — typed-payload Regex branch. The
+                    // `wrap_rule_leaf_kind`-derived `leaf_kind` sits in
+                    // the caller's scope (bound via `quote!` ident).
+                    // Emit the scan, commit `*p`, write 1 byte to the
+                    // arena, push a leaf carrying the arena payload.
+                    // `variant_idx = rule.id & 0xFF` so downstream
+                    // readers (`typed_u8_payloads`) see a record whose
+                    // `variant_idx()` matches the walker's Seq-
+                    // promotion output.
+                    quote! {
+                        {
+                            let span_lo = *p as u32;
+                            match #regex_scan_ident(#pattern, input, *p) {
+                                ::core::option::Option::Some(len) => {
+                                    *p += len as usize;
+                                    let __arena_off: u32 =
+                                        builder.arena_mut().len() as u32;
+                                    builder.arena_mut().push((#payload_u32) as u8);
+                                    let _ = builder.push_leaf_with_arena_payload(
+                                        #leaf_kind,
+                                        span_lo,
+                                        *p as u32,
+                                        #rule_variant_idx,
+                                        0u8,
+                                        __arena_off,
+                                        1u32,
+                                    );
+                                    ::core::result::Result::<
+                                        ::bbnf::runtime::tape::TapeOffset,
+                                        ::bbnf::runtime::tape::DtaError,
+                                    >::Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+                                }
+                                ::core::option::Option::None => {
+                                    ::core::result::Result::Err(
+                                        ::bbnf::runtime::tape::DtaError::Syntax {
+                                            offset: span_lo,
+                                            failing_state:
+                                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                            failing_rule:
+                                                ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                        },
+                                    )
+                                }
+                            }
                         }
-                        ::core::option::Option::None => {
-                            ::core::result::Result::Err(
-                                ::bbnf::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state:
-                                        ::bbnf::runtime::tape::DtaStateId::NONE,
-                                    failing_rule:
-                                        ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                },
-                            )
+                    }
+                }
+                None => {
+                    // Untyped Regex branch — preserve the pre-W0a.2.q
+                    // Span-leaf / no-payload emission.
+                    quote! {
+                        {
+                            let span_lo = *p as u32;
+                            match #regex_scan_ident(#pattern, input, *p) {
+                                ::core::option::Option::Some(len) => {
+                                    *p += len as usize;
+                                    let _ = builder.push_leaf_with(
+                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        span_lo,
+                                        *p as u32,
+                                        0,
+                                        0,
+                                        ::bbnf::runtime::tape::PayloadData::None,
+                                    );
+                                    ::core::result::Result::<
+                                        ::bbnf::runtime::tape::TapeOffset,
+                                        ::bbnf::runtime::tape::DtaError,
+                                    >::Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+                                }
+                                ::core::option::Option::None => {
+                                    ::core::result::Result::Err(
+                                        ::bbnf::runtime::tape::DtaError::Syntax {
+                                            offset: span_lo,
+                                            failing_state:
+                                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                            failing_rule:
+                                                ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                        },
+                                    )
+                                }
+                            }
                         }
                     }
                 }

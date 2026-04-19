@@ -284,15 +284,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bbnf-tape-codegen"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
 name = "bbnf_derive"
 version = "0.2.11"
 dependencies = [

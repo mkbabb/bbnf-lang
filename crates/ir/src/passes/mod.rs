@@ -50,8 +50,6 @@ pub use transform::{
     canonicalize_aliases, eliminate_epsilon, fuse_single_use, fuse_token_dispatch, inline_acyclic,
     merge_literals, prune_unreachable,
 };
-#[allow(deprecated)]
-pub use csp_strategy::{solve_strategy_and_materialization, solve_strategy_decisions};
 pub use csp_strategy::{
     components::{GrammarComponents, UnionFind, partition_by_call_graph},
     extract_regex_engine_decisions,
@@ -59,9 +57,9 @@ pub use csp_strategy::{
     StrategyDomain, StrategyValue, WrapMode,
 };
 pub use recognizers::dta::{
-    lift_dta, Associativity, CounterOptional, DtaBuilder, DtaProfile, DtaState, DtaSummary,
-    DtaTable, FrameKind, LiteralPayload, PrecedenceEntry, PrecedenceTable, RegexPayloadKind,
-    SeqPromote, StateId, summarise as summarise_dta,
+    lift_dta, summarise as summarise_dta, Associativity, CounterOptional, DtaBuilder, DtaProfile,
+    DtaState, DtaSummary, DtaTable, FrameKind, LiteralPayload, PrecedenceEntry, PrecedenceTable,
+    RegexPayloadKind, SeqPromote, StateId,
 };
 pub use recognizers::mine_list_rules;
 pub use recognizers::mine_recognizers;

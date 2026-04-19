@@ -427,31 +427,6 @@ pub fn solve_grammar_components(
     (decisions, mat_out)
 }
 
-/// Deprecated alias for [`solve_grammar_components`]. Preserved so
-/// external callers can migrate incrementally; the internal pipeline
-/// and tests call the new name directly. Renamed in Tranche AF.3
-/// when the per-rule solve became a per-component solve.
-#[deprecated(
-    since = "0.1.6",
-    note = "use solve_grammar_components (renamed in Tranche AF.3; iterates connected components of the rule call graph)"
-)]
-pub fn solve_strategy_and_materialization(
-    ir: &GrammarIR,
-) -> (RecognizerDecisionMap, HashMap<NodeId, MaterializationClass>) {
-    solve_grammar_components(ir)
-}
-
-/// Deprecated alias preserved for external callers from the Tranche
-/// AB.1 transition when the joint strategy + materialization solve
-/// landed. Uses the new entry point under the hood.
-#[deprecated(
-    since = "0.1.6",
-    note = "use solve_grammar_components (renamed in Tranche AF.3; returns both decisions and updated materialization)"
-)]
-pub fn solve_strategy_decisions(ir: &GrammarIR) -> RecognizerDecisionMap {
-    solve_grammar_components(ir).0
-}
-
 /// Build and solve the strategy CSP for a single call-graph component.
 ///
 /// AF.3 — every rule in `member_rules` contributes its decision

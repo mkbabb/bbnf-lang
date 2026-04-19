@@ -91,18 +91,10 @@ fn evaluate(ir: &GrammarIR) -> Predicates {
 //
 // Each row below is one grammar. Each `assert_eq!` freezes one
 // (grammar, predicate) pair. The expected values encode the state
-// AFTER AX.W0a.2.f's `body_has_dispatcher_fallback_position`
-// retirement: every non-JSON grammar's entry-reachable Ref graph is
-// closed over classified targets (verified by
-// `ax_w0a2b_probe::all_grammars_have_zero_entry_reachable_unclassified_refs`),
-// and the prior fallback-position guard was a false positive — the
-// per-shape emitters handle their body positions natively (Wrap /
-// Keyword / AltDispatch / HRegex / Number / String / Scalar consume
-// whole bodies; Flat / ArgList walk inline positions via
-// `inline::emit_inline_position_tape`; Array / Object / Pratt /
-// Unordered extract Refs whose targets are admission-guaranteed
-// classified). Every grammar with a classified entry + classified
-// Ref-reachable graph now admits shape-dispatcher routing.
+// AFTER AX.W0a.2's predicate narrowing — same behaviour as pre-
+// narrowing for all grammars (all unclassified rules are reachable
+// from the entry in every non-JSON case), but matches the docstring
+// intent.
 //
 // Invariant 9 ledger: any downstream wave that flips ANY expected
 // value must (a) amend this file with a same-commit rationale, and
@@ -140,12 +132,12 @@ fn css_l4_predicate_contract() {
         p.has_full_shape_coverage, true,
         "CSS L4 has_full_shape_coverage"
     );
-    // AX.W0a.2.f — `stylesheet`'s Ref graph closes over classified
-    // targets (see `ax_w0a2b_probe`) and every classified rule's
-    // body is consumed by its shape emitter directly (Wrap / Keyword
-    // / AltDispatch / HRegex / Flat + inline-position wiring).
+    // 34 entry-reachable unclassified Refs (bgDecl → value,
+    // compoundSelector → attrSelector, etc.). Predicate correctly
+    // rejects to prevent `__value` fallback emission that would
+    // infinite-loop at parse time.
     assert_eq!(
-        p.has_shape_dispatcher_entrypoint, true,
+        p.has_shape_dispatcher_entrypoint, false,
         "CSS L4 has_shape_dispatcher_entrypoint"
     );
 }
@@ -165,11 +157,9 @@ fn sheets_predicate_contract() {
         p.has_full_shape_coverage, true,
         "Sheets has_full_shape_coverage"
     );
-    // AX.W0a.2.f — `formula`'s Ref graph closes over classified
-    // targets and every classified rule's body is consumed natively
-    // or via inline-position wiring.
+    // Entry-reachable unclassified: `exp_expr → unary_expr`.
     assert_eq!(
-        p.has_shape_dispatcher_entrypoint, true,
+        p.has_shape_dispatcher_entrypoint, false,
         "Sheets has_shape_dispatcher_entrypoint"
     );
 }
@@ -189,13 +179,11 @@ fn bbnf_predicate_contract() {
         p.has_full_shape_coverage, true,
         "BBNF has_full_shape_coverage"
     );
-    // AX.W0a.2.f — entry `grammar`'s Ref graph closes over classified
-    // targets (stale comment's cited unclassified Refs have been
-    // closed by the AltDispatch / Wrap / Pratt detectors). Every
-    // classified rule's body is consumed natively or via inline-
-    // position wiring in Flat / ArgList.
+    // Entry-reachable unclassified: host_directive → type_name,
+    // import_directive → {import_items, import_path},
+    // rhs → alternation.
     assert_eq!(
-        p.has_shape_dispatcher_entrypoint, true,
+        p.has_shape_dispatcher_entrypoint, false,
         "BBNF has_shape_dispatcher_entrypoint"
     );
 }
@@ -209,11 +197,10 @@ fn ebnf_predicate_contract() {
         p.has_full_shape_coverage, true,
         "EBNF has_full_shape_coverage"
     );
-    // AX.W0a.2.f — entry `grammar`'s Ref graph closes over classified
-    // targets; every classified rule's body is consumed natively or
-    // via inline-position wiring.
+    // Entry-reachable unclassified: identifier → letter,
+    // rule → alternation.
     assert_eq!(
-        p.has_shape_dispatcher_entrypoint, true,
+        p.has_shape_dispatcher_entrypoint, false,
         "EBNF has_shape_dispatcher_entrypoint"
     );
 }
@@ -227,11 +214,10 @@ fn bnf_predicate_contract() {
         p.has_full_shape_coverage, true,
         "BNF has_full_shape_coverage"
     );
-    // AX.W0a.2.f — entry `grammar`'s Ref graph closes over classified
-    // targets; every classified rule's body is consumed natively or
-    // via inline-position wiring.
+    // Entry-reachable unclassified: rule → alternation,
+    // rule → nonterminal.
     assert_eq!(
-        p.has_shape_dispatcher_entrypoint, true,
+        p.has_shape_dispatcher_entrypoint, false,
         "BNF has_shape_dispatcher_entrypoint"
     );
 }
@@ -257,11 +243,8 @@ fn bbnf_bootstrap_predicate_contract() {
         p.has_full_shape_coverage, true,
         "BbnfBootstrap has_full_shape_coverage"
     );
-    // AX.W0a.2.f — same rationale as BBNF; structural-mode pipeline
-    // does not reshape the classification closure for the entry-
-    // reachable Ref graph.
     assert_eq!(
-        p.has_shape_dispatcher_entrypoint, true,
+        p.has_shape_dispatcher_entrypoint, false,
         "BbnfBootstrap has_shape_dispatcher_entrypoint"
     );
 }

@@ -141,20 +141,20 @@ fn json_admits_via_shape_dispatcher_entrypoint() {
 /// direct calls to target shape fns; calling a non-existent shape fn
 /// would be a compilation error. The admission gate prevents that.
 #[test]
-fn admission_admits_sheets_after_inline_position_wiring() {
-    // Post AX.W0a.2.f — the legacy `body_has_dispatcher_fallback_position`
-    // rejection has been retired. Sheets's `formula = /=?/ , expression`
-    // carries an inline Regex at position 0; the Flat emitter now walks
-    // that position via `inline::emit_inline_position_tape` (landed in
-    // W0a.2.e), producing a direct `regex_scan_adapter` call rather than
-    // a `#dispatcher_ident` fallback. With compound shape fns emitting
-    // plain `#[inline]` (AX.W0a.2.f D1), LLVM's inliner collapses
-    // recursion-prone edges without the unrolling that previously
-    // SIGBUSed BbnfBootstrap's `grammar_item` triangle.
+fn admission_rejects_sheets_due_to_inline_regex_positions() {
+    // Post AX.W0a.2.b — detector widening closes the entry-reachable
+    // unclassified Ref gap, but `has_shape_dispatcher_entrypoint` also
+    // checks per hard gate 7 ("No `__value` fallback emission") that
+    // no classified rule body contains inline Regex / Alt / Negate /
+    // Minus / TokenDispatch positions that would emit
+    // `#dispatcher_ident` fallback.
     //
-    // This test was inverted in W0a.2.f: the admission gate now admits
-    // Sheets, and the per-grammar rollout verifies the emission via
-    // `tape_parity_sheets`.
+    // Sheets's entry `formula = /=?/ , expression` has an inline Regex
+    // at position 0. Flat's emitter delegates Regex positions to the
+    // grammar's `__value` dispatcher; for non-Alt-rooted grammars
+    // that IS the entry's shape fn, causing infinite recursion. The
+    // admission gate correctly rejects until the Flat emitter inlines
+    // regex matches (AX successor waves).
     let ir = compile_grammar("../../grammar/google-sheets/google-sheets.bbnf");
     assert!(
         has_shape_dispatch(&ir),
@@ -165,12 +165,11 @@ fn admission_admits_sheets_after_inline_position_wiring() {
         "Sheets's entry (formula) is classified (Flat) — has_full_shape_coverage admits"
     );
     assert!(
-        has_shape_dispatcher_entrypoint(&ir),
-        "Sheets's entry-reachable Ref graph is closed over classified \
-         targets and every classified rule's body is consumed by its \
-         shape emitter directly (inline-position wiring in Flat / \
-         ArgList; Wrap / Keyword / AltDispatch / HRegex / Scalar \
-         consume whole bodies)."
+        !has_shape_dispatcher_entrypoint(&ir),
+        "Sheets's entry-reachable Ref graph is closed but `formula`'s \
+         body contains an inline Regex position (`/=?/`) that would \
+         fall back to `__value` and infinite-loop. The admission gate \
+         rejects per hard gate 7."
     );
 }
 

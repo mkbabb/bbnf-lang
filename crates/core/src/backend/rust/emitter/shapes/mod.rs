@@ -356,24 +356,6 @@ pub fn has_full_shape_coverage(ir: &GrammarIR) -> bool {
 /// rejecting grammars whose genuine entry-reachable Ref graph was
 /// already closed over classified targets — a false-negative the
 /// docstring had already described the narrow shape of.
-///
-/// # AX.W0a.2.f — dispatcher-fallback predicate retired
-///
-/// The prior `body_has_dispatcher_fallback_position` guard rejected
-/// every non-Alt-rooted grammar whose entry-reachable rules contained
-/// Alt / Regex / Negate / Minus / TokenDispatch anywhere in their
-/// bodies. That guard was a false positive: most of those positions
-/// are the rule body itself for shapes that consume their body whole
-/// (Wrap handles Alt natively; Keyword / AltDispatch / HRegex /
-/// Number / String likewise). For shapes whose emitter walks sub-
-/// positions (Flat / ArgList / Wrap / Array / Object / Pratt /
-/// Unordered), the per-emitter inline-position wiring
-/// (`inline::emit_inline_position_tape`) covers Alt / Regex /
-/// Negate / Minus / TokenDispatch directly; the remaining Ref
-/// positions are guaranteed classified by the BFS walk below, so
-/// `emit_ref_call_tape` cannot return `None`. No runtime
-/// `#dispatcher_ident` edge survives for any admitted grammar, and
-/// the fallback check is deleted rather than narrowed.
 pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
     let Some(entry_rule) = ir.rules.iter().find(|r| r.id == ir.entry) else {
         return false;
@@ -405,21 +387,6 @@ pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
     // A Ref to an unclassified rule is a dispositive rejection: the
     // shape emitter at that Ref's call site emits a `__value`
     // fallback, which re-enters the entry's shape fn and loops.
-    //
-    // AX.W0a.2.f — `body_has_dispatcher_fallback_position` retired.
-    // Every shape emitter now owns its body's inline positions
-    // directly: Flat / ArgList walk positions via
-    // `inline::emit_inline_position_tape`; Wrap dispatches Alt
-    // natively (byte-dispatch + linear-try, no `__value` call);
-    // AltDispatch / Keyword / HRegex / Number / String / Scalar
-    // consume their bodies whole. Array / Object / Pratt / Unordered
-    // extract a Ref from their element / pair-value / operand /
-    // branch positions and emit `emit_ref_call_tape` directly —
-    // admission has already guaranteed every such Ref target is
-    // classified (the loop below), so `emit_ref_call_tape` cannot
-    // return None for a reachable position and the historical
-    // `#dispatcher_ident` fallback inside those emitters is
-    // structurally unreachable for any admitted grammar.
     let mut visited: std::collections::HashSet<bbnf_ir::RuleId> = Default::default();
     let mut stack: Vec<bbnf_ir::RuleId> = vec![entry_rule.id];
     visited.insert(entry_rule.id);
@@ -430,6 +397,18 @@ pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
             // the IR-build bug.
             return false;
         };
+        // AX.W0a.2.b — per-wave hard gate 7 ("No `__value` fallback
+        // emission"). Several shape emitters fall back to
+        // `#dispatcher_ident` on inline Alt / Regex / Negate / Minus
+        // / TokenDispatch positions. For non-Alt-rooted grammars the
+        // dispatcher IS the root's shape fn, so the fallback loops.
+        // Reject admission when any classified entry-reachable rule's
+        // body contains one of these fallback-triggering positions
+        // outside of a Ref (per-Ref routing already handles Refs
+        // directly via `emit_ref_call_tape`).
+        if body_has_dispatcher_fallback_position(&rule.body) {
+            return false;
+        }
         // Skip transparent rules' bodies — transparent rules collapse
         // into their alias targets during lowering, but the interned
         // IR still carries the body. Walk their Refs so Alt-of-Refs
@@ -450,6 +429,51 @@ pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
         }
     }
     true
+}
+
+/// Whether a rule's body contains a structural position that would
+/// emit `#dispatcher_ident` under the current shape emitters'
+/// fallback chains (Flat, Wrap, and friends).
+///
+/// Positions that trigger the fallback:
+///
+/// - `IrNode::Alt(_, _)` — inline Alts at a Seq position have no
+///   dedicated inline-dispatch emission; Flat delegates to the
+///   grammar's `__value`.
+/// - `IrNode::Regex(_)` — inline regex scans lack pattern-specific
+///   emission in Flat / Scalar; Flat delegates to `__value`.
+/// - `IrNode::Negate(_)` / `IrNode::Minus(_, _)` /
+///   `IrNode::TokenDispatch { .. }` — structural guards Flat cannot
+///   inline and delegates instead.
+///
+/// Positions that are safe: Ref (per-Ref routing via
+/// `emit_ref_call_tape`), Literal (inline byte match), Repeat
+/// (recursive walk that bottoms out at Refs/Literals), Seq / Next /
+/// Skip / Map / OptionalWhitespace (structural wrappers the walkers
+/// descend through).
+fn body_has_dispatcher_fallback_position(node: &bbnf_ir::IrNode) -> bool {
+    use bbnf_ir::IrNode;
+    match node {
+        // Dispatcher-fallback positions.
+        IrNode::Regex(_) | IrNode::Alt(_, _) | IrNode::Negate(_)
+        | IrNode::Minus(_, _) | IrNode::TokenDispatch { .. } => true,
+        // Structural wrappers — descend.
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+            body_has_dispatcher_fallback_position(inner)
+        }
+        IrNode::Seq(children) => children
+            .iter()
+            .any(body_has_dispatcher_fallback_position),
+        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+            body_has_dispatcher_fallback_position(lhs)
+                || body_has_dispatcher_fallback_position(rhs)
+        }
+        IrNode::Repeat { inner, .. } => {
+            body_has_dispatcher_fallback_position(inner)
+        }
+        // Safe positions.
+        IrNode::Ref(_) | IrNode::Literal(_) | IrNode::Epsilon => false,
+    }
 }
 
 /// Resolve the grammar's root rule per [`GrammarIR::entry`]. Returns

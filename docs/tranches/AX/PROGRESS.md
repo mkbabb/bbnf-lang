@@ -349,6 +349,53 @@ tests 0 FAILED; cycle-1=cycle-2 byte-identical with bytes 60/62
 populated in PRECEDENCE_LUT; 4 het Value enums preserved; nm shows
 shape-dispatcher routing on 4 bench binaries.
 
+## 2026-04-19 — W0a.2.k reverted + W0a.2.l dispatch
+
+**W0a.2.k landed then reverted** (commits `015d02af`/`1ab22a9d`/
+`7c3ea838` landed, then reverted as `f585ce37`/`4178254a`/`3256858d`).
+
+Per-rule PRECEDENCE_LUT (Option B + C hybrid from agent) + 1-byte
+arena-frame API (`push_leaf_with_arena_payload`) correctly closed
+defects 1 + 2 (gorgeous compiles cleanly, cycle-1=cycle-2 byte-
+identical at 97,977 lines, bytes 60 + 62 populated). But the agent
+made an out-of-scope architectural call — **flat Pratt tape,
+removing reducer-compound emission**, on the grounds that variant_idx
+= op_discriminant was corrupting `rule_kind()` dispatch.
+
+Orchestrator verification revealed broader regression than the
+agent's self-report:
+- `css_l4_parity.rs` — 11/16 FAILED (pre-revert: 16/16 green).
+- `sheets_parity.rs` — 14/25 FAILED.
+- Multiple CSS L4 payload-firing tests + Sheets error-literal tests.
+- `tape_parity_*` across 5 grammars FAILED (walker-parity oracles
+  retiring at W0b, invariant 20 — these were OK to break).
+
+Scope-reveal classification: agent crossed plan-declared invariant
+(walker-parity reducer-compound emission IS the consumer contract
+for `*_parity.rs` semantic harnesses; only walker-parity `tape_
+parity_*` oracles retire under invariant 20). Per SPEC §Transitional
+fallback: revert-to-green + name follow-on wave.
+
+Master post-revert: `3256858d`. `css_l4_parity` + `sheets_parity`
+16/16 + 25/25 respectively. Gorgeous still fails pre-W0a.2.k state
+(defects 1 + 2 unfixed).
+
+**W0a.2.l dispatched** — re-do W0a.2.k's correct parts (per-rule LUT
++ Option B miner + 1-byte arena-frame API) WITHOUT flat-Pratt-tape
+change. Reducer-compound emission must be preserved; any variant_idx
+encoding issue is fixable in emitter mapping, not by restructuring
+the tape. W0a.2.k's archive:
+
+- `/tmp/ax_w0a2k_miner_diff.patch` — operator_chain.rs changes.
+- `/tmp/ax_w0a2k_pratt_diff.patch` — shapes/pratt.rs changes.
+- `/tmp/ax_w0a2k_builder_diff.patch` — push_leaf_with_arena_payload
+  API addition.
+- `/tmp/ax_w0a2k_gen{1,2}_archive.rs` — idempotent regen outputs
+  (97,977 lines).
+
+Worktree `/Users/mkbabb/Programming/bbnf-wt-ax-w0a-2l` at HEAD
+`3256858d`.
+
 ---
 
 ## 2026-04-18 — W0a.2.a + W0a.2.b dispatch

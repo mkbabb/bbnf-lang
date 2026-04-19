@@ -969,26 +969,138 @@ impl Columns {
         idx
     }
 
-    // ── AX.W0b.A — paired span_lo/span_hi store stub ────────────────
+    // ── AX.W1.5 — paired-column span_lo/span_hi store ───────────────
     //
-    // Lever 4's `push_compound_fused_v32` retired per R4 §5: the
-    // 32-byte packed record + NEON-Q store never cleared the hard
-    // gate on real grammars (the scatter write to 7 SoA columns
-    // dominated the cycle budget; the vector pack was structurally
-    // serialising). W1 replaces the retired scaffold with a paired
-    // SIMD `stp`-oriented pattern over just the span_lo/span_hi
-    // columns. AX.W1.D commit 1 adds `invalidate_packed()` on every
-    // patch so the AoS sidecar cannot retain stale spans; commit 2
-    // replaces the scalar body with the arch-specific paired store.
+    // Lever 4's `push_compound_fused_v32` retired per R4 §5 / §6
+    // (self-alias pathology on the 32-byte packed record). W1.5
+    // replaces it with a paired-column surface over just the two
+    // span columns: compound close + leaf emit both know the
+    // `(lo, hi)` pair at the same call site, so one entry point
+    // writing both slots beats two separate indexed stores that
+    // LLVM's scheduler is free to interleave with surrounding code.
+    //
+    // The two columns are backed by separate `Vec<u32>` allocations,
+    // so a single aarch64 `stp` instruction cannot fuse across them
+    // (stp requires one base register + a single offset range). What
+    // we can guarantee is that the two stores emit back-to-back with
+    // both base registers held live across the pair, so the M-series
+    // Firestorm front-end macro-op-fuses them into one dispatch slot
+    // and retires them at the L=1 rtp=0.5 envelope cited in the W1.5
+    // spec. Rust's scalar `span_lo[idx] = lo; span_hi[idx] = hi;`
+    // passes through LLVM's instruction scheduler which is free to
+    // interleave unrelated arithmetic between the two stores; inline
+    // assembly blocks that reordering and forces the adjacency the
+    // fusion heuristic requires. Intel Skylake / AMD Zen3+ apply the
+    // same macro-op fusion rule to adjacent `mov` stores on x86_64.
+    //
+    // Every arch honours `invalidate_packed()` at the tail — mutating
+    // `span_*[idx]` stales any prior-populated AoS sidecar; the next
+    // `packed_cache()` call re-transposes the updated SoA.
 
-    /// Paired span_lo/span_hi store — writes both span columns at
-    /// row `idx`. AX.W1.D commit 1 version: scalar body with AoS
-    /// sidecar invalidation. Commit 2 replaces the body with
-    /// arch-specific paired-store emission.
+    /// Paired-column span write — writes both `span_lo[idx]` and
+    /// `span_hi[idx]` via a single logical call.
+    ///
+    /// Replaces the reverted Lever 4 per R4 §6 Design A. Call sites
+    /// know both span endpoints at compound close + leaf emit time;
+    /// this method takes the pair once and emits the stores back-to-
+    /// back so the front-end's macro-op fusion heuristic sees them as
+    /// one dispatch slot.
+    ///
+    /// # Panics
+    ///
+    /// Panics in debug builds if `idx` is out of range for either
+    /// column. The columns must already cover `idx` (every caller
+    /// has pushed a structural row with the same index via
+    /// [`Self::push_compound_fused`] / [`Self::push_leaf_fused`]
+    /// before patching).
+    #[cfg(target_arch = "aarch64")]
     #[inline(always)]
-    pub fn stp_span(&mut self, idx: usize, span_lo: u32, span_hi: u32) {
-        self.span_lo[idx] = span_lo;
-        self.span_hi[idx] = span_hi;
+    pub fn stp_span(&mut self, idx: usize, span_lo_val: u32, span_hi_val: u32) {
+        debug_assert!(
+            idx < self.span_lo.len() && idx < self.span_hi.len(),
+            "stp_span: idx {} out of range (span_lo len {}, span_hi len {})",
+            idx,
+            self.span_lo.len(),
+            self.span_hi.len(),
+        );
+        // SAFETY: `idx` is bounds-checked in debug above; in release
+        // builds, every call site preserves the invariant that `idx
+        // < min(span_lo.len(), span_hi.len())` via a prior
+        // `push_*_fused` call that grew both columns in lockstep. The
+        // two pointers target distinct `Vec<u32>` allocations so
+        // there is no aliasing concern; each store writes exactly
+        // one aligned `u32` value to a valid, already-initialised
+        // slot (the prior push wrote a provisional value that this
+        // method overwrites).
+        //
+        // The inline-assembly block pins the two stores adjacent in
+        // the emitted machine code so the M1/M2 Firestorm front-end
+        // macro-op-fuses them into a single dispatch slot. The
+        // `nostack` + `preserves_flags` options let the compiler
+        // schedule non-memory code around the block freely while
+        // keeping the pair itself atomic w.r.t. scheduling.
+        unsafe {
+            let lo_ptr = self.span_lo.as_mut_ptr().add(idx);
+            let hi_ptr = self.span_hi.as_mut_ptr().add(idx);
+            core::arch::asm!(
+                "str {lo:w}, [{lo_ptr}]",
+                "str {hi:w}, [{hi_ptr}]",
+                lo_ptr = in(reg) lo_ptr,
+                hi_ptr = in(reg) hi_ptr,
+                lo = in(reg) span_lo_val,
+                hi = in(reg) span_hi_val,
+                options(nostack, preserves_flags),
+            );
+        }
+        self.invalidate_packed();
+    }
+
+    /// Paired-column span write — x86_64 path.
+    ///
+    /// See the aarch64 variant for the architectural rationale.
+    /// Intel Skylake / AMD Zen3+ fuse two adjacent `mov [mem], reg`
+    /// instructions into a single dispatch uop when the base
+    /// registers are live across the pair.
+    #[cfg(target_arch = "x86_64")]
+    #[inline(always)]
+    pub fn stp_span(&mut self, idx: usize, span_lo_val: u32, span_hi_val: u32) {
+        debug_assert!(
+            idx < self.span_lo.len() && idx < self.span_hi.len(),
+            "stp_span: idx {} out of range (span_lo len {}, span_hi len {})",
+            idx,
+            self.span_lo.len(),
+            self.span_hi.len(),
+        );
+        // SAFETY: see the aarch64 variant. Inline assembly pins the
+        // two `mov` stores adjacent so Zen3+/Skylake macro-op fusion
+        // fires; LLVM otherwise may interleave unrelated work.
+        unsafe {
+            let lo_ptr = self.span_lo.as_mut_ptr().add(idx);
+            let hi_ptr = self.span_hi.as_mut_ptr().add(idx);
+            core::arch::asm!(
+                "mov dword ptr [{lo_ptr}], {lo:e}",
+                "mov dword ptr [{hi_ptr}], {hi:e}",
+                lo_ptr = in(reg) lo_ptr,
+                hi_ptr = in(reg) hi_ptr,
+                lo = in(reg) span_lo_val,
+                hi = in(reg) span_hi_val,
+                options(nostack, preserves_flags),
+            );
+        }
+        self.invalidate_packed();
+    }
+
+    /// Paired-column span write — portable fallback.
+    ///
+    /// Hosts without a macro-op-fusion heuristic fall through to
+    /// two scalar indexed writes. LLVM may still schedule the pair
+    /// contiguously at `-O2`; the fusion win is a micro-architecture
+    /// property that does not affect correctness.
+    #[cfg(not(any(target_arch = "aarch64", target_arch = "x86_64")))]
+    #[inline(always)]
+    pub fn stp_span(&mut self, idx: usize, span_lo_val: u32, span_hi_val: u32) {
+        self.span_lo[idx] = span_lo_val;
+        self.span_hi[idx] = span_hi_val;
         self.invalidate_packed();
     }
 

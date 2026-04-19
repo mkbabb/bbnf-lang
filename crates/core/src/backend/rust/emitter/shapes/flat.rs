@@ -84,9 +84,16 @@ pub fn emit_parse_flat(
     // Flatten the rule body into positional IR nodes.
     let positions = collect_positions(&rule.body);
 
+    // AX.W0a.2.p — the owning rule's id drives leaf-kind selection
+    // for `Map { Regex, host-fn }` positions (KvPair when the rule
+    // type is `Tuple([Span, scalar])`; Span otherwise). Thread it
+    // through emission.
+    let rule_id = rule.id;
+
     let body_emission = emit_tape_positions(
         &positions,
         variant_idx,
+        rule_id,
         &support_mod,
         &dispatcher_ident,
         ir,
@@ -167,6 +174,20 @@ fn walk_positions<'a>(
     out: &mut Vec<PositionedNode<'a>>,
 ) {
     match node {
+        // AX.W0a.2.p — preserve `Map { Regex, host-fn }` so the
+        // typed-leaf position emitter sees the annotation + emits the
+        // host-fn call + arena payload (CSS `hex` host-fn pattern and
+        // `NumberConvert` f64 scan). The Map arm in
+        // `emit_tape_position_core` falls back to transparent unwrap
+        // for structural Map / non-regex inners so other arms retain
+        // their existing behaviour.
+        IrNode::Map { inner, .. } if matches!(inner.as_ref(), IrNode::Regex(_)) => {
+            out.push(PositionedNode {
+                node,
+                leading_ws: leading,
+                trailing_ws: trailing,
+            });
+        }
         IrNode::Map { inner, .. } => walk_positions(inner, leading, trailing, out),
         IrNode::OptionalWhitespace(inner) => {
             walk_positions(inner, true, true, out)
@@ -197,6 +218,7 @@ fn walk_positions<'a>(
 fn emit_tape_positions(
     positions: &[PositionedNode],
     variant_idx: u8,
+    rule_id: bbnf_ir::RuleId,
     support_mod: &proc_macro2::Ident,
     dispatcher_ident: &proc_macro2::Ident,
     ir: &GrammarIR,
@@ -216,6 +238,7 @@ fn emit_tape_positions(
         let core = emit_tape_position_core(
             pos.node,
             variant_idx,
+            rule_id,
             support_mod,
             dispatcher_ident,
             ir,
@@ -236,6 +259,7 @@ fn emit_tape_positions(
 fn emit_tape_position_core(
     node: &IrNode,
     variant_idx: u8,
+    rule_id: bbnf_ir::RuleId,
     support_mod: &proc_macro2::Ident,
     dispatcher_ident: &proc_macro2::Ident,
     ir: &GrammarIR,
@@ -263,6 +287,24 @@ fn emit_tape_position_core(
                 }
             }
         }
+        IrNode::Alt(branches, _)
+            if alt_branches_carry_typed_payloads(branches, ir) =>
+        {
+            // AX.W0a.2.p — Alt position whose branches each carry a
+            // `Map { inner: Literal|Seq-literal-chain, IntLit|BoolLit }`
+            // annotation. The default inline emission (inline.rs
+            // `emit_alt_branch_body_tape`) strips Map wrappers and
+            // pushes Literal leaves with `push_leaf(Literal, ..., 0, 0)`
+            // — payload LOST. Emit here instead with
+            // `push_leaf_with_arena_payload` so the per-branch byte
+            // discriminant reaches the tape.
+            //
+            // Canonical source: Sheets `error_literal` post-factoring
+            // (`Seq(Literal("#"), Alt(Map{"N/A",0u8}, Map{"VALUE!",1u8},
+            // …))`), and structurally-analogous CSS `keyframeStop`.
+            let _ = dispatcher_ident;
+            emit_alt_typed_payload_tape(branches, support_mod, &grammar_suffix, ir)
+        }
         IrNode::Alt(_, _) | IrNode::Regex(_)
         | IrNode::Negate(_) | IrNode::Minus(_, _)
         | IrNode::TokenDispatch { .. } => {
@@ -282,6 +324,7 @@ fn emit_tape_position_core(
             *lo,
             *hi,
             variant_idx,
+            rule_id,
             support_mod,
             dispatcher_ident,
             ir,
@@ -290,6 +333,7 @@ fn emit_tape_position_core(
             let inner = emit_tape_seq_children(
                 children,
                 variant_idx,
+                rule_id,
                 support_mod,
                 dispatcher_ident,
                 ir,
@@ -313,6 +357,7 @@ fn emit_tape_position_core(
             let l = emit_tape_position_core(
                 lhs,
                 variant_idx,
+                rule_id,
                 support_mod,
                 dispatcher_ident,
                 ir,
@@ -320,23 +365,45 @@ fn emit_tape_position_core(
             let r = emit_tape_position_core(
                 rhs,
                 variant_idx,
+                rule_id,
                 support_mod,
                 dispatcher_ident,
                 ir,
             );
             quote! { #l #r }
         }
-        IrNode::Map { inner, .. } => emit_tape_position_core(
-            inner,
-            variant_idx,
-            support_mod,
-            dispatcher_ident,
-            ir,
-        ),
+        IrNode::Map { inner, fn_id } => {
+            // AX.W0a.2.p — detect `Map { Regex, Expr { expr: FnCall,
+            // return_type: U32 } }` (CSS `hex` host-fn pattern) and
+            // emit a regex-scan + host fn call + arena-payload push
+            // so the u32 value reaches the tape via
+            // `push_leaf_with_arena_payload`. Other Map shapes retain
+            // the transparent unwrap for structural emission.
+            if let Some(emission) = emit_map_regex_host_fn(
+                inner,
+                *fn_id,
+                variant_idx,
+                rule_id,
+                &grammar_suffix,
+                ir,
+            ) {
+                emission
+            } else {
+                emit_tape_position_core(
+                    inner,
+                    variant_idx,
+                    rule_id,
+                    support_mod,
+                    dispatcher_ident,
+                    ir,
+                )
+            }
+        }
         IrNode::OptionalWhitespace(inner) => {
             let inner_emit = emit_tape_position_core(
                 inner,
                 variant_idx,
+                rule_id,
                 support_mod,
                 dispatcher_ident,
                 ir,
@@ -355,6 +422,7 @@ fn emit_tape_position_core(
 fn emit_tape_seq_children(
     children: &[IrNode],
     variant_idx: u8,
+    rule_id: bbnf_ir::RuleId,
     support_mod: &proc_macro2::Ident,
     dispatcher_ident: &proc_macro2::Ident,
     ir: &GrammarIR,
@@ -364,6 +432,7 @@ fn emit_tape_seq_children(
         out.push(emit_tape_position_core(
             child,
             variant_idx,
+            rule_id,
             support_mod,
             dispatcher_ident,
             ir,
@@ -387,6 +456,7 @@ fn emit_tape_repeat(
     lo: u32,
     hi: u32,
     variant_idx: u8,
+    rule_id: bbnf_ir::RuleId,
     support_mod: &proc_macro2::Ident,
     dispatcher_ident: &proc_macro2::Ident,
     ir: &GrammarIR,
@@ -404,6 +474,7 @@ fn emit_tape_repeat(
         IrNode::Seq(children) => emit_tape_seq_children(
             children,
             variant_idx,
+            rule_id,
             support_mod,
             dispatcher_ident,
             ir,
@@ -411,6 +482,7 @@ fn emit_tape_repeat(
         _ => emit_tape_position_core(
             inner,
             variant_idx,
+            rule_id,
             support_mod,
             dispatcher_ident,
             ir,
@@ -809,5 +881,433 @@ fn emit_visitor_position_core(
             }
         }
         IrNode::Epsilon => quote! {},
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AX.W0a.2.p — Map { Regex, host-fn } position emission (Class 2).
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit a position whose structure is `Map { Regex(s), FnDescriptor
+/// that returns u32 or f64 }` — the host-function-backed typed-leaf
+/// pattern (CSS `hex = "#" , /regex/ -> parse_hex_color(input) : u32`
+/// and analogous).
+///
+/// Returns `None` when the Map doesn't match one of the recognized
+/// host-fn shapes; the caller falls back to the transparent Map
+/// unwrap.
+///
+/// Supported FnDescriptor arms:
+///
+/// - `HexConvert { fn_path }` — scan the regex, call `fn_path(input)`,
+///   push a Span leaf carrying the u32 return value as a 4-byte arena
+///   aggregate (little-endian). `TapeKind::KvPair` when the owning
+///   rule's type is `Tuple([Span, U32])` (hex's inferred type post-
+///   layout-planning); Span otherwise.
+/// - `NumberConvert { allow_leading_dot }` — scan number, convert to
+///   f64, push Span/KvPair with 8-byte arena payload.
+fn emit_map_regex_host_fn(
+    inner: &bbnf_ir::IrNode,
+    fn_id: u32,
+    variant_idx: u8,
+    rule_id: bbnf_ir::RuleId,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> Option<TokenStream> {
+    use bbnf_ir::{FnDescriptor, IrNode, TypeDesc};
+    let IrNode::Regex(sid) = inner else {
+        return None;
+    };
+    let pattern = ir.get_string(*sid).to_string();
+    let fd = ir.fns.get(fn_id as usize)?;
+    let regex_scan_ident =
+        super::super::dta_walker::regex_scan_adapter_ident(&super::sanitise_grammar(grammar_suffix));
+    // Owner-rule type decides KvPair-vs-Span on the pushed leaf. A
+    // rule whose inferred type is `Tuple([Span, scalar])` is KvPair-
+    // shaped per `is_kv_pair_shape`; the walker rewrites such Seq
+    // compounds to KvPair at frame-pop time. Matching that on the
+    // leaf side at emit time lets `css_l4_parity::hex_color_*` find
+    // a KvPair record with the 4-byte hex payload without a runtime
+    // compound-rewrite.
+    let kind_is_kv = matches!(
+        ir.types.iter().find_map(|(rid, t)| {
+            if *rid == rule_id {
+                Some(t)
+            } else {
+                None
+            }
+        }),
+        Some(TypeDesc::Tuple(fields)) if matches!(
+            fields.as_slice(),
+            [TypeDesc::Span, value] if value.is_scalar_payload()
+        )
+    );
+    let leaf_kind = if kind_is_kv {
+        quote! { ::bbnf::runtime::tape::TapeKind::KvPair }
+    } else {
+        quote! { ::bbnf::runtime::tape::TapeKind::Span }
+    };
+    match fd {
+        FnDescriptor::HexConvert { fn_path } => {
+            let path_str = ir.get_string(*fn_path);
+            let path: syn::Path = syn::parse_str(path_str).ok()?;
+            Some(quote! {
+                {
+                    let span_lo = *p as u32;
+                    let Some(match_len) = #regex_scan_ident(#pattern, input, *p) else {
+                        return ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: span_lo,
+                                failing_state:
+                                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule:
+                                    ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
+                    };
+                    *p += match_len as usize;
+                    let span_hi = *p as u32;
+                    // Host fn sees the matched substring as &str; the
+                    // Map's `Expr { FnCall(path, [Input]) }` / the
+                    // HexConvert specialisation declares the return
+                    // type is u32, which the walker-parity emitter
+                    // packs as 4-byte LE into the arena.
+                    let __decoded_u32: u32 = #path(
+                        core::str::from_utf8(
+                            &input[span_lo as usize..span_hi as usize]
+                        ).unwrap_or(""),
+                    );
+                    let __arena_off: u32 =
+                        builder.arena_mut().len() as u32;
+                    builder
+                        .arena_mut()
+                        .extend_from_slice(&__decoded_u32.to_le_bytes());
+                    let _ = builder.push_leaf_with_arena_payload(
+                        #leaf_kind,
+                        span_lo,
+                        span_hi,
+                        #variant_idx,
+                        0u8,
+                        __arena_off,
+                        4u32,
+                    );
+                }
+            })
+        }
+        FnDescriptor::NumberConvert { allow_leading_dot } => {
+            let _ = allow_leading_dot;
+            Some(quote! {
+                {
+                    let span_lo = *p as u32;
+                    let Some(match_len) = #regex_scan_ident(#pattern, input, *p) else {
+                        return ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: span_lo,
+                                failing_state:
+                                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule:
+                                    ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
+                    };
+                    *p += match_len as usize;
+                    let span_hi = *p as u32;
+                    let __f64: f64 = core::str::from_utf8(
+                        &input[span_lo as usize..span_hi as usize]
+                    )
+                    .ok()
+                    .and_then(|s| s.parse::<f64>().ok())
+                    .unwrap_or(0.0);
+                    let __arena_off: u32 =
+                        builder.arena_mut().len() as u32;
+                    builder
+                        .arena_mut()
+                        .extend_from_slice(&__f64.to_le_bytes());
+                    let _ = builder.push_leaf_with_arena_payload(
+                        #leaf_kind,
+                        span_lo,
+                        span_hi,
+                        #variant_idx,
+                        0u8,
+                        __arena_off,
+                        8u32,
+                    );
+                }
+            })
+        }
+        _ => None,
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AX.W0a.2.p — typed-payload Alt-branch emission (Class 2).
+// ─────────────────────────────────────────────────────────────────────
+
+/// True iff every branch in `branches` carries a `Map { inner: literal
+/// or literal-chain, IntLit | BoolLit }` annotation — the factored-Alt
+/// shape Sheets `error_literal` and analogous CSS typed-discriminant
+/// rules produce post-factoring.
+///
+/// Returns false when any branch is Ref-led, Regex-led, or structurally
+/// incompatible with per-literal byte dispatch (the inline module's
+/// linear-try fallback retains ownership of those cases).
+fn alt_branches_carry_typed_payloads(
+    branches: &[bbnf_ir::AltBranch],
+    ir: &GrammarIR,
+) -> bool {
+    if branches.is_empty() {
+        return false;
+    }
+    branches
+        .iter()
+        .all(|b| !extract_branch_typed_payload(&b.node, ir).is_empty())
+}
+
+/// Extract every `(literal_bytes, payload_u32)` pair a Map-carrying
+/// Alt-branch declares, including nested factored branches
+/// (`Seq([Literal(prefix), Alt([Map{…}, Map{…}])])` expands to the
+/// Cartesian product of `prefix` with each inner Map's suffix +
+/// payload).
+///
+/// Recognized shapes (recursing through `Map` wrappers and descending
+/// `Seq` / `Next` / `Skip` / nested `Alt` prefix-factored bodies):
+///
+/// - `Map { Literal(s), IntLit(n) }` — single-literal branch.
+/// - `Map { Literal(s), BoolLit(b) }` — single-literal with bool.
+/// - `Map { Seq([Literal(a), Literal(b), …]), IntLit(n) }` —
+///   literal-chain branch.
+/// - `Seq([Literal(prefix), Alt([Map{Literal(s1), IntLit(n1)}, …])])`
+///   — factored branch emitted post-prefix-factoring (Sheets
+///   `error_literal`'s `Seq("N", Alt("/A"→0, "ULL!"→4, "UM!"→6,
+///   "AME?"→5))` pattern). Expands into four flat
+///   `(literal_bytes, payload)` pairs.
+///
+/// Returns an empty vector when the branch is not structurally
+/// eligible for the typed-payload byte-dispatch.
+fn extract_branch_typed_payload(
+    node: &bbnf_ir::IrNode,
+    ir: &GrammarIR,
+) -> Vec<(Vec<u8>, u32)> {
+    use bbnf_ir::{FnDescriptor, IrNode, MapExpr};
+    match node {
+        IrNode::Map { inner, fn_id } => {
+            let Some(fd) = ir.fns.get(*fn_id as usize) else {
+                return Vec::new();
+            };
+            let FnDescriptor::Expr { expr, .. } = fd else {
+                return Vec::new();
+            };
+            let payload = match expr {
+                MapExpr::IntLit(n) => *n as u32,
+                MapExpr::BoolLit(b) => {
+                    if *b {
+                        1u32
+                    } else {
+                        0u32
+                    }
+                }
+                _ => return Vec::new(),
+            };
+            let Some(bytes) = branch_literal_bytes(inner, ir) else {
+                return Vec::new();
+            };
+            if bytes.is_empty() {
+                return Vec::new();
+            }
+            vec![(bytes, payload)]
+        }
+        IrNode::OptionalWhitespace(inner) => {
+            extract_branch_typed_payload(inner, ir)
+        }
+        IrNode::Seq(children) => {
+            // Factored prefix + Alt-of-Map branch. The canonical
+            // shape is `Seq([Literal(prefix), Alt([Map{...}, ...])])`,
+            // possibly interleaved with trivial `Epsilon` /
+            // `OptionalWhitespace` positions the lifter admits at
+            // prefix boundaries.
+            let substantive: Vec<&IrNode> = children
+                .iter()
+                .filter(|c| {
+                    !matches!(
+                        c,
+                        IrNode::Epsilon | IrNode::OptionalWhitespace(_)
+                    )
+                })
+                .collect();
+            if substantive.len() != 2 {
+                return Vec::new();
+            }
+            // First position is a literal (or literal-chain) prefix.
+            let Some(prefix) = branch_literal_bytes(substantive[0], ir) else {
+                return Vec::new();
+            };
+            // Second position is an Alt whose branches each are
+            // Map-annotated literals.
+            let suffix_alt = substantive[1];
+            let IrNode::Alt(suffix_branches, _) = suffix_alt else {
+                return Vec::new();
+            };
+            let mut out = Vec::new();
+            for suffix_branch in suffix_branches {
+                let suffix_pairs =
+                    extract_branch_typed_payload(&suffix_branch.node, ir);
+                if suffix_pairs.is_empty() {
+                    return Vec::new();
+                }
+                for (suffix_bytes, payload) in suffix_pairs {
+                    let mut combined = prefix.clone();
+                    combined.extend(suffix_bytes);
+                    out.push((combined, payload));
+                }
+            }
+            out
+        }
+        _ => Vec::new(),
+    }
+}
+
+/// Collect a literal-chain's byte sequence from a flat Map-free
+/// structural body. Descends `Seq` / `Next` / `Skip` /
+/// `OptionalWhitespace` / `Map` (the inner Map the lifter leaves in
+/// place after factoring); rejects when any position is non-literal
+/// (Ref, Regex, Alt, Repeat, Negate, Minus, TokenDispatch).
+fn branch_literal_bytes(
+    node: &bbnf_ir::IrNode,
+    ir: &GrammarIR,
+) -> Option<Vec<u8>> {
+    use bbnf_ir::IrNode;
+    match node {
+        IrNode::Literal(sid) => Some(ir.get_string(*sid).as_bytes().to_vec()),
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+            branch_literal_bytes(inner, ir)
+        }
+        IrNode::Seq(children) => {
+            let mut acc = Vec::new();
+            for c in children {
+                acc.extend(branch_literal_bytes(c, ir)?);
+            }
+            Some(acc)
+        }
+        IrNode::Next(l, r) | IrNode::Skip(l, r) => {
+            let mut acc = branch_literal_bytes(l, ir)?;
+            acc.extend(branch_literal_bytes(r, ir)?);
+            Some(acc)
+        }
+        _ => None,
+    }
+}
+
+/// Emit a byte-dispatch Alt where each branch commits to its literal
+/// prefix + writes the typed-byte payload via
+/// `push_leaf_with_arena_payload`. The emitted block reads one outer
+/// Alt compound around the chosen branch's leaf — matching the
+/// walker's Alt+Literal layering so downstream view accessors see the
+/// same record stream.
+///
+/// Branches whose first byte collides collapse into one match arm that
+/// tries each longer prefix first, then shorter (mirrors the Keyword
+/// emitter's prefix-length-descending admission).
+fn emit_alt_typed_payload_tape(
+    branches: &[bbnf_ir::AltBranch],
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    use std::collections::BTreeMap;
+    let _ = grammar_suffix;
+    let mut by_first: BTreeMap<u8, Vec<(Vec<u8>, u32)>> = BTreeMap::new();
+    for b in branches {
+        let pairs = extract_branch_typed_payload(&b.node, ir);
+        if pairs.is_empty() {
+            return quote! {
+                // Defensive fallback — the admission predicate
+                // `alt_branches_carry_typed_payloads` screened this,
+                // but emit nothing to keep codegen valid if a later
+                // mutation violates it.
+            };
+        }
+        for (bytes, payload) in pairs {
+            let first = *bytes.first().unwrap_or(&0);
+            by_first.entry(first).or_default().push((bytes, payload));
+        }
+    }
+    let byte_arms: Vec<TokenStream> = by_first
+        .iter()
+        .map(|(first, group)| {
+            // Longer prefixes first so the exact-match branch commits
+            // before any prefix-only neighbour. Stable order preserves
+            // grammar-declaration order within equal-length groups.
+            let mut ordered: Vec<_> = group.clone();
+            ordered.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
+            let tries: Vec<TokenStream> = ordered
+                .iter()
+                .map(|(bytes, payload)| {
+                    let len = bytes.len();
+                    let byte_lits: Vec<TokenStream> =
+                        bytes.iter().map(|b| quote! { #b }).collect();
+                    let payload_u32 = *payload;
+                    quote! {
+                        if input.len() >= *p + #len
+                            && input[*p..*p + #len] == [#(#byte_lits),*]
+                        {
+                            let at = *p;
+                            let end = at + #len;
+                            *p = end;
+                            let __arena_off: u32 =
+                                builder.arena_mut().len() as u32;
+                            builder.arena_mut().push((#payload_u32) as u8);
+                            let _ = builder.push_leaf_with_arena_payload(
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                at as u32,
+                                end as u32,
+                                0u8,
+                                0u8,
+                                __arena_off,
+                                1u32,
+                            );
+                            break 'try_branches;
+                        }
+                    }
+                })
+                .collect();
+            let first_lit = *first;
+            quote! {
+                #first_lit => {
+                    #(#tries)*
+                }
+            }
+        })
+        .collect();
+    quote! {
+        {
+            let first = #support_mod::skip_space(input, p, state)
+                .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                    offset: *p as u32,
+                })?;
+            let alt_lo = *p as u32;
+            let alt_child = builder.mark_children();
+            'try_branches: loop {
+                match first {
+                    #(#byte_arms)*
+                    _ => {}
+                }
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    },
+                );
+            }
+            let alt_hi = *p as u32;
+            let _ = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Alt,
+                alt_child,
+                alt_lo,
+                alt_hi,
+                0u8,
+                0u8,
+            );
+        }
     }
 }

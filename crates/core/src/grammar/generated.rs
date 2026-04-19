@@ -71391,58 +71391,72 @@ mod __bbnfbootstrap_emit_impl {
         Ok(leaf_off)
     }
     /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led or Ref-led branches).
+    ///
+    /// AX.W0a.2.g — admits Ref-led branches whose target
+    /// resolves to a literal-prefix body (per `leading_
+    /// literal_bytes`). For each first-byte group, each
+    /// candidate's full prefix is checked before committing:
+    /// Literal branches emit the legacy leaf push;
+    /// Ref branches delegate to the target's shape fn via
+    /// [`emit_ref_call_tape`], threading `state` through.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_bool_lit(
         input: &[u8],
         p: &mut usize,
         first_byte: u8,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut ::bbnf::runtime::tape::TapeBuilder,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
+        let _ = state;
         match first_byte {
-            116u8 => {
-                let at = *p;
-                let end = at + 4usize;
-                if input.len() < end || input[at..end] != [116u8, 114u8, 117u8, 101u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    2u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
-            }
             102u8 => {
-                let at = *p;
-                let end = at + 5usize;
-                if input.len() < end || input[at..end] != [102u8, 97u8, 108u8, 115u8, 101u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                if input.len() >= *p + 5usize
+                    && input[*p..*p + 5usize] == [102u8, 97u8, 108u8, 115u8, 101u8]
+                {
+                    let at = *p;
+                    let end = at + 5usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        2u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    2u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            116u8 => {
+                if input.len() >= *p + 4usize
+                    && input[*p..*p + 4usize] == [116u8, 114u8, 117u8, 101u8]
+                {
+                    let at = *p;
+                    let end = at + 4usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        2u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
             _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
@@ -72512,7 +72526,7 @@ mod __bbnfbootstrap_emit_impl {
                             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
                                 offset: *p as u32,
                             })?;
-                        parse_keyword_BbnfBootstrap_bool_lit(input, p, __first, builder)
+                        parse_keyword_BbnfBootstrap_bool_lit(input, p, __first, state, builder)
                     } {
                         Ok(_) => break 'try_branches,
                         Err(_) => {
@@ -72539,7 +72553,7 @@ mod __bbnfbootstrap_emit_impl {
                             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
                                 offset: *p as u32,
                             })?;
-                        parse_keyword_BbnfBootstrap_bool_lit(input, p, __first, builder)
+                        parse_keyword_BbnfBootstrap_bool_lit(input, p, __first, state, builder)
                     } {
                         Ok(_) => break 'try_branches,
                         Err(_) => {
@@ -72591,79 +72605,89 @@ mod __bbnfbootstrap_emit_impl {
         Ok(off)
     }
     /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led or Ref-led branches).
+    ///
+    /// AX.W0a.2.g — admits Ref-led branches whose target
+    /// resolves to a literal-prefix body (per `leading_
+    /// literal_bytes`). For each first-byte group, each
+    /// candidate's full prefix is checked before committing:
+    /// Literal branches emit the legacy leaf push;
+    /// Ref branches delegate to the target's shape fn via
+    /// [`emit_ref_call_tape`], threading `state` through.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_mul_op(
         input: &[u8],
         p: &mut usize,
         first_byte: u8,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut ::bbnf::runtime::tape::TapeBuilder,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
+        let _ = state;
         match first_byte {
-            42u8 => {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [42u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+            37u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [37u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        9u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    9u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            42u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [42u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        9u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
             47u8 => {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [47u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [47u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        9u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    9u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
-            }
-            37u8 => {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [37u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    9u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
             _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
@@ -72673,58 +72697,68 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led or Ref-led branches).
+    ///
+    /// AX.W0a.2.g — admits Ref-led branches whose target
+    /// resolves to a literal-prefix body (per `leading_
+    /// literal_bytes`). For each first-byte group, each
+    /// candidate's full prefix is checked before committing:
+    /// Literal branches emit the legacy leaf push;
+    /// Ref branches delegate to the target's shape fn via
+    /// [`emit_ref_call_tape`], threading `state` through.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_add_op(
         input: &[u8],
         p: &mut usize,
         first_byte: u8,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut ::bbnf::runtime::tape::TapeBuilder,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
+        let _ = state;
         match first_byte {
             43u8 => {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [43u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [43u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        10u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    10u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
             45u8 => {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [45u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [45u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        10u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    10u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
             _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
@@ -72734,142 +72768,138 @@ mod __bbnfbootstrap_emit_impl {
         }
     }
     /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led or Ref-led branches).
+    ///
+    /// AX.W0a.2.g — admits Ref-led branches whose target
+    /// resolves to a literal-prefix body (per `leading_
+    /// literal_bytes`). For each first-byte group, each
+    /// candidate's full prefix is checked before committing:
+    /// Literal branches emit the legacy leaf push;
+    /// Ref branches delegate to the target's shape fn via
+    /// [`emit_ref_call_tape`], threading `state` through.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_cmp_op(
         input: &[u8],
         p: &mut usize,
         first_byte: u8,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut ::bbnf::runtime::tape::TapeBuilder,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
+        let _ = state;
         match first_byte {
-            61u8 => {
-                let at = *p;
-                let end = at + 2usize;
-                if input.len() < end || input[at..end] != [61u8, 61u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    11u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
-            }
             33u8 => {
-                let at = *p;
-                let end = at + 2usize;
-                if input.len() < end || input[at..end] != [33u8, 61u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [33u8, 61u8] {
+                    let at = *p;
+                    let end = at + 2usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        11u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    11u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
             60u8 => {
-                let at = *p;
-                let end = at + 2usize;
-                if input.len() < end || input[at..end] != [60u8, 61u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [60u8, 61u8] {
+                    let at = *p;
+                    let end = at + 2usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        11u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    11u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        11u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            61u8 => {
+                if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [61u8, 61u8] {
+                    let at = *p;
+                    let end = at + 2usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        11u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
             62u8 => {
-                let at = *p;
-                let end = at + 2usize;
-                if input.len() < end || input[at..end] != [62u8, 61u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [62u8, 61u8] {
+                    let at = *p;
+                    let end = at + 2usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        11u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    11u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
-            }
-            60u8 => {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [60u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [62u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        11u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    11u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
-            }
-            62u8 => {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [62u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    11u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
             _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
@@ -73996,12 +74026,11 @@ mod __bbnfbootstrap_emit_impl {
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
+                let save_cols = builder.columns_mut().len();
                 let iter_lo = *p as u32;
                 let iter_child = builder.mark_children();
                 let attempt =
                     (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
-                        let seq_lo = *p as u32;
-                        let seq_child = builder.mark_children();
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let at = *p;
                         let end = at + 1usize;
@@ -74026,22 +74055,15 @@ mod __bbnfbootstrap_emit_impl {
                             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                             parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
                         })?;
-                        let seq_hi = *p as u32;
-                        let _ = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
-                            seq_child,
-                            seq_lo,
-                            seq_hi,
-                            0,
-                            0,
-                        );
                         Ok(())
                     })();
                 if attempt.is_err() {
                     *p = save_p;
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 if *p == save_p {
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
@@ -74517,16 +74539,26 @@ mod __bbnfbootstrap_emit_impl {
         Ok(leaf_off)
     }
     /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led or Ref-led branches).
+    ///
+    /// AX.W0a.2.g — admits Ref-led branches whose target
+    /// resolves to a literal-prefix body (per `leading_
+    /// literal_bytes`). For each first-byte group, each
+    /// candidate's full prefix is checked before committing:
+    /// Literal branches emit the legacy leaf push;
+    /// Ref branches delegate to the target's shape fn via
+    /// [`emit_ref_call_tape`], threading `state` through.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_literal(
         input: &[u8],
         p: &mut usize,
         first_byte: u8,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut ::bbnf::runtime::tape::TapeBuilder,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
+        let _ = state;
         match first_byte {
             _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
@@ -74903,12 +74935,11 @@ mod __bbnfbootstrap_emit_impl {
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
+                let save_cols = builder.columns_mut().len();
                 let iter_lo = *p as u32;
                 let iter_child = builder.mark_children();
                 let attempt =
                     (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
-                        let seq_lo = *p as u32;
-                        let seq_child = builder.mark_children();
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let _ = ({
                             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -74955,22 +74986,15 @@ mod __bbnfbootstrap_emit_impl {
                             0,
                             0,
                         );
-                        let seq_hi = *p as u32;
-                        let _ = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
-                            seq_child,
-                            seq_lo,
-                            seq_hi,
-                            0,
-                            0,
-                        );
                         Ok(())
                     })();
                 if attempt.is_err() {
                     *p = save_p;
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 if *p == save_p {
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
@@ -75054,7 +75078,7 @@ mod __bbnfbootstrap_emit_impl {
                             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
                                 offset: *p as u32,
                             })?;
-                        parse_keyword_BbnfBootstrap_literal(input, p, __first, builder)
+                        parse_keyword_BbnfBootstrap_literal(input, p, __first, state, builder)
                     } {
                         Ok(_) => break 'try_branches,
                         Err(_) => {
@@ -75069,7 +75093,7 @@ mod __bbnfbootstrap_emit_impl {
                             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
                                 offset: *p as u32,
                             })?;
-                        parse_keyword_BbnfBootstrap_literal(input, p, __first, builder)
+                        parse_keyword_BbnfBootstrap_literal(input, p, __first, state, builder)
                     } {
                         Ok(_) => break 'try_branches,
                         Err(_) => {
@@ -75204,7 +75228,7 @@ mod __bbnfbootstrap_emit_impl {
                             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
                                 offset: *p as u32,
                             })?;
-                        parse_keyword_BbnfBootstrap_literal(input, p, __first, builder)
+                        parse_keyword_BbnfBootstrap_literal(input, p, __first, state, builder)
                     } {
                         Ok(_) => break 'try_branches,
                         Err(_) => {
@@ -75325,100 +75349,103 @@ mod __bbnfbootstrap_emit_impl {
         Ok(off)
     }
     /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led or Ref-led branches).
+    ///
+    /// AX.W0a.2.g — admits Ref-led branches whose target
+    /// resolves to a literal-prefix body (per `leading_
+    /// literal_bytes`). For each first-byte group, each
+    /// candidate's full prefix is checked before committing:
+    /// Literal branches emit the legacy leaf push;
+    /// Ref branches delegate to the target's shape fn via
+    /// [`emit_ref_call_tape`], threading `state` through.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_modifier(
         input: &[u8],
         p: &mut usize,
         first_byte: u8,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut ::bbnf::runtime::tape::TapeBuilder,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
+        let _ = state;
         match first_byte {
-            63u8 => {
-                let at = *p;
-                let end = at + 2usize;
-                if input.len() < end || input[at..end] != [63u8, 119u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    30u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
-            }
-            63u8 => {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [63u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    30u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
-            }
             42u8 => {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [42u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [42u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        30u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    30u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
             43u8 => {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [43u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [43u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        30u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    30u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            63u8 => {
+                if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [63u8, 119u8] {
+                    let at = *p;
+                    let end = at + 2usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        30u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
+                }
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [63u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        30u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
             _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
@@ -75504,7 +75531,7 @@ mod __bbnfbootstrap_emit_impl {
             let _ = ({
                 let __first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
                     .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-                parse_keyword_BbnfBootstrap_modifier(input, p, __first, builder)
+                parse_keyword_BbnfBootstrap_modifier(input, p, __first, state, builder)
             })?;
             let iter_hi = *p as u32;
             let _ = builder.push_compound(
@@ -75608,8 +75635,6 @@ mod __bbnfbootstrap_emit_impl {
             let repeat_child = builder.mark_children();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let seq_lo = *p as u32;
-            let seq_child = builder.mark_children();
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let at = *p;
             let end = at + 2usize;
@@ -75671,15 +75696,6 @@ mod __bbnfbootstrap_emit_impl {
                 0,
                 0,
             );
-            let seq_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                seq_child,
-                seq_lo,
-                seq_hi,
-                0,
-                0,
-            );
             let iter_hi = *p as u32;
             let _ = builder.push_compound(
                 ::bbnf::runtime::tape::TapeKind::Seq,
@@ -75711,79 +75727,89 @@ mod __bbnfbootstrap_emit_impl {
         Ok(outer_off)
     }
     /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led or Ref-led branches).
+    ///
+    /// AX.W0a.2.g — admits Ref-led branches whose target
+    /// resolves to a literal-prefix body (per `leading_
+    /// literal_bytes`). For each first-byte group, each
+    /// candidate's full prefix is checked before committing:
+    /// Literal branches emit the legacy leaf push;
+    /// Ref branches delegate to the target's shape fn via
+    /// [`emit_ref_call_tape`], threading `state` through.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_binary_operators(
         input: &[u8],
         p: &mut usize,
         first_byte: u8,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut ::bbnf::runtime::tape::TapeBuilder,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
+        let _ = state;
         match first_byte {
-            60u8 => {
-                let at = *p;
-                let end = at + 2usize;
-                if input.len() < end || input[at..end] != [60u8, 60u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+            45u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [45u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        33u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    33u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            60u8 => {
+                if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [60u8, 60u8] {
+                    let at = *p;
+                    let end = at + 2usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        33u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
             62u8 => {
-                let at = *p;
-                let end = at + 2usize;
-                if input.len() < end || input[at..end] != [62u8, 62u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [62u8, 62u8] {
+                    let at = *p;
+                    let end = at + 2usize;
+                    *p = end;
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        at as u32,
+                        end as u32,
+                        33u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                    );
+                    return Ok(off);
                 }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    33u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
-            }
-            45u8 => {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [45u8] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let off = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    at as u32,
-                    end as u32,
-                    33u8,
-                    0u8,
-                    ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
-                );
-                Ok(off)
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
             _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
@@ -76010,12 +76036,11 @@ mod __bbnfbootstrap_emit_impl {
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
+                let save_cols = builder.columns_mut().len();
                 let iter_lo = *p as u32;
                 let iter_child = builder.mark_children();
                 let attempt =
                     (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
-                        let seq_lo = *p as u32;
-                        let seq_child = builder.mark_children();
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let _ = ({
                             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -76062,22 +76087,15 @@ mod __bbnfbootstrap_emit_impl {
                             0,
                             0,
                         );
-                        let seq_hi = *p as u32;
-                        let _ = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
-                            seq_child,
-                            seq_lo,
-                            seq_hi,
-                            0,
-                            0,
-                        );
                         Ok(())
                     })();
                 if attempt.is_err() {
                     *p = save_p;
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 if *p == save_p {
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
@@ -76158,12 +76176,11 @@ mod __bbnfbootstrap_emit_impl {
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
+                let save_cols = builder.columns_mut().len();
                 let iter_lo = *p as u32;
                 let iter_child = builder.mark_children();
                 let attempt =
                     (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
-                        let seq_lo = *p as u32;
-                        let seq_child = builder.mark_children();
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let _ = ({
                             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -76210,22 +76227,15 @@ mod __bbnfbootstrap_emit_impl {
                             0,
                             0,
                         );
-                        let seq_hi = *p as u32;
-                        let _ = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
-                            seq_child,
-                            seq_lo,
-                            seq_hi,
-                            0,
-                            0,
-                        );
                         Ok(())
                     })();
                 if attempt.is_err() {
                     *p = save_p;
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 if *p == save_p {
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
@@ -76332,12 +76342,11 @@ mod __bbnfbootstrap_emit_impl {
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
+                let save_cols = builder.columns_mut().len();
                 let iter_lo = *p as u32;
                 let iter_child = builder.mark_children();
                 let attempt =
                     (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
-                        let seq_lo = *p as u32;
-                        let seq_child = builder.mark_children();
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let at = *p;
                         let end = at + 1usize;
@@ -76362,22 +76371,15 @@ mod __bbnfbootstrap_emit_impl {
                             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                             parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
                         })?;
-                        let seq_hi = *p as u32;
-                        let _ = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
-                            seq_child,
-                            seq_lo,
-                            seq_hi,
-                            0,
-                            0,
-                        );
                         Ok(())
                     })();
                 if attempt.is_err() {
                     *p = save_p;
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 if *p == save_p {
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
@@ -76816,12 +76818,11 @@ mod __bbnfbootstrap_emit_impl {
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
+                let save_cols = builder.columns_mut().len();
                 let iter_lo = *p as u32;
                 let iter_child = builder.mark_children();
                 let attempt =
                     (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
-                        let seq_lo = *p as u32;
-                        let seq_child = builder.mark_children();
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let at = *p;
                         let end = at + 1usize;
@@ -76846,22 +76847,15 @@ mod __bbnfbootstrap_emit_impl {
                             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                             parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
                         })?;
-                        let seq_hi = *p as u32;
-                        let _ = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
-                            seq_child,
-                            seq_lo,
-                            seq_hi,
-                            0,
-                            0,
-                        );
                         Ok(())
                     })();
                 if attempt.is_err() {
                     *p = save_p;
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 if *p == save_p {
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
@@ -77352,8 +77346,6 @@ mod __bbnfbootstrap_emit_impl {
             let repeat_child = builder.mark_children();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let seq_lo = *p as u32;
-            let seq_child = builder.mark_children();
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -77409,15 +77401,6 @@ mod __bbnfbootstrap_emit_impl {
                 44u8,
                 0,
                 ::bbnf::runtime::tape::PayloadData::None,
-            );
-            let seq_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                seq_child,
-                seq_lo,
-                seq_hi,
-                0,
-                0,
             );
             let iter_hi = *p as u32;
             let _ = builder.push_compound(
@@ -77570,6 +77553,7 @@ mod __bbnfbootstrap_emit_impl {
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
+                let save_cols = builder.columns_mut().len();
                 let iter_lo = *p as u32;
                 let iter_child = builder.mark_children();
                 let attempt =
@@ -77584,9 +77568,11 @@ mod __bbnfbootstrap_emit_impl {
                     })();
                 if attempt.is_err() {
                     *p = save_p;
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 if *p == save_p {
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
@@ -78284,8 +78270,6 @@ mod __bbnfbootstrap_emit_impl {
             let repeat_child = builder.mark_children();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let seq_lo = *p as u32;
-            let seq_child = builder.mark_children();
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let at = *p;
             let end = at + 1usize;
@@ -78312,15 +78296,6 @@ mod __bbnfbootstrap_emit_impl {
                 parse_altdispatch_BbnfBootstrap_type_name(input, p, state, builder)
             })?;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let seq_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                seq_child,
-                seq_lo,
-                seq_hi,
-                0,
-                0,
-            );
             let iter_hi = *p as u32;
             let _ = builder.push_compound(
                 ::bbnf::runtime::tape::TapeKind::Seq,
@@ -78431,17 +78406,89 @@ mod __bbnfbootstrap_emit_impl {
         Ok(outer_off)
     }
     /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led or Ref-led branches).
+    ///
+    /// AX.W0a.2.g — admits Ref-led branches whose target
+    /// resolves to a literal-prefix body (per `leading_
+    /// literal_bytes`). For each first-byte group, each
+    /// candidate's full prefix is checked before committing:
+    /// Literal branches emit the legacy leaf push;
+    /// Ref branches delegate to the target's shape fn via
+    /// [`emit_ref_call_tape`], threading `state` through.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_directive(
         input: &[u8],
         p: &mut usize,
         first_byte: u8,
+        state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut ::bbnf::runtime::tape::TapeBuilder,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
+        let _ = state;
         match first_byte {
+            64u8 => {
+                if input.len() >= *p + 7usize
+                    && input[*p..*p + 7usize] == [64u8, 105u8, 109u8, 112u8, 111u8, 114u8, 116u8]
+                {
+                    return ({
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        parse_flat_BbnfBootstrap_import_directive(input, p, state, builder)
+                    });
+                }
+                if input.len() >= *p + 8usize
+                    && input[*p..*p + 8usize]
+                        == [64u8, 114u8, 101u8, 99u8, 111u8, 118u8, 101u8, 114u8]
+                {
+                    return ({
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        parse_flat_BbnfBootstrap_recover_directive(input, p, state, builder)
+                    });
+                }
+                if input.len() >= *p + 7usize
+                    && input[*p..*p + 7usize] == [64u8, 112u8, 114u8, 101u8, 116u8, 116u8, 121u8]
+                {
+                    return ({
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        parse_flat_BbnfBootstrap_pretty_directive(input, p, state, builder)
+                    });
+                }
+                if input.len() >= *p + 3usize && input[*p..*p + 3usize] == [64u8, 119u8, 115u8] {
+                    return ({
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        parse_flat_BbnfBootstrap_ws_directive(input, p, state, builder)
+                    });
+                }
+                if input.len() >= *p + 6usize
+                    && input[*p..*p + 6usize] == [64u8, 116u8, 111u8, 107u8, 101u8, 110u8]
+                {
+                    return ({
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        parse_flat_BbnfBootstrap_token_directive(input, p, state, builder)
+                    });
+                }
+                if input.len() >= *p + 6usize
+                    && input[*p..*p + 6usize] == [64u8, 100u8, 101u8, 98u8, 117u8, 103u8]
+                {
+                    return ({
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        parse_flat_BbnfBootstrap_debug_directive(input, p, state, builder)
+                    });
+                }
+                if input.len() >= *p + 5usize
+                    && input[*p..*p + 5usize] == [64u8, 104u8, 111u8, 115u8, 116u8]
+                {
+                    return ({
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        parse_flat_BbnfBootstrap_host_directive(input, p, state, builder)
+                    });
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
             _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
@@ -78501,7 +78548,7 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let attempt_p = *p;
                 let attempt_len = builder.columns_mut().len();
-                match parse_keyword_BbnfBootstrap_directive(input, p, first, builder) {
+                match parse_keyword_BbnfBootstrap_directive(input, p, first, state, builder) {
                     Ok(_) => break 'try_branches,
                     Err(_) => {
                         *p = attempt_p;
@@ -78594,7 +78641,7 @@ mod __bbnfbootstrap_emit_impl {
             repeat_child,
             repeat_open,
             repeat_close,
-            52u8,
+            0u8,
             0,
         );
         Ok(repeat_off)

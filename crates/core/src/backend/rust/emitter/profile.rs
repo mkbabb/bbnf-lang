@@ -19,29 +19,17 @@
 //! |------|--------------|
 //! | push counts + per-byte density | V1 |
 //! | structural alphabet + digraphs | V1 |
-//! | active_columns | V2 (AW-IV.W1.δ projection live; mining in W3) |
 //! | list_rules | V6 (AW-IV.W1.δ projection live; mining in W4.4) |
-//! | keyword_tables | V7 (AW-III.W6.2 mining; AW-IV.W1.δ projection) |
 //! | shape_dict | V5 (AV.5.4 mining; AW-IV.W1.δ projection) |
-//! | branch_priors | V4 (AW-IV.W1.δ projection live; mining later) |
-//! | dedup_eligible_rules | V8 (AW-IV.W1.δ projection live; AW-IV.W4.3 mining active) |
-//! | reorder_unroll_visitors | V2 (AV.2.5) |
 //!
-//! # AW-IV.W1.δ — wire-contract closure
-//!
-//! Pre-W1.δ every consumer slot (`active_columns`, `list_rules`,
-//! `keyword_tables`, `shape_dict`, `branch_priors`,
-//! `dedup_eligible_rules`) landed in the emitted literal as `&[]`
-//! even when the upstream IR mining produced data. This silently
-//! dropped every mined value on its way to the runtime const — the
-//! bug AW-IV.W1.δ fixes. Every previously-`&[]` slot now emits a
-//! supporting `static __GRAMMAR_PROFILE_<NAME>: [<Elem>; N] = [...];`
-//! (when the IR field is non-empty) and a `&__GRAMMAR_PROFILE_<NAME>`
-//! reference into the const literal. Empty IR fields fall back to
-//! `&[]` — the projection is still live; the empty set is the
-//! legitimate current state for slots whose mining lands in W3/W4.
+//! AX.W0b.A — seven dead slots retired with the walker
+//! (`active_columns`, `branch_priors`, `reorder_unroll_visitors`,
+//! `keyword_tables`, `dedup_eligible_rules`,
+//! `payload_bytes_per_input_byte`, `expected_ns_per_byte`). Each
+//! shipped substrate-side without a live consumer; W9 reintroduces
+//! the predictive ones from the surviving density fields.
 
-use bbnf_ir::passes::{BranchPriorIr, GrammarProfile, KeywordTableIr, ShapeEntryIr};
+use bbnf_ir::passes::{GrammarProfile, ShapeEntryIr};
 use proc_macro2::{Literal, TokenStream};
 use quote::quote;
 
@@ -64,8 +52,6 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
 
     let compounds_per_input_byte = f32_literal(profile.compounds_per_input_byte);
     let leaves_per_input_byte = f32_literal(profile.leaves_per_input_byte);
-    let payload_bytes_per_input_byte = f32_literal(profile.payload_bytes_per_input_byte);
-    let expected_ns_per_byte = f32_literal(profile.expected_ns_per_byte);
     let parallel_break_even_bytes = profile.parallel_break_even_bytes;
 
     // Static byte arrays for the slice-valued fields. Empty alphabets
@@ -136,46 +122,9 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
         )
     };
 
-    // AV.2.5 — one `VisitorId(i)` per descriptor in
-    // `reorder_unroll_visitors`, positional so the id matches the
-    // index of the emitted kernel in the grammar `impl` block.
-    let (visitors_decl, visitors_ref) = if profile.reorder_unroll_visitors.is_empty() {
-        (TokenStream::new(), quote! { &[] })
-    } else {
-        let ids = profile
-            .reorder_unroll_visitors
-            .iter()
-            .enumerate()
-            .map(|(idx, _)| {
-                let idx_lit = Literal::u16_unsuffixed(idx as u16);
-                quote! { ::bbnf::runtime::tape::VisitorId(#idx_lit) }
-            });
-        let len = profile.reorder_unroll_visitors.len();
-        (
-            quote! {
-                static __GRAMMAR_PROFILE_VISITORS:
-                    [::bbnf::runtime::tape::VisitorId; #len] = [#(#ids),*];
-            },
-            quote! { &__GRAMMAR_PROFILE_VISITORS },
-        )
-    };
-
-    // AW-IV.W1.δ — `active_columns` projection. The mining pass is
-    // scheduled in W3 (columnar substrate); today the IR field is
-    // empty so the reference lowers to `&[]`.
-    let (active_columns_decl, active_columns_ref) =
-        emit_active_columns(&profile.active_columns);
-
     // AW-IV.W1.δ — `list_rules` projection. Mining lands in W4.4
     // (document-level parallel parse); IR-side empty today.
     let (list_rules_decl, list_rules_ref) = emit_list_rules(&profile.list_rules);
-
-    // AW-IV.W1.δ — `keyword_tables` projection. Populated from the
-    // `KeywordStatsMiner` via [`GrammarIR::profile`]. Each entry
-    // references a per-entry `static __GRAMMAR_PROFILE_KW_<i>: [&[u8]; N]`
-    // array holding the sorted keyword byte slices.
-    let (keyword_tables_decl, keyword_tables_ref) =
-        emit_keyword_tables(&profile.keyword_tables);
 
     // AW-IV.W1.δ — `shape_dict` projection. Populated from the
     // `ShapeDictMiner` + `solve_shape_dict_selection` via
@@ -184,40 +133,17 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
     // `__GRAMMAR_PROFILE_SHAPE_<i>_OFFSETS: [u16; N]` arrays.
     let (shape_dict_decl, shape_dict_ref) = emit_shape_dict(&profile.shape_dict);
 
-    // AW-IV.W1.δ — `branch_priors` projection. Mining lands in V4
-    // (speculative Alt dispatch); IR-side empty today.
-    let (branch_priors_decl, branch_priors_ref) = emit_branch_priors(&profile.branch_priors);
-
-    // AW-IV.W1.δ wire + AW-IV.W4.3 mining active — the emitter now
-    // lowers `GrammarProfile::dedup_eligible_rules` to the per-grammar
-    // `__GRAMMAR_PROFILE_DEDUP_RULES: [RuleId; N]` static array.
-    // Consumed at parse time by the walker's compound-emit arm for
-    // dedup-eligible rules via `BloomDedup::try_dedup`.
-    let (dedup_decl, dedup_ref) = emit_dedup_eligible_rules(&profile.dedup_eligible_rules);
-
     quote! {
         #alphabet_decl
         #digraphs_decl
         #quote_classes_decl
-        #visitors_decl
-        #active_columns_decl
         #list_rules_decl
-        #keyword_tables_decl
         #shape_dict_decl
-        #branch_priors_decl
-        #dedup_decl
 
         /// Per-grammar codegen fingerprint — consolidated static
         /// profile emitted by Tranche AV Phase 1. Every downstream
-        /// consumer (tape capacity, scanner dispatch, column-set
-        /// selection, reorder visitors, keyword tables, shape
-        /// dictionary, runtime dedup) reads the matching field.
-        ///
-        /// AW-IV.W1.δ — the wire contract from IR mining through this
-        /// const literal to the runtime consumer is closed. Every
-        /// `&[...]` slice reference below lowers to a static array
-        /// emitted above when the IR-side field has mined data, or
-        /// `&[]` when the upstream mining is genuinely empty.
+        /// consumer (tape capacity, scanner dispatch, shape
+        /// dictionary) reads the matching field.
         pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile =
             ::bbnf::runtime::tape::GrammarProfile {
                 push_compound_count: #push_compound_count,
@@ -225,46 +151,18 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
                 push_leaf_with_count: #push_leaf_with_count,
                 compounds_per_input_byte: #compounds_per_input_byte,
                 leaves_per_input_byte: #leaves_per_input_byte,
-                payload_bytes_per_input_byte: #payload_bytes_per_input_byte,
-                expected_ns_per_byte: #expected_ns_per_byte,
                 parallel_break_even_bytes: #parallel_break_even_bytes,
                 structural_alphabet: #alphabet_ref,
                 structural_digraphs: #digraphs_ref,
                 structural_digraph_mask: #digraph_mask_ref,
                 structural_quote_classes: #quote_classes_ref,
-                active_columns: #active_columns_ref,
                 list_rules: #list_rules_ref,
-                keyword_tables: #keyword_tables_ref,
                 shape_dict: #shape_dict_ref,
-                branch_priors: #branch_priors_ref,
-                dedup_eligible_rules: #dedup_ref,
-                reorder_unroll_visitors: #visitors_ref,
             };
     }
 }
 
 // ── Per-slot emitters ─────────────────────────────────────────────────
-
-/// AW-IV.W1.δ — emit `static __GRAMMAR_PROFILE_ACTIVE_COLUMNS:
-/// [ColumnId; N] = [...]` and a `&__GRAMMAR_PROFILE_ACTIVE_COLUMNS`
-/// reference, or `(empty, &[])` when the IR-side slot is empty.
-fn emit_active_columns(columns: &[u16]) -> (TokenStream, TokenStream) {
-    if columns.is_empty() {
-        return (TokenStream::new(), quote! { &[] });
-    }
-    let ids = columns.iter().map(|c| {
-        let lit = Literal::u16_unsuffixed(*c);
-        quote! { ::bbnf::runtime::tape::ColumnId(#lit) }
-    });
-    let len = columns.len();
-    (
-        quote! {
-            static __GRAMMAR_PROFILE_ACTIVE_COLUMNS:
-                [::bbnf::runtime::tape::ColumnId; #len] = [#(#ids),*];
-        },
-        quote! { &__GRAMMAR_PROFILE_ACTIVE_COLUMNS },
-    )
-}
 
 /// AW-IV.W1.δ — emit `static __GRAMMAR_PROFILE_LIST_RULES:
 /// [RuleId; N] = [...]` and a `&__GRAMMAR_PROFILE_LIST_RULES`
@@ -284,52 +182,6 @@ fn emit_list_rules(rules: &[u32]) -> (TokenStream, TokenStream) {
                 [::bbnf::runtime::tape::RuleId; #len] = [#(#ids),*];
         },
         quote! { &__GRAMMAR_PROFILE_LIST_RULES },
-    )
-}
-
-/// AW-IV.W1.δ — emit `static __GRAMMAR_PROFILE_KEYWORD_TABLES:
-/// [KeywordTable; N] = [...]` plus one `static
-/// __GRAMMAR_PROFILE_KW_<i>: [&[u8]; M] = [...]` per entry holding
-/// the per-rule sorted keyword byte slices, and a reference into
-/// the resulting table. Empty IR-side slot → `(empty, &[])`.
-fn emit_keyword_tables(tables: &[KeywordTableIr]) -> (TokenStream, TokenStream) {
-    if tables.is_empty() {
-        return (TokenStream::new(), quote! { &[] });
-    }
-    let mut support = TokenStream::new();
-    let mut entries: Vec<TokenStream> = Vec::with_capacity(tables.len());
-    for (idx, table) in tables.iter().enumerate() {
-        let kw_ident = quote::format_ident!("__GRAMMAR_PROFILE_KW_{}", idx);
-        let kw_lits: Vec<TokenStream> = table
-            .keywords
-            .iter()
-            .map(|bytes| {
-                let lit = Literal::byte_string(bytes);
-                quote! { #lit }
-            })
-            .collect();
-        let kw_len = table.keywords.len();
-        support.extend(quote! {
-            static #kw_ident: [&[u8]; #kw_len] = [#(#kw_lits),*];
-        });
-        let rule_lit = Literal::u32_unsuffixed(table.rule_id);
-        entries.push(quote! {
-            ::bbnf::runtime::tape::KeywordTable {
-                rule: ::bbnf::runtime::tape::RuleId(#rule_lit),
-                keywords: &#kw_ident,
-            }
-        });
-    }
-    let table_len = entries.len();
-    (
-        quote! {
-            #support
-            static __GRAMMAR_PROFILE_KEYWORD_TABLES:
-                [::bbnf::runtime::tape::KeywordTable; #table_len] = [
-                #(#entries),*
-            ];
-        },
-        quote! { &__GRAMMAR_PROFILE_KEYWORD_TABLES },
     )
 }
 
@@ -390,56 +242,6 @@ fn emit_shape_dict(entries: &[ShapeEntryIr]) -> (TokenStream, TokenStream) {
             ];
         },
         quote! { &__GRAMMAR_PROFILE_SHAPE_DICT },
-    )
-}
-
-/// AW-IV.W1.δ — emit `static __GRAMMAR_PROFILE_BRANCH_PRIORS:
-/// [BranchPrior; N] = [...]` and a reference, or `(empty, &[])`
-/// when the IR-side slot is empty.
-fn emit_branch_priors(priors: &[BranchPriorIr]) -> (TokenStream, TokenStream) {
-    if priors.is_empty() {
-        return (TokenStream::new(), quote! { &[] });
-    }
-    let entries = priors.iter().map(|p| {
-        let rule_lit = Literal::u32_unsuffixed(p.rule_id);
-        let branch_lit = Literal::u16_unsuffixed(p.branch_idx);
-        let weight_lit = Literal::u8_unsuffixed(p.weight_q8);
-        quote! {
-            ::bbnf::runtime::tape::BranchPrior {
-                rule: ::bbnf::runtime::tape::RuleId(#rule_lit),
-                branch_idx: #branch_lit,
-                weight_q8: #weight_lit,
-            }
-        }
-    });
-    let len = priors.len();
-    (
-        quote! {
-            static __GRAMMAR_PROFILE_BRANCH_PRIORS:
-                [::bbnf::runtime::tape::BranchPrior; #len] = [#(#entries),*];
-        },
-        quote! { &__GRAMMAR_PROFILE_BRANCH_PRIORS },
-    )
-}
-
-/// AW-IV.W1.δ — emit `static __GRAMMAR_PROFILE_DEDUP_RULES:
-/// [RuleId; N] = [...]` and a reference, or `(empty, &[])` when the
-/// IR-side slot is empty.
-fn emit_dedup_eligible_rules(rules: &[u32]) -> (TokenStream, TokenStream) {
-    if rules.is_empty() {
-        return (TokenStream::new(), quote! { &[] });
-    }
-    let ids = rules.iter().map(|r| {
-        let lit = Literal::u32_unsuffixed(*r);
-        quote! { ::bbnf::runtime::tape::RuleId(#lit) }
-    });
-    let len = rules.len();
-    (
-        quote! {
-            static __GRAMMAR_PROFILE_DEDUP_RULES:
-                [::bbnf::runtime::tape::RuleId; #len] = [#(#ids),*];
-        },
-        quote! { &__GRAMMAR_PROFILE_DEDUP_RULES },
     )
 }
 

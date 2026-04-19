@@ -1,20 +1,15 @@
-//! Grammar-level emission for the Rust backend under the AW-I
-//! DTA-wholesale dispatch.
+//! Grammar-level emission for the Rust backend — AX.W0b shape-dispatch era.
 //!
-//! Post-W4α the Rust backend emits no per-rule parse functions.
-//! `emit_rule_function_impl` is retained as an empty shim so the
-//! driver's call pipeline compiles while the sibling per-rule
-//! emitter modules (`alt.rs`, `seq.rs`, `repeat.rs`, etc.) are
-//! dismantled in W4β. The `parse()` entry point emitted by
-//! `emit_grammar_impl` dispatches through `dta_run_into` wholesale —
-//! the DTA walker (AW-I.W2.1) owns Seq / Literal / Regex / Ref /
-//! AltLinear-with-savepoint / Repeat with `lo..=hi` bounds /
-//! ShuntingYard and is the sole parse pathway.
+//! Post-W0b the Rust backend emits no per-rule parse functions and
+//! no walker. `emit_rule_function_impl` is retained as an empty
+//! shim so the driver's call pipeline compiles; sibling per-rule
+//! emitter modules were dismantled in AW-I.W4β. The `parse()` entry
+//! point emitted by `emit_grammar_impl` routes through the
+//! shape dispatcher unconditionally.
 //!
 //! `materialization_for_rule_pub` is preserved because the driver's
 //! `pre_compile_rule_body` hook consults it to set up AM.3 tape
-//! surgery context; W4β will revisit once the surgery context falls
-//! out of use.
+//! surgery context.
 
 use bbnf_ir::passes::MaterializationClass;
 use bbnf_ir::{GrammarIR, IrRule, TypeDesc};
@@ -403,18 +398,6 @@ impl RustEmitter {
             )
         };
 
-        // Tranche AV Phase 2 — AV.2.5 reordered-unrolling kernels for
-        // typed-payload visitors. One free-function per descriptor
-        // with a 4-lane reordered accumulator (Sum) or lane-wise
-        // extrema (Min/Max). The grammar-side `@visitor` directive is
-        // not wired today, so `reorder_unroll_visitors` is empty for
-        // every grammar shipped; the list is exercised by tests that
-        // populate it directly. When the directive lands, the kernels
-        // start appearing in every affected grammar without any
-        // further emitter work.
-        let visitor_kernels =
-            super::visitor::emit_visitor_kernels(&profile.reorder_unroll_visitors);
-
         // Debug trace depth counter (only emitted if any rule
         // uses @debug).
         let has_debug = ir.debug_all || ir.rules.iter().any(|r| r.meta.directives.debug);
@@ -648,7 +631,6 @@ impl RustEmitter {
             impl #ident {
                 #depth_counter
                 #extra
-                #visitor_kernels
 
                 /// AW-IV.W1.δ — associated-constant accessor for the
                 /// grammar's consolidated codegen fingerprint. Alias
@@ -666,22 +648,13 @@ impl RustEmitter {
                 /// Parse an input string and return a zero-copy
                 /// `Parsed<'_, Self>` that borrows the input directly.
                 ///
-                /// AW-III.W4.d: `parse()` dispatches through the
-                /// per-grammar specialised walker emitted by W4.b. The
-                /// inlined arms cover every `DtaState` variant; the
-                /// cold-path `dispatch_one` survives in `bbnf-tape`
-                /// only for the AX replay subsystem and walker-arm
-                /// regression tests. The hot path here:
+                /// AX.W0b: `parse()` routes through the shape
+                /// dispatcher. The hot path here:
                 ///
-                /// 1. Allocate a sized `TapeBuilder` + `PayloadStream`.
-                /// 2. Call the emitted `dta_run_<grammar>` directly,
-                ///    handing it the builder's `columns_mut` /
-                ///    `frame_depth_mut` references so the inlined arms
-                ///    write structurally + frame-depth inline.
-                /// 3. Drain the PSI stream into typed payload columns.
-                /// 4. Finalise via `TapeBuilder::finish` — the
-                ///    inline-frame-depth path skips
-                ///    `derive_frame_depth` reconstruction.
+                /// 1. Allocate a sized `TapeBuilder`.
+                /// 2. Call the shape dispatcher, which decomposes into
+                ///    per-shape bodies inlined at the call site.
+                /// 3. Finalise via `TapeBuilder::finish`.
                 pub fn parse(
                     input: &str,
                 ) -> ::core::result::Result<

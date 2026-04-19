@@ -851,188 +851,36 @@ impl Columns {
         idx
     }
 
-    // ── AW-V.W1.3 — Lever 4: column-parallel SIMD compound emission ──
+    // ── AX.W0b.A — paired span_lo/span_hi store stub ────────────────
     //
-    // Per AW-V.md §"Novel algorithmic levers" §"Lever 4" + the W2.3
-    // retirement table ("4 Column-parallel SoA emission → AW-V.W1
-    // substrate enabler"): pack the 7 SoA columns' worth of bytes
-    // (rule_kind + tape_kind + span_lo + span_hi + child_off +
-    // variant_idx + sib_skip) into a 20-byte record; prepare that
-    // record in a 32-byte vector register via a single AVX-256 /
-    // NEON-Q store intrinsic; then scatter-write to the seven
-    // structural columns.
+    // Lever 4's `push_compound_fused_v32` retired per R4 §5: the
+    // 32-byte packed record + NEON-Q store never cleared the hard
+    // gate on real grammars (the scatter write to 7 SoA columns
+    // dominated the cycle budget; the vector pack was structurally
+    // serialising). W1 replaces the retired scaffold with a paired
+    // SIMD `stp`-oriented pattern over just the span_lo/span_hi
+    // columns (ARM64 `stp` writes 16 aligned bytes in one cycle,
+    // matching the two columns' 4+4 = 8 bytes when both sides advance
+    // in lockstep). The stub surface exists so W1 lands the populated
+    // body without touching call-site signatures.
     //
-    // sonic-rs writes to an AoS `u64` tape (8 bytes per record —
-    // compact but algorithmically serial — one `str` store per
-    // record). The bbnf-tape substrate emits SoA columns which admit
-    // this parallel packing: one `vst1q_u8` / `_mm256_storeu_si256`
-    // primes the register; seven unaligned stores commit to the
-    // columns. The net cost on Apple M-class is ~4 cyc/record (four
-    // store ports × single-cycle throughput) versus ~21 cyc on the
-    // scalar fused path — per the AW-V.W2.3 Lever 4 projection.
-    //
-    // # Layout
-    //
-    // The packed 20-byte record holds:
-    //
-    // ```text
-    //  offset │ bytes │ source column
-    // ────────┼───────┼──────────────────
-    //    0    │   1   │ kinds        (TapeKind low nibble)
-    //    1    │   1   │ flags        (variant_idx — AW-III.W1.A 8-bit)
-    //    2    │   2   │ extra        (packed bit flags)
-    //    4    │   4   │ span_lo
-    //    8    │   4   │ span_hi
-    //   12    │   4   │ sib_skip
-    //   16    │   4   │ child_off
-    // ────────┼───────┤
-    //   20    │  12   │ zero pad to 32 bytes
-    // ```
-    //
-    // The 12-byte pad zeroes out the rest of the Q-register so the
-    // `vst1q_u8` covers a defined region. Readers never observe the
-    // packed record — it lives in a local `[u8; 32]` on the caller's
-    // stack, used as source for the seven scatter stores.
+    // At AX.W0b.A the method is a scalar fallback — pre-populated so
+    // downstream callers wiring the paired store surface in W1 have a
+    // stable entry point. Argument shape mirrors `push_leaf_fused`'s
+    // span_lo/span_hi pair; the column advance is the caller's
+    // responsibility so the stub does not double-write.
 
-    /// Vectorised compound-record store — packs the 7 SoA columns
-    /// (rule_kind + tape_kind + span_lo + span_hi + child_off +
-    /// variant_idx + sib_skip) into a 20-byte payload that fits in a
-    /// single AVX-256 / NEON-Q register store.
+    /// AX.W0b.A stub for W1's paired span_lo/span_hi `stp` store.
     ///
-    /// Falls back to scalar field-by-field stores on architectures
-    /// without 256-bit / Q-register vector support.
-    ///
-    /// Returns the index of the compound record (mirrors
-    /// [`Self::push_compound_fused`]'s return shape).
-    ///
-    /// # Pre-allocation invariant
-    ///
-    /// Identical to [`Self::push_compound_fused`]'s — callers should
-    /// pre-allocate via
-    /// `GRAMMAR_PROFILE.capacity_for(input.len())`. The `#[cold]`
-    /// `grow_all` fall-through catches the slow path without
-    /// polluting the hot one.
+    /// Writes both span columns at a given row index via scalar
+    /// stores today; W1 populates the paired-SIMD form (ARM64 `stp`
+    /// q-register pair / AVX128 store pair). The body is
+    /// `#[inline(always)]` so the scalar fallback fuses at every
+    /// call site until W1 replaces it.
     #[inline(always)]
-    pub fn push_compound_fused_v32(
-        &mut self,
-        kind: TapeKind,
-        span_lo: u32,
-        span_hi: u32,
-        sib_skip: u32,
-        child_off: u32,
-        variant_idx: u32,
-    ) -> u32 {
-        // Capacity guard — single compare against min-cap, same as
-        // `push_compound_fused`. `grow_all` is `#[cold]`
-        // `#[inline(never)]` so the slow path stays far from the hot
-        // straight-line body.
-        if self.kinds.len() >= self.structural_min_cap() {
-            self.grow_all();
-        }
-        let idx = self.kinds.len();
-        let kind_meta = (kind as u8) & 0x0F;
-        let flags_byte = (variant_idx & 0xFF) as u8;
-
-        // Pack the 20-byte record into a 32-byte-aligned staging
-        // buffer via scalar writes. The vector path below then
-        // commits the buffer in a SINGLE 32-byte Q-register store
-        // (aarch64) or AVX-256 store (x86_64), from which the seven
-        // scatter writes to the column pointers pull their bytes.
-        //
-        // Bytes beyond offset 20 are zero-padded so the vector store
-        // covers the full 32-byte register region.
-        #[repr(align(32))]
-        struct Packed([u8; 32]);
-        let mut packed = Packed([0u8; 32]);
-        packed.0[0] = kind_meta;
-        packed.0[1] = flags_byte;
-        // `extra` is u16 little-endian; compound defaults to 0
-        // (HAS_CHILDREN + META_IDX_HI are stamped by the subsequent
-        // compound-close at the call site).
-        let extra: u16 = 0;
-        packed.0[2..4].copy_from_slice(&extra.to_le_bytes());
-        packed.0[4..8].copy_from_slice(&span_lo.to_le_bytes());
-        packed.0[8..12].copy_from_slice(&span_hi.to_le_bytes());
-        packed.0[12..16].copy_from_slice(&sib_skip.to_le_bytes());
-        packed.0[16..20].copy_from_slice(&child_off.to_le_bytes());
-
-        // Emit the 32-byte vector store of the packed record. On
-        // aarch64 + NEON this is one `stp q0, q1, [...]` (a paired
-        // Q-register store spanning bytes 0..32); on x86_64 + AVX
-        // it is one `vmovdqu [...], ymm0`. The store serves as the
-        // sequence point that LLVM cannot reorder past — subsequent
-        // reads of `packed` must see the vector-committed bytes.
-        //
-        // Seven scatter writes then pull bytes out of the vector-
-        // committed buffer and land them in the SoA columns. The
-        // vector op is the architecturally-novel primitive Lever 4
-        // contributes; the scatter is the SoA-reader-contract bridge.
-        //
-        // On non-NEON / non-AVX targets the vector block is skipped
-        // and the scatter reads `packed` directly — bit-identical
-        // output, one less instruction class on the wire.
-        #[cfg(target_arch = "aarch64")]
-        unsafe {
-            use core::arch::aarch64::{vld1q_u8, vst1q_u8};
-            // Single vector load → store round-trip; LLVM keeps the
-            // load + store pair when the `packed` buffer escapes
-            // through the subsequent scatter reads (which it does).
-            // The load+store maps to `ldp q0, q1, [rsp]` + `stp q0,
-            // q1, [rsp]` on Apple M-class.
-            let lo = vld1q_u8(packed.0.as_ptr());
-            let hi = vld1q_u8(packed.0.as_ptr().add(16));
-            vst1q_u8(packed.0.as_mut_ptr(), lo);
-            vst1q_u8(packed.0.as_mut_ptr().add(16), hi);
-        }
-        #[cfg(all(target_arch = "x86_64", target_feature = "avx"))]
-        unsafe {
-            use core::arch::x86_64::{_mm256_loadu_si256, _mm256_storeu_si256};
-            let v = _mm256_loadu_si256(packed.0.as_ptr() as *const _);
-            _mm256_storeu_si256(packed.0.as_mut_ptr() as *mut _, v);
-        }
-
-        // Scatter the vector-committed bytes into the seven SoA
-        // columns. The `packed` buffer is the live-dependency source;
-        // LLVM keeps the vector store live because these seven reads
-        // observe it.
-        //
-        // SAFETY: `structural_min_cap` guard above ensures
-        // `idx < <column>.capacity()` for every structural column;
-        // `grow_all` reserves matching capacity in lockstep. Every
-        // `as_mut_ptr().add(idx)` write is in-bounds; post-write
-        // `set_len(idx + 1)` satisfies `Vec::set_len`'s capacity
-        // precondition.
-        unsafe {
-            let new_len = idx + 1;
-            *self.kinds.as_mut_ptr().add(idx) = packed.0[0];
-            *self.flags.as_mut_ptr().add(idx) = packed.0[1];
-            let extra_le = u16::from_le_bytes([packed.0[2], packed.0[3]]);
-            *self.extra.as_mut_ptr().add(idx) = extra_le;
-            let span_lo_le = u32::from_le_bytes([
-                packed.0[4], packed.0[5], packed.0[6], packed.0[7],
-            ]);
-            *self.span_lo.as_mut_ptr().add(idx) = span_lo_le;
-            let span_hi_le = u32::from_le_bytes([
-                packed.0[8], packed.0[9], packed.0[10], packed.0[11],
-            ]);
-            *self.span_hi.as_mut_ptr().add(idx) = span_hi_le;
-            let sib_skip_le = u32::from_le_bytes([
-                packed.0[12], packed.0[13], packed.0[14], packed.0[15],
-            ]);
-            *self.sib_skip.as_mut_ptr().add(idx) = sib_skip_le;
-            let child_off_le = u32::from_le_bytes([
-                packed.0[16], packed.0[17], packed.0[18], packed.0[19],
-            ]);
-            *self.child_off.as_mut_ptr().add(idx) = TapeOffset(child_off_le);
-            self.kinds.set_len(new_len);
-            self.flags.set_len(new_len);
-            self.extra.set_len(new_len);
-            self.span_lo.set_len(new_len);
-            self.span_hi.set_len(new_len);
-            self.sib_skip.set_len(new_len);
-            self.child_off.set_len(new_len);
-        }
-        idx as u32
+    pub fn stp_span(&mut self, idx: usize, span_lo: u32, span_hi: u32) {
+        self.span_lo[idx] = span_lo;
+        self.span_hi[idx] = span_hi;
     }
 
     // ── AW-IV.W5.1 — reduce_column<C, R> consumer API ────────────────

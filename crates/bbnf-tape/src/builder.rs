@@ -164,22 +164,6 @@ impl TapeBuilder {
         }
     }
 
-    /// Opt the builder into Stage-C finalisation.
-    ///
-    /// Call this exactly once at builder construction time when the
-    /// DTA driver is going to emit `frame_depth` inline during stage
-    /// A. [`Self::finish`] will then run [`crate::finaliser::
-    /// derive_frame_depth`] + [`crate::finaliser::finalise`] to close
-    /// the derived columns off the parallel depth stream.
-    ///
-    /// Leaving this unset (the default) keeps the builder on the
-    /// legacy fn-per-rule path where `push_compound` writes
-    /// `sib_skip` / `span_hi` / `child_off` inline; the Stage-C
-    /// scans are then purely wasted work and are elided.
-    pub fn enable_inline_frame_depth(&mut self) {
-        self.has_inline_frame_depth = true;
-    }
-
     /// Record the current tape length as the start of a children run.
     ///
     /// Call this before pushing a compound's children. The returned
@@ -817,45 +801,6 @@ impl TapeBuilder {
         &mut self,
     ) -> (&mut Columns, &mut Vec<u8>) {
         (&mut self.columns, &mut self.frame_depth)
-    }
-
-    /// Run the DTA driver against `input` and write its output
-    /// directly into this builder.
-    ///
-    /// The DTA walker needs simultaneous `&mut` access to the
-    /// builder's [`Columns`] and per-record `frame_depth` stream.
-    /// Exposing both accessors from the outside costs the caller a
-    /// split-borrow dance; this method takes them internally.
-    ///
-    /// # AW-III.W4 — hot/cold split
-    ///
-    /// **This helper invokes the cold-path dispatch loop**
-    /// ([`crate::driver::dta_run_cold`]) and exists as the canonical
-    /// fallback for tests + replay code that don't have access to a
-    /// per-grammar specialised walker. The post-W4 hot path bypasses
-    /// this helper entirely: every grammar's `parse()` calls its
-    /// emitted `dta_run_<grammar>` directly via the W4.b
-    /// `emit_specialised_walker` pass output.
-    ///
-    /// On success, the builder's columns and `frame_depth` are
-    /// populated and a subsequent [`Self::finish`] closes the
-    /// tape via the inline-frame-depth [`crate::finaliser::finalise`]
-    /// path.
-    pub fn dta_run_into<'t>(
-        &mut self,
-        table: &'t crate::dta::DtaTable,
-        input: &'t [u8],
-        regex_scan: fn(&str, &[u8], usize) -> Option<u32>,
-        psi: &mut crate::psi::PayloadStream,
-    ) -> Result<crate::tape::TapeOffset, crate::driver::DtaError> {
-        crate::driver::dta_run_cold(
-            table,
-            input,
-            regex_scan,
-            &mut self.columns,
-            psi,
-            &mut self.frame_depth,
-        )
     }
 
     /// Access the in-progress tape view for debug inspection.

@@ -28,29 +28,6 @@ use crate::passes::recognizers::shape_dict::TemplatePiece;
 use crate::passes::recognizers::shape_dict_bbnf::{
     mine_bbnf_shape_templates, BbnfShapeTemplate,
 };
-use crate::passes::recognizers::visitor::{mine_visitors, VisitorDescriptor};
-
-/// IR-side counterpart of [`bbnf_tape::KeywordTable`]. Carries the
-/// mined Alt's rule id and the sorted keyword byte slices the emitter
-/// will lower to `&'static [&'static [u8]]`.
-///
-/// AW-IV.W1.δ — populated from [`GrammarIR::keyword_branches`] by
-/// projecting each Alt NodeId back to the enclosing rule id via the
-/// rule body's DAG node. Only rules whose Alt body was directly mined
-/// by [`crate::passes::recognizers::keyword_stats::KeywordStatsMiner`]
-/// surface here; the AltLinear consumer reads this slot directly at
-/// codegen time.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct KeywordTableIr {
-    /// Rule id the keyword table fires for. Matches
-    /// [`bbnf_tape::RuleId`](bbnf_tape::profile::RuleId) on emission.
-    pub rule_id: u32,
-    /// Keyword bytes for the Alt's literal-led branches, sorted
-    /// lexicographically for binary-search dispatch. The emitter
-    /// lowers this to `&'static [&'static [u8]]`.
-    pub keywords: Vec<Vec<u8>>,
-}
-
 /// IR-side counterpart of [`bbnf_tape::ShapeEntry`]. Carries the
 /// shape hash, owning rule id, per-child kind discriminants, per-hole
 /// payload offsets, and total packed payload byte width.
@@ -75,18 +52,6 @@ pub struct ShapeEntryIr {
     pub leaf_payload_offsets: Vec<u16>,
     /// Total byte width of the packed payload blob.
     pub payload_bytes: u16,
-}
-
-/// IR-side counterpart of [`bbnf_tape::BranchPrior`]. V4 mining
-/// substrate; empty today so the emitter carries an empty static.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BranchPriorIr {
-    /// Alt rule id the prior applies to.
-    pub rule_id: u32,
-    /// Selected-branch index for speculative dispatch.
-    pub branch_idx: u16,
-    /// Observed-prior weight in the 0..=255 quantised domain.
-    pub weight_q8: u8,
 }
 
 /// Consolidated per-grammar fingerprint — the owned IR-side
@@ -135,16 +100,7 @@ pub struct GrammarProfile {
     /// Estimated leaf records produced per input byte.
     pub leaves_per_input_byte: f32,
 
-    /// Estimated decoded-payload byte output per input byte.
-    /// Conservative upper bound at V1; V4 refines with per-scanner
-    /// actuals.
-    pub payload_bytes_per_input_byte: f32,
-
     // ── Parallel parse cost model (V6) ───────────────────────────────
-
-    /// Expected ns of parse work per input byte on the reference
-    /// platform. V6 populates; V1 defaults to 0.
-    pub expected_ns_per_byte: f32,
 
     /// Minimum input size (bytes) at which parallel parse beats
     /// sequential. V6 populates; V1 defaults to 0 (no parallel path).
@@ -186,15 +142,6 @@ pub struct GrammarProfile {
     /// defeats strict-IEEE `f64` non-associativity and lets LLVM
     /// vectorise the accumulator on NEON / AVX2.
     ///
-    /// Populated by [`mine_visitors`] via
-    /// [`GrammarIR::profile`]. The current grammar-side
-    /// `@visitor` directive is not wired; the field is empty on master
-    /// grammars today, and tests populate the tape-side slice directly
-    /// via [`VisitorDescriptor::canonical`] + manual profile
-    /// construction. When the directive lands, `mine_visitors` walks
-    /// the parsed descriptors; this accessor signature does not change.
-    pub reorder_unroll_visitors: Vec<VisitorDescriptor>,
-
     // ── Shape dictionary (V5, AV.5.6) ───────────────────────────────
 
     /// BBNF-specific shape templates mined from the grammar IR.
@@ -208,15 +155,6 @@ pub struct GrammarProfile {
     /// [`GrammarIR::profile`]. Empty for non-BBNF grammars.
     pub bbnf_shape_templates: Vec<BbnfShapeTemplate>,
 
-    // ── Columnar substrate selection (V2, AW-IV.W1.δ wire-contract) ──
-
-    /// Payload columns activated for this grammar. V2 consumer
-    /// substrate. Empty today — the grammar-driven column-activation
-    /// pass has not yet landed. The projection is live so the emitter
-    /// emits a valid `&'static [ColumnId]` reference (empty slice).
-    /// W3 wires the mining; the projection does not change.
-    pub active_columns: Vec<u16>,
-
     // ── Document-level parallel parse (V6, AW-IV.W4.4 wired) ────────
 
     /// Rules eligible for chunked parallel parse (top-level lists).
@@ -226,21 +164,10 @@ pub struct GrammarProfile {
     /// transparent wrappers) is a `Repeat` over an `Alt` / `Ref` /
     /// `Seq`. Non-empty for CSS L4 (`stylesheet = rule*`), BBNF
     /// (`grammar = directive* rule*`), Sheets (`file = cell*`);
-    /// empty for JSON (entry `value` is an Alt). When non-empty
-    /// AND `input.len() > parallel_break_even_bytes`, the runtime
-    /// parse() routes through `dta_run_parallel`.
+    /// empty for JSON (entry `value` is an Alt). W9 wires the
+    /// runtime parallel-fork consumer; today the slot flows the
+    /// mined data through the codegen without a live call site.
     pub list_rules: Vec<u32>,
-
-    // ── Keyword dispatch (V7, AW-IV.W1.δ wire-contract) ──────────────
-
-    /// Per-rule keyword tables for SIMD / binary-search dispatch.
-    /// Populated from [`GrammarIR::keyword_branches`] via
-    /// [`GrammarIR::profile`]: for each Alt NodeId the miner
-    /// recorded, the projection maps back to the enclosing rule id
-    /// by matching the rule body's DAG node and lowers the
-    /// per-branch byte vectors to the runtime
-    /// [`bbnf_tape::KeywordTable`] shape.
-    pub keyword_tables: Vec<KeywordTableIr>,
 
     // ── Shape dictionary runtime entries (V5, AW-IV.W1.δ wire-contract)
 
@@ -253,21 +180,6 @@ pub struct GrammarProfile {
     /// payload byte width the runtime uses to rebuild the collapsed
     /// subtree at view time.
     pub shape_dict: Vec<ShapeEntryIr>,
-
-    // ── Branch priors (V4, AW-IV.W1.δ wire-contract) ─────────────────
-
-    /// Observed branch priors for speculative Alt dispatch. V4
-    /// substrate; empty today. Projection live so the emitter carries
-    /// an empty static and the runtime const references it.
-    pub branch_priors: Vec<BranchPriorIr>,
-
-    // ── Runtime dedup eligibility (V8, AW-IV.W1.δ wire-contract) ─────
-
-    /// Rules admitted to the runtime bloom + GADT dedup pass. V8
-    /// substrate; empty today — W4.3 wires the `dedup_eligibility`
-    /// miner. Projection live so the const flows the mined data
-    /// without any further emitter changes when W4.3 lands.
-    pub dedup_eligible_rules: Vec<u32>,
 }
 
 impl GrammarIR {
@@ -306,14 +218,6 @@ impl GrammarIR {
         let compounds_per_input_byte = records_per_byte * compound_share;
         let leaves_per_input_byte = records_per_byte * leaf_share;
 
-        // Payload-byte density is a V4 refinement target — today a
-        // conservative upper bound derived from `push_leaf_with`
-        // density. Aggregates peak at 16 B per site; leaf-with rules
-        // fire at most once per byte in the worst case. V4 replaces
-        // this with per-scanner profiling output.
-        let payload_bytes_per_input_byte =
-            records_per_byte * (push_leaf_with_count as f32 / total_pushes as f32) * 16.0;
-
         let (
             structural_alphabet,
             structural_digraphs,
@@ -329,57 +233,10 @@ impl GrammarIR {
             None => (Vec::new(), Vec::new(), [0u64; 4], Vec::new()),
         };
 
-        // V2 AV.2.5 — visitor-recognition pass. Empty for every
-        // grammar shipped today because the grammar-side `@visitor`
-        // directive is not yet wired; tests exercise the emitter via
-        // synthetic profile construction. See `mine_visitors` for the
-        // forward plan.
-        let reorder_unroll_visitors = mine_visitors(self);
-
         // V5 AV.5.6 — BBNF-specific shape templates. Mines rule bodies
         // for collapsible patterns (big_comment, mapped_factor empty
         // branch). Empty for non-BBNF grammars.
         let bbnf_shape_templates = mine_bbnf_shape_templates(self);
-
-        // AW-IV.W1.δ — keyword_tables projection.
-        //
-        // The [`KeywordStatsMiner`] indexes its output by Alt
-        // `NodeId`; the runtime `KeywordTable` struct indexes by
-        // `RuleId`. Project by walking every rule, looking up its
-        // body's NodeId via the DAG, and matching against the mined
-        // map. Transparent rules are skipped (their Alt surfaces
-        // under the enclosing rule's keyword table, consistent with
-        // the AW-III.W6.2 `keyword_phf_tables` emission in
-        // `emitter/grammar.rs`).
-        let keyword_tables: Vec<KeywordTableIr> = if let Some(dag) = self.dag.as_ref() {
-            let mut tables: Vec<KeywordTableIr> = Vec::new();
-            for rule in &self.rules {
-                if rule.meta.is_transparent {
-                    continue;
-                }
-                let Some(body_id) = dag.node_for(&rule.body) else { continue };
-                if let Some(branches) = self.keyword_branches.get(&body_id) {
-                    if branches.is_empty() {
-                        continue;
-                    }
-                    // Sort keywords lexicographically for determinism
-                    // and to match the emitter's binary-search shape.
-                    let mut kws: Vec<Vec<u8>> =
-                        branches.iter().map(|b| b.bytes.clone()).collect();
-                    kws.sort();
-                    kws.dedup();
-                    tables.push(KeywordTableIr {
-                        rule_id: rule.id,
-                        keywords: kws,
-                    });
-                }
-            }
-            // Deterministic output order: by rule_id ascending.
-            tables.sort_by_key(|t| t.rule_id);
-            tables
-        } else {
-            Vec::new()
-        };
 
         // AW-IV.W1.δ — shape_dict projection.
         //
@@ -514,44 +371,20 @@ impl GrammarIR {
             1 << 20
         };
 
-        // AW-IV.W1.δ — V2/V4/V6 slots whose upstream mining has
-        // not yet wired. The projection carries empty Vecs so the
-        // const-literal emission is always well-formed; when W3 or
-        // W4 lands the mining pass, the projection composes without
-        // further emitter changes.
-        let active_columns: Vec<u16> = Vec::new();
-        let branch_priors: Vec<BranchPriorIr> = Vec::new();
-
-        // AW-IV.W4.3 — dedup-eligible rules projection. Read from the
-        // IR slot populated by
-        // `passes::recognizers::dedup_eligibility::mine_dedup_eligible_rules`.
-        // The mining pass runs in `analyze_grammar` before this
-        // accessor is called; when the mining has not yet executed
-        // (tests constructing IR directly) the slot is empty and the
-        // projection flows an empty Vec without panicking.
-        let dedup_eligible_rules: Vec<u32> = self.dedup_eligible_rules.clone();
-
         GrammarProfile {
             push_compound_count,
             push_leaf_count,
             push_leaf_with_count,
             compounds_per_input_byte,
             leaves_per_input_byte,
-            payload_bytes_per_input_byte,
-            expected_ns_per_byte: 0.0,
             parallel_break_even_bytes,
             structural_alphabet,
             structural_digraphs,
             structural_digraph_mask,
             structural_quote_classes,
-            reorder_unroll_visitors,
             bbnf_shape_templates,
-            active_columns,
             list_rules,
-            keyword_tables,
             shape_dict,
-            branch_priors,
-            dedup_eligible_rules,
         }
     }
 }

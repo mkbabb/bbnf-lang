@@ -50,107 +50,6 @@ mod __bbnfbootstrap_emit_impl {
     static __GRAMMAR_PROFILE_LIST_RULES: [::bbnf::runtime::tape::RuleId; 1usize] = [
         ::bbnf::runtime::tape::RuleId(52),
     ];
-    static __GRAMMAR_PROFILE_KW_0: [&[u8]; 2usize] = [b"false", b"true"];
-    static __GRAMMAR_PROFILE_KW_1: [&[u8]; 3usize] = [b"\"", b"(", b"input"];
-    static __GRAMMAR_PROFILE_KW_2: [&[u8]; 3usize] = [b"%", b"*", b"/"];
-    static __GRAMMAR_PROFILE_KW_3: [&[u8]; 2usize] = [b"+", b"-"];
-    static __GRAMMAR_PROFILE_KW_4: [&[u8]; 6usize] = [
-        b"!=",
-        b"<",
-        b"<=",
-        b"==",
-        b">",
-        b">=",
-    ];
-    static __GRAMMAR_PROFILE_KW_5: [&[u8]; 1usize] = [b"|"];
-    static __GRAMMAR_PROFILE_KW_6: [&[u8]; 10usize] = [
-        b"bool",
-        b"f32",
-        b"f64",
-        b"i32",
-        b"i64",
-        b"u16",
-        b"u32",
-        b"u64",
-        b"u8",
-        b"usize",
-    ];
-    static __GRAMMAR_PROFILE_KW_7: [&[u8]; 7usize] = [
-        b"(",
-        b"/",
-        b"@{",
-        b"[",
-        b"epsilon",
-        b"{",
-        b"\xce\xb5",
-    ];
-    static __GRAMMAR_PROFILE_KW_8: [&[u8]; 4usize] = [b"*", b"+", b"?", b"?w"];
-    static __GRAMMAR_PROFILE_KW_9: [&[u8]; 3usize] = [b"-", b"<<", b">>"];
-    static __GRAMMAR_PROFILE_KW_10: [&[u8]; 1usize] = [b"|"];
-    static __GRAMMAR_PROFILE_KW_11: [&[u8]; 7usize] = [
-        b"@debug",
-        b"@host",
-        b"@import",
-        b"@pretty",
-        b"@recover",
-        b"@token",
-        b"@ws",
-    ];
-    static __GRAMMAR_PROFILE_KW_12: [&[u8]; 2usize] = [b"/*", b"//"];
-    static __GRAMMAR_PROFILE_KEYWORD_TABLES: [::bbnf::runtime::tape::KeywordTable; 13usize] = [
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(2),
-            keywords: &__GRAMMAR_PROFILE_KW_0,
-        },
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(8),
-            keywords: &__GRAMMAR_PROFILE_KW_1,
-        },
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(9),
-            keywords: &__GRAMMAR_PROFILE_KW_2,
-        },
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(10),
-            keywords: &__GRAMMAR_PROFILE_KW_3,
-        },
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(11),
-            keywords: &__GRAMMAR_PROFILE_KW_4,
-        },
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(19),
-            keywords: &__GRAMMAR_PROFILE_KW_5,
-        },
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(21),
-            keywords: &__GRAMMAR_PROFILE_KW_6,
-        },
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(29),
-            keywords: &__GRAMMAR_PROFILE_KW_7,
-        },
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(30),
-            keywords: &__GRAMMAR_PROFILE_KW_8,
-        },
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(33),
-            keywords: &__GRAMMAR_PROFILE_KW_9,
-        },
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(38),
-            keywords: &__GRAMMAR_PROFILE_KW_10,
-        },
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(50),
-            keywords: &__GRAMMAR_PROFILE_KW_11,
-        },
-        ::bbnf::runtime::tape::KeywordTable {
-            rule: ::bbnf::runtime::tape::RuleId(51),
-            keywords: &__GRAMMAR_PROFILE_KW_12,
-        },
-    ];
     static __GRAMMAR_PROFILE_SHAPE_0_KINDS: [u8; 3usize] = [3, 1, 3];
     static __GRAMMAR_PROFILE_SHAPE_0_OFFSETS: [u16; 3usize] = [65535, 0, 65535];
     static __GRAMMAR_PROFILE_SHAPE_1_KINDS: [u8; 2usize] = [1, 1];
@@ -243,55 +142,23 @@ mod __bbnfbootstrap_emit_impl {
             payload_bytes: 24,
         },
     ];
-    static __GRAMMAR_PROFILE_DEDUP_RULES: [::bbnf::runtime::tape::RuleId; 16usize] = [
-        ::bbnf::runtime::tape::RuleId(0),
-        ::bbnf::runtime::tape::RuleId(1),
-        ::bbnf::runtime::tape::RuleId(2),
-        ::bbnf::runtime::tape::RuleId(3),
-        ::bbnf::runtime::tape::RuleId(4),
-        ::bbnf::runtime::tape::RuleId(9),
-        ::bbnf::runtime::tape::RuleId(10),
-        ::bbnf::runtime::tape::RuleId(11),
-        ::bbnf::runtime::tape::RuleId(22),
-        ::bbnf::runtime::tape::RuleId(24),
-        ::bbnf::runtime::tape::RuleId(25),
-        ::bbnf::runtime::tape::RuleId(26),
-        ::bbnf::runtime::tape::RuleId(27),
-        ::bbnf::runtime::tape::RuleId(30),
-        ::bbnf::runtime::tape::RuleId(33),
-        ::bbnf::runtime::tape::RuleId(40),
-    ];
     /// Per-grammar codegen fingerprint — consolidated static
     /// profile emitted by Tranche AV Phase 1. Every downstream
-    /// consumer (tape capacity, scanner dispatch, column-set
-    /// selection, reorder visitors, keyword tables, shape
-    /// dictionary, runtime dedup) reads the matching field.
-    ///
-    /// AW-IV.W1.δ — the wire contract from IR mining through this
-    /// const literal to the runtime consumer is closed. Every
-    /// `&[...]` slice reference below lowers to a static array
-    /// emitted above when the IR-side field has mined data, or
-    /// `&[]` when the upstream mining is genuinely empty.
+    /// consumer (tape capacity, scanner dispatch, shape
+    /// dictionary) reads the matching field.
     pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile = ::bbnf::runtime::tape::GrammarProfile {
         push_compound_count: 53u16,
         push_leaf_count: 0u16,
         push_leaf_with_count: 0u16,
         compounds_per_input_byte: 1f32,
         leaves_per_input_byte: 0f32,
-        payload_bytes_per_input_byte: 0f32,
-        expected_ns_per_byte: 0f32,
         parallel_break_even_bytes: 1048576u32,
         structural_alphabet: &__GRAMMAR_PROFILE_ALPHABET,
         structural_digraphs: &__GRAMMAR_PROFILE_DIGRAPHS,
         structural_digraph_mask: [17582233548629213184, 1161928703861587969, 0, 16384],
         structural_quote_classes: &[],
-        active_columns: &[],
         list_rules: &__GRAMMAR_PROFILE_LIST_RULES,
-        keyword_tables: &__GRAMMAR_PROFILE_KEYWORD_TABLES,
         shape_dict: &__GRAMMAR_PROFILE_SHAPE_DICT,
-        branch_priors: &[],
-        dedup_eligible_rules: &__GRAMMAR_PROFILE_DEDUP_RULES,
-        reorder_unroll_visitors: &[],
     };
     /// AW-III.W6.2 — PHF keyword table.
     ///
@@ -29446,22 +29313,13 @@ mod __bbnfbootstrap_emit_impl {
         /// Parse an input string and return a zero-copy
         /// `Parsed<'_, Self>` that borrows the input directly.
         ///
-        /// AW-III.W4.d: `parse()` dispatches through the
-        /// per-grammar specialised walker emitted by W4.b. The
-        /// inlined arms cover every `DtaState` variant; the
-        /// cold-path `dispatch_one` survives in `bbnf-tape`
-        /// only for the AX replay subsystem and walker-arm
-        /// regression tests. The hot path here:
+        /// AX.W0b: `parse()` routes through the shape
+        /// dispatcher. The hot path here:
         ///
-        /// 1. Allocate a sized `TapeBuilder` + `PayloadStream`.
-        /// 2. Call the emitted `dta_run_<grammar>` directly,
-        ///    handing it the builder's `columns_mut` /
-        ///    `frame_depth_mut` references so the inlined arms
-        ///    write structurally + frame-depth inline.
-        /// 3. Drain the PSI stream into typed payload columns.
-        /// 4. Finalise via `TapeBuilder::finish` — the
-        ///    inline-frame-depth path skips
-        ///    `derive_frame_depth` reconstruction.
+        /// 1. Allocate a sized `TapeBuilder`.
+        /// 2. Call the shape dispatcher, which decomposes into
+        ///    per-shape bodies inlined at the call site.
+        /// 3. Finalise via `TapeBuilder::finish`.
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<

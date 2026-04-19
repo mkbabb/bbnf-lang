@@ -39,7 +39,7 @@ pub use payload::{
     PayloadField, PayloadLayout, LARGE_PAYLOAD_MAX, MAX_PAYLOAD_BYTES,
 };
 pub use prefix::factor_common_prefixes;
-pub use profile::{BranchPriorIr, GrammarProfile, KeywordTableIr, ShapeEntryIr};
+pub use profile::{GrammarProfile, ShapeEntryIr};
 pub use sets::{
     compute_first_sets, compute_follow_sets, compute_push_fingerprint, compute_rule_deps,
     compute_scc, factor_regex_with_lookahead, generate_dispatch_tables, sort_alt_branches,
@@ -66,10 +66,6 @@ pub use recognizers::mine_recognizers;
 pub use recognizers::operator_chain::{
     collect_operator_chains, OperatorArity, OperatorChainEntry, OperatorChainFacts,
     OperatorChainRule,
-};
-pub use recognizers::state_visit_frequency::{
-    compute_state_visit_frequency, partition_hot_cold, requires_hot_cold_split, top_hot_states,
-    HOT_BUDGET, MAX_PROPAGATION_ITERS, REPEAT_BODY_MULTIPLIER, SHUNTING_YARD_MULTIPLIER,
 };
 pub use recognizers::visitor::{mine_visitors, VisitorColumn, VisitorDescriptor, VisitorReduce};
 pub use regex_info::compute_regex_info;

@@ -68,75 +68,22 @@ pub use columns::{
 };
 pub use cursor::{ChildIter, ColumnRank, ShapeRefChildIter, ShapeRefSyntheticChild, TapeCursor};
 pub use dedup::{columns_range_eq, push_compound_referring, BloomDedup, N_WORDS};
-// AW-III.W4.c — driver hot/cold split.
-//
-// Hot path: per-grammar `dta_run_<grammar>` emitted by W4.b's
-// `emit_specialised_walker` pass; the per-grammar `parse()` calls
-// the emitted function directly.
-//
-// Cold path: [`dta_run_cold`] is the dispatch_one + walk-table loop
-// preserved verbatim for the AX replay subsystem and walker-arm
-// regression tests. Helpers ([`emit_leaf`], [`emit_leaf_with_payload`],
-// [`close_compound`], [`advance_or_pop_with`], [`frame_to_tape_kind`],
-// etc.) are re-exported so the emitted walker can call them as
-// inlined helpers. AW-III.W5.c: `reserve_compound` helper deleted;
-// compounds emit via [`Columns::push_compound_fused`] directly.
+// AX.W0b.A — tape-emission helper re-exports. Post-W0b the walker
+// interpreter retires; shape emitters are the sole consumers of
+// these helpers (leaf emission, compound close, payload staging,
+// whitespace skip, Pratt-operator lookup).
 pub use driver::{
-    advance_or_pop_with, advance_seq_fast, close_compound, dispatch_one,
-    dta_run_cold, emit_leaf, emit_leaf_with_payload, emit_reducer_compound,
-    first_ws_pattern, frame_at, frame_to_tape_kind, handle_repeat_failure,
-    handle_repeat_failure_bounded, lookup_precedence, pop_and_release,
-    saturating_u16, stack_top, stage_literal_payload_in_arena,
-    trim_ascii_ws, trim_with_pattern, try_branch, Cursor, DtaError, Frame,
-    FrameStack, FrameStackProbeSnapshot, FrameStackSavepoint, IterSavepoint,
-    OpStackEntry, RepeatAbsorbResult, StepResult,
-    COUNTER_INLINE_SLOTS, STACK_INLINE_DEPTH,
+    close_compound, emit_leaf, emit_leaf_with_payload, emit_reducer_compound,
+    first_ws_pattern, lookup_precedence, saturating_u16,
+    stage_literal_payload_in_arena, trim_ascii_ws, trim_with_pattern, DtaError,
 };
-
-// AW-IV.W4.4 — document-parallel fork substrate.
-//
-// `WalkerFn` + `dta_run_parallel` + `rayon_num_threads` are always
-// exported — `dta_run_parallel` has a rayon-feature-gated body and a
-// single-thread fallback when rayon is disabled. This keeps the
-// emitted `parse()` entry compilable regardless of the tape crate's
-// feature-flag state; when rayon is off, the fallback forwards to
-// the single-thread walker so the parallel branch collapses to the
-// sequential path. The emitter's break-even gate + worker-count
-// clamp do the same thing at runtime when `rayon_num_threads()`
-// returns 1.
-pub use driver::{dta_run_parallel, WalkerFn};
-
-/// AW-IV.W4.4 — rayon worker-count accessor for the emitted parse()
-/// entry.
-///
-/// The emitted `parse()` caps the parallel fork at 4 workers per the
-/// canonical AW-IV.W4.4 bench gate (tailwind.css 4c sub-linear-to-
-/// linear scaling); this accessor returns `rayon::current_num_threads()`
-/// when the feature is enabled and `1` when it isn't (the emitter's
-/// break-even gate + worker-count clamp both collapse to the single-
-/// thread path on `1`).
-#[inline]
-pub fn rayon_num_threads() -> usize {
-    #[cfg(feature = "rayon")]
-    {
-        ::rayon::current_num_threads()
-    }
-    #[cfg(not(feature = "rayon"))]
-    {
-        1
-    }
-}
-#[cfg(feature = "dta-replay")]
-pub use driver::{dta_run_with_replay, DtaSnapshot};
 pub use dta::{
     DtaAssociativity, DtaCounterOptional, DtaDiagnostic, DtaFrameKind, DtaPrecedenceEntry,
     DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable, LiteralPayload, SeqPromote,
 };
 pub use finaliser::{derive_frame_depth, finalise, STACK_DEPTH_HINT};
 pub use kind::TapeKind;
-pub use profile::{
-    BranchPrior, ColumnId, GrammarProfile, KeywordTable, RuleId, ShapeEntry, VisitorId,
-};
+pub use profile::{GrammarProfile, RuleId, ShapeEntry};
 pub use psi::{PayloadJob, PayloadKind, PayloadStream};
 pub use shape_dict::{BbnfShapeEntry, BbnfShapeKind};
 pub use stage1::StructuralIndex;

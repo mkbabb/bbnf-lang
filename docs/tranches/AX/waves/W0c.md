@@ -9,10 +9,11 @@
 1. Strike Lever 4 `push_compound_fused_v32` from AW-V.md (§§Novel-levers table, wave-schedule references).
 2. Strike "17-digit NEON lever" from AW-V.md projected-performance table.
 3. Rewrite §Invariants.3 (drop cold-path replay hedge — the interpreter is gone, AX handles replay differently via AY).
-4. Rewrite §Wave-schedule W5/W6 references to remove walker mentions.
+4. Rewrite §Wave-schedule W5/W6 references to remove walker mentions; reframe walker role as historical scaffold retired in W0a/W0b — AST-level `*_parity.rs` semantic harnesses are the forward correctness oracle per AX invariant 20.
 5. Rewrite §Delete-manifest to point to `docs/tranches/AW/audit/{dead-code-manifest,psi-and-dead-substrate,full-codebase-prune}.md`.
 6. Rewrite §Successor-chain: `AW-V → AX (RD reckoning) → AY (replay + JIT)`. No AW-VI.
 7. Retire "compile DTA into hot-path code" branding throughout. The thesis becomes *"fn-per-rule over shape templates; DTA-era IR facts feed the shape emitter; the scaffold came down as the consumer emerged."*
+8. Add a §Pivot subsection documenting the W0a.2.h shape-emission-authoritative pivot. Cite `docs/benchmarks/post-AX-W0a2g-progress.md` §Remaining-blockers (four deferred walker-parity deltas that motivated the pivot) + `docs/tranches/AX/audit/R4-plan-redress.md` (retrospective + invariant 20). The subsection is ≤ 30 lines; positions walker-parity chasing as a category-error the AW-V arc inherited, not a failure of the shape emitter itself.
 
 ## File bounds
 

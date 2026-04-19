@@ -38,8 +38,9 @@ Six propositions:
 15. **Small-input amortisation documented at plan time.** Sheets parse entries (505 B – 1.8 KB) cannot meet post-AU on SIMD-amortising levers; their path is W0a routing.
 16. **Predicate-widening requires re-bench of downstream gates.** A wave widening a classification predicate runs the full bench matrix at commit time.
 17. **"Architectural transposition complete; throughput in next wave" is not a closeable wave.**
-18. **No stubs, no shims, no placeholder surfaces.** Every Value API variant ships field-complete on day one of its wave. No `todo!()` arms, no `_` variants placeholdered for later, no `#[allow(dead_code)]` on struct fields awaiting a populator.
+18. **No stubs, no shims, no placeholder surfaces.** Every Value API variant ships field-complete on day one of its wave. No `todo!()` arms, no `_` variants placeholdered for later, no `#[allow(dead_code)]` on struct fields awaiting a populator. Shape-emission output is likewise field-complete — no emitted parse fn emits a placeholder compound awaiting walker-parity later; the shape emitter decides the tape shape, ships it, and downstream consumers project from it.
 19. **Per-wave spec documents.** Each wave carries its own `docs/tranches/AX/waves/W<N>.md` spec. The AX.md parent is the index; the spec documents are the orchestrator's dispatch inputs.
+20. **Tape shape is shape-emission-authoritative.** Downstream correctness is asserted by AST-level `*_parity.rs` harnesses (JSON/CSS/Sheets/BBNF against sonic-rs / lightningcss / simdjson-OnDemand + self-parity), not by record-count or column-layout equivalence against the walker. Walker tape is a historical scaffold retired in W0b; the shape emitter's own output is the one source of truth for `TapeCursor` + `Root::View` consumers. Per W0a.2.h pivot; diag `docs/benchmarks/post-AX-W0a2g-progress.md` §Remaining-blockers + audit `docs/tranches/AX/audit/R4-plan-redress.md`.
 
 ## AX operational posture
 
@@ -50,12 +51,13 @@ Six propositions:
 
 ## Wave summary
 
-Eighteen waves. Each row links to its spec document. Block A is correctness + API (W0a–W3); Block B is optimizations (W4–W14); W15 is FINAL.
+Nineteen waves. Each row links to its spec document. Block A is correctness + API (W0a–W3); Block B is optimizations (W4–W14); W15 is FINAL.
 
 | Wave | Spec | Headline | Opens after |
 |------|------|----------|-------------|
-| **W0a** | [waves/W0a.md](waves/W0a.md) | Gate repair + non-Alt-rooted `parse()` routing + `gate_predicate_wire_contract.rs` | AW-V.W6 |
-| **W0b** | [waves/W0b.md](waves/W0b.md) | Interpreter deletion + substrate-without-consumer purge + crate renames | W0a |
+| **W0a** | [waves/W0a.md](waves/W0a.md) | Gate repair + non-Alt-rooted `parse()` routing + `gate_predicate_wire_contract.rs` (closes with W0a.2.h shape-emission pivot) | AW-V.W6 |
+| **W0a.close** | *(authoring deferred to restart — see `audit/R4-plan-redress.md` §P6)* | Pre-W0b 17-entry bench baseline (`docs/benchmarks/post-AX-W0a-close.json`) — attribution anchor for every downstream wave | W0a |
+| **W0b** | [waves/W0b.md](waves/W0b.md) | Interpreter deletion + substrate-without-consumer purge + crate renames; `tape_parity_*.rs` retire (walker scaffold; semantic `*_parity.rs` survive) | W0a.close |
 | **W0c** | [waves/W0c.md](waves/W0c.md) | AW-V.md rewrite in RD language | W0b |
 | **W1** | [waves/W1.md](waves/W1.md) | Value API + hybrid tape + named_types BINDINGS widening (L8) | W0c |
 | **W2** | [waves/W2.md](waves/W2.md) | Parity harnesses CI-gated (5 comparators) | W1 |

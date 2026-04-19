@@ -1,8 +1,8 @@
 # AX.W0b — Interpreter Deletion + Substrate-Without-Consumer Purge + Crate Renames
 
-**Opens after**: W0a close
+**Opens after**: W0a close (inclusive of W0a.2.h shape-emission pivot + W0a.close bench baseline)
 **Agents**: 4 parallel (deletion, emit/ purge, renames, tests)
-**Hard gate**: `nm` + `grep` zero DTA symbols; `cargo test --workspace` green; bootstrap idempotent; generated.rs shrinks ~57K lines; ~78,500 LOC total reclaim.
+**Hard gate**: `nm` + `grep` zero DTA symbols; `cargo test --workspace` green; bootstrap idempotent; generated.rs shrinks ~57K lines; ~78,500 LOC total reclaim; `tape_parity_*.rs` walker-parity harnesses retire (semantic `*_parity.rs` AST-level harnesses survive — per invariant 20 pivot).
 
 ## Scope
 
@@ -11,7 +11,7 @@ Five categories of deletion, all atomic to this wave per the AW documentation tr
 1. **DTA interpreter machinery** (~12,000 LOC source + ~57,481 LOC generated.rs walker output).
 2. **Substrate-without-consumer purge** (~2,500 LOC): `tape::psi`, `simd-scan::emit/*`, 7 dead `GrammarProfile` slots, `bbnf-tape-codegen` entire crate, Lever 4, `state_visit_frequency` miner.
 3. **Deprecated code** (~20 LOC): `csp_strategy` `#[deprecated]` aliases + `#[allow(deprecated)]` suppressor.
-4. **DTA-coupled test suites** (~3,900 LOC): walker_arms, aq5_regression, driver_dual_cursor, dta_walker_codegen, dta_counter_states, dta_shunting_yard, dta_diagnostic_replay, aw3_w1_payload_lift, aw_ii_w5b_minus, aw_ii_w2_binary_factor, aw3_w1_walker_trace, aw5_w13_substrate (Lever 4 section only).
+4. **DTA-coupled test suites** (~3,900 LOC): walker_arms, aq5_regression, driver_dual_cursor, dta_walker_codegen, dta_counter_states, dta_shunting_yard, dta_diagnostic_replay, aw3_w1_payload_lift, aw_ii_w5b_minus, aw_ii_w2_binary_factor, aw3_w1_walker_trace, aw5_w13_substrate (Lever 4 section only). **Plus `tape_parity_*.rs` (6 per-grammar binaries: `tape_parity_bbnf`, `tape_parity_bnf`, `tape_parity_css_l4`, `tape_parity_ebnf`, `tape_parity_json`, `tape_parity_sheets`) + `tape_parity_common/mod.rs`** — walker-parity oracles retired per invariant 20; AST-level `*_parity.rs` (bbnf_ast_parity, json_value_parity, sheets_expr_parity, css_l4_parity, sonic_rs_parity, lightningcss_parity) survive and migrate to W2 expansion.
 5. **Crate renames**: `bbnf-tape` → `tape`, `bbnf-simd-scan` → `simd-scan`, `bbnf-json-prototype` → `json-prototype`.
 
 ## File bounds
@@ -98,6 +98,7 @@ Run `cargo test --workspace`, `cargo test --workspace --release`, `cargo bench -
 7. Workspace `Cargo.toml` lists `tape`, `simd-scan`, `json-prototype` (no `bbnf-` prefix on workspace-local crates).
 8. All `use bbnf_tape::`, `use bbnf_simd_scan::`, `use bbnf_json_prototype::` migrated.
 9. `cargo check --workspace` exit 0.
+10. `tape_parity_*.rs` (6 binaries) + `tape_parity_common/mod.rs` deleted; `ls crates/core/tests/ | grep '^tape_parity'` returns zero. Semantic `*_parity.rs` harnesses (`bbnf_ast_parity`, `json_value_parity`, `sheets_expr_parity`, `css_l4_parity`, `sonic_rs_parity`, `lightningcss_parity`, `bbnf_parity`, `sheets_parity`, `json_parity`) remain green — proof that correctness asserts through AST-level semantic projection, not walker record-count equivalence (invariant 20).
 
 ## Verification artefacts
 

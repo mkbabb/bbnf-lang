@@ -148,4 +148,75 @@ target/ now symlinks to main target/ so parallel worktree builds
 share artefacts; `CARGO_BUILD_JOBS=4` policy in subsequent agent
 briefings.
 
+## 2026-04-19 — W0a.2.h partial close + research wave + restart preparation
+
+W0a.2.h landed four surgical emitter bug fixes (commit `3feb4999`) +
+probe (`7464df6b`) + halt diag (`3328ff6c`):
+
+- Inline Seq Alt-branches with Refs — `emit_structural_branch_tape`
+  replaces dead `return Err(())` stubs.
+- OptionalWhitespace trivia preservation — `unwrap_trivia` no longer
+  strips OW before OW-arm match.
+- AltDispatch Seq branches — Ref-led emission fixed.
+- Keyword Alt arm — admits Seq branches.
+- Flat `Repeat { lo=0, hi=1 }` — iter rewind on failure.
+
+Admission-widening commit `29bfd055` intentionally NOT cherry-picked.
+Master keeps the narrow predicate; the four emitter fixes activate
+once admission widens. Cross-scope blocker documented at
+`docs/benchmarks/post-AX-W0a2h-progress.md §Halt rationale`:
+
+- `grammar/host.rs::walk_tape` depends on walker-shaped Rule compound
+  with variant_idx stamping.
+- `lower/expression.rs::collect_sub_variants_walk` and `graph/deps.rs`
+  Pratt detector key on those sub-variant identities.
+- Shape-emission tape collapses those identities; cycle-2 regen
+  dropped 22 → 0 Pratt emission sites.
+
+## 2026-04-19 — Research wave (4 parallel agents, audit-only)
+
+Orchestrator dispatched four read-only research agents to audit the
+last ten sessions and redress plan + instructions + infra for the
+fresh-context restart. All four produced artefacts under
+`docs/tranches/AX/audit/`:
+
+- R1 (`d0a7987c`) — waste-pattern archaeology. Documents 14
+  bootstrap regens, 4 independent Ref probes, 4 verbatim predicate
+  tables, 26 GB OOM. 70% of W0a.2 scope-reveals were walker-parity
+  chasing the pivot retires.
+- R2 (`cd443f75`) — edicts redress. Seven surgical edits to
+  `README.md` + `SPEC.md`: escape-clause consolidated, transitional-
+  fallback clause added, parallel-probe guidance, memory discipline,
+  worktree `target/` symlink documented, pre-regen vs post-regen
+  evidence distinction. Two proposals deferred:
+  `AGENT_BRIEF_TEMPLATE.md` + walker-parity-oracle edict.
+- R3 (`62d40d90`) — infra speedups. `[profile.ax-iter]` in workspace
+  `Cargo.toml` (–3×RSS on aggregate binaries); `test-tier.sh` /
+  `worktree-status.sh` / `kill-all-rust.sh` scripts;
+  `seed-worktree.sh` owns target symlink; `.cargo/config.toml` lld
+  comment fixed.
+- R4 (`68f604ad`) — plan redress. AX.md invariant 20 added (shape-
+  emission authority); invariant 18 augmented; W0b deletion list
+  adds `tape_parity_*.rs` (6 files) + `tape_parity_common/`; W0c
+  scope augmented; W2 scope shrinks (no new shape-parity harness).
+  New `W0a.close` bench-baseline wave proposed.
+
+Synthesis at `docs/tranches/AX/audit/SYNTHESIS.md` consolidates the
+four reports + articulates the W0a.2.i restart plan (3 parallel
+agents on `host.rs`, `lower/expression.rs` + `graph/deps.rs`, and
+admission-widen + regen).
+
+## Restart handoff
+
+Fresh-context orchestrator reads:
+1. `docs/tranches/AX/audit/SYNTHESIS.md` first.
+2. `docs/tranches/AX/AX.md` (invariants 1–20, wave summary).
+3. This PROGRESS.md for state.
+4. `docs/benchmarks/post-AX-W0a2h-progress.md` §Halt rationale for
+   cross-scope blocker concretes.
+
+Then dispatches W0a.2.i per SYNTHESIS §"The next wave".
+
+---
+
 ## 2026-04-18 — W0a.2.a + W0a.2.b dispatch

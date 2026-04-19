@@ -71458,7 +71458,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -71619,7 +71629,10 @@ mod __bbnfbootstrap_emit_impl {
     ///    `mark_children` index) so the cursor's pre-order walk
     ///    surfaces the reduced tree root as the compound's first
     ///    child.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -71795,7 +71808,10 @@ mod __bbnfbootstrap_emit_impl {
     ///    `mark_children` index) so the cursor's pre-order walk
     ///    surfaces the reduced tree root as the compound's first
     ///    child.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -71942,7 +71958,10 @@ mod __bbnfbootstrap_emit_impl {
     /// Head (Literal / Regex / Ref) + optional `(` + body arg
     /// positions (dispatched through the grammar's value-
     /// dispatcher) + `)` literal.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale (see `flat.rs`).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -72137,7 +72156,10 @@ mod __bbnfbootstrap_emit_impl {
     /// Each branch is a classified-Ref, a Literal, a Regex, or a
     /// leaf-only Seq (prefix-tree factoring). No recursion through
     /// `__value` — per-Ref routing emits direct shape-fn calls.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -72862,7 +72884,10 @@ mod __bbnfbootstrap_emit_impl {
     /// Each branch is a classified-Ref, a Literal, a Regex, or a
     /// leaf-only Seq (prefix-tree factoring). No recursion through
     /// `__value` — per-Ref routing emits direct shape-fn calls.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -73046,7 +73071,10 @@ mod __bbnfbootstrap_emit_impl {
     ///    `mark_children` index) so the cursor's pre-order walk
     ///    surfaces the reduced tree root as the compound's first
     ///    child.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -73222,7 +73250,10 @@ mod __bbnfbootstrap_emit_impl {
     ///    `mark_children` index) so the cursor's pre-order walk
     ///    surfaces the reduced tree root as the compound's first
     ///    child.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -73398,7 +73429,10 @@ mod __bbnfbootstrap_emit_impl {
     ///    `mark_children` index) so the cursor's pre-order walk
     ///    surfaces the reduced tree root as the compound's first
     ///    child.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -73574,7 +73608,10 @@ mod __bbnfbootstrap_emit_impl {
     ///    `mark_children` index) so the cursor's pre-order walk
     ///    surfaces the reduced tree root as the compound's first
     ///    child.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -73750,7 +73787,10 @@ mod __bbnfbootstrap_emit_impl {
     ///    `mark_children` index) so the cursor's pre-order walk
     ///    surfaces the reduced tree root as the compound's first
     ///    child.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -73898,7 +73938,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -74065,7 +74115,11 @@ mod __bbnfbootstrap_emit_impl {
     /// to the chosen branch's shape fn, return that shape fn's
     /// offset unchanged. No outer compound emission; the
     /// branch's own shape fn owns the tape record.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; see `flat.rs` emission for the
+    /// `#[inline]` downgrade rationale (LLVM inline-cycle
+    /// collapse vs hard-requirement inliner abort).
+    #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
     pub fn parse_wrap_BbnfBootstrap_value_expr(
         input: &[u8],
@@ -74117,7 +74171,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -74178,7 +74242,10 @@ mod __bbnfbootstrap_emit_impl {
     /// Each branch is a classified-Ref, a Literal, a Regex, or a
     /// leaf-only Seq (prefix-tree factoring). No recursion through
     /// `__value` — per-Ref routing emits direct shape-fn calls.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -74475,7 +74542,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -74572,7 +74649,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -74674,7 +74761,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -74750,7 +74847,10 @@ mod __bbnfbootstrap_emit_impl {
     /// AX.W0a.2.b — per-grammar Scalar-shape parse function
     /// (transparent-Ref body). Delegates to the target's
     /// shape fn.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound (delegates via
+    /// `emit_ref_call_tape`); plain `#[inline]`.
+    #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_scalar_BbnfBootstrap_lhs(
         input: &[u8],
@@ -74771,7 +74871,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -74908,7 +75018,10 @@ mod __bbnfbootstrap_emit_impl {
     /// Each branch is a classified-Ref, a Literal, a Regex, or a
     /// leaf-only Seq (prefix-tree factoring). No recursion through
     /// `__value` — per-Ref routing emits direct shape-fn calls.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -75321,7 +75434,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -75448,7 +75571,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -75694,7 +75827,10 @@ mod __bbnfbootstrap_emit_impl {
     ///    `mark_children` index) so the cursor's pre-order walk
     ///    surfaces the reduced tree root as the compound's first
     ///    child.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -75842,7 +75978,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -75980,7 +76126,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -76118,7 +76274,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -76287,7 +76453,11 @@ mod __bbnfbootstrap_emit_impl {
     /// to the chosen branch's shape fn, return that shape fn's
     /// offset unchanged. No outer compound emission; the
     /// branch's own shape fn owns the tape record.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; see `flat.rs` emission for the
+    /// `#[inline]` downgrade rationale (LLVM inline-cycle
+    /// collapse vs hard-requirement inliner abort).
+    #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
     pub fn parse_wrap_BbnfBootstrap_rhs(
         input: &[u8],
@@ -76339,7 +76509,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -76466,7 +76646,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -76563,7 +76753,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -76731,7 +76931,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -76942,7 +77152,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -77095,7 +77315,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -77226,7 +77456,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -77474,7 +77714,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -77617,7 +77867,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -77760,7 +78020,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -77953,7 +78223,17 @@ mod __bbnfbootstrap_emit_impl {
     /// records. Ref / Regex / Alt positions recurse through the
     /// grammar's value-position dispatcher (the walker's
     /// authoritative state path).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
@@ -78175,7 +78455,11 @@ mod __bbnfbootstrap_emit_impl {
     /// to the chosen branch's shape fn, return that shape fn's
     /// offset unchanged. No outer compound emission; the
     /// branch's own shape fn owns the tape record.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; see `flat.rs` emission for the
+    /// `#[inline]` downgrade rationale (LLVM inline-cycle
+    /// collapse vs hard-requirement inliner abort).
+    #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
     pub fn parse_wrap_BbnfBootstrap_grammar_item(
         input: &[u8],
@@ -78253,7 +78537,9 @@ mod __bbnfbootstrap_emit_impl {
     /// walker's direct lowering of a `Repeat { .. }` body
     /// where the rule's variant stamp lands on the Rule
     /// compound itself (no outer Seq wrapper).
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_array_BbnfBootstrap_grammar(
         input: &[u8],
@@ -78322,7 +78608,10 @@ mod __bbnfbootstrap_emit_impl {
     /// `value` emits no compound either, and the target rule's Ref
     /// overwrites any `pending_variant_idx` en route, so the chosen
     /// rule's own compound carries the final root variant.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_BbnfBootstrap_grammar(
         input: &[u8],
@@ -78335,7 +78624,9 @@ mod __bbnfbootstrap_emit_impl {
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
     /// the grammar root and from Object / Array compound bodies.
-    #[inline(always)]
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_BbnfBootstrap_grammar__value(
         input: &[u8],

@@ -145,12 +145,21 @@ pub fn emit_parse_keyword(
             // committing to its call.
             use std::collections::BTreeMap;
 
-            // Collect `(leading_literal_bytes, branch_ref_or_literal)`
-            // for each branch. Literal-led branches carry `None` for
-            // the target; Ref-led branches carry `Some(rid)` so the
-            // emission dispatches to the target's shape fn via
-            // `emit_ref_call_tape`.
-            let per_branch: Vec<(Vec<u8>, Option<bbnf_ir::RuleId>, usize, &bbnf_ir::AltBranch)> =
+            // BranchKind selects emission strategy per branch:
+            //   Literal  — byte-match + Literal leaf push.
+            //   Ref(rid) — prefix-check + delegate to target shape fn.
+            //   Seq      — structural per-position emission + one
+            //              Span leaf covering the whole match. BBNF
+            //              `literal = "\"" , Regex , "\"" | ...`
+            //              canonical case — Keyword-classified, each
+            //              branch is a Seq with a leading literal plus
+            //              inner positions.
+            enum BranchKind<'a> {
+                Literal,
+                Ref(bbnf_ir::RuleId),
+                Seq(&'a IrNode),
+            }
+            let per_branch: Vec<(Vec<u8>, BranchKind<'_>, usize, &bbnf_ir::AltBranch)> =
                 branches
                     .iter()
                     .enumerate()
@@ -162,14 +171,23 @@ pub fn emit_parse_keyword(
                                 if bytes.is_empty() {
                                     return None;
                                 }
-                                Some((bytes, None, branch_idx, branch))
+                                Some((bytes, BranchKind::Literal, branch_idx, branch))
                             }
                             IrNode::Ref(rid) => {
                                 let bytes = leading_literal_bytes(body, ir)?;
                                 if bytes.is_empty() {
                                     return None;
                                 }
-                                Some((bytes, Some(*rid), branch_idx, branch))
+                                Some((bytes, BranchKind::Ref(*rid), branch_idx, branch))
+                            }
+                            IrNode::Seq(_)
+                            | IrNode::Next(_, _)
+                            | IrNode::Skip(_, _) => {
+                                let bytes = leading_literal_bytes(body, ir)?;
+                                if bytes.is_empty() {
+                                    return None;
+                                }
+                                Some((bytes, BranchKind::Seq(body), branch_idx, branch))
                             }
                             _ => None,
                         }
@@ -178,7 +196,7 @@ pub fn emit_parse_keyword(
 
             // Group per-branch entries by their first byte; each group
             // becomes one `#first => { ... }` match arm.
-            let mut by_first: BTreeMap<u8, Vec<&(Vec<u8>, Option<bbnf_ir::RuleId>, usize, &bbnf_ir::AltBranch)>> =
+            let mut by_first: BTreeMap<u8, Vec<&(Vec<u8>, BranchKind<'_>, usize, &bbnf_ir::AltBranch)>> =
                 BTreeMap::new();
             for entry in &per_branch {
                 by_first.entry(entry.0[0]).or_default().push(entry);
@@ -193,23 +211,19 @@ pub fn emit_parse_keyword(
                     // per_branch build order).
                     let tries: Vec<TokenStream> = group
                         .iter()
-                        .map(|(bytes, target_ref, branch_idx, branch)| {
+                        .map(|(bytes, kind, branch_idx, branch)| {
                             let len = bytes.len();
                             let byte_lits: Vec<TokenStream> =
                                 bytes.iter().map(|b| {
                                     let lit = *b;
                                     quote! { #lit }
                                 }).collect();
-                            if let Some(target_rid) = target_ref {
-                                // Ref branch — prefix check then delegate to the
-                                // target's shape fn. `emit_ref_call_tape`'s stream
-                                // already assumes a classified target; admission
-                                // guarantees that. The prefix check fires only
-                                // when the ENTIRE leading literal matches, so the
-                                // target's shape fn sees `*p` pointed at its own
-                                // recognizable prefix.
-                                let ref_call = emit_ref_call_tape(grammar_suffix, *target_rid, ir)
-                                    .unwrap_or_else(|| quote! {
+                            match kind {
+                                BranchKind::Ref(target_rid) => {
+                                    // Ref branch — prefix check then delegate.
+                                    let ref_call = emit_ref_call_tape(
+                                        grammar_suffix, *target_rid, ir,
+                                    ).unwrap_or_else(|| quote! {
                                         ::core::result::Result::Err(
                                             ::bbnf::runtime::tape::DtaError::Syntax {
                                                 offset: *p as u32,
@@ -220,44 +234,102 @@ pub fn emit_parse_keyword(
                                             },
                                         )
                                     });
-                                let _ = (branch_idx, branch);
-                                quote! {
-                                    if input.len() >= *p + #len
-                                        && input[*p..*p + #len] == [#(#byte_lits),*]
-                                    {
-                                        return (#ref_call);
+                                    let _ = (branch_idx, branch);
+                                    quote! {
+                                        if input.len() >= *p + #len
+                                            && input[*p..*p + #len] == [#(#byte_lits),*]
+                                        {
+                                            return (#ref_call);
+                                        }
                                     }
                                 }
-                            } else {
-                                // Literal branch — emit the legacy
-                                // byte-sequence-match + Literal leaf
-                                // push with per-branch payload.
-                                let branch_payload =
-                                    alt_branch_payload(rule, branch, *branch_idx, ir);
-                                // AW-V.W3-fix (cursor parity): walker
-                                // emits meta_idx=0 for every leaf —
-                                // `push_leaf_fused` packs `kind_meta =
-                                // kind & 0x0F` with no meta_idx slot,
-                                // and the Alt frame's `cursor` (branch
-                                // index) is stamped into the COMPOUND's
-                                // `flags` by close_compound, not into
-                                // leaf meta_idx.
-                                quote! {
-                                    if input.len() >= *p + #len
-                                        && input[*p..*p + #len] == [#(#byte_lits),*]
-                                    {
-                                        let at = *p;
-                                        let end = at + #len;
-                                        *p = end;
-                                        let off = builder.push_leaf_with(
-                                            ::bbnf::runtime::tape::TapeKind::Span,
-                                            at as u32,
-                                            end as u32,
-                                            #variant_idx,
-                                            0u8,
-                                            #branch_payload,
+                                BranchKind::Literal => {
+                                    // Literal branch — byte-match + Literal leaf.
+                                    let branch_payload =
+                                        alt_branch_payload(rule, branch, *branch_idx, ir);
+                                    quote! {
+                                        if input.len() >= *p + #len
+                                            && input[*p..*p + #len] == [#(#byte_lits),*]
+                                        {
+                                            let at = *p;
+                                            let end = at + #len;
+                                            *p = end;
+                                            let off = builder.push_leaf_with(
+                                                ::bbnf::runtime::tape::TapeKind::Span,
+                                                at as u32,
+                                                end as u32,
+                                                #variant_idx,
+                                                0u8,
+                                                #branch_payload,
+                                            );
+                                            return Ok(off);
+                                        }
+                                    }
+                                }
+                                BranchKind::Seq(seq_body) => {
+                                    // Seq branch — structural per-position
+                                    // emission. On prefix match, run each
+                                    // position (Literal → byte-match; Regex →
+                                    // adapter scan; Ref → delegate; OW →
+                                    // skip_space; etc.) inside an attempt
+                                    // closure. On success, push ONE Span leaf
+                                    // covering the whole matched range
+                                    // (`literal` rule's contract — emit one
+                                    // record per matched literal, not one
+                                    // per position).
+                                    let inner_emit = super::inline::
+                                        emit_seq_branch_structural_tape(
+                                            seq_body,
+                                            &support_mod,
+                                            grammar_suffix,
+                                            ir,
                                         );
-                                        return Ok(off);
+                                    quote! {
+                                        if input.len() >= *p + #len
+                                            && input[*p..*p + #len] == [#(#byte_lits),*]
+                                        {
+                                            let span_lo = *p as u32;
+                                            let seq_save_cols =
+                                                builder.columns_mut().len();
+                                            let seq_attempt:
+                                                ::core::result::Result<(), ()> =
+                                                (|| {
+                                                    #inner_emit
+                                                    Ok(())
+                                                })();
+                                            if seq_attempt.is_err() {
+                                                *p = span_lo as usize;
+                                                builder.columns_mut()
+                                                    .truncate(seq_save_cols);
+                                                return Err(
+                                                    ::bbnf::runtime::tape::DtaError::Syntax {
+                                                        offset: span_lo,
+                                                        failing_state:
+                                                            ::bbnf::runtime::tape::DtaStateId::NONE,
+                                                        failing_rule:
+                                                            ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                                    },
+                                                );
+                                            }
+                                            let span_hi = *p as u32;
+                                            // Replace the structural records
+                                            // pushed by the attempt with a
+                                            // single Span leaf — mirrors the
+                                            // walker's `Keyword` state that
+                                            // emits one leaf per matched
+                                            // literal.
+                                            builder.columns_mut()
+                                                .truncate(seq_save_cols);
+                                            let off = builder.push_leaf_with(
+                                                ::bbnf::runtime::tape::TapeKind::Span,
+                                                span_lo,
+                                                span_hi,
+                                                #variant_idx,
+                                                0u8,
+                                                ::bbnf::runtime::tape::PayloadData::None,
+                                            );
+                                            return Ok(off);
+                                        }
                                     }
                                 }
                             }

@@ -419,27 +419,41 @@ fn emit_tape_repeat(
     let lo_lit = lo as usize;
 
     if hi == 1 && lo == 0 {
-        // Optional. Emit the inner once; on failure the dispatcher
-        // raises — we don't attempt roll-back because the Flat
-        // emitter's gate is not on the hot path yet (W4.2/W4.3 wires
-        // it). The structural invariant is the `Rule`-wrapped Repeat
-        // compound.
+        // Optional. AX.W0a.2.h — wrap the inner in an attempt so
+        // failure silently rolls back `*p` + tape columns instead
+        // of propagating to the enclosing shape fn. Prior emission
+        // bubbled any inner `Err` through, which breaks `?`-gated
+        // positions like `"|" ?` in BBNF's `alternation` iter
+        // (optional separator) — the failing `|` check aborted the
+        // whole rule. Matches walker's `lo==0` optional semantics.
         let _ = lo_lit;
         quote! {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            #inner_emit
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
-            );
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> =
+                (|| {
+                    #inner_emit
+                    Ok(())
+                })();
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
+                    0,
+                );
+            }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
                 ::bbnf::runtime::tape::TapeKind::Rule,

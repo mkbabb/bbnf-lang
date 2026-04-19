@@ -190,6 +190,7 @@ fn emit_branch_body(
     ir: &GrammarIR,
 ) -> TokenStream {
     let inner = unwrap_trivia(node);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     match inner {
         IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
             Some(call) => quote! {
@@ -206,10 +207,58 @@ fn emit_branch_body(
         IrNode::Literal(sid) => emit_literal_attempt(*sid, ir),
         IrNode::Regex(_) => emit_regex_attempt(),
         IrNode::Seq(_) | IrNode::Next(_, _) | IrNode::Skip(_, _) => {
-            emit_seq_attempt(inner, ir)
+            // AX.W0a.2.h — dispatch on Seq content. Pure literal
+            // chains (prefix-tree factored keywords) keep the legacy
+            // `emit_seq_attempt` emission (one Literal leaf covering
+            // the whole match). Seqs with Refs / Regex / nested Alts
+            // delegate to the inline structural emitter, producing
+            // walker-parity records position-by-position.
+            if seq_is_pure_literal_chain(inner) {
+                emit_seq_attempt(inner, ir)
+            } else {
+                let body = super::inline::emit_seq_branch_structural_tape(
+                    inner, &support_mod, grammar_suffix, ir,
+                );
+                quote! {
+                    {
+                        let attempt_p = *p;
+                        let attempt_len = builder.columns_mut().len();
+                        let attempt: ::core::result::Result<(), ()> = (|| {
+                            #body
+                            Ok(())
+                        })();
+                        match attempt {
+                            Ok(_) => break 'try_branches,
+                            Err(_) => {
+                                *p = attempt_p;
+                                builder.columns_mut().truncate(attempt_len);
+                            }
+                        }
+                    }
+                }
+            }
         }
         _ => quote! {},
     }
+}
+
+/// Returns `true` when every flattened position in `seq` is a
+/// `Literal`, `Alt(of Literals)`, `Regex`, or `Epsilon` — the set
+/// [`emit_seq_position`] handles without falling through to
+/// `return Err(())`. Refs, Repeats, Negate, Minus, TokenDispatch
+/// trip the structural path.
+fn seq_is_pure_literal_chain(seq: &IrNode) -> bool {
+    let mut positions: Vec<&IrNode> = Vec::new();
+    flatten(seq, &mut positions);
+    positions.iter().all(|pos| {
+        match unwrap_trivia(pos) {
+            IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
+            IrNode::Alt(branches, _) => branches.iter().all(|b| {
+                matches!(unwrap_trivia(&b.node), IrNode::Literal(_))
+            }),
+            _ => false,
+        }
+    })
 }
 
 /// Literal-branch attempt — byte-match and commit.

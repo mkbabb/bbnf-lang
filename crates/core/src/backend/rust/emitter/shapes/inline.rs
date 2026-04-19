@@ -156,7 +156,7 @@ fn emit_alt_byte_dispatch_tape(
     let mut enumerated: Vec<(Vec<u8>, TokenStream)> = Vec::with_capacity(branches.len());
     for branch in branches {
         let first_bytes = branch_first_bytes(&branch.node, ir);
-        let body = emit_alt_branch_body_tape(&branch.node, grammar_suffix, ir);
+        let body = emit_alt_branch_body_tape(&branch.node, support_mod, grammar_suffix, ir);
         enumerated.push((first_bytes, body));
     }
 
@@ -281,7 +281,7 @@ fn emit_alt_tape(
     let mut enumerated: Vec<(Vec<u8>, TokenStream)> = Vec::with_capacity(branches.len());
     for branch in branches {
         let first_bytes = branch_first_bytes(&branch.node, ir);
-        let body = emit_alt_branch_body_tape(&branch.node, grammar_suffix, ir);
+        let body = emit_alt_branch_body_tape(&branch.node, support_mod, grammar_suffix, ir);
         enumerated.push((first_bytes, body));
     }
 
@@ -366,6 +366,7 @@ fn emit_alt_tape(
 /// back on failure, matching the walker's rollback semantics.
 fn emit_alt_branch_body_tape(
     node: &IrNode,
+    support_mod: &proc_macro2::Ident,
     grammar_suffix: &str,
     ir: &GrammarIR,
 ) -> TokenStream {
@@ -390,9 +391,252 @@ fn emit_alt_branch_body_tape(
         IrNode::Literal(sid) => emit_literal_branch_tape(*sid, ir),
         IrNode::Regex(_) => emit_regex_branch_tape(),
         IrNode::Seq(_) | IrNode::Next(_, _) | IrNode::Skip(_, _) => {
-            emit_seq_branch_tape(inner, ir)
+            // AX.W0a.2.h — Seq Alt-branch emission splits on content.
+            // Pure literal-chain branches (prefix-tree factored keywords)
+            // compress into one `TapeKind::Literal` span. Branches that
+            // contain structural positions (Refs, inline Alts, Regex
+            // scans, nested Seqs, etc.) must emit walker-parity records
+            // position-by-position — this unblocks BBNF's
+            // `import_directive` branch `import_items ?w , "from" ?w ,
+            // import_path`, where both end positions are Refs.
+            if seq_is_pure_literal_chain(inner) {
+                emit_seq_branch_tape(inner, ir)
+            } else {
+                emit_structural_branch_tape(inner, support_mod, grammar_suffix, ir)
+            }
         }
         _ => quote! {},
+    }
+}
+
+/// Returns `true` when every flattened position in `seq` is a
+/// `Literal`, `Alt(of Literals)`, `Regex`, or `Epsilon` — the set
+/// [`emit_seq_position`] handles without falling through to
+/// `return Err(())`. Refs, nested Alts with non-literal branches,
+/// Repeats, Negate, Minus, TokenDispatch all trip the structural
+/// path.
+fn seq_is_pure_literal_chain(seq: &IrNode) -> bool {
+    let mut positions: Vec<&IrNode> = Vec::new();
+    flatten(seq, &mut positions);
+    positions.iter().all(|pos| {
+        match unwrap_trivia(pos) {
+            IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
+            IrNode::Alt(branches, _) => branches.iter().all(|b| {
+                matches!(unwrap_trivia(&b.node), IrNode::Literal(_))
+            }),
+            _ => false,
+        }
+    })
+}
+
+/// Emit a structural Seq Alt-branch attempt — one position per
+/// child, recursing through the standard per-position tape emitter
+/// (`emit_branch_position_core`), with full rollback on failure.
+///
+/// The emission mirrors Flat's `emit_tape_position_core` contract:
+/// each Ref position calls its target's shape fn; each Literal /
+/// Regex / Alt / inline position emits the walker-parity record
+/// stream for that node. Unlike the pure-literal-chain path, the
+/// records are NOT compressed into a single Literal leaf — the
+/// branch's records land directly in the outer Alt compound.
+///
+/// AX.W0a.2.h — must preserve `OptionalWhitespace` trivia between
+/// positions. `flatten()` strips OW wrappers (historical contract
+/// for pure-literal-chain emission); the structural branch instead
+/// descends Seq / Next / Skip / Map wrappers directly, keeping OW
+/// as an `emit_branch_position_core` case so `skip_space` lands
+/// between positions. Without this, `@import { a } from "foo"`'s
+/// branch loses the space between `}` and `from` and rejects.
+fn emit_structural_branch_tape(
+    seq: &IrNode,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let body = emit_branch_position_core(seq, support_mod, grammar_suffix, ir);
+    quote! {
+        {
+            let attempt_p = *p;
+            let attempt_len = builder.columns_mut().len();
+            let attempt: ::core::result::Result<(), ()> = (|| {
+                #body
+                Ok(())
+            })();
+            match attempt {
+                Ok(_) => break 'try_branches,
+                Err(_) => {
+                    *p = attempt_p;
+                    builder.columns_mut().truncate(attempt_len);
+                }
+            }
+        }
+    }
+}
+
+/// AX.W0a.2.h — sibling entry for the Keyword emitter's Seq-branch
+/// arm. Emits the raw structural body of a Seq (per-position tape
+/// emission) without the `break 'try_branches` / attempt wrapper —
+/// the Keyword emitter packages the result under its own success
+/// semantics (replacing inner records with ONE Span leaf).
+pub(super) fn emit_seq_branch_structural_tape(
+    seq: &IrNode,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    emit_branch_position_core(seq, support_mod, grammar_suffix, ir)
+}
+
+/// Emit a single position inside a structural Seq Alt-branch attempt
+/// closure. The closure returns `Err(())` on failure and `Ok(())` on
+/// the terminating position; each per-position emission propagates
+/// failures via `?` → `Err(())` conversion or early `return Err(())`.
+///
+/// Mirrors the walker's per-state lowering for the corresponding
+/// `IrNode`, with rollback handled by the outer attempt wrapper.
+///
+/// AX.W0a.2.h — matches `node` directly (NOT `unwrap_trivia(node)`):
+/// `OptionalWhitespace` must reach its dedicated arm to emit
+/// `skip_space` bookends around the inner position. Stripping OW
+/// here would silently drop the whitespace-between-positions
+/// emission (bug observed on BBNF's `import_directive` structural
+/// branch, where `import_items ?w "from" ?w import_path` lost the
+/// skip_space between `import_items` and `"from"`).
+fn emit_branch_position_core(
+    node: &IrNode,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    match node {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> =
+                bytes.iter().map(|b| quote! { #b }).collect();
+            quote! {
+                let at = *p;
+                let end = at + #len;
+                if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                    return Err(());
+                }
+                *p = end;
+                let _ = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    at as u32,
+                    end as u32,
+                    0,
+                    0,
+                    ::bbnf::runtime::tape::PayloadData::None,
+                );
+            }
+        }
+        IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+            Some(call) => quote! {
+                if (#call).is_err() {
+                    return Err(());
+                }
+            },
+            None => quote! { return Err(()); },
+        },
+        IrNode::Regex(sid) => {
+            let pattern = ir.get_string(*sid).to_string();
+            let regex_scan_ident =
+                regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+            quote! {
+                let span_lo = *p as u32;
+                let Some(match_len) = #regex_scan_ident(#pattern, input, *p) else {
+                    return Err(());
+                };
+                *p += match_len as usize;
+                let span_hi = *p as u32;
+                let _ = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    span_lo,
+                    span_hi,
+                    0,
+                    0,
+                    ::bbnf::runtime::tape::PayloadData::None,
+                );
+            }
+        }
+        IrNode::Epsilon => quote! {},
+        IrNode::Seq(children) => {
+            let inner: Vec<TokenStream> = children
+                .iter()
+                .map(|c| emit_branch_position_core(c, support_mod, grammar_suffix, ir))
+                .collect();
+            quote! { #(#inner)* }
+        }
+        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+            let l = emit_branch_position_core(lhs, support_mod, grammar_suffix, ir);
+            let r = emit_branch_position_core(rhs, support_mod, grammar_suffix, ir);
+            quote! { #l #r }
+        }
+        IrNode::OptionalWhitespace(inner) => {
+            let i = emit_branch_position_core(inner, support_mod, grammar_suffix, ir);
+            quote! {
+                let _ = #support_mod::skip_space(input, p, state);
+                #i
+                let _ = #support_mod::skip_space(input, p, state);
+            }
+        }
+        IrNode::Map { inner, .. } => {
+            emit_branch_position_core(inner, support_mod, grammar_suffix, ir)
+        }
+        IrNode::Repeat { inner, lo, hi } => {
+            let inner_emit =
+                emit_branch_position_core(inner, support_mod, grammar_suffix, ir);
+            let lo_lit = *lo;
+            let hi_is_finite = *hi != u32::MAX;
+            let hi_lit = *hi;
+            let bound_check = if hi_is_finite {
+                quote! {
+                    if iter_count >= #hi_lit as usize {
+                        break;
+                    }
+                }
+            } else {
+                quote! {}
+            };
+            quote! {
+                {
+                    let mut iter_count: usize = 0;
+                    loop {
+                        #bound_check
+                        let iter_p = *p;
+                        let iter_len = builder.columns_mut().len();
+                        let iter_res: ::core::result::Result<(), ()> = (|| {
+                            #inner_emit
+                            Ok(())
+                        })();
+                        if iter_res.is_err() || *p == iter_p {
+                            *p = iter_p;
+                            builder.columns_mut().truncate(iter_len);
+                            break;
+                        }
+                        iter_count += 1;
+                    }
+                    if iter_count < #lo_lit as usize {
+                        return Err(());
+                    }
+                }
+            }
+        }
+        // Negate, Minus, Alt, TokenDispatch — rare inside an Alt
+        // branch's Seq (the grammar usually routes these through
+        // outer rules). Emit a guard-only best-effort so admission
+        // doesn't reject; if the grammar lands on this edge case a
+        // follow-on specialisation pins the body. Today's grammars
+        // (JSON / CSS L4 / Sheets / BBNF / EBNF / BNF /
+        // BbnfBootstrap) route these at rule boundaries.
+        IrNode::Alt(_, _)
+        | IrNode::Negate(_)
+        | IrNode::Minus(_, _)
+        | IrNode::TokenDispatch { .. } => {
+            // Fall through — parent attempt rolls back.
+            quote! { return Err(()); }
+        }
     }
 }
 

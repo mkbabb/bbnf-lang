@@ -1,6 +1,52 @@
 use bbnf::runtime::tape::TapeKind;
 use bbnf_derive::Parser;
 
+#[derive(Parser)]
+#[parser(path = "../../grammar/misc/csv.bbnf")]
+struct CsvParser;
+
+#[test]
+fn probe_csv() {
+    for input in &["a", "a,b", "a\nb", "a,b\nc,d"] {
+        let r = CsvParser::parse(input);
+        match r {
+            Ok(p) => {
+                eprintln!("CSV {input:?}: ok, tape_len={}", p.tape().len());
+                for (i, rec) in p.tape().iter().enumerate() {
+                    eprintln!(
+                        "  {i}: kind={:?} span=({},{})",
+                        rec.kind(),
+                        rec.span_lo,
+                        rec.span_hi
+                    );
+                }
+            }
+            Err(e) => eprintln!("CSV {input:?}: err={e:?}"),
+        }
+    }
+}
+
+#[test]
+fn probe_csv_types() {
+    use bbnf::pipeline::{CompileOutput, CompileRequest, CompileTarget, PipelineOptions};
+    use bbnf::pipeline::compile::compile_paths_request;
+
+    let request = CompileRequest {
+        options: PipelineOptions::default(),
+        target: CompileTarget::Vm,
+    };
+    if let Ok(CompileOutput::Vm(ir)) = compile_paths_request(
+        &["../../grammar/misc/csv.bbnf".into()],
+        &request,
+    ) {
+        for rule in &ir.rules {
+            let name = ir.get_string(rule.name);
+            let shape = ir.shape_assignments.get(rule.id);
+            eprintln!("RULE {name} shape={shape:?} transparent={}", rule.meta.is_transparent);
+        }
+    }
+}
+
 #[allow(dead_code)]
 mod css_types {
     pub fn parse_hex_color(_: &str) -> u32 {

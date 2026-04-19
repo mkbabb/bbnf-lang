@@ -484,16 +484,23 @@ impl<'input> PrattVisitor for TapeVisitor<'input> {
         // walker's tape layout. Reducer compound emission is the
         // emitter's responsibility via `builder.push_compound` at
         // the per-arm reduce point.
+        // AX.W0a.2.k — 1-byte arena payload via the arena-payload API
+        // so the `PAYLOAD_IN_ARENA_BIT` lands and downstream scalar
+        // readers slice `pay_agg` instead of indirecting through a
+        // column rank. `push_leaf_with_arena_frame` assumed a 4-byte
+        // length-prefix convention (JSON-string decode kernel) that
+        // doesn't fit the Pratt op-discriminant shape.
         let arena = self.builder.arena_mut();
         let arena_off = arena.len() as u32;
         arena.push(op);
-        self.builder.push_leaf_with_arena_frame(
+        self.builder.push_leaf_with_arena_payload(
             TapeKind::Span,
             0,
             0,
             0,
             0,
             arena_off,
+            1,
         );
         Ok(())
     }

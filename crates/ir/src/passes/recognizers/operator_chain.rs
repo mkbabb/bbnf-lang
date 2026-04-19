@@ -1,36 +1,58 @@
 //! AW-III.W6.5 — Operator-chain miner: extract per-grammar
-//! operator entries from the `DtaTable`'s lifted
-//! [`crate::passes::recognizers::dta::PrecedenceEntry`] lists for
-//! downstream consumers (Pratt LUT emission).
+//! operator entries for downstream consumers (Pratt LUT emission).
 //!
 //! ## Architectural role
 //!
+//! The miner produces per-Pratt-rule operator-byte tables the Rust-
+//! backend emitter consumes when lowering the per-rule
+//! `PRECEDENCE_LUT_<rule>` constants. The IR fact produced here —
+//! [`OperatorChainEntry`] — carries one entry per operator byte, with
+//! enough context (byte, second_byte, precedence, associativity,
+//! arity, op_rule, op_discriminant) for the emitter to pack a dense
+//! `[u8; 256]` LUT plus a sparse metadata slice per rule.
+//!
+//! ## Pratt-classification authoritativeness (AX.W0a.2.k)
+//!
+//! The miner keys on [`crate::passes::recognizers::shape_dispatch::
+//! ShapeTag::Pratt`] — every rule the shape detector admits as
+//! Pratt-shape contributes its operator set. This decouples the LUT
+//! from DTA lift semantics: the DTA's
 //! [`crate::passes::recognizers::dta::collect_precedence_chain`]
-//! already discovers operator chains at lift time — Sheets's six-
-//! rung `__formula → … → __unary_expr`, BBNF's `value_or → … →
-//! value_unary`, CSS's `calc`-style `mathExpr → mathProduct`. It
-//! materialises the result as a
-//! [`crate::passes::recognizers::dta::PrecedenceTable`] on each
-//! emitted [`crate::passes::recognizers::dta::DtaState::ShuntingYard`].
+//! requires ≥ 2 rungs to collapse a tower into one `ShuntingYard`
+//! state (a walker-path optimisation). The Pratt shape emitter,
+//! however, emits per-Pratt-rule `parse_pratt_*` bodies — including
+//! single-rung Pratt rules (BBNF's `binary_factor = mapped_factor ,
+//! (binary_operators ?w , mapped_factor) *`) whose operators must
+//! populate the rule's LUT for the emitted
+//! `parse_pratt_*_binary_factor` body's inner byte dispatch to
+//! succeed.
 //!
-//! W6.5 needs the same precedence data in a shape the Rust-backend
-//! emitter can consume when lowering the per-grammar
-//! `PRECEDENCE_LUT` constant. The IR fact produced here —
-//! [`OperatorChainEntry`] — is a flat, side-table projection of the
-//! `DtaTable::shunting_yard_chains` map: one entry per operator
-//! byte, with enough context (byte, second_byte, precedence,
-//! associativity, arity, op_rule, op_discriminant) for the emitter
-//! to pack a dense `[u8; 256]` LUT + a sparse metadata slice.
+//! ## Per-rule scoping
 //!
-//! The miner runs AFTER the DTA lift so it can read the already-
-//! mined chain data; it does not re-implement chain detection.
-//! Consumers (emitter) read [`collect_operator_chains`] and emit
-//! per-grammar LUTs.
+//! Each Pratt rule gets its OWN [`OperatorChainRule`] (and its own
+//! emitted `PRECEDENCE_LUT_<rule>` constant). This avoids cross-rule
+//! first-byte collisions that arise when multiple Pratt rules share
+//! a first byte (BBNF: `||` in `value_or` vs `|` as grammar-level
+//! alternation separator in `binary_factor`'s caller — the two
+//! contexts must NOT share a LUT byte). Per-rule scoping ensures
+//! each Pratt function consults only its own operator alphabet.
+//!
+//! Rule sources:
+//!
+//! 1. `DtaTable::shunting_yard_chains` — the multi-rung towers the
+//!    DTA lift already mined (unchanged from W6.5). Each rule in a
+//!    chain gets the chain's shared precedence table (the rung
+//!    doesn't own its own slice).
+//! 2. `ShapeTag::Pratt` rules outside those chains — structurally
+//!    matched via [`crate::passes::recognizers::dta::
+//!    match_operator_chain_rule`] to extract their operator entries
+//!    with precedence = 1 (single-rung).
 
 use crate::passes::recognizers::dta::{
-    Associativity, DtaState, DtaTable, PrecedenceEntry,
+    match_operator_chain_rule, Associativity, DtaState, DtaTable, PrecedenceEntry,
 };
-use crate::RuleId;
+use crate::passes::recognizers::shape_dispatch::ShapeTag;
+use crate::{GrammarIR, RuleId};
 
 // ── Public types ──────────────────────────────────────────────────────
 
@@ -90,21 +112,46 @@ pub struct OperatorChainEntry {
     pub op_discriminant: u8,
 }
 
-/// All operator chains mined from a grammar's `DtaTable`.
+/// Per-rule operator-chain projection.
 ///
-/// One [`OperatorChainFacts`] per grammar; the `entries` slice lists
-/// every operator row across every chain. The emitter ingests this
-/// collection to produce the per-grammar `PRECEDENCE_LUT` +
-/// `DtaPrecedenceEntry` metadata slice.
+/// Each Pratt-classified rule owns one [`OperatorChainRule`] carrying
+/// its operator entries. Per-rule scoping prevents cross-rule
+/// first-byte collisions between Pratt contexts: BBNF's `value_or`
+/// owns `||` without leaking into `binary_factor`'s byte-60-dispatch
+/// (which carries `<<`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct OperatorChainRule {
+    /// The Pratt rule whose operator alphabet this entry owns.
+    pub rule: RuleId,
+    /// Rule name (resolved from `GrammarIR::get_string(rule.name)` at
+    /// mining time). Carrying the name here avoids the emitter needing
+    /// IR access to produce per-rule `PRECEDENCE_LUT_<name>` constants.
+    pub rule_name: String,
+    /// Operator entries for this rule's alphabet — one per operator
+    /// first byte (multi-byte ops contribute the first byte here +
+    /// the second in `second_byte`).
+    pub entries: Vec<OperatorChainEntry>,
+}
+
+/// All operator chains mined from a grammar's IR + `DtaTable`.
+///
+/// One [`OperatorChainFacts`] per grammar. The `rules` slice lists
+/// one [`OperatorChainRule`] per Pratt-classified rule — the emitter
+/// ingests this collection to produce one
+/// `PRECEDENCE_LUT_<rule>` + `PRECEDENCE_ENTRIES_<rule>` metadata
+/// slice per rule, giving each `parse_pratt_*` function its own
+/// operator alphabet.
+///
+/// `chain_heads` is the set of rules that carry operator entries;
+/// consumers use it to diagnose mining hits / misses.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct OperatorChainFacts {
-    /// Flat list of operator rows. Empty for grammars whose lift
-    /// found no chains (i.e. [`DtaTable::shunting_yard_chains`] was
-    /// empty).
-    pub entries: Vec<OperatorChainEntry>,
-    /// Rule ids for the heads of mined chains. Used by emitters
-    /// that need to refer to the head state by rule name (e.g. for
-    /// diagnostic messages).
+    /// One record per Pratt-classified rule whose operator chain was
+    /// structurally matched. Sort-stable by [`RuleId`].
+    pub rules: Vec<OperatorChainRule>,
+    /// Rule ids for the heads of mined chains. Duplicates
+    /// `rules[*].rule` — retained as a flat projection so consumers
+    /// that only need the head set don't iterate the per-rule entries.
     pub chain_heads: Vec<RuleId>,
 }
 
@@ -112,50 +159,79 @@ impl OperatorChainFacts {
     /// Is the miner's output empty (no chains detected)?
     #[inline]
     pub fn is_empty(&self) -> bool {
-        self.entries.is_empty()
+        self.rules.iter().all(|r| r.entries.is_empty())
     }
 
-    /// Number of distinct operator byte entries. Each emitted LUT
-    /// row consumes one.
+    /// Total number of distinct operator byte entries across every
+    /// Pratt rule. Each emitted LUT row consumes one.
     #[inline]
     pub fn operator_count(&self) -> usize {
-        self.entries.len()
+        self.rules.iter().map(|r| r.entries.len()).sum()
+    }
+
+    /// Flat view of every operator entry across every rule. Preserves
+    /// rule-iteration order for deterministic emission. Used by
+    /// consumers that don't care about per-rule scoping (diagnostic
+    /// tests, summary accumulators).
+    pub fn entries_flat(&self) -> impl Iterator<Item = &OperatorChainEntry> {
+        self.rules.iter().flat_map(|r| r.entries.iter())
     }
 }
 
 // ── Miner ────────────────────────────────────────────────────────────
 
-/// Mine operator-chain facts from a lifted [`DtaTable`].
+/// Mine operator-chain facts from a grammar IR and its lifted
+/// [`DtaTable`].
 ///
-/// Walks `shunting_yard_chains` (the set of rules mapped to a
-/// `ShuntingYard` state), collects the `PrecedenceEntry` list from
-/// each `ShuntingYard` state's table, and projects each entry into
-/// an [`OperatorChainEntry`] with arity `Binary` (the only arity
-/// `collect_precedence_chain` admits today).
+/// Two-source projection:
 ///
-/// Idempotent: repeated runs over the same table produce identical
-/// output.
+/// 1. Every multi-rung tower the DTA lift mined into
+///    `shunting_yard_chains` contributes each operator-byte entry
+///    from its [`DtaState::ShuntingYard`] state's precedence table
+///    (pre-AX.W0a.2.k behaviour, unchanged).
+/// 2. Every [`ShapeTag::Pratt`]-classified rule not covered by (1)
+///    is structurally matched via [`match_operator_chain_rule`] and
+///    contributes its operator entries with precedence = 1
+///    (single-rung Pratt — BBNF's `binary_factor` is the canonical
+///    case).
+///
+/// Bytes already claimed by higher-priority (multi-rung) chains are
+/// not reclaimed — each operator byte maps to exactly one LUT row.
+///
+/// Idempotent: repeated runs over the same `(ir, table)` produce
+/// identical output. Stable ordering: rule-id ascending within each
+/// source, multi-rung chains first so their precedence values win
+/// byte-collisions with single-rung Pratt rules.
 ///
 /// ## §6 generalisation
 ///
 /// The miner is grammar-name-blind. Sheets's six-rung arithmetic
-/// tower, BBNF's `value_or` tower, and CSS's `calc()` math tower
-/// all ride the same chain detector upstream — this miner ingests
-/// their output uniformly and emits one `OperatorChainFacts` per
-/// grammar without any per-grammar branching.
-pub fn collect_operator_chains(table: &DtaTable) -> OperatorChainFacts {
-    let mut entries: Vec<OperatorChainEntry> = Vec::new();
+/// tower, BBNF's `value_or` + `binary_factor` rules, and CSS's
+/// `calc()` math tower all ride the same classification surface
+/// (ShapeTag::Pratt + optional multi-rung DTA collapse) upstream —
+/// this miner projects their operator sets uniformly into one
+/// `OperatorChainFacts` per grammar without any per-grammar
+/// branching.
+pub fn collect_operator_chains(
+    ir: &GrammarIR,
+    table: &DtaTable,
+) -> OperatorChainFacts {
+    let mut rules_out: Vec<OperatorChainRule> = Vec::new();
     let mut chain_heads: Vec<RuleId> = Vec::new();
-    let mut seen_bytes: [bool; 256] = [false; 256];
 
-    // `shunting_yard_chains` keys by the chain's outermost rule.
-    // Walk in stable order so the emitted LUT byte layout is
-    // deterministic across builds.
+    // ── Source 1: multi-rung chains from the DTA lift ───────────────
+    //
+    // `shunting_yard_chains` keys by every chain rung (outermost AND
+    // inner rungs all map to the same `ShuntingYard` state). Each
+    // rule gets its OWN [`OperatorChainRule`] carrying the chain's
+    // entries — per-rule LUT emission means each `parse_pratt_<rung>`
+    // function has the full tower's operator alphabet (that's what
+    // the walker's ShuntingYard state gave every chain rung).
     let mut chain_rules: Vec<RuleId> = table.shunting_yard_chains.keys().copied().collect();
     chain_rules.sort_unstable();
 
-    for rule_id in chain_rules {
-        let state_id = match table.shunting_yard_chains.get(&rule_id) {
+    for rule_id in &chain_rules {
+        let state_id = match table.shunting_yard_chains.get(rule_id) {
             Some(&sid) => sid,
             None => continue,
         };
@@ -169,24 +245,107 @@ pub fn collect_operator_chains(table: &DtaTable) -> OperatorChainFacts {
             // defensively; lift invariant says this cannot happen.
             _ => continue,
         };
-        chain_heads.push(rule_id);
-
+        // Deduplicate within-rule byte collisions. The chain
+        // detector enforces pairwise disjointness across rungs, so
+        // this is defensive.
+        let mut rule_entries: Vec<OperatorChainEntry> = Vec::new();
+        let mut rule_seen: [bool; 256] = [false; 256];
         for pe in precedence {
-            if seen_bytes[pe.byte as usize] {
-                // Byte already claimed by an earlier chain; the
-                // chain detector enforces pairwise disjointness
-                // within a single chain, but not across chains.
-                // Defensive: the emitter rejects duplicates, so
-                // silently drop them here.
+            if rule_seen[pe.byte as usize] {
                 continue;
             }
-            seen_bytes[pe.byte as usize] = true;
-            entries.push(to_chain_entry(pe));
+            rule_seen[pe.byte as usize] = true;
+            rule_entries.push(to_chain_entry(pe));
         }
+        let rule_name = ir
+            .rules
+            .iter()
+            .find(|r| r.id == *rule_id)
+            .map(|r| ir.get_string(r.name).to_string())
+            .unwrap_or_default();
+        chain_heads.push(*rule_id);
+        rules_out.push(OperatorChainRule {
+            rule: *rule_id,
+            rule_name,
+            entries: rule_entries,
+        });
+    }
+
+    // ── Source 2: single-rung Pratt rules outside the multi-rung
+    //             chains (AX.W0a.2.k). ────────────────────────────────
+    //
+    // The DTA lift's `collect_precedence_chain` enforces rungs ≥ 2
+    // because the walker-path ShuntingYard collapse is only a win
+    // for towers. The shape emitter, however, emits per-Pratt-rule
+    // `parse_pratt_*` bodies — single-rung Pratt rules (BBNF's
+    // `binary_factor`) need their operators in their per-rule LUT so
+    // the emitted inner byte dispatch resolves `<<` / `>>` / `-` etc.
+    //
+    // Rule admission criterion: the rule's operator byte set must be
+    // pairwise first-byte disjoint. Two-byte ops (`<<`, `>>`) are
+    // distinguishable via the LUT's bit-7 two_byte flag + the
+    // `PRECEDENCE_ENTRIES_<rule>` scan; ops that share first byte
+    // without two-byte disambiguation (`<` + `<=` in the same rule)
+    // would produce ambiguous runtime dispatch, so such rules are
+    // dropped. Per-rule scoping means dropping value_cmp doesn't
+    // affect binary_factor's alphabet.
+    let multi_rung_rules: std::collections::HashSet<RuleId> =
+        table.shunting_yard_chains.keys().copied().collect();
+
+    for rule in &ir.rules {
+        if !matches!(ir.shape_assignments.get(rule.id), ShapeTag::Pratt) {
+            continue;
+        }
+        if multi_rung_rules.contains(&rule.id) {
+            continue;
+        }
+        let rule_name = ir.get_string(rule.name).to_string();
+        // Structural-match + within-rule disjointness. Rules that
+        // fail either admission produce an EMPTY per-rule entry so
+        // the emitter still has a record to project into an empty
+        // `PRECEDENCE_LUT_<rule>` (walker-path parity — the rule
+        // still emits a `parse_pratt_<rule>` function, the loop just
+        // exits immediately because every LUT byte reads 0).
+        let rule_entries: Vec<OperatorChainEntry> =
+            match_operator_chain_rule(ir, rule)
+                .and_then(|(_, operators, _)| {
+                    // Within-rule first-byte disjointness: reject
+                    // rules where two entries share a first byte
+                    // without two-byte disambiguation (cmp_op's
+                    // `<` + `<=` case). Ambiguous dispatch would
+                    // silently corrupt runtime parsing.
+                    let mut rule_seen: [bool; 256] = [false; 256];
+                    for pe in &operators {
+                        if rule_seen[pe.byte as usize] {
+                            return None;
+                        }
+                        rule_seen[pe.byte as usize] = true;
+                    }
+                    Some(
+                        operators
+                            .into_iter()
+                            .map(|mut pe| {
+                                // Single-rung chain: precedence is 1
+                                // (the innermost / only rung).
+                                pe.precedence = 1;
+                                to_chain_entry(&pe)
+                            })
+                            .collect::<Vec<_>>(),
+                    )
+                })
+                .unwrap_or_default();
+        if !rule_entries.is_empty() {
+            chain_heads.push(rule.id);
+        }
+        rules_out.push(OperatorChainRule {
+            rule: rule.id,
+            rule_name,
+            entries: rule_entries,
+        });
     }
 
     OperatorChainFacts {
-        entries,
+        rules: rules_out,
         chain_heads,
     }
 }

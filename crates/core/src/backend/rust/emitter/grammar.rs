@@ -451,8 +451,14 @@ impl RustEmitter {
         // for uniform downstream consumption.
         let precedence_lut = {
             let lifted_table = super::dta_walker::lift_for_walker(ir);
+            // AX.W0a.2.k — mine operator-byte entries from both the
+            // DTA lift's multi-rung collapses AND every
+            // `ShapeTag::Pratt` rule outside those towers
+            // (single-rung Pratt like BBNF's `binary_factor` whose
+            // operators must populate `PRECEDENCE_LUT` for the
+            // emitted `parse_pratt_*` body's inner dispatch).
             let chain_facts =
-                bbnf_ir::passes::collect_operator_chains(&lifted_table);
+                bbnf_ir::passes::collect_operator_chains(ir, &lifted_table);
             super::precedence::emit_precedence_lut(
                 ident.to_string().as_str(),
                 &chain_facts,

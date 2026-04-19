@@ -500,6 +500,71 @@ impl TapeBuilder {
         TapeOffset(idx)
     }
 
+    /// Append a leaf record whose payload is an in-arena scalar of
+    /// `payload_width` bytes already written at `arena_offset`.
+    ///
+    /// Distinct from [`Self::push_leaf_with_arena_frame`], which
+    /// assumes a 4-byte length prefix convention for decoded-string
+    /// frames. This entry point mirrors the walker's
+    /// [`crate::driver::emit_leaf_with_payload`] semantics: the
+    /// caller has pushed `payload_width` bytes (1 for the Pratt
+    /// op-discriminant, 8 for wide scalars) directly into
+    /// [`Self::arena_mut`], and the resulting record carries
+    /// [`TapeRec::PAYLOAD_IN_ARENA_BIT`] set so scalar readers
+    /// ([`Tape::payload_u8`], [`Tape::payload_u64`]) slice the arena
+    /// at `arena_offset` instead of indirecting through a column
+    /// rank.
+    ///
+    /// AX.W0a.2.k — the Pratt shape emitter uses this for the
+    /// per-operator Span leaf's 1-byte `op_discriminant` payload,
+    /// reaching parity with the walker's
+    /// [`crate::driver::emit_leaf_with_payload`] layout.
+    ///
+    /// `meta_idx` range is 0-31 (5-bit packed field).
+    /// `payload_width` must be one of 1 / 2 / 4 / 8 — the widths the
+    /// scalar readers honour; asserted in debug builds.
+    #[inline]
+    pub fn push_leaf_with_arena_payload(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+        arena_offset: u32,
+        payload_width: u32,
+    ) -> TapeOffset {
+        debug_assert!(
+            kind.is_leaf(),
+            "push_leaf_with_arena_payload on compound kind {:?}",
+            kind
+        );
+        debug_assert!(
+            matches!(payload_width, 1 | 2 | 4 | 8),
+            "push_leaf_with_arena_payload: payload_width {} must be 1 / 2 / 4 / 8",
+            payload_width,
+        );
+        debug_assert!(
+            (arena_offset as usize) + (payload_width as usize)
+                <= self.columns.pay_agg.len(),
+            "push_leaf_with_arena_payload: offset {} + {} exceeds arena len {}",
+            arena_offset,
+            payload_width,
+            self.columns.pay_agg.len()
+        );
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
+        let extra = extra_meta_bit | TapeRec::PAYLOAD_IN_ARENA_BIT;
+        let idx = self.columns.push_structural(
+            kind_meta,
+            variant_idx,
+            extra,
+            span_lo,
+            span_hi,
+            TapeOffset(arena_offset),
+        );
+        TapeOffset(idx)
+    }
+
     /// Append a borrow-safe string leaf — zero arena writes.
     ///
     /// Companion to [`Self::push_leaf_with_arena_frame`] for the

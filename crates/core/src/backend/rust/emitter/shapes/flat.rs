@@ -391,13 +391,31 @@ fn emit_tape_repeat(
     dispatcher_ident: &proc_macro2::Ident,
     ir: &GrammarIR,
 ) -> TokenStream {
-    let inner_emit = emit_tape_position_core(
-        inner,
-        variant_idx,
-        support_mod,
-        dispatcher_ident,
-        ir,
-    );
+    // AX.W0a.2.g — walker-parity iter-Seq flattening. Walker's
+    // `IrState::Repeat { inner: Seq }` lowering transitions directly
+    // to the Seq's inner states after pushing the Repeat frame (Rule),
+    // and the Seq state's compound push IS the iter Seq — no extra
+    // wrapper. When the Repeat's inner is itself a Seq, emit the
+    // children directly inside the iter-Seq push, not a nested Seq
+    // wrapping another Seq. For non-Seq inners (Ref, Alt, Literal,
+    // Regex, etc.) the iter-Seq is the only walker-pushed Seq, so
+    // emission is unchanged.
+    let inner_emit = match inner {
+        IrNode::Seq(children) => emit_tape_seq_children(
+            children,
+            variant_idx,
+            support_mod,
+            dispatcher_ident,
+            ir,
+        ),
+        _ => emit_tape_position_core(
+            inner,
+            variant_idx,
+            support_mod,
+            dispatcher_ident,
+            ir,
+        ),
+    };
     let lo_lit = lo as usize;
 
     if hi == 1 && lo == 0 {
@@ -434,12 +452,22 @@ fn emit_tape_repeat(
         }
     } else {
         // Generic repeat. Iterate greedily.
+        //
+        // AX.W0a.2.g — column truncation on iter failure + zero-width
+        // break. Walker's `handle_repeat_failure_bounded` rolls back
+        // `columns` to the iter's savepoint on Err or zero-width
+        // success so orphan leaves pushed inside the inner_emit don't
+        // leak into the surrounding tape. Without truncation, a
+        // zero-width regex match (e.g. `/[ \t]*/` at EOF) emits its
+        // Span leaf, the iter `*p == save_p` break fires, and the leaf
+        // remains on the tape outside any iter-Seq compound.
         quote! {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
+                let save_cols = builder.columns_mut().len();
                 let iter_lo = *p as u32;
                 let iter_child = builder.mark_children();
                 let attempt = (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
@@ -448,10 +476,12 @@ fn emit_tape_repeat(
                 })();
                 if attempt.is_err() {
                     *p = save_p;
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 // Protect against non-progressing iterations.
                 if *p == save_p {
+                    builder.columns_mut().truncate(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;

@@ -555,7 +555,15 @@ fn emit_branch_body(
             None => quote! {},
         },
         IrNode::Literal(sid) => emit_literal_attempt(*sid, ir),
-        IrNode::Regex(_) => emit_regex_attempt(),
+        // AX.W0a.2.q — dispatch Regex branches through their actual
+        // pattern via the per-grammar regex-scan adapter. Pre-W0a.2.q
+        // emission used a hard-coded `[^\s;!}…]+` scanner that over-
+        // consumed on byte sequences the rule's regex would reject
+        // (Sheets `range_end`'s column-only `A:A` case where the
+        // scanner swallowed the `:` delimiter). The pattern-aware
+        // scan respects each branch's own regex — on failure the
+        // attempt rolls back and the next candidate is tried.
+        IrNode::Regex(sid) => emit_regex_pattern_attempt(*sid, grammar_suffix, ir),
         IrNode::Seq(_) | IrNode::Next(_, _) | IrNode::Skip(_, _) => {
             // AX.W0a.2.h — dispatch on Seq content. Pure literal
             // chains (prefix-tree factored keywords) keep the legacy
@@ -636,8 +644,48 @@ fn emit_literal_attempt(sid: u32, ir: &GrammarIR) -> TokenStream {
     }
 }
 
+/// AX.W0a.2.q — Regex-branch attempt using the rule's actual regex
+/// pattern via the per-grammar regex-scan adapter. The attempt block
+/// saves `*p` + column length, runs the scan, and on a successful
+/// match pushes a Span leaf + `break 'try_branches`. On regex-scan
+/// failure, it leaves `*p` + columns untouched so the linear-try
+/// loop's outer `return Err` at the end of `emit_dispatch_arms`
+/// surfaces the syntax error at the correct offset.
+fn emit_regex_pattern_attempt(
+    sid: u32,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let pattern = ir.get_string(sid).to_string();
+    let regex_scan_ident = super::super::dta_walker::regex_scan_adapter_ident(
+        &super::sanitise_grammar(grammar_suffix),
+    );
+    quote! {
+        {
+            let span_lo = *p as u32;
+            if let ::core::option::Option::Some(match_len) =
+                #regex_scan_ident(#pattern, input, *p)
+            {
+                *p += match_len as usize;
+                let _ = builder.push_leaf(
+                    ::bbnf::runtime::tape::TapeKind::Span,
+                    span_lo,
+                    *p as u32,
+                    0,
+                    0,
+                );
+                break 'try_branches;
+            }
+        }
+    }
+}
+
 /// Regex-branch attempt — canonical non-whitespace scan. Matches
 /// CSS's `/[^\s;!}]+/` catch-all and similar fallback patterns.
+/// Retained for fallback cases where no structural regex pattern is
+/// attached to a branch (shouldn't occur under AltDispatch admission,
+/// but kept as a defensive path).
+#[allow(dead_code)]
 fn emit_regex_attempt() -> TokenStream {
     quote! {
         {

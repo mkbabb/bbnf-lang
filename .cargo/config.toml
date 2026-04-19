@@ -3,17 +3,27 @@
 
 # Tranche AG.0: optional fast linker for debug builds.
 #
-# Apple's default ld64 is acceptable. To opt into a faster linker, install
-# mold (`brew install mold`) or LLVM lld (`brew install llvm` — adds `ld.lld`
-# to `/opt/homebrew/opt/llvm/bin/`), then uncomment the matching block below
-# and ensure the linker binary is on PATH. Removing this whole section also
-# works.
+# Apple's default ld64 is serial and dominates incremental link time
+# on the bench binaries (~60% of the rebuild step on a two-file edit
+# per profiling during AX.W0a.2.d iteration). To opt into a faster
+# linker:
+#
+#   brew install lld       # adds /opt/homebrew/opt/lld/bin/ld64.lld
+#   brew install mold      # Linux-only upstream; macOS port exists
+#
+# then uncomment the matching block below. Check the binary exists
+# first (`ls /opt/homebrew/opt/lld/bin/ld64.lld`) — a missing linker
+# fails every build with an opaque rustc error.
+#
+# Expected speedup on this workspace (13 GB target, release w/ fat LTO
+# or dev w/ 16 codegen-units): 30–50% link time reduction, 10–20% total
+# rebuild time on small edits.
+#
+# [target.aarch64-apple-darwin]
+# rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/opt/lld/bin/ld64.lld"]
 #
 # [target.aarch64-apple-darwin]
 # rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/bin/mold"]
-#
-# [target.aarch64-apple-darwin]
-# rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/opt/llvm/bin/ld.lld"]
 
 [patch.crates-io]
 pprint = { path = "../pprint/rust" }

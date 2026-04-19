@@ -34,3 +34,25 @@ opt-level = 1
 
 [profile.dev.package.parse_that]
 opt-level = 1
+
+# Lean iteration profile for compile-gate + non-samply test runs.
+#
+# The `dev` profile carries `debuginfo=2` because samply needs DWARF
+# for symbol resolution (see feedback_samply_symbols). That same DWARF
+# cost drove AX.W0a.2.d's 26 GB-RSS single-rustc OOM (tape_parity
+# aggregate before the per-grammar split). When an agent only needs
+# "does it compile?" / "do these tests pass?" — not a profile — the
+# DWARF budget is dead weight.
+#
+# Usage:
+#   cargo test --profile ax-iter -p bbnf --test tape_parity_json
+#   cargo check --profile ax-iter -p bbnf
+#
+# Inherits from `dev` (incremental on, per-package opt-level=1 above),
+# then strips debuginfo. Link time ≈ 2×; peak RSS ≈ 0.3× on aggregate
+# test binaries. Never use for samply or crash-dump workflows.
+[profile.ax-iter]
+inherits = "dev"
+debug = 0
+split-debuginfo = "off"
+strip = "debuginfo"

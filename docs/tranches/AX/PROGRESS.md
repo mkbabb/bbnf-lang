@@ -242,6 +242,58 @@ Both A + B carry tight scope, ≤ 500-word return caps, hard gates
 cited to artefact paths. C awaits cherry-pick of A + B onto master
 before dispatch.
 
+## 2026-04-19 — W0a.2.i.a + W0a.2.i.b close; W0a.2.i.c halt
+
+**Agent A** (commits `c4d56a42` + `a46d3f25`, cherry-picked onto master)
+— `find_rhs_expression_descendant` in `crates/core/src/lower/tape_walk.rs`
+falls back to `closure` / `alternation` Rule descendants when the
+shape-authoritative tape elides the `rhs` Wrap compound. Two host.rs
+call sites rewired (lines 310, 388). Probe green 20/20 inputs under
+locally-flipped predicate; leaf tier green under HEAD-committed
+narrow predicate.
+
+**Agent B** (commits `fe17964f` + `9e5cc2f1`, cherry-picked) — dropped
+`directive_0 | grammar_item_0` from `expression.rs:214-215`; consolidated
+deps.rs `term_1` + `term_2 | value_atom_0` arms into a single
+canonical `term | grammar_item | directive | lhs` handler keying on
+IR-structural signals (grouped-rhs descent → Rule-child iteration →
+span-text extraction fallback). Added 4 synthesised-Alt sub-variant
+fixtures in `crates/ir/tests/lattices/subvariants.rs` proving the
+IR-level projection is sound. Classified cycle-2 heterogeneity loss
+as root-cause (c): tape-side coalesce in `shapes/wrap.rs`.
+
+**Agent C** HALTED per SPEC §Scope-reveal. Milestone-1 admission
+widening + wire-contract flip verified in isolation (7/7 gate tests
+green), then ROLLED BACK because bootstrap regen cycle-2 reproduces
+the W0a.2.h cascade:
+
+| Metric | cycle-1 | cycle-2 | target |
+|---|---|---|---|
+| Lines | 97,513 | 169,446 | within ±10% |
+| `fn parse_pratt_` | 8 | **0** | ≥ cycle-1 |
+| `*Value<'p>` enums (`value_atom`, `term`, `directive`, `grammar_item`) | 4 | **0** | preserved |
+
+Artefacts at `/tmp/ax_w0a2i_c_gen1.rs` (97,513 lines, 8 Pratt, 4 het
+enums) and `/tmp/ax_w0a2i_c_gen2.rs` (169,446 lines, 0 Pratt, 0 het
+enums). C correctly rolled back milestone-1 to keep master clean
+(HEAD `9e5cc2f1`). Diagnosis: when bbnf.bbnf is re-parsed under
+shape-authoritative Wrap dispatch, the tape projection drives
+`lower/expression.rs` to produce IR with homogeneous-typed Alt
+branches where walker-routed tape produced heterogeneous ones.
+Type inference declares the Alts homogeneous → `*Value<'p>` enum
+emission elides → Pratt classification and sub-variant projection
+both collapse.
+
+## 2026-04-19 — W0a.2.j dispatch
+
+Single-agent diagnostic + fix probe on the Wrap Alt-branch
+coalescing root cause. Allow-list: `shapes/wrap.rs` + adjacent
+shape-emitter discriminator surfaces. The agent's job: reproduce the
+cycle-2 drift on a clean worktree, identify the specific tape
+mechanism that drives lower/expression.rs IR-heterogeneity loss, and
+land a fix that restores cycle-2 idempotency with the four
+`*Value<'p>` enums + Pratt classification preserved.
+
 ---
 
 ## 2026-04-18 — W0a.2.a + W0a.2.b dispatch

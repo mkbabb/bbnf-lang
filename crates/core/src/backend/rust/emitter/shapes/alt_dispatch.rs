@@ -69,7 +69,10 @@ pub fn emit_parse_alt_dispatch(
         /// Each branch is a classified-Ref, a Literal, a Regex, or a
         /// leaf-only Seq (prefix-tree factoring). No recursion through
         /// `__value` — per-Ref routing emits direct shape-fn calls.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+        /// recursion rationale.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut, unused_assignments, unreachable_code)]
         pub fn #fn_ident(
             input: &[u8],
@@ -466,7 +469,9 @@ pub fn emit_parse_alt_dispatch_visitor(
 
     quote! {
         /// AX.W0a.2.b — visitor-path AltDispatch-shape parse function.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]`.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut, unused_assignments, unreachable_code)]
         pub fn #fn_ident<V>(
             input: &[u8],

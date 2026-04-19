@@ -310,7 +310,10 @@ pub fn emit_parse_unordered(
         /// outer compound for the full Unordered span; each admitted
         /// branch contributes its own sub-compound through the per-
         /// grammar value-position dispatcher.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+        /// recursion rationale.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #fn_ident(
             input: &[u8],
@@ -396,7 +399,9 @@ fn emit_parse_unordered_fallback(
         /// call elsewhere). Emits an empty compound + `UnexpectedEnd`
         /// so the parsability gate passes without asserting parse
         /// semantics on a shape the rule doesn't match.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]`.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #fn_ident(
             input: &[u8],
@@ -482,7 +487,9 @@ pub fn emit_parse_unordered_visitor(
         /// routes through the per-grammar value-position visitor
         /// dispatcher. The Kleene-plus loop terminates at the first
         /// byte no branch's FIRST set admits.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]`.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #fn_ident<V>(
             input: &[u8],
@@ -530,7 +537,9 @@ fn emit_parse_unordered_visitor_fallback(
 
     quote! {
         /// AW-V.W4-fix — visitor-path Unordered-shape fallback.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]`.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #fn_ident<V>(
             input: &[u8],

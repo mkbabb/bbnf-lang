@@ -121,7 +121,11 @@ pub fn emit_parse_wrap(
         /// to the chosen branch's shape fn, return that shape fn's
         /// offset unchanged. No outer compound emission; the
         /// branch's own shape fn owns the tape record.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; see `flat.rs` emission for the
+        /// `#[inline]` downgrade rationale (LLVM inline-cycle
+        /// collapse vs hard-requirement inliner abort).
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
         pub fn #fn_ident(
             input: &[u8],
@@ -419,7 +423,10 @@ pub fn emit_parse_wrap_visitor(
         /// the chosen branch's visitor-path shape fn. No visitor event
         /// fires here; the chosen branch's visitor fn owns the event
         /// emission.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+        /// recursion rationale.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
         pub fn #fn_ident<V>(
             input: &[u8],

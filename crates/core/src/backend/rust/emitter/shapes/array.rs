@@ -164,7 +164,10 @@ fn emit_parse_array_wrapped(
         /// record tree is navigated by every downstream view derive
         /// and the `tape_parity` golden fixtures; only dispatch is
         /// inlined relative to the walker, not the record stream.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+        /// recursion rationale (the array ↔ value cycle).
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #fn_ident(
             input: &[u8],
@@ -632,7 +635,9 @@ fn emit_parse_array_list(
             /// `OptionalWhitespace(Repeat(...))` where the outer Seq
             /// carries the rule's variant stamp and the inner Rule
             /// compound carries the per-iteration children.
-            #[inline(always)]
+            ///
+            /// AX.W0a.2.f — compound; plain `#[inline]`.
+            #[inline]
             #[allow(non_snake_case, clippy::too_many_arguments)]
             pub fn #fn_ident(
                 input: &[u8],
@@ -727,7 +732,9 @@ fn emit_parse_array_list(
             /// walker's direct lowering of a `Repeat { .. }` body
             /// where the rule's variant stamp lands on the Rule
             /// compound itself (no outer Seq wrapper).
-            #[inline(always)]
+            ///
+            /// AX.W0a.2.f — compound; plain `#[inline]`.
+            #[inline]
             #[allow(non_snake_case, clippy::too_many_arguments)]
             pub fn #fn_ident(
                 input: &[u8],
@@ -951,7 +958,9 @@ pub fn emit_parse_array_visitor(
         ///
         /// Mirrors `bbnf_json_prototype::parse_array::<V>`. Bypasses
         /// the tape entirely.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]`.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #fn_ident<V>(
             input: &[u8],

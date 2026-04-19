@@ -84,7 +84,10 @@ pub fn emit_parse_object(
     quote! {
         /// AW-V.W3.2 — per-grammar Object-shape parse function,
         /// **walker-tape-identical**.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+        /// recursion rationale (object → value → object).
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #fn_ident(
             input: &[u8],
@@ -597,7 +600,9 @@ pub fn emit_parse_object_visitor(
         ///
         /// Mirrors `bbnf_json_prototype::parse_object::<V>`. Bypasses
         /// the tape entirely; visitor method calls drive materialisation.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]`.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #fn_ident<V>(
             input: &[u8],

@@ -7,9 +7,15 @@
 //! `crates/bbnf-json-prototype/` shape. For each rule whose
 //! [`ShapeTag`] is [`ShapeTag::is_w3_classified`] the matching
 //! shape-emitter module produces one `parse_<shape>_<grammar>_<rule>`
-//! function carrying `#[inline(always)]`; the dispatcher emitter wires
-//! the top-level entry `parse_<grammar>_<root>` that the grammar's
-//! `parse()` call site invokes.
+//! function; leaf shape fns (Keyword / Number / String / HRegex /
+//! literal-Scalar) carry `#[inline(always)]`, compound shape fns
+//! (Object / Array / Flat / Wrap / ArgList / Pratt / Unordered /
+//! AltDispatch / Ref-Scalar + the grammar's top-level dispatchers)
+//! carry plain `#[inline]` so LLVM's inliner collapses cross-shape
+//! recursive edges without unrolling indefinitely (AX.W0a.2.f).
+//! The dispatcher emitter wires the top-level entry
+//! `parse_<grammar>_<root>` that the grammar's `parse()` call site
+//! invokes.
 //!
 //! # Module layout
 //!

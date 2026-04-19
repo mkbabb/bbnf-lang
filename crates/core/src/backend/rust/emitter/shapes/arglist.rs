@@ -95,7 +95,10 @@ pub fn emit_parse_arglist(
         /// Head (Literal / Regex / Ref) + optional `(` + body arg
         /// positions (dispatched through the grammar's value-
         /// dispatcher) + `)` literal.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+        /// recursion rationale (see `flat.rs`).
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
         pub fn #fn_ident(
             input: &[u8],
@@ -461,7 +464,9 @@ pub fn emit_parse_arglist_visitor(
         /// Visitor method dispatch replaces tape record writes.
         /// Literal positions byte-match only; Ref / Regex / Alt
         /// positions recurse through the visitor dispatcher.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]`.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
         pub fn #fn_ident<V>(
             input: &[u8],

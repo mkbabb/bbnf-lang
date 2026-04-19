@@ -100,7 +100,17 @@ pub fn emit_parse_flat(
         /// records. Ref / Regex / Alt positions recurse through the
         /// grammar's value-position dispatcher (the walker's
         /// authoritative state path).
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+        /// sits on a cross-shape recursive edge
+        /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+        /// peer shape fn → back here through the grammar's `__value`
+        /// discriminant). LLVM's inliner collapses plain `#[inline]`
+        /// candidates only when profitable and bails cleanly on
+        /// detected recursion; `#[inline(always)]` would recurse the
+        /// inliner until stack exhaustion (observed SIGBUS in
+        /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
         pub fn #fn_ident(
             input: &[u8],
@@ -544,7 +554,10 @@ pub fn emit_parse_flat_visitor(
         /// Mirrors the tape-path emitter structure. Literal positions
         /// byte-match without emitting a visitor event; Ref / Regex /
         /// Alt positions recurse through the visitor dispatcher.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; see tape-path comment for the
+        /// `#[inline]` downgrade rationale.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
         pub fn #fn_ident<V>(
             input: &[u8],

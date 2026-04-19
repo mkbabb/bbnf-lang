@@ -509,7 +509,10 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
         /// `value` emits no compound either, and the target rule's Ref
         /// overwrites any `pending_variant_idx` en route, so the chosen
         /// rule's own compound carries the final root variant.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+        /// recursion rationale.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #dispatcher_ident(
             input: &[u8],
@@ -525,7 +528,9 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
 
         /// AW-V.W3.2 — value-position shape dispatcher. Called both at
         /// the grammar root and from Object / Array compound bodies.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]`.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #nonroot_ident(
             input: &[u8],
@@ -786,7 +791,9 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
         /// rippling into callers that don't have those bounds. Visitor
         /// activation for W4-carrying grammars lands in a follow-on
         /// wave alongside the per-Ref `__value` dispatcher refactor.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]`.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #dispatcher_ident<V>(
             input: &[u8],
@@ -807,7 +814,9 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
         /// AW-V.W3-bench-fix — value-position visitor-path dispatcher.
         /// Called both at the grammar root and from the object / array
         /// shape fns' value-position recursion.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]`.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #nonroot_ident<V>(
             input: &[u8],

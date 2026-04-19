@@ -147,7 +147,10 @@ pub fn emit_parse_pratt(
         ///    `mark_children` index) so the cursor's pre-order walk
         ///    surfaces the reduced tree root as the compound's first
         ///    child.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+        /// recursion rationale.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_assignments, unused_mut, unused_variables)]
         pub fn #fn_ident(
             input: &[u8],
@@ -430,7 +433,9 @@ pub fn emit_parse_pratt_visitor(
         ///    reducer-compound stamp; `operand_end` fires after each
         ///    operand parse.
         /// 5. `visitor.end_pratt()` — outer compound close.
-        #[inline(always)]
+        ///
+        /// AX.W0a.2.f — compound; plain `#[inline]`.
+        #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_assignments, unused_mut, unused_variables)]
         pub fn #fn_ident<V>(
             input: &[u8],

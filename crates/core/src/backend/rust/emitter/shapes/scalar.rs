@@ -103,7 +103,10 @@ pub fn emit_parse_scalar(
                 /// AX.W0a.2.b — per-grammar Scalar-shape parse function
                 /// (transparent-Ref body). Delegates to the target's
                 /// shape fn.
-                #[inline(always)]
+                ///
+                /// AX.W0a.2.f — compound (delegates via
+                /// `emit_ref_call_tape`); plain `#[inline]`.
+                #[inline]
                 #[allow(non_snake_case, clippy::too_many_arguments)]
                 pub fn #fn_ident(
                     input: &[u8],
@@ -207,7 +210,9 @@ pub fn emit_parse_scalar_visitor(
             quote! {
                 /// AX.W0a.2.b — visitor-path Scalar-shape parse function
                 /// (transparent-Ref body).
-                #[inline(always)]
+                ///
+                /// AX.W0a.2.f — compound; plain `#[inline]`.
+                #[inline]
                 #[allow(non_snake_case, clippy::too_many_arguments)]
                 pub fn #fn_ident<V>(
                     input: &[u8],

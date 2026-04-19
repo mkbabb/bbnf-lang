@@ -176,7 +176,23 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
             ShapeTag::Object => object::emit_parse_object(&grammar_suffix, rule, ir),
             ShapeTag::Array => array::emit_parse_array(&grammar_suffix, rule, ir),
             ShapeTag::String => string::emit_parse_string(&grammar_suffix, rule, ir),
-            ShapeTag::Number => number::emit_parse_number(&grammar_suffix, rule, ir),
+            ShapeTag::Number => {
+                // AX.W0a.2.q — lenient-number routing: when the rule's
+                // regex classification admits leading-dot literals
+                // (CSS `.5` / `.25e3`), emit the Number-named fn via
+                // the HRegex regex-scan path so the per-grammar regex
+                // adapter handles admission. The default Number
+                // emitter's inline scanner rejects `.5` (requires at
+                // least one integer digit before the dot); routing
+                // lenient dialects through regex-scan closes the gap
+                // without modifying the strict scanner CSS's other
+                // callers (JSON) depend on.
+                if hregex::number_rule_allows_leading_dot(rule, ir) {
+                    hregex::emit_parse_number_via_hregex(&grammar_suffix, rule, ir)
+                } else {
+                    number::emit_parse_number(&grammar_suffix, rule, ir)
+                }
+            }
             ShapeTag::Keyword => keyword::emit_parse_keyword(&grammar_suffix, rule, ir),
             ShapeTag::Scalar => scalar::emit_parse_scalar(&grammar_suffix, rule, ir),
             ShapeTag::Pratt => pratt::emit_parse_pratt(&grammar_suffix, rule, ir),
@@ -207,7 +223,16 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
                 ShapeTag::Object => object::emit_parse_object_visitor(&grammar_suffix, rule, ir),
                 ShapeTag::Array => array::emit_parse_array_visitor(&grammar_suffix, rule, ir),
                 ShapeTag::String => string::emit_parse_string_visitor(&grammar_suffix, rule, ir),
-                ShapeTag::Number => number::emit_parse_number_visitor(&grammar_suffix, rule, ir),
+                ShapeTag::Number => {
+                    // AX.W0a.2.q — parallel to the tape-path routing
+                    // above: lenient-number visitor emission routes
+                    // through the HRegex-backed regex-scan path.
+                    if hregex::number_rule_allows_leading_dot(rule, ir) {
+                        hregex::emit_parse_number_visitor_via_hregex(&grammar_suffix, rule, ir)
+                    } else {
+                        number::emit_parse_number_visitor(&grammar_suffix, rule, ir)
+                    }
+                }
                 ShapeTag::Keyword => {
                     keyword::emit_parse_keyword_visitor(&grammar_suffix, rule, ir)
                 }

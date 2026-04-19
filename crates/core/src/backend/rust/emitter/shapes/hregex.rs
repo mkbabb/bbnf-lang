@@ -363,6 +363,246 @@ pub fn emit_parse_hregex(
     }
 }
 
+/// AX.W0a.2.q — true iff the Number-classified rule's pattern carries
+/// `allow_leading_dot` in its `RegexClass::Numeric` classification.
+/// CSS's `number` canonically lands here (admits `.5`); JSON's does
+/// not. Controls the shape-dispatch routing in `mod.rs`: lenient
+/// numbers emit via [`emit_parse_number_via_hregex`] below so the raw
+/// regex-scan path admits leading-dot literals, where the default
+/// Number emitter's inline scanner requires at least one integer
+/// digit before the dot.
+pub fn number_rule_allows_leading_dot(rule: &IrRule, ir: &GrammarIR) -> bool {
+    use parse_that::regex::classify::RegexClass;
+    let Some(sid) = extract_regex_pattern(&rule.body) else {
+        return false;
+    };
+    let Some(info) = ir.regex_info.get(&sid) else {
+        return false;
+    };
+    matches!(
+        info.classification,
+        RegexClass::Numeric {
+            allow_leading_dot: true,
+            ..
+        }
+    )
+}
+
+/// AX.W0a.2.q — emit a `parse_number_<grammar>_<rule>` fn using the
+/// per-grammar regex-scan adapter + typed-f64 arena payload, keeping
+/// the Number-shape caller signature (`input, p, first_byte,
+/// builder`). Used when the rule's regex classifier admits leading-
+/// dot literals (CSS `.5`-compatible number grammar) — the default
+/// Number emitter's inline scanner rejects leading-dot, so CSS's
+/// `opacity: .5` / `width: .5px` parses must route through the
+/// pattern-aware regex-scan path instead.
+///
+/// The emitted body:
+///   1. Scans via `__regex_scan_<grammar>` with the rule's pattern.
+///   2. On success, decodes the matched bytes to `f64` via
+///      `str::parse::<f64>()` (consistent with the HRegex NumberConvert
+///      arm above).
+///   3. Writes 8 LE bytes into the arena and pushes a payload-carrying
+///      leaf (Span leaf + `PAYLOAD_IN_ARENA_BIT` so
+///      `payload_wide::<f64>` / `payload_bytes(rec, 8)` reads the
+///      decoded value).
+///
+/// The emitted fn name is `parse_number_<grammar>_<rule>` — the
+/// Number-shape naming convention — so every existing call site
+/// (`emit_ref_call_tape`, Wrap dispatch, AltDispatch dispatch)
+/// resolves unchanged. `first_byte` is ignored (regex-scan doesn't
+/// need the pre-read byte); retained so the caller's emission stays
+/// identical.
+pub fn emit_parse_number_via_hregex(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = shape_fn_ident("number", grammar_suffix, rule_name);
+    let variant_idx = (rule.id & 0xFF) as u8;
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let _ = support_mod; // `state` parameter is absent on Number sigs.
+
+    let Some(sid) = extract_regex_pattern(&rule.body) else {
+        // Shouldn't reach here — the routing gate above checks the
+        // regex classification, which implies the body resolves to a
+        // Regex. Emit a minimal scaffold for safety.
+        return quote! {
+            #[inline(always)]
+            #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+            pub fn #fn_ident(
+                input: &[u8],
+                p: &mut usize,
+                first_byte: u8,
+                builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            ) -> ::core::result::Result<
+                ::bbnf::runtime::tape::TapeOffset,
+                ::bbnf::runtime::tape::DtaError,
+            > {
+                let _ = (input, p, first_byte, builder);
+                Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                })
+            }
+        };
+    };
+    let pattern_lit = ir.get_string(sid).to_string();
+    let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+
+    // Leaf-kind policy: owner-rule `F64` ⇒ Span (walker-parity for
+    // JSON-style numbers); `Tuple([Span, scalar])` ⇒ KvPair; every
+    // other typed form ⇒ Span.
+    use bbnf_ir::TypeDesc;
+    let kind_is_kv = matches!(
+        ir.types.iter().find_map(|(rid, t)| {
+            if *rid == rule.id {
+                Some(t)
+            } else {
+                None
+            }
+        }),
+        Some(TypeDesc::Tuple(fields)) if matches!(
+            fields.as_slice(),
+            [TypeDesc::Span, value] if value.is_scalar_payload()
+        )
+    );
+    let leaf_kind = if kind_is_kv {
+        quote! { ::bbnf::runtime::tape::TapeKind::KvPair }
+    } else {
+        quote! { ::bbnf::runtime::tape::TapeKind::Span }
+    };
+
+    quote! {
+        /// AX.W0a.2.q — Number-shape parse function routed through the
+        /// per-grammar regex-scan adapter so leading-dot literals
+        /// (`.5`) admitted by the rule's regex classification parse
+        /// without the JSON-strict "digit before dot" rejection the
+        /// default Number emitter enforces.
+        ///
+        /// Writes 8 LE f64 bytes into the tape arena; the leaf kind
+        /// mirrors `emit_map_regex_host_fn`'s policy (KvPair when the
+        /// rule projects as `Tuple([Span, scalar])`; Span otherwise).
+        #[inline(always)]
+        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+        pub fn #fn_ident(
+            input: &[u8],
+            p: &mut usize,
+            first_byte: u8,
+            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        ) -> ::core::result::Result<
+            ::bbnf::runtime::tape::TapeOffset,
+            ::bbnf::runtime::tape::DtaError,
+        > {
+            let _ = first_byte;
+            let span_lo = *p as u32;
+            let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: span_lo,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            };
+            *p += match_len as usize;
+            let span_hi = *p as u32;
+            let __f64: f64 = core::str::from_utf8(
+                &input[span_lo as usize..span_hi as usize]
+            )
+            .ok()
+            .and_then(|s| s.parse::<f64>().ok())
+            .unwrap_or(0.0);
+            let __arena_off: u32 = builder.arena_mut().len() as u32;
+            builder.arena_mut().extend_from_slice(&__f64.to_le_bytes());
+            let leaf_off = builder.push_leaf_with_arena_payload(
+                #leaf_kind,
+                span_lo,
+                span_hi,
+                #variant_idx,
+                0u8,
+                __arena_off,
+                8u32,
+            );
+            Ok(leaf_off)
+        }
+    }
+}
+
+/// AX.W0a.2.q — visitor-path mirror of
+/// [`emit_parse_number_via_hregex`] with the Number visitor
+/// signature (`input, p, first_byte, visitor`). Emits
+/// `parse_number_visitor_<grammar>_<rule>` so the visitor dispatcher
+/// continues to route via the Number-shape naming convention. Fires
+/// `visitor.number_f64(value)` with the decoded f64.
+pub fn emit_parse_number_visitor_via_hregex(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = visitor_shape_fn_ident("number", grammar_suffix, rule_name);
+
+    let Some(sid) = extract_regex_pattern(&rule.body) else {
+        return quote! {
+            #[inline(always)]
+            #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+            pub fn #fn_ident<V>(
+                input: &[u8],
+                p: &mut usize,
+                first_byte: u8,
+                visitor: &mut V,
+            ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+            where
+                V: ::bbnf::runtime::tape::NumberVisitor,
+            {
+                let _ = (input, p, first_byte, visitor);
+                Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32, rule: None,
+                })
+            }
+        };
+    };
+    let pattern_lit = ir.get_string(sid).to_string();
+    let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+
+    quote! {
+        /// AX.W0a.2.q — visitor-path Number-shape via regex-scan for
+        /// leading-dot-admitting rules; see
+        /// `emit_parse_number_via_hregex` for tape-path rationale.
+        #[inline(always)]
+        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+        pub fn #fn_ident<V>(
+            input: &[u8],
+            p: &mut usize,
+            first_byte: u8,
+            visitor: &mut V,
+        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        where
+            V: ::bbnf::runtime::tape::NumberVisitor,
+        {
+            let _ = first_byte;
+            let span_lo = *p;
+            let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: span_lo as u32, rule: None,
+                });
+            };
+            let span_hi = span_lo + match_len as usize;
+            *p = span_hi;
+            let __f64: f64 = core::str::from_utf8(&input[span_lo..span_hi])
+                .ok()
+                .and_then(|s| s.parse::<f64>().ok())
+                .unwrap_or(0.0);
+            visitor.number_f64(__f64).map_err(|_| {
+                ::bbnf::runtime::ParseErr::Syntax {
+                    offset: span_lo as u32, rule: None,
+                }
+            })
+        }
+    }
+}
+
 /// Emit a defensive stub when the rule body is not a single Regex
 /// leaf. The HRegex detector should gate admission upstream; this
 /// branch exists only to keep the emitter output compilable when the

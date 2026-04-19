@@ -29,14 +29,17 @@ pub fn parse_keyword_JsonFixture_bool(
                 let at = *p;
                 let end = at + 5usize;
                 *p = end;
+                let __arena_off: u32 = builder.arena_mut().len() as u32;
+                builder.arena_mut().push((0u32) as u8);
                 let off = builder
-                    .push_leaf_with(
+                    .push_leaf_with_arena_payload(
                         ::bbnf::runtime::tape::TapeKind::Span,
                         at as u32,
                         end as u32,
                         1u8,
                         0u8,
-                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(0u32) as u8]),
+                        __arena_off,
+                        1u32,
                     );
                 return Ok(off);
             }
@@ -53,14 +56,17 @@ pub fn parse_keyword_JsonFixture_bool(
                 let at = *p;
                 let end = at + 4usize;
                 *p = end;
+                let __arena_off: u32 = builder.arena_mut().len() as u32;
+                builder.arena_mut().push((1u32) as u8);
                 let off = builder
-                    .push_leaf_with(
+                    .push_leaf_with_arena_payload(
                         ::bbnf::runtime::tape::TapeKind::Span,
                         at as u32,
                         end as u32,
                         1u8,
                         0u8,
-                        ::bbnf::runtime::tape::PayloadData::Aggregate(&[(1u32) as u8]),
+                        __arena_off,
+                        1u32,
                     );
                 return Ok(off);
             }

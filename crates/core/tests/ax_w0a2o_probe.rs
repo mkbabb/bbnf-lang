@@ -3,6 +3,11 @@
 
 use bbnf_derive::Parser;
 
+#[allow(dead_code)]
+mod css_types {
+    pub fn parse_hex_color(_: &str) -> u32 { 0 }
+}
+
 #[derive(Parser)]
 #[parser(path = "../../grammar/json/json.bbnf")]
 struct JsonParser;

@@ -120,15 +120,21 @@ fn format_tokens(ts: &proc_macro2::TokenStream, label: &str) -> String {
 // ─── Pratt: CSS operator-chain rules ─────────────────────────────────
 
 /// `complexSelector = compoundSelector, (combinator, compoundSelector)*`
-/// at `grammar/css/l4/selectors.bbnf` is a canonical operator-chain
-/// rung — the detector admits it via `node_facts.operator_chain`.
+/// at `grammar/css/l4/selectors.bbnf` is structurally an operator-
+/// chain rung, but `combinator` resolves to regex-only branches
+/// (`/\s*>\s*/`, `/\s*\+\s*/`, `/\s*~\s*/`, `/\s+/`) — no literal
+/// operator tokens to populate the Pratt `PRECEDENCE_LUT`. AX.W0a.2.p
+/// narrowed `detect_pratt` to reject rules whose operator position
+/// yields an empty operator set; complexSelector now routes through
+/// Flat so the iteration wrapper byte-walks the regex operator
+/// properly.
 #[test]
-fn css_complex_selector_classified_as_pratt() {
+fn css_complex_selector_classified_as_flat_not_pratt() {
     let Some(ir) = compile_css_l4() else {
         println!("CSS L4 grammar unavailable — test skipped");
         return;
     };
-    assert_shape(&ir, "complexSelector", ShapeTag::Pratt);
+    assert_shape(&ir, "complexSelector", ShapeTag::Flat);
 }
 
 /// `mathExpr = mathProduct , ( ("+" | "-") >> mathProduct ) *` at

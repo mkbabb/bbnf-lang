@@ -223,19 +223,28 @@ pub fn emit_parse_pratt(
             // step so downstream consumers see the walker-compatible
             // reduced tree).
             //
-            // AX.W0a.2.n — skip trailing whitespace at the top of
-            // every loop iteration so the LUT peek sees the next
-            // operator byte, not the whitespace separating an
-            // operand from its successor operator. Without this
-            // the LUT returns 0 on a space byte and the loop
-            // terminates prematurely, leaving the remainder of
-            // the operand chain un-consumed (json.bbnf offset-192
-            // defect).
+            // AX.W0a.2.n — Whitespace-aware operator peek. If the
+            // byte at `*p` is already a valid operator (LUT byte
+            // nonzero), dispatch on it directly — whitespace may
+            // BE the operator (CSS combinators `/\s*>\s*/` etc.
+            // carry leading whitespace as part of the operator
+            // alphabet). If the byte is not an operator, attempt
+            // skip_space + re-peek once; operator-chain mining
+            // ensures the rule's LUT indexes a disjoint first-byte
+            // alphabet so a skipped whitespace byte cannot collide
+            // with a non-whitespace operator. This restores
+            // json.bbnf's `"[" >> ... << "]"` Pratt chain (the
+            // W0a.2.n target) without breaking whitespace-carrying
+            // combinator operators.
             loop {
-                let _ = #support_mod::skip_space(input, p, state);
                 // Peek next byte; consult the per-rule PRECEDENCE_LUT_<rule>.
-                let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-                let lut_byte: u8 = #rule_lut_ident[op_byte as usize];
+                let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+                let mut lut_byte: u8 = #rule_lut_ident[op_byte as usize];
+                if lut_byte == 0 {
+                    let _ = #support_mod::skip_space(input, p, state);
+                    op_byte = input.get(*p).copied().unwrap_or(0);
+                    lut_byte = #rule_lut_ident[op_byte as usize];
+                }
                 let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                     ::core::option::Option::None
                 } else {
@@ -535,14 +544,21 @@ pub fn emit_parse_pratt_visitor(
             let mut op_stack: ::std::vec::Vec<LocalOpEntry> =
                 ::std::vec::Vec::with_capacity(4);
 
-            // AX.W0a.2.n — skip trailing whitespace at the top of
-            // every loop iteration (mirrors tape-path emitter) so
-            // the LUT peek sees the next operator byte rather than
-            // operand-trailing whitespace.
+            // AX.W0a.2.n — Whitespace-aware operator peek (mirrors
+            // tape-path emitter). Dispatch on the current byte
+            // directly when it is already an operator; fall back to
+            // skip_space + re-peek only when the current byte is
+            // not in the rule's LUT alphabet. Preserves whitespace-
+            // carrying combinator operators while fixing the
+            // trailing-whitespace premature-break.
             loop {
-                let _ = #support_mod::skip_space(input, p, state);
-                let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-                let lut_byte: u8 = #rule_lut_ident[op_byte as usize];
+                let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+                let mut lut_byte: u8 = #rule_lut_ident[op_byte as usize];
+                if lut_byte == 0 {
+                    let _ = #support_mod::skip_space(input, p, state);
+                    op_byte = input.get(*p).copied().unwrap_or(0);
+                    lut_byte = #rule_lut_ident[op_byte as usize];
+                }
                 let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                     ::core::option::Option::None
                 } else {

@@ -288,18 +288,21 @@ pub fn emit_parse_pratt(
 
                 let second_byte: ::core::option::Option<u8> =
                     input.get(*p + 1).copied();
-                let (op_width, op_discriminant) = if two_byte == 0 {
+                let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
                     let mut found_disc: u8 = 0u8;
+                    let mut matched: bool = false;
                     for e in #rule_entries_ident.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
+                            matched = true;
                             break;
                         }
                     }
-                    (1u32, found_disc)
+                    (1u32, found_disc, matched)
                 } else {
                     let mut found_disc: u8 = 0u8;
                     let mut matched_two_byte: bool = false;
+                    let mut matched_single: bool = false;
                     for e in #rule_entries_ident.iter() {
                         if e.byte == op_byte && e.second_byte == second_byte {
                             found_disc = e.op_discriminant;
@@ -311,17 +314,33 @@ pub fn emit_parse_pratt(
                     // (byte, second_byte) pair wasn't in the entries
                     // — fall back to a single-byte entry on the same
                     // first byte.
-                    if !matched_two_byte && found_disc == 0u8 {
+                    if !matched_two_byte {
                         for e in #rule_entries_ident.iter() {
                             if e.byte == op_byte && e.second_byte.is_none() {
                                 found_disc = e.op_discriminant;
+                                matched_single = true;
                                 break;
                             }
                         }
                     }
                     let width = if matched_two_byte { 2u32 } else { 1u32 };
-                    (width, found_disc)
+                    (width, found_disc, matched_two_byte || matched_single)
                 };
+
+                // AX.W0a.2.n — if the LUT byte was nonzero but no
+                // concrete entry matched (first byte of a two-byte op
+                // alone, e.g. `|` where only `||` is a real operator),
+                // the current position isn't actually an operator —
+                // break the loop instead of consuming a phantom byte.
+                // Pre-W0a.2.n the same code consumed the byte (found_disc
+                // = 0, width = 1) and emitted a zero-discriminant op
+                // leaf, corrupting the reducer chain. Surface exposed
+                // once skip_space lifted the operator peek past trailing
+                // whitespace on `value_or`'s single `|` alternation
+                // separator.
+                if !op_matched {
+                    break;
+                }
 
                 // Advance past the op bytes + emit a payload-bearing
                 // Span leaf carrying the 1-byte op_discriminant via
@@ -566,18 +585,21 @@ pub fn emit_parse_pratt_visitor(
 
                 let second_byte: ::core::option::Option<u8> =
                     input.get(*p + 1).copied();
-                let (op_width, op_discriminant) = if two_byte == 0 {
+                let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
                     let mut found_disc: u8 = 0u8;
+                    let mut matched: bool = false;
                     for e in #rule_entries_ident.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
+                            matched = true;
                             break;
                         }
                     }
-                    (1u32, found_disc)
+                    (1u32, found_disc, matched)
                 } else {
                     let mut found_disc: u8 = 0u8;
                     let mut matched_two_byte: bool = false;
+                    let mut matched_single: bool = false;
                     for e in #rule_entries_ident.iter() {
                         if e.byte == op_byte && e.second_byte == second_byte {
                             found_disc = e.op_discriminant;
@@ -585,9 +607,23 @@ pub fn emit_parse_pratt_visitor(
                             break;
                         }
                     }
+                    if !matched_two_byte {
+                        for e in #rule_entries_ident.iter() {
+                            if e.byte == op_byte && e.second_byte.is_none() {
+                                found_disc = e.op_discriminant;
+                                matched_single = true;
+                                break;
+                            }
+                        }
+                    }
                     let width = if matched_two_byte { 2u32 } else { 1u32 };
-                    (width, found_disc)
+                    (width, found_disc, matched_two_byte || matched_single)
                 };
+
+                // AX.W0a.2.n — phantom-op guard (mirrors tape-path).
+                if !op_matched {
+                    break;
+                }
 
                 *p = (*p).saturating_add(op_width as usize);
 

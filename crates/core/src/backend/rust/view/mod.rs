@@ -65,6 +65,7 @@ use crate::backend::rust::ir_types::IrCodegenCtx;
 mod alt;
 pub mod color;
 mod grammar;
+pub mod json;
 mod leaves;
 pub mod named_types;
 mod repeat;

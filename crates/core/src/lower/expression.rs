@@ -120,6 +120,38 @@ fn dispatch_expression<'a>(
         node.kind(),
         TapeKind::Rule | TapeKind::Repeat | TapeKind::Seq | TapeKind::Alt,
     );
+    // Pratt-shape detection runs before the anonymous-wrapper branch
+    // so that reducer compounds carrying op_discriminant in
+    // `variant_idx` (∈ {0,1,2} → rule_kind aliases to int_lit /
+    // float_lit / bool_lit) and flat-sequence wrappers both route
+    // through `lower_binary_factor` rather than falling into the
+    // wrapper-substantive branch (which drops the Span op-leaves) or
+    // the catch-all `_ => lower_term` arm (which panics on
+    // non-terminal spans).
+    //
+    // Two entry shapes:
+    //  1. Direct reducer: `kind == Rule`, `variant_idx ∈ {0,1,2}`,
+    //     three children `[LHS, op_leaf, RHS]`. The wrapper's buggy
+    //     `first_child_root` backward walk sometimes surfaces the tail
+    //     reducer in place of the true `binary_factor` outer.
+    //  2. Flat wrapper: wrapper's `children()` surfaces `[operand,
+    //     op_leaf, operand, …]` — the tail reducer's own children
+    //     leaked through the wrapper's sib-skip walk. Detected via
+    //     the presence of a `Span vi=0` child whose span text is one
+    //     of the fixed operator tokens.
+    //
+    // Under the walker-era tape (pre-W0b) neither shape fires — the
+    // outer `binary_factor` Rule compound was emitted with
+    // `variant_idx = 34` (maps to `BbnfBootstrapRuleKind::binary_
+    // factor`) and surfaced at the `BbnfBootstrapRuleKind::binary_
+    // factor` arm below.
+    if is_pratt_reducer(node) {
+        return lower_binary_factor(node, ctx);
+    }
+    if is_wrapper_kind && looks_like_pratt_flat(node) {
+        return lower_binary_factor(node, ctx);
+    }
+
     if is_unknown_or_sentinel && is_wrapper_kind {
         let parent_offset = node.cursor().offset();
         let substantive: Vec<BbnfBootstrapNodeView<'a>> = node
@@ -464,22 +496,55 @@ fn recognize_binary_operator<'a>(
 /// Collect the flattened child sequence of a `binary_factor`
 /// compound as `[first_operand, op, operand, op, operand, ...]`.
 ///
-/// The DTA tape wraps the iteration body
-/// `( binary_operators ?w , mapped_factor )` in two layers:
-///   1. An outer Rule/Repeat compound that holds every iteration.
-///   2. Per iteration, a `Seq` whose children include the
-///      `binary_operators` Alt and the `mapped_factor` operand.
+/// Two tape shapes reach this entry, dispatched on structure:
 ///
-/// This function peels both layers so the partition loop in
-/// [`lower_binary_factor`] sees a flat sequence. Under the legacy
-/// fn-per-rule emission (pre-DTA) the Repeat wrapper held operand
-/// compounds directly; the flattening degrades gracefully — a child
-/// that is already `mapped_factor` / `binary_operators` / an
-/// operator-shaped compound passes through unchanged.
+/// 1. **Pratt reducer chain** (post-W0a.2.l under shape-dispatched
+///    routing). `parse_pratt_BbnfBootstrap_binary_factor` emits an
+///    outer `TapeKind::Rule` compound whose `child_off` points at the
+///    LAST reducer in a right-leaning chain. Each reducer is itself
+///    a `TapeKind::Rule` compound stamped with the op_discriminant as
+///    its `variant_idx` (0/1/2 → `<<`/`>>`/`-`), holding three
+///    children `[LHS_compound, Span_op_leaf, RHS_compound]`. The LHS
+///    is either the previous reducer or the initial operand;
+///    the op-leaf is a `TapeKind::Span` leaf with `variant_idx == 0`
+///    carrying the operator's punctuation via its source span. This
+///    shape surfaces as a SINGLE direct child on the outer compound
+///    even when multiple operators fire — the `sib_skip` finaliser
+///    only admits the last reducer at the outer's frame depth. Walk
+///    the chain backward to produce `[initial, op, rhs₁, op, rhs₂,
+///    …]` in source order.
+///
+/// 2. **Walker-era iteration-pair layout** (pre-Pratt routing; still
+///    reaches this entry for grammars whose binary_factor is not
+///    routed through the shape dispatcher, plus any residual walker-
+///    tape callers until W0b). The walker emits `[first_operand,
+///    iteration_wrapper]` where the wrapper holds per-iteration
+///    `Seq` compounds each wrapping `(operator, optional_ws,
+///    operand)`. `is_iteration_pair_wrapper` + `iter_pair_children`
+///    flatten that wrapping.
+///
+/// Pratt detection fires first so the Pratt shape is always caught
+/// before walker-era heuristics get to inspect the outer. When the
+/// detector rejects (no reducer-chain structure), control falls
+/// through to the walker-era branch unchanged — preserving the
+/// tape-shape compatibility required until W0b deletes the walker
+/// outright.
 fn collect_binary_operands<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Vec<BbnfBootstrapNodeView<'a>> {
     use ::bbnf::runtime::tape::TapeKind;
+
+    // Pratt-shape branch: detect a reducer-chain outer and walk it
+    // into the flat `[operand, op_leaf, operand, op_leaf, …]`
+    // sequence the partition loop consumes. The op-leaves are
+    // `TapeKind::Span` records whose `span_text().trim()` carries one
+    // of `<<` / `>>` / `-`, so the existing `recognize_binary_operator`
+    // partition fires on the span-text arm.
+    if let Some(chain) = collect_pratt_reducer_chain(node) {
+        return chain;
+    }
+
+    // Walker-era iteration-pair branch.
     let mut children = node.children();
     let Some(first) = children.next() else {
         return Vec::new();
@@ -513,6 +578,193 @@ fn collect_binary_operands<'a>(
     }
 
     operands
+}
+
+/// Detect a Pratt reducer-chain outer and walk it into the flat
+/// `[initial_operand, op_leaf, operand, op_leaf, operand, …]`
+/// sequence expected by [`lower_binary_factor`]'s partition loop.
+///
+/// Returns `None` when `outer` does not look like a Pratt reducer-
+/// chain outer — single-operand binary_factor (no reducer fires) or
+/// walker-era iteration-pair layout both land here.
+///
+/// # Shape invariants (see `emit_parse_pratt` in
+/// `backend/rust/emitter/shapes/pratt.rs`)
+///
+/// - The outer compound has exactly ONE direct child visible via
+///   the frame-depth child iteration: `sib_skip` admits only the
+///   last reducer because the outer's `child_off` points at it and
+///   every intermediate operand / op-leaf sits at a deeper frame.
+/// - That child is `TapeKind::Rule` with `variant_idx ∈ {0,1,2}`
+///   (the op_discriminant). When surfaced through `rule_kind()`'s
+///   variant_idx → rule table the reducer aliases to `int_lit`,
+///   `float_lit`, or `bool_lit` — a pure-coincidence collision
+///   with the literal rules' variant ids; the structural check on
+///   `(kind, variant_idx, children.len(), children[1].kind())` is
+///   the disambiguator.
+/// - The reducer compound has EXACTLY three direct children
+///   `[LHS, op_leaf, RHS]`. The middle child is `TapeKind::Span`
+///   with `variant_idx == 0` whose span text is one of the fixed
+///   operator tokens.
+///
+/// Every reducer whose LHS is ALSO a reducer chains the same shape
+/// recursively. Termination: the deepest reducer's LHS is the
+/// initial operand — a different structure (literal / identifier /
+/// regex / grouped expression) that fails the reducer check.
+fn collect_pratt_reducer_chain<'a>(
+    outer: BbnfBootstrapNodeView<'a>,
+) -> Option<Vec<BbnfBootstrapNodeView<'a>>> {
+    // Three entry shapes reach this detector:
+    //
+    //  (a) `outer` is the proper `binary_factor` Rule compound with
+    //      `variant_idx = 34` pushed by `parse_pratt_<rule>`'s close
+    //      step. Its `children()` yield EXACTLY ONE direct child, the
+    //      tail reducer. Chain walk proceeds from there.
+    //
+    //  (b) `outer` is the tail reducer itself. Under the post-W0a.2.l
+    //      tape a concatenation-iteration `Seq vi=0` wrapper surfaces
+    //      this reducer through its `children()` sib-skip walk even
+    //      though the true direct child (per frame-depth) is the
+    //      binary_factor outer compound. The wrapper's first-child
+    //      backward walk leaps past the binary_factor outer into the
+    //      reducer's own children. When a caller dispatches on those
+    //      children, the tail reducer arrives as `outer` here.
+    //
+    //  (c) `outer` is a concatenation-iteration wrapper whose own
+    //      `children()` surfaces `[reducer, op_leaf, RHS]` flat (the
+    //      tail reducer's children rather than the binary_factor
+    //      compound). The first child is a reducer that already carries
+    //      the full chain; treat it as case (b).
+    //
+    // All three paths converge on "find the tail reducer, walk its
+    // LHS chain backward". Case (a) vs (b/c) is discriminated by whether
+    // the outer itself is a reducer (is_pratt_reducer): case (a)'s outer
+    // is the binary_factor compound (variant_idx == 34 → rule_kind ==
+    // binary_factor, not in the {0,1,2} op_discriminant space);
+    // case (b)'s outer IS a reducer. Case (c) needs to peek at the
+    // first child: if it's a reducer we treat the outer as a wrapper
+    // whose first child is the tail reducer.
+    let tail_reducer = if is_pratt_reducer(outer) {
+        // Case (b): outer IS the tail reducer.
+        outer
+    } else {
+        let mut iter = outer.children();
+        let first = iter.next()?;
+        if is_pratt_reducer(first) {
+            // Case (a) when `first` is the ONLY child (standard
+            // binary_factor compound), OR case (c) when `first` is the
+            // tail reducer surfaced by the wrapper's buggy sib-skip
+            // walk past the binary_factor outer. In either case, first
+            // is the reducer that roots the chain.
+            first
+        } else {
+            return None;
+        }
+    };
+
+    // Walk the chain: each reducer contributes `[op_leaf, RHS]`;
+    // after the chain, the deepest reducer's LHS is the initial
+    // operand. Push in reverse order (tail reducer's RHS first) then
+    // reverse at the end.
+    let mut reversed: Vec<BbnfBootstrapNodeView<'a>> = Vec::new();
+    let mut current = tail_reducer;
+    loop {
+        let mut kids_iter = current.children();
+        let lhs = kids_iter.next()?;
+        let op_leaf = kids_iter.next()?;
+        let rhs = kids_iter.next()?;
+        // Sanity: exactly 3 children.
+        if kids_iter.next().is_some() {
+            return None;
+        }
+        reversed.push(rhs);
+        reversed.push(op_leaf);
+        if is_pratt_reducer(lhs) {
+            current = lhs;
+        } else {
+            reversed.push(lhs);
+            break;
+        }
+    }
+    reversed.reverse();
+    Some(reversed)
+}
+
+/// Structural check: `view` matches the shape of a Pratt reducer
+/// compound — `TapeKind::Rule` with op_discriminant `variant_idx`
+/// and three children whose middle is the `TapeKind::Span` op-leaf.
+///
+/// Accepts `variant_idx ∈ {0,1,2}` to cover every binary operator's
+/// op_discriminant within `PRECEDENCE_ENTRIES_binary_factor`; if a
+/// future grammar introduces a fourth binary operator the range
+/// widens naturally (the check on `op_leaf.kind() == Span` + its
+/// variant_idx == 0 + span text in the fixed alphabet remains the
+/// authoritative discriminator).
+fn is_pratt_reducer<'a>(view: BbnfBootstrapNodeView<'a>) -> bool {
+    use ::bbnf::runtime::tape::TapeKind;
+    if view.kind() != TapeKind::Rule {
+        return false;
+    }
+    // op_discriminant lives in [0, 2] inclusive for binary_factor's
+    // three operators (`<<` / `>>` / `-`).
+    if !matches!(view.variant_idx(), 0 | 1 | 2) {
+        return false;
+    }
+    let mut kids = view.children();
+    let _lhs = match kids.next() {
+        Some(v) => v,
+        None => return false,
+    };
+    let op_leaf = match kids.next() {
+        Some(v) => v,
+        None => return false,
+    };
+    let _rhs = match kids.next() {
+        Some(v) => v,
+        None => return false,
+    };
+    if kids.next().is_some() {
+        return false;
+    }
+    // Middle child must be the op-leaf: Span kind, variant_idx = 0,
+    // trimmed span text is one of the fixed operator tokens.
+    if op_leaf.kind() != TapeKind::Span {
+        return false;
+    }
+    if op_leaf.variant_idx() != 0u8 {
+        return false;
+    }
+    let trimmed = op_leaf.span_text().trim();
+    matches!(trimmed, "<<" | ">>" | "-")
+}
+
+/// Structural check: `view`'s direct children surface as a flat
+/// `[operand, op_leaf, operand, op_leaf, …]` Pratt sequence — the
+/// tail reducer's three children `[LHS_reducer, op_leaf, RHS]`
+/// leaked through an enclosing wrapper's sib-skip backward walk
+/// instead of the true `binary_factor` outer compound.
+///
+/// Discriminator: at least one direct child is a `TapeKind::Span`
+/// record with `variant_idx == 0` whose trimmed span text is one of
+/// the fixed operator tokens `<<` / `>>` / `-`. No walker-era
+/// wrapper carries a span-text op-leaf at its first structural
+/// level (the walker produces explicit `binary_operators` Alt
+/// compounds, not bare Span leaves), so the presence of this shape
+/// is authoritative evidence that the current tape is Pratt-flat.
+///
+/// Returns `false` when no such op-leaf child exists — the caller
+/// falls through to the standard wrapper-substantive branch.
+fn looks_like_pratt_flat<'a>(view: BbnfBootstrapNodeView<'a>) -> bool {
+    use ::bbnf::runtime::tape::TapeKind;
+    for child in view.children() {
+        if child.kind() == TapeKind::Span
+            && child.variant_idx() == 0
+            && matches!(child.span_text().trim(), "<<" | ">>" | "-")
+        {
+            return true;
+        }
+    }
+    false
 }
 
 /// Whether `view` is an iteration-pair wrapper compound — a `Seq`
@@ -1263,6 +1515,16 @@ fn lower_leaf_by_span_text<'a>(
 /// `peel_transparent` — routes through here; there is no other
 /// term-lowering path.
 fn lower_term<'a>(node: BbnfBootstrapNodeView<'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
+    {
+        use std::io::Write as _;
+        if let Ok(mut f) = std::fs::OpenOptions::new()
+            .create(true).append(true)
+            .open("/Users/mkbabb/Programming/bbnf-wt-ax-w0a-2m/axw0a2m-probe.log")
+        {
+            let _ = writeln!(f, "[lt] ENTRY span={:?} kind={:?} vi={} rk={:?}",
+                node.span_text(), node.kind(), node.variant_idx(), node.rule_kind());
+        }
+    }
     // Plain leaf — literal, regex, identifier, epsilon — classified
     // directly from the span text. Covers every term branch whose
     // source span IS the leaf token (no inner expression to descend into).

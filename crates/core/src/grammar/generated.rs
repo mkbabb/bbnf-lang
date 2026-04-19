@@ -7589,22 +7589,15 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Err(_) => ::core::option::Option::None,
         }
     }
-    /// AW-III.W6.5 — dense Pratt precedence LUT (aggregate).
+    /// AW-III.W6.5 — dense Pratt precedence LUT.
     ///
-    /// One byte per dispatch byte, spanning every Pratt rule in
-    /// the grammar. Consulted by the DTA walker's cold-path
-    /// `ShuntingYard` arm; superseded for shape-emission Pratt
-    /// bodies by the per-rule `PRECEDENCE_LUT_<rule>` constants
-    /// below (AX.W0a.2.k). See `bbnf::backend::rust::emitter::
+    /// One byte per dispatch byte. Consulted by the DTA driver's
+    /// `ShuntingYard` arm. See `bbnf::backend::rust::emitter::
     /// precedence` for the bit layout.
     pub const PRECEDENCE_LUT: [u8; 256] = [
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 1u8, 129u8, 0u8, 0u8, 0u8, 1u8, 2u8, 0u8, 2u8, 0u8, 1u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 129u8, 0u8, 129u8, 0u8, 129u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 129u8,
+        0u8, 1u8, 0u8, 0u8, 0u8, 0u8, 1u8, 2u8, 0u8, 2u8, 0u8, 1u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
@@ -7612,12 +7605,17 @@ mod __bbnfbootstrap_emit_impl {
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8,
     ];
-    /// AW-III.W6.5 — aggregate sparse Pratt metadata slice.
+    /// AW-III.W6.5 — sparse Pratt metadata slice.
     ///
-    /// Walker-path companion to [`PRECEDENCE_LUT`]. Per-rule
-    /// emitters use `PRECEDENCE_ENTRIES_<rule>` instead.
+    /// One entry per mined operator. Consulted by the DTA
+    /// driver when `PRECEDENCE_LUT[byte] & 0x80 != 0` (two-byte
+    /// operator) to resolve the second byte + discriminant.
     pub const PRECEDENCE_ENTRIES: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
         ::bbnf::runtime::tape::DtaPrecedenceEntry {
             byte: 43u8,
@@ -7659,460 +7657,10 @@ mod __bbnfbootstrap_emit_impl {
             op_rule: ::bbnf::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 2u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 58u8,
-            second_byte: ::core::option::Option::Some(58u8),
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(5u32),
-            op_discriminant: 0u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 38u8,
-            second_byte: ::core::option::Option::Some(38u8),
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(16u32),
-            op_discriminant: 0u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 124u8,
-            second_byte: ::core::option::Option::Some(124u8),
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(17u32),
-            op_discriminant: 0u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 60u8,
-            second_byte: ::core::option::Option::Some(60u8),
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(33u32),
-            op_discriminant: 0u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 62u8,
-            second_byte: ::core::option::Option::Some(62u8),
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(33u32),
-            op_discriminant: 1u8,
-        },
     ];
-    /// AW-III.W6.5 — total mined operator count (aggregate).
-    pub const PRECEDENCE_OPERATOR_COUNT: usize = 10usize;
-    /// AX.W0a.2.k — per-rule Pratt precedence LUT.
-    ///
-    /// One byte per dispatch byte. The emitted
-    /// `parse_pratt_<rule>` body references this constant
-    /// (not the grammar-wide aggregate) so each Pratt
-    /// rule has its own scoped operator alphabet —
-    /// preventing cross-rule byte collisions (e.g.
-    /// `||` in `value_or` vs `<<` in `binary_factor`).
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_LUT_value_mul: [u8; 256] = [
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 1u8, 0u8, 0u8, 0u8, 0u8, 1u8, 2u8, 0u8, 2u8, 0u8, 1u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8,
-    ];
-    /// AX.W0a.2.k — per-rule sparse Pratt metadata.
-    ///
-    /// Consulted by the rule's Pratt body when
-    /// `PRECEDENCE_LUT_<rule>[byte] & 0x80 != 0`.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_ENTRIES_value_mul: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 43u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
-            op_discriminant: 0u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 45u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
-            op_discriminant: 1u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 42u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(9u32),
-            op_discriminant: 0u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 47u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(9u32),
-            op_discriminant: 1u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 37u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(9u32),
-            op_discriminant: 2u8,
-        },
-    ];
-    /// AX.W0a.2.k — per-rule operator count.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_OPERATOR_COUNT_value_mul: usize = 5usize;
-    /// AX.W0a.2.k — per-rule Pratt precedence LUT.
-    ///
-    /// One byte per dispatch byte. The emitted
-    /// `parse_pratt_<rule>` body references this constant
-    /// (not the grammar-wide aggregate) so each Pratt
-    /// rule has its own scoped operator alphabet —
-    /// preventing cross-rule byte collisions (e.g.
-    /// `||` in `value_or` vs `<<` in `binary_factor`).
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_LUT_value_add: [u8; 256] = [
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 1u8, 0u8, 0u8, 0u8, 0u8, 1u8, 2u8, 0u8, 2u8, 0u8, 1u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8,
-    ];
-    /// AX.W0a.2.k — per-rule sparse Pratt metadata.
-    ///
-    /// Consulted by the rule's Pratt body when
-    /// `PRECEDENCE_LUT_<rule>[byte] & 0x80 != 0`.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_ENTRIES_value_add: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 43u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
-            op_discriminant: 0u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 45u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
-            op_discriminant: 1u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 42u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(9u32),
-            op_discriminant: 0u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 47u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(9u32),
-            op_discriminant: 1u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 37u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(9u32),
-            op_discriminant: 2u8,
-        },
-    ];
-    /// AX.W0a.2.k — per-rule operator count.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_OPERATOR_COUNT_value_add: usize = 5usize;
-    /// AX.W0a.2.k — per-rule Pratt precedence LUT.
-    ///
-    /// One byte per dispatch byte. The emitted
-    /// `parse_pratt_<rule>` body references this constant
-    /// (not the grammar-wide aggregate) so each Pratt
-    /// rule has its own scoped operator alphabet —
-    /// preventing cross-rule byte collisions (e.g.
-    /// `||` in `value_or` vs `<<` in `binary_factor`).
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_LUT_value_path: [u8; 256] = [
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 129u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8,
-    ];
-    /// AX.W0a.2.k — per-rule sparse Pratt metadata.
-    ///
-    /// Consulted by the rule's Pratt body when
-    /// `PRECEDENCE_LUT_<rule>[byte] & 0x80 != 0`.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_ENTRIES_value_path: &[::bbnf::runtime::tape::DtaPrecedenceEntry] =
-        &[::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 58u8,
-            second_byte: ::core::option::Option::Some(58u8),
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(5u32),
-            op_discriminant: 0u8,
-        }];
-    /// AX.W0a.2.k — per-rule operator count.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_OPERATOR_COUNT_value_path: usize = 1usize;
-    /// AX.W0a.2.k — per-rule Pratt precedence LUT.
-    ///
-    /// One byte per dispatch byte. The emitted
-    /// `parse_pratt_<rule>` body references this constant
-    /// (not the grammar-wide aggregate) so each Pratt
-    /// rule has its own scoped operator alphabet —
-    /// preventing cross-rule byte collisions (e.g.
-    /// `||` in `value_or` vs `<<` in `binary_factor`).
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_LUT_value_input: [u8; 256] = [
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8,
-    ];
-    /// AX.W0a.2.k — per-rule sparse Pratt metadata.
-    ///
-    /// Consulted by the rule's Pratt body when
-    /// `PRECEDENCE_LUT_<rule>[byte] & 0x80 != 0`.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_ENTRIES_value_input: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[];
-    /// AX.W0a.2.k — per-rule operator count.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_OPERATOR_COUNT_value_input: usize = 0usize;
-    /// AX.W0a.2.k — per-rule Pratt precedence LUT.
-    ///
-    /// One byte per dispatch byte. The emitted
-    /// `parse_pratt_<rule>` body references this constant
-    /// (not the grammar-wide aggregate) so each Pratt
-    /// rule has its own scoped operator alphabet —
-    /// preventing cross-rule byte collisions (e.g.
-    /// `||` in `value_or` vs `<<` in `binary_factor`).
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_LUT_value_cmp: [u8; 256] = [
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8,
-    ];
-    /// AX.W0a.2.k — per-rule sparse Pratt metadata.
-    ///
-    /// Consulted by the rule's Pratt body when
-    /// `PRECEDENCE_LUT_<rule>[byte] & 0x80 != 0`.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_ENTRIES_value_cmp: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[];
-    /// AX.W0a.2.k — per-rule operator count.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_OPERATOR_COUNT_value_cmp: usize = 0usize;
-    /// AX.W0a.2.k — per-rule Pratt precedence LUT.
-    ///
-    /// One byte per dispatch byte. The emitted
-    /// `parse_pratt_<rule>` body references this constant
-    /// (not the grammar-wide aggregate) so each Pratt
-    /// rule has its own scoped operator alphabet —
-    /// preventing cross-rule byte collisions (e.g.
-    /// `||` in `value_or` vs `<<` in `binary_factor`).
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_LUT_value_and: [u8; 256] = [
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 129u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8,
-    ];
-    /// AX.W0a.2.k — per-rule sparse Pratt metadata.
-    ///
-    /// Consulted by the rule's Pratt body when
-    /// `PRECEDENCE_LUT_<rule>[byte] & 0x80 != 0`.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_ENTRIES_value_and: &[::bbnf::runtime::tape::DtaPrecedenceEntry] =
-        &[::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 38u8,
-            second_byte: ::core::option::Option::Some(38u8),
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(16u32),
-            op_discriminant: 0u8,
-        }];
-    /// AX.W0a.2.k — per-rule operator count.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_OPERATOR_COUNT_value_and: usize = 1usize;
-    /// AX.W0a.2.k — per-rule Pratt precedence LUT.
-    ///
-    /// One byte per dispatch byte. The emitted
-    /// `parse_pratt_<rule>` body references this constant
-    /// (not the grammar-wide aggregate) so each Pratt
-    /// rule has its own scoped operator alphabet —
-    /// preventing cross-rule byte collisions (e.g.
-    /// `||` in `value_or` vs `<<` in `binary_factor`).
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_LUT_value_or: [u8; 256] = [
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 129u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8,
-    ];
-    /// AX.W0a.2.k — per-rule sparse Pratt metadata.
-    ///
-    /// Consulted by the rule's Pratt body when
-    /// `PRECEDENCE_LUT_<rule>[byte] & 0x80 != 0`.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_ENTRIES_value_or: &[::bbnf::runtime::tape::DtaPrecedenceEntry] =
-        &[::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 124u8,
-            second_byte: ::core::option::Option::Some(124u8),
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(17u32),
-            op_discriminant: 0u8,
-        }];
-    /// AX.W0a.2.k — per-rule operator count.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_OPERATOR_COUNT_value_or: usize = 1usize;
-    /// AX.W0a.2.k — per-rule Pratt precedence LUT.
-    ///
-    /// One byte per dispatch byte. The emitted
-    /// `parse_pratt_<rule>` body references this constant
-    /// (not the grammar-wide aggregate) so each Pratt
-    /// rule has its own scoped operator alphabet —
-    /// preventing cross-rule byte collisions (e.g.
-    /// `||` in `value_or` vs `<<` in `binary_factor`).
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_LUT_binary_factor: [u8; 256] = [
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 1u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 129u8, 0u8, 129u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8,
-    ];
-    /// AX.W0a.2.k — per-rule sparse Pratt metadata.
-    ///
-    /// Consulted by the rule's Pratt body when
-    /// `PRECEDENCE_LUT_<rule>[byte] & 0x80 != 0`.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_ENTRIES_binary_factor: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 60u8,
-            second_byte: ::core::option::Option::Some(60u8),
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(33u32),
-            op_discriminant: 0u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 62u8,
-            second_byte: ::core::option::Option::Some(62u8),
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(33u32),
-            op_discriminant: 1u8,
-        },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
-            byte: 45u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(33u32),
-            op_discriminant: 2u8,
-        },
-    ];
-    /// AX.W0a.2.k — per-rule operator count.
-    #[allow(non_upper_case_globals)]
-    pub const PRECEDENCE_OPERATOR_COUNT_binary_factor: usize = 3usize;
+    /// AW-III.W6.5 — total mined operator count for this
+    /// grammar. Non-zero iff the lift admitted ≥ 1 chain.
+    pub const PRECEDENCE_OPERATOR_COUNT: usize = 5usize;
     #[inline]
     #[cold]
     fn __regex_scan_BbnfBootstrap(
@@ -72123,6 +71671,8 @@ mod __bbnfbootstrap_emit_impl {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let outer_span_lo = *p as u32;
         let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
@@ -72130,11 +71680,40 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_path[op_byte as usize];
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
             if lut_byte == 0 {
-                while op_stack.pop().is_some() {}
                 break;
             }
             let precedence: u8 = lut_byte & 0x0Fu8;
@@ -72142,90 +71721,65 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, found_entry) = if two_byte == 0 {
+            let (op_width, op_discriminant) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_path.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
-                        found = true;
                         break;
                     }
                 }
-                (1u32, found_disc, found)
+                (1u32, found_disc)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_path.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
                         matched_two_byte = e.second_byte.is_some();
-                        found = true;
                         break;
-                    }
-                }
-                if !found {
-                    for e in PRECEDENCE_ENTRIES_value_path.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            found = true;
-                            break;
-                        }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, found)
+                (width, found_disc)
             };
-            if !found_entry {
-                while op_stack.pop().is_some() {}
-                break;
-            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let op_kind_variant_idx: u8 = {
-                let mut v: u8 = 0u8;
-                for e in PRECEDENCE_ENTRIES_value_path.iter() {
-                    if e.byte == op_byte
-                        && (e.second_byte == second_byte
-                            || (e.second_byte.is_none() && op_width == 1))
-                    {
-                        v = (e.op_rule.0 & 0xFF) as u8;
-                        break;
-                    }
-                }
-                v
-            };
             let arena_off: u32 = builder.arena_mut().len() as u32;
             builder.arena_mut().push(op_discriminant);
-            let _op_rec = builder.push_leaf_with_arena_payload(
+            let _op_rec = builder.push_leaf_with_arena_frame(
                 ::bbnf::runtime::tape::TapeKind::Span,
                 op_lo,
                 op_hi,
-                op_kind_variant_idx,
-                (op_discriminant & 0x1F),
+                0,
+                0,
                 arena_off,
-                1,
             );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
             op_stack.push(LocalOpEntry {
                 op_discriminant,
                 precedence,
                 associativity_is_left,
-                lhs_idx: 0u32,
-                lhs_span_lo: 0u32,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
             })?;
-            let _ = _rhs_off;
+            this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
         let outer_off = builder.push_compound(
             ::bbnf::runtime::tape::TapeKind::Rule,
-            outer_child_mark,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
             outer_span_lo,
             outer_span_hi,
             5u8,
@@ -72296,6 +71850,8 @@ mod __bbnfbootstrap_emit_impl {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let outer_span_lo = *p as u32;
         let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
@@ -72303,11 +71859,40 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_input[op_byte as usize];
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
             if lut_byte == 0 {
-                while op_stack.pop().is_some() {}
                 break;
             }
             let precedence: u8 = lut_byte & 0x0Fu8;
@@ -72315,90 +71900,65 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, found_entry) = if two_byte == 0 {
+            let (op_width, op_discriminant) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_input.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
-                        found = true;
                         break;
                     }
                 }
-                (1u32, found_disc, found)
+                (1u32, found_disc)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_input.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
                         matched_two_byte = e.second_byte.is_some();
-                        found = true;
                         break;
-                    }
-                }
-                if !found {
-                    for e in PRECEDENCE_ENTRIES_value_input.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            found = true;
-                            break;
-                        }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, found)
+                (width, found_disc)
             };
-            if !found_entry {
-                while op_stack.pop().is_some() {}
-                break;
-            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let op_kind_variant_idx: u8 = {
-                let mut v: u8 = 0u8;
-                for e in PRECEDENCE_ENTRIES_value_input.iter() {
-                    if e.byte == op_byte
-                        && (e.second_byte == second_byte
-                            || (e.second_byte.is_none() && op_width == 1))
-                    {
-                        v = (e.op_rule.0 & 0xFF) as u8;
-                        break;
-                    }
-                }
-                v
-            };
             let arena_off: u32 = builder.arena_mut().len() as u32;
             builder.arena_mut().push(op_discriminant);
-            let _op_rec = builder.push_leaf_with_arena_payload(
+            let _op_rec = builder.push_leaf_with_arena_frame(
                 ::bbnf::runtime::tape::TapeKind::Span,
                 op_lo,
                 op_hi,
-                op_kind_variant_idx,
-                (op_discriminant & 0x1F),
+                0,
+                0,
                 arena_off,
-                1,
             );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
             op_stack.push(LocalOpEntry {
                 op_discriminant,
                 precedence,
                 associativity_is_left,
-                lhs_idx: 0u32,
-                lhs_span_lo: 0u32,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
             })?;
-            let _ = _rhs_off;
+            this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
         let outer_off = builder.push_compound(
             ::bbnf::runtime::tape::TapeKind::Rule,
-            outer_child_mark,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
             outer_span_lo,
             outer_span_hi,
             6u8,
@@ -73539,6 +73099,8 @@ mod __bbnfbootstrap_emit_impl {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let outer_span_lo = *p as u32;
         let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_altdispatch_BbnfBootstrap_value_unary(input, p, state, builder)
@@ -73546,11 +73108,40 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_mul[op_byte as usize];
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
             if lut_byte == 0 {
-                while op_stack.pop().is_some() {}
                 break;
             }
             let precedence: u8 = lut_byte & 0x0Fu8;
@@ -73558,90 +73149,65 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, found_entry) = if two_byte == 0 {
+            let (op_width, op_discriminant) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_mul.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
-                        found = true;
                         break;
                     }
                 }
-                (1u32, found_disc, found)
+                (1u32, found_disc)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_mul.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
                         matched_two_byte = e.second_byte.is_some();
-                        found = true;
                         break;
-                    }
-                }
-                if !found {
-                    for e in PRECEDENCE_ENTRIES_value_mul.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            found = true;
-                            break;
-                        }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, found)
+                (width, found_disc)
             };
-            if !found_entry {
-                while op_stack.pop().is_some() {}
-                break;
-            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let op_kind_variant_idx: u8 = {
-                let mut v: u8 = 0u8;
-                for e in PRECEDENCE_ENTRIES_value_mul.iter() {
-                    if e.byte == op_byte
-                        && (e.second_byte == second_byte
-                            || (e.second_byte.is_none() && op_width == 1))
-                    {
-                        v = (e.op_rule.0 & 0xFF) as u8;
-                        break;
-                    }
-                }
-                v
-            };
             let arena_off: u32 = builder.arena_mut().len() as u32;
             builder.arena_mut().push(op_discriminant);
-            let _op_rec = builder.push_leaf_with_arena_payload(
+            let _op_rec = builder.push_leaf_with_arena_frame(
                 ::bbnf::runtime::tape::TapeKind::Span,
                 op_lo,
                 op_hi,
-                op_kind_variant_idx,
-                (op_discriminant & 0x1F),
+                0,
+                0,
                 arena_off,
-                1,
             );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
             op_stack.push(LocalOpEntry {
                 op_discriminant,
                 precedence,
                 associativity_is_left,
-                lhs_idx: 0u32,
-                lhs_span_lo: 0u32,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_altdispatch_BbnfBootstrap_value_unary(input, p, state, builder)
             })?;
-            let _ = _rhs_off;
+            this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
         let outer_off = builder.push_compound(
             ::bbnf::runtime::tape::TapeKind::Rule,
-            outer_child_mark,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
             outer_span_lo,
             outer_span_hi,
             13u8,
@@ -73712,6 +73278,8 @@ mod __bbnfbootstrap_emit_impl {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let outer_span_lo = *p as u32;
         let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder)
@@ -73719,11 +73287,40 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_add[op_byte as usize];
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
             if lut_byte == 0 {
-                while op_stack.pop().is_some() {}
                 break;
             }
             let precedence: u8 = lut_byte & 0x0Fu8;
@@ -73731,90 +73328,65 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, found_entry) = if two_byte == 0 {
+            let (op_width, op_discriminant) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_add.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
-                        found = true;
                         break;
                     }
                 }
-                (1u32, found_disc, found)
+                (1u32, found_disc)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_add.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
                         matched_two_byte = e.second_byte.is_some();
-                        found = true;
                         break;
-                    }
-                }
-                if !found {
-                    for e in PRECEDENCE_ENTRIES_value_add.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            found = true;
-                            break;
-                        }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, found)
+                (width, found_disc)
             };
-            if !found_entry {
-                while op_stack.pop().is_some() {}
-                break;
-            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let op_kind_variant_idx: u8 = {
-                let mut v: u8 = 0u8;
-                for e in PRECEDENCE_ENTRIES_value_add.iter() {
-                    if e.byte == op_byte
-                        && (e.second_byte == second_byte
-                            || (e.second_byte.is_none() && op_width == 1))
-                    {
-                        v = (e.op_rule.0 & 0xFF) as u8;
-                        break;
-                    }
-                }
-                v
-            };
             let arena_off: u32 = builder.arena_mut().len() as u32;
             builder.arena_mut().push(op_discriminant);
-            let _op_rec = builder.push_leaf_with_arena_payload(
+            let _op_rec = builder.push_leaf_with_arena_frame(
                 ::bbnf::runtime::tape::TapeKind::Span,
                 op_lo,
                 op_hi,
-                op_kind_variant_idx,
-                (op_discriminant & 0x1F),
+                0,
+                0,
                 arena_off,
-                1,
             );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
             op_stack.push(LocalOpEntry {
                 op_discriminant,
                 precedence,
                 associativity_is_left,
-                lhs_idx: 0u32,
-                lhs_span_lo: 0u32,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder)
             })?;
-            let _ = _rhs_off;
+            this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
         let outer_off = builder.push_compound(
             ::bbnf::runtime::tape::TapeKind::Rule,
-            outer_child_mark,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
             outer_span_lo,
             outer_span_hi,
             14u8,
@@ -73885,6 +73457,8 @@ mod __bbnfbootstrap_emit_impl {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let outer_span_lo = *p as u32;
         let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_pratt_BbnfBootstrap_value_add(input, p, state, builder)
@@ -73892,11 +73466,40 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_cmp[op_byte as usize];
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
             if lut_byte == 0 {
-                while op_stack.pop().is_some() {}
                 break;
             }
             let precedence: u8 = lut_byte & 0x0Fu8;
@@ -73904,90 +73507,65 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, found_entry) = if two_byte == 0 {
+            let (op_width, op_discriminant) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_cmp.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
-                        found = true;
                         break;
                     }
                 }
-                (1u32, found_disc, found)
+                (1u32, found_disc)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_cmp.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
                         matched_two_byte = e.second_byte.is_some();
-                        found = true;
                         break;
-                    }
-                }
-                if !found {
-                    for e in PRECEDENCE_ENTRIES_value_cmp.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            found = true;
-                            break;
-                        }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, found)
+                (width, found_disc)
             };
-            if !found_entry {
-                while op_stack.pop().is_some() {}
-                break;
-            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let op_kind_variant_idx: u8 = {
-                let mut v: u8 = 0u8;
-                for e in PRECEDENCE_ENTRIES_value_cmp.iter() {
-                    if e.byte == op_byte
-                        && (e.second_byte == second_byte
-                            || (e.second_byte.is_none() && op_width == 1))
-                    {
-                        v = (e.op_rule.0 & 0xFF) as u8;
-                        break;
-                    }
-                }
-                v
-            };
             let arena_off: u32 = builder.arena_mut().len() as u32;
             builder.arena_mut().push(op_discriminant);
-            let _op_rec = builder.push_leaf_with_arena_payload(
+            let _op_rec = builder.push_leaf_with_arena_frame(
                 ::bbnf::runtime::tape::TapeKind::Span,
                 op_lo,
                 op_hi,
-                op_kind_variant_idx,
-                (op_discriminant & 0x1F),
+                0,
+                0,
                 arena_off,
-                1,
             );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
             op_stack.push(LocalOpEntry {
                 op_discriminant,
                 precedence,
                 associativity_is_left,
-                lhs_idx: 0u32,
-                lhs_span_lo: 0u32,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_add(input, p, state, builder)
             })?;
-            let _ = _rhs_off;
+            this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
         let outer_off = builder.push_compound(
             ::bbnf::runtime::tape::TapeKind::Rule,
-            outer_child_mark,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
             outer_span_lo,
             outer_span_hi,
             15u8,
@@ -74058,6 +73636,8 @@ mod __bbnfbootstrap_emit_impl {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let outer_span_lo = *p as u32;
         let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder)
@@ -74065,11 +73645,40 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_and[op_byte as usize];
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
             if lut_byte == 0 {
-                while op_stack.pop().is_some() {}
                 break;
             }
             let precedence: u8 = lut_byte & 0x0Fu8;
@@ -74077,90 +73686,65 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, found_entry) = if two_byte == 0 {
+            let (op_width, op_discriminant) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_and.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
-                        found = true;
                         break;
                     }
                 }
-                (1u32, found_disc, found)
+                (1u32, found_disc)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_and.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
                         matched_two_byte = e.second_byte.is_some();
-                        found = true;
                         break;
-                    }
-                }
-                if !found {
-                    for e in PRECEDENCE_ENTRIES_value_and.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            found = true;
-                            break;
-                        }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, found)
+                (width, found_disc)
             };
-            if !found_entry {
-                while op_stack.pop().is_some() {}
-                break;
-            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let op_kind_variant_idx: u8 = {
-                let mut v: u8 = 0u8;
-                for e in PRECEDENCE_ENTRIES_value_and.iter() {
-                    if e.byte == op_byte
-                        && (e.second_byte == second_byte
-                            || (e.second_byte.is_none() && op_width == 1))
-                    {
-                        v = (e.op_rule.0 & 0xFF) as u8;
-                        break;
-                    }
-                }
-                v
-            };
             let arena_off: u32 = builder.arena_mut().len() as u32;
             builder.arena_mut().push(op_discriminant);
-            let _op_rec = builder.push_leaf_with_arena_payload(
+            let _op_rec = builder.push_leaf_with_arena_frame(
                 ::bbnf::runtime::tape::TapeKind::Span,
                 op_lo,
                 op_hi,
-                op_kind_variant_idx,
-                (op_discriminant & 0x1F),
+                0,
+                0,
                 arena_off,
-                1,
             );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
             op_stack.push(LocalOpEntry {
                 op_discriminant,
                 precedence,
                 associativity_is_left,
-                lhs_idx: 0u32,
-                lhs_span_lo: 0u32,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder)
             })?;
-            let _ = _rhs_off;
+            this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
         let outer_off = builder.push_compound(
             ::bbnf::runtime::tape::TapeKind::Rule,
-            outer_child_mark,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
             outer_span_lo,
             outer_span_hi,
             16u8,
@@ -74231,6 +73815,8 @@ mod __bbnfbootstrap_emit_impl {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let outer_span_lo = *p as u32;
         let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_pratt_BbnfBootstrap_value_and(input, p, state, builder)
@@ -74238,11 +73824,40 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_or[op_byte as usize];
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
             if lut_byte == 0 {
-                while op_stack.pop().is_some() {}
                 break;
             }
             let precedence: u8 = lut_byte & 0x0Fu8;
@@ -74250,90 +73865,65 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, found_entry) = if two_byte == 0 {
+            let (op_width, op_discriminant) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_or.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
-                        found = true;
                         break;
                     }
                 }
-                (1u32, found_disc, found)
+                (1u32, found_disc)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_value_or.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
                         matched_two_byte = e.second_byte.is_some();
-                        found = true;
                         break;
-                    }
-                }
-                if !found {
-                    for e in PRECEDENCE_ENTRIES_value_or.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            found = true;
-                            break;
-                        }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, found)
+                (width, found_disc)
             };
-            if !found_entry {
-                while op_stack.pop().is_some() {}
-                break;
-            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let op_kind_variant_idx: u8 = {
-                let mut v: u8 = 0u8;
-                for e in PRECEDENCE_ENTRIES_value_or.iter() {
-                    if e.byte == op_byte
-                        && (e.second_byte == second_byte
-                            || (e.second_byte.is_none() && op_width == 1))
-                    {
-                        v = (e.op_rule.0 & 0xFF) as u8;
-                        break;
-                    }
-                }
-                v
-            };
             let arena_off: u32 = builder.arena_mut().len() as u32;
             builder.arena_mut().push(op_discriminant);
-            let _op_rec = builder.push_leaf_with_arena_payload(
+            let _op_rec = builder.push_leaf_with_arena_frame(
                 ::bbnf::runtime::tape::TapeKind::Span,
                 op_lo,
                 op_hi,
-                op_kind_variant_idx,
-                (op_discriminant & 0x1F),
+                0,
+                0,
                 arena_off,
-                1,
             );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
             op_stack.push(LocalOpEntry {
                 op_discriminant,
                 precedence,
                 associativity_is_left,
-                lhs_idx: 0u32,
-                lhs_span_lo: 0u32,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_and(input, p, state, builder)
             })?;
-            let _ = _rhs_off;
+            this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
         let outer_off = builder.push_compound(
             ::bbnf::runtime::tape::TapeKind::Rule,
-            outer_child_mark,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
             outer_span_lo,
             outer_span_hi,
             17u8,
@@ -76770,6 +76360,8 @@ mod __bbnfbootstrap_emit_impl {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let outer_span_lo = *p as u32;
         let outer_child_mark = builder.mark_children();
+        let outer_child_mark_idx: u32 = outer_child_mark.0;
+        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_flat_BbnfBootstrap_mapped_factor(input, p, state, builder)
@@ -76777,11 +76369,40 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_binary_factor[op_byte as usize];
+            let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                ::core::option::Option::None
+            } else {
+                ::core::option::Option::Some(lut_byte & 0x0Fu8)
+            };
+            loop {
+                let top_op = match op_stack.last() {
+                    ::core::option::Option::Some(e) => e,
+                    ::core::option::Option::None => break,
+                };
+                let should_reduce = match new_prec {
+                    ::core::option::Option::None => true,
+                    ::core::option::Option::Some(p_new) => {
+                        top_op.precedence > p_new
+                            || (top_op.precedence == p_new && top_op.associativity_is_left)
+                    }
+                };
+                if !should_reduce {
+                    break;
+                }
+                let top_op = op_stack.pop().unwrap();
+                let compound_idx = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                    top_op.lhs_span_lo,
+                    *p as u32,
+                    top_op.op_discriminant,
+                    0,
+                );
+                this_operand_root = compound_idx.0;
+            }
             if lut_byte == 0 {
-                while op_stack.pop().is_some() {}
                 break;
             }
             let precedence: u8 = lut_byte & 0x0Fu8;
@@ -76789,90 +76410,65 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, found_entry) = if two_byte == 0 {
+            let (op_width, op_discriminant) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_binary_factor.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
-                        found = true;
                         break;
                     }
                 }
-                (1u32, found_disc, found)
+                (1u32, found_disc)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
-                let mut found: bool = false;
-                for e in PRECEDENCE_ENTRIES_binary_factor.iter() {
+                for e in PRECEDENCE_ENTRIES.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
                         matched_two_byte = e.second_byte.is_some();
-                        found = true;
                         break;
-                    }
-                }
-                if !found {
-                    for e in PRECEDENCE_ENTRIES_binary_factor.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            found = true;
-                            break;
-                        }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, found)
+                (width, found_disc)
             };
-            if !found_entry {
-                while op_stack.pop().is_some() {}
-                break;
-            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let op_kind_variant_idx: u8 = {
-                let mut v: u8 = 0u8;
-                for e in PRECEDENCE_ENTRIES_binary_factor.iter() {
-                    if e.byte == op_byte
-                        && (e.second_byte == second_byte
-                            || (e.second_byte.is_none() && op_width == 1))
-                    {
-                        v = (e.op_rule.0 & 0xFF) as u8;
-                        break;
-                    }
-                }
-                v
-            };
             let arena_off: u32 = builder.arena_mut().len() as u32;
             builder.arena_mut().push(op_discriminant);
-            let _op_rec = builder.push_leaf_with_arena_payload(
+            let _op_rec = builder.push_leaf_with_arena_frame(
                 ::bbnf::runtime::tape::TapeKind::Span,
                 op_lo,
                 op_hi,
-                op_kind_variant_idx,
-                (op_discriminant & 0x1F),
+                0,
+                0,
                 arena_off,
-                1,
             );
+            let lhs_span_lo: u32 = builder
+                .columns()
+                .span_lo
+                .get(this_operand_root as usize)
+                .copied()
+                .unwrap_or(op_hi);
             op_stack.push(LocalOpEntry {
                 op_discriminant,
                 precedence,
                 associativity_is_left,
-                lhs_idx: 0u32,
-                lhs_span_lo: 0u32,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
             });
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_flat_BbnfBootstrap_mapped_factor(input, p, state, builder)
             })?;
-            let _ = _rhs_off;
+            this_operand_root = _op_rec.0 + 1;
         }
         let outer_span_hi = *p as u32;
         let outer_off = builder.push_compound(
             ::bbnf::runtime::tape::TapeKind::Rule,
-            outer_child_mark,
+            ::bbnf::runtime::tape::TapeOffset(this_operand_root),
             outer_span_lo,
             outer_span_hi,
             34u8,

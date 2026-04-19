@@ -218,6 +218,14 @@ AT.1 Phase-1 passed its grep gate while every typed payload
 capture was a dead store. The verification tool decides the
 gate.
 
+**Pre-regen vs post-regen evidence.** A gate closable via
+source-grep or `cargo expand` against the current `generated.rs`
+is **pre-regen** and does not require a bootstrap cycle. A gate
+demanding byte-identical regen output or the post-regen emission
+of new parse-fn bodies is **post-regen**. Phrase each gate
+explicitly; do not conflate. AX.W0a.2 sub-waves ran ~20 regen
+cycles (~5 h wall) against gates that could have closed pre-regen.
+
 ## Bench contract
 
 Per-wave cold sequential bench runs are **structural**, not
@@ -297,6 +305,28 @@ commit fix; chasing symptoms would have shipped three
 work-around commits and left the underlying bug. When you find
 yourself patching at a new layer for the same observable failure,
 pause and walk the producer → tape → consumer path end-to-end.
+
+### Parallel-probe on > 2 candidate blockers
+
+When a scope-reveal diag enumerates more than two candidate
+architectural blockers, dispatch parallel probe-agents on
+disjoint file bounds — one per blocker — rather than serially
+patching the first. AX.W0a.2.d–.g probed one blocker per sub-
+wave (LLVM cycle → Keyword Ref gap → four Flat walker-parity
+deltas), consuming four sequential wave cycles for work that
+three parallel agents could have diagnosed in one.
+
+### Transitional fallback during elimination waves
+
+An in-transit fallback path whose elimination is the tranche's
+principal work is work-in-progress, not a workaround. The
+one-codegen-path invariant binds at tranche close, not at every
+wave close. AX.W0a kept walker fallback green across seven sub-
+waves precisely to eliminate it in the eighth. A wave may revert
+an admission-widening commit to preserve master-green while the
+follow-on wave lands the consumer-side fix; the revert is
+Absorb-mode, not deferral, when the follow-on wave is named in
+PROGRESS.md at revert time.
 
 ## Closing ceremony
 

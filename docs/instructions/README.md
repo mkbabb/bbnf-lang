@@ -71,7 +71,8 @@ architectural changes to any of them are first-class work items, not
   within its scope, it ships in that tranche. Deferring to a future
   tranche is accepted only when the plan document declares the
   deferral explicitly, with rationale, at plan time — not silently
-  during execution.
+  during execution. Absorb-mode re-planning and new-letter response
+  per `tranche/SPEC.md` §Scope-reveal protocol are not deferrals.
 - **Execute the plan, not around it.** The plan declares intent;
   contact reveals scope. The default response to scope-reveal-
   under-contact is re-plan-with-more-agents: dispatch more
@@ -169,6 +170,11 @@ prior sessions have lost work when it was violated.
 - If an agent needs to compare against an older commit, it does
   so inside its worktree. The main worktree's HEAD is owned by
   the orchestrator.
+- Sub-agents inherit the orchestrator's build cache via symlink —
+  `ln -s <main-repo>/target <worktree>/target` before the agent's
+  first build. Worktree git isolation does not imply build
+  isolation; rebuilding the entire workspace per sub-agent burns
+  cycles and RSS. W0a.2 PROGRESS entry documents the mitigation.
 
 **File bounds.**
 
@@ -288,12 +294,11 @@ A tranche is **not complete** until:
    no `#[ignore]` added in the tranche, no workarounds, no
    temporary skips.
 
-**Escape clause.** A tranche that is multi-phase with an explicitly-
-declared interim state in which the codebase is not workable must
-say so inside `{LETTER}.md`, at plan time, with a clear statement
-of which phases produce the final workable state. In that case
-`FINAL.md` and `post-{LETTER}.json` land at the end of the final
-phase, not at tranche start. A tranche silently declaring itself
+**Escape clause + scope-reveal response modes** live in
+`tranche/SPEC.md` §Scope-reveal protocol. Plan-time-declared
+intentional unworkability, Absorb-mode re-plans under contact,
+and new-letter response on scope shifts are all normed there; do
+not re-litigate from README. A tranche silently declaring itself
 "incomplete" at execution time to dodge the completion requirements
 is a violation of the no-workarounds invariant.
 
@@ -325,6 +330,15 @@ awk 'NR>=5000 && NR<=5100' /tmp/expand-css.txt
 awk '/fn __declaration/,/^        fn __/' /tmp/expand-css.txt > /tmp/decl.txt
 wc -l /tmp/decl.txt
 ```
+
+## Memory discipline for aggregate test binaries
+
+Aggregate test binaries linking ≥ 4 derive-Parser sites hit LLVM
+codegen super-linearity — AX.W0a.2.d observed a single rustc peaking
+at 26 GB RSS on a 5-derive-site `tape_parity` binary. Split into
+per-grammar test binaries (AX commit `61053374` template) and export
+`CARGO_BUILD_JOBS=4` in sub-agent briefings to cap parallel rustc
+processes. Per-grammar binaries compile in ~11-14 s at ~3 GB RSS.
 
 ## Cache clearing
 

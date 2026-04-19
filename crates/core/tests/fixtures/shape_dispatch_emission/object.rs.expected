@@ -1,6 +1,9 @@
 /// AW-V.W3.2 — per-grammar Object-shape parse function,
 /// **walker-tape-identical**.
-#[inline(always)]
+///
+/// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+/// recursion rationale (object → value → object).
+#[inline]
 #[allow(non_snake_case, clippy::too_many_arguments)]
 pub fn parse_object_JsonFixture_object(
     input: &[u8],

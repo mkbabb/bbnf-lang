@@ -294,6 +294,61 @@ mechanism that drives lower/expression.rs IR-heterogeneity loss, and
 land a fix that restores cycle-2 idempotency with the four
 `*Value<'p>` enums + Pratt classification preserved.
 
+## 2026-04-19 — W0a.2.j close + W0a.2.k dispatch
+
+**W0a.2.j landed** (cherry-picked onto master at `5f0709fc` + `ee03e8fa`
++ `07e254f7`):
+
+- Admission widening: `body_has_dispatcher_fallback_position` retired;
+  `has_shape_dispatcher_entrypoint` expected-map flipped for 6 non-JSON
+  grammars (`5f0709fc`).
+- Two root causes at tape-emission layer (`ee03e8fa`):
+  1. **Wrap parent compound** — `emit_alt_tape_dispatch` pushes a Rule
+     compound with `variant_idx = rule.id` + `meta_idx = branch_ordinal`.
+     Restores the walker-era heterogeneity discriminator IR lowering
+     needs without reintroducing walker code.
+  2. **Flat iteration wrapper TapeKind** — `emit_tape_repeat` pushed
+     `TapeKind::Rule` at optional + generic Repeat wrappers; IR cursor
+     `iter_rep_children` peels only `TapeKind::Repeat`. Switched to
+     `TapeKind::Repeat` at both emission paths.
+- Bootstrap regen cycle-1 = cycle-2 byte-identical at 97,573 lines
+  (`07e254f7`). Pratt sites: 8. Heterogeneous `*Value<'p>` enums:
+  4 (`value_atomValue`, `termValue`, `directiveValue`,
+  `grammar_itemValue`). Idempotency restored.
+
+**Agent halted on downstream defects** (gates 4-7) surfaced by the
+widening + shape-authoritative routing:
+
+1. **PRECEDENCE_LUT coverage** — `binary_factor` gets ShapeTag::Pratt
+   (`parse_pratt_BbnfBootstrap_binary_factor` emits) but NOT in
+   `__DTA_SHUNTING_YARD_RULES` (only value_mul + value_add, RuleIds
+   13 + 14). `collect_operator_chains` walks `shunting_yard_chains`
+   only; binary_factor's `<<`/`>>`/`-` operators never reach
+   PRECEDENCE_LUT — bytes 60 (`<`) + 62 (`>`) carry 0. Gorgeous
+   `#[derive(Parser)]` on json.bbnf / bnf.bbnf / sheets.bbnf panics
+   because their sources use `<<`/`>>` as BBNF meta-operators.
+2. **parse_pratt arena-frame sizing** — emitter pushes 1 byte
+   (`op_discriminant`) then calls `push_leaf_with_arena_frame` which
+   reads a 4-byte frame; panics `offset 0 + 4 exceeds arena len 1`.
+   Gorgeous `#[derive(Parser)]` on ebnf.bbnf panics at this site.
+
+Both defects are latent on master (pre-W0a.2.j) because walker-routed
+parsing bypasses these code paths; activate under shape-authoritative
+routing. Neither is in W0a.2.j's emitter-scope allow-list.
+
+**W0a.2.k dispatched** — single-agent wave on Pratt LUT propagation +
+arena-frame sizing. Allow-list: `shapes/pratt.rs`,
+`passes/recognizers/operator_chain.rs`,
+`passes/recognizers/dta.rs`,
+`passes/recognizers/shape_dispatch/pratt.rs`, and generated.rs regen
+window. Worktree `/Users/mkbabb/Programming/bbnf-wt-ax-w0a-2k` seeded
+at HEAD `07e254f7`.
+
+Hard gates: gorgeous check clean (6/6 derive sites compile); workspace
+tests 0 FAILED; cycle-1=cycle-2 byte-identical with bytes 60/62
+populated in PRECEDENCE_LUT; 4 het Value enums preserved; nm shows
+shape-dispatcher routing on 4 bench binaries.
+
 ---
 
 ## 2026-04-18 — W0a.2.a + W0a.2.b dispatch

@@ -54,6 +54,7 @@ pub mod driver;
 pub mod dta;
 pub mod finaliser;
 pub mod kind;
+pub mod packed;
 pub mod profile;
 pub mod psi;
 pub mod shape_dict;
@@ -83,6 +84,7 @@ pub use dta::{
 };
 pub use finaliser::{derive_frame_depth, finalise, STACK_DEPTH_HINT};
 pub use kind::TapeKind;
+pub use packed::PackedRecord;
 pub use profile::{GrammarProfile, RuleId, ShapeEntry};
 pub use psi::{PayloadJob, PayloadKind, PayloadStream};
 pub use shape_dict::{BbnfShapeEntry, BbnfShapeKind};

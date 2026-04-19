@@ -82,7 +82,10 @@
 //! this crate's public API.
 
 use crate::kind::TapeKind;
+use crate::packed::PackedRecord;
 use crate::tape::{TapeOffset, TapeRec};
+
+use std::sync::OnceLock;
 
 /// The columnar record substrate.
 ///
@@ -99,6 +102,12 @@ pub struct Columns {
     /// bits of `meta_idx`. Read with [`TapeKind::from_u8`] and the
     /// [`TapeRec::pack_kind_meta`] inverse.
     pub kinds: Vec<u8>,
+    // NOTE — `packed_cache` is declared at the END of the struct (see
+    // below) rather than mixed in with the SoA columns; logically it
+    // is a sidecar view over the SoA primary, not a structural column.
+    // The existing fields stay in their pre-AX.W1.D positions so
+    // downstream code matching on `Columns { .. }` pattern shapes is
+    // untouched.
     /// Full 8-bit `variant_idx` (rule discriminant). AW-III.W1.A
     /// widened from 6 → 8 bits; `has_children` and `meta_idx[4]`
     /// migrated to [`Self::extra`].
@@ -139,6 +148,28 @@ pub struct Columns {
     /// back [`Tape::arena`](crate::Tape::arena) for external
     /// consumers that slice raw bytes.
     pub pay_agg: Vec<u8>,
+
+    // ── AX.W1.D — AoS sidecar for hybrid random-access reads ──────
+    /// Lazy AoS projection of the SoA primary. Populated on first
+    /// call to [`Self::packed_cache`]; invalidated by every mutating
+    /// call that touches a structural column.
+    ///
+    /// Rationale: the six-column SoA scatter is cache-friendly for
+    /// the bulk-payload kernel in
+    /// [`Self::reduce_column`], but random-access reads (the lazy-
+    /// field extractor hot path — Twitter `statuses[].text`, CSS
+    /// selector run) pay seven disjoint cache-line loads per record.
+    /// The AoS sidecar stores each record as a single 32-byte
+    /// aligned [`PackedRecord`]; the first `packed_cache()` call
+    /// performs an O(n) transpose from SoA to AoS, and every
+    /// subsequent random read is a single 32-byte load.
+    ///
+    /// Thread-safety: [`OnceLock`] admits concurrent readers once
+    /// the inner `Vec` is stored. Mutators require `&mut self`, so
+    /// they cannot race with readers. Every mutation path calls
+    /// [`Self::invalidate_packed`] to reset the cache; the next
+    /// reader re-transposes.
+    packed_cache: OnceLock<Vec<PackedRecord>>,
 }
 
 impl Columns {
@@ -164,6 +195,7 @@ impl Columns {
             pay_narrow: Vec::new(),
             pay_wide: Vec::new(),
             pay_agg: Vec::with_capacity(expected / 8 * 8),
+            packed_cache: OnceLock::new(),
         }
     }
 
@@ -197,6 +229,86 @@ impl Columns {
         self.span_hi.truncate(new_len);
         self.sib_skip.truncate(new_len);
         self.child_off.truncate(new_len);
+        self.invalidate_packed();
+    }
+
+    // ── AX.W1.D — AoS sidecar (`packed_cache`) readers/invalidators ──
+
+    /// Get (populating on first call) the AoS sidecar view over this
+    /// column set.
+    ///
+    /// The first call transposes the SoA primary into a dense
+    /// `Vec<PackedRecord>` — O(n) one-time cost. Subsequent calls
+    /// return the cached slice without re-transposing.
+    ///
+    /// The cache is invalidated whenever the SoA primary is mutated
+    /// (any `push_*` or `truncate`); the next call re-transposes the
+    /// updated state.
+    ///
+    /// Uses [`OnceLock::get_or_init`], so concurrent readers across
+    /// threads observe the same immutable transpose without racing.
+    /// The populate closure captures `self` by `&` so the transpose
+    /// reads the SoA columns directly; no extra clone.
+    #[inline]
+    pub fn packed_cache(&self) -> &[PackedRecord] {
+        self.packed_cache
+            .get_or_init(|| self.transpose_to_packed())
+            .as_slice()
+    }
+
+    /// `None` if the AoS sidecar is not currently populated; `Some`
+    /// if a prior read has materialised it and no subsequent write
+    /// has invalidated it. Exposed so consumers wanting to probe
+    /// whether a hot path exercised the sidecar — e.g. the AX.W1.7
+    /// Twitter lazy-field bench — can assert the contract without
+    /// forcing the transpose.
+    #[inline]
+    pub fn packed_cache_populated(&self) -> bool {
+        self.packed_cache.get().is_some()
+    }
+
+    /// Invalidate the AoS sidecar. Called by every mutation that
+    /// touches a structural column; the next `packed_cache()` call
+    /// re-transposes from the (updated) SoA primary.
+    ///
+    /// Idempotent: invalidating an already-empty cache is a no-op.
+    /// `#[inline]` because the hot-path push sites call this once
+    /// per row — the body compiles down to a single `OnceLock::take`
+    /// which is a conditional pointer-write.
+    #[inline]
+    pub fn invalidate_packed(&mut self) {
+        let _ = self.packed_cache.take();
+    }
+
+    /// Transpose the SoA primary into a fresh AoS `Vec`. Internal
+    /// helper for [`Self::packed_cache`]; kept at module scope so
+    /// tests can call it directly without going through the lock.
+    fn transpose_to_packed(&self) -> Vec<PackedRecord> {
+        let n = self.kinds.len();
+        debug_assert_eq!(self.flags.len(), n, "flags column length mismatch");
+        debug_assert_eq!(self.extra.len(), n, "extra column length mismatch");
+        debug_assert_eq!(self.span_lo.len(), n, "span_lo column length mismatch");
+        debug_assert_eq!(self.span_hi.len(), n, "span_hi column length mismatch");
+        debug_assert_eq!(self.sib_skip.len(), n, "sib_skip column length mismatch");
+        debug_assert_eq!(
+            self.child_off.len(),
+            n,
+            "child_off column length mismatch",
+        );
+        let mut out: Vec<PackedRecord> = Vec::with_capacity(n);
+        for i in 0..n {
+            out.push(PackedRecord {
+                kind_meta: self.kinds[i],
+                flags: self.flags[i],
+                extra: self.extra[i],
+                span_lo: self.span_lo[i],
+                span_hi: self.span_hi[i],
+                child_off: self.child_off[i],
+                sib_skip: self.sib_skip[i],
+                _pad: [0u8; 12],
+            });
+        }
+        out
     }
 
     /// Append one structural row across the six structural columns
@@ -224,6 +336,8 @@ impl Columns {
         self.span_hi.push(span_hi);
         self.sib_skip.push(0);
         self.child_off.push(child_off);
+        // AX.W1.D — SoA mutation invalidates the AoS sidecar.
+        self.invalidate_packed();
         idx
     }
 
@@ -500,6 +614,8 @@ impl Columns {
             self.sib_skip.set_len(new_len);
             self.child_off.set_len(new_len);
         }
+        // AX.W1.D — SoA mutation invalidates the AoS sidecar.
+        self.invalidate_packed();
         idx as u32
     }
 
@@ -564,6 +680,8 @@ impl Columns {
             self.sib_skip.set_len(new_len);
             self.child_off.set_len(new_len);
         }
+        // AX.W1.D — SoA mutation invalidates the AoS sidecar.
+        self.invalidate_packed();
         idx as u32
     }
 
@@ -859,28 +977,19 @@ impl Columns {
     // dominated the cycle budget; the vector pack was structurally
     // serialising). W1 replaces the retired scaffold with a paired
     // SIMD `stp`-oriented pattern over just the span_lo/span_hi
-    // columns (ARM64 `stp` writes 16 aligned bytes in one cycle,
-    // matching the two columns' 4+4 = 8 bytes when both sides advance
-    // in lockstep). The stub surface exists so W1 lands the populated
-    // body without touching call-site signatures.
-    //
-    // At AX.W0b.A the method is a scalar fallback — pre-populated so
-    // downstream callers wiring the paired store surface in W1 have a
-    // stable entry point. Argument shape mirrors `push_leaf_fused`'s
-    // span_lo/span_hi pair; the column advance is the caller's
-    // responsibility so the stub does not double-write.
+    // columns. AX.W1.D commit 1 adds `invalidate_packed()` on every
+    // patch so the AoS sidecar cannot retain stale spans; commit 2
+    // replaces the scalar body with the arch-specific paired store.
 
-    /// AX.W0b.A stub for W1's paired span_lo/span_hi `stp` store.
-    ///
-    /// Writes both span columns at a given row index via scalar
-    /// stores today; W1 populates the paired-SIMD form (ARM64 `stp`
-    /// q-register pair / AVX128 store pair). The body is
-    /// `#[inline(always)]` so the scalar fallback fuses at every
-    /// call site until W1 replaces it.
+    /// Paired span_lo/span_hi store — writes both span columns at
+    /// row `idx`. AX.W1.D commit 1 version: scalar body with AoS
+    /// sidecar invalidation. Commit 2 replaces the body with
+    /// arch-specific paired-store emission.
     #[inline(always)]
     pub fn stp_span(&mut self, idx: usize, span_lo: u32, span_hi: u32) {
         self.span_lo[idx] = span_lo;
         self.span_hi[idx] = span_hi;
+        self.invalidate_packed();
     }
 
     // ── AW-IV.W5.1 — reduce_column<C, R> consumer API ────────────────

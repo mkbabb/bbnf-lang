@@ -132,12 +132,14 @@ fn css_l4_predicate_contract() {
         p.has_full_shape_coverage, true,
         "CSS L4 has_full_shape_coverage"
     );
-    // 34 entry-reachable unclassified Refs (bgDecl → value,
-    // compoundSelector → attrSelector, etc.). Predicate correctly
-    // rejects to prevent `__value` fallback emission that would
-    // infinite-loop at parse time.
+    // AX.W0a.2.j — admission widens once
+    // `body_has_dispatcher_fallback_position` is retired. All entry-
+    // reachable Refs classify under the widened `has_shape_dispatcher_
+    // entrypoint` which no longer rejects inline Alt / Regex / Negate /
+    // Minus / TokenDispatch positions (those now route via shape-
+    // authoritative emission under Wrap Alt-dispatch).
     assert_eq!(
-        p.has_shape_dispatcher_entrypoint, false,
+        p.has_shape_dispatcher_entrypoint, true,
         "CSS L4 has_shape_dispatcher_entrypoint"
     );
 }
@@ -157,9 +159,9 @@ fn sheets_predicate_contract() {
         p.has_full_shape_coverage, true,
         "Sheets has_full_shape_coverage"
     );
-    // Entry-reachable unclassified: `exp_expr → unary_expr`.
+    // AX.W0a.2.j — admission widens under retired predicate.
     assert_eq!(
-        p.has_shape_dispatcher_entrypoint, false,
+        p.has_shape_dispatcher_entrypoint, true,
         "Sheets has_shape_dispatcher_entrypoint"
     );
 }
@@ -179,11 +181,9 @@ fn bbnf_predicate_contract() {
         p.has_full_shape_coverage, true,
         "BBNF has_full_shape_coverage"
     );
-    // Entry-reachable unclassified: host_directive → type_name,
-    // import_directive → {import_items, import_path},
-    // rhs → alternation.
+    // AX.W0a.2.j — admission widens under retired predicate.
     assert_eq!(
-        p.has_shape_dispatcher_entrypoint, false,
+        p.has_shape_dispatcher_entrypoint, true,
         "BBNF has_shape_dispatcher_entrypoint"
     );
 }
@@ -197,10 +197,9 @@ fn ebnf_predicate_contract() {
         p.has_full_shape_coverage, true,
         "EBNF has_full_shape_coverage"
     );
-    // Entry-reachable unclassified: identifier → letter,
-    // rule → alternation.
+    // AX.W0a.2.j — admission widens under retired predicate.
     assert_eq!(
-        p.has_shape_dispatcher_entrypoint, false,
+        p.has_shape_dispatcher_entrypoint, true,
         "EBNF has_shape_dispatcher_entrypoint"
     );
 }
@@ -214,10 +213,9 @@ fn bnf_predicate_contract() {
         p.has_full_shape_coverage, true,
         "BNF has_full_shape_coverage"
     );
-    // Entry-reachable unclassified: rule → alternation,
-    // rule → nonterminal.
+    // AX.W0a.2.j — admission widens under retired predicate.
     assert_eq!(
-        p.has_shape_dispatcher_entrypoint, false,
+        p.has_shape_dispatcher_entrypoint, true,
         "BNF has_shape_dispatcher_entrypoint"
     );
 }
@@ -243,8 +241,9 @@ fn bbnf_bootstrap_predicate_contract() {
         p.has_full_shape_coverage, true,
         "BbnfBootstrap has_full_shape_coverage"
     );
+    // AX.W0a.2.j — admission widens under retired predicate.
     assert_eq!(
-        p.has_shape_dispatcher_entrypoint, false,
+        p.has_shape_dispatcher_entrypoint, true,
         "BbnfBootstrap has_shape_dispatcher_entrypoint"
     );
 }

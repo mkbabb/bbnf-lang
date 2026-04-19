@@ -397,28 +397,6 @@ pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
             // the IR-build bug.
             return false;
         };
-        // AX.W0a.2.b — per-wave hard gate 7 ("No `__value` fallback
-        // emission"). Several shape emitters fall back to
-        // `#dispatcher_ident` on inline Alt / Regex / Negate / Minus
-        // / TokenDispatch positions. For non-Alt-rooted grammars the
-        // dispatcher IS the root's shape fn, so the fallback loops.
-        // Reject admission when any classified entry-reachable rule's
-        // body contains one of these fallback-triggering positions
-        // outside of a Ref (per-Ref routing already handles Refs
-        // directly via `emit_ref_call_tape`).
-        //
-        // AX.W0a.2.g halt — predicate retained; Flat / ArgList emitter
-        // walker-parity issues (inline Alt compound vs ByteDispatch,
-        // emit_tape_repeat column-truncation on zero-width match,
-        // missing Next/Skip compound emission) were diagnosed during
-        // the widening probe but only partially fixed (Alt ByteDispatch
-        // split + emit_tape_repeat truncation landed). CSS / Sheets /
-        // EBNF / BBNF / BbnfBootstrap all revealed additional blockers
-        // beyond the two named in the W0a.2.f scope-reveal; halting
-        // per the "new blocker" non-negotiable in the task spec.
-        if body_has_dispatcher_fallback_position(&rule.body) {
-            return false;
-        }
         // Skip transparent rules' bodies — transparent rules collapse
         // into their alias targets during lowering, but the interned
         // IR still carries the body. Walk their Refs so Alt-of-Refs
@@ -439,60 +417,6 @@ pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
         }
     }
     true
-}
-
-/// Whether a rule's body contains a structural position that would
-/// emit `#dispatcher_ident` under the current shape emitters'
-/// fallback chains (Flat, Wrap, and friends).
-///
-/// Positions that trigger the fallback:
-///
-/// - `IrNode::Alt(_, _)` — inline Alts at a Seq position have no
-///   dedicated inline-dispatch emission; Flat delegates to the
-///   grammar's `__value`.
-/// - `IrNode::Regex(_)` — inline regex scans lack pattern-specific
-///   emission in Flat / Scalar; Flat delegates to `__value`.
-/// - `IrNode::Negate(_)` / `IrNode::Minus(_, _)` /
-///   `IrNode::TokenDispatch { .. }` — structural guards Flat cannot
-///   inline and delegates instead.
-///
-/// Positions that are safe: Ref (per-Ref routing via
-/// `emit_ref_call_tape`), Literal (inline byte match), Repeat
-/// (recursive walk that bottoms out at Refs/Literals), Seq / Next /
-/// Skip / Map / OptionalWhitespace (structural wrappers the walkers
-/// descend through).
-///
-/// AX.W0a.2.g — retained; the widening probe revealed walker-parity
-/// issues beyond the two named in the W0a.2.f scope-reveal (inline
-/// Alt compound vs ByteDispatch, Repeat-iter column leaks, missing
-/// Next/Skip compound emission). Partial fixes landed
-/// (`emit_alt_byte_dispatch_tape`, Flat repeat column-truncation,
-/// Seq-inner iter-Seq flattening, Array-list `variant=0` stamping)
-/// but the full walker-parity audit is deferred to W0a.2.h; the
-/// predicate stays load-bearing until that wave lands.
-fn body_has_dispatcher_fallback_position(node: &bbnf_ir::IrNode) -> bool {
-    use bbnf_ir::IrNode;
-    match node {
-        // Dispatcher-fallback positions.
-        IrNode::Regex(_) | IrNode::Alt(_, _) | IrNode::Negate(_)
-        | IrNode::Minus(_, _) | IrNode::TokenDispatch { .. } => true,
-        // Structural wrappers — descend.
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-            body_has_dispatcher_fallback_position(inner)
-        }
-        IrNode::Seq(children) => children
-            .iter()
-            .any(body_has_dispatcher_fallback_position),
-        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            body_has_dispatcher_fallback_position(lhs)
-                || body_has_dispatcher_fallback_position(rhs)
-        }
-        IrNode::Repeat { inner, .. } => {
-            body_has_dispatcher_fallback_position(inner)
-        }
-        // Safe positions.
-        IrNode::Ref(_) | IrNode::Literal(_) | IrNode::Epsilon => false,
-    }
 }
 
 /// Resolve the grammar's root rule per [`GrammarIR::entry`]. Returns

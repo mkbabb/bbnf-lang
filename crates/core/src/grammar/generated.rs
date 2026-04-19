@@ -7807,6 +7807,9 @@ mod __bbnfbootstrap_emit_impl {
     /// rust::emitter::precedence` for the bit layout.
     pub const PRECEDENCE_LUT_value_cmp: [u8; 256] = [
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 129u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 129u8, 129u8, 129u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
@@ -7817,10 +7820,7 @@ mod __bbnfbootstrap_emit_impl {
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8,
     ];
     /// AX.W0a.2.l — per-rule sparse Pratt metadata slice.
     ///
@@ -7828,7 +7828,56 @@ mod __bbnfbootstrap_emit_impl {
     /// Consulted by the rule's emitted `parse_pratt_*`
     /// body when the LUT byte's bit-7 two-byte flag is
     /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_value_cmp: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[];
+    pub const PRECEDENCE_ENTRIES_value_cmp: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 61u8,
+            second_byte: ::core::option::Option::Some(61u8),
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(11u32),
+            op_discriminant: 0u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 33u8,
+            second_byte: ::core::option::Option::Some(61u8),
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(11u32),
+            op_discriminant: 1u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 60u8,
+            second_byte: ::core::option::Option::Some(61u8),
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(11u32),
+            op_discriminant: 2u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 62u8,
+            second_byte: ::core::option::Option::Some(61u8),
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(11u32),
+            op_discriminant: 3u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 60u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(11u32),
+            op_discriminant: 4u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 62u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(11u32),
+            op_discriminant: 5u8,
+        },
+    ];
     /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
     ///
     /// One byte per dispatch byte for this Pratt rule's
@@ -7969,20 +8018,20 @@ mod __bbnfbootstrap_emit_impl {
     /// layout.
     pub const PRECEDENCE_LUT: [u8; 256] = [
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 129u8, 0u8, 0u8,
         0u8, 1u8, 129u8, 0u8, 0u8, 0u8, 1u8, 2u8, 0u8, 1u8, 0u8, 1u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 129u8, 0u8, 129u8, 0u8, 129u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 129u8,
+        0u8, 0u8, 0u8, 0u8, 129u8, 0u8, 129u8, 129u8, 129u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        129u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
     ];
     /// AW-III.W6.5 — aggregate sparse Pratt metadata slice.
     ///
@@ -8078,6 +8127,54 @@ mod __bbnfbootstrap_emit_impl {
             op_discriminant: 0u8,
         },
         ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 61u8,
+            second_byte: ::core::option::Option::Some(61u8),
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(11u32),
+            op_discriminant: 0u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 33u8,
+            second_byte: ::core::option::Option::Some(61u8),
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(11u32),
+            op_discriminant: 1u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 60u8,
+            second_byte: ::core::option::Option::Some(61u8),
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(11u32),
+            op_discriminant: 2u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 62u8,
+            second_byte: ::core::option::Option::Some(61u8),
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(11u32),
+            op_discriminant: 3u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 60u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(11u32),
+            op_discriminant: 4u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+            byte: 62u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 1u8,
+            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
+            op_rule: ::bbnf::runtime::tape::DtaRuleId(11u32),
+            op_discriminant: 5u8,
+        },
+        ::bbnf::runtime::tape::DtaPrecedenceEntry {
             byte: 38u8,
             second_byte: ::core::option::Option::Some(38u8),
             precedence: 1u8,
@@ -8121,7 +8218,7 @@ mod __bbnfbootstrap_emit_impl {
     /// AW-III.W6.5 — total mined operator count for this
     /// grammar. Non-zero iff the lift admitted ≥ 1 chain OR the
     /// shape classifier admitted ≥ 1 single-rung Pratt rule.
-    pub const PRECEDENCE_OPERATOR_COUNT: usize = 16usize;
+    pub const PRECEDENCE_OPERATOR_COUNT: usize = 22usize;
     #[inline]
     #[cold]
     fn __regex_scan_BbnfBootstrap(

@@ -37,6 +37,11 @@ fn probe_css_minimal() {
         ".x { color: aliceblue; }",
         "@media (min-width: 640px) { a { color: red; } }",
         "@keyframes pulse { 50% { opacity: .5; } }",
+        ".foo { color: red; }",
+        "#bar { color: red; }",
+        ".foo#bar > baz.qux:hover { color: red; }",
+        ".foo > .bar { color: red; }",
+        ".foo:hover { color: red; }",
     ] {
         let r = CssL4Parser::parse(input);
         eprintln!("CSS {:?}: {:?}", input, r.map(|_| "ok"));

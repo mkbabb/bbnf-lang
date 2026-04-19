@@ -4,24 +4,33 @@
 //!
 //! A rule is Pratt-shaped when its body matches the canonical
 //! operator-chain rung shape — `Seq(operand, Repeat(Seq(op, operand)))`
-//! — such that the chain detector in
-//! [`crate::passes::recognizers::dta::collect_precedence_chain`] would
-//! admit it as part of a multi-rung operator tower (≥ 2 rungs
-//! collapsing into one [`ShuntingYard`](
-//! crate::passes::recognizers::dta::DtaState::ShuntingYard) state).
+//! — AND the operator position carries at least one extractable
+//! literal operator token. The emitted `parse_pratt_*` body dispatches
+//! on per-byte LUT entries; a rule whose operator alphabet is
+//! regex-only (e.g. CSS `complexSelector`'s `combinator = /\s*>\s*/ |
+//! /\s*\+\s*/ | /\s*~\s*/ | /\s+/`) produces an empty LUT + empty
+//! `PRECEDENCE_ENTRIES_*` slice and its emitted body exits the inner
+//! loop on the first byte, silently dropping every operator
+//! occurrence. Classifying such rules as Pratt is a structural
+//! mismatch — the detector must reject them so they fall through to
+//! Flat (or another non-Pratt shape) whose emitter handles the
+//! iteration wrapper without a byte-dispatch assumption.
 //!
-//! The detector does not invoke the DTA lift (which happens
-//! downstream of the recognizer miners) — it reuses the structural
-//! predicate [`node_facts.operator_chain`](
-//! crate::passes::patterns::NodeFacts::operator_chain), which the
-//! [`crate::passes::recognizers::node_facts::recognize_tree`] walk
-//! populates during Phase 2 of
-//! [`crate::passes::recognizers::mine_recognizers`] for any Seq that
-//! unwraps to `Seq(operand, Repeat(Seq(op, rhs)))`.
+//! # Two-stage admission
 //!
-//! The rule's body's Seq [`crate::dag::NodeId`] carries the
-//! `operator_chain: true` fact when the body matches; the detector
-//! simply checks that flag.
+//! 1. **Structural** — the rule's body matches the operator-chain
+//!    rung shape. Sourced from [`GrammarIR::pattern_annotations`]
+//!    (`is_operator_chain`) or the DAG's per-NodeId facts
+//!    (`operator_chain`). These are pure-shape checks populated by
+//!    [`crate::passes::recognizers::node_facts::recognize_tree`].
+//!
+//! 2. **Operator-literal mineable** — [`match_operator_chain_rule`]
+//!    must succeed AND produce at least one operator entry. This is
+//!    the semantic gate: the structural shape is necessary but not
+//!    sufficient; a rung whose operator is a Regex (no `Ref` to an
+//!    Alt-of-literal, no inlined Alt-of-literal, no Literal) cannot
+//!    populate `PRECEDENCE_ENTRIES_<rule>` and must not route through
+//!    the Pratt emitter.
 //!
 //! # Canonical sources
 //!
@@ -35,52 +44,85 @@
 //!   value_add → value_mul → value_unary` per
 //!   `grammar/bbnf/expressions.bbnf`.
 //!
+//! # Rejection cases (AX.W0a.2.p)
+//!
+//! - CSS `complexSelector = compoundSelector, (combinator,
+//!   compoundSelector)*` where `combinator` is regex-only.
+//! - CSS `selectorList = complexSelector, (/\s*,\s*/ >>
+//!   complexSelector)*` — inline regex op.
+//! - CSS `relativeSelectorList = relativeSelector, (/\s*,\s*/ >>
+//!   relativeSelector)*` — inline regex op.
+//! - CSS `keyframeSel = keyframeStop, (/\s*,\s*/ >> keyframeStop)*` —
+//!   inline regex op.
+//!
+//! All four had `operator_chain: true` + empty
+//! `PRECEDENCE_ENTRIES_*` pre-W0a.2.p, producing shape functions that
+//! parsed only the leading operand and silently ignored every
+//! subsequent operator. Narrowing drops them to Flat so the iteration
+//! wrapper ships.
+//!
 //! # Projection
 //!
 //! Reads [`GrammarIR::node_facts`] via the DAG's per-rule-body
-//! [`crate::dag::NodeId`]. The `operator_chain` bit is the authoritative
-//! Pratt-admissibility signal: it fires exactly when the rule's body
-//! is a canonical operator-chain rung Seq.
+//! [`crate::dag::NodeId`]. The `operator_chain` bit is the
+//! Pratt-admissibility *prerequisite*; the second-stage admission via
+//! [`match_operator_chain_rule`] decides whether the rule's
+//! operator alphabet is literal-mineable.
 //!
 //! Note that the operator-chain tower admits rungs only in
 //! pairs — `collect_precedence_chain` requires ≥ 2 rungs. A top-most
 //! chain head that transitively references a second rung forms the
 //! tower; individual rungs all satisfy the same per-body operator-
-//! chain predicate. The detector therefore admits EVERY rung of a
-//! mined chain — the emitter composes them into one `ShuntingYard`
+//! chain predicate. The detector admits EVERY literal-mineable rung of
+//! a mined chain — the emitter composes them into one `ShuntingYard`
 //! state at the backend.
 
 use crate::passes::inspect::unwrap_map_ow;
+use crate::passes::recognizers::dta::match_operator_chain_rule;
 use crate::types::{GrammarIR, RuleId};
 
 /// Detect Pratt-shape: the rule's body is an operator-chain rung (or
-/// the outer head of a chain tower).
+/// the outer head of a chain tower) AND the operator position carries
+/// at least one extractable literal operator token.
 pub fn detect_pratt(rule_id: RuleId, ir: &GrammarIR) -> bool {
     let rule = &ir.rules[rule_id as usize];
-    // The operator-chain flag rides on the rule's PatternAnnotations,
-    // which the `mine_recognizers` Phase 1 pass populates for every
-    // rule whose top-level Seq matches `Seq(operand, Repeat(Seq(op,
-    // rhs)))`. Reading the rule-level annotation (not the node-facts)
-    // ensures we hit the *outer* chain-rung body even after the body
-    // is Map / OptionalWhitespace wrapped.
+    // Stage 1 — structural. The operator-chain flag rides on the
+    // rule's PatternAnnotations, which the `mine_recognizers`
+    // Phase 1 pass populates for every rule whose top-level Seq
+    // matches `Seq(operand, Repeat(Seq(op, rhs)))`. Reading the
+    // rule-level annotation (not the node-facts) ensures we hit the
+    // *outer* chain-rung body even after the body is Map /
+    // OptionalWhitespace wrapped.
     //
     // Falls back to the DAG's per-NodeId facts when the annotation
     // isn't present — some rules with `?w`-wrapped bodies surface the
     // operator_chain bit on the inner Seq NodeId rather than on the
     // rule-level annotation.
-    if let Some(ann) = ir.pattern_annotations.get(&rule.id) {
-        if ann.is_operator_chain {
-            return true;
-        }
+    let structural = ir
+        .pattern_annotations
+        .get(&rule.id)
+        .is_some_and(|ann| ann.is_operator_chain)
+        || ir
+            .dag
+            .as_ref()
+            .and_then(|dag| dag.node_for(unwrap_map_ow(&rule.body)))
+            .and_then(|node_id| ir.node_facts.get(&node_id))
+            .is_some_and(|facts| facts.operator_chain);
+    if !structural {
+        return false;
     }
-    let Some(dag) = ir.dag.as_ref() else {
-        return false;
-    };
-    let body = unwrap_map_ow(&rule.body);
-    let Some(node_id) = dag.node_for(body) else {
-        return false;
-    };
-    ir.node_facts
-        .get(&node_id)
-        .is_some_and(|facts| facts.operator_chain)
+    // Stage 2 — literal-mineable. A rule's operator position must
+    // admit at least one `PrecedenceEntry`. `match_operator_chain_rule`
+    // returns `Some((_, entries, _))` only when the operator resolves
+    // to an Alt-of-literal (`Ref` or inlined), a single Literal, or a
+    // prefix-factored Seq whose suffix is an Alt-of-literal. A
+    // regex-only operator (CSS `combinator` = pure Alt of regexes, or
+    // inline `/\s*,\s*/`) yields `None` — those rules fall through to
+    // Flat / Scalar so their iteration wrapper emits a byte-walking
+    // loop rather than the Pratt LUT dispatch that their empty LUT
+    // would silently short-circuit.
+    match match_operator_chain_rule(ir, rule) {
+        Some((_, entries, _)) => !entries.is_empty(),
+        None => false,
+    }
 }

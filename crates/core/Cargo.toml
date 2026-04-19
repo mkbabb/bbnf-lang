@@ -163,3 +163,11 @@ harness = false
 name = "bbnf_monolithic"
 path = "benches/bbnf/monolithic.rs"
 harness = false
+
+# AX.W1.A.5 — consumer bench for the Value projection API.
+# Lazy-field extraction over twitter.json; matched against sonic-rs
+# on the same corpus with the same extraction pattern.
+[[bench]]
+name = "twitter_lazy_field"
+path = "benches/twitter_lazy_field.rs"
+harness = false

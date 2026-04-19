@@ -42,6 +42,30 @@ fn probe_bbnf_parse_snippets() {
             "first_72_of_bbnf",
             "// BBNF — Better Backus-Naur Form\n// Self-hosted grammar definition.\n\n",
         ),
+        // AX.W0a.2.n — json.bbnf offset-23 isolation. The first rule
+        // exercises a `-> 0u8` map-arm that parses via mapped_factor +
+        // int_lit's `\w*` suffix (`/[0-9]+\w*/`). The second rule's
+        // first byte (`b` of `bool`) is the reported failure offset.
+        ("map_arm_int_lit", "null = \"null\" -> 0u8 ;\n"),
+        (
+            "map_arm_int_lit_two_rules",
+            "null = \"null\" -> 0u8 ;\nbool = \"true\" ;\n",
+        ),
+        (
+            "json_first_two_rules",
+            "null = \"null\" -> 0u8 ;\nbool = \"true\" -> true | \"false\" -> false ;\n",
+        ),
+        // Narrowing: isolate which construct breaks the self-host parse.
+        ("single_alt_map", "foo = \"a\" -> true | \"b\" -> false ;\n"),
+        ("single_alt_map_bare", "foo = \"a\" -> true ;\n"),
+        ("single_alt_map_false", "foo = \"a\" -> false ;\n"),
+        ("two_rules_simple", "a = \"x\" ;\nb = \"y\" ;\n"),
+        ("two_rules_one_map", "a = \"x\" -> 0u8 ;\nb = \"y\" ;\n"),
+        ("two_alt_no_map", "foo = \"a\" | \"b\" ;\n"),
+        ("two_alt_first_map", "foo = \"a\" -> true | \"b\" ;\n"),
+        ("two_alt_second_map", "foo = \"a\" | \"b\" -> false ;\n"),
+        ("two_alt_both_map_int", "foo = \"a\" -> 0u8 | \"b\" -> 1u8 ;\n"),
+        ("two_alt_both_map_bool", "foo = \"a\" -> true | \"b\" -> false ;\n"),
     ];
     let mut failures: Vec<(String, String)> = Vec::new();
     for (name, input) in tests {

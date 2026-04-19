@@ -72141,9 +72141,13 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_path[op_byte as usize];
+            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let mut lut_byte: u8 = PRECEDENCE_LUT_value_path[op_byte as usize];
+            if lut_byte == 0 {
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                op_byte = input.get(*p).copied().unwrap_or(0);
+                lut_byte = PRECEDENCE_LUT_value_path[op_byte as usize];
+            }
             let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                 ::core::option::Option::None
             } else {
@@ -72337,9 +72341,13 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_input[op_byte as usize];
+            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let mut lut_byte: u8 = PRECEDENCE_LUT_value_input[op_byte as usize];
+            if lut_byte == 0 {
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                op_byte = input.get(*p).copied().unwrap_or(0);
+                lut_byte = PRECEDENCE_LUT_value_input[op_byte as usize];
+            }
             let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                 ::core::option::Option::None
             } else {
@@ -73603,9 +73611,13 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_mul[op_byte as usize];
+            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let mut lut_byte: u8 = PRECEDENCE_LUT_value_mul[op_byte as usize];
+            if lut_byte == 0 {
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                op_byte = input.get(*p).copied().unwrap_or(0);
+                lut_byte = PRECEDENCE_LUT_value_mul[op_byte as usize];
+            }
             let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                 ::core::option::Option::None
             } else {
@@ -73799,9 +73811,13 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_add[op_byte as usize];
+            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let mut lut_byte: u8 = PRECEDENCE_LUT_value_add[op_byte as usize];
+            if lut_byte == 0 {
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                op_byte = input.get(*p).copied().unwrap_or(0);
+                lut_byte = PRECEDENCE_LUT_value_add[op_byte as usize];
+            }
             let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                 ::core::option::Option::None
             } else {
@@ -73995,9 +74011,13 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_cmp[op_byte as usize];
+            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let mut lut_byte: u8 = PRECEDENCE_LUT_value_cmp[op_byte as usize];
+            if lut_byte == 0 {
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                op_byte = input.get(*p).copied().unwrap_or(0);
+                lut_byte = PRECEDENCE_LUT_value_cmp[op_byte as usize];
+            }
             let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                 ::core::option::Option::None
             } else {
@@ -74191,9 +74211,13 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_and[op_byte as usize];
+            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let mut lut_byte: u8 = PRECEDENCE_LUT_value_and[op_byte as usize];
+            if lut_byte == 0 {
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                op_byte = input.get(*p).copied().unwrap_or(0);
+                lut_byte = PRECEDENCE_LUT_value_and[op_byte as usize];
+            }
             let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                 ::core::option::Option::None
             } else {
@@ -74387,9 +74411,13 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_value_or[op_byte as usize];
+            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let mut lut_byte: u8 = PRECEDENCE_LUT_value_or[op_byte as usize];
+            if lut_byte == 0 {
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                op_byte = input.get(*p).copied().unwrap_or(0);
+                lut_byte = PRECEDENCE_LUT_value_or[op_byte as usize];
+            }
             let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                 ::core::option::Option::None
             } else {
@@ -76949,9 +76977,13 @@ mod __bbnfbootstrap_emit_impl {
         let _ = _operand_off;
         let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(4);
         loop {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let lut_byte: u8 = PRECEDENCE_LUT_binary_factor[op_byte as usize];
+            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+            let mut lut_byte: u8 = PRECEDENCE_LUT_binary_factor[op_byte as usize];
+            if lut_byte == 0 {
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                op_byte = input.get(*p).copied().unwrap_or(0);
+                lut_byte = PRECEDENCE_LUT_binary_factor[op_byte as usize];
+            }
             let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                 ::core::option::Option::None
             } else {

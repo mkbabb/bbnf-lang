@@ -268,9 +268,11 @@ fn emit_tape_position_core(
         IrNode::Regex(_) | IrNode::Alt(_, _)
         | IrNode::Negate(_) | IrNode::Minus(_, _)
         | IrNode::TokenDispatch { .. } => {
-            quote! {
-                let _ = #dispatcher_ident(input, p, state, builder)?;
-            }
+            // AX.W0a.2.e — inline-position emission (tape path).
+            let _ = dispatcher_ident;
+            super::inline::emit_inline_position_tape(
+                node, variant_idx, support_mod, &grammar_suffix, ir,
+            )
         }
         IrNode::Repeat { inner, lo, hi } => {
             let inner_emit = emit_tape_position_core(
@@ -557,9 +559,11 @@ fn emit_visitor_position_core(
         IrNode::Regex(_) | IrNode::Alt(_, _)
         | IrNode::Negate(_) | IrNode::Minus(_, _)
         | IrNode::TokenDispatch { .. } => {
-            quote! {
-                #dispatcher_ident(input, p, state, visitor)?;
-            }
+            // AX.W0a.2.e — inline-position emission (visitor path).
+            let _ = dispatcher_ident;
+            super::inline::emit_inline_position_visitor(
+                node, support_mod, &grammar_suffix, ir,
+            )
         }
         IrNode::Repeat { inner, lo, hi } => {
             let inner_emit = emit_visitor_position_core(

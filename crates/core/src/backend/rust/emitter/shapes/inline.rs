@@ -266,6 +266,18 @@ fn emit_alt_tape(
 /// Emit the body of a single Alt-branch tape-path attempt. The body
 /// either `break 'try_branches`es on success or falls through to the
 /// next candidate.
+///
+/// # Walker parity — per-branch rollback
+///
+/// Walker's `emit_alt_linear_arm` captures `cols_len_after_push` and on
+/// branch failure calls `columns.truncate(cols_len_after_push)` so
+/// rows pushed inside the failed branch do not leak into subsequent
+/// attempts or the surrounding tape. Ref branches through shape fns
+/// may push a compound + leaves on partial success before the shape
+/// fn's own internal parse fails; without the truncation those rows
+/// persist after the branch's `Err` is observed here. Every branch
+/// attempt below saves `builder.columns_mut().len()` and truncates
+/// back on failure, matching the walker's rollback semantics.
 fn emit_alt_branch_body_tape(
     node: &IrNode,
     grammar_suffix: &str,
@@ -277,9 +289,13 @@ fn emit_alt_branch_body_tape(
             Some(call) => quote! {
                 {
                     let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len();
                     match #call {
                         Ok(_) => break 'try_branches,
-                        Err(_) => { *p = attempt_p; }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.columns_mut().truncate(attempt_len);
+                        }
                     }
                 }
             },
@@ -939,6 +955,12 @@ fn emit_primary_tape(
             }
         }
         IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+            // Walker-parity: on Ref-call failure inside a Minus-primary
+            // we are already in a failure-commit state (the caller
+            // propagates `?`), so the enclosing rule will itself fail
+            // and its caller's truncation takes effect. No per-site
+            // truncation needed here because the failure is terminal
+            // at this position.
             Some(call) => quote! { let _ = (#call)?; },
             None => quote! {
                 return ::core::result::Result::Err(

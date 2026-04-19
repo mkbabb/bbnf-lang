@@ -256,12 +256,16 @@ fn emit_tape_position_core(
         IrNode::Alt(_, _) | IrNode::Regex(_)
         | IrNode::Negate(_) | IrNode::Minus(_, _)
         | IrNode::TokenDispatch { .. } => {
-            // Delegate to the dispatcher's value-position routine —
-            // the walker's authoritative path. The dispatcher resolves
-            // these to their shape fns or falls back to the walker.
-            quote! {
-                let _ = #dispatcher_ident(input, p, state, builder)?;
-            }
+            // AX.W0a.2.e — inline-position emission. Walker-parity
+            // byte-dispatch for inline Alt, regex-scan adapter for
+            // inline Regex, guard-only for Negate / Minus, dedicated
+            // compound for TokenDispatch. No recursion into
+            // `#dispatcher_ident` — for non-Alt-rooted grammars the
+            // dispatcher IS the root shape fn and would loop.
+            let _ = dispatcher_ident;
+            super::inline::emit_inline_position_tape(
+                node, variant_idx, support_mod, &grammar_suffix, ir,
+            )
         }
         IrNode::Repeat { inner, lo, hi } => emit_tape_repeat(
             inner,
@@ -639,9 +643,12 @@ fn emit_visitor_position_core(
         IrNode::Regex(_) | IrNode::Alt(_, _)
         | IrNode::Negate(_) | IrNode::Minus(_, _)
         | IrNode::TokenDispatch { .. } => {
-            quote! {
-                #dispatcher_ident(input, p, state, visitor)?;
-            }
+            // AX.W0a.2.e — inline-position emission (visitor path).
+            // See tape-path note above for rationale.
+            let _ = dispatcher_ident;
+            super::inline::emit_inline_position_visitor(
+                node, support_mod, &grammar_suffix, ir,
+            )
         }
         IrNode::Repeat { inner, lo, hi } => {
             let inner_emit = emit_visitor_position_core(

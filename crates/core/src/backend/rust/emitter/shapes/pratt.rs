@@ -222,7 +222,17 @@ pub fn emit_parse_pratt(
             // top_op.op_discriminant, 0)` remains inside the reduce
             // step so downstream consumers see the walker-compatible
             // reduced tree).
+            //
+            // AX.W0a.2.n — skip trailing whitespace at the top of
+            // every loop iteration so the LUT peek sees the next
+            // operator byte, not the whitespace separating an
+            // operand from its successor operator. Without this
+            // the LUT returns 0 on a space byte and the loop
+            // terminates prematurely, leaving the remainder of
+            // the operand chain un-consumed (json.bbnf offset-192
+            // defect).
             loop {
+                let _ = #support_mod::skip_space(input, p, state);
                 // Peek next byte; consult the per-rule PRECEDENCE_LUT_<rule>.
                 let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let lut_byte: u8 = #rule_lut_ident[op_byte as usize];
@@ -506,7 +516,12 @@ pub fn emit_parse_pratt_visitor(
             let mut op_stack: ::std::vec::Vec<LocalOpEntry> =
                 ::std::vec::Vec::with_capacity(4);
 
+            // AX.W0a.2.n — skip trailing whitespace at the top of
+            // every loop iteration (mirrors tape-path emitter) so
+            // the LUT peek sees the next operator byte rather than
+            // operand-trailing whitespace.
             loop {
+                let _ = #support_mod::skip_space(input, p, state);
                 let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let lut_byte: u8 = #rule_lut_ident[op_byte as usize];
                 let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {

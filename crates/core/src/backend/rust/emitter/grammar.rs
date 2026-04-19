@@ -121,13 +121,10 @@ fn emit_direct_to_struct_projection(ir: &GrammarIR, _grammar_name: &str) -> Toke
 
 /// AW-V.W3.2 — emit the per-grammar shared helpers the shape fns
 /// consume — JSON string escape decoder, number fallback, etc.
-/// Emitted once per compilation when the grammar has any shape-
-/// classified rule.
+/// Emitted once per grammar; unused helpers are dead-code-eliminated
+/// by LLVM.
 fn emit_shape_helpers(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
     use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
-    if !super::shapes::has_full_shape_coverage(ir) {
-        return quote! {};
-    }
     let grammar_suffix = super::shapes::sanitise_grammar(grammar_ident_str);
     let mut helpers: Vec<TokenStream> = Vec::new();
     // String escape helper — emit when the grammar has any
@@ -340,67 +337,18 @@ impl RustEmitter {
         let profile = ir.profile();
         let grammar_profile = super::profile::emit_grammar_profile(&profile);
 
-        // Tranche AV Phase 3 — DTA table. Lowers the lifter's
-        // owned `DtaTable` into a `const DTA_TABLE: ::bbnf::runtime::tape::DtaTable
-        // = DtaTable { ... };` literal next to `GRAMMAR_PROFILE`. The
-        // runtime driver consuming the table ships in V4 PSI; until
-        // then the table is inert data and `parse()` drives the
-        // legacy fn-per-rule path.
-        let dta_table = super::dta::emit_dta_table(ir);
-
-        // AW-III.W4.b — specialised DTA walker. Mechanically lowers
-        // every `DtaState` variant in the lifted table to inlined
-        // Rust dispatch arms; the `DtaState` enum match disappears in
-        // the output. The cold-path `dispatch_one` survives in
-        // `bbnf_tape::driver` for replay (AX substrate); the hot path
-        // is the `dta_run_<grammar>` function emitted here.
-        //
-        // The walker function exists alongside the live cold-path
-        // `dta_run` (which `parse()` still drives below) so W4.c can
-        // swap the `parse()` call site without touching this file
-        // again. Both the hot-emitted and cold-private paths read
-        // the same `DTA_TABLE` and produce structurally-identical
-        // tapes for the same input.
-        // AW-IV.W1.4-aggro — lift the DTA table once; the walker
-        // emitter splices the DFA's loop body directly into every
-        // Regex / WsTrim / boundary-ws site, so the walker owns the
-        // hot-path regex semantics at the source level (no separately-
-        // emitted `__dfa_match_*` fn exists). The `dfa_codegen` pass
-        // still emits one per-grammar `__regex_scan_<grammar>` adapter
-        // as the SOLE out-of-line regex-related fn — the adapter
-        // exists only for cold-path callers that dispatch by pattern
-        // string (replay surface's `try_branch` /
-        // `handle_repeat_failure_bounded`), and its own dispatch arms
-        // also splice inline DFA bodies so no chain of `fn` calls
-        // survives anywhere on the regex hot path.
-        let dta_walker_table = super::dta_walker::lift_for_walker(ir);
+        // AW-IV.W1.4-aggro — regex-scan adapter. The shape emitters
+        // consume it for every Regex / WsTrim site; its dispatch arms
+        // splice inline DFA bodies so no chain of `fn` calls survives
+        // on the hot path. Lifts the DTA once to read the pattern
+        // set; the table is NOT emitted as runtime data.
         let grammar_name = ident.to_string();
+        let dta_walker_table = bbnf_ir::passes::lift_dta(ir);
         let regex_scan_adapter = dfa_codegen::emit_regex_scan_adapter(
             grammar_name.as_str(),
             ir,
             &dta_walker_table,
         );
-        let dta_walker = {
-            let alphabet = ir
-                .structural_alphabet
-                .as_ref()
-                .cloned()
-                .unwrap_or_default();
-            let profile = ir.profile();
-            super::dta_walker::emit_specialised_walker(
-                grammar_name.as_str(),
-                ir,
-                &dta_walker_table,
-                &alphabet,
-                &profile,
-            )
-        };
-        // AW-III.W4.d — emit the walker fn ident parse() calls into
-        // directly. The ident is the same one the
-        // `emit_specialised_walker` pass produces above; sharing the
-        // sanitiser keeps both call sites in sync.
-        let walker_fn_ident =
-            super::dta_walker::walker_fn_ident(ident.to_string().as_str());
 
         // AW-III.W6.2 — emit PHF keyword tables for every literal-led
         // Alt whose mined branch count exceeds the threshold. The
@@ -444,15 +392,11 @@ impl RustEmitter {
         // AW-III.W6.5 — per-grammar Pratt precedence LUT. Mines every
         // DtaState::ShuntingYard chain's operators from the lifted
         // DTA table and emits a packed `const PRECEDENCE_LUT: [u8; 256]`
-        // plus a sparse `PRECEDENCE_ENTRIES` slice. The walker's
-        // ShuntingYard arm (specialised inline by W4) consults the LUT
-        // at runtime — one indexed byte load + three shifts per operator
-        // dispatch. Grammars without operator chains emit a zeroed LUT
-        // for uniform downstream consumption.
+        // plus a sparse `PRECEDENCE_ENTRIES` slice. Consulted inline by
+        // the shape-dispatch Pratt body.
         let precedence_lut = {
-            let lifted_table = super::dta_walker::lift_for_walker(ir);
             let chain_facts =
-                bbnf_ir::passes::collect_operator_chains(ir, &lifted_table);
+                bbnf_ir::passes::collect_operator_chains(ir, &dta_walker_table);
             super::precedence::emit_precedence_lut(
                 ident.to_string().as_str(),
                 &chain_facts,
@@ -504,15 +448,8 @@ impl RustEmitter {
             ir,
         );
         let shape_helpers = emit_shape_helpers(ident.to_string().as_str(), ir);
-        // AW-V.W4-activation — parse() routing is narrower than
-        // [`has_full_shape_coverage`] admission. The coverage gate
-        // admits substrate emission for CSS / Sheets / BBNF with
-        // classified entry rules; the entrypoint gate preserves
-        // walker-routed parse() for non-Alt-rooted grammars until the
-        // per-Ref `__value` dispatcher refactor lands. See
-        // [`super::shapes::has_shape_dispatcher_entrypoint`] for the
-        // decoupling rationale.
-        let use_shape_dispatch = super::shapes::has_shape_dispatcher_entrypoint(ir);
+        // AX.W0b — every grammar routes through the shape dispatcher
+        // post-W0a.2.h; the gate predicates retired with the walker.
         let shape_dispatcher_ident = super::shapes::root_rule_name(ir).map(|root| {
             super::shapes::dispatcher_fn_ident(ident.to_string().as_str(), &root)
         });
@@ -548,15 +485,12 @@ impl RustEmitter {
         // on JSON twitter) is gone from the hot path entirely.
         let _ = rule_functions;
 
-        // AW-V.W3.2 — parse() routes through the shape dispatcher
-        // when every non-transparent rule has a W3-active shape
-        // classification. Otherwise it falls through to the legacy
-        // walker path (`dta_run_<grammar>`), preserving CSS / Sheets
-        // / BBNF coverage until W4 extends the detectors.
-        let parse_body = if use_shape_dispatch {
+        // AX.W0b — parse() routes through the shape dispatcher
+        // uniformly; the walker fallback retired with W0b.A.
+        let parse_body = {
             let dispatcher = shape_dispatcher_ident
                 .as_ref()
-                .expect("use_shape_dispatch gated on root_rule_name");
+                .expect("shape dispatcher gated on root_rule_name");
             let support_mod_ident = quote::format_ident!(
                 "__shape_support_{}",
                 super::shapes::sanitise_grammar(ident.to_string().as_str()),
@@ -614,93 +548,6 @@ impl RustEmitter {
                     ::bbnf::runtime::Parsed::new(tape, input, root_off),
                 )
             }
-        } else {
-            quote! {
-                let mut builder =
-                    ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                        GRAMMAR_PROFILE.capacity_for(input.len()),
-                    );
-                builder.enable_inline_frame_depth();
-                let mut psi = psi_with_capacity(input.len());
-                // AW-III.W5.d — stage-1 SIMD structural pre-pass.
-                const STRUCTURAL_ALPHABET:
-                    ::bbnf::runtime::scan::StructuralAlphabet =
-                    ::bbnf::runtime::scan::StructuralAlphabet::from_profile(
-                        &GRAMMAR_PROFILE,
-                    );
-                let idx = ::bbnf::runtime::scan::scan_structural(
-                    input.as_bytes(),
-                    &STRUCTURAL_ALPHABET,
-                );
-                let root_off = {
-                    let (columns, frame_depth) =
-                        builder.columns_and_frame_depth_mut();
-                    if !GRAMMAR_PROFILE.list_rules.is_empty()
-                        && (input.as_bytes().len() as u32)
-                            > GRAMMAR_PROFILE.parallel_break_even_bytes
-                        && GRAMMAR_PROFILE.parallel_break_even_bytes > 0
-                    {
-                        let n_workers = ::core::cmp::min(
-                            4usize,
-                            ::core::cmp::max(
-                                1usize,
-                                ::bbnf::runtime::tape::rayon_num_threads(),
-                            ),
-                        );
-                        let list_rule_id =
-                            GRAMMAR_PROFILE.list_rules[0].0;
-                        ::bbnf::runtime::tape::dta_run_parallel(
-                            input.as_bytes(),
-                            &idx,
-                            list_rule_id,
-                            n_workers,
-                            #walker_fn_ident,
-                            columns,
-                            &mut psi,
-                            frame_depth,
-                        )
-                    } else {
-                        #walker_fn_ident(
-                            input.as_bytes(),
-                            &idx,
-                            columns,
-                            &mut psi,
-                            frame_depth,
-                        )
-                    }
-                }
-                    .map_err(|e| match e {
-                        ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
-                                offset,
-                                rule: None,
-                            }
-                        }
-                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
-                                offset,
-                                rule: None,
-                            }
-                        }
-                        ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
-                                offset: 0,
-                                rule: None,
-                            }
-                        }
-                    })?;
-                psi.fill_columns(
-                    input.as_bytes(),
-                    builder.columns_mut(),
-                    &GRAMMAR_PROFILE,
-                );
-                let tape = builder
-                    .finish()
-                    .map_err(::bbnf::runtime::ParseErr::Tape)?;
-                ::core::result::Result::Ok(
-                    ::bbnf::runtime::Parsed::new(tape, input, root_off),
-                )
-            }
         };
 
         // AW-V.W3-bench-fix — `parse_with_visitor::<V>` method body.
@@ -709,15 +556,12 @@ impl RustEmitter {
         // The visitor is monomorphised at the call site; per-shape
         // bodies inline into one tight dispatcher, matching the
         // prototype's perf shape.
-        // AW-V.W4-activation — `parse_with_visitor` emission gates on
-        // W4-absence. The visitor dispatcher it calls has narrow W3
-        // trait bounds; grammars carrying W4 rules skip visitor
-        // emission entirely (see
-        // [`super::shapes::has_w4_classified`]). Visitor activation
-        // for W4 grammars lands in a follow-on wave.
-        let parse_with_visitor_body = if use_shape_dispatch
-            && !super::shapes::has_w4_classified(ir)
-        {
+        //
+        // AX.W0b — visitor emission stays gated on W4-absence; grammars
+        // carrying W4 rules skip visitor emission (visitor activation
+        // for W4 grammars is a future tranche deliverable). The
+        // shape-dispatch gate retired alongside the walker per W0b.
+        let parse_with_visitor_body = if !super::shapes::has_w4_classified(ir) {
             let visitor_dispatcher = visitor_dispatcher_ident
                 .as_ref()
                 .expect("use_shape_dispatch gated on root_rule_name");
@@ -776,8 +620,6 @@ impl RustEmitter {
 
             #grammar_profile
 
-            #dta_table
-
             // AW-III.W6.2 — PHF keyword tables for literal-led Alts.
             // Emitted at module scope per rule whose Alt body has
             // literal-led branches ≥ PHF_MIN_BRANCHES; consulted by
@@ -786,28 +628,18 @@ impl RustEmitter {
 
             // AW-III.W6.5 — Pratt precedence LUT. Dense `[u8; 256]`
             // packed byte layout + sparse metadata slice for two-byte
-            // operators. Consulted by the W4-emitted walker's
-            // ShuntingYard arm via a single indexed byte load.
+            // operators. Consulted by the shape-dispatch Pratt body.
             #precedence_lut
 
             // AW-IV.W1.4-aggro — per-grammar regex-scan adapter.
             // Dispatches on pointer-equality of the interned pattern
             // `&'static str` statics (`__DTA_REGEX_K` / `__DTA_WS_K`);
             // each matched arm splices the corresponding DFA's loop
-            // body inline (no chain of `__dfa_match_*` fn calls
-            // anywhere). Consumed as the `regex_scan: fn(&str, &[u8],
-            // usize) -> Option<u32>` parameter by the cold-path
-            // replay (AX) and any call site that dispatches by
-            // pattern string. The hot-path walker arms splice the DFA
-            // body directly and never reach this adapter — it is the
-            // SOLE out-of-line regex-related fn emitted per grammar.
+            // body inline. Consumed by shape emitters whose Regex /
+            // WsTrim arms splice its dispatch in-line.
             #regex_scan_adapter
 
-            #dta_walker
-
-            // AW-V.W3.2 — per-shape emitter modules + helpers. The
-            // dispatcher emits alongside the walker; `parse()` routes
-            // through it when the grammar's shape coverage is total.
+            // AW-V.W3.2 — per-shape emitter modules + helpers.
             #shape_helpers
             #shape_emitters
 

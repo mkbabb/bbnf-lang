@@ -131,18 +131,11 @@ pub(crate) fn sanitise_grammar(grammar: &str) -> String {
 /// condition to decide whether `parse()` routes through shape
 /// dispatch or the existing `dta_run_<grammar>`.
 pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
-    // AW-V.W4-activation — emit the shape fn family when the grammar's
-    // dispatch shape is consumable by the dispatcher. The admission
-    // gate ([`has_full_shape_coverage`]) covers JSON's Alt-of-Refs
-    // pattern plus the W4-activated forms (Wrap-rooted Alt dispatcher
-    // OR a W3/W4 classified root whose shape fn handles recursion
-    // through the `__value` dispatcher). Grammars that don't meet the
-    // gate continue through the walker fallback per the AX cold-path
-    // replay contract.
-    if !has_full_shape_coverage(ir) {
-        return quote! {};
-    }
-
+    // AX.W0b.A — the coverage gate retired alongside the walker;
+    // every grammar admits shape emission post-W0a.2.h. Unclassified
+    // rules (`ShapeTag::None`) contribute nothing to the stream —
+    // they fall through to the dispatcher's classified-branch path
+    // (JSON Alt-of-Refs) or inline per-Ref routing.
     let grammar_suffix = sanitise_grammar(grammar_ident_str);
     let mut per_rule: Vec<TokenStream> = Vec::new();
     let mut per_rule_visitor: Vec<TokenStream> = Vec::new();
@@ -277,171 +270,15 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
     }
 }
 
-/// Returns `true` when `ir` has at least one shape-classified rule
-/// (so `parse()` should route through the shape dispatcher).
-pub fn has_shape_dispatch(ir: &GrammarIR) -> bool {
+
+/// Returns `true` when `ir` has at least one shape-classified rule.
+/// Used internally by [`dispatcher`] to choose between root-delegation
+/// and Alt-dispatch bodies.
+pub(super) fn has_shape_dispatch(ir: &GrammarIR) -> bool {
     ir.rules.iter().any(|rule| {
         !rule.meta.is_transparent
             && ir.shape_assignments.get(rule.id).is_classified()
     })
-}
-
-/// Returns `true` when `ir` admits shape dispatch — the grammar has
-/// W3- or W4-classified rules whose per-shape emitters land as
-/// substrate for the runtime consumer.
-///
-/// Admission criteria (AW-V.W4-activation):
-///
-/// 1. **Alt-of-Refs entry.** The entry rule's body is `Alt(Ref, Ref, ...)`
-///    and every branch Ref resolves to a shape-classified rule
-///    (W3 or W4). Covers JSON's `value = object | array | string |
-///    number | bool | null`.
-///
-/// 2. **Classified entry rule.** The entry rule itself carries a W3 or
-///    W4 shape tag. Covers CSS L4 (`stylesheet` → Array-tagged via
-///    list-rule detection), Sheets (`formula` → Flat), BBNF (`grammar`
-///    → Array).
-///
-/// Admission drives substrate emission via [`emit_shapes_for_grammar`]:
-/// every classified rule gets its per-shape `parse_<shape>_<grammar>_
-/// <rule>` function compiled. Rules absent from [`ShapeAssignments`]
-/// (`ShapeTag::None`) continue routing through `__dta_walker_inline::run`
-/// per the AX cold-path replay contract.
-///
-/// See [`has_shape_dispatcher_entrypoint`] for the companion gate that
-/// decides whether `parse()` invokes the shape dispatcher or falls
-/// through to the walker. Admission is broader than entrypoint
-/// routing: a grammar may admit substrate emission (shape fns compile
-/// per-rule) without the top-level `parse()` routing through the
-/// dispatcher yet — this is the architectural split the W4-activation
-/// sub-wave uses to land W4 emitters as substrate before the
-/// per-Ref-routed `__value` dispatcher refactor lands in a follow-on.
-pub fn has_full_shape_coverage(ir: &GrammarIR) -> bool {
-    let Some(entry_rule) = ir.rules.iter().find(|r| r.id == ir.entry) else {
-        return false;
-    };
-    use bbnf_ir::IrNode;
-
-    // Criterion 1 — Alt-of-Refs entry with every branch classified.
-    if let IrNode::Alt(branches, _) = &entry_rule.body {
-        return branches.iter().all(|b| match &b.node {
-            IrNode::Ref(rid) => ir.shape_assignments.get(*rid).is_classified(),
-            _ => false,
-        });
-    }
-
-    // Criterion 2 — classified entry rule. The per-shape emitter for
-    // the entry fires; internal Ref recursion currently routes through
-    // `__value` (the Alt-dispatch body on Alt-rooted grammars, or the
-    // root shape fn on non-Alt-rooted — see
-    // [`has_shape_dispatcher_entrypoint`]).
-    let entry_tag = ir.shape_assignments.get(entry_rule.id);
-    entry_tag.is_classified()
-}
-
-/// Returns `true` when `parse()` should route through the shape
-/// dispatcher as its top-level entrypoint.
-///
-/// # AW-V.W5.2 — per-Ref routing
-///
-/// With the per-Ref routing refactor (W5.2), admission extends beyond
-/// Alt-of-Refs entries. A grammar is admissible when:
-///
-/// 1. **Entry is classified.** The entry rule itself has a shape tag
-///    (W3 or W4 — not `None`). This means the entry's per-shape fn is
-///    emitted by [`emit_shapes_for_grammar`].
-///
-/// 2. **Every value-position Ref transitively reachable from the
-///    entry's classified shape fns resolves to a classified rule.**
-///    Per-Ref routing emits direct calls to each Ref target's shape
-///    fn; if any Ref target is unclassified, the emitter falls back
-///    to the `__value` dispatcher — which for non-Alt roots
-///    recursively invokes the entry's shape fn, triggering runtime
-///    infinite recursion unless the fallback is never reached.
-///
-/// JSON's Alt-of-Refs entry is a special case of the general rule —
-/// the entry rule itself doesn't need a shape tag (it's transparent
-/// and emits NO compound); the Alt branches must all be classified.
-/// The dispatcher emits a byte-dispatch over the Alt branches (see
-/// [`dispatcher::emit_alt_dispatch_body`]).
-///
-/// Non-Alt roots (CSS `stylesheet`, Sheets `formula`, BBNF `grammar`)
-/// emit a direct delegation from the dispatcher to the root's shape
-/// fn — the root's per-shape body then recurses via per-Ref routing
-/// (emitted inline via [`dispatcher::emit_ref_call_tape`]).
-///
-/// # AX.W0a.2 — entry-reachable narrowing
-///
-/// The reachability walk starts at the entry rule and traverses every
-/// value-position Ref through classified rule bodies, accumulating a
-/// visited set. Unclassified rules that are structurally present in
-/// the IR but unreachable from the entry cannot trip the `__value`
-/// fallback at parse time, so they do not block admission. Prior
-/// implementation iterated every classified rule (reachable or not),
-/// rejecting grammars whose genuine entry-reachable Ref graph was
-/// already closed over classified targets — a false-negative the
-/// docstring had already described the narrow shape of.
-pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
-    let Some(entry_rule) = ir.rules.iter().find(|r| r.id == ir.entry) else {
-        return false;
-    };
-    use bbnf_ir::IrNode;
-
-    // Criterion 1 — Alt-of-Refs entry (JSON). Every branch must
-    // resolve to a classified rule.
-    if let IrNode::Alt(branches, _) = &entry_rule.body {
-        return branches.iter().all(|b| match &b.node {
-            IrNode::Ref(rid) => ir.shape_assignments.get(*rid).is_classified(),
-            _ => false,
-        });
-    }
-
-    // Criterion 2 — classified entry with entry-reachable per-Ref
-    // routability. Entry is classified AND every value-position Ref
-    // transitively reachable through classified rule bodies starting
-    // from the entry resolves to a classified rule. Unclassified rules
-    // unreachable from the entry are irrelevant — their shape fns are
-    // never compiled, so no `__value` fallback call site exists that
-    // could run at parse time.
-    let entry_tag = ir.shape_assignments.get(entry_rule.id);
-    if !entry_tag.is_classified() {
-        return false;
-    }
-
-    // BFS from entry, following Refs through classified rule bodies.
-    // A Ref to an unclassified rule is a dispositive rejection: the
-    // shape emitter at that Ref's call site emits a `__value`
-    // fallback, which re-enters the entry's shape fn and loops.
-    let mut visited: std::collections::HashSet<bbnf_ir::RuleId> = Default::default();
-    let mut stack: Vec<bbnf_ir::RuleId> = vec![entry_rule.id];
-    visited.insert(entry_rule.id);
-    while let Some(rid) = stack.pop() {
-        let Some(rule) = ir.rules.iter().find(|r| r.id == rid) else {
-            // Stale RuleId — treat as structural corruption. Reject
-            // to preserve the walker path; a downstream wave surfaces
-            // the IR-build bug.
-            return false;
-        };
-        // Skip transparent rules' bodies — transparent rules collapse
-        // into their alias targets during lowering, but the interned
-        // IR still carries the body. Walk their Refs so Alt-of-Refs
-        // dispatchers (e.g. CSS `ruleItem`) compose transitively.
-        let refs = dispatcher::collect_value_refs(&rule.body);
-        for target_rid in refs {
-            let target_tag = ir.shape_assignments.get(target_rid);
-            if !target_tag.is_classified() {
-                // The target is an unclassified rule reachable from
-                // the entry — admitting this grammar would compile a
-                // `__value` fallback call site that infinite-loops at
-                // parse time. Reject.
-                return false;
-            }
-            if visited.insert(target_rid) {
-                stack.push(target_rid);
-            }
-        }
-    }
-    true
 }
 
 /// Resolve the grammar's root rule per [`GrammarIR::entry`]. Returns

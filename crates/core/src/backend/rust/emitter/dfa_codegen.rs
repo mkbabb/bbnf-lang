@@ -349,13 +349,24 @@ pub fn emit_regex_scan_adapter(
     let adapter_ident = regex_scan_adapter_ident(grammar);
     let states = collect_regex_bearing_states(ir, table);
 
-    let dispatch_arms = states.into_iter().map(|(_idx, pattern, pat_ident)| {
+    // AX.W0b.A — after walker deletion the `emit_dta_table` path that
+    // previously owned the per-state pattern statics no longer runs.
+    // The adapter now emits its own `static #pat_ident: &str = "...";`
+    // declarations so the pointer-equality dispatch arms below resolve.
+    let pattern_statics = states.iter().map(|(_idx, pattern, pat_ident)| {
+        let pat_lit = Literal::string(pattern);
+        quote! {
+            #[allow(dead_code)]
+            static #pat_ident: &str = #pat_lit;
+        }
+    });
+
+    let dispatch_arms = states.iter().map(|(_idx, pattern, pat_ident)| {
         let body = emit_dfa_body_for_pattern(pattern);
-        // Pointer-equality fast path first (hot from walker-emit call
-        // sites that hand over the interned `__DTA_REGEX_N` static).
-        // Byte-equality fallback covers the HRegex shape emitter's
-        // call site, which stringifies the rule-body pattern as a raw
-        // literal — `ptr::eq` misses but `==` resolves.
+        // Pointer-equality fast path first (hot from emit sites that
+        // hand over the interned `#pat_ident` static). Byte-equality
+        // fallback covers call sites (HRegex) that stringify the
+        // rule-body pattern as a raw literal.
         quote! {
             if ::core::ptr::eq(pattern.as_ptr(), #pat_ident.as_ptr())
                 || pattern == #pat_ident
@@ -366,6 +377,8 @@ pub fn emit_regex_scan_adapter(
     });
 
     quote! {
+        #(#pattern_statics)*
+
         #[inline]
         #[cold]
         fn #adapter_ident(

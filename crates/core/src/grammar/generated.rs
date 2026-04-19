@@ -72183,18 +72183,21 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant) = if two_byte == 0 {
+            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
+                let mut matched: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_path.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
+                        matched = true;
                         break;
                     }
                 }
-                (1u32, found_disc)
+                (1u32, found_disc, matched)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
+                let mut matched_single: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_path.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
@@ -72202,17 +72205,21 @@ mod __bbnfbootstrap_emit_impl {
                         break;
                     }
                 }
-                if !matched_two_byte && found_disc == 0u8 {
+                if !matched_two_byte {
                     for e in PRECEDENCE_ENTRIES_value_path.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
+                            matched_single = true;
                             break;
                         }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc)
+                (width, found_disc, matched_two_byte || matched_single)
             };
+            if !op_matched {
+                break;
+            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
@@ -72372,18 +72379,21 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant) = if two_byte == 0 {
+            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
+                let mut matched: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_input.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
+                        matched = true;
                         break;
                     }
                 }
-                (1u32, found_disc)
+                (1u32, found_disc, matched)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
+                let mut matched_single: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_input.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
@@ -72391,17 +72401,21 @@ mod __bbnfbootstrap_emit_impl {
                         break;
                     }
                 }
-                if !matched_two_byte && found_disc == 0u8 {
+                if !matched_two_byte {
                     for e in PRECEDENCE_ENTRIES_value_input.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
+                            matched_single = true;
                             break;
                         }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc)
+                (width, found_disc, matched_two_byte || matched_single)
             };
+            if !op_matched {
+                break;
+            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
@@ -73631,18 +73645,21 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant) = if two_byte == 0 {
+            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
+                let mut matched: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_mul.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
+                        matched = true;
                         break;
                     }
                 }
-                (1u32, found_disc)
+                (1u32, found_disc, matched)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
+                let mut matched_single: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_mul.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
@@ -73650,17 +73667,21 @@ mod __bbnfbootstrap_emit_impl {
                         break;
                     }
                 }
-                if !matched_two_byte && found_disc == 0u8 {
+                if !matched_two_byte {
                     for e in PRECEDENCE_ENTRIES_value_mul.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
+                            matched_single = true;
                             break;
                         }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc)
+                (width, found_disc, matched_two_byte || matched_single)
             };
+            if !op_matched {
+                break;
+            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
@@ -73820,18 +73841,21 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant) = if two_byte == 0 {
+            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
+                let mut matched: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_add.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
+                        matched = true;
                         break;
                     }
                 }
-                (1u32, found_disc)
+                (1u32, found_disc, matched)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
+                let mut matched_single: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_add.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
@@ -73839,17 +73863,21 @@ mod __bbnfbootstrap_emit_impl {
                         break;
                     }
                 }
-                if !matched_two_byte && found_disc == 0u8 {
+                if !matched_two_byte {
                     for e in PRECEDENCE_ENTRIES_value_add.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
+                            matched_single = true;
                             break;
                         }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc)
+                (width, found_disc, matched_two_byte || matched_single)
             };
+            if !op_matched {
+                break;
+            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
@@ -74009,18 +74037,21 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant) = if two_byte == 0 {
+            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
+                let mut matched: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_cmp.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
+                        matched = true;
                         break;
                     }
                 }
-                (1u32, found_disc)
+                (1u32, found_disc, matched)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
+                let mut matched_single: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_cmp.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
@@ -74028,17 +74059,21 @@ mod __bbnfbootstrap_emit_impl {
                         break;
                     }
                 }
-                if !matched_two_byte && found_disc == 0u8 {
+                if !matched_two_byte {
                     for e in PRECEDENCE_ENTRIES_value_cmp.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
+                            matched_single = true;
                             break;
                         }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc)
+                (width, found_disc, matched_two_byte || matched_single)
             };
+            if !op_matched {
+                break;
+            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
@@ -74198,18 +74233,21 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant) = if two_byte == 0 {
+            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
+                let mut matched: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_and.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
+                        matched = true;
                         break;
                     }
                 }
-                (1u32, found_disc)
+                (1u32, found_disc, matched)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
+                let mut matched_single: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_and.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
@@ -74217,17 +74255,21 @@ mod __bbnfbootstrap_emit_impl {
                         break;
                     }
                 }
-                if !matched_two_byte && found_disc == 0u8 {
+                if !matched_two_byte {
                     for e in PRECEDENCE_ENTRIES_value_and.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
+                            matched_single = true;
                             break;
                         }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc)
+                (width, found_disc, matched_two_byte || matched_single)
             };
+            if !op_matched {
+                break;
+            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
@@ -74387,18 +74429,21 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant) = if two_byte == 0 {
+            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
+                let mut matched: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_or.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
+                        matched = true;
                         break;
                     }
                 }
-                (1u32, found_disc)
+                (1u32, found_disc, matched)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
+                let mut matched_single: bool = false;
                 for e in PRECEDENCE_ENTRIES_value_or.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
@@ -74406,17 +74451,21 @@ mod __bbnfbootstrap_emit_impl {
                         break;
                     }
                 }
-                if !matched_two_byte && found_disc == 0u8 {
+                if !matched_two_byte {
                     for e in PRECEDENCE_ENTRIES_value_or.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
+                            matched_single = true;
                             break;
                         }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc)
+                (width, found_disc, matched_two_byte || matched_single)
             };
+            if !op_matched {
+                break;
+            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
@@ -76942,18 +76991,21 @@ mod __bbnfbootstrap_emit_impl {
             let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant) = if two_byte == 0 {
+            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
                 let mut found_disc: u8 = 0u8;
+                let mut matched: bool = false;
                 for e in PRECEDENCE_ENTRIES_binary_factor.iter() {
                     if e.byte == op_byte && e.second_byte.is_none() {
                         found_disc = e.op_discriminant;
+                        matched = true;
                         break;
                     }
                 }
-                (1u32, found_disc)
+                (1u32, found_disc, matched)
             } else {
                 let mut found_disc: u8 = 0u8;
                 let mut matched_two_byte: bool = false;
+                let mut matched_single: bool = false;
                 for e in PRECEDENCE_ENTRIES_binary_factor.iter() {
                     if e.byte == op_byte && e.second_byte == second_byte {
                         found_disc = e.op_discriminant;
@@ -76961,17 +77013,21 @@ mod __bbnfbootstrap_emit_impl {
                         break;
                     }
                 }
-                if !matched_two_byte && found_disc == 0u8 {
+                if !matched_two_byte {
                     for e in PRECEDENCE_ENTRIES_binary_factor.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
+                            matched_single = true;
                             break;
                         }
                     }
                 }
                 let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc)
+                (width, found_disc, matched_two_byte || matched_single)
             };
+            if !op_matched {
+                break;
+            }
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;

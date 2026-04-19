@@ -1,0 +1,69 @@
+   Compiling egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-ax-w0a-close/crates/egraph-derive)
+   Compiling csp-solver v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-ax-w0a-close/crates/csp-solver)
+   Compiling bbnf-tape v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-ax-w0a-close/crates/bbnf-tape)
+warning: missing documentation for a variant
+  --> crates/bbnf-tape/src/dta.rs:90:5
+   |
+90 |     Default = 0,
+   |     ^^^^^^^
+   |
+note: the lint level is defined here
+  --> crates/bbnf-tape/src/lib.rs:46:9
+   |
+46 | #![warn(missing_docs)]
+   |         ^^^^^^^^^^^^
+
+warning: missing documentation for a variant
+  --> crates/bbnf-tape/src/dta.rs:91:5
+   |
+91 |     KvPair = 1,
+   |     ^^^^^^
+
+   Compiling egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-ax-w0a-close/crates/egraph)
+warning: `bbnf-tape` (lib) generated 2 warnings
+   Compiling bbnf-regex v0.1.0 (/Users/mkbabb/Programming/parse-that/rust/regex)
+warning: `bbnf-tape` (lib) generated 2 warnings (2 duplicates)
+   Compiling bbnf-simd-scan v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-ax-w0a-close/crates/bbnf-simd-scan)
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that/rust/parse_that)
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-ax-w0a-close/crates/ser)
+   Compiling bbnf_derive v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-ax-w0a-close/crates/derive)
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-wt-ax-w0a-close/crates/ir)
+   Compiling bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-ax-w0a-close/crates/core)
+   Compiling bbnf-json-prototype v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-ax-w0a-close/crates/bbnf-json-prototype)
+   Compiling gorgeous v0.1.10 (/Users/mkbabb/Programming/bbnf-wt-ax-w0a-close/crates/gorgeous)
+warning: unreachable statement
+ --> crates/gorgeous/src/ebnf.rs:5:10
+  |
+5 | #[derive(Parser)]
+  |          ^^^^^^
+  |          |
+  |          unreachable statement
+  |          any code following this expression is unreachable
+  |
+  = note: `#[warn(unreachable_code)]` (part of `#[warn(unused)]`) on by default
+  = note: this warning originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unreachable expression
+ --> crates/gorgeous/src/ebnf.rs:5:10
+  |
+5 | #[derive(Parser)]
+  |          ^^^^^^
+  |          |
+  |          unreachable expression
+  |          any code following this expression is unreachable
+  |
+  = note: this warning originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: `gorgeous` (lib) generated 2 warnings
+    Finished `bench` profile [optimized + debuginfo] target(s) in 49.94s
+     Running benches/compile_pipeline.rs (target/release/deps/compile_pipeline-6b901b9b70519fe8)
+
+running 5 tests
+test compile_bbnf   ... bench:   2,560,625 ns/iter (+/- 125,460)
+test compile_css_l4 ... bench:  21,082,325 ns/iter (+/- 927,429)
+test compile_ebnf   ... bench:     513,774 ns/iter (+/- 23,912)
+test compile_json   ... bench:     167,699 ns/iter (+/- 23,432)
+test compile_sheets ... bench:  11,367,099 ns/iter (+/- 599,593)
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 5 measured
+

@@ -306,17 +306,61 @@ pub fn collect_operator_chains(
         let rule_entries: Vec<OperatorChainEntry> =
             match_operator_chain_rule(ir, rule)
                 .and_then(|(_, operators, _)| {
-                    // Within-rule first-byte disjointness: reject
-                    // rules where two entries share a first byte
-                    // without two-byte disambiguation (cmp_op's
-                    // `<` + `<=` case). Ambiguous dispatch would
-                    // silently corrupt runtime parsing.
-                    let mut rule_seen: [bool; 256] = [false; 256];
+                    // Within-rule first-byte + (first_byte, second_byte)
+                    // admission. The runtime dispatch (see
+                    // `shapes/pratt.rs::emit_parse_pratt`) packs one
+                    // `(precedence, associativity, two_byte_flag)` LUT
+                    // byte per first byte. Multiple entries sharing a
+                    // first byte ARE admissible when:
+                    //
+                    //   1. They carry matching (precedence,
+                    //      associativity) — the LUT byte encodes one
+                    //      triplet. The first-byte entries' triplets
+                    //      must agree so the LUT byte faithfully
+                    //      reflects any one of them.
+                    //   2. Their `(first_byte, second_byte)` tuples are
+                    //      distinct — the runtime `PRECEDENCE_ENTRIES_
+                    //      <rule>` scan uses the tuple as the
+                    //      discriminator on two-byte dispatch.
+                    //
+                    // AX.W0a.2.o: Sheets `compare_op = "<>" | "<=" |
+                    // ">=" | "=" | "<" | ">"` shares first byte 60
+                    // (`<`) across `"<>" / "<=" / "<"` and first byte
+                    // 62 (`>`) across `">=" / ">"`. Each sharing-
+                    // first-byte set has distinct `(first, second)`
+                    // tuples, and the runtime's two-byte-then-fallback
+                    // dispatch correctly selects the matching entry.
+                    // Pre-AX.W0a.2.o the admission rejected such rules
+                    // outright, emitting an empty `PRECEDENCE_ENTRIES_
+                    // comparison_expr` that the Pratt loop's LUT byte
+                    // read as zero — binary_factor parsed only the
+                    // first operand and stopped.
+                    let mut rule_tuple_seen: std::collections::HashSet<
+                        (u8, Option<u8>),
+                    > = std::collections::HashSet::new();
+                    let mut first_byte_triplet: std::collections::HashMap<
+                        u8,
+                        (u8, Associativity),
+                    > = std::collections::HashMap::new();
                     for pe in &operators {
-                        if rule_seen[pe.byte as usize] {
+                        let tup = (pe.byte, pe.second_byte);
+                        if !rule_tuple_seen.insert(tup) {
+                            // Exact `(first, second)` duplicate —
+                            // truly ambiguous; reject defensively.
                             return None;
                         }
-                        rule_seen[pe.byte as usize] = true;
+                        let triplet = (pe.precedence, pe.associativity);
+                        if let Some(existing) = first_byte_triplet
+                            .insert(pe.byte, triplet)
+                        {
+                            if existing != triplet {
+                                // First-byte entries disagree on
+                                // (precedence, associativity) — the
+                                // single LUT byte cannot encode both;
+                                // reject.
+                                return None;
+                            }
+                        }
                     }
                     Some(
                         operators

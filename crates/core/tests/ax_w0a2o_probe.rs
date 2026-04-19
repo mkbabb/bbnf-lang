@@ -29,7 +29,15 @@ fn probe_json_scalars_vs_compounds() {
 
 #[test]
 fn probe_css_minimal() {
-    for input in &["a { width: 50%; }", "a { }", "a{}"] {
+    for input in &[
+        "a { width: 50%; }", "a { }", "a{}",
+        "a:dir(rtl) { color: red; }", "a:dir(ltr) { color: red; }",
+        "@keyframes pulse { 50% { opacity: 1; } }",
+        ".x { color: #abc; }", ".x { color: #aabbcc; }", ".x { color: #aabbccdd; }",
+        ".x { color: aliceblue; }",
+        "@media (min-width: 640px) { a { color: red; } }",
+        "@keyframes pulse { 50% { opacity: .5; } }",
+    ] {
         let r = CssL4Parser::parse(input);
         eprintln!("CSS {:?}: {:?}", input, r.map(|_| "ok"));
     }
@@ -55,6 +63,7 @@ fn dump_css_ruleblock_ir() {
     for path in &[
         "../../grammar/css/l4/stylesheet.bbnf",
         "../../grammar/json/json.bbnf",
+        "../../grammar/google-sheets/google-sheets.bbnf",
     ] {
         eprintln!("=== {}", path);
         match compile_paths_request(&[path.into()], &request) {
@@ -64,7 +73,9 @@ fn dump_css_ruleblock_ir() {
                     if matches!(
                         name,
                         "ruleBlock" | "blockContent" | "stylesheet" | "ruleList" |
-                        "array" | "object" | "pair" | "value"
+                        "array" | "object" | "pair" | "value" |
+                        "comparison_expr" | "concat_expr" | "add_expr" | "mul_expr" | "exp_expr" |
+                        "compare_op" | "add_op" | "mul_op" | "unary_prefix"
                     ) {
                         eprintln!("RULE {} = {:#?}", name, rule.body);
                         eprintln!("  shape = {:?}", ir.shape_assignments.get(rule.id));

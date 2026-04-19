@@ -1157,8 +1157,15 @@ fn extract_operator_set(
 }
 
 /// Collect operator entries from an inlined Alt node. The node must
-/// be an Alt whose branches are each a Literal (possibly wrapped in
-/// Map/OptionalWhitespace).
+/// be an Alt whose branches are each a Literal, possibly wrapped in
+/// Map/OptionalWhitespace, or prefix-factored as
+/// `Seq(Literal(prefix), Alt(suffixes))` post-optimizer.
+///
+/// AX.W0a.2.o: Sheets `comparison_expr`'s inlined `compare_op`
+/// surfaces a prefix-factored branch (`Seq(Literal("<"),
+/// Alt(Literal(">") | Literal("=")))` → `["<>", "<="]`); handle it
+/// via [`extract_literal_set`] so the admission sees every operator
+/// literal the rule admits.
 fn collect_inlined_alt_operators(
     ir: &GrammarIR,
     node: &IrNode,
@@ -1169,20 +1176,24 @@ fn collect_inlined_alt_operators(
         _ => return None,
     };
     let mut out = Vec::new();
-    for (discriminant, branch) in branches.iter().enumerate() {
-        let literal = extract_literal(&branch.node, ir)?;
-        let bytes = literal.as_bytes();
-        if bytes.is_empty() {
-            return None;
+    let mut discriminant: usize = 0;
+    for branch in branches.iter() {
+        let literals = extract_literal_set(&branch.node, ir)?;
+        for literal in literals {
+            let bytes = literal.as_bytes();
+            if bytes.is_empty() {
+                return None;
+            }
+            out.push(PrecedenceEntry {
+                byte: bytes[0],
+                second_byte: bytes.get(1).copied(),
+                precedence: 0,
+                associativity: infer_associativity(&literal),
+                op_rule: owning_rule_id,
+                op_discriminant: discriminant.min(u8::MAX as usize) as u8,
+            });
+            discriminant += 1;
         }
-        out.push(PrecedenceEntry {
-            byte: bytes[0],
-            second_byte: bytes.get(1).copied(),
-            precedence: 0,
-            associativity: infer_associativity(&literal),
-            op_rule: owning_rule_id,
-            op_discriminant: discriminant.min(u8::MAX as usize) as u8,
-        });
     }
     Some(out)
 }
@@ -1408,20 +1419,24 @@ fn collect_operator_alternatives(
         _ => return None,
     };
     let mut out = Vec::new();
-    for (discriminant, branch) in branches.iter().enumerate() {
-        let literal = extract_literal(&branch.node, ir)?;
-        let bytes = literal.as_bytes();
-        if bytes.is_empty() {
-            return None;
+    let mut discriminant: usize = 0;
+    for branch in branches.iter() {
+        let literals = extract_literal_set(&branch.node, ir)?;
+        for literal in literals {
+            let bytes = literal.as_bytes();
+            if bytes.is_empty() {
+                return None;
+            }
+            out.push(PrecedenceEntry {
+                byte: bytes[0],
+                second_byte: bytes.get(1).copied(),
+                precedence: 0, // filled in by caller
+                associativity: infer_associativity(&literal),
+                op_rule: op_rule_id,
+                op_discriminant: discriminant.min(u8::MAX as usize) as u8,
+            });
+            discriminant += 1;
         }
-        out.push(PrecedenceEntry {
-            byte: bytes[0],
-            second_byte: bytes.get(1).copied(),
-            precedence: 0, // filled in by caller
-            associativity: infer_associativity(&literal),
-            op_rule: op_rule_id,
-            op_discriminant: discriminant.min(u8::MAX as usize) as u8,
-        });
     }
     Some(out)
 }
@@ -1430,6 +1445,83 @@ fn extract_literal(node: &IrNode, ir: &GrammarIR) -> Option<String> {
     match strip_transparent_owned(node) {
         IrNode::Literal(sid) => Some(ir.get_string(sid).to_string()),
         IrNode::Map { inner, .. } => extract_literal(&inner, ir),
+        _ => None,
+    }
+}
+
+/// Extract the set of literal strings an operator-branch node admits.
+///
+/// Extends [`extract_literal`] to handle prefix-factored Alt branches
+/// produced by the optimizer's prefix-tree factoring on literal-led
+/// Alts. The factoring rewrites
+/// `Alt(Literal("<>") | Literal("<=") | Literal("<") | …)` as
+/// `Alt(Seq(Literal("<"), Alt(Literal(">") | Literal("="))) | Literal("<") | …)`
+/// — the Seq-factored branch expands to `["<>", "<="]` via the
+/// Cartesian product of its prefix / suffix literal sets.
+///
+/// AX.W0a.2.o: Sheets `compare_op`'s post-factor body surfaces one
+/// Seq-factored branch; single-literal `collect_operator_alternatives`
+/// rejected the entire Alt when that branch failed `extract_literal`.
+/// Factoring-aware expansion admits the miner's seven-literal chain.
+///
+/// Returns `None` when a branch is not literal-derivable (Seq with
+/// non-literal head, Ref chain, Regex leaf, etc.) — those shapes are
+/// not operator alternatives and the miner must not invent a
+/// single-byte projection for them.
+fn extract_literal_set(node: &IrNode, ir: &GrammarIR) -> Option<Vec<String>> {
+    match strip_transparent_owned(node) {
+        IrNode::Literal(sid) => Some(vec![ir.get_string(sid).to_string()]),
+        IrNode::Map { inner, .. } => extract_literal_set(&inner, ir),
+        IrNode::Seq(children) => {
+            // Prefix-factored branch: `Seq([Literal(prefix), Alt(suffixes)])`
+            // — expand the Cartesian product of the prefix with each
+            // suffix literal. Chain with more than one non-trivial
+            // child beyond the prefix-suffix split is not a valid
+            // operator alternative and we reject.
+            let substantive: Vec<&IrNode> = children
+                .iter()
+                .filter(|c| {
+                    !matches!(
+                        strip_transparent_owned(c),
+                        IrNode::Epsilon | IrNode::OptionalWhitespace(_)
+                    )
+                })
+                .collect();
+            if substantive.len() != 2 {
+                return None;
+            }
+            let prefix = extract_literal(substantive[0], ir)?;
+            let suffix_alt = strip_transparent_owned(substantive[1]);
+            let suffix_branches = match suffix_alt {
+                IrNode::Alt(b, _) => b,
+                _ => return None,
+            };
+            let mut out = Vec::new();
+            for suffix_branch in &suffix_branches {
+                let suffix_literals = extract_literal_set(&suffix_branch.node, ir)?;
+                for suffix in suffix_literals {
+                    let mut combined = prefix.clone();
+                    combined.push_str(&suffix);
+                    out.push(combined);
+                }
+            }
+            if out.is_empty() {
+                return None;
+            }
+            Some(out)
+        }
+        IrNode::Alt(branches, _) => {
+            // Nested Alt — flatten each branch's literal set.
+            let mut out = Vec::new();
+            for branch in &branches {
+                let literals = extract_literal_set(&branch.node, ir)?;
+                out.extend(literals);
+            }
+            if out.is_empty() {
+                return None;
+            }
+            Some(out)
+        }
         _ => None,
     }
 }

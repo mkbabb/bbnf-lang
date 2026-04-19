@@ -128,9 +128,36 @@ pub fn emit_precedence_lut(
             let rule_entries_ident =
                 format_ident!("PRECEDENCE_ENTRIES_{}", rule.rule_name);
 
+            // AX.W0a.2.o — when multiple entries share a first byte
+            // (Sheets `compare_op` shares byte 60 across `"<>" / "<=" /
+            // "<"`), the LUT's one-byte-per-first-byte encoding must
+            // set bit-7 `two_byte` whenever ANY entry on that first
+            // byte carries a `second_byte`. Otherwise the single-byte
+            // entry — written last when iteration hits `"<"` after
+            // `"<>"` / `"<="` — clobbers the two-byte flag, and the
+            // runtime's `shapes/pratt.rs` op_matched path never enters
+            // the two-byte lookup branch, silently treating `"<="` as
+            // a bare `"<"`. Merge by OR-ing the packed byte with the
+            // prior write's value so every `two_byte` bit on the same
+            // first byte lights the flag.
             let mut packed: [u8; 256] = [0u8; 256];
             for entry in &rule.entries {
-                packed[entry.byte as usize] = pack_lut_byte(entry);
+                let byte = pack_lut_byte(entry);
+                let slot = &mut packed[entry.byte as usize];
+                *slot = if *slot == 0 {
+                    byte
+                } else {
+                    // Same first byte already packed — merge. The
+                    // (precedence, associativity, arity) low bits
+                    // agree across same-first-byte entries by the
+                    // miner's admission check (see operator_chain.rs
+                    // first_byte_triplet); only the two_byte bit
+                    // differs when one entry has `second_byte` and
+                    // another does not. OR the two_byte bit so the
+                    // runtime attempts two-byte lookup, falling back
+                    // to single-byte when the pair misses.
+                    *slot | (byte & 0x80)
+                };
             }
             let lut_bytes: Vec<TokenStream> =
                 packed.iter().map(|b| quote! { #b }).collect();

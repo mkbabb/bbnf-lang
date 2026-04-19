@@ -217,6 +217,31 @@ Fresh-context orchestrator reads:
 
 Then dispatches W0a.2.i per SYNTHESIS §"The next wave".
 
+## 2026-04-19 — W0a.2.i dispatch
+
+Three sub-agents dispatched; allow-lists disjoint. Master HEAD
+`26f714a1` at dispatch; worktrees seeded with `target/` symlink +
+`data/` copy via `scripts/seed-worktree.sh`.
+
+- **Agent A** (`bbnf-wt-ax-w0a-2i-a`) — rewire `crates/core/src/
+  grammar/host.rs::walk_tape` off walker-specific compound identity.
+  Allow: host.rs, lower/tape_walk.rs, shapes/wrap.rs (option-b
+  fallback), ax_w0a2h_probe.rs. Preferred: option (a) cursor API
+  over option (b) wrap-emitter stamping (invariant 20 alignment).
+- **Agent B** (`bbnf-wt-ax-w0a-2i-b`) — re-key IR-side walks on
+  IR-structural identity. Allow: lower/expression.rs, graph/deps.rs,
+  passes/types/subvariants.rs + located Pratt detector. Drops stale
+  `grammar_item_0 / directive_0 / term_1 / term_2 / value_atom_0`
+  match arms; root-causes cycle-2 heterogeneity loss.
+- **Agent C** (`bbnf-wt-ax-w0a-2i-c`) — serial, blocked by A + B.
+  Re-applies `29bfd055` admission widening; runs bootstrap regen to
+  idempotent fixed point preserving Pratt classification; flips
+  wire-contract expected map.
+
+Both A + B carry tight scope, ≤ 500-word return caps, hard gates
+cited to artefact paths. C awaits cherry-pick of A + B onto master
+before dispatch.
+
 ---
 
 ## 2026-04-18 — W0a.2.a + W0a.2.b dispatch

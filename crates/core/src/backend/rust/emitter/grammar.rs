@@ -452,7 +452,7 @@ impl RustEmitter {
         let precedence_lut = {
             let lifted_table = super::dta_walker::lift_for_walker(ir);
             let chain_facts =
-                bbnf_ir::passes::collect_operator_chains(&lifted_table);
+                bbnf_ir::passes::collect_operator_chains(ir, &lifted_table);
             super::precedence::emit_precedence_lut(
                 ident.to_string().as_str(),
                 &chain_facts,

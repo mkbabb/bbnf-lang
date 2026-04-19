@@ -24,7 +24,7 @@ use bbnf::pipeline::{
 };
 use bbnf_ir::passes::{
     collect_operator_chains, Associativity, OperatorArity, OperatorChainEntry,
-    OperatorChainFacts,
+    OperatorChainFacts, OperatorChainRule,
 };
 use bbnf_ir::RuleId;
 
@@ -126,8 +126,12 @@ fn emit_populated_facts_produces_nonzero_bytes() {
         mk_entry(b'^', None, 7, Associativity::Right, OperatorArity::Binary),
     ];
     let facts = OperatorChainFacts {
-        entries,
-        chain_heads: vec![],
+        rules: vec![OperatorChainRule {
+            rule: 0 as RuleId,
+            rule_name: "test_rule".to_string(),
+            entries,
+        }],
+        chain_heads: vec![0 as RuleId],
     };
     let emitted = emit_precedence_lut("TestGrammar", &facts);
     let text = emitted.to_string();
@@ -151,7 +155,7 @@ fn compile_and_mine(path: &str) -> OperatorChainFacts {
         _ => panic!("expected Vm output"),
     };
     let dta = bbnf_ir::passes::lift_dta(&ir);
-    collect_operator_chains(&dta)
+    collect_operator_chains(&ir, &dta)
 }
 
 #[test]
@@ -174,20 +178,19 @@ fn sheets_mines_operators() {
         facts.operator_count() >= 6,
         "Sheets must mine ≥ 6 operators (&, +, -, *, /, ^), got {}: {:?}",
         facts.operator_count(),
-        facts.entries.iter().map(|e| e.byte as char).collect::<Vec<_>>(),
+        facts.entries_flat().map(|e| e.byte as char).collect::<Vec<_>>(),
     );
     // Verify the key arithmetic operators are captured.
     for expected in &[b'+', b'-', b'*', b'/', b'^', b'&'] {
         assert!(
-            facts.entries.iter().any(|e| e.byte == *expected),
+            facts.entries_flat().any(|e| e.byte == *expected),
             "Sheets must mine operator {:?}",
             *expected as char,
         );
     }
     // `^` must be right-associative.
     let caret = facts
-        .entries
-        .iter()
+        .entries_flat()
         .find(|e| e.byte == b'^')
         .expect("`^` must be mined");
     assert_eq!(caret.associativity, Associativity::Right);
@@ -213,11 +216,11 @@ fn bbnf_mines_operators() {
         facts.operator_count() >= 4,
         "BBNF must mine ≥ 4 arithmetic operators, got {}: {:?}",
         facts.operator_count(),
-        facts.entries.iter().map(|e| e.byte as char).collect::<Vec<_>>(),
+        facts.entries_flat().map(|e| e.byte as char).collect::<Vec<_>>(),
     );
     for expected in &[b'+', b'-', b'*', b'/'] {
         assert!(
-            facts.entries.iter().any(|e| e.byte == *expected),
+            facts.entries_flat().any(|e| e.byte == *expected),
             "BBNF must mine operator {:?}",
             *expected as char,
         );
@@ -242,11 +245,11 @@ fn css_l4_mines_math_expr_operators() {
         facts.operator_count() >= 4,
         "CSS L4 must mine ≥ 4 math operators, got {}: {:?}",
         facts.operator_count(),
-        facts.entries.iter().map(|e| e.byte as char).collect::<Vec<_>>(),
+        facts.entries_flat().map(|e| e.byte as char).collect::<Vec<_>>(),
     );
     for expected in &[b'+', b'-', b'*', b'/'] {
         assert!(
-            facts.entries.iter().any(|e| e.byte == *expected),
+            facts.entries_flat().any(|e| e.byte == *expected),
             "CSS must mine operator {:?}",
             *expected as char,
         );
@@ -288,8 +291,12 @@ fn emitted_lut_packs_non_operator_bytes_as_zero() {
         mk_entry(b'+', None, 5, Associativity::Left, OperatorArity::Binary),
     ];
     let facts = OperatorChainFacts {
-        entries,
-        chain_heads: vec![],
+        rules: vec![OperatorChainRule {
+            rule: 0 as RuleId,
+            rule_name: "test_rule".to_string(),
+            entries,
+        }],
+        chain_heads: vec![0 as RuleId],
     };
     let emitted = emit_precedence_lut("Test", &facts);
     let text = emitted.to_string();
@@ -318,8 +325,12 @@ fn pack_overlap_byte_unique_in_lut() {
         mk_entry(b'+', None, 3, Associativity::Right, OperatorArity::Binary),
     ];
     let facts = OperatorChainFacts {
-        entries,
-        chain_heads: vec![],
+        rules: vec![OperatorChainRule {
+            rule: 0 as RuleId,
+            rule_name: "test_rule".to_string(),
+            entries,
+        }],
+        chain_heads: vec![0 as RuleId],
     };
     let emitted = emit_precedence_lut("Test", &facts);
     let text = emitted.to_string();
@@ -371,7 +382,7 @@ fn let_call_dispatch_reachable_via_view() {
 /// a full grammar compile. Binary arity, no second byte, op_rule
 /// 0, op_discriminant 0.
 fn mk_facts(ops: &[(u8, u8, Associativity)]) -> OperatorChainFacts {
-    let entries = ops
+    let entries: Vec<OperatorChainEntry> = ops
         .iter()
         .map(|(b, p, a)| OperatorChainEntry {
             byte: *b,
@@ -384,8 +395,12 @@ fn mk_facts(ops: &[(u8, u8, Associativity)]) -> OperatorChainFacts {
         })
         .collect();
     OperatorChainFacts {
-        entries,
-        chain_heads: vec![],
+        rules: vec![OperatorChainRule {
+            rule: 0 as RuleId,
+            rule_name: "test_rule".to_string(),
+            entries,
+        }],
+        chain_heads: vec![0 as RuleId],
     }
 }
 

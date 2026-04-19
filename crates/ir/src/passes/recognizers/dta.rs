@@ -1053,7 +1053,13 @@ fn collect_precedence_chain(ir: &GrammarIR, rule: &IrRule) -> Option<PrecedenceC
 /// The owning rule's id is used as the `op_rule` reference so the
 /// emitter can thread variant_idx through without a secondary rule
 /// allocation.
-fn match_operator_chain_rule(
+///
+/// AX.W0a.2.l — lifted to `pub(super)` so the sibling
+/// [`super::operator_chain`] miner can reuse the structural matcher
+/// for single-rung Pratt-classified rules (BBNF's `binary_factor`)
+/// that the DTA `collect_precedence_chain` walker-path collapse
+/// skips (it requires ≥ 2 rungs).
+pub(super) fn match_operator_chain_rule(
     ir: &GrammarIR,
     rule: &IrRule,
 ) -> Option<(RuleId, Vec<PrecedenceEntry>, IrNode)> {

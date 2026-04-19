@@ -72,6 +72,12 @@ pub fn emit_parse_pratt(
     let fn_ident = shape_fn_ident("pratt", grammar_suffix, rule_name);
     let variant_idx = (rule.id & 0xFF) as u8;
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    // AX.W0a.2.l — per-rule Pratt LUT. Each rule's Pratt body
+    // consults its own `PRECEDENCE_LUT_<rule>` so cross-rule byte
+    // collisions (BBNF: `||` in `value_or` vs `<<` in `binary_factor`)
+    // don't leak into one another's dispatch.
+    let rule_lut_ident = format_ident!("PRECEDENCE_LUT_{}", rule_name);
+    let rule_entries_ident = format_ident!("PRECEDENCE_ENTRIES_{}", rule_name);
 
     // The per-grammar value-position dispatcher — the operand
     // parses recurse through this so nested calls, parens, numbers,
@@ -210,10 +216,16 @@ pub fn emit_parse_pratt(
                 ::std::vec::Vec::with_capacity(4);
 
             // ── Reducer loop ────────────────────────────────────────
+            //
+            // AX.W0a.2.l — per-rule LUT references; reducer-compound
+            // emission preserved (`push_compound(TapeKind::Rule, ...,
+            // top_op.op_discriminant, 0)` remains inside the reduce
+            // step so downstream consumers see the walker-compatible
+            // reduced tree).
             loop {
-                // Peek next byte; consult PRECEDENCE_LUT.
+                // Peek next byte; consult the per-rule PRECEDENCE_LUT_<rule>.
                 let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-                let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+                let lut_byte: u8 = #rule_lut_ident[op_byte as usize];
                 let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                     ::core::option::Option::None
                 } else {
@@ -258,7 +270,7 @@ pub fn emit_parse_pratt(
 
                 // Push-op path: unpack LUT byte's (prec, assoc,
                 // two_byte) + resolve (op_rule, op_discriminant) from
-                // PRECEDENCE_ENTRIES.
+                // the per-rule PRECEDENCE_ENTRIES_<rule> slice.
                 let precedence: u8 = lut_byte & 0x0Fu8;
                 let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
                 let associativity_is_left: bool = assoc_bit == 0;
@@ -268,7 +280,7 @@ pub fn emit_parse_pratt(
                     input.get(*p + 1).copied();
                 let (op_width, op_discriminant) = if two_byte == 0 {
                     let mut found_disc: u8 = 0u8;
-                    for e in PRECEDENCE_ENTRIES.iter() {
+                    for e in #rule_entries_ident.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
                             break;
@@ -278,11 +290,23 @@ pub fn emit_parse_pratt(
                 } else {
                     let mut found_disc: u8 = 0u8;
                     let mut matched_two_byte: bool = false;
-                    for e in PRECEDENCE_ENTRIES.iter() {
+                    for e in #rule_entries_ident.iter() {
                         if e.byte == op_byte && e.second_byte == second_byte {
                             found_disc = e.op_discriminant;
                             matched_two_byte = e.second_byte.is_some();
                             break;
+                        }
+                    }
+                    // Two-byte bit was set, but the specific
+                    // (byte, second_byte) pair wasn't in the entries
+                    // — fall back to a single-byte entry on the same
+                    // first byte.
+                    if !matched_two_byte && found_disc == 0u8 {
+                        for e in #rule_entries_ident.iter() {
+                            if e.byte == op_byte && e.second_byte.is_none() {
+                                found_disc = e.op_discriminant;
+                                break;
+                            }
                         }
                     }
                     let width = if matched_two_byte { 2u32 } else { 1u32 };
@@ -290,20 +314,21 @@ pub fn emit_parse_pratt(
                 };
 
                 // Advance past the op bytes + emit a payload-bearing
-                // Span leaf carrying the discriminant (walker parity;
-                // downstream typed-payload walkers surface every op).
+                // Span leaf carrying the 1-byte op_discriminant via
+                // `push_leaf_with_arena_payload` (AX.W0a.2.l).
                 let op_lo: u32 = *p as u32;
                 *p = (*p).saturating_add(op_width as usize);
                 let op_hi: u32 = *p as u32;
                 let arena_off: u32 = builder.arena_mut().len() as u32;
                 builder.arena_mut().push(op_discriminant);
-                let _op_rec = builder.push_leaf_with_arena_frame(
+                let _op_rec = builder.push_leaf_with_arena_payload(
                     ::bbnf::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
                     arena_off,
+                    1,
                 );
 
                 // Capture LHS span_lo for the reducer compound. The
@@ -330,7 +355,7 @@ pub fn emit_parse_pratt(
                 // AW-V.W5.2 — per-Ref RHS call.
                 #rhs_call
                 // Re-point `this_operand_root` at the RHS root (first
-                // record the RHS emitted). The `push_leaf_with_arena_frame`
+                // record the RHS emitted). The `push_leaf_with_arena_payload`
                 // above sits at this_operand_root + 1 when the operand
                 // was a single leaf; for compound operands the root
                 // sits at the position right after the op leaf.
@@ -387,6 +412,11 @@ pub fn emit_parse_pratt_visitor(
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("pratt", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    // AX.W0a.2.l — per-rule visitor-path Pratt LUT (mirrors tape-
+    // path emitter above). Each visitor body consults its own
+    // rule-scoped LUT + sparse entries slice.
+    let rule_lut_ident = format_ident!("PRECEDENCE_LUT_{}", rule_name);
+    let rule_entries_ident = format_ident!("PRECEDENCE_ENTRIES_{}", rule_name);
 
     // Visitor-path dispatcher — wires the RHS operand parse into the
     // grammar's per-shape visitor family. When the grammar has no
@@ -478,7 +508,7 @@ pub fn emit_parse_pratt_visitor(
 
             loop {
                 let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-                let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+                let lut_byte: u8 = #rule_lut_ident[op_byte as usize];
                 let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                     ::core::option::Option::None
                 } else {
@@ -523,7 +553,7 @@ pub fn emit_parse_pratt_visitor(
                     input.get(*p + 1).copied();
                 let (op_width, op_discriminant) = if two_byte == 0 {
                     let mut found_disc: u8 = 0u8;
-                    for e in PRECEDENCE_ENTRIES.iter() {
+                    for e in #rule_entries_ident.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
                             break;
@@ -533,7 +563,7 @@ pub fn emit_parse_pratt_visitor(
                 } else {
                     let mut found_disc: u8 = 0u8;
                     let mut matched_two_byte: bool = false;
-                    for e in PRECEDENCE_ENTRIES.iter() {
+                    for e in #rule_entries_ident.iter() {
                         if e.byte == op_byte && e.second_byte == second_byte {
                             found_disc = e.op_discriminant;
                             matched_two_byte = e.second_byte.is_some();

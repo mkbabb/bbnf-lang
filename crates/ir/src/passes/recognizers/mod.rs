@@ -106,6 +106,7 @@ pub use keyword_stats::{KeywordBranch, KeywordBranchMap, KeywordStatsMiner};
 pub use list_rules::mine_list_rules;
 pub use operator_chain::{
     collect_operator_chains, OperatorArity, OperatorChainEntry, OperatorChainFacts,
+    OperatorChainRule,
 };
 pub use pattern_alphabet::{PatternAlphabet, PatternAlphabetMap, PatternAlphabetMiner};
 pub use punct_ws_region::PunctWsRegionMiner;

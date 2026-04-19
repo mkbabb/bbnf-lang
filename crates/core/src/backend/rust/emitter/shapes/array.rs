@@ -546,19 +546,33 @@ fn emit_parse_array_list(
     // single meaningful child is the value-dispatch result.
     let has_iter_ow = matches!(repeat_inner, IrNode::OptionalWhitespace(_));
 
-    // Element-value Ref extraction. Walk past any OW / Map / Seq
-    // wrappers to the first value-position Ref; use the per-Ref
-    // direct-call emitter when the target is classified, else fall
-    // back to the `__value` dispatcher.
-    let element_ref = extract_element_ref(repeat_inner, ir);
-    let value_call = element_ref
-        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
-        .map(|call| quote! { let _value_off = (#call)?; })
-        .unwrap_or_else(|| {
-            quote! {
-                let _value_off = #dispatcher_ident(input, p, state, builder)?;
-            }
-        });
+    // AX.W0a.2.f — structural element emission. Walk `repeat_inner`
+    // (or its OW-unwrapped inner when `has_iter_ow`) and emit position-
+    // specific code: Ref → `emit_ref_call_tape`; Alt/Regex/Negate/
+    // Minus/TokenDispatch → `inline::emit_inline_position_tape`; Seq /
+    // Next / Skip → recurse; Literal → byte-match. Prior implementation
+    // `extract_element_ref` collapsed the element to its first Ref and
+    // fell back to `#dispatcher_ident` for Alts (BBNF
+    // `Repeat(OW(Alt[Ref,…]))`) — the fallback called the root's
+    // `__value` dispatcher, which on non-Alt-rooted grammars IS the
+    // root shape fn and loops indefinitely. Direct structural emission
+    // eliminates the recursive edge.
+    let inner_to_emit = if has_iter_ow {
+        match repeat_inner {
+            IrNode::OptionalWhitespace(inner) => inner.as_ref(),
+            _ => repeat_inner,
+        }
+    } else {
+        repeat_inner
+    };
+    let _ = dispatcher_ident;
+    let value_call = emit_element_position_tape(
+        inner_to_emit,
+        variant_idx,
+        &support_mod,
+        grammar_suffix,
+        ir,
+    );
 
     // First-set byte check for termination. When the dispatcher's byte
     // dispatch would reject the current `*p`, the Repeat closes. Today
@@ -786,54 +800,156 @@ fn emit_parse_array_list(
     }
 }
 
-/// Walk past transparent IR wrappers inside a Repeat's inner to find
-/// the first value-position `Ref` target. Mirrors the Shape 1
-/// [`extract_array_value_ref`] strategy but doesn't chase past the
-/// outer Repeat (the caller has already positioned on the inner).
+/// AX.W0a.2.f — emit tape-path code for a Repeat element body.
 ///
-/// Returns `None` when the inner carries no Ref target the per-Ref
-/// router can resolve (bare literal, inline regex, etc.) — the caller
-/// falls back to the `__value` dispatcher in that case.
-fn extract_element_ref(
+/// Walks the element structurally and emits per-position code:
+///
+/// - `Ref(rid)` → `emit_ref_call_tape` on the target's classified
+///   shape fn. Classification is admission-guaranteed by
+///   [`has_shape_dispatcher_entrypoint`]; unclassified targets would
+///   have rejected the grammar before reaching this emission.
+/// - `Alt(_, _)` / `Regex(_)` / `Negate(_)` / `Minus(_, _)` /
+///   `TokenDispatch { .. }` → `inline::emit_inline_position_tape` —
+///   byte-dispatch, regex-scan, guard, or TokenDispatch compound
+///   directly, no recursion through `__value`.
+/// - `Literal(sid)` → byte-match + `TapeKind::Literal` leaf push.
+/// - `Seq(children)` / `Next(lhs, rhs)` / `Skip(lhs, rhs)` → emit each
+///   child structurally in order.
+/// - `OptionalWhitespace(inner)` / `Map { inner, .. }` → strip wrapper,
+///   recurse on inner.
+/// - `Repeat { inner, .. }` → emit the Repeat's inner positions inside
+///   a bounded per-iter retry loop. Matches walker's `handle_repeat`
+///   state machine: rollback `*p` on failure, terminate loop.
+/// - `Epsilon` → emit nothing.
+///
+/// Note: this emitter is distinct from [`super::inline::
+/// emit_inline_position_tape`] — the inline emitter focuses on the
+/// five discrete positions (Alt / Regex / Negate / Minus /
+/// TokenDispatch) a Flat/ArgList/Seq body might encounter at a
+/// single position. The element emitter composes Seq / Next / Skip /
+/// Literal / Ref handling around those positions so a Repeat can
+/// iterate a composite element.
+fn emit_element_position_tape(
     node: &bbnf_ir::IrNode,
+    variant_idx: u8,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
     ir: &GrammarIR,
-) -> Option<bbnf_ir::RuleId> {
-    fn is_punct(rid: bbnf_ir::RuleId, ir: &GrammarIR) -> bool {
-        let Some(rule) = ir.rules.iter().find(|r| r.id == rid) else {
-            return false;
-        };
-        fn unwrap<'a>(n: &'a IrNode) -> &'a IrNode {
-            match n {
-                IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
-                    unwrap(inner)
+) -> TokenStream {
+    use bbnf_ir::IrNode;
+    match node {
+        IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+            Some(call) => quote! { let _value_off = (#call)?; },
+            None => {
+                // Admission guarantees this Ref's target is classified;
+                // hitting None here indicates a detector/admission
+                // disagreement. Emit a syntax error to surface the bug
+                // rather than a silently-broken parse.
+                quote! {
+                    return ::core::result::Result::Err(
+                        ::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        },
+                    );
                 }
-                _ => n,
+            }
+        },
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> =
+                bytes.iter().map(|b| quote! { #b }).collect();
+            let var = variant_idx;
+            quote! {
+                {
+                    let at = *p;
+                    let end = at + #len;
+                    if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                        return ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: at as u32,
+                                failing_state:
+                                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule:
+                                    ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
+                    }
+                    *p = end;
+                    let _ = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Literal,
+                        at as u32,
+                        end as u32,
+                        #var,
+                        0,
+                        ::bbnf::runtime::tape::PayloadData::None,
+                    );
+                }
             }
         }
-        matches!(unwrap(&rule.body), IrNode::Literal(_))
-    }
-    match node {
-        IrNode::Ref(rid) => {
-            if is_punct(*rid, ir) {
-                None
-            } else {
-                Some(*rid)
-            }
+        IrNode::Alt(_, _) | IrNode::Regex(_) | IrNode::Negate(_)
+        | IrNode::Minus(_, _) | IrNode::TokenDispatch { .. } => {
+            super::inline::emit_inline_position_tape(
+                node, variant_idx, support_mod, grammar_suffix, ir,
+            )
         }
         IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
-            extract_element_ref(inner, ir)
+            emit_element_position_tape(
+                inner, variant_idx, support_mod, grammar_suffix, ir,
+            )
         }
-        IrNode::Seq(children) => children.iter().find_map(|c| extract_element_ref(c, ir)),
-        IrNode::Skip(lhs, _) => extract_element_ref(lhs, ir),
-        IrNode::Next(lhs, rhs) => {
-            extract_element_ref(lhs, ir).or_else(|| extract_element_ref(rhs, ir))
+        IrNode::Seq(children) => {
+            let parts: Vec<TokenStream> = children
+                .iter()
+                .map(|c| emit_element_position_tape(
+                    c, variant_idx, support_mod, grammar_suffix, ir,
+                ))
+                .collect();
+            quote! { #(#parts)* }
         }
-        // Alt at the element position routes through the dispatcher —
-        // each branch may target a different classified rule. Return
-        // None so the caller emits the `__value` fallback which byte-
-        // dispatches through the Alt.
-        IrNode::Alt(_, _) => None,
-        _ => None,
+        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+            let l = emit_element_position_tape(
+                lhs, variant_idx, support_mod, grammar_suffix, ir,
+            );
+            let r = emit_element_position_tape(
+                rhs, variant_idx, support_mod, grammar_suffix, ir,
+            );
+            quote! { #l #r }
+        }
+        IrNode::Epsilon => quote! {},
+        IrNode::Repeat { inner, .. } => {
+            // Nested Repeat inside a Repeat element — uncommon but
+            // legal (e.g. `((a b)* c)*`). Emit a bounded retry loop
+            // whose body emits the inner positions. Iteration
+            // terminates on body failure or zero-width progress.
+            let body = emit_element_position_tape(
+                inner, variant_idx, support_mod, grammar_suffix, ir,
+            );
+            quote! {
+                loop {
+                    let __inner_save_p = *p;
+                    let __inner_result:
+                        ::core::result::Result<(), ::bbnf::runtime::tape::DtaError>
+                        = (|| {
+                            #body
+                            Ok(())
+                        })();
+                    match __inner_result {
+                        Ok(()) => {
+                            if *p == __inner_save_p {
+                                break;
+                            }
+                        }
+                        Err(_) => {
+                            *p = __inner_save_p;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

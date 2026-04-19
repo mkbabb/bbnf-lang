@@ -396,6 +396,60 @@ the tape. W0a.2.k's archive:
 Worktree `/Users/mkbabb/Programming/bbnf-wt-ax-w0a-2l` at HEAD
 `3256858d`.
 
+## 2026-04-19 — W0a.2.l substrate landed; W0a.2.m dispatch
+
+**W0a.2.l landed on master** (`64d6ab2f` + `e5ff835e` + `34be629e` +
+`7d2fa1b8`):
+
+- `push_leaf_with_arena_payload(kind, span_lo, span_hi, variant, meta,
+  arena_offset, payload_width)` — 1-byte arena-frame API with bounds
+  check (`64d6ab2f`).
+- TapeVisitor mirror (`e5ff835e`).
+- Option B+C hybrid miner: `OperatorChainFacts::entries` →
+  `Vec<OperatorChainRule>` per-rule; `collect_operator_chains`
+  keys on `ShapeTag::Pratt` directly; within-rule first-byte
+  disjointness check (`34be629e`).
+- Per-rule PRECEDENCE_LUT consts emitted (8: value_{mul,add,path,
+  input,cmp,and,or}, binary_factor) + per-rule PRECEDENCE_ENTRIES
+  consts; `parse_pratt_<rule>` bodies reference `PRECEDENCE_LUT_<rule>`.
+  Reducer-compound emission **preserved** (`34be629e` + `7d2fa1b8`).
+- Bootstrap regen cycle-1 = cycle-2 byte-identical at 98,106 lines.
+  Pratt sites 8, 4 het Value enums, reducer compounds 8/8.
+  `PRECEDENCE_LUT_binary_factor[60] = 129`, `[62] = 129`.
+
+**Consumer-side halt**: W0a.2.l correctly surfaced a pre-existing
+inconsistency in `crates/core/src/lower/expression.rs::
+lower_binary_factor`. Pre-W0a.2.l, parse_pratt_binary_factor
+early-terminated on `<`/`>` bytes (LUT zero) so the reducer-compound
+chain was never built at runtime. Post-W0a.2.l, Pratt correctly
+dispatches `<<`/`>>`/`-` operators → builds reducer-compound tree
+→ `collect_binary_operands` walks the outer Pratt compound via
+walker-era assumptions (iteration-wrapper flat `[operand, op,
+operand, op, …]` sequence) → sees single-child reducer chain →
+dispatches reducer-compound as operand → reducer's `rule_kind()`
+resolves to `float_lit` (variant_idx = op_discriminant = 1 for
+`>>`) → panics `lower_term: unknown leading byte '"' for rule_kind
+float_lit (span = "\"<\" >> identifier ")`.
+
+Blocks gorgeous derives on bnf.bbnf (and json.bbnf via
+`>>`/`<<` meta-operators) → blocks cargo test on bbnf lib (gorgeous
+is a path dep, not dev-dep). Leaf/ir/tape crate tests unaffected.
+
+## 2026-04-19 — W0a.2.m dispatch
+
+Single-agent wave on `lower/expression.rs::lower_binary_factor` +
+`collect_binary_operands` to teach the consumer to walk reducer-
+compound chains correctly. Allow-list: `lower/expression.rs`;
+potentially `lower/tape_walk.rs` for cursor helper additions.
+Worktree `/Users/mkbabb/Programming/bbnf-wt-ax-w0a-2m` seeded at
+HEAD `7d2fa1b8`.
+
+Hard gates: gorgeous check clean (6/6 derive sites compile);
+workspace tests 0 FAILED excluding retiring tape_parity_*; `cargo
+test -p bbnf --test css_l4_parity` 16/16; `sheets_parity` 25/25;
+cycle-1 = cycle-2 byte-identical preserved (no regen changes;
+generated.rs untouched in this wave).
+
 ---
 
 ## 2026-04-18 — W0a.2.a + W0a.2.b dispatch

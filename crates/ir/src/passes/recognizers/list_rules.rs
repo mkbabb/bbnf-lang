@@ -54,8 +54,8 @@
 //! routes through `dta_run_parallel` when the slot is non-empty and
 //! `input.len() > parallel_break_even_bytes`.
 //!
-//! [`Columns`]: bbnf_tape::Columns
-//! [`child_off`]: bbnf_tape::TapeRec::child_off
+//! [`Columns`]: tape::Columns
+//! [`child_off`]: tape::TapeRec::child_off
 
 use crate::types::{GrammarIR, IrNode};
 

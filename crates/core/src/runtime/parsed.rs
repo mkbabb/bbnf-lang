@@ -36,7 +36,7 @@
 
 use std::marker::PhantomData;
 
-use bbnf_tape::{Tape, TapeOffset};
+use tape::{Tape, TapeOffset};
 
 /// Binding between a grammar marker type and the root view it
 /// produces over a parsed tape.

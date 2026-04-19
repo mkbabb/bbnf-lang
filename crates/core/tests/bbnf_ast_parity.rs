@@ -482,7 +482,7 @@ fn bbnf_expressions_grammar_parity() {
 }
 
 #[test]
-fn bbnf_tape_root_covers_input() {
+fn tape_root_covers_input() {
     // W6.4: the grammar root's tape span must cover the entire
     // parsed input (modulo trailing whitespace).
     let input = r#"

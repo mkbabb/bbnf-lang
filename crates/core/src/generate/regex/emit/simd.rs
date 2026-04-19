@@ -100,7 +100,7 @@ pub fn build_nibble_luts(targets: &[u8]) -> ([u8; 16], [u8; 16]) {
 /// without a runtime dispatch cost.
 ///
 /// Both paths produce byte-identical output (the correctness tests in
-/// `bbnf-simd-scan::tests::correctness` enforce cross-arch parity for
+/// `simd-scan::tests::correctness` enforce cross-arch parity for
 /// the scanner side; this emitter side shares the nibble-LUT
 /// expansion semantics with the u8x16 path via `build_nibble_luts`).
 ///

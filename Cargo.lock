@@ -138,10 +138,7 @@ name = "bbnf"
 version = "0.2.11"
 dependencies = [
  "bbnf-ir",
- "bbnf-json-prototype",
  "bbnf-ser",
- "bbnf-simd-scan",
- "bbnf-tape",
  "bbnf_derive",
  "bencher",
  "csp-solver",
@@ -152,6 +149,7 @@ dependencies = [
  "gorgeous",
  "indexmap",
  "jiter",
+ "json-prototype",
  "lightningcss",
  "mimalloc",
  "nom",
@@ -168,8 +166,10 @@ dependencies = [
  "serde_json",
  "serde_json_borrow",
  "simd-json",
+ "simd-scan",
  "sonic-rs 0.5.8",
  "syn 2.0.117",
+ "tape",
  "tempfile",
  "tree-sitter",
  "tree-sitter-json",
@@ -218,19 +218,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bbnf-json-prototype"
-version = "0.1.0"
-dependencies = [
- "bbnf-simd-scan",
- "bbnf-tape",
- "bencher",
- "mimalloc",
- "parse_that",
- "serde_json",
- "sonic-rs 0.3.17",
-]
-
-[[package]]
 name = "bbnf-lsp"
 version = "0.1.0"
 dependencies = [
@@ -262,25 +249,6 @@ version = "0.1.0"
 dependencies = [
  "itoa",
  "ryu",
-]
-
-[[package]]
-name = "bbnf-simd-scan"
-version = "0.1.0"
-dependencies = [
- "bbnf-tape",
- "proc-macro2",
- "proptest",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
-name = "bbnf-tape"
-version = "0.1.0"
-dependencies = [
- "rayon",
- "serde",
 ]
 
 [[package]]
@@ -1608,6 +1576,19 @@ checksum = "cc4c90f45aa2e6eacbe8645f77fdea542ac97a494bcd117a67df9ff4d611f995"
 dependencies = [
  "once_cell",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "json-prototype"
+version = "0.1.0"
+dependencies = [
+ "bencher",
+ "mimalloc",
+ "parse_that",
+ "serde_json",
+ "simd-scan",
+ "sonic-rs 0.3.17",
+ "tape",
 ]
 
 [[package]]
@@ -2979,6 +2960,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "simd-scan"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "proptest",
+ "quote",
+ "syn 2.0.117",
+ "tape",
+]
+
+[[package]]
 name = "simdutf8"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3147,6 +3139,14 @@ name = "tap"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
+
+[[package]]
+name = "tape"
+version = "0.1.0"
+dependencies = [
+ "rayon",
+ "serde",
+]
 
 [[package]]
 name = "target-lexicon"

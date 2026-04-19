@@ -4,7 +4,7 @@
 //!
 //! Per AW-III.W5.b plan: minimum 1000 iterations.
 
-use bbnf_simd_scan::{
+use simd_scan::{
     alphabet::StructuralAlphabet,
     scalar, scan_structural,
 };

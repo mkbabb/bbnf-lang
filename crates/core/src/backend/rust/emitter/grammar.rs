@@ -558,13 +558,13 @@ impl RustEmitter {
                 /// Bypasses the tape entirely; `V` is monomorphised at
                 /// the call site so the per-shape parse bodies inline
                 /// into one tight dispatcher. Matches the shape of
-                /// `bbnf_json_prototype::parse_json::<V>`.
+                /// `json_prototype::parse_json::<V>`.
                 ///
                 /// `V` must implement every per-shape visitor sub-trait
                 /// the grammar drives (`ObjectVisitor`, `ArrayVisitor`,
                 /// `StringVisitor`, `NumberVisitor`, `KeywordVisitor`)
                 /// so each method invocation resolves statically at
-                /// monomorphisation time. See `bbnf-tape::visitor` for
+                /// monomorphisation time. See `tape::visitor` for
                 /// the trait hierarchy and the shipped `TapeVisitor` /
                 /// `ValueVisitor` implementations.
                 pub fn parse_with_visitor<V>(

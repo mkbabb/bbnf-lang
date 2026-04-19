@@ -124,7 +124,7 @@ pub enum SeqPromote {
     KvPair,
 }
 
-/// AW-III.W1 — IR-side mirror of `bbnf_tape::LiteralPayload`.
+/// AW-III.W1 — IR-side mirror of `tape::LiteralPayload`.
 ///
 /// The lifter resolves the enclosing `Map { Literal,
 /// MapExpr::IntLit/BoolLit/FloatLit }` into one of these variants;
@@ -146,7 +146,7 @@ pub enum LiteralPayload {
     F64(f64),
 }
 
-/// AW-III.W1 — IR-side mirror of `bbnf_tape::PayloadKind` for the
+/// AW-III.W1 — IR-side mirror of `tape::PayloadKind` for the
 /// regex-decoder selector.
 ///
 /// The lifter resolves an enclosing `Map { Regex, FnDescriptor }` into
@@ -170,7 +170,7 @@ pub enum DtaState {
         text: StringId,
         /// AW-III.W1 — typed-leaf payload threaded from the enclosing
         /// `Map { Literal, MapExpr::IntLit/BoolLit/FloatLit }`. The
-        /// emitter lowers this 1:1 into `bbnf_tape::LiteralPayload`.
+        /// emitter lowers this 1:1 into `tape::LiteralPayload`.
         payload: LiteralPayload,
     },
     /// Match a regex pattern at the current offset (runs through the
@@ -178,7 +178,7 @@ pub enum DtaState {
     Regex {
         pattern: StringId,
         /// AW-III.W1 — decoder selector for the matched bytes; the
-        /// emitter lowers `Some(_)` to `bbnf_tape::PayloadKind::*` and
+        /// emitter lowers `Some(_)` to `tape::PayloadKind::*` and
         /// the walker enqueues a `PayloadJob`. `None` keeps the
         /// payload-less Span emission.
         payload: Option<RegexPayloadKind>,
@@ -789,7 +789,7 @@ impl<'ir> DtaBuilder<'ir> {
                 // recursive lift. The pre-W1 lifter dropped the Map
                 // wrapper wholesale (`self.lift_node(inner)`), losing
                 // every typed-leaf annotation. The arms below mirror
-                // the codegen routing in `bbnf-tape::psi`:
+                // the codegen routing in `tape::psi`:
                 //
                 //   - `IntLit` / `FloatLit` / `BoolLit` over a literal
                 //     scanner → `LiteralPayload::*`. Walker writes the

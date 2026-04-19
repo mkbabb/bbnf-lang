@@ -21,7 +21,7 @@
 
 use crate::alphabet::{KernelShape, NibbleLut, StructuralAlphabet};
 use crate::parity;
-use bbnf_tape::stage1::StructuralIndex;
+use tape::stage1::StructuralIndex;
 
 use core::arch::x86_64::*;
 

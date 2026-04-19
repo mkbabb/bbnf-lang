@@ -4,7 +4,7 @@
 //! Mirrors `bbnf_ir::passes::sets::structural_alphabet::StructuralAlphabet`
 //! at the runtime / SIMD-scanner side of the codegen boundary. The IR
 //! pass mines the alphabet from the grammar and the codegen emits a
-//! `pub static ALPHABET: bbnf_simd_scan::alphabet::StructuralAlphabet =
+//! `pub static ALPHABET: simd_scan::alphabet::StructuralAlphabet =
 //! ...;` per grammar; the kernel picks its strategy from cardinality.
 //!
 //! Held entirely as `&'static` slices so the type is `Copy` and lives
@@ -73,7 +73,7 @@ impl StructuralAlphabet {
     }
 
     /// Build the scanner alphabet from a
-    /// [`bbnf_tape::GrammarProfile`]. The tape profile and the scanner
+    /// [`tape::GrammarProfile`]. The tape profile and the scanner
     /// alphabet share the same underlying `&'static` data — the tape
     /// profile's `structural_alphabet`, `structural_digraphs`,
     /// `structural_digraph_mask`, and `structural_quote_classes` feed
@@ -84,7 +84,7 @@ impl StructuralAlphabet {
     /// `const fn` so `parse()` constructs the alphabet at compile time
     /// when the profile is itself a const — the entire alphabet folds
     /// into `.rodata` alongside the profile's backing statics.
-    pub const fn from_profile(profile: &bbnf_tape::GrammarProfile) -> Self {
+    pub const fn from_profile(profile: &tape::GrammarProfile) -> Self {
         Self {
             singletons: profile.structural_alphabet,
             digraph_pairs: profile.structural_digraphs,

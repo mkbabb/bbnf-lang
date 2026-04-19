@@ -3,7 +3,7 @@
 //! # Role — AW-V.W3.2
 //!
 //! Emits the per-grammar Number-shape parse function mirroring
-//! `bbnf_json_prototype::number::parse_number_body` (crates/bbnf-json-
+//! `json_prototype::number::parse_number_body` (crates/bbnf-json-
 //! prototype/src/number.rs:75). The emitted function accumulates the
 //! mantissa + decimal exponent during a single scalar digit scan,
 //! feeds them to `parse_that::parsers::eisel_lemire::compute_f64`,
@@ -36,7 +36,7 @@ pub fn emit_parse_number(
     quote! {
         /// AW-V.W3.2 — per-grammar Number-shape parse function.
         ///
-        /// Mirrors `bbnf_json_prototype::number::parse_number_body`.
+        /// Mirrors `json_prototype::number::parse_number_body`.
         /// `first_byte` is the byte the dispatcher already matched;
         /// passing it avoids a redundant re-read for the sign check.
         #[inline(always)]
@@ -192,7 +192,7 @@ pub fn emit_number_fallback_helper() -> TokenStream {
 // AW-V.W3-bench-fix — visitor-path Number emitter.
 //
 // Mirrors the prototype's
-// `bbnf_json_prototype::number::parse_number_body::<V>`. Bypasses the
+// `json_prototype::number::parse_number_body::<V>`. Bypasses the
 // tape; `visitor.number_f64(value)` replaces the Span + WideScalar
 // payload push the tape-path emits.
 // ─────────────────────────────────────────────────────────────────────
@@ -211,7 +211,7 @@ pub fn emit_parse_number_visitor(
     quote! {
         /// AW-V.W3-bench-fix — visitor-path Number-shape parse function.
         ///
-        /// Mirrors `bbnf_json_prototype::number::parse_number_body::<V>`.
+        /// Mirrors `json_prototype::number::parse_number_body::<V>`.
         #[inline(always)]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #fn_ident<V>(
@@ -353,8 +353,8 @@ pub fn emit_parse_number_visitor(
 /// `target_arch = "aarch64"`; non-aarch64 builds see a stub that's
 /// never referenced from the visitor path.
 ///
-/// Mirrors `bbnf_json_prototype::number::simd_str2int`
-/// (crates/bbnf-json-prototype/src/number.rs:306) — the packadd
+/// Mirrors `json_prototype::number::simd_str2int`
+/// (crates/json-prototype/src/number.rs:306) — the packadd
 /// cascade + 17-arm dispatch on `count`. Feeds the visitor-path
 /// Number emitter's aarch64 fraction path.
 pub fn emit_number_simd_fraction_helper() -> TokenStream {

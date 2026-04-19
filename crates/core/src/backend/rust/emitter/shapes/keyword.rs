@@ -23,7 +23,7 @@
 //!   [`PayloadData::InlineScalar(1u32)`] and
 //!   [`PayloadData::InlineScalar(0u32)`] respectively (per
 //!   [`NumberVisitor`]'s `bool(value as u32)` convention in
-//!   `bbnf-tape::visitor`).
+//!   `tape::visitor`).
 
 use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;

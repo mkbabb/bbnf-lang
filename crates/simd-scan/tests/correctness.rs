@@ -2,7 +2,7 @@
 //! `StructuralIndex` on the canonical corpus. Scalar path is the
 //! reference; per-arch paths must match byte-for-byte.
 
-use bbnf_simd_scan::{
+use simd_scan::{
     alphabet::StructuralAlphabet,
     scalar,
     scan_structural,
@@ -36,7 +36,7 @@ fn read_corpus(name: &str) -> Vec<u8> {
     std::fs::read(&path).unwrap_or_else(|e| panic!("failed to read {}: {}", path.display(), e))
 }
 
-fn assert_indices_equal(a: &bbnf_tape::StructuralIndex, b: &bbnf_tape::StructuralIndex, ctx: &str) {
+fn assert_indices_equal(a: &tape::StructuralIndex, b: &tape::StructuralIndex, ctx: &str) {
     assert_eq!(
         a.positions.len(),
         b.positions.len(),

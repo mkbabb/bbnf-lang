@@ -1,5 +1,5 @@
 //! Kernel-shape selector pass — mechanically chooses the SIMD kernel
-//! shape that the `bbnf-simd-scan` crate dispatches at scan time and
+//! shape that the `simd-scan` crate dispatches at scan time and
 //! that the W6 emitter consults when const-folding the per-grammar
 //! `scan_structural_<grammar>` entry function.
 //!
@@ -11,7 +11,7 @@
 //! - `|singletons| ≤ 8` → nibble-LUT collapse (one `vqtbl1q_u8` per
 //!   16-byte lane on NEON; `vpshufb` per 16-byte lane on AVX2).
 //! - `9 ≤ |singletons| ≤ 16` → wide-LUT (lifts the AU.2.7 v2 `1 << i`
-//!   membership cap; the `bbnf-simd-scan::neon` wide variant matches).
+//!   membership cap; the `simd-scan::neon` wide variant matches).
 //! - `|singletons| > 16` → multi-pass cmpeq + OR-reduce.
 //! - `|digraph_pairs| > 0` → kernel folds `vextq_u8` shifted-compare
 //!   per pair, OR'd into the structural mask before compaction.
@@ -20,7 +20,7 @@
 //!   are masked off.
 //!
 //! The pass returns a [`KernelStrategy`] describing all four lever
-//! decisions; `bbnf-simd-scan::scan_structural` reads the strategy at
+//! decisions; `simd-scan::scan_structural` reads the strategy at
 //! scan time. At W6 the emitter will read the same struct to produce
 //! one tightly-specialised entry function per grammar.
 //!
@@ -83,7 +83,7 @@ impl KernelShape {
 /// plus the two boolean levers controlling whether the kernel folds in
 /// digraph detection and quote-parity correction.
 ///
-/// Consumed at scan time by `bbnf-simd-scan::scan_structural` and at
+/// Consumed at scan time by `simd-scan::scan_structural` and at
 /// emit time by the W6 const-fold pass.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct KernelStrategy {

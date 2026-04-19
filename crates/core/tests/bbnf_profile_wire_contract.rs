@@ -45,7 +45,7 @@ use bbnf::grammar::generated::BbnfBootstrap;
 /// parser's `parse()` entry point consumes for capacity sizing,
 /// structural-alphabet dispatch, keyword-table lookup, and
 /// shape-ref dedup (at runtime, per
-/// `crates/bbnf-tape/src/profile.rs`).
+/// `crates/tape/src/profile.rs`).
 ///
 /// AW-IV.W1.δ — `BbnfBootstrap::GRAMMAR_PROFILE` is the associated-
 /// constant accessor emitted by the grammar codegen, aliasing the
@@ -298,7 +298,7 @@ fn bootstrap_runtime_capacity_reads_profile_density() {
 
     // The runtime `GrammarProfile::capacity_for` consumer reads
     // `compounds_per_input_byte + leaves_per_input_byte` (per
-    // `crates/bbnf-tape/src/profile.rs`). This exercise is the
+    // `crates/tape/src/profile.rs`). This exercise is the
     // "runtime invocation consumes the const non-trivially" side
     // of the wire contract (per `docs/instructions/README.md`
     // §wave-verification-ledger — a runtime invocation must

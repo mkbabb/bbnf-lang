@@ -46,7 +46,7 @@
 //! the same helpers via mechanical lowering, so any AQ-5 regression
 //! would surface here.
 
-use bbnf_tape::{
+use tape::{
     dta_run_cold, Columns, DtaFrameKind, DtaRuleEntry, DtaRuleId, DtaState,
     DtaStateId, DtaTable, FrameStack, FrameStackSavepoint, LiteralPayload,
     PayloadStream, SeqPromote, StructuralIndex, TapeKind,
@@ -388,7 +388,7 @@ fn aq5_disabled_ws_elision_wstrim_collapses() {
 /// Exercises the W5.b `StructuralIndex` type the dual-cursor consumes,
 /// to verify the cross-crate wire contract is intact in the cold-path
 /// fallback. When W5.b's SIMD scanner wires into the parse prologue,
-/// these are the only types crossing the bbnf-simd-scan ↔ bbnf-tape
+/// these are the only types crossing the simd-scan ↔ tape
 /// boundary; the test asserts both `len()` and `is_empty()` agree
 /// with the underlying `positions` Vec.
 #[test]

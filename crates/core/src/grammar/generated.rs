@@ -2102,7 +2102,7 @@ mod __bbnfbootstrap_emit_impl {
     #[allow(dead_code, non_snake_case)]
     pub(crate) mod __shape_support_BbnfBootstrap {
         /// Per-parse SIMD scratch — 64-byte whitespace-bitmap
-        /// cache mirroring `bbnf-json-prototype::simd::ScanState`.
+        /// cache mirroring `json-prototype::simd::ScanState`.
         pub struct ScanState {
             pub(crate) nospace_bits: u64,
             pub(crate) nospace_start: isize,
@@ -2245,7 +2245,7 @@ mod __bbnfbootstrap_emit_impl {
             out
         }
         /// Find the first `b'"'` or `b'\\'` byte in `bytes`.
-        /// Mirrors `bbnf-json-prototype::simd::first_quote_or_backslash`.
+        /// Mirrors `json-prototype::simd::first_quote_or_backslash`.
         #[inline(always)]
         pub fn first_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
             unsafe {

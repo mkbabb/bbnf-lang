@@ -23,18 +23,18 @@ pub mod parsed;
 pub use error::ParseErr;
 pub use parsed::{Parsed, Root};
 
-/// Re-export the full `bbnf-tape` public surface from `bbnf::runtime`.
+/// Re-export the full `tape` public surface from `bbnf::runtime`.
 ///
 /// Generated parsers reference `::bbnf::runtime::tape::*` for tape
 /// types (`Tape`, `TapeBuilder`, `TapeOffset`, `TapeCursor`,
 /// `TapeKind`, `TapeBuildError`) so downstream consumers do not need
-/// a direct `bbnf-tape` dependency — `bbnf` already carries it as
+/// a direct `tape` dependency — `bbnf` already carries it as
 /// the substrate for the generated code. This keeps
 /// `#[derive(Parser)]` usage single-dep from the consumer's point
 /// of view.
-pub use bbnf_tape as tape;
+pub use tape;
 
-/// Re-export the `bbnf-simd-scan` public surface from `bbnf::runtime`.
+/// Re-export the `simd-scan` public surface from `bbnf::runtime`.
 ///
 /// The emitted `parse()` body constructs a
 /// [`scan::StructuralAlphabet`] from `GRAMMAR_PROFILE` (via
@@ -47,7 +47,7 @@ pub use bbnf_tape as tape;
 /// AW-III.W5.d — integrates the SIMD pre-pass kernel into the hot
 /// path. Pre-W5.d the emitted walker received an empty index; the
 /// bitmap kernel never ran.
-pub use bbnf_simd_scan as scan;
+pub use simd_scan as scan;
 
 /// AW.0.5: typed view-layer projections the generated `.as_color()`
 /// shims reference. The Rust-side `Color` struct + `ColorSpace`

@@ -28,7 +28,7 @@ use crate::passes::recognizers::shape_dict::TemplatePiece;
 use crate::passes::recognizers::shape_dict_bbnf::{
     mine_bbnf_shape_templates, BbnfShapeTemplate,
 };
-/// IR-side counterpart of [`bbnf_tape::ShapeEntry`]. Carries the
+/// IR-side counterpart of [`tape::ShapeEntry`]. Carries the
 /// shape hash, owning rule id, per-child kind discriminants, per-hole
 /// payload offsets, and total packed payload byte width.
 ///
@@ -43,7 +43,7 @@ pub struct ShapeEntryIr {
     pub shape_hash: u64,
     /// Rule id the shape-ref expands to at view time.
     pub rule_id: u32,
-    /// Per-child [`bbnf_tape::TapeKind`] discriminants declaring the
+    /// Per-child [`tape::TapeKind`] discriminants declaring the
     /// skeleton. Length = number of direct children the collapsed
     /// compound would have emitted.
     pub child_kinds: Vec<u8>,
@@ -55,7 +55,7 @@ pub struct ShapeEntryIr {
 }
 
 /// Consolidated per-grammar fingerprint — the owned IR-side
-/// counterpart of [`bbnf_tape::GrammarProfile`].
+/// counterpart of [`tape::GrammarProfile`].
 ///
 /// Every field is produced by reading already-computed IR facts:
 /// [`PushFingerprint`](crate::passes::sets::PushFingerprint),
@@ -63,7 +63,7 @@ pub struct ShapeEntryIr {
 /// [`KeywordBranchMap`](crate::passes::recognizers::keyword_stats::KeywordBranchMap),
 /// [`ShapeDictMap`](crate::passes::recognizers::shape_dict::ShapeDictMap).
 /// The emitter lowers this struct to a single `const GRAMMAR_PROFILE:
-/// bbnf_tape::GrammarProfile = GrammarProfile { ... };` literal —
+/// tape::GrammarProfile = GrammarProfile { ... };` literal —
 /// the `&'static` slices in the tape-side struct become `&'static`
 /// references to `static` arrays emitted alongside the literal.
 ///
@@ -117,8 +117,8 @@ pub struct GrammarProfile {
     ///
     /// Stored as `(first, second)` tuples — the emitter lowers this
     /// directly to a `&'static [(u8, u8)]` that feeds the tape-side
-    /// [`bbnf_tape::GrammarProfile::structural_digraphs`] and the SIMD
-    /// scanner's [`bbnf_simd_scan::StructuralAlphabet::digraph_pairs`]
+    /// [`tape::GrammarProfile::structural_digraphs`] and the SIMD
+    /// scanner's [`simd_scan::StructuralAlphabet::digraph_pairs`]
     /// with no shim layer (AW-III.W5.d).
     pub structural_digraphs: Vec<(u8, u8)>,
 
@@ -243,7 +243,7 @@ impl GrammarIR {
         // The CSP shape-dict selection prunes the candidate pool
         // ([`GrammarIR::shape_dict_templates`]) to the admitted set
         // ([`GrammarIR::shape_dict_selection`]). Project the admitted
-        // templates to the runtime-consumable [`bbnf_tape::ShapeEntry`]
+        // templates to the runtime-consumable [`tape::ShapeEntry`]
         // shape: each template's `skeleton` maps to per-child
         // `TapeKind` discriminants; each `LeafHole` contributes a
         // packed-payload offset; constant positions carry the
@@ -392,9 +392,9 @@ impl GrammarIR {
 // ── TapeKind discriminant constants ──────────────────────────────────
 //
 // AW-IV.W1.δ — carried as `const u8` values so the IR crate doesn't
-// need an upward import of `bbnf_tape`. The values match the
-// `#[repr(u8)]` discriminants declared on `bbnf_tape::TapeKind`; see
-// `crates/bbnf-tape/src/kind.rs` for the canonical source. Kept in
+// need an upward import of `tape`. The values match the
+// `#[repr(u8)]` discriminants declared on `tape::TapeKind`; see
+// `crates/tape/src/kind.rs` for the canonical source. Kept in
 // lockstep with
 // [`crate::backend::rust::emitter::dta::template_piece_to_kind_byte`]
 // (the existing `SHAPE_DICT` emitter): that function uses

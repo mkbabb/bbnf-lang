@@ -16,7 +16,7 @@
 //!   non-digit byte, returning the digit-run length. NEON
 //!   implementation mirrors sonic-rs's number scanner.
 //!
-//! The `bbnf-simd-scan` crate's `parity` module is consumed for
+//! The `simd-scan` crate's `parity` module is consumed for
 //! `prefix_xor_64` + `escape_mask_64` (the escape-counting kernel the
 //! string path needs); `scan_structural` is NOT used because it
 //! materialises a `StructuralIndex` with positions + kinds, which the

@@ -17,7 +17,7 @@
 //!
 //! Two concrete visitor consumers ship alongside the trait hierarchy:
 //!
-//! - [`TapeVisitor`] — emits into a [`bbnf_tape::Columns`] substrate via
+//! - [`TapeVisitor`] — emits into a [`tape::Columns`] substrate via
 //!   a [`TapeBuilder`]. Records the structural + payload bytes the
 //!   `dispatch_one` cold-path replay would produce; parity is the
 //!   sanity gate for the shape-emitter lift in W3.
@@ -33,10 +33,10 @@
 //! # Design template
 //!
 //! The trait hierarchy lifts the shape established by
-//! `bbnf-json-prototype`'s `JsonVisitor` (crates/bbnf-json-prototype/
+//! `json-prototype`'s `JsonVisitor` (crates/json-prototype/
 //! src/visitor.rs:31) into the per-shape sub-trait composition B4 §5
 //! prescribes. The prototype trait was JSON-fixed by necessity (single
-//! grammar); lifting it to `bbnf-tape` generalises the method set
+//! grammar); lifting it to `tape` generalises the method set
 //! across grammars by splitting per-shape concerns into sub-traits a
 //! consumer opts into.
 
@@ -211,8 +211,8 @@ pub trait PrattVisitor: GrammarVisitor {
 // TapeVisitor — default impl that emits into Columns / TapeBuilder
 // ─────────────────────────────────────────────────────────────────────
 
-/// The `bbnf-tape` substrate visitor — emits events into a
-/// [`bbnf_tape::Columns`] + [`bbnf_tape::PayloadStream`] backing store
+/// The `tape` substrate visitor — emits events into a
+/// [`tape::Columns`] + [`tape::PayloadStream`] backing store
 /// via a [`TapeBuilder`].
 ///
 /// # Layout per shape

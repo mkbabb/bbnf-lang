@@ -4,7 +4,7 @@
 //! `crates/core/tests/json_decode.rs` integration tests exercise the
 //! full lift + walk pipeline; this file pin-points the kernel itself.
 
-use bbnf_tape::decoders::json_string::decode_into;
+use tape::decoders::json_string::decode_into;
 
 fn decode(input: &[u8]) -> String {
     let mut buf = vec![0u8; 4 + input.len()];

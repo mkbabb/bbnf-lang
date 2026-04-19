@@ -6,7 +6,7 @@
 //!   [`crate::Value`]. The speed-ceiling validator: head-to-head
 //!   against `sonic_rs::from_str::<Value>` in the twin-pair bench.
 //! - [`TapeVisitor`] — AW-IV-substrate materialisation into
-//!   `bbnf_tape::Columns` via a `TapeBuilder`. Validates the same
+//!   `tape::Columns` via a `TapeBuilder`. Validates the same
 //!   parse body over the existing substrate; proves the visitor
 //!   abstraction covers both.
 //!
@@ -14,7 +14,7 @@
 //! body in `lib.rs` is monomorphised at each call site.
 
 use crate::value::{Document, NodeSpan, Number, StringSpan, Value};
-use bbnf_tape::{PayloadData, Tape, TapeBuilder, TapeKind};
+use tape::{PayloadData, Tape, TapeBuilder, TapeKind};
 
 /// Visitor trait consumed by [`crate::parse_json`].
 ///
@@ -26,7 +26,7 @@ use bbnf_tape::{PayloadData, Tape, TapeBuilder, TapeKind};
 /// intentional. Method signatures take raw byte slices where
 /// sonic-rs would take `&str`; the prototype avoids the UTF-8
 /// validation round-trip by contract (JSON string bodies are
-/// UTF-8-clean by construction, per the `bbnf-tape` decoder kernel's
+/// UTF-8-clean by construction, per the `tape` decoder kernel's
 /// invariant).
 pub trait JsonVisitor {
     /// Visitor-side error surface. The parser translates this to
@@ -325,7 +325,7 @@ impl JsonVisitor for ValueVisitor {
 
 // ── TapeVisitor ─────────────────────────────────────────────────────
 
-/// Materialises JSON events into a `bbnf_tape::Columns` substrate via
+/// Materialises JSON events into a `tape::Columns` substrate via
 /// a [`TapeBuilder`].
 ///
 /// Per AW-V.W2 B1 §6, the tape is pre-allocated at
@@ -360,7 +360,7 @@ pub struct TapeVisitor<'input> {
 struct CompoundFrame {
     kind: TapeKind,
     span_lo: u32,
-    child_off: bbnf_tape::TapeOffset,
+    child_off: tape::TapeOffset,
 }
 
 /// [`TapeVisitor`] error surface — visitor never rejects events.
@@ -387,7 +387,7 @@ impl<'input> TapeVisitor<'input> {
     /// stamps spans by re-deriving from the visitor call-side info
     /// (`&[u8]` bytes for strings, `f64` for numbers). Compound spans
     /// are threaded through the compound frame stack.
-    pub fn finish(self) -> Result<Tape, bbnf_tape::TapeBuildError> {
+    pub fn finish(self) -> Result<Tape, tape::TapeBuildError> {
         self.builder.finish()
     }
 

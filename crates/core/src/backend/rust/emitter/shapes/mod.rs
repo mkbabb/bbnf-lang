@@ -4,7 +4,7 @@
 //!
 //! Consumes [`ShapeAssignments`] from W3.1 to emit per-(grammar, rule)
 //! inline parse functions mirroring the hand-tuned
-//! `crates/bbnf-json-prototype/` shape. For each rule whose
+//! `crates/json-prototype/` shape. For each rule whose
 //! [`ShapeTag`] is [`ShapeTag::is_w3_classified`] the matching
 //! shape-emitter module produces one `parse_<shape>_<grammar>_<rule>`
 //! function; leaf shape fns (Keyword / Number / String / HRegex /
@@ -25,10 +25,10 @@
 //! - [`object`] — `parse_object_<grammar>_<rule>` emitter.
 //! - [`array`] — `parse_array_<grammar>_<rule>` emitter.
 //! - [`string`] — `parse_string_<grammar>_<rule>` emitter (quoted-
-//!   string SIMD body via `bbnf-simd-scan::emit::quoted_string_simd_body`
+//!   string SIMD body via `simd-scan::emit::quoted_string_simd_body`
 //!   / `first_quote_or_backslash`).
 //! - [`number`] — `parse_number_<grammar>_<rule>` emitter (Eisel-Lemire
-//!   body via `bbnf-simd-scan::emit::eisel_lemire_body`).
+//!   body via `simd-scan::emit::eisel_lemire_body`).
 //! - [`keyword`] — `parse_keyword_<grammar>_<rule>` emitter (literal or
 //!   short Alt-of-literal dispatch).
 //! - [`scalar`] — `parse_scalar_<grammar>_<rule>` emitter (single-leaf

@@ -5,7 +5,7 @@
 //! # Role — AW-V.W3.2
 //!
 //! The dispatcher mirrors the prototype's
-//! `bbnf_json_prototype::parse_json` shape: skip initial whitespace,
+//! `json_prototype::parse_json` shape: skip initial whitespace,
 //! dispatch on the first byte to the appropriate shape function,
 //! verify trailing whitespace. Per-rule recursion threads through the
 //! dispatcher (e.g. object's value-position reads dispatch back
@@ -14,7 +14,7 @@
 //!
 //! The support module emits per-grammar SIMD scaffolding —
 //! `ScanState` (64-byte whitespace bitmap cache, mirroring
-//! `bbnf-json-prototype`'s `src/simd.rs::ScanState`), `skip_space`,
+//! `json-prototype`'s `src/simd.rs::ScanState`), `skip_space`,
 //! `first_quote_or_backslash`, and friends. Emitting these per-grammar
 //! (rather than referencing a cross-crate symbol) keeps the hot path
 //! free of function-call boundaries — every SIMD helper resolves at
@@ -51,7 +51,7 @@ pub fn shape_fn_ident(shape: &str, grammar_suffix: &str, rule_name: &str) -> pro
 /// emitting visitor method calls (`begin_object`, `key`, `string`,
 /// `number_f64`, etc.) in place of tape record pushes. Monomorphised
 /// per visitor at the call site; zero structural / PSI overhead on
-/// the hot path. Matches `bbnf-json-prototype`'s perf shape.
+/// the hot path. Matches `json-prototype`'s perf shape.
 pub fn visitor_shape_fn_ident(
     shape: &str,
     grammar_suffix: &str,
@@ -359,7 +359,7 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
         #[allow(dead_code, non_snake_case)]
         pub(crate) mod #mod_ident {
             /// Per-parse SIMD scratch — 64-byte whitespace-bitmap
-            /// cache mirroring `bbnf-json-prototype::simd::ScanState`.
+            /// cache mirroring `json-prototype::simd::ScanState`.
             #[derive(Debug, Default)]
             pub struct ScanState {
                 pub(crate) nospace_bits: u64,
@@ -480,7 +480,7 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
             }
 
             /// Find the first `b'"'` or `b'\\'` byte in `bytes`.
-            /// Mirrors `bbnf-json-prototype::simd::first_quote_or_backslash`.
+            /// Mirrors `json-prototype::simd::first_quote_or_backslash`.
             #[inline(always)]
             pub fn first_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
                 #[cfg(target_arch = "aarch64")]
@@ -778,7 +778,7 @@ pub(super) fn shape_tag_name(tag: ShapeTag) -> &'static str {
 
 /// Emit the Alt-dispatch body for the root rule — byte-matches the
 /// next non-whitespace byte and calls the corresponding branch shape
-/// fn. Mirrors `bbnf_json_prototype::parse_value`'s 6-arm match.
+/// fn. Mirrors `json_prototype::parse_value`'s 6-arm match.
 fn emit_alt_dispatch_body(
     grammar_suffix: &str,
     root_rule: &bbnf_ir::IrRule,
@@ -935,7 +935,7 @@ fn rule_is_single_null_keyword(rule: &bbnf_ir::IrRule, ir: &GrammarIR) -> bool {
 /// [`emit_dispatcher`] but generic over a visitor type `V: JsonVisitor`.
 /// It bypasses the tape entirely: visitor method calls (`begin_object`,
 /// `key`, `string`, `number_f64`, etc.) replace the tape record pushes.
-/// The prototype's `bbnf_json_prototype::parse_value::<V>` shape is the
+/// The prototype's `json_prototype::parse_value::<V>` shape is the
 /// reference — one monomorphic dispatcher per visitor type, all
 /// per-shape bodies inlined.
 pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {

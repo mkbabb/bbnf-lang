@@ -1,7 +1,7 @@
 //! Stage-1 SIMD structural-index output type.
 //!
 //! `StructuralIndex` is the wire contract between the SIMD scanner
-//! (`bbnf-simd-scan`) and the DTA driver (`crates/bbnf-tape/src/driver.rs`).
+//! (`simd-scan`) and the DTA driver (`crates/tape/src/driver.rs`).
 //! The scanner builds it once per parse from the input; the driver's
 //! `Cursor` consumes it via slot-indexed lookups.
 //!
@@ -34,10 +34,10 @@
 //!
 //! # Construction
 //!
-//! Build via `bbnf_simd_scan::scan_structural(input, &alphabet)`. The
-//! `bbnf-tape` crate holds only the type definition; no kernel code.
+//! Build via `simd_scan::scan_structural(input, &alphabet)`. The
+//! `tape` crate holds only the type definition; no kernel code.
 //! This crate owns no SIMD intrinsics — they live in the architecture-
-//! neutral `bbnf-simd-scan` crate per the §architecture invariants
+//! neutral `simd-scan` crate per the §architecture invariants
 //! (general-purpose constructs in their own crates).
 
 /// Stage-1 structural index: every byte in `positions` is a position

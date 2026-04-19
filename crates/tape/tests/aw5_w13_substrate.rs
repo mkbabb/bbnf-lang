@@ -19,7 +19,7 @@
 //!    surface; assertions cover record count, per-record kind, and
 //!    the spanning-compound invariant.
 
-use bbnf_tape::{
+use tape::{
     columns::Columns,
     kind::TapeKind,
     tape::{TapeOffset, TapeRec},
@@ -462,7 +462,7 @@ fn tape_visitor_key_arena_frame_contains_bytes() {
 /// The `ValueVisitor` placeholder compiles against the minimal JSON
 /// enum + materialises a nested structure. W3.2 replaces this with
 /// a per-grammar generated visitor; the placeholder exists so the
-/// trait surface has a concrete consumer inside `bbnf-tape`.
+/// trait surface has a concrete consumer inside `tape`.
 #[test]
 fn value_visitor_placeholder_materialises_object() {
     let mut visitor = ValueVisitor::new();

@@ -1,4 +1,4 @@
-//! `bbnf-tape` — leaf crate for the parser tape representation.
+//! `tape` — leaf crate for the parser tape representation.
 //!
 //! # Architectural role
 //!

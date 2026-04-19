@@ -4,9 +4,9 @@
 //! Selects up to [`MAX_SHAPE_DICT_ENTRIES`] [`ShapeTemplate`]
 //! candidates from the per-grammar pool emitted by
 //! [`crate::passes::recognizers::ShapeDictMiner`]. Each surviving
-//! template gets one [`bbnf_tape::ShapeEntry`] in
+//! template gets one [`tape::ShapeEntry`] in
 //! `GrammarProfile::shape_dict`; the runtime DTA emits a
-//! [`bbnf_tape::TapeKind::ShapeRef`] record on `shape_hash` match.
+//! [`tape::TapeKind::ShapeRef`] record on `shape_hash` match.
 //!
 //! # Selection model
 //!
@@ -49,7 +49,7 @@ use csp_solver::Csp;
 /// Maximum shape-dictionary entries per grammar.
 ///
 /// Bounded by the 5-bit `shape_dict_idx` field in the
-/// [`bbnf_tape::TapeKind::ShapeRef`] flags layout. The per-grammar
+/// [`tape::TapeKind::ShapeRef`] flags layout. The per-grammar
 /// pool of fixed-shape compounds is typically ~10 in production
 /// grammars (CSS, JSON, BBNF), so 32 leaves comfortable headroom.
 pub const MAX_SHAPE_DICT_ENTRIES: usize = 32;

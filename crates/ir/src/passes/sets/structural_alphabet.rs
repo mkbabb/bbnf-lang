@@ -76,7 +76,7 @@ use std::collections::BTreeSet;
 
 /// Width of the [`StructuralAlphabet`] bitmap fields, in `u64` words.
 /// Four 64-bit words cover the full 256-byte universe (`u8` value
-/// space) — the same shape `bbnf-simd-scan` consumes.
+/// space) — the same shape `simd-scan` consumes.
 pub const STRUCTURAL_BITMAP_WORDS: usize = 4;
 
 /// 256-bit bitmap of `u8` values, packed as four 64-bit words. Word
@@ -136,7 +136,7 @@ pub struct StructuralAlphabet {
 
     /// String-toggle byte set. Mined from `IrNode::Regex` nodes
     /// classified as `RegexClass::QuotedString`. Drives the CLMUL /
-    /// PMULL / shift-XOR quote-parity path in `bbnf-simd-scan`.
+    /// PMULL / shift-XOR quote-parity path in `simd-scan`.
     #[serde(default)]
     pub quote_classes: BTreeSet<u8>,
 }
@@ -239,7 +239,7 @@ pub fn compute_structural_alphabet(ir: &mut GrammarIR) {
     //
     // The classifier accepts only `"` and `'` as quote chars; other
     // delimiter-toggles (e.g. BBNF's `/regex/` literal) are not
-    // surfaced today. The `bbnf-simd-scan` parity kernel still works
+    // surfaced today. The `simd-scan` parity kernel still works
     // for any byte set the IR exposes — the limit is purely the
     // mining boundary.
     let mut quote_classes: BTreeSet<u8> = BTreeSet::new();

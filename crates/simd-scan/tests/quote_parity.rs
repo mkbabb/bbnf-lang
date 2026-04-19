@@ -7,7 +7,7 @@
 //! a structural byte at offset `i` is real iff the prefix-XOR of
 //! quote positions at offset `i` is `0` (outside string).
 
-use bbnf_simd_scan::{
+use simd_scan::{
     alphabet::StructuralAlphabet,
     parity, scalar, scan_structural,
 };

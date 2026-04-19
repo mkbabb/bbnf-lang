@@ -35,7 +35,7 @@
 //! The view layer is schema-generic and stays that way — these
 //! helpers live in `lower/` because they encode bbnf.bbnf-specific
 //! semantic knowledge (which rule_kinds are transparent wrappers)
-//! and shouldn't leak into `bbnf-tape::TapeCursor` or the generated
+//! and shouldn't leak into `tape::TapeCursor` or the generated
 //! view types.
 
 use ::bbnf::runtime::tape::TapeKind;

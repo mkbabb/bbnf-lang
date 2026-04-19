@@ -3,8 +3,8 @@
 //! # Role — AW-V.W3.2
 //!
 //! Emits the per-grammar String-shape parse function mirroring
-//! `bbnf_json_prototype::parse_string` (crates/bbnf-json-prototype/
-//! src/lib.rs:351) + `bbnf_json_prototype::string::parse_string_body`.
+//! `json_prototype::parse_string` (crates/json-prototype/
+//! src/lib.rs:351) + `json_prototype::string::parse_string_body`.
 //!
 //! The emitted function:
 //!
@@ -48,7 +48,7 @@ pub fn emit_parse_string(
     quote! {
         /// AW-V.W3.2 — per-grammar String-shape parse function.
         ///
-        /// Mirrors `bbnf_json_prototype::string::parse_string_body`.
+        /// Mirrors `json_prototype::string::parse_string_body`.
         /// `"` must NOT be consumed by the caller — this function
         /// reads it, scans for the closing quote, and pushes a Span
         /// leaf with appropriate borrow / arena-decode metadata.
@@ -331,7 +331,7 @@ pub fn emit_escape_helper(grammar_suffix: &str) -> TokenStream {
 // AW-V.W3-bench-fix — visitor-path String emitter.
 //
 // Mirrors the prototype's
-// `bbnf_json_prototype::string::parse_string_body::<V>`. Borrow-path
+// `json_prototype::string::parse_string_body::<V>`. Borrow-path
 // fast: `visitor.string(&input[body_start..end])` / `visitor.key(...)`
 // without tape / arena copy. Escape-path cold: decodes into a local
 // buffer and emits `visitor.string(&buf)` / `visitor.key(&buf)`.
@@ -357,7 +357,7 @@ pub fn emit_parse_string_visitor(
     quote! {
         /// AW-V.W3-bench-fix — visitor-path String-shape parse function.
         ///
-        /// Mirrors `bbnf_json_prototype::string::parse_string_body::<V>`.
+        /// Mirrors `json_prototype::string::parse_string_body::<V>`.
         /// `"` must NOT be consumed by the caller. Borrow-path reads
         /// the full span from input; escape-path decodes into a local
         /// buffer.
@@ -421,7 +421,7 @@ pub fn emit_parse_string_visitor(
 
 /// Pre-emitted visitor-path escape helper fn — one per grammar.
 ///
-/// Mirrors `bbnf_json_prototype::string::parse_string_escaped::<V>`.
+/// Mirrors `json_prototype::string::parse_string_escaped::<V>`.
 /// Decodes RFC 8259 escapes into a fresh buffer and emits the decoded
 /// bytes via `visitor.string` / `visitor.key`. Cold path by design —
 /// `#[cold]` + `#[inline(never)]`.

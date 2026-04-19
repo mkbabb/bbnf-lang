@@ -29,7 +29,7 @@
 //! (`cargo bench` uses `[profile.bench]`), so LTO + codegen-units=1
 //! give the SIMD kernel its honest throughput ceiling.
 
-use bbnf_tape::{ColumnTag, Columns, PayWideF64, Reducer, SumF64};
+use tape::{ColumnTag, Columns, PayWideF64, Reducer, SumF64};
 use std::hint::black_box;
 use std::time::Instant;
 

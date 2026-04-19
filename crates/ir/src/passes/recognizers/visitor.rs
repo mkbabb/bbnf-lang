@@ -20,7 +20,7 @@
 //! exercised by tests that populate [`GrammarProfile::reorder_unroll_visitors`]
 //! directly via the synthetic harness (see `crates/core/tests/visitor_reorder.rs`).
 //!
-//! [`GrammarProfile::reorder_unroll_visitors`]: bbnf_tape::GrammarProfile::reorder_unroll_visitors
+//! [`GrammarProfile::reorder_unroll_visitors`]: tape::GrammarProfile::reorder_unroll_visitors
 
 use crate::types::{GrammarIR, TypeDesc};
 
@@ -156,7 +156,7 @@ impl VisitorDescriptor {
 /// produces one descriptor per declaration. The signature is stable
 /// across that transition; callers need not change.
 ///
-/// [`GrammarProfile::reorder_unroll_visitors`]: bbnf_tape::GrammarProfile::reorder_unroll_visitors
+/// [`GrammarProfile::reorder_unroll_visitors`]: tape::GrammarProfile::reorder_unroll_visitors
 pub fn mine_visitors(_ir: &GrammarIR) -> Vec<VisitorDescriptor> {
     // Placeholder: the grammar-side `@visitor` directive is not yet
     // wired through the lexer/parser. Codegen is already exercised via

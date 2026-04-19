@@ -9,10 +9,10 @@
 //!   quote parity.
 
 use crate::alphabet::StructuralAlphabet;
-use bbnf_tape::stage1::StructuralIndex;
+use tape::stage1::StructuralIndex;
 
 /// Walk `input` byte-by-byte, classify against `alphabet`, and write
-/// the resulting `StructuralIndex`. Used by `bbnf_simd_scan::scan_structural`
+/// the resulting `StructuralIndex`. Used by `simd_scan::scan_structural`
 /// when no SIMD path is available, and as the fuzz reference.
 pub fn scan(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
     if alphabet.singletons.is_empty() && alphabet.digraph_pairs.is_empty() {

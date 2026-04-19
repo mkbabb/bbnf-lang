@@ -6,7 +6,7 @@
 //! position (the SECOND byte's position may or may not separately
 //! be in `singletons`; either is a valid emit).
 
-use bbnf_simd_scan::{alphabet::StructuralAlphabet, scalar, scan_structural};
+use simd_scan::{alphabet::StructuralAlphabet, scalar, scan_structural};
 
 const CSS_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
     &[b'{', b'}', b'(', b')', b';', b':', b','],

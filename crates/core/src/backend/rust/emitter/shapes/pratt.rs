@@ -5,7 +5,7 @@
 //! Emits per-grammar Pratt-shape parse functions for operator-chain
 //! head rules. The emitted body mirrors the walker's existing
 //! `DtaState::ShuntingYard` arm at
-//! `bbnf-tape::driver.rs` — operand dispatch, then a loop that
+//! `tape::driver.rs` — operand dispatch, then a loop that
 //! consults [`PRECEDENCE_LUT`](
 //! crate::backend::rust::emitter::precedence) to pack / pop / reduce
 //! operators until EOF-operator or lower precedence is reached.

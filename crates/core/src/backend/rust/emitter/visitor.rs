@@ -2,7 +2,7 @@
 //! (Tranche AV Phase 2 — AV.2.5; Tranche AW-IV.W5.1 consumer API).
 //!
 //! Emits two kinds of free functions per visitor listed in
-//! [`GrammarProfile::reorder_unroll_visitors`][bbnf_tape::GrammarProfile::reorder_unroll_visitors]:
+//! [`GrammarProfile::reorder_unroll_visitors`][tape::GrammarProfile::reorder_unroll_visitors]:
 //!
 //! 1. **AV.2.5 standalone kernel** — `fn <name>(col: &[T]) -> <Acc>`.
 //!    The function body is a 4-lane reordered accumulator (`lane0 +
@@ -12,7 +12,7 @@
 //!    (tests, external consumers that slice the column themselves).
 //! 2. **AW-IV.W5.1 column wrapper** — `fn reduce_<name>(cols: &Columns)
 //!    -> <Acc>` that dispatches through
-//!    [`Columns::reduce_column<C, R>`][bbnf_tape::Columns::reduce_column].
+//!    [`Columns::reduce_column<C, R>`][tape::Columns::reduce_column].
 //!    The body delegates to the tape-side SIMD-packed reducer
 //!    (`vaddq_f64` pairs on NEON, `_mm256_add_pd` on AVX2) — this is
 //!    the form the walker-emitted consumer code calls at the end of
@@ -37,7 +37,7 @@
 //! partial sum independent, making lane-parallel SIMD (NEON
 //! `vaddq_f64`, AVX2 `_mm256_add_pd`) applicable. W5.1 promotes this
 //! further: the `_column` wrapper dispatches to
-//! [`bbnf_tape::Columns::reduce_column`][bbnf_tape::Columns::reduce_column]
+//! [`tape::Columns::reduce_column`][tape::Columns::reduce_column]
 //! which invokes the arch-intrinsic kernel directly, clearing the ≥ 6×
 //! hard gate on canada.json's f64 column.
 //!
@@ -89,7 +89,7 @@ pub fn emit_visitor_kernels(visitors: &[VisitorDescriptor]) -> TokenStream {
 
 /// AW-IV.W5.1 — emit the `reduce_<name>(cols: &Columns) -> T`
 /// wrapper that dispatches through
-/// [`Columns::reduce_column<C, R>`][bbnf_tape::Columns::reduce_column].
+/// [`Columns::reduce_column<C, R>`][tape::Columns::reduce_column].
 ///
 /// One wrapper per descriptor; each descriptor pins one
 /// (`ColumnTag`, `Reducer`) pair — `SumF64` on `PayWideF64`, `MaxF64`
@@ -163,7 +163,7 @@ fn column_tag_and_reducer(desc: &VisitorDescriptor) -> (TokenStream, TokenStream
             // Min/Max over integer columns — not yet in the tape
             // crate's reducer suite; fall back to `Count` so the
             // emitted wrapper still compiles. Extension point: add
-            // `MinU32`, `MaxU32`, etc. to `bbnf_tape::columns` when
+            // `MinU32`, `MaxU32`, etc. to `tape::columns` when
             // the mining signals a need.
             quote! { ::bbnf::runtime::tape::Count }
         }

@@ -15,7 +15,7 @@
 //!   must consult the MIN capacity across all columns, not just
 //!   `kinds.capacity()`).
 
-use bbnf_tape::{kind::TapeKind, tape::TapeOffset, Columns};
+use tape::{kind::TapeKind, tape::TapeOffset, Columns};
 
 #[test]
 fn push_compound_fused_returns_row_index() {

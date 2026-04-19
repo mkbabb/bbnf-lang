@@ -23,7 +23,7 @@
 //! bench adds the visitor lane (`bbnf_visitor_*`) that exercises
 //! `JsonParser::parse_with_visitor::<V>` — bypasses the tape entirely,
 //! materialising into a packed `ValueVisitor` that mirrors the
-//! prototype's `bbnf_json_prototype::ValueVisitor` shape. Gate: within
+//! prototype's `json_prototype::ValueVisitor` shape. Gate: within
 //! ±5% of prototype's `proto_value_*` on every entry.
 
 #[global_allocator]
@@ -34,7 +34,7 @@ use bbnf::runtime::tape::{
     Tape, TapeCursor, TapeKind, TapeOffset,
 };
 use bbnf_derive::Parser;
-use bbnf_json_prototype::{self as proto, parse_json};
+use json_prototype::{self as proto, parse_json};
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 #[path = "../common/timeout.rs"]
@@ -185,12 +185,12 @@ bench_sonic!(sonic_data_xl, "data_xl.json");
 // The shape-emitter-produced `JsonParser::parse_with_visitor::<V>`
 // entry bypasses the tape entirely; visitor method calls materialise
 // directly into a packed `ValueVisitor` whose layout mirrors
-// `bbnf_json_prototype::ValueVisitor`. Gate: within ±5% of the
+// `json_prototype::ValueVisitor`. Gate: within ±5% of the
 // prototype's `proto_value_*` on every entry.
 
 /// Local packed `ValueVisitor` mirroring
-/// `bbnf_json_prototype::ValueVisitor`'s shape while implementing the
-/// `bbnf_tape` per-shape visitor trait hierarchy. Borrow-path strings
+/// `json_prototype::ValueVisitor`'s shape while implementing the
+/// `tape` per-shape visitor trait hierarchy. Borrow-path strings
 /// reference the input directly when pointer identity resolves inside
 /// the registered window; escape-decoded strings copy into the
 /// document arena. Compound slot pre-reservation + in-place

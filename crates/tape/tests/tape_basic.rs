@@ -13,7 +13,7 @@
 //!    `child_off`; wide scalars, aggregates, and byte strings use
 //!    the shared arena.
 
-use bbnf_tape::{
+use tape::{
     GrammarProfile, PayloadData, RuleId, Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset,
     TapeRec,
 };
@@ -587,7 +587,7 @@ fn payload_large_aggregate_empty_is_none() {
     );
     let tape = b.finish().unwrap();
     let rec = tape.get(off);
-    assert_eq!(rec.child_off, bbnf_tape::TapeOffset::NONE);
+    assert_eq!(rec.child_off, tape::TapeOffset::NONE);
     assert!(!rec.has_payload());
 }
 
@@ -910,7 +910,7 @@ fn grammar_profile_slices_reference_rodata() {
 
 // ── Tranche AV Phase 2 — Columns SoA substrate ────────────────────
 
-use bbnf_tape::Columns;
+use tape::Columns;
 
 #[test]
 fn columns_struct_holds_soa_layout() {
@@ -1280,7 +1280,7 @@ fn columns_direct_access_for_bulk_visitors() {
 
 #[test]
 fn column_rank_default() {
-    use bbnf_tape::ColumnRank;
+    use tape::ColumnRank;
     let r = ColumnRank::default();
     assert_eq!(r.pay_narrow, 0);
     assert_eq!(r.pay_wide, 0);
@@ -1289,7 +1289,7 @@ fn column_rank_default() {
 
 #[test]
 fn cursor_with_rank_preserves_rank() {
-    use bbnf_tape::ColumnRank;
+    use tape::ColumnRank;
     let mut b = TapeBuilder::new();
     let off = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     let tape = b.finish().unwrap();
@@ -1321,7 +1321,7 @@ const _COLUMNS_DEFAULT_WITNESS: fn() -> Columns = Columns::new;
 
 #[test]
 fn payload_job_size_and_alignment() {
-    use bbnf_tape::PayloadJob;
+    use tape::PayloadJob;
     // AW-III.W1 widened `column_idx: u8` to `arena_offset: u32` so
     // every job lands at a unique byte offset in `pay_agg`. Total
     // size is 20 bytes; each cache line holds 3 jobs.
@@ -1331,7 +1331,7 @@ fn payload_job_size_and_alignment() {
 
 #[test]
 fn payload_kind_arena_widths() {
-    use bbnf_tape::PayloadKind;
+    use tape::PayloadKind;
     // AW-III.W1: every kind serialises into `pay_agg` at the
     // documented little-endian width. String / AggregateLarge are
     // variable-width (driven by the matched input slice), reported
@@ -1351,7 +1351,7 @@ fn payload_kind_arena_widths() {
 
 #[test]
 fn payload_stream_capacity_from_profile() {
-    use bbnf_tape::{GrammarProfile, PayloadStream};
+    use tape::{GrammarProfile, PayloadStream};
     let mut profile = GrammarProfile::EMPTY;
     profile.leaves_per_input_byte = 0.05; // 5% of input bytes
     let stream = PayloadStream::with_capacity_for(&profile, 10_000);
@@ -1364,11 +1364,11 @@ fn payload_stream_capacity_from_profile() {
     // estimate without expecting reallocation.
     let mut stream = stream;
     for i in 0..500u32 {
-        stream.push(bbnf_tape::PayloadJob::new(
+        stream.push(tape::PayloadJob::new(
             i,
             i,
             i + 1,
-            bbnf_tape::PayloadKind::U8,
+            tape::PayloadKind::U8,
             i,
         ));
     }
@@ -1377,7 +1377,7 @@ fn payload_stream_capacity_from_profile() {
 
 #[test]
 fn payload_stream_sequential_fill_round_trip() {
-    use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    use tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
     // AW-III.W1 unified arena emission: every payload kind serialises
     // to `pay_agg` little-endian bytes. The Stage-A allocator hands
     // out unique byte offsets per job; the Stage-B drain writes the
@@ -1403,7 +1403,7 @@ fn payload_stream_sequential_fill_round_trip() {
 
 #[test]
 fn payload_stream_parallel_fill_matches_sequential() {
-    use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    use tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
     // Build a stream large enough to clear the rayon chunk threshold
     // and exercise both paths. Sequential and parallel must produce
     // bit-identical column state — that's the AV.4.2 invariant
@@ -1450,7 +1450,7 @@ fn payload_stream_parallel_fill_matches_sequential() {
 
 #[test]
 fn payload_stream_parallel_threshold_gates() {
-    use bbnf_tape::{GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    use tape::{GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
     let mut psi = PayloadStream::new();
     for i in 0..16u32 {
         psi.push(PayloadJob::new(i, i, i + 1, PayloadKind::U8, i));
@@ -1472,7 +1472,7 @@ fn payload_stream_parallel_threshold_gates() {
 
 #[test]
 fn payload_stream_arena_payload_round_trip() {
-    use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    use tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
     // AW-III.W1: `String` payloads land as `(len: u32 LE, bytes)`
     // arena frames per the `Tape::payload_string_bytes` reader
     // contract; `AggregateLarge` keeps the verbatim byte copy. The
@@ -1511,7 +1511,7 @@ fn payload_stream_arena_payload_round_trip() {
 
 #[test]
 fn payload_stream_hex_color_round_trip() {
-    use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    use tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
     // AW-III.W1 unified arena emission: HexU32 lands as 4 little-
     // endian bytes per slot.
     let input = b"#ff0080 #abcdef12";
@@ -1531,7 +1531,7 @@ fn payload_stream_hex_color_round_trip() {
 
 #[test]
 fn payload_stream_bool_round_trip() {
-    use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    use tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
     // AW-III.W1 unified arena emission: Bool lands as 1 byte per slot.
     let input = b"true false";
     let mut psi = PayloadStream::new();
@@ -1546,7 +1546,7 @@ fn payload_stream_bool_round_trip() {
 
 #[test]
 fn payload_stream_i64_round_trip() {
-    use bbnf_tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
+    use tape::{Columns, GrammarProfile, PayloadJob, PayloadKind, PayloadStream};
     // AW-III.W1 unified arena emission: I64 lands as 8 little-endian
     // bytes per slot.
     let input = b"-9223372036854775808 9223372036854775807";
@@ -1564,7 +1564,7 @@ fn payload_stream_i64_round_trip() {
 
 #[test]
 fn payload_job_input_len_helper() {
-    use bbnf_tape::{PayloadJob, PayloadKind};
+    use tape::{PayloadJob, PayloadKind};
     let job = PayloadJob::new(0, 100, 110, PayloadKind::F64, 0);
     assert_eq!(job.input_len(), 10);
     assert_eq!(job.kind, PayloadKind::F64);
@@ -1573,7 +1573,7 @@ fn payload_job_input_len_helper() {
 
 #[test]
 fn payload_stream_chunk_recs_matches_cache_line() {
-    use bbnf_tape::{PayloadJob, PayloadStream};
+    use tape::{PayloadJob, PayloadStream};
     // AW-III.W1: PayloadJob widened to 20 bytes — three jobs per
     // 64 B cache line. The CHUNK_RECS stride drives the rayon worker
     // partitioning so each chunk owns a cache-coherent run on the
@@ -1588,7 +1588,7 @@ fn payload_stream_chunk_recs_matches_cache_line() {
 // ── Tranche AV.4.4 — Stage-C finaliser bit-equality regression ─────
 //
 // `TapeBuilder::finish` routes through the Stage-C segmented prefix
-// scan (`bbnf_tape::finaliser::finalise`) when
+// scan (`tape::finaliser::finalise`) when
 // `has_inline_frame_depth` is set; these tests pin the invariant
 // that the scan's output matches a reference backward-walk
 // implementation byte-for-byte on canonical post-order tapes.
@@ -1597,7 +1597,7 @@ fn payload_stream_chunk_recs_matches_cache_line() {
 // regression is a self-contained black-box check against the public
 // API, with no dependence on crate-internal helpers.
 
-use bbnf_tape::{derive_frame_depth, finalise, TapeOffset as Off};
+use tape::{derive_frame_depth, finalise, TapeOffset as Off};
 
 /// Reference backward-walk sibling-skip computation.
 ///
@@ -1956,7 +1956,7 @@ fn finalise_independently_reproduces_v2_via_helper() {
     // hold the parser-written values. Perfect inputs for a direct
     // `finalise()` call.
     let snap = b.tape_snapshot();
-    let mut cols = bbnf_tape::Columns {
+    let mut cols = tape::Columns {
         kinds: snap.columns().kinds.clone(),
         flags: snap.columns().flags.clone(),
         extra: snap.columns().extra.clone(),
@@ -2033,7 +2033,7 @@ fn shape_ref_with_payload_round_trip() {
 /// child cursors from the template.
 #[test]
 fn shape_ref_cursor_lazy_expansion() {
-    use bbnf_tape::ShapeEntry;
+    use tape::ShapeEntry;
 
     let mut b = TapeBuilder::new();
     // Template: 5 children. Positions 0, 2, 4 are leaf holes (Span);
@@ -2103,7 +2103,7 @@ fn shape_ref_cursor_lazy_expansion() {
 /// On a non-ShapeRef record, `shape_ref_children` yields no items.
 #[test]
 fn shape_ref_children_empty_on_non_shape_ref() {
-    use bbnf_tape::ShapeEntry;
+    use tape::ShapeEntry;
 
     let mut b = TapeBuilder::new();
     let off = b.push_leaf(TapeKind::Span, 0, 10, 0, 0);
@@ -2145,10 +2145,10 @@ fn shape_ref_dict_idx_boundary() {
 /// accessor must return offset 1 without entering the backward walk.
 #[test]
 fn cursor_child_zero_is_o1_under_preorder() {
-    use bbnf_tape::dta::{
+    use tape::dta::{
         DtaFrameKind, DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable,
     };
-    use bbnf_tape::psi::PayloadStream;
+    use tape::psi::PayloadStream;
 
     // Three Literal states + one Seq state referencing them in order.
     // Static arrays keep lifetimes `'static` as the DTA contract
@@ -2165,11 +2165,11 @@ fn cursor_child_zero_is_o1_under_preorder() {
         DtaState::Seq {
             children: &SEQ_CHILDREN,
             frame: DtaFrameKind::Seq,
-            promote: bbnf_tape::SeqPromote::Default,
+            promote: tape::SeqPromote::Default,
         },
-        DtaState::Literal { text: LIT_A, payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: LIT_B, payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: LIT_C, payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: LIT_A, payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: LIT_B, payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: LIT_C, payload: tape::LiteralPayload::None },
     ];
     static RULE_ENTRIES: [DtaRuleEntry; 1] = [DtaRuleEntry {
         rule: DtaRuleId(0),

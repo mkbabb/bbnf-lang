@@ -6,7 +6,7 @@
 //! the [`Document::root`] is `Some`. Smaller smoke tests exercise
 //! scalar roots + error paths.
 
-use bbnf_json_prototype::{parse_json, Document, TapeVisitor, Value, ValueVisitor};
+use json_prototype::{parse_json, Document, TapeVisitor, Value, ValueVisitor};
 
 fn load(name: &str) -> String {
     let path = format!("../../data/json/{}", name);

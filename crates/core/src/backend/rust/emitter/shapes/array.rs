@@ -1058,8 +1058,8 @@ fn extract_array_value_ref(
 // ─────────────────────────────────────────────────────────────────────
 // AW-V.W3-bench-fix — visitor-path Array emitter.
 //
-// Mirrors the prototype's `bbnf_json_prototype::parse_array::<V>`
-// (crates/bbnf-json-prototype/src/lib.rs:308). Bypasses the tape;
+// Mirrors the prototype's `json_prototype::parse_array::<V>`
+// (crates/json-prototype/src/lib.rs:308). Bypasses the tape;
 // `visitor.begin_array()` / `visitor.end_array()` replace the compound
 // + leaf record pushes the tape-path emits.
 // ─────────────────────────────────────────────────────────────────────
@@ -1097,7 +1097,7 @@ pub fn emit_parse_array_visitor(
     quote! {
         /// AW-V.W3-bench-fix — visitor-path Array-shape parse function.
         ///
-        /// Mirrors `bbnf_json_prototype::parse_array::<V>`. Bypasses
+        /// Mirrors `json_prototype::parse_array::<V>`. Bypasses
         /// the tape entirely.
         ///
         /// AX.W0a.2.f — compound; plain `#[inline]`.

@@ -122,8 +122,8 @@ fn assert_corpus_parity(fixture: &str) -> (usize, usize) {
 
     let bbnf_parsed = CssL4Parser::parse(&input)
         .unwrap_or_else(|e| panic!("{fixture}: bbnf parse failed: {e:?}"));
-    let bbnf_tape = bbnf_parsed.tape();
-    let bbnf_rec_count = bbnf_tape.len();
+    let tape_val = bbnf_parsed.tape();
+    let bbnf_rec_count = tape_val.len();
     assert!(
         bbnf_rec_count > 0,
         "{fixture}: bbnf produced an empty tape"

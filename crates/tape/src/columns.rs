@@ -432,7 +432,7 @@ impl Columns {
     /// stores.
     ///
     /// Replaces the seven `self.<column>.push(...)` calls in
-    /// `bbnf_tape::driver::reserve_compound` with seven unchecked
+    /// `tape::driver::reserve_compound` with seven unchecked
     /// stores. The row's `span_hi` and `child_off` defaults match
     /// `reserve_compound`'s provisional-then-overwrite pattern — the
     /// frame-pop site fixes both via the column slices once the
@@ -510,7 +510,7 @@ impl Columns {
     /// stores.
     ///
     /// Replaces the seven `self.<column>.push(...)` calls in
-    /// `bbnf_tape::driver::emit_leaf_with_payload` with seven
+    /// `tape::driver::emit_leaf_with_payload` with seven
     /// unchecked stores. The caller supplies the `flags` (variant_idx)
     /// and `extra` (PAYLOAD_IN_ARENA flag) values directly — both are
     /// already classified by the caller via the
@@ -917,7 +917,7 @@ impl Columns {
     /// # Example
     ///
     /// ```no_run
-    /// use bbnf_tape::columns::{Columns, PayWideF64, SumF64};
+    /// use tape::columns::{Columns, PayWideF64, SumF64};
     ///
     /// let cols = Columns::new();
     /// let total: f64 = cols.reduce_column::<PayWideF64, SumF64>();

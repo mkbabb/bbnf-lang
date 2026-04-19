@@ -9,7 +9,7 @@
 //! directly with a populated index to verify the dual-cursor's
 //! slot-aware shortcuts work end-to-end.
 
-use bbnf_tape::{
+use tape::{
     dispatch_one, Columns, Cursor, DtaFrameKind, DtaRuleEntry, DtaRuleId,
     DtaState, DtaStateId, DtaTable, FrameStack, LiteralPayload, PayloadStream,
     SeqPromote, StepResult, StructuralIndex,

@@ -10,7 +10,7 @@
 //!
 //! The W5 hard gate: ≥ 2 GB/s (≈ 2000 MB/s) on 1 MB JSON.
 
-use bbnf_simd_scan::{alphabet::StructuralAlphabet, scan_structural};
+use simd_scan::{alphabet::StructuralAlphabet, scan_structural};
 use std::hint::black_box;
 use std::time::Instant;
 

@@ -143,7 +143,7 @@ fn walk<'t>(tape: &'t Tape, cursor: TapeCursor<'t>, source: &[u8], out: &mut Vec
         return;
     }
     // Compound — recurse in source order. AV-onward, `children_zero_alloc`
-    // is forward-source-order zero-alloc (see `bbnf_tape::cursor`); the
+    // is forward-source-order zero-alloc (see `tape::cursor`); the
     // pre-AV reverse-then-restore dance collapsed when the substrate
     // collapsed both methods into one.
     for child in cursor.children_zero_alloc() {

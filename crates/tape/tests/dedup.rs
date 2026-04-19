@@ -4,10 +4,10 @@
 //! probe with identical bytes hits, bloom false-positive handling,
 //! columns_range_eq correctness, and push_compound_referring layout.
 
-use bbnf_tape::columns::Columns;
-use bbnf_tape::kind::TapeKind;
-use bbnf_tape::tape::TapeOffset;
-use bbnf_tape::{columns_range_eq, push_compound_referring, BloomDedup};
+use tape::columns::Columns;
+use tape::kind::TapeKind;
+use tape::tape::TapeOffset;
+use tape::{columns_range_eq, push_compound_referring, BloomDedup};
 
 fn push_compound_row(columns: &mut Columns, kind: TapeKind, span_lo: u32, span_hi: u32) -> u32 {
     let idx = columns.push_compound_fused(kind, span_lo);

@@ -1,9 +1,9 @@
-//! `bbnf-json-prototype` — JSON-only hand-tuned per-shape inline parser.
+//! `json-prototype` — JSON-only hand-tuned per-shape inline parser.
 //!
 //! # Role — AW-V.W2 (speed-ceiling validator)
 //!
 //! The AW-IV profile wave established that bbnf's JSON parse sits ~13×
-//! behind sonic-rs not because the `bbnf-simd-scan` + `bbnf-tape`
+//! behind sonic-rs not because the `simd-scan` + `tape`
 //! substrate is deficient but because the consumer — the monolithic
 //! `__dta_walker_inline::run` — is still an interpreter over a runtime
 //! state table with cross-crate helper tails at every arm. This crate
@@ -29,8 +29,8 @@
 //! - Two shipped visitors — [`visitor::ValueVisitor`] (the sonic-parity
 //!   validator, materialising into the crate-local [`value::Value`]
 //!   enum) and [`visitor::TapeVisitor`] (the AW-IV substrate validator,
-//!   emitting into `bbnf_tape::Columns` via `TapeBuilder`).
-//! - Inline SIMD kernels consumed from `bbnf-simd-scan`'s `parity` +
+//!   emitting into `tape::Columns` via `TapeBuilder`).
+//! - Inline SIMD kernels consumed from `simd-scan`'s `parity` +
 //!   the crate-local [`simd`] module's `nospace64` bitmap cache +
 //!   `first_quote_or_backslash` primitive.
 //! - Inline Eisel-Lemire via
@@ -137,7 +137,7 @@ impl std::error::Error for ParseError {}
 ///
 /// - `input` must be UTF-8. The parser does not re-validate it; the
 ///   SIMD kernels treat input as raw bytes and assume the content
-///   between quotes is already valid (matches the `bbnf-tape`
+///   between quotes is already valid (matches the `tape`
 ///   decoder contract at `tape.rs:664` — the JSON-string body is
 ///   UTF-8-clean by construction).
 /// - Whitespace handling matches RFC 8259: `{ \t, \n, \r, ' ' }`.

@@ -4,7 +4,7 @@
 //! corpus ({data, twitter, citm, canada, data_xl}), identical
 //! loader, identical `black_box` discipline, identical
 //! `benchmark_group!` shape. The only difference is the `bbnf`
-//! entries invoke [`bbnf_json_prototype::parse_json`] with a
+//! entries invoke [`json_prototype::parse_json`] with a
 //! [`ValueVisitor`] (sonic-parity materialisation) rather than
 //! routing through `JsonParser::parse` + the tape-walk fold.
 //!
@@ -15,7 +15,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bbnf_json_prototype::{parse_json, Document, TapeVisitor, ValueVisitor};
+use json_prototype::{parse_json, Document, TapeVisitor, ValueVisitor};
 use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 fn load(name: &str) -> String {

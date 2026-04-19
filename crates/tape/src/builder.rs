@@ -84,8 +84,8 @@ pub enum PayloadData<'a> {
 /// ```ignore
 /// fn __pair<'i>(
 ///     state: &mut parse_that::ParserState<'i>,
-///     tape: &mut bbnf_tape::TapeBuilder,
-/// ) -> Option<bbnf_tape::TapeOffset> {
+///     tape: &mut tape::TapeBuilder,
+/// ) -> Option<tape::TapeOffset> {
 ///     let start_off = tape.mark_children();
 ///     let _key = __string(state, tape)?;
 ///     state.eat_byte(b':')?;

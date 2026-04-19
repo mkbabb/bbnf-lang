@@ -2,7 +2,7 @@
 //!
 //! # Architectural role
 //!
-//! The Dispatch Tape Automaton (Stage A — `crates/bbnf-tape/src/dta.rs`)
+//! The Dispatch Tape Automaton (Stage A — `crates/tape/src/dta.rs`)
 //! emits the tape's structural skeleton in a single linear byte pass:
 //! every record lands with its kind, variant, and `span_lo` populated.
 //! Two populations of payload decoding fan out from this skeleton:

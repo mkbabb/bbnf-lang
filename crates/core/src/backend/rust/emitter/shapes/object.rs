@@ -539,8 +539,8 @@ fn extract_value_ref_from_pair_body(
 // ─────────────────────────────────────────────────────────────────────
 // AW-V.W3-bench-fix — visitor-path Object emitter.
 //
-// Mirrors the prototype's `bbnf_json_prototype::parse_object::<V>`
-// (crates/bbnf-json-prototype/src/lib.rs:258). Bypasses the tape
+// Mirrors the prototype's `json_prototype::parse_object::<V>`
+// (crates/json-prototype/src/lib.rs:258). Bypasses the tape
 // entirely: `visitor.begin_object()` / `visitor.key()` /
 // `visitor.end_object()` replace the compound + leaf record pushes
 // the tape-path emits.
@@ -598,7 +598,7 @@ pub fn emit_parse_object_visitor(
     quote! {
         /// AW-V.W3-bench-fix — visitor-path Object-shape parse function.
         ///
-        /// Mirrors `bbnf_json_prototype::parse_object::<V>`. Bypasses
+        /// Mirrors `json_prototype::parse_object::<V>`. Bypasses
         /// the tape entirely; visitor method calls drive materialisation.
         ///
         /// AX.W0a.2.f — compound; plain `#[inline]`.

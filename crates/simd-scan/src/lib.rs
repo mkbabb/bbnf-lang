@@ -1,4 +1,4 @@
-//! `bbnf-simd-scan` — architecture-neutral SIMD structural-bitmap
+//! `simd-scan` — architecture-neutral SIMD structural-bitmap
 //! kernel for the bbnf-lang DTA driver.
 //!
 //! # Role (Tranche AW-III §W5)
@@ -11,9 +11,9 @@
 //! cursor in O(1).
 //!
 //! This crate owns the kernel that builds the `StructuralIndex`. The
-//! type itself lives in `bbnf-tape::stage1::StructuralIndex` to keep
+//! type itself lives in `tape::stage1::StructuralIndex` to keep
 //! the wire contract on the tape side; this crate has one workspace
-//! dependency on `bbnf-tape` and no other workspace deps.
+//! dependency on `tape` and no other workspace deps.
 //!
 //! # Architecture
 //!
@@ -65,7 +65,7 @@ pub mod avx512;
 pub mod wasm;
 
 pub use alphabet::{KernelShape, NibbleLut, StructuralAlphabet, WideLut};
-pub use bbnf_tape::stage1::StructuralIndex;
+pub use tape::stage1::StructuralIndex;
 
 /// Build the [`StructuralIndex`] for `input` under `alphabet`.
 ///

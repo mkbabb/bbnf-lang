@@ -1,7 +1,7 @@
 //! Tranche AW-I.W2.1 — Walker arm completion regression tests.
 //!
 //! Exercises the `AltLinear`, `Repeat`, and `ShuntingYard` walker arms
-//! of `bbnf_tape::driver::dta_run_cold`. Each test constructs a
+//! of `tape::driver::dta_run_cold`. Each test constructs a
 //! minimal [`DtaTable`] literal and drives the cold-path walker
 //! directly — no need to lift from source grammars.
 //!
@@ -10,7 +10,7 @@
 //! the same arm semantics by mechanical lowering, so any deviation
 //! caught here also catches a deviation in the emitted walker.
 
-use bbnf_tape::{
+use tape::{
     dta_run_cold, Columns, DtaAssociativity, DtaError, DtaFrameKind, DtaPrecedenceEntry,
     DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable, PayloadStream, TapeKind,
 };
@@ -41,24 +41,24 @@ fn altlinear_backtracks_after_first_failure() {
         // 0: entry AltLinear
         DtaState::AltLinear { branches: BRANCHES },
         // 1: Literal("x")
-        DtaState::Literal { text: "x", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "x", payload: tape::LiteralPayload::None },
         // 2: Literal("y")
-        DtaState::Literal { text: "y", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "y", payload: tape::LiteralPayload::None },
         // 3: Seq for branch0 ["x","y"]
         DtaState::Seq {
             children: BRANCH0_CHILDREN,
             frame: DtaFrameKind::Seq,
-            promote: bbnf_tape::SeqPromote::Default,
+            promote: tape::SeqPromote::Default,
         },
         // 4: Literal("a")
-        DtaState::Literal { text: "a", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "a", payload: tape::LiteralPayload::None },
         // 5: Literal("b")
-        DtaState::Literal { text: "b", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "b", payload: tape::LiteralPayload::None },
         // 6: Seq for branch1 ["a","b"]
         DtaState::Seq {
             children: BRANCH1_CHILDREN,
             frame: DtaFrameKind::Seq,
-            promote: bbnf_tape::SeqPromote::Default,
+            promote: tape::SeqPromote::Default,
         },
     ];
     static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
@@ -99,8 +99,8 @@ fn altlinear_exhausts_all_branches_returns_syntax() {
     static BRANCHES: &[DtaStateId] = &[DtaStateId(1), DtaStateId(2)];
     static STATES: &[DtaState] = &[
         DtaState::AltLinear { branches: BRANCHES },
-        DtaState::Literal { text: "x", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "y", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "x", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "y", payload: tape::LiteralPayload::None },
     ];
     static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
         rule: DtaRuleId(0),
@@ -155,19 +155,19 @@ fn altlinear_nested_paren_group() {
         DtaState::Seq {
             children: GROUP_CHILDREN,
             frame: DtaFrameKind::Seq,
-            promote: bbnf_tape::SeqPromote::Default,
+            promote: tape::SeqPromote::Default,
         },
         // 2: "("
-        DtaState::Literal { text: "(", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "(", payload: tape::LiteralPayload::None },
         // 3: expr self-ref → dispatch back to state 0.
         DtaState::Ref {
             rule: DtaRuleId(0),
             target: DtaStateId(0),
         },
         // 4: ")"
-        DtaState::Literal { text: ")", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: ")", payload: tape::LiteralPayload::None },
         // 5: literal = "x"
-        DtaState::Literal { text: "x", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "x", payload: tape::LiteralPayload::None },
     ];
     static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
         rule: DtaRuleId(0),
@@ -247,24 +247,24 @@ fn altlinear_branch_fails_after_nested_ref_alt_partial() {
             target: DtaStateId::NONE,
         },
         // 2: Literal("a")
-        DtaState::Literal { text: "a", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "a", payload: tape::LiteralPayload::None },
         // 3: Literal("b")
-        DtaState::Literal { text: "b", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "b", payload: tape::LiteralPayload::None },
         // 4: paren_group = Seq["(", outer_ref, ")"]
         DtaState::Seq {
             children: GROUP_CHILDREN,
             frame: DtaFrameKind::Seq,
-            promote: bbnf_tape::SeqPromote::Default,
+            promote: tape::SeqPromote::Default,
         },
         // 5: "("
-        DtaState::Literal { text: "(", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "(", payload: tape::LiteralPayload::None },
         // 6: Ref to outer (self-recursive)
         DtaState::Ref {
             rule: DtaRuleId(0),
             target: DtaStateId(0),
         },
         // 7: ")"
-        DtaState::Literal { text: ")", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: ")", payload: tape::LiteralPayload::None },
         // 8: a_or_b = AltLinear[a, b]  (entry of rule 1)
         DtaState::AltLinear { branches: A_OR_B_BRANCHES },
     ];
@@ -313,11 +313,11 @@ fn altlinear_branch_partial_match_then_fails_restores_pos() {
         DtaState::Seq {
             children: AB_CHILDREN,
             frame: DtaFrameKind::Seq,
-            promote: bbnf_tape::SeqPromote::Default,
+            promote: tape::SeqPromote::Default,
         },
-        DtaState::Literal { text: "a", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "b", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "a", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "a", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "b", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "a", payload: tape::LiteralPayload::None },
     ];
     static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
         rule: DtaRuleId(0),
@@ -352,15 +352,15 @@ fn altlinear_nested_paren_literal_only_works() {
         DtaState::Seq {
             children: GROUP_CHILDREN,
             frame: DtaFrameKind::Seq,
-            promote: bbnf_tape::SeqPromote::Default,
+            promote: tape::SeqPromote::Default,
         },
-        DtaState::Literal { text: "(", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "(", payload: tape::LiteralPayload::None },
         DtaState::Ref {
             rule: DtaRuleId(0),
             target: DtaStateId(0),
         },
-        DtaState::Literal { text: ")", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "x", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: ")", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "x", payload: tape::LiteralPayload::None },
     ];
     static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
         rule: DtaRuleId(0),
@@ -397,7 +397,7 @@ fn repeat_iterates_to_hi() {
             hi: 3,
             counter_optional: None,
         },
-        DtaState::Literal { text: "a", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "a", payload: tape::LiteralPayload::None },
     ];
     static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
         rule: DtaRuleId(0),
@@ -435,7 +435,7 @@ fn repeat_many1_rejects_empty() {
             hi: u32::MAX,
             counter_optional: None,
         },
-        DtaState::Literal { text: "a", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "a", payload: tape::LiteralPayload::None },
     ];
     static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
         rule: DtaRuleId(0),
@@ -470,7 +470,7 @@ fn repeat_optional_admits_empty() {
             hi: 1,
             counter_optional: None,
         },
-        DtaState::Literal { text: "a", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "a", payload: tape::LiteralPayload::None },
     ];
     static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
         rule: DtaRuleId(0),
@@ -543,16 +543,16 @@ fn shunting_yard_left_associative_add() {
             branches: DIGITS_BRANCHES,
         },
         // 2..11: Literal("0") .. Literal("9")
-        DtaState::Literal { text: "0", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "1", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "2", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "3", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "4", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "5", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "6", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "7", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "8", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "9", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "0", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "1", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "2", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "3", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "4", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "5", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "6", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "7", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "8", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "9", payload: tape::LiteralPayload::None },
     ];
     static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
         rule: DtaRuleId(0),
@@ -623,16 +623,16 @@ fn shunting_yard_right_associative_pow() {
         DtaState::AltLinear {
             branches: DIGITS_BRANCHES,
         },
-        DtaState::Literal { text: "0", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "1", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "2", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "3", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "4", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "5", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "6", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "7", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "8", payload: bbnf_tape::LiteralPayload::None },
-        DtaState::Literal { text: "9", payload: bbnf_tape::LiteralPayload::None },
+        DtaState::Literal { text: "0", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "1", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "2", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "3", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "4", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "5", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "6", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "7", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "8", payload: tape::LiteralPayload::None },
+        DtaState::Literal { text: "9", payload: tape::LiteralPayload::None },
     ];
     static RULE_ENTRIES: &[DtaRuleEntry] = &[DtaRuleEntry {
         rule: DtaRuleId(0),

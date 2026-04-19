@@ -10,7 +10,7 @@
 //! the baseline public type stays small so it's cheap to return
 //! and cheap to pattern-match.
 
-use bbnf_tape::TapeBuildError;
+use tape::TapeBuildError;
 
 /// Error returned by the generated `parse` entry point.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -30,7 +30,7 @@ pub enum ParseErr {
 
     /// The tape builder's sticky error fired during construction.
     /// Only possible when the generated parser calls
-    /// [`bbnf_tape::TapeBuilder::set_error`] from a recovery path
+    /// [`tape::TapeBuilder::set_error`] from a recovery path
     /// — otherwise the builder never surfaces an error.
     Tape(TapeBuildError),
 }

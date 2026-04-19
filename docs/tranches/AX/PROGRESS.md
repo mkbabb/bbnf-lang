@@ -450,6 +450,60 @@ test -p bbnf --test css_l4_parity` 16/16; `sheets_parity` 25/25;
 cycle-1 = cycle-2 byte-identical preserved (no regen changes;
 generated.rs untouched in this wave).
 
+## 2026-04-19 — W0a.2.{n,o,p,q,r} cascade + W0a close
+
+Post-W0a.2.m, gorgeous compile + parity-harness suite surfaced nine
+classes of shape-emission + payload defects across the six emitter
+paths (pratt, wrap, hregex, keyword, alt_dispatch, flat, inline).
+Each class required tight-scoped surgical fixes; the cascade closed
+across five sub-waves:
+
+- **W0a.2.n** (`8dce3270`/`9afb2d44`/`2d084d76`/`a5aac742`/`49ed4b95`/
+  `26480ae0`/`6e8958b5`) — Pratt loop `skip_space` + phantom-op guard
+  + whitespace-aware operator peek. Gorgeous 6/6 compile unblocked.
+  Regen 98,202 lines. bbnf_parity 2/2, bbnf_ast_parity 9/9,
+  ax_w0a2h_probe 33/33.
+- **W0a.2.o** (`5a451df1`/`5e886cca`/`f50f9d27`) — Pratt-wrapper-peel
+  admits leaked 3-child flat layout (`lower_binary_factor` virtual
+  tail-reducer), factored-Alt operator mining, first-byte LUT merge.
+  Regen 98,299 lines. JSON 22/22 → 0 failures. css_l4_parity 5/16 →
+  14/16. sheets_parity 11/25 → 13/25.
+- **W0a.2.p** (`2b7f9744`/`d1fc8c0d`/`36f19e09`/`fd7ab1d6`/`4bb295dc`/
+  `a726fdce`) — Pratt detector narrowing (reject regex-only operator
+  rules → complexSelector demotes Pratt→Flat), Keyword typed-leaf
+  arena payload, Flat typed-Alt + Map-regex host-fn emission, Keyword
+  Ref-branch rollback + length-descending order. css_l4_parity 14/16,
+  sheets_parity 22/25. No regen (no BBNF grammar changes).
+- **W0a.2.q** (`a776de3c`/`48ecdea5`/`a4465484`/`16952531`/`381cb9cd`)
+  — Wrap typed Alt Regex-branch arena payload, HRegex typed-payload
+  arena emission, AltDispatch typed-Alt literal-branch arena payload
+  + Regex-branch pattern routing, leading-dot Number via regex-scan.
+  css_l4_parity 16/16 ✅. sheets_parity 24/25.
+- **W0a.2.r** (`c92ceee9`/`6b03dd53`) — inline.rs Alt Regex branch
+  uses actual pattern (mirrors alt_dispatch fix). Regen 98,270 lines,
+  cycle-1 = cycle-2 byte-identical. sheets_parity 25/25 ✅.
+
+### W0a parity-harness closure at HEAD `6b03dd53`
+
+```
+bbnf_parity         2/0  ok
+bbnf_ast_parity     9/0  ok
+css_l4_parity      16/0  ok
+json_parity         9/0  ok
+json_value_parity  13/0  ok
+sheets_parity      25/0  ok
+```
+
+All six invariant-20 semantic parity harnesses green on master.
+gorgeous derive compiles clean on all 6 grammars (JsonParser,
+CssL4Parser, EbnfParser, BnfParser, GoogleSheetsParser, BbnfParser).
+Bootstrap regen cycle-1 = cycle-2 byte-identical at 98,270 lines,
+8 per-rule Pratt LUTs, 4 heterogeneous `*Value<'p>` enums, 251
+skip_space call sites, reducer-compound emission preserved.
+
+W0a closes at HEAD `6b03dd53`. Proceeding to W0a.close (single-agent
+17-entry bench baseline wave).
+
 ---
 
 ## 2026-04-18 — W0a.2.a + W0a.2.b dispatch

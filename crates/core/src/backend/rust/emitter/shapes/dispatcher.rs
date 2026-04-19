@@ -72,6 +72,256 @@ pub fn visitor_dispatcher_fn_ident(
     format_ident!("parse_{}_{}_visitor", grammar, root)
 }
 
+/// Classify the grammar's `@ws` directive. When the pattern matches
+/// `RegexClass::WhitespaceWithBlockComment`, `skip_space` must also
+/// skip `/* ... */` block comments (CSS contract); otherwise the
+/// default JSON-shaped ASCII-whitespace-only skip applies.
+fn ws_is_comment_aware(ir: &GrammarIR) -> bool {
+    use parse_that::regex::classify::{RegexClass, classify_regex};
+    let Some(ws_sid) = ir.ws_pattern else {
+        return false;
+    };
+    let pattern = ir.get_string(ws_sid);
+    matches!(classify_regex(pattern), RegexClass::WhitespaceWithBlockComment)
+}
+
+/// Emit the plain-ASCII `skip_space` pair (`skip_space` + `skip_space_slow`)
+/// for grammars whose `@ws` pattern is the default JSON-shaped set
+/// `{' ', '\t', '\n', '\r'}`. Uses the 64-byte SIMD bitmap cache
+/// on the slow path.
+fn emit_skip_space_plain() -> TokenStream {
+    quote! {
+        /// Skip JSON whitespace at `*p`, returning the first
+        /// non-whitespace byte (or `None` on EOF). Hot-path fast-
+        /// exit when the next byte is non-whitespace.
+        #[inline(always)]
+        pub fn skip_space(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut ScanState,
+        ) -> Option<u8> {
+            // Direct boolean form rather than `matches!`: nightly's
+            // `matches!` expansion decorates the inner `match` with
+            // `#[allow(non_exhaustive_omitted_patterns)]` — an
+            // attribute on an expression (unstable, E0658) —
+            // surfaced by the bootstrap's `cargo expand` step.
+            match input.get(*p) {
+                Some(&b) if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' => Some(b),
+                None => None,
+                _ => {
+                    skip_space_slow(input, p, state);
+                    input.get(*p).copied()
+                }
+            }
+        }
+
+        #[inline(always)]
+        pub(crate) fn skip_space_slow(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut ScanState,
+        ) {
+            loop {
+                let cache_base = state.nospace_start;
+                if cache_base >= 0 && (*p as isize) >= cache_base {
+                    let rel = *p - cache_base as usize;
+                    if rel < 64 {
+                        let masked = state.nospace_bits & (!0u64 << rel);
+                        if masked != 0 {
+                            let bit = masked.trailing_zeros() as usize;
+                            *p = cache_base as usize + bit;
+                            return;
+                        }
+                        *p = cache_base as usize + 64;
+                    }
+                }
+                if *p + 64 > input.len() {
+                    while let Some(&b) = input.get(*p) {
+                        // Direct boolean form (see `skip_space`).
+                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                            return;
+                        }
+                        *p += 1;
+                    }
+                    return;
+                }
+                let stripe = unsafe {
+                    ::core::slice::from_raw_parts(input.as_ptr().add(*p), 64)
+                };
+                let mask = nospace_bitmap_64(stripe);
+                state.nospace_bits = mask;
+                state.nospace_start = *p as isize;
+                if mask != 0 {
+                    let bit = mask.trailing_zeros() as usize;
+                    *p += bit;
+                    return;
+                }
+                *p += 64;
+            }
+        }
+    }
+}
+
+/// Emit the comment-aware `skip_space` pair for grammars whose `@ws`
+/// pattern matches `RegexClass::WhitespaceWithBlockComment`
+/// (CSS's `(?s)(?:\s|\/\*...\*\/)*`).
+///
+/// The fast path treats `/` as a candidate separator (because `/*`
+/// may open a block comment). The slow path alternates between
+/// the SIMD whitespace bitmap (reused intact) and a per-iteration
+/// check for `/*...*/`; on a comment opening, the body is skipped
+/// via `memchr`-style scan for `*/` and the bitmap cache is
+/// invalidated. A bare `/` (not followed by `*`) terminates the
+/// skip — this mirrors the `@ws` regex's semantics (the comment
+/// alternative starts with `/*`; a lone `/` is not whitespace).
+fn emit_skip_space_comment_aware() -> TokenStream {
+    quote! {
+        /// Skip whitespace AND `/* ... */` block comments at `*p`,
+        /// returning the first non-whitespace, non-comment byte
+        /// (or `None` on EOF). Hot-path fast-exit when the next
+        /// byte is neither whitespace nor `/`.
+        ///
+        /// When the next byte is `/`: if followed by `*`, enter
+        /// the slow path to consume the comment body; otherwise
+        /// return `Some(b'/')` — a bare `/` is a semantic byte.
+        #[inline(always)]
+        pub fn skip_space(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut ScanState,
+        ) -> Option<u8> {
+            match input.get(*p) {
+                Some(&b)
+                    if b != b' '
+                        && b != b'\t'
+                        && b != b'\n'
+                        && b != b'\r'
+                        && b != b'/' =>
+                {
+                    Some(b)
+                }
+                Some(&b'/') if input.get(*p + 1) != Some(&b'*') => {
+                    // Bare `/` — not a comment opening; return it as
+                    // the first non-whitespace byte.
+                    Some(b'/')
+                }
+                None => None,
+                _ => {
+                    skip_space_slow(input, p, state);
+                    input.get(*p).copied()
+                }
+            }
+        }
+
+        /// Advance `*p` past ASCII whitespace AND `/* ... */` block
+        /// comments. The bitmap cache accelerates pure-whitespace
+        /// runs; comment detection runs on every iteration where
+        /// `*p` points at `/`.
+        #[inline(always)]
+        pub(crate) fn skip_space_slow(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut ScanState,
+        ) {
+            loop {
+                // Inline whitespace skip — reuses the bitmap cache
+                // when valid.
+                let cache_base = state.nospace_start;
+                if cache_base >= 0 && (*p as isize) >= cache_base {
+                    let rel = *p - cache_base as usize;
+                    if rel < 64 {
+                        let masked = state.nospace_bits & (!0u64 << rel);
+                        if masked != 0 {
+                            let bit = masked.trailing_zeros() as usize;
+                            *p = cache_base as usize + bit;
+                        } else {
+                            *p = cache_base as usize + 64;
+                            continue;
+                        }
+                    }
+                }
+                if *p >= input.len() {
+                    return;
+                }
+                if *p + 64 > input.len() {
+                    // Tail — direct byte loop.
+                    while let Some(&b) = input.get(*p) {
+                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                            break;
+                        }
+                        *p += 1;
+                    }
+                } else {
+                    // 64-byte SIMD stripe.
+                    let stripe = unsafe {
+                        ::core::slice::from_raw_parts(
+                            input.as_ptr().add(*p),
+                            64,
+                        )
+                    };
+                    let mask = nospace_bitmap_64(stripe);
+                    state.nospace_bits = mask;
+                    state.nospace_start = *p as isize;
+                    if mask != 0 {
+                        let bit = mask.trailing_zeros() as usize;
+                        *p += bit;
+                    } else {
+                        *p += 64;
+                        continue;
+                    }
+                }
+                // Whitespace run terminated. Check whether `*p`
+                // opens a block comment.
+                if input.get(*p) == Some(&b'/')
+                    && input.get(*p + 1) == Some(&b'*')
+                {
+                    // Consume `/*` + body + `*/`. Body-scan iterates
+                    // forward looking for `*/`; LLVM vectorises the
+                    // byte search to SIMD under `-O3`.
+                    *p += 2;
+                    let len = input.len();
+                    loop {
+                        if *p + 1 >= len {
+                            // Unterminated comment — eat to EOF.
+                            *p = len;
+                            state.nospace_start = -1;
+                            return;
+                        }
+                        // Manual `*/` search. `iter().position` lowers
+                        // to a vectorisable loop; inlined here so the
+                        // emitted code has no external crate dep.
+                        let slice = unsafe {
+                            input.get_unchecked(*p..len)
+                        };
+                        match slice.iter().position(|&b| b == b'*') {
+                            None => {
+                                *p = len;
+                                state.nospace_start = -1;
+                                return;
+                            }
+                            Some(rel) => {
+                                *p += rel + 1;
+                                if input.get(*p) == Some(&b'/') {
+                                    *p += 1;
+                                    break;
+                                }
+                                // Lone `*` — keep scanning body.
+                            }
+                        }
+                    }
+                    // Advanced past comment; invalidate the cache
+                    // (the stripe we just scanned may no longer be
+                    // adjacent to `*p`).
+                    state.nospace_start = -1;
+                    continue;
+                }
+                // Not whitespace and not a comment opening — done.
+                return;
+            }
+        }
+    }
+}
+
 /// Per-grammar SIMD support module. Emitted once per grammar with
 /// shape dispatch. Contains the `ScanState`, `skip_space`, and SIMD
 /// primitives every shape fn inlines.
@@ -80,8 +330,23 @@ pub fn visitor_dispatcher_fn_ident(
 /// functions so they can share `ScanState` by reference. Naming:
 /// `__shape_support_<grammar>` — the grammar suffix prevents
 /// collisions when multiple grammars coexist in one compilation.
-pub fn emit_support_module(grammar_suffix: &str) -> TokenStream {
+///
+/// # Comment-aware whitespace (AX.W0a.2.s)
+///
+/// When the grammar's `@ws` pattern classifies as
+/// [`RegexClass::WhitespaceWithBlockComment`], `skip_space` transparently
+/// also skips `/* ... */` block comments. CSS L4's `@ws` regex
+/// `(?s)(?:\s|\/\*[^*]*(?:\*+[^\/][^*]*)*\*+\/)*` activates this path;
+/// JSON / Sheets / BBNF fall through to the plain ASCII-ws skip.
+/// The dispatch is compile-time — callers never see two APIs.
+pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
     let mod_ident = format_ident!("__shape_support_{}", grammar_suffix);
+    let comment_aware = ws_is_comment_aware(ir);
+    let skip_space_body = if comment_aware {
+        emit_skip_space_comment_aware()
+    } else {
+        emit_skip_space_plain()
+    };
     quote! {
         /// AW-V.W3.2 — per-grammar shape-dispatch support.
         ///
@@ -108,74 +373,7 @@ pub fn emit_support_module(grammar_suffix: &str) -> TokenStream {
                 }
             }
 
-            /// Skip JSON whitespace at `*p`, returning the first
-            /// non-whitespace byte (or `None` on EOF). Hot-path fast-
-            /// exit when the next byte is non-whitespace.
-            #[inline(always)]
-            pub fn skip_space(
-                input: &[u8],
-                p: &mut usize,
-                state: &mut ScanState,
-            ) -> Option<u8> {
-                // Direct boolean form rather than `matches!`: nightly's
-                // `matches!` expansion decorates the inner `match` with
-                // `#[allow(non_exhaustive_omitted_patterns)]` — an
-                // attribute on an expression (unstable, E0658) —
-                // surfaced by the bootstrap's `cargo expand` step.
-                match input.get(*p) {
-                    Some(&b) if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' => Some(b),
-                    None => None,
-                    _ => {
-                        skip_space_slow(input, p, state);
-                        input.get(*p).copied()
-                    }
-                }
-            }
-
-            #[inline(always)]
-            pub(crate) fn skip_space_slow(
-                input: &[u8],
-                p: &mut usize,
-                state: &mut ScanState,
-            ) {
-                loop {
-                    let cache_base = state.nospace_start;
-                    if cache_base >= 0 && (*p as isize) >= cache_base {
-                        let rel = *p - cache_base as usize;
-                        if rel < 64 {
-                            let masked = state.nospace_bits & (!0u64 << rel);
-                            if masked != 0 {
-                                let bit = masked.trailing_zeros() as usize;
-                                *p = cache_base as usize + bit;
-                                return;
-                            }
-                            *p = cache_base as usize + 64;
-                        }
-                    }
-                    if *p + 64 > input.len() {
-                        while let Some(&b) = input.get(*p) {
-                            // Direct boolean form (see `skip_space`).
-                            if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
-                                return;
-                            }
-                            *p += 1;
-                        }
-                        return;
-                    }
-                    let stripe = unsafe {
-                        ::core::slice::from_raw_parts(input.as_ptr().add(*p), 64)
-                    };
-                    let mask = nospace_bitmap_64(stripe);
-                    state.nospace_bits = mask;
-                    state.nospace_start = *p as isize;
-                    if mask != 0 {
-                        let bit = mask.trailing_zeros() as usize;
-                        *p += bit;
-                        return;
-                    }
-                    *p += 64;
-                }
-            }
+            #skip_space_body
 
             /// Compute the 64-bit "non-whitespace" bitmap for a 64-byte
             /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT in
@@ -946,6 +1144,15 @@ pub fn emit_ref_call_tape(
     };
     let target_fn = shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
     let support_mod = support_mod_ident(grammar_suffix);
+    // AX.W0a.2.s — Rules whose body admits whitespace as a leading
+    // byte (CSS `combinator = /\s*>\s*/ | /\s*\+\s*/ | /\s*~\s*/ |
+    // /\s+/`) handle whitespace internally. Pre-skipping at the Ref
+    // call site erases the significant whitespace the rule needs —
+    // `/\s+/` loses its match input and the descendant combinator
+    // silently fails (bootstrap.css offset 8163, tailwind.css deep
+    // selector sites). Suppress pre-skip when the target's leading
+    // byte set includes any ASCII whitespace byte.
+    let pre_skip_needed = !target_rule_accepts_leading_ws(&target.body, ir);
     // AX.W0a.2.g — Keyword's signature gained a `state` parameter so
     // Ref-led Alt branches can delegate via this helper. Number keeps
     // the legacy `(input, p, first, builder)` shape since its body
@@ -969,14 +1176,92 @@ pub fn emit_ref_call_tape(
                 #target_fn(input, p, __first, state, builder)
             }
         },
-        _ => quote! {
+        _ if pre_skip_needed => quote! {
             {
                 let _ = #support_mod::skip_space(input, p, state);
                 #target_fn(input, p, state, builder)
             }
         },
+        _ => quote! {
+            {
+                #target_fn(input, p, state, builder)
+            }
+        },
     };
     Some(expr)
+}
+
+/// Returns `true` if `body` can match an ASCII-whitespace byte as its
+/// first input byte. Used by [`emit_ref_call_tape`] to suppress the
+/// pre-skip ws step when the rule itself handles whitespace (CSS
+/// `combinator`, where `/\s+/` IS a combinator branch).
+///
+/// Walks `Alt`, `OptionalWhitespace`, `Map`, and transparent `Seq` /
+/// `Next` / `Skip` / `Repeat` structures to find the leading node in
+/// each path. `Regex` nodes consult `ir.regex_info[sid].first_chars`;
+/// `Literal` nodes check the first byte; `Ref` nodes recurse once
+/// into the referenced rule.
+fn target_rule_accepts_leading_ws(body: &bbnf_ir::IrNode, ir: &GrammarIR) -> bool {
+    // Conservative recursion bound: `Ref` cycles are possible through
+    // mutual recursion. One-level follow is sufficient for the CSS
+    // `combinator`-shaped case; deeper chains fall back to the
+    // existing pre-skip behaviour.
+    target_rule_accepts_leading_ws_bounded(body, ir, 3)
+}
+
+fn target_rule_accepts_leading_ws_bounded(
+    body: &bbnf_ir::IrNode,
+    ir: &GrammarIR,
+    budget: usize,
+) -> bool {
+    use bbnf_ir::IrNode;
+    if budget == 0 {
+        return false;
+    }
+    match body {
+        IrNode::Literal(sid) => {
+            let bytes = ir.strings[*sid as usize].as_bytes();
+            bytes
+                .first()
+                .map(|&b| matches!(b, b' ' | b'\t' | b'\n' | b'\r' | 0x0C))
+                .unwrap_or(false)
+        }
+        IrNode::Regex(sid) => {
+            if let Some(info) = ir.regex_info.get(sid) {
+                // Check whether any whitespace byte is in the
+                // first-byte set of the pattern.
+                info.first_chars.has(b' ')
+                    || info.first_chars.has(b'\t')
+                    || info.first_chars.has(b'\n')
+                    || info.first_chars.has(b'\r')
+            } else {
+                false
+            }
+        }
+        IrNode::Alt(branches, _) => branches
+            .iter()
+            .any(|b| target_rule_accepts_leading_ws_bounded(&b.node, ir, budget)),
+        IrNode::Seq(children) => children
+            .first()
+            .map(|c| target_rule_accepts_leading_ws_bounded(c, ir, budget))
+            .unwrap_or(false),
+        IrNode::Next(a, _) | IrNode::Skip(a, _) => {
+            target_rule_accepts_leading_ws_bounded(a, ir, budget)
+        }
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+            target_rule_accepts_leading_ws_bounded(inner, ir, budget)
+        }
+        IrNode::Repeat { inner, lo, .. } if *lo > 0 => {
+            target_rule_accepts_leading_ws_bounded(inner, ir, budget)
+        }
+        IrNode::Ref(rid) => {
+            let Some(target) = ir.rules.iter().find(|r| r.id == *rid) else {
+                return false;
+            };
+            target_rule_accepts_leading_ws_bounded(&target.body, ir, budget - 1)
+        }
+        _ => false,
+    }
 }
 
 /// Visitor-path Ref-call emitter: resolves `target_rid`'s shape and

@@ -47,6 +47,64 @@ use super::dispatcher::{
 };
 use super::root_rule_name;
 
+/// Returns true when the Wrap rule's first-byte set includes an
+/// ASCII whitespace byte — i.e. the rule's pattern matches significant
+/// whitespace as its leading input. CSS `combinator` is the canonical
+/// case (`/\s*>\s*/ | … | /\s+/`). When this returns `true` the
+/// Wrap body must NOT pre-skip whitespace: the `/\s+/` branch relies
+/// on the whitespace being present at `*p`. Walks `Alt`, `Regex`,
+/// `Literal`, and transparent structural wrappers via `regex_info`
+/// for the ASCII whitespace set.
+fn wrap_rule_accepts_leading_ws(rule: &IrRule, ir: &GrammarIR) -> bool {
+    accepts_leading_ws_bounded(&rule.body, ir, 3)
+}
+
+fn accepts_leading_ws_bounded(node: &IrNode, ir: &GrammarIR, budget: usize) -> bool {
+    if budget == 0 {
+        return false;
+    }
+    match node {
+        IrNode::Literal(sid) => {
+            let bytes = ir.strings[*sid as usize].as_bytes();
+            bytes
+                .first()
+                .map(|&b| matches!(b, b' ' | b'\t' | b'\n' | b'\r' | 0x0C))
+                .unwrap_or(false)
+        }
+        IrNode::Regex(sid) => {
+            if let Some(info) = ir.regex_info.get(sid) {
+                info.first_chars.has(b' ')
+                    || info.first_chars.has(b'\t')
+                    || info.first_chars.has(b'\n')
+                    || info.first_chars.has(b'\r')
+            } else {
+                false
+            }
+        }
+        IrNode::Alt(branches, _) => branches
+            .iter()
+            .any(|b| accepts_leading_ws_bounded(&b.node, ir, budget)),
+        IrNode::Seq(children) => children
+            .first()
+            .map(|c| accepts_leading_ws_bounded(c, ir, budget))
+            .unwrap_or(false),
+        IrNode::Next(a, _) | IrNode::Skip(a, _) => accepts_leading_ws_bounded(a, ir, budget),
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+            accepts_leading_ws_bounded(inner, ir, budget)
+        }
+        IrNode::Repeat { inner, lo, .. } if *lo > 0 => {
+            accepts_leading_ws_bounded(inner, ir, budget)
+        }
+        IrNode::Ref(rid) => {
+            let Some(target) = ir.rules.iter().find(|r| r.id == *rid) else {
+                return false;
+            };
+            accepts_leading_ws_bounded(&target.body, ir, budget - 1)
+        }
+        _ => false,
+    }
+}
+
 /// AX.W0a.2.q — rule-type-driven leaf-kind selection for Wrap's
 /// typed-payload Alt branches. Mirrors
 /// [`super::keyword::rule_keyword_leaf_kind`]'s policy so the
@@ -252,6 +310,13 @@ fn emit_alt_tape_dispatch(
 ) -> TokenStream {
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let _ = dispatcher_ident; // retained for trait-level compat; not emitted.
+    // AX.W0a.2.s — Wrap rules whose branches accept whitespace as a
+    // leading byte (CSS `combinator = /\s*>\s*/ | /\s*\+\s*/ |
+    // /\s*~\s*/ | /\s+/`) cannot pre-skip at entry — the `/\s+/`
+    // alternative needs the whitespace itself. Peek without advancing
+    // when the rule is ws-leading; the first-byte arm match and the
+    // linear-try branches both work fine on a non-advancing peek.
+    let ws_leading = wrap_rule_accepts_leading_ws(rule, ir);
     // AX.W0a.2.q — rule-type-driven leaf kind; Wrap Alt branches
     // that carry typed `-> Nu8` / `-> bool` payloads push a leaf
     // whose kind matches the Keyword emitter's policy so walker-
@@ -335,14 +400,29 @@ fn emit_alt_tape_dispatch(
         })
         .collect();
 
+    let first_peek = if ws_leading {
+        // Peek without advancing: ws-leading branches need the
+        // whitespace preserved at `*p`.
+        quote! {
+            let first = *input
+                .get(*p)
+                .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                    offset: *p as u32,
+                })?;
+        }
+    } else {
+        quote! {
+            let first = #support_mod::skip_space(input, p, state)
+                .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                    offset: *p as u32,
+                })?;
+        }
+    };
     quote! {
         let __wrap_enter_p = *p as u32;
         let __wrap_enter_child = builder.mark_children();
         let mut __wrap_chosen_meta: u8 = 0;
-        let first = #support_mod::skip_space(input, p, state)
-            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
-                offset: *p as u32,
-            })?;
+        #first_peek
         'try_branches: loop {
             match first {
                 #(#byte_arms)*

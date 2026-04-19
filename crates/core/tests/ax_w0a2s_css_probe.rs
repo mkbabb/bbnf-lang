@@ -124,3 +124,35 @@ fn probe_exact_tailwind_bytes() {
         try_parse(&format!("prefix {n}"), slice);
     }
 }
+
+#[test]
+fn probe_descendant_combinator() {
+    // bootstrap.css offset 8163 fails at `ol ol, ul ul, ...`.
+    eprintln!("=== descendant combinator ===");
+    try_parse("single type selector", "ol { margin: 0; }");
+    try_parse("empty rule", "a {}");
+    try_parse("single type + decl", "a { color: red; }");
+    try_parse("type then space then type", "ol ol");
+    try_parse("type + space + type + brace", "ol ol {");
+    try_parse("type + space + type + empty", "ol ol {}");
+    try_parse("single rule w/ descendant", "ol ol { margin: 0; }");
+    try_parse("compound, compound", "ol ol, ul ul { margin: 0; }");
+    try_parse(
+        "4-way selector list",
+        "ol ol, ul ul, ol ul, ul ol { margin-bottom: 0; }",
+    );
+}
+
+#[test]
+fn probe_attribute_selector_single_quote() {
+    // tailwind.css offset 3236 fails at `button, [type='button'], ...`.
+    eprintln!("=== attribute selector with single quotes ===");
+    try_parse("attr no quotes", "[type=button] {}");
+    try_parse("attr double-quote", "[type=\"button\"] {}");
+    try_parse("attr single-quote", "[type='button'] {}");
+    try_parse("attr empty value", "[type=''] {}");
+    try_parse(
+        "4-way single-quote list",
+        "button,\n[type='button'],\n[type='reset'],\n[type='submit'] {}",
+    );
+}

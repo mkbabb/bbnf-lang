@@ -261,7 +261,7 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
         return quote! {};
     }
 
-    let support = dispatcher::emit_support_module(&grammar_suffix);
+    let support = dispatcher::emit_support_module(&grammar_suffix, ir);
     let dispatcher_fn = dispatcher::emit_dispatcher(&grammar_suffix, ir);
     let visitor_dispatcher_fn = if emit_visitor_path {
         dispatcher::emit_visitor_dispatcher(&grammar_suffix, ir)

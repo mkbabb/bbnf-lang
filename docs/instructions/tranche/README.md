@@ -17,6 +17,9 @@ Normative documents for tranche authoring and execution. Composes
 - [WAVE_SPEC.md](WAVE_SPEC.md) — Per-wave sub-document format.
   Required when a tranche has ≥ 6 waves OR ≥ 4 parallel agents in any
   wave; then each wave carries its own `waves/W<N>.md` spec.
+- [AGENT_BRIEF_TEMPLATE.md](AGENT_BRIEF_TEMPLATE.md) — Sub-agent
+  prompt boilerplate. Orchestrator substitutes bracketed fields per
+  wave; each per-wave dispatch shrinks by ~50% vs re-derived prose.
 
 ## Invocation order
 

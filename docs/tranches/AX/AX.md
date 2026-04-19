@@ -56,7 +56,7 @@ Nineteen waves. Each row links to its spec document. Block A is correctness + AP
 | Wave | Spec | Headline | Opens after |
 |------|------|----------|-------------|
 | **W0a** | [waves/W0a.md](waves/W0a.md) | Gate repair + non-Alt-rooted `parse()` routing + `gate_predicate_wire_contract.rs` (closes with W0a.2.h shape-emission pivot) | AW-V.W6 |
-| **W0a.close** | *(authoring deferred to restart — see `audit/R4-plan-redress.md` §P6)* | Pre-W0b 17-entry bench baseline (`docs/benchmarks/post-AX-W0a-close.json`) — attribution anchor for every downstream wave | W0a |
+| **W0a.close** | [waves/W0a.close.md](waves/W0a.close.md) | Pre-W0b 17-entry bench baseline (`docs/benchmarks/post-AX-W0a-close.json`) — attribution anchor for every downstream wave | W0a |
 | **W0b** | [waves/W0b.md](waves/W0b.md) | Interpreter deletion + substrate-without-consumer purge + crate renames; `tape_parity_*.rs` retire (walker scaffold; semantic `*_parity.rs` survive) | W0a.close |
 | **W0c** | [waves/W0c.md](waves/W0c.md) | AW-V.md rewrite in RD language | W0b |
 | **W1** | [waves/W1.md](waves/W1.md) | Value API + hybrid tape + named_types BINDINGS widening (L8) | W0c |

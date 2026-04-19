@@ -198,11 +198,22 @@ Seven surgical edits to `README.md` and `SPEC.md`:
 7. `SPEC.md §Runtime-evidence` — pre-regen vs post-regen evidence
    distinction; gate authors state explicitly.
 
-Deferred to restart:
-- `AGENT_BRIEF_TEMPLATE.md` (~60-line template; halves per-
-  dispatch prose).
-- Walker-parity-as-snapshot-oracle edict — invariant 20 already
-  encodes this in AX.md.
+Landed in this session:
+- `docs/instructions/tranche/AGENT_BRIEF_TEMPLATE.md` — reusable
+  sub-agent prompt template; cuts per-dispatch prose ~50%.
+- Walker-parity-as-snapshot-oracle edict — lives as AX.md
+  invariant 20 (R4 P7); no separate `ORACLE.md` needed.
+- `docs/tranches/AX/waves/W0a.close.md` — bench-baseline wave
+  spec per WAVE_SPEC.md format.
+
+Genuinely deferred (legitimate scope):
+- sccache rollout — needs installer + measurement; post-AX.
+- `serialize_roundtrip.rs` + `grammar_profile_wire_contract.rs` +
+  `gate_predicate_wire_contract.rs` splits — emitter-adjacent;
+  W0b follow-on.
+- `bootstrap-bbnf.sh` delta regen — proc-macro cache-key work.
+- `cargo expand` content-hash caching — W13 tooling sweep.
+- Hard-gate floor-check tooling (R2 P3) — W13/W14 tooling sweep.
 
 ## The next wave — AX.W0a.2.i
 

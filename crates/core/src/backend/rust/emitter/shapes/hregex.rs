@@ -41,7 +41,7 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::dta_walker::regex_scan_adapter_ident;
+use super::super::dfa_codegen::regex_scan_adapter_ident;
 use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
 use super::sanitise_grammar;
 

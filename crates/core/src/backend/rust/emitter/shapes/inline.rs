@@ -77,7 +77,7 @@ use bbnf_ir::{AltBranch, GrammarIR, IrNode};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::super::dta_walker::regex_scan_adapter_ident;
+use super::super::dfa_codegen::regex_scan_adapter_ident;
 use super::dispatcher::emit_ref_call_tape;
 use super::sanitise_grammar;
 

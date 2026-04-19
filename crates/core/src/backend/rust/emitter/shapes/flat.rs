@@ -921,7 +921,7 @@ fn emit_map_regex_host_fn(
     let pattern = ir.get_string(*sid).to_string();
     let fd = ir.fns.get(fn_id as usize)?;
     let regex_scan_ident =
-        super::super::dta_walker::regex_scan_adapter_ident(&super::sanitise_grammar(grammar_suffix));
+        super::super::dfa_codegen::regex_scan_adapter_ident(&super::sanitise_grammar(grammar_suffix));
     // Owner-rule type decides KvPair-vs-Span on the pushed leaf. A
     // rule whose inferred type is `Tuple([Span, scalar])` is KvPair-
     // shaped per `is_kv_pair_shape`; the walker rewrites such Seq

@@ -532,7 +532,7 @@ fn emit_wrap_branch_call_tape(
             // 1)`) saw nothing, and the rule's `-> Nu8` discriminant
             // never reached the tape.
             let pattern = ir.get_string(*sid).to_string();
-            let regex_scan_ident = super::super::dta_walker::regex_scan_adapter_ident(
+            let regex_scan_ident = super::super::dfa_codegen::regex_scan_adapter_ident(
                 &super::sanitise_grammar(grammar_suffix),
             );
             let typed_payload = alt_branch_payload_value_for_wrap(branch, ir);

@@ -657,7 +657,7 @@ fn emit_regex_pattern_attempt(
     ir: &GrammarIR,
 ) -> TokenStream {
     let pattern = ir.get_string(sid).to_string();
-    let regex_scan_ident = super::super::dta_walker::regex_scan_adapter_ident(
+    let regex_scan_ident = super::super::dfa_codegen::regex_scan_adapter_ident(
         &super::sanitise_grammar(grammar_suffix),
     );
     quote! {

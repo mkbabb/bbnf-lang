@@ -338,8 +338,22 @@ fn iter_iteration_pairs<'a>(
     iter_rep_children(node).filter_map(|pair| {
         // Peel an explicit Seq wrapper around `(content, optional_sep)` —
         // the legacy shape before structural-mode emission flattened it.
+        //
+        // AX.W0a.2.o exception: under shape-authoritative Pratt emission
+        // the concatenation-iteration Seq wrapper's `children()` sib-skip
+        // walk can leak the tail-reducer's three direct children
+        // `[lhs, op_leaf, rhs]` past the binary_factor outer compound,
+        // leaving the wrapper presenting a flat Pratt layout rather than
+        // a single-content-child `(content, optional_sep)` shape. Peeling
+        // `child(0)` in that case discards `op_leaf` and `rhs` — the
+        // `<<` / `>>` / `-` operator + trailing operand — and
+        // `lower_binary_factor` reconstructs only the leading portion of
+        // the chain. Detect the leak via [`looks_like_pratt_flat`] and
+        // hand the WRAPPER down untouched; `dispatch_expression` then
+        // routes it through `lower_binary_factor` which processes the
+        // wrapper as a virtual tail reducer.
         let candidate = match pair.kind() {
-            TapeKind::Seq => pair.child(0)?,
+            TapeKind::Seq if !looks_like_pratt_flat(pair) => pair.child(0)?,
             _ => pair,
         };
         // Reject separator / whitespace placeholder compounds that sit
@@ -631,41 +645,57 @@ fn collect_pratt_reducer_chain<'a>(
     //      children, the tail reducer arrives as `outer` here.
     //
     //  (c) `outer` is a concatenation-iteration wrapper whose own
-    //      `children()` surfaces `[reducer, op_leaf, RHS]` flat (the
-    //      tail reducer's children rather than the binary_factor
-    //      compound). The first child is a reducer that already carries
-    //      the full chain; treat it as case (b).
+    //      `children()` surfaces `[lhs, op_leaf, rhs]` directly — the
+    //      tail reducer's three children rather than the tail reducer
+    //      compound itself. AX.W0a.2.o: treat `outer` AS IF it were
+    //      the tail reducer — process these 3 children as the
+    //      tail-level `[lhs, op_leaf, rhs]` triple and recurse on `lhs`
+    //      for any deeper reducers.
     //
-    // All three paths converge on "find the tail reducer, walk its
-    // LHS chain backward". Case (a) vs (b/c) is discriminated by whether
-    // the outer itself is a reducer (is_pratt_reducer): case (a)'s outer
-    // is the binary_factor compound (variant_idx == 34 → rule_kind ==
-    // binary_factor, not in the {0,1,2} op_discriminant space);
-    // case (b)'s outer IS a reducer. Case (c) needs to peek at the
-    // first child: if it's a reducer we treat the outer as a wrapper
-    // whose first child is the tail reducer.
+    // Case (a) vs (b) vs (c) is discriminated by inspecting (outer,
+    // outer.children()): outer-is-reducer → (b), outer has exactly one
+    // reducer child → (a), outer has a 3-element `[X, op_leaf, Y]`
+    // sequence → (c). Cases (a) and (b) converge on walking a single
+    // tail reducer; case (c) starts the walk at `outer` as the virtual
+    // tail reducer.
     let tail_reducer = if is_pratt_reducer(outer) {
         // Case (b): outer IS the tail reducer.
         outer
     } else {
         let mut iter = outer.children();
         let first = iter.next()?;
-        if is_pratt_reducer(first) {
-            // Case (a) when `first` is the ONLY child (standard
-            // binary_factor compound), OR case (c) when `first` is the
-            // tail reducer surfaced by the wrapper's buggy sib-skip
-            // walk past the binary_factor outer. In either case, first
-            // is the reducer that roots the chain.
+        let second = iter.next();
+        let third = iter.next();
+        let fourth = iter.next();
+
+        if second.is_none() && fourth.is_none() && is_pratt_reducer(first) {
+            // Case (a): outer has exactly ONE direct child (the tail
+            // reducer). Walk starts from `first`.
             first
+        } else if fourth.is_none() {
+            // Case (c): outer has three children `[lhs, op_leaf, rhs]`
+            // surfaced by the wrapper's sib-skip leak past the outer
+            // binary_factor compound. Confirm shape: middle is an
+            // op-leaf (Span, variant_idx 0, fixed-alphabet span), and
+            // `first` / `third` are present. Treat `outer` as the
+            // virtual tail reducer and walk from here — `is_pratt_
+            // reducer(first)` decides whether the chain continues up
+            // or terminates at `first` as the initial operand.
+            let op_leaf = second?;
+            let _rhs = third?;
+            if !op_leaf_has_pratt_shape(op_leaf) {
+                return None;
+            }
+            outer
         } else {
             return None;
         }
     };
 
-    // Walk the chain: each reducer contributes `[op_leaf, RHS]`;
-    // after the chain, the deepest reducer's LHS is the initial
-    // operand. Push in reverse order (tail reducer's RHS first) then
-    // reverse at the end.
+    // Walk the chain: each reducer (or virtual tail in Case c)
+    // contributes `[op_leaf, RHS]`; after the chain, the deepest
+    // reducer's LHS is the initial operand. Push in reverse order
+    // (tail reducer's RHS first) then reverse at the end.
     let mut reversed: Vec<BbnfBootstrapNodeView<'a>> = Vec::new();
     let mut current = tail_reducer;
     loop {
@@ -688,6 +718,24 @@ fn collect_pratt_reducer_chain<'a>(
     }
     reversed.reverse();
     Some(reversed)
+}
+
+/// Shape check: `view` is a Pratt op-leaf — a `TapeKind::Span` record
+/// with `variant_idx == 0` whose trimmed span text is one of the fixed
+/// binary_operators tokens (`<<` / `>>` / `-`).
+///
+/// Used by [`collect_pratt_reducer_chain`] to confirm that Case (c)'s
+/// middle-child position carries an op-leaf before treating the
+/// surrounding wrapper as a virtual tail reducer.
+fn op_leaf_has_pratt_shape<'a>(view: BbnfBootstrapNodeView<'a>) -> bool {
+    use ::bbnf::runtime::tape::TapeKind;
+    if view.kind() != TapeKind::Span {
+        return false;
+    }
+    if view.variant_idx() != 0u8 {
+        return false;
+    }
+    matches!(view.span_text().trim(), "<<" | ">>" | "-")
 }
 
 /// Structural check: `view` matches the shape of a Pratt reducer

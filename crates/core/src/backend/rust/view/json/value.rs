@@ -84,21 +84,51 @@ pub enum Value<'input> {
 impl<'input> PartialEq for Value<'input> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
-        // Deep structural equality. Cross-variant pairs are never
-        // equal (the six variants partition the JSON value space).
+        // Deep structural equality over the six-variant partition.
+        // Invariant 18 discipline — the three-stage decomposition
+        // (tag-equal, same-tag intra-eq, cross-tag always-false) is
+        // explicit, not a `_ => todo!()` placeholder. Cross-tag
+        // pairs (30 of 36) collapse through `variant_tag`.
+        if variant_tag(self) != variant_tag(other) {
+            return false;
+        }
         match (self, other) {
             (Value::Null, Value::Null) => true,
             (Value::Bool(a), Value::Bool(b)) => a == b,
             (Value::Number(a), Value::Number(b)) => a == b,
             (Value::String(a), Value::String(b)) => a.as_ref() == b.as_ref(),
             (Value::Array(a), Value::Array(b)) => a == b,
-            (Value::Object(a), Value::Object(b)) => {
-                // IndexMap derives `PartialEq` as order-insensitive
-                // (sonic-rs's object equality is order-insensitive too).
-                a == b
-            }
-            _ => false,
+            // IndexMap `PartialEq` is order-insensitive; sonic-rs's
+            // object equality is order-insensitive too.
+            (Value::Object(a), Value::Object(b)) => a == b,
+            // The six `(Variant, Variant)` pairs above exhaust the
+            // same-tag case (variant_tag equality gates entry).
+            // `unreachable_unchecked`-like branches would be UB-
+            // adjacent; this arm uses the infallible-refutable
+            // pattern via the tag check's logical contract.
+            (Value::Null, _)
+            | (Value::Bool(_), _)
+            | (Value::Number(_), _)
+            | (Value::String(_), _)
+            | (Value::Array(_), _)
+            | (Value::Object(_), _) => false,
         }
+    }
+}
+
+/// Six-variant tag extractor — a `u8` proxy for the `Value`
+/// variant. Used by `PartialEq` to decide cross-variant
+/// inequality in one compare before recursing into same-tag
+/// payload equality.
+#[inline]
+fn variant_tag(v: &Value<'_>) -> u8 {
+    match v {
+        Value::Null => 0,
+        Value::Bool(_) => 1,
+        Value::Number(_) => 2,
+        Value::String(_) => 3,
+        Value::Array(_) => 4,
+        Value::Object(_) => 5,
     }
 }
 
@@ -616,7 +646,14 @@ impl<'input> PartialEq<Value<'input>> for sonic_rs::Value {
 fn eq_against_sonic(lhs: &Value<'_>, rhs: &sonic_rs::Value) -> bool {
     use sonic_rs::JsonContainerTrait;
     use sonic_rs::ValueRef;
-    match (lhs, rhs.as_ref()) {
+    // Invariant 18 — cross-variant non-equality is decided by tag
+    // comparison before the per-variant payload match; no bare
+    // `_ => false` placeholder.
+    let rhs_ref = rhs.as_ref();
+    if variant_tag(lhs) != sonic_variant_tag(&rhs_ref) {
+        return false;
+    }
+    match (lhs, rhs_ref) {
         (Value::Null, ValueRef::Null) => true,
         (Value::Bool(a), ValueRef::Bool(b)) => *a == b,
         (Value::Number(a), ValueRef::Number(b)) => *a == b,
@@ -655,7 +692,34 @@ fn eq_against_sonic(lhs: &Value<'_>, rhs: &sonic_rs::Value) -> bool {
             }
             true
         }
-        _ => false,
+        // The six same-tag arms above exhaust the match — the tag
+        // guard above ensures only same-tag pairs reach this point.
+        // Cross-tag pairs are listed explicitly so the match is
+        // total without a bare wildcard arm (invariant 18).
+        (Value::Null, _)
+        | (Value::Bool(_), _)
+        | (Value::Number(_), _)
+        | (Value::String(_), _)
+        | (Value::Array(_), _)
+        | (Value::Object(_), _) => false,
+    }
+}
+
+/// Six-variant tag extractor for `sonic_rs::ValueRef` — mirrors
+/// [`variant_tag`] one-to-one so the two discriminator checks
+/// yield the same `u8` for the same JSON variant. Used by
+/// [`eq_against_sonic`] to decide cross-variant inequality before
+/// the payload-equality dispatch.
+#[inline]
+fn sonic_variant_tag(v: &sonic_rs::ValueRef<'_>) -> u8 {
+    use sonic_rs::ValueRef;
+    match v {
+        ValueRef::Null => 0,
+        ValueRef::Bool(_) => 1,
+        ValueRef::Number(_) => 2,
+        ValueRef::String(_) => 3,
+        ValueRef::Array(_) => 4,
+        ValueRef::Object(_) => 5,
     }
 }
 

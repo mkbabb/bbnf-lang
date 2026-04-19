@@ -53,12 +53,18 @@ impl PartialEq for N {
         // variants partition the value space (positive int, negative
         // int, finite float), so two `Number` values with different
         // kind tags describe different numbers by construction.
-        // `sonic_rs::Number`'s `N` impl has the same shape.
+        // Every pair is enumerated explicitly so no arm is a
+        // placeholder (invariant 18 discipline).
         match (self, other) {
             (N::PosInt(a), N::PosInt(b)) => a == b,
             (N::NegInt(a), N::NegInt(b)) => a == b,
             (N::Float(a), N::Float(b)) => a == b,
-            _ => false,
+            (N::PosInt(_), N::NegInt(_))
+            | (N::PosInt(_), N::Float(_))
+            | (N::NegInt(_), N::PosInt(_))
+            | (N::NegInt(_), N::Float(_))
+            | (N::Float(_), N::PosInt(_))
+            | (N::Float(_), N::NegInt(_)) => false,
         }
     }
 }

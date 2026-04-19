@@ -103,7 +103,18 @@ pub(super) fn emit_inline_position_tape(
     ir: &GrammarIR,
 ) -> TokenStream {
     match node {
-        IrNode::Alt(branches, _) => {
+        // AX.W0a.2.g — walker-parity split. The IR's `Alt(branches,
+        // Some(AltDispatch))` variant lowers to `IrState::ByteDispatch`
+        // in the walker, which transitions to the chosen branch WITHOUT
+        // pushing an Alt compound — the branch's own records are the
+        // only tape emission. Inline emission must match: no Alt
+        // compound push when a dispatch table is present. The
+        // `AltLinear` variant (no dispatch table) continues to push
+        // the Alt compound to preserve its walker parity.
+        IrNode::Alt(branches, Some(_)) => emit_alt_byte_dispatch_tape(
+            branches, support_mod, grammar_suffix, ir,
+        ),
+        IrNode::Alt(branches, None) => {
             emit_alt_tape(branches, variant_idx, support_mod, grammar_suffix, ir)
         }
         IrNode::Regex(sid) => emit_regex_tape(*sid, variant_idx, grammar_suffix, ir),
@@ -125,6 +136,81 @@ pub(super) fn emit_inline_position_tape(
              {:?}",
             std::mem::discriminant(node),
         ),
+    }
+}
+
+/// AX.W0a.2.g — walker-parity `ByteDispatch` emission for inline Alts
+/// carrying a dispatch table. Transitions to the chosen branch without
+/// pushing an Alt compound.
+///
+/// Matches the walker's `emit_byte_dispatch_arm` contract: on each
+/// branch attempt, rollback `*p` and truncate columns on failure so
+/// a partial push from an inner shape fn's fallible parse doesn't
+/// leak into the next attempt.
+fn emit_alt_byte_dispatch_tape(
+    branches: &[AltBranch],
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let mut enumerated: Vec<(Vec<u8>, TokenStream)> = Vec::with_capacity(branches.len());
+    for branch in branches {
+        let first_bytes = branch_first_bytes(&branch.node, ir);
+        let body = emit_alt_branch_body_tape(&branch.node, grammar_suffix, ir);
+        enumerated.push((first_bytes, body));
+    }
+
+    let mut per_byte_arms: std::collections::BTreeMap<u8, Vec<TokenStream>> =
+        Default::default();
+    let mut fallback_arms: Vec<TokenStream> = Vec::new();
+
+    for (first_bytes, body) in &enumerated {
+        if first_bytes.is_empty() || first_bytes.len() > 16 {
+            fallback_arms.push(body.clone());
+        } else {
+            for &b in first_bytes {
+                per_byte_arms.entry(b).or_default().push(body.clone());
+            }
+        }
+    }
+
+    let byte_arms: Vec<TokenStream> = per_byte_arms
+        .into_iter()
+        .map(|(byte, bodies)| {
+            let byte_lit = byte;
+            quote! {
+                #byte_lit => {
+                    #(#bodies)*
+                }
+            }
+        })
+        .collect();
+
+    quote! {
+        {
+            // AX.W0a.2.g — ByteDispatch-style inline Alt position. No
+            // Alt compound push (walker parity: ByteDispatch only
+            // transitions to the chosen branch, leaving tape emission
+            // to the branch body itself).
+            let first = #support_mod::skip_space(input, p, state)
+                .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                    offset: *p as u32,
+                })?;
+            'try_branches: loop {
+                match first {
+                    #(#byte_arms)*
+                    _ => {}
+                }
+                #(#fallback_arms)*
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    },
+                );
+            }
+        }
     }
 }
 

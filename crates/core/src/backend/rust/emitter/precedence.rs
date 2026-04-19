@@ -100,121 +100,43 @@ pub fn emit_precedence_lut(
     let count_ident = format_ident!("PRECEDENCE_OPERATOR_COUNT");
     let _ = grammar; // reserved for future prefix-based disambiguation.
 
-    // AX.W0a.2.k — aggregate LUT (union across rules) drives the
-    // walker-path's cold-path ShuntingYard arm. Per-rule LUTs (see
-    // below) drive the shape-emission `parse_pratt_<rule>` bodies.
-    // Both emissions live side-by-side until the walker retires
-    // (W0b); same mined facts, distinct scoping.
-    //
-    // Aggregate: preserve byte-disjointness across rules. When two
-    // rules claim the same first byte (BBNF `||` in value_or vs no
-    // conflict in binary_factor), later rules in iteration order lose
-    // to earlier. Iteration order is stable (miner's source-1 first,
-    // then source-2 in rule-id order).
-    let mut packed_agg: [u8; 256] = [0u8; 256];
-    let mut entries_agg: Vec<&OperatorChainEntry> = Vec::new();
-    let mut seen_bytes: [bool; 256] = [false; 256];
-    for rule in &facts.rules {
-        for entry in &rule.entries {
-            if seen_bytes[entry.byte as usize] {
-                continue;
-            }
-            seen_bytes[entry.byte as usize] = true;
-            packed_agg[entry.byte as usize] = pack_lut_byte(entry);
-            entries_agg.push(entry);
-        }
+    // Pack the 256-entry byte array. Every byte not claimed by a
+    // mined operator stays 0 — the Pratt loop reads 0 as "not an
+    // operator" and exits.
+    let mut packed: [u8; 256] = [0u8; 256];
+    for entry in &facts.entries {
+        packed[entry.byte as usize] = pack_lut_byte(entry);
     }
-    let agg_lut_bytes: Vec<TokenStream> =
-        packed_agg.iter().map(|b| quote! { #b }).collect();
-    let agg_entry_literals: Vec<TokenStream> =
-        entries_agg.iter().copied().map(entry_literal).collect();
-    let agg_count = entries_agg.len();
+    let lut_bytes: Vec<TokenStream> =
+        packed.iter().map(|b| quote! { #b }).collect();
 
-    // Per-rule constants — one `PRECEDENCE_LUT_<rule>` +
-    // `PRECEDENCE_ENTRIES_<rule>` per Pratt-classified rule. Each
-    // LUT contains ONLY that rule's operators, preserving per-rule
-    // byte-alphabet isolation. `parse_pratt_<rule>` bodies reference
-    // their own constants.
-    let per_rule_blocks: Vec<TokenStream> = facts
-        .rules
-        .iter()
-        .map(|rule_entry| {
-            let rule_name = rule_entry.rule_name.as_str();
-            let rule_lut = format_ident!("PRECEDENCE_LUT_{}", rule_name);
-            let rule_entries_ident = format_ident!(
-                "PRECEDENCE_ENTRIES_{}",
-                rule_name
-            );
-            let rule_count_ident = format_ident!(
-                "PRECEDENCE_OPERATOR_COUNT_{}",
-                rule_name
-            );
-            let mut packed: [u8; 256] = [0u8; 256];
-            for entry in &rule_entry.entries {
-                packed[entry.byte as usize] = pack_lut_byte(entry);
-            }
-            let lut_bytes: Vec<TokenStream> =
-                packed.iter().map(|b| quote! { #b }).collect();
-            let entry_literals: Vec<TokenStream> =
-                rule_entry.entries.iter().map(entry_literal).collect();
-            let entry_count = rule_entry.entries.len();
-            quote! {
-                /// AX.W0a.2.k — per-rule Pratt precedence LUT.
-                ///
-                /// One byte per dispatch byte. The emitted
-                /// `parse_pratt_<rule>` body references this constant
-                /// (not the grammar-wide aggregate) so each Pratt
-                /// rule has its own scoped operator alphabet —
-                /// preventing cross-rule byte collisions (e.g.
-                /// `||` in `value_or` vs `<<` in `binary_factor`).
-                #[allow(non_upper_case_globals)]
-                pub const #rule_lut: [u8; 256] = [
-                    #(#lut_bytes),*
-                ];
-
-                /// AX.W0a.2.k — per-rule sparse Pratt metadata.
-                ///
-                /// Consulted by the rule's Pratt body when
-                /// `PRECEDENCE_LUT_<rule>[byte] & 0x80 != 0`.
-                #[allow(non_upper_case_globals)]
-                pub const #rule_entries_ident:
-                    &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-                    #(#entry_literals),*
-                ];
-
-                /// AX.W0a.2.k — per-rule operator count.
-                #[allow(non_upper_case_globals)]
-                pub const #rule_count_ident: usize = #entry_count;
-            }
-        })
-        .collect();
+    let entry_literals: Vec<TokenStream> =
+        facts.entries.iter().map(entry_literal).collect();
+    let entry_count = facts.entries.len();
 
     quote! {
-        /// AW-III.W6.5 — dense Pratt precedence LUT (aggregate).
+        /// AW-III.W6.5 — dense Pratt precedence LUT.
         ///
-        /// One byte per dispatch byte, spanning every Pratt rule in
-        /// the grammar. Consulted by the DTA walker's cold-path
-        /// `ShuntingYard` arm; superseded for shape-emission Pratt
-        /// bodies by the per-rule `PRECEDENCE_LUT_<rule>` constants
-        /// below (AX.W0a.2.k). See `bbnf::backend::rust::emitter::
+        /// One byte per dispatch byte. Consulted by the DTA driver's
+        /// `ShuntingYard` arm. See `bbnf::backend::rust::emitter::
         /// precedence` for the bit layout.
         pub const #lut_ident: [u8; 256] = [
-            #(#agg_lut_bytes),*
+            #(#lut_bytes),*
         ];
 
-        /// AW-III.W6.5 — aggregate sparse Pratt metadata slice.
+        /// AW-III.W6.5 — sparse Pratt metadata slice.
         ///
-        /// Walker-path companion to [`PRECEDENCE_LUT`]. Per-rule
-        /// emitters use `PRECEDENCE_ENTRIES_<rule>` instead.
+        /// One entry per mined operator. Consulted by the DTA
+        /// driver when `PRECEDENCE_LUT[byte] & 0x80 != 0` (two-byte
+        /// operator) to resolve the second byte + discriminant.
         pub const #entries_ident:
             &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-            #(#agg_entry_literals),*
+            #(#entry_literals),*
         ];
 
-        /// AW-III.W6.5 — total mined operator count (aggregate).
-        pub const #count_ident: usize = #agg_count;
-
-        #(#per_rule_blocks)*
+        /// AW-III.W6.5 — total mined operator count for this
+        /// grammar. Non-zero iff the lift admitted ≥ 1 chain.
+        pub const #count_ident: usize = #entry_count;
     }
 }
 

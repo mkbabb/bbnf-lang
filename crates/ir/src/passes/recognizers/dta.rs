@@ -1053,7 +1053,7 @@ fn collect_precedence_chain(ir: &GrammarIR, rule: &IrRule) -> Option<PrecedenceC
 /// The owning rule's id is used as the `op_rule` reference so the
 /// emitter can thread variant_idx through without a secondary rule
 /// allocation.
-pub(super) fn match_operator_chain_rule(
+fn match_operator_chain_rule(
     ir: &GrammarIR,
     rule: &IrRule,
 ) -> Option<(RuleId, Vec<PrecedenceEntry>, IrNode)> {

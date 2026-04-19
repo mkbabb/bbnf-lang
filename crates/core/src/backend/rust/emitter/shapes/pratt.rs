@@ -72,12 +72,6 @@ pub fn emit_parse_pratt(
     let fn_ident = shape_fn_ident("pratt", grammar_suffix, rule_name);
     let variant_idx = (rule.id & 0xFF) as u8;
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
-    // AX.W0a.2.k — per-rule Pratt LUT. Each rule's Pratt body
-    // consults its own `PRECEDENCE_LUT_<rule>` so cross-rule byte
-    // collisions (BBNF: `||` in `value_or` vs `<<` in `binary_factor`)
-    // don't leak into one another's dispatch.
-    let rule_lut_ident = format_ident!("PRECEDENCE_LUT_{}", rule_name);
-    let rule_entries_ident = format_ident!("PRECEDENCE_ENTRIES_{}", rule_name);
 
     // The per-grammar value-position dispatcher — the operand
     // parses recurse through this so nested calls, parens, numbers,
@@ -185,67 +179,86 @@ pub fn emit_parse_pratt(
             }
 
             // ── Outer Pratt compound ────────────────────────────────
-            //
-            // AX.W0a.2.k — shape-emission-authoritative Pratt tape
-            // layout. The outer compound reserves a children run; the
-            // body emits a FLAT linear sequence `[operand, op_leaf,
-            // operand, op_leaf, ...]`. No reducer compounds — the
-            // walker-era shunting-yard reducer tree is preserved at
-            // PARSE TIME (via the op_stack loop below) for syntactic
-            // admission (correctly rejects malformed operator chains)
-            // but not materialised on the tape. The downstream
-            // `lower_binary_factor` consumer reconstructs the
-            // precedence tree from the flat stream + the
-            // per-rule `PRECEDENCE_LUT_<rule>` metadata.
-            //
-            // The reducer compound approach used walker-era
-            // `variant_idx = op_discriminant` stamping, which
-            // conflicts with `rule_kind()` dispatch in the lowering
-            // (variant_idx 0 reports as `int_lit` kind rather than
-            // `binary_operators`). Flat linear emission restores
-            // consumer parity with the pre-Pratt Flat shape.
             let _ = #support_mod::skip_space(input, p, state);
             let outer_span_lo = *p as u32;
             let outer_child_mark = builder.mark_children();
+            let outer_child_mark_idx: u32 = outer_child_mark.0;
 
             // ── Leftmost operand ────────────────────────────────────
+            // The operand root is the first record the dispatcher
+            // emits; track it so the reducer's first reduce points
+            // back at the correct LHS. Initial value = child_mark
+            // (= index of the first child after the outer compound's
+            // reserved slot — the operand's root record lands here).
+            let mut this_operand_root: u32 = outer_child_mark_idx;
             // AW-V.W5.2 — per-Ref operand call.
             #operand_call
+            // The dispatcher returns the operand's root TapeOffset;
+            // the walker's SY arm uses the child_mark directly (the
+            // first-child position) rather than the dispatcher's
+            // return value because the DTA driver's frame marker sits
+            // at child_mark. Preserve that invariant here.
             let _ = _operand_off;
 
             // ── Op stack ────────────────────────────────────────────
             // Inline `Vec` bounded by the grammar's precedence-chain
-            // depth. Typical Pratt towers have ≤ 6 rungs.
+            // depth. Typical Pratt towers have ≤ 6 rungs (Sheets, CSS
+            // math); a small-capacity heap Vec avoids the bench
+            // pressure of a SmallVec dep while keeping allocation
+            // amortised across parses.
             let mut op_stack: ::std::vec::Vec<LocalOpEntry> =
                 ::std::vec::Vec::with_capacity(4);
 
-            // ── Operator loop ───────────────────────────────────────
-            //
-            // Emits op leaves + RHS operands flatly; drains the
-            // op_stack at end-of-chain without emitting reducer
-            // compounds (see §Outer Pratt compound above).
+            // ── Reducer loop ────────────────────────────────────────
             loop {
-                // AX.W0a.2.k — skip trivia before peeking the next
-                // operator. The grammar's `(op ?w , operand)` allows
-                // whitespace between an operand and the subsequent
-                // operator; without skip_space the LUT lookup on the
-                // whitespace byte terminates the loop prematurely.
-                let _ = #support_mod::skip_space(input, p, state);
-                // AX.W0a.2.k — peek next byte; consult per-rule LUT.
+                // Peek next byte; consult PRECEDENCE_LUT.
                 let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-                let lut_byte: u8 = #rule_lut_ident[op_byte as usize];
+                let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
+                let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
+                    ::core::option::Option::None
+                } else {
+                    ::core::option::Option::Some(lut_byte & 0x0Fu8)
+                };
 
-                // Not an operator — drain op_stack (no-op under flat
-                // emission; preserved so op_stack parity is explicit)
-                // and exit.
+                // Reduce op-stack entries whose precedence > new_prec
+                // (or ties + left-assoc). On EOF-op (new_prec = None)
+                // reduce all remaining entries.
+                loop {
+                    let top_op = match op_stack.last() {
+                        ::core::option::Option::Some(e) => e,
+                        ::core::option::Option::None => break,
+                    };
+                    let should_reduce = match new_prec {
+                        ::core::option::Option::None => true,
+                        ::core::option::Option::Some(p_new) => {
+                            top_op.precedence > p_new
+                                || (top_op.precedence == p_new
+                                    && top_op.associativity_is_left)
+                        }
+                    };
+                    if !should_reduce {
+                        break;
+                    }
+                    let top_op = op_stack.pop().unwrap();
+                    let compound_idx = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
+                        top_op.lhs_span_lo,
+                        *p as u32,
+                        top_op.op_discriminant,
+                        0,
+                    );
+                    this_operand_root = compound_idx.0;
+                }
+
+                // If no new op: outer compound closes.
                 if lut_byte == 0 {
-                    while op_stack.pop().is_some() {}
                     break;
                 }
 
                 // Push-op path: unpack LUT byte's (prec, assoc,
                 // two_byte) + resolve (op_rule, op_discriminant) from
-                // the per-rule PRECEDENCE_ENTRIES_<rule> slice.
+                // PRECEDENCE_ENTRIES.
                 let precedence: u8 = lut_byte & 0x0Fu8;
                 let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
                 let associativity_is_left: bool = assoc_bit == 0;
@@ -253,126 +266,94 @@ pub fn emit_parse_pratt(
 
                 let second_byte: ::core::option::Option<u8> =
                     input.get(*p + 1).copied();
-                let (op_width, op_discriminant, found_entry) = if two_byte == 0 {
+                let (op_width, op_discriminant) = if two_byte == 0 {
                     let mut found_disc: u8 = 0u8;
-                    let mut found: bool = false;
-                    for e in #rule_entries_ident.iter() {
+                    for e in PRECEDENCE_ENTRIES.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
-                            found = true;
                             break;
                         }
                     }
-                    (1u32, found_disc, found)
+                    (1u32, found_disc)
                 } else {
                     let mut found_disc: u8 = 0u8;
                     let mut matched_two_byte: bool = false;
-                    let mut found: bool = false;
-                    for e in #rule_entries_ident.iter() {
+                    for e in PRECEDENCE_ENTRIES.iter() {
                         if e.byte == op_byte && e.second_byte == second_byte {
                             found_disc = e.op_discriminant;
                             matched_two_byte = e.second_byte.is_some();
-                            found = true;
                             break;
-                        }
-                    }
-                    // Two-byte bit was set, but the specific
-                    // (byte, second_byte) pair wasn't in the entries
-                    // — fall back to a single-byte entry on the same
-                    // first byte.
-                    if !found {
-                        for e in #rule_entries_ident.iter() {
-                            if e.byte == op_byte && e.second_byte.is_none() {
-                                found_disc = e.op_discriminant;
-                                found = true;
-                                break;
-                            }
                         }
                     }
                     let width = if matched_two_byte { 2u32 } else { 1u32 };
-                    (width, found_disc, found)
+                    (width, found_disc)
                 };
 
-                // No matching entry — treat as end-of-chain (the
-                // LUT's `lut_byte != 0` hit came from a cross-rule
-                // stale entry; per-rule scoping should prevent this
-                // but stay defensive).
-                if !found_entry {
-                    while op_stack.pop().is_some() {}
-                    break;
-                }
-
                 // Advance past the op bytes + emit a payload-bearing
-                // Span leaf carrying the discriminant. `variant_idx`
-                // = the mining-layer's `op_rule` (the Alt-of-literal
-                // rule owning the operator set, e.g. BBNF's
-                // `binary_operators` = rule 33) so `rule_kind()`
-                // reports `binary_operators` on the op leaf — the
-                // downstream `recognize_binary_operator` keys on
-                // this kind. meta_idx = op_discriminant (fits in 5
-                // bits — operator sets are ≤ 32 per rule in shipped
-                // grammars) so the lowering can recover the
-                // specific operator if needed.
+                // Span leaf carrying the discriminant (walker parity;
+                // downstream typed-payload walkers surface every op).
                 let op_lo: u32 = *p as u32;
                 *p = (*p).saturating_add(op_width as usize);
                 let op_hi: u32 = *p as u32;
-                // Operator-kind variant_idx: the `op_rule` of the
-                // matched entry names the Alt-of-literal rule that
-                // owns the operator (binary_operators, add_op,
-                // mul_op, etc.). Resolved from the matched entry in
-                // the scan above.
-                let op_kind_variant_idx: u8 = {
-                    let mut v: u8 = 0u8;
-                    for e in #rule_entries_ident.iter() {
-                        if e.byte == op_byte
-                            && (e.second_byte == second_byte
-                                || (e.second_byte.is_none() && op_width == 1))
-                        {
-                            v = (e.op_rule.0 & 0xFF) as u8;
-                            break;
-                        }
-                    }
-                    v
-                };
                 let arena_off: u32 = builder.arena_mut().len() as u32;
                 builder.arena_mut().push(op_discriminant);
-                let _op_rec = builder.push_leaf_with_arena_payload(
+                let _op_rec = builder.push_leaf_with_arena_frame(
                     ::bbnf::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
-                    op_kind_variant_idx,
-                    (op_discriminant & 0x1F),
+                    0,
+                    0,
                     arena_off,
-                    1,
                 );
+
+                // Capture LHS span_lo for the reducer compound. The
+                // walker reads `columns.span_lo[this_operand_root]`
+                // — this emitter mirrors via the builder's column
+                // accessor.
+                let lhs_span_lo: u32 = builder
+                    .columns()
+                    .span_lo
+                    .get(this_operand_root as usize)
+                    .copied()
+                    .unwrap_or(op_hi);
 
                 op_stack.push(LocalOpEntry {
                     op_discriminant,
                     precedence,
                     associativity_is_left,
-                    lhs_idx: 0u32,      // unused under flat emission
-                    lhs_span_lo: 0u32,  // unused under flat emission
+                    lhs_idx: this_operand_root,
+                    lhs_span_lo,
                 });
 
                 // ── RHS operand ─────────────────────────────────────
                 let _ = #support_mod::skip_space(input, p, state);
                 // AW-V.W5.2 — per-Ref RHS call.
                 #rhs_call
-                let _ = _rhs_off;
+                // Re-point `this_operand_root` at the RHS root (first
+                // record the RHS emitted). The `push_leaf_with_arena_frame`
+                // above sits at this_operand_root + 1 when the operand
+                // was a single leaf; for compound operands the root
+                // sits at the position right after the op leaf.
+                //
+                // Mirrors the walker's SY reducer: after the op leaf
+                // fires, the next operand's first record becomes the
+                // new `this_operand_root`.
+                // The op leaf incremented columns.len() by 1; the RHS
+                // dispatcher then emitted its root starting at that
+                // position. Tracking via the builder's post-op record
+                // index (arena offset proxy) isn't safe across
+                // payload alignment; instead read back the index of
+                // the first record AFTER the op leaf.
+                this_operand_root = _op_rec.0 + 1;
             }
 
             // ── Close outer compound ────────────────────────────────
-            // AX.W0a.2.k — outer compound's `child_off` points at
-            // `outer_child_mark` (the first child slot reserved
-            // before any operand emission). `node.children()` thus
-            // iterates the full flat linear sequence in source
-            // order — `[operand, op, operand, op, ...]` — which is
-            // exactly what `lower_binary_factor` /
-            // `collect_binary_operands` expect.
+            // Patch the outer Rule compound's `child_off` to point at
+            // the final reduced operand root; stamp span_hi + close.
             let outer_span_hi = *p as u32;
             let outer_off = builder.push_compound(
                 ::bbnf::runtime::tape::TapeKind::Rule,
-                outer_child_mark,
+                ::bbnf::runtime::tape::TapeOffset(this_operand_root),
                 outer_span_lo,
                 outer_span_hi,
                 #variant_idx,
@@ -406,11 +387,6 @@ pub fn emit_parse_pratt_visitor(
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("pratt", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
-    // AX.W0a.2.k — per-rule visitor-path Pratt LUT (mirrors tape-
-    // path emitter above). Each visitor body consults its own
-    // rule-scoped LUT + sparse entries slice.
-    let rule_lut_ident = format_ident!("PRECEDENCE_LUT_{}", rule_name);
-    let rule_entries_ident = format_ident!("PRECEDENCE_ENTRIES_{}", rule_name);
 
     // Visitor-path dispatcher — wires the RHS operand parse into the
     // grammar's per-shape visitor family. When the grammar has no
@@ -502,7 +478,7 @@ pub fn emit_parse_pratt_visitor(
 
             loop {
                 let op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-                let lut_byte: u8 = #rule_lut_ident[op_byte as usize];
+                let lut_byte: u8 = PRECEDENCE_LUT[op_byte as usize];
                 let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
                     ::core::option::Option::None
                 } else {
@@ -547,7 +523,7 @@ pub fn emit_parse_pratt_visitor(
                     input.get(*p + 1).copied();
                 let (op_width, op_discriminant) = if two_byte == 0 {
                     let mut found_disc: u8 = 0u8;
-                    for e in #rule_entries_ident.iter() {
+                    for e in PRECEDENCE_ENTRIES.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
                             break;
@@ -557,7 +533,7 @@ pub fn emit_parse_pratt_visitor(
                 } else {
                     let mut found_disc: u8 = 0u8;
                     let mut matched_two_byte: bool = false;
-                    for e in #rule_entries_ident.iter() {
+                    for e in PRECEDENCE_ENTRIES.iter() {
                         if e.byte == op_byte && e.second_byte == second_byte {
                             found_disc = e.op_discriminant;
                             matched_two_byte = e.second_byte.is_some();

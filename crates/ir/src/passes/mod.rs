@@ -67,7 +67,6 @@ pub use recognizers::mine_list_rules;
 pub use recognizers::mine_recognizers;
 pub use recognizers::operator_chain::{
     collect_operator_chains, OperatorArity, OperatorChainEntry, OperatorChainFacts,
-    OperatorChainRule,
 };
 pub use recognizers::state_visit_frequency::{
     compute_state_visit_frequency, partition_hot_cold, requires_hot_cold_split, top_hot_states,

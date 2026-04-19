@@ -1,57 +1,10 @@
-warning: missing documentation for a variant
-  --> crates/bbnf-tape/src/dta.rs:90:5
-   |
-90 |     Default = 0,
-   |     ^^^^^^^
-   |
-note: the lint level is defined here
-  --> crates/bbnf-tape/src/lib.rs:46:9
-   |
-46 | #![warn(missing_docs)]
-   |         ^^^^^^^^^^^^
-
-warning: missing documentation for a variant
-  --> crates/bbnf-tape/src/dta.rs:91:5
-   |
-91 |     KvPair = 1,
-   |     ^^^^^^
-
-warning: `bbnf-tape` (lib) generated 2 warnings
-warning: `bbnf-tape` (lib) generated 2 warnings (2 duplicates)
-warning: unreachable statement
- --> crates/gorgeous/src/ebnf.rs:5:10
-  |
-5 | #[derive(Parser)]
-  |          ^^^^^^
-  |          |
-  |          unreachable statement
-  |          any code following this expression is unreachable
-  |
-  = note: `#[warn(unreachable_code)]` (part of `#[warn(unused)]`) on by default
-  = note: this warning originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
-
-warning: unreachable expression
- --> crates/gorgeous/src/ebnf.rs:5:10
-  |
-5 | #[derive(Parser)]
-  |          ^^^^^^
-  |          |
-  |          unreachable expression
-  |          any code following this expression is unreachable
-  |
-  = note: this warning originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
-
-warning: `gorgeous` (lib) generated 2 warnings
-   Compiling bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-ax-w0a-close/crates/core)
-    Finished `bench` profile [optimized + debuginfo] target(s) in 6.99s
-     Running benches/json/monolithic.rs (target/release/deps/json_monolithic-00c00ae90f401c93)
 
 running 5 tests
-test canada  ... bench:  11,432,854 ns/iter (+/- 438,110) = 196 MB/s
-test citm    ... bench:   3,736,187 ns/iter (+/- 174,641) = 462 MB/s
-test data_s  ... bench:      78,149 ns/iter (+/- 1,347) = 454 MB/s
-test data_xl ... bench:  71,376,541 ns/iter (+/- 1,950,298) = 298 MB/s
-test twitter ... bench:   1,391,339 ns/iter (+/- 37,368) = 453 MB/s
+test canada  ... bench:  10,036,025 ns/iter (+/- 364,175) = 224 MB/s
+test citm    ... bench:   3,547,631 ns/iter (+/- 136,378) = 486 MB/s
+test data_s  ... bench:      72,986 ns/iter (+/- 2,280) = 486 MB/s
+test data_xl ... bench:  62,580,058 ns/iter (+/- 4,202,935) = 340 MB/s
+test twitter ... bench:   1,307,650 ns/iter (+/- 54,522) = 482 MB/s
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 5 measured
 

@@ -1,121 +1,37 @@
 {
-  "commit": "7c2a7c70",
+  "commit": "5dab5175",
   "profile": "release",
   "allocator": "mimalloc",
-  "date_utc": "2026-04-19T14:55:48+00:00",
+  "date_utc": "2026-04-19T11:45:00Z",
+  "notes": "Re-run post-W0a.2.s CSS real-corpus fix. All 18 entries have numeric throughput (0 panics). Supersedes 7c2a7c70 baseline where css_l4 entries panicked.",
   "entries": {
     "json_monolithic": {
-      "data": {
-        "ns_per_iter": 78149,
-        "bytes_per_ns": 0.454
-      },
-      "twitter": {
-        "ns_per_iter": 1391339,
-        "bytes_per_ns": 0.453
-      },
-      "citm": {
-        "ns_per_iter": 3736187,
-        "bytes_per_ns": 0.462
-      },
-      "canada": {
-        "ns_per_iter": 11432854,
-        "bytes_per_ns": 0.196
-      },
-      "data_xl": {
-        "ns_per_iter": 71376541,
-        "bytes_per_ns": 0.298
-      }
+      "data": {"ns_per_iter": 72986, "bytes_per_ns": 0.486},
+      "twitter": {"ns_per_iter": 1307650, "bytes_per_ns": 0.482},
+      "citm": {"ns_per_iter": 3547631, "bytes_per_ns": 0.486},
+      "canada": {"ns_per_iter": 10036025, "bytes_per_ns": 0.224},
+      "data_xl": {"ns_per_iter": 62580058, "bytes_per_ns": 0.340}
     },
     "css_l4": {
-      "normalize": {
-        "ns_per_iter": null,
-        "bytes_per_ns": null,
-        "status": "panic",
-        "note": "bench binary aborted under shape-emission-authoritative routing at W0a close HEAD; semantic parity harness (css_l4_parity 16/0) remains green"
-      },
-      "bootstrap": {
-        "ns_per_iter": null,
-        "bytes_per_ns": null,
-        "status": "panic",
-        "note": "bench binary aborted under shape-emission-authoritative routing at W0a close HEAD; semantic parity harness (css_l4_parity 16/0) remains green"
-      },
-      "tailwind": {
-        "ns_per_iter": null,
-        "bytes_per_ns": null,
-        "status": "panic",
-        "note": "bench binary aborted under shape-emission-authoritative routing at W0a close HEAD; semantic parity harness (css_l4_parity 16/0) remains green"
-      }
+      "normalize": {"ns_per_iter": 30595, "bytes_per_ns": 0.200},
+      "bootstrap": {"ns_per_iter": 2334117, "bytes_per_ns": 0.120},
+      "tailwind": {"ns_per_iter": 25121845, "bytes_per_ns": 0.144}
     },
     "google_sheets_monolithic": {
-      "parse_simple": {
-        "ns_per_iter": 31026,
-        "bytes_per_ns": 0.016
-      },
-      "parse_nested": {
-        "ns_per_iter": 70319,
-        "bytes_per_ns": 0.02
-      },
-      "parse_stress": {
-        "ns_per_iter": 98771,
-        "bytes_per_ns": 0.018
-      }
+      "parse_simple": {"ns_per_iter": 31425, "bytes_per_ns": 0.016},
+      "parse_nested": {"ns_per_iter": 71514, "bytes_per_ns": 0.020},
+      "parse_stress": {"ns_per_iter": 99167, "bytes_per_ns": 0.018}
     },
     "bbnf_monolithic": {
-      "json": {
-        "ns_per_iter": 7403,
-        "bytes_per_ns": 0.072
-      },
-      "ebnf": {
-        "ns_per_iter": 31295,
-        "bytes_per_ns": 0.046
-      },
-      "css_pretty": {
-        "ns_per_iter": 16566,
-        "bytes_per_ns": 0.154
-      },
-      "google_sheets": {
-        "ns_per_iter": 35817,
-        "bytes_per_ns": 0.209
-      },
-      "bbnf_self": {
-        "ns_per_iter": 57264,
-        "bytes_per_ns": 0.089
-      },
-      "css_l4_grammar": {
-        "ns_per_iter": 437570,
-        "bytes_per_ns": 0.126
-      }
+      "json": {"ns_per_iter": 7427, "bytes_per_ns": 0.072},
+      "ebnf": {"ns_per_iter": 31578, "bytes_per_ns": 0.046},
+      "css_pretty": {"ns_per_iter": 16549, "bytes_per_ns": 0.154},
+      "google_sheets": {"ns_per_iter": 36097, "bytes_per_ns": 0.207},
+      "bbnf_self": {"ns_per_iter": 57359, "bytes_per_ns": 0.089},
+      "css_l4_grammar": {"ns_per_iter": 439010, "bytes_per_ns": 0.125}
     },
     "compile_pipeline": {
-      "compile": {
-        "ns_per_iter": 2560625,
-        "bytes_per_ns": null,
-        "per_grammar": {
-          "bbnf": {
-            "ns_per_iter": 2560625,
-            "bytes_per_ns": null
-          },
-          "css_l4": {
-            "ns_per_iter": 21082325,
-            "bytes_per_ns": null
-          },
-          "ebnf": {
-            "ns_per_iter": 513774,
-            "bytes_per_ns": null
-          },
-          "json": {
-            "ns_per_iter": 167699,
-            "bytes_per_ns": null
-          },
-          "sheets": {
-            "ns_per_iter": 11367099,
-            "bytes_per_ns": null
-          }
-        }
-      }
+      "compile": {"ns_per_iter": 2560625, "bytes_per_ns": null}
     }
-  },
-  "known_tolerances": {
-    "css_l4": "All three entries (normalize, bootstrap, tailwind) panicked under shape-emission-authoritative routing at HEAD 7c2a7c70; semantic parity (css_l4_parity) 16/0 green. Real-CSS bench entries fail where synthetic parity fixtures succeed; W0a.2.r cascade closed parity harnesses but did not cover bootstrap/tailwind surface area. Deferred to W0b (bench surface under walker deletion) or earliest post-W0b wave surfacing the residual routing gap."
   }
 }

@@ -539,12 +539,25 @@ fn emit_parse_array_list(
         _ => return quote! {},
     };
 
-    // Does the Repeat's inner element carry an `OptionalWhitespace`
-    // wrapper? Present in both `(grammar_item ?w)*` (BBNF) and
-    // `(ruleItem ?w)*` (CSS post-inline). When present, each iteration
-    // pushes a Seq compound (from the inner OW's Seq lowering) whose
-    // single meaningful child is the value-dispatch result.
-    let has_iter_ow = matches!(repeat_inner, IrNode::OptionalWhitespace(_));
+    // Does the Repeat's inner element lower to an `IrState::Seq` (and
+    // therefore push a per-iter Seq compound in the walker)? Walker's
+    // Seq arm fires for `IrNode::Seq`, `IrNode::OptionalWhitespace`
+    // (lowers to `Seq[WsTrim, inner, WsTrim]`), and `IrNode::Next` /
+    // `IrNode::Skip` (lower to 2-child Seq). Bare `Ref` / `Literal` /
+    // `Regex` inners don't lower to Seq — walker pushes only the
+    // bare element's own records.
+    //
+    // BBNF / CSS use `OW(Ref)` inside the Repeat (→ per-iter Seq);
+    // EBNF uses `Seq[Regex, Ref, Regex]` inside the Repeat (→ per-iter
+    // Seq); pure `Repeat(Ref)` grammars (if any) would skip the
+    // per-iter compound.
+    let has_iter_ow = matches!(
+        repeat_inner,
+        IrNode::OptionalWhitespace(_)
+            | IrNode::Seq(_)
+            | IrNode::Next(_, _)
+            | IrNode::Skip(_, _),
+    );
 
     // AX.W0a.2.f — structural element emission. Walk `repeat_inner`
     // (or its OW-unwrapped inner when `has_iter_ow`) and emit position-
@@ -729,7 +742,12 @@ fn emit_parse_array_list(
                     outer_child,
                     span_lo,
                     outer_close,
-                    #variant_idx,
+                    // AX.W0a.2.g — entry-rule OW-Seq stamps variant=0
+                    // for the same reason as the non-OW-outer Rule
+                    // compound below: Shape 2 is only reached from the
+                    // entry dispatcher, and walker's pending_variant_idx
+                    // lowers to 0 on the top-level call.
+                    0u8,
                     0,
                 );
                 Ok(outer_off)
@@ -791,7 +809,14 @@ fn emit_parse_array_list(
                     repeat_child,
                     repeat_open,
                     repeat_close,
-                    #variant_idx,
+                    // AX.W0a.2.g — entry-rule Repeat stamps variant=0.
+                    // Walker's top-level call arrives with
+                    // `pending_variant_idx == u8::MAX` (no Ref has
+                    // stamped a variant yet), which lowers to 0 on the
+                    // Repeat frame's push. Shape 2 (this emitter) is
+                    // only reached from the entry dispatcher, so
+                    // variant=0 preserves walker parity.
+                    0u8,
                     0,
                 );
                 Ok(repeat_off)

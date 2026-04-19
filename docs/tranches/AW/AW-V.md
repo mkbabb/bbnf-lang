@@ -1,4 +1,4 @@
-# Tranche AW-V — Compile DTA/PSI into Hot-Path Code + Novel-Exceed
+# Tranche AW-V — Fn-per-Rule over Shape Templates
 
 > **W2.1 CLOSE — hard gate MET, sonic-rs beaten on every entry (2026-04-17+).**
 > Prototype `crates/bbnf-json-prototype/` (cherry-picked 2026-04-17
@@ -7,20 +7,19 @@
 > data_s 0.94×, twitter 0.89×, citm 0.89×, canada 0.90×, data_xl 0.90×
 > (ratios of prototype/sonic ns/iter; gate was ≤1.10). Samply: one
 > monomorphised symbol at 91.15% self-time (sonic's twin is ≤88%
-> over two symbols). `nm` verification clean: zero `dispatch_one` /
-> `try_branch` / `advance_or_pop_with` / `__dta_walker_inline` /
-> `DtaState` / `FrameStack` reachable from bench binary. Close ledger
-> at `docs/tranches/AW/AW-V-W2-close.md`; bench artefact at
+> over two symbols). `nm` verification clean on the six historical
+> scaffold symbols reachable from the bench binary. Close ledger at
+> `docs/tranches/AW/AW-V-W2-close.md`; bench artefact at
 > `docs/benchmarks/post-AW-V-W2-prototype.json`.
 >
 > **The substrate is viable.** `bbnf-tape` + `bbnf-simd-scan` + the
 > existing miner IR produce a parser that exceeds sonic-rs on
 > single-thread NEON with just the W2.1 hand-tuned shape — no novel
-> exceed lever required to meet the gate. W2.3 (the 6 novel levers)
+> exceed lever required to meet the gate. W2.3 (the novel levers)
 > rescopes from "needed to meet exceed-sonic gate" to "optional
 > refinements composed with shape-emitter generalisation"; they
 > land in W3/W4 alongside shape-mining where they apply, or defer to
-> AX / successor tranche where they don't. See §W2.3 rescope.
+> AX where they don't. See §W2.3 rescope.
 
 > **Post-W3-flat rethink anchor.** AW-IV.W3 closed with consumer levers
 > ledger-marked active but bench flat (see
@@ -32,14 +31,13 @@
 > - **JSON prototype first** — hand-tuned `crates/bbnf-json-prototype/`
 >   validates substrate viability before the emitter generalises.
 > - **One-pass parse + monomorphic visitor.** `ValueVisitor` path skips
->   the tape entirely; no second `walk_cursor` materialisation pass.
-> - **`TapeVisitor` path retained for AX.** Tape is AX substrate, not
->   the value-benchmark path.
-> - **`DTA_TABLE` + `dispatch_one` live only as cold replay.** Hot path
->   never reaches them.
+>   the tape entirely; no second materialisation pass.
+> - **`TapeVisitor` path retained.** Tape is the shape-emitter's
+>   downstream surface; `TapeCursor` + `Root::View` consumers project
+>   from it.
 > - **N1 / N2 novel-exceed layer stays OUT of critical path.**
 >   Speculative parsing, JIT, PMC feedback, e-graph rewrite codegen
->   defer to AX / successor tranche.
+>   defer to AX.
 > - **11-shape taxonomy** (H1 audit), not 7. CSS L4 hot/cold
 >   partitioning mandatory from W4.1 opening per H2's L1-fit
 >   projection.
@@ -49,52 +47,48 @@
 >   without-authoritative-consumer rejected at wave close per
 >   `docs/instructions/README.md` §Wave-verification-ledger.
 
-AW-V **compiles the DTA IR into hot-path code** via per-shape
-emitter dispatch + novel algorithmic levers that exceed sonic-rs on
-single-thread — not via fork, not via parallelism, not by abandoning
-the DTA, and not by duplicating the existing mining / CSP / e-graph
-infrastructure. The DTA IR representation (state graph,
-`GrammarProfile`, `SHAPE_DICT`, structural alphabet, dispatch-table
-mining, `disjoint_first`, `operator_chain`, `pattern_alphabet`,
-`keyword_stats`, etc.) survives verbatim as the substrate feeding the
-**shape classifier** (which is a thin pattern-match over existing
-miner outputs, ~150 LOC — not a new mining system). Per-shape emitter
-modules then consume the classifier's output + the existing mining
-facts to produce sonic-rs-shaped inline loops per rule. The DTA
-interpreter survives as AX's cold-path replay surface. CSP + e-graph
-substrates unchanged. What is replaced is the interpreter-as-consumer-
-on-the-hot-path shape. What is added is the **per-shape emitter
-modules** (new TokenStream producers that lower grammar rules to
-inline loops) plus six algorithmic levers sonic-rs lacks because
-sonic is JSON-hand-tuned rather than grammar-derived.
+AW-V **lifts fn-per-rule recursive descent over shape templates** via
+per-shape emitter dispatch + novel algorithmic levers that exceed
+sonic-rs on single-thread — not via fork, not via parallelism, and not
+by duplicating the existing mining / CSP / e-graph infrastructure. The
+DTA-era IR facts (state graph, `GrammarProfile`, `SHAPE_DICT`,
+structural alphabet, dispatch-table mining, `disjoint_first`,
+`operator_chain`, `pattern_alphabet`, `keyword_stats`, etc.) survive
+verbatim as the substrate feeding the **shape classifier** (a thin
+pattern-match over existing miner outputs, ~150 LOC — not a new
+mining system). Per-shape emitter modules consume the classifier's
+output + the existing mining facts to produce sonic-rs-shaped inline
+loops per rule. CSP + e-graph substrates unchanged. What is added is
+the **per-shape emitter modules** (new TokenStream producers that
+lower grammar rules to inline loops) plus algorithmic levers sonic-rs
+lacks because sonic is JSON-hand-tuned rather than grammar-derived.
 
 AW-IV closed at a post-W2 floor of ~240 MB/s twitter / 24 MB/s CSS
-normalize because the walker was still indirected at the `try_branch`
-boundary; the `bbnf-tape` residual-helper boundary; the `walk_cursor`
-second-pass boundary; and the cold-helper-BL boundary on CSS L4's
-i-cache-overflowing walker. A JSON-only hand-tuned prototype in an
-isolated worktree validates that the existing `bbnf-tape`
-+ `bbnf-simd-scan` substrate supports sonic-rs-class single-thread
-throughput (W2.1); novel-exceed levers then push the prototype past
-sonic on single-thread without recourse to document-parallel fork
-(W2.3); the same per-shape structure then generalises back through
-the emitter via a thin shape-dispatch classifier and per-shape emitter
-modules (W3).
+normalize because the hot path crossed four indirection boundaries
+per byte (dispatch helper, residual-helper, second-pass materialisation,
+cold-helper BLs in the CSS L4 i-cache-overflowing scaffold). A JSON-only
+hand-tuned prototype in an isolated worktree validates that the
+existing `bbnf-tape` + `bbnf-simd-scan` substrate supports sonic-rs-
+class single-thread throughput (W2.1); novel-exceed levers then push
+the prototype past sonic on single-thread without recourse to
+document-parallel fork (W2.3); the same per-shape structure then
+generalises back through the emitter via a thin shape-dispatch
+classifier and per-shape emitter modules (W3).
 
 Six waves; strict sequencing. Prototype isolated until its exceed-
 sonic gate passes, then cherry-picked onto master alongside the
 AW-V substrate-enabler changes and the emitter-lifted per-shape
 pipeline.
 
-## Compile DTA into hot-path code — not abrogate
+## Fn-per-rule over shape templates
 
-The DTA is not abandoned. The DTA IR is compiled into hot-path code
-at a different level of granularity. Five compilation strategies
-considered:
+The DTA-era IR facts feed the shape emitter at a different level of
+granularity than the historical scaffold they were minted for. Five
+compilation strategies considered:
 
 | Strategy | Per-state cost | i-cache | Dispatch boundary | Status |
 |---|---|---|---|---|
-| DTA interpreter (AW-II baseline) | runtime `match table.states[N]` | fine | every byte — interpreted | cold-path survives as AX replay surface |
+| Table-driven dispatch (AW-II baseline) | runtime `match table.states[N]` | fine | every byte | historical scaffold; retired W0a/W0b |
 | State-table inlined (AW-IV W1.4-aggro) | inlined state body | CSS L4 154 KB overflows L1 | 2,283 cold-helper BLs spilled | attempted; perf pathology |
 | Fn-per-rule RD (post-AU) | inlined per-rule fn | per-rule size | LLVM inlines across rules | the pre-DTA baseline |
 | **Shape-mined per-shape emission (B4)** | **inlined per-shape fn** | **naturally small (7–8 shapes)** | **compile-time resolved at call site** | **AW-V.W3 target** |
@@ -103,25 +97,23 @@ considered:
 Shape-mining is a **higher-level compilation** than state-table
 inlining: 7 shapes vs ~500 states, per-shape loop body stays small,
 dispatch is at compile-time-resolved call sites (no runtime state
-lookup, no cold-helper BLs). The DTA state table feeds the shape
-miner; the shape miner feeds the per-shape emitters; the DTA
-interpreter survives as cold-path replay of the same state table.
-PSI is selectively bypassed: scalar payloads direct-write into
-Columns; non-trivial typed fills stay on PSI rayon. Nothing is
-abrogated; everything is *re-consumed at the right granularity*.
+lookup, no cold-helper BLs). The DTA-era state table feeds the shape
+miner; the shape miner feeds the per-shape emitters; the scaffold came
+down as the consumer emerged. PSI is selectively bypassed: scalar
+payloads direct-write into Columns; non-trivial typed fills stay on
+PSI rayon. IR facts are *re-consumed at the right granularity*.
 
 ## Scope
 
-1. **Substrate enablers** (B2 + B3): four surgical `bbnf-tape` changes
-   + one `bbnf-simd-scan::emit` addition. All preserve AX's cold-path
-   replay surface verbatim.
+1. **Substrate enablers** (B2 + B3): surgical `bbnf-tape` changes
+   + one `bbnf-simd-scan::emit` addition that feed the shape emitter.
 2. **JSON-only hand-prototype — sonic parity** (B1, W2.1): new crate
    `crates/bbnf-json-prototype/` with hand-tuned per-shape inline
    loops + monomorphic visitor. Bench-gated within 10% of sonic-rs
    single-thread.
-3. **Novel-exceed levers** (W2.3): six algorithmic differentiators
-   sonic-rs lacks. Single-thread **≥ 1.10× sonic-rs on JSON twitter**
-   after W2.3. No fork; no core-count cheating.
+3. **Novel-exceed levers** (W2.3): algorithmic differentiators sonic-rs
+   lacks. Single-thread **≥ 1.10× sonic-rs on JSON twitter** after W2.3.
+   No fork; no core-count cheating.
 4. **Shape-dispatch classifier + JSON emitter-lift** (B4 Phase 2): generalise
    the prototype back through codegen. Emitter-produced JSON parser
    matches hand-prototype bench ± 5%.
@@ -136,7 +128,7 @@ abrogated; everything is *re-consumed at the right granularity*.
 
 ## Novel algorithmic levers vs sonic-rs
 
-Six levers that sonic-rs lacks because sonic is JSON-hand-tuned rather
+Levers that sonic-rs lacks because sonic is JSON-hand-tuned rather
 than grammar-derived. Each is grammar-agnostic by construction — they
 fall out of shape-mining. All land in the prototype (W2.3), verified
 single-thread, then generalise through the emitter (W3+).
@@ -170,16 +162,6 @@ linear key-compare at serde-deserialize; we compact N-key dispatch
 to one compare. Common case (N ≤ 16 keys): 16× fewer comparison
 instructions.
 
-### Lever 4 — Column-parallel SIMD emission
-
-TapeVisitor writes 7 SoA columns per compound record (rule_kind + tape_kind
-+ span_lo + span_hi + child_off + variant_idx + sib_skip). Pack into
-a 20-byte record, emit as one AVX-256 or NEON Q-register 32-byte
-vector store. sonic writes to an AoS u64 tape (8 bytes per record,
-compact but algorithmically serial); we emit SoA columns in parallel.
-`Columns::push_compound_fused_v32` is the new store API;
-`bbnf-tape` §columns gets the vectorised path.
-
 ### Lever 5 — Bounded Regex via inverse-alphabet invariant
 
 A regex whose `last_byte_set` (computed from NFA accept-state
@@ -208,7 +190,7 @@ bootstrap record count drops ≥ 30%); neutral on non-repetitive
 
 Parse once, emit to `TapeVisitor` AND to a user-struct `ValueVisitor`
 simultaneously via two visitor arguments. Each visitor method inlines
-into its call site at compile time; the walker body duplicates (code
+into its call site at compile time; the emitted body duplicates (code
 size) but emission is branchless at the source level. sonic's visitor
 is single-target per parse call. Our trait-based approach composes
 any finite visitor set.
@@ -219,7 +201,7 @@ JSON (96 pairs × 200 LOC × 25 B ≈ 480 KB). AW-V ships the
 `(TapeVisitor, ValueVisitor)` pair **only**, gated via
 `#[derive(Visitor)] #[emit_paired_with(V2)]`. User-declared custom
 multi-visitor combinations are opt-in at user authorship and land as
-AX consumers (see §Deferred — AX + successor tranches below).
+AX consumers (see §Deferred — AX below).
 
 ## Shape taxonomy — 11 categories (H1-corrected)
 
@@ -247,13 +229,12 @@ confirmed Sheets function names match the generic `identifier` regex;
 there is NO keyword set. Function dispatch is ArgList-shape, not
 Kw-shape + PHF. Projection updated accordingly.
 
-**Interpreter fallback — permanent** (~3–5% of CSS; the only rules
-that remain on `__dta_walker_inline::run` per the AX replay contract):
-`funcBody` (`grammar/css/l4/func-body.bbnf:11`),
-`customPropertyDecl` (`grammar/css/l4/properties.bbnf:206`),
-`genericDecl` (`grammar/css/l4/properties.bbnf:212`). These three are
-grammatically heterogeneous (free-form content, user-extension hooks);
-no general shape admits them. They stay on the interpreter by design,
+**Heterogeneous fallback — permanent** (~3–5% of CSS): `funcBody`
+(`grammar/css/l4/func-body.bbnf:11`), `customPropertyDecl`
+(`grammar/css/l4/properties.bbnf:206`), `genericDecl`
+(`grammar/css/l4/properties.bbnf:212`). These three are grammatically
+heterogeneous (free-form content, user-extension hooks); no general
+shape admits them. They stay on a per-rule generic emitter by design,
 not by deferral.
 
 **Pratt AX-incremental caveat**: Pratt-shape admits local reparse only
@@ -278,31 +259,27 @@ prevent scope creep:
   as `AX.X8 — Gradient parsing consumer`.
 - **User-declared custom multi-visitor pairs** (extends Lever 7
   beyond `(TapeVisitor, ValueVisitor)`). Visitors declared by user
-  code via `#[derive(Visitor)]`; landed as the AX.X8-sibling
-  consumer phase.
+  code via `#[derive(Visitor)]`; landed as the AX consumer phase.
 - **Speculative parsing with shape-transition Markov predictor**
-  (N2.1). The rollback-scratchpad infrastructure is a sibling of
-  AX's `DtaSnapshot` replay mechanism. Ships when AX's snapshot
-  serdes + resume entrypoint lands; natural fit as `AX.X9 —
-  Speculative consumer`.
+  (N2.1). The rollback-scratchpad infrastructure fits AX's snapshot
+  mechanism; ships alongside the snapshot serdes + resume entrypoint.
 
-**Deferred to successor tranche** (meta-optimisation layers that sit
-atop AW-V's viability proof; implementing them before the substrate
-is proven is scope reversal):
+**Deferred to AX** (meta-optimisation layers that sit atop AW-V's
+viability proof; implementing them before the substrate is proven is
+scope reversal):
 
 - **E-graph rewrite codegen** (`aw5-n1-egraph-rewrite-codegen.md`).
   12 rewrites over Shape-Emit IR; +30% on CSS bootstrap, +20% on
-  Sheets, etc. Belongs in successor tranche AW-VI (or renamed) as
-  the optimisation layer over proven shape emitters.
+  Sheets, etc. Lands as AX's e-graph grammar-rewrite wave.
 - **Runtime CPU-capability auto-tuning** (N2.5). Five-variant kernel
-  dispatch at runtime; 10–25% on Ice Lake / Graviton. Binary-size
-  cost bounds integration; needs dedicated tranche.
+  dispatch at runtime; 10–25% on Ice Lake / Graviton. AX.W13 cost-
+  grid sweep.
 - **PMC-feedback adaptive kernels** (N2.6). Self-tuning via Apple M
   performance counters; experimental; ≥ 10 KB input break-even.
-  Research-tranche territory.
+  AX.W13 alongside the autotune cost grid.
 - **Cranelift JIT per-schema** (N2.7). Conflicts with AW-V's static-
-  codegen invariant; useful as alternate deployment mode but needs
-  its own tranche + architectural concession.
+  codegen invariant; useful as alternate deployment mode. Routed to
+  AY's replay + JIT surface, not AX.
 
 **Folded into AW-V substrate (not as novel levers; as refinements)**:
 
@@ -321,19 +298,18 @@ is proven is scope reversal):
 Per the AW-IV profile wave (six samply + static-audit agents at HEAD
 `f457b4df`):
 
-1. **The DTA substrate is architecturally complete.** `bbnf-simd-scan`
-   is algorithmically sufficient (B3); `bbnf-tape` needs four surgical
-   changes that preserve the cold-path replay surface (B2). No crate
-   rewrite; no architectural transposition.
+1. **The IR substrate is architecturally complete.** `bbnf-simd-scan`
+   is algorithmically sufficient (B3); `bbnf-tape` needs surgical
+   additions that feed the shape emitter (B2). No crate rewrite; no
+   architectural transposition.
 
-2. **The interpreter persists in the consumer, not the substrate.**
-   `try_branch` (AltLinear dispatch helper) contains inlined
-   `dispatch_one` + runtime `match table.states[N]`; every AltLinear
-   branch attempt re-interprets the state table at the cross-crate
-   boundary. CSS L4 70.9–78.9% self-time; Sheets 52–72%; BBNF 70%.
-   CSS L4's 153.9 KB walker sits at 0.1–0.2% self-time because the hot
-   path never reaches the walker's outer `match cur` — it is trapped
-   inside `try_branch` (P2).
+2. **The indirection persists at the consumer boundary.** The
+   historical scaffold's AltLinear dispatch helper sits across a
+   cross-crate boundary; every branch attempt re-dispatches over the
+   state table. CSS L4 70.9–78.9% self-time; Sheets 52–72%; BBNF 70%.
+   CSS L4's 153.9 KB emitted body sits at 0.1–0.2% self-time because
+   the hot path never reaches the outer per-rule `match` — it is
+   trapped inside the helper (P2).
 
 3. **sonic-rs's winning shape is replicable.** `parse_object::<DocumentVisitor>`
    + `parse_array::<DocumentVisitor>` cover 81–88% self-time at 2 symbols
@@ -347,9 +323,8 @@ Per the AW-IV profile wave (six samply + static-audit agents at HEAD
    (Object/Array/String/Number/Keyword/Pratt/Unordered). Per-shape
    emitter modules at `crates/core/src/backend/rust/emitter/shapes/`.
    Detectors ground in existing miner outputs; no grammar-name
-   branches. Rules without shape match fall back to
-   `__dta_walker_inline::run` — AW-III/IV substrate + AX replay
-   preserved. Coverage: JSON 100%, Sheets 92%, CSS L4 78%, BBNF 75%
+   branches. Rules without shape match route to a generic per-rule
+   emitter body. Coverage: JSON 100%, Sheets 92%, CSS L4 78%, BBNF 75%
    (≥ 80% average).
 
 ## Invariants
@@ -359,10 +334,11 @@ Per the AW-IV profile wave (six samply + static-audit agents at HEAD
 2. **Substrate-with-consumer is one unit of work.** Per
    `docs/instructions/README.md` §code-discipline. Each shape-mining
    detector that lands without a consuming emitter is rejected.
-3. **AX replay-surface preserved.** `bbnf_tape::driver::dispatch_one` +
-   helpers + `DtaState` variants + `DTA_TABLE` + the cold-path
-   table-interpretive path continue to exist. Per
-   `docs/tranches/AX/AX.md` §3 (cold-path replay-surface invariant).
+3. **Shape emission is the one hot path.** No hedged replay surface
+   inside the tranche. Replay tooling (snapshot, resume, incremental
+   re-parse) is routed to AY per AX.md §Architectural-thesis bullet —
+   AX handles the broader replay contract without reinstating a
+   parallel interpretive path in AW-V.
 4. **§6 generalisation invariant.** Every shape detector is an IR pass
    triggered by IR-structural properties; per-grammar OUTPUT varies
    because per-grammar IR varies; per-grammar MECHANISM does not. The
@@ -386,21 +362,21 @@ Per the AW-IV profile wave (six samply + static-audit agents at HEAD
 
 | Wave | Scope | Agents | Opens after | Hard gate |
 |------|-------|--------|-------------|-----------|
-| W1 | Substrate enablers: `bbnf-tape-codegen` subcrate (TokenStream body fragments for 4 residual helpers) + `bbnf-simd-scan::emit` submodule (~300 LOC) + `Columns::push_scalar_payload_*` + `Columns::push_compound_fused_v32` (32-byte vector store, Lever 4) + monomorphic `Visitor` trait in bbnf-tape | 3 parallel | AW-IV closed | `bbnf-tape-codegen` exposes the 4 helper-body fragments; `bbnf-simd-scan::emit` round-trips a test fragment; `Visitor` trait has `TapeVisitor` + placeholder `ValueVisitor`; `push_compound_fused_v32` emits a single AVX-256/NEON-Q store on a fixture; all W1 work preserves `bbnf_tape::driver::dispatch_one` verbatim |
-| W2.1 *(CLOSED 2026-04-17)* | JSON hand-prototype in `crates/bbnf-json-prototype/`, sonic-exceed form. Cherry-picked at `f8e56d50`. | 1 serial agent in `bbnf-wt-aw5-prototype` | W1 closed | **MET BY EXCEED, NOT PARITY**: data_s 0.94× / twitter 0.89× / citm 0.89× / canada 0.90× / data_xl 0.90× sonic-rs ns/iter (5/5 entries beat sonic). Samply: one symbol at 91.15% self-time (sonic's twin ≤88% over 2 symbols). `nm` clean on 6 forbidden interpretive symbols. See `docs/tranches/AW/AW-V-W2-close.md` + `docs/benchmarks/post-AW-V-W2-prototype.json` |
-| ~~W2.3~~ *(RETIRED)* | ~~Novel-exceed levers (3 parallel agents)~~ | — | — | **Retired.** W2.1 met exceed-sonic without the 6 novel levers. Levers redistribute: Lever 3 (multi-key SIMD) + Lever 5 (bounded Regex) + Lever 6 (ShapeRef) fold into W3 shape-emitter options; Lever 4 (`push_compound_fused_v32`) folds into W1 substrate enablers; Lever 7 (multi-visitor) bounded to `(TapeVisitor, ValueVisitor)` in W3 codegen; user-declared custom multi-visitor defers to **AX.X10** |
-| W3 | Shape-dispatch classifier + JSON emitter-lift: `crates/ir/src/passes/recognizers/shape_dispatch.rs` + `crates/core/src/backend/rust/emitter/shapes/{object,array,string,number,keyword,scalar}.rs`; shape-emitter consumes the existing miner IR facts + emits sonic-exceeding per-shape inline loops. Redistributed novel levers 3/5/6/7 fold in per-shape where applicable | 4 parallel | W2.1 closed + cherry-picked *(done)* | emitter-produced JSON parser matches hand-prototype exceed-sonic bench ± 5%; rules without shape match continue to route through `__dta_walker_inline::run`; wire-contract test per shape category |
+| W1 | Substrate enablers: `bbnf-tape-codegen` subcrate (TokenStream body fragments for 4 residual helpers) + `bbnf-simd-scan::emit` submodule (~300 LOC) + `Columns::push_scalar_payload_*` + monomorphic `Visitor` trait in bbnf-tape | 3 parallel | AW-IV closed | `bbnf-tape-codegen` exposes the 4 helper-body fragments; `bbnf-simd-scan::emit` round-trips a test fragment; `Visitor` trait has `TapeVisitor` + placeholder `ValueVisitor`; every W1 addition feeds the shape emitter |
+| W2.1 *(CLOSED 2026-04-17)* | JSON hand-prototype in `crates/bbnf-json-prototype/`, sonic-exceed form. Cherry-picked at `f8e56d50`. | 1 serial agent in `bbnf-wt-aw5-prototype` | W1 closed | **MET BY EXCEED, NOT PARITY**: data_s 0.94× / twitter 0.89× / citm 0.89× / canada 0.90× / data_xl 0.90× sonic-rs ns/iter (5/5 entries beat sonic). Samply: one symbol at 91.15% self-time (sonic's twin ≤88% over 2 symbols). `nm` clean on the six historical scaffold symbols. See `docs/tranches/AW/AW-V-W2-close.md` + `docs/benchmarks/post-AW-V-W2-prototype.json` |
+| ~~W2.3~~ *(RETIRED)* | ~~Novel-exceed levers (3 parallel agents)~~ | — | — | **Retired.** W2.1 met exceed-sonic without the novel levers. Levers redistribute: Lever 3 (multi-key SIMD) + Lever 5 (bounded Regex) + Lever 6 (ShapeRef) fold into W3 shape-emitter options; Lever 7 (multi-visitor) bounded to `(TapeVisitor, ValueVisitor)` in W3 codegen; user-declared custom multi-visitor defers to AX |
+| W3 | Shape-dispatch classifier + JSON emitter-lift: `crates/ir/src/passes/recognizers/shape_dispatch.rs` + `crates/core/src/backend/rust/emitter/shapes/{object,array,string,number,keyword,scalar}.rs`; shape-emitter consumes the existing miner IR facts + emits sonic-exceeding per-shape inline loops. Redistributed novel levers 3/5/6/7 fold in per-shape where applicable | 4 parallel | W2.1 closed + cherry-picked *(done)* | emitter-produced JSON parser matches hand-prototype exceed-sonic bench ± 5%; every grammar's `parse()` tail-calls a per-shape emitter fn; wire-contract test per shape category |
 | W4 | CSS L4 + Sheets shape coverage: `shapes/{pratt,unordered}.rs` + extend `shape_dispatch.rs` for CSS compound-selectors + Sheets 6-rung Pratt + function-name PHF via shape-mining. ShapeRef dedup consumer activates on CSS (high-repetition workload) | 3 parallel | W3 closed | CSS bootstrap ≥ 1500 MB/s single-thread; tailwind / normalize sonic-parity-equivalent; Sheets parse entries ≥ parity post-AU |
-| W5 | BBNF shape coverage + wire-contract pipeline fix for BBNF's `GRAMMAR_PROFILE` silent drop | 2 parallel | W4 closed | BBNF self-host ≥ 500 MB/s single-thread; `GRAMMAR_PROFILE` literal non-empty for every slot where IR mining produces data |
-| W6 | FINAL + 19-entry bench matrix + sonic-rs + lightningcss parity harnesses CI-gated. Document-parallel fork lands as an *amortisation multiplier on top of single-thread exceed*, documented separately — not as an exceed lever | 1 serial + 1 parity-harness agent | W5 closed | every parse entry exceeds post-AU on single-thread; both parity harnesses zero-divergence + CI-gated; verification ledger complete |
+| W5 | BBNF shape coverage + wire-contract pipeline fix for BBNF's `GRAMMAR_PROFILE` silent drop. Per-shape emitter covers BBNF's entry-reachable rule set; any shape miss routes through the generic per-rule fn, never the historical scaffold | 2 parallel | W4 closed | BBNF self-host ≥ 500 MB/s single-thread; `GRAMMAR_PROFILE` literal non-empty for every slot where IR mining produces data |
+| W6 | FINAL + 19-entry bench matrix + sonic-rs + lightningcss AST-level parity harnesses CI-gated. Per AX invariant 20 (added post-tranche), semantic `*_parity.rs` harnesses are the forward correctness oracle; tape-record parity against any historical scaffold is not a gate. Document-parallel fork lands as an *amortisation multiplier on top of single-thread exceed*, documented separately — not as an exceed lever | 1 serial + 1 parity-harness agent | W5 closed | every parse entry exceeds post-AU on single-thread; both parity harnesses zero-divergence + CI-gated; verification ledger complete |
 
 ## Phases
 
 ### W1 — Substrate enablers
 
-Three parallel agents. None modifies the AW-IV hot-path walker; all
-additions are additive (new crate, new submodule, new method, new trait)
-preserving the cold-path replay surface verbatim.
+Three parallel agents. All additions are additive (new crate, new
+submodule, new method, new trait); every landing feeds the shape
+emitter.
 
 #### W1.1 — `bbnf-tape-codegen` subcrate
 
@@ -410,7 +386,7 @@ Owner: `crates/bbnf-tape-codegen/` (new workspace member);
 
 Per B2 §1, the four residual helpers — `advance_or_pop_with`,
 `nearest_variant_frame`, `write_decoded`, `finalise` — expose their
-bodies as TokenStream fragments the walker emitter splices inline.
+bodies as TokenStream fragments the shape emitter splices inline.
 Two approaches:
 
 - **Body-source fragments**: `bbnf-tape-codegen` crate holds the helper
@@ -421,9 +397,7 @@ Two approaches:
   __<helper>_BODY: &str = "..."` at build time.
 
 W1.1 picks the approach with fewer moving parts (likely the first) and
-ships the fragment library. The runtime helpers in `bbnf-tape::driver`
-survive unchanged — they remain callable for the cold-path
-`dispatch_one` replay surface.
+ships the fragment library.
 
 **Hard gate**: `bbnf-tape-codegen` exports 4 body fragments; a unit test
 parses each fragment with `syn::parse_str::<syn::Block>` and confirms it
@@ -463,9 +437,8 @@ per-shape sub-traits). Ship default impls `TapeVisitor` (emits into
 monomorphised at call sites; no dyn dispatch.
 
 **Hard gate**: `push_scalar_payload_*` write bytes to the right column
-offsets; unit tests verify. `TapeVisitor` emits tape-shape-identical
-output to `dispatch_one`'s path on a fixture; `ValueVisitor` compiles
-against a minimal JSON enum.
+offsets; unit tests verify. `TapeVisitor` emits a shape-emitter-defined
+tape on a fixture; `ValueVisitor` compiles against a minimal JSON enum.
 
 ### W2.1 — JSON hand-prototype, sonic-parity baseline
 
@@ -480,15 +453,15 @@ Per B1:
 - Single `pub fn parse_json<V: JsonVisitor>(input: &[u8], visitor: &mut V) -> Result<(), ParseError>`.
 - Five `#[inline(always)]` per-shape functions: `parse_value`,
   `parse_object`, `parse_array`, `parse_string`, `parse_number`.
-- Zero `dispatch_one` / `try_branch` / `advance_or_pop_with` /
-  `DtaState` / `FrameStack`. Recursive descent via the CPU stack.
+- Pure recursive descent via the CPU stack; no dispatch-table indirection.
 - Inline SIMD kernels via W1.2's `bbnf-simd-scan::emit` fragments OR
   via direct `#[inline(always)]` fn calls (the prototype picks
   whichever matches sonic's shape).
 - Inline Eisel-Lemire for f64 decode.
 - Two visitors: `ValueVisitor` (materialises into `sonic_rs::Value`-shaped
   enum; this is the sonic-parity validator) and `TapeVisitor` (emits
-  into `bbnf_tape::Columns`; this is the AW-IV-substrate validator).
+  into `bbnf_tape::Columns`; this is the shape-emitter substrate
+  validator).
 
 #### W2.1.b — Bench scaffolding
 
@@ -500,12 +473,12 @@ entry; divvy-mode SIMD-off tests for fallback coverage.
 
 **W2.1 hard gate**: each of {data_s, twitter, citm, canada, data_xl}
 within **10% of sonic-rs's ns/iter** on the twin-pair bench (per B1 §7).
-Samply on JSON twitter confirms the walker's top-2 hot symbols
+Samply on JSON twitter confirms the prototype's top-2 hot symbols
 (`parse_object` + `parse_array`) cover ≥ 70% self-time. No out-of-line
-`#[cold]` helpers inside the walker module. No symbol named
-`dispatch_one` / `advance_or_pop_with` / `try_branch` / `walk_cursor`
-reachable from the walker. **This is the parity baseline** — the
-shape is correct; exceed-sonic work is W2.3.
+`#[cold]` helpers inside the prototype module; `nm` confirms the six
+historical scaffold symbols are unreachable from the prototype binary.
+**This is the parity baseline** — the shape is correct; exceed-sonic
+work is W2.3.
 
 If gate passes: W2.3 opens on the same prototype crate; cherry-pick
 to master happens at W3 open after W2.3 lands the exceed gate.
@@ -513,12 +486,12 @@ to master happens at W3 open after W2.3 lands the exceed gate.
 ### W2.3 — Novel-exceed levers (WAVE RETIRED; CONTENT PRESERVED)
 
 **Rescope rationale**: W2.1 closed with prototype beating sonic-rs on
-every twin-pair entry 0.89–0.94×. The 6 novel levers are no longer
+every twin-pair entry 0.89–0.94×. The novel levers are no longer
 required to meet the exceed-sonic gate — the gate is already met by
 shape + inlining discipline alone. The W2.3 **wave structure** (3
 parallel agents with an independent gate) is unnecessary. The W2.3
-**lever content is preserved in full** — every lever has a concrete
-home in W1 / W3 / AX per the table below. Nothing is abrogated.
+**lever content is preserved** — every surviving lever has a concrete
+home in W1 / W3 / AX per the table below.
 
 Full lever accounting:
 
@@ -527,11 +500,10 @@ Full lever accounting:
 | 1 Shape-mined codegen | AW-V.W3 (core thesis; shape-dispatch classifier + per-shape emitters) | The thesis of AW-V; every other lever composes with it. |
 | 2 Grammar-specialised SIMD kernel selection | AW-V.W3 via `recognizers/kernel_shape.rs` | IR-cardinality gate `prefer_inline_in_loop`; per-compound dispatch at codegen time. |
 | 3 SIMD-parallel multi-key compare | AW-V.W3 Object-shape emitter codegen option | Active when `ObjectVisitor` declares known keys (serde-compat use case); NEON `vceqq_u8` / AVX2 `vpcmpeqb` over up to 16 packed key prefixes. |
-| 4 Column-parallel SoA emission | AW-V.W1 substrate enabler | `Columns::push_compound_fused_v32` — 32-byte AVX-256 / NEON-Q vector store; method on `Columns`. |
 | 5 Bounded Regex via inverse-alphabet | AW-V.W3 String / HRegex shape emitters | `pattern.last_byte_set ⊆ structural_alphabet` invariant check per rule; scan bounded at next structural byte when admissible. |
-| 6 ShapeRef dedup | AW-V.W3 Object / Array / Flat compound-emit | `SHAPE_DICT.lookup(shape_hash)` short-circuit before `push_compound_fused_v32`; substrate already mined. |
-| 7 Multi-visitor `(TapeVisitor, ValueVisitor)` pair | AW-V.W3 codegen option (bounded) | Per H2's L1-fit analysis — only the named pair lands in AW-V; user-declared custom pairs → AX.X10. |
-| 7-ext user-declared custom pairs | **AX.X10** | `#[derive(Visitor)] #[emit_paired_with]` macro + emitter budget guard; user-authored multi-visitor combinations. |
+| 6 ShapeRef dedup | AW-V.W3 Object / Array / Flat compound-emit | `SHAPE_DICT.lookup(shape_hash)` short-circuit before the shape emitter's compound-push; substrate already mined. |
+| 7 Multi-visitor `(TapeVisitor, ValueVisitor)` pair | AW-V.W3 codegen option (bounded) | Per H2's L1-fit analysis — only the named pair lands in AW-V; user-declared custom pairs → AX. |
+| 7-ext user-declared custom pairs | **AX** | `#[derive(Visitor)] #[emit_paired_with]` macro + emitter budget guard; user-authored multi-visitor combinations. |
 
 **W3 is a multi-file wave** consuming these levers as codegen options
 in per-shape emitter modules. The levers do not require their own
@@ -594,9 +566,10 @@ TokenStream golden file).
 
 Owner: `crates/core/tests/json_parity_shape_emit.rs` (new).
 
-Re-run the full JSON parity test suite with the shape-emitter-produced
-parser; assert zero divergence vs the `__dta_walker_inline::run` path
-on every existing fixture.
+Run the full JSON semantic parity suite against the shape-emitted
+parser + sonic-rs / serde_json / simdjson-OnDemand; assert zero
+divergence at the AST-level comparator. Record-count equivalence
+against any historical scaffold is not a gate.
 
 ### W4 — CSS L4 + Sheets shape coverage
 
@@ -617,13 +590,15 @@ independent; emit as byte-dispatch + sub-loop per B4 §1).
 
 Owner: extend `shape_dispatch.rs` + wire CSS L4 rules to the new emitters.
 
-Target 78% coverage per B4. Rules without shape match continue through
-`__dta_walker_inline::run` per the fallback contract.
+Target 78% coverage per B4. Rules without shape match route to the
+generic per-rule emitter fn, which ships field-complete under the
+shape-emission-authoritative invariant (no deferral to a secondary
+scaffold).
 
 **Hard gate**: CSS bootstrap ≥ 1500 MB/s; samply confirms CSS compound-
 selector arms are monomorphic hot symbols (sonic-parity-equivalent);
-`__dta_walker_inline::run` symbol size reduced by ≥ 50% (most hot arms
-moved to shape emitters, eliminating the 154 KB overflow).
+shape-emitted hot arms dominate self-time (the 154 KB i-cache overflow
+from the AW-IV consumer boundary is eliminated).
 
 #### W4.3 — Sheets shape coverage + function-name PHF
 
@@ -680,16 +655,15 @@ All numbers are **single-thread NEON on Apple M-class**; no document-
 parallel fork. Exceed-sonic via algorithmic novelty, not core count.
 
 Computed from B1's ~1.2 cyc/byte cost model, W2.3's novel-lever
-compounding (multi-key SIMD ~1.1×, column-parallel SoA ~1.1×, bounded
-Regex ~1.05×, ShapeRef dedup workload-dependent, NEON 17-digit ~1.15×
-on fraction-heavy), and B4's coverage percentages for grammars where
-sonic doesn't exist as a comparator.
+compounding (multi-key SIMD ~1.1×, bounded Regex ~1.05×, ShapeRef
+dedup workload-dependent), and B4's coverage percentages for grammars
+where sonic doesn't exist as a comparator.
 
 | Entry | post-AU | sonic (single-thread) | post-AW-V projected | vs post-AU | vs sonic |
 |---|---:|---:|---:|:---:|:---:|
 | json twitter | 1967 | 2652 | 2900–3100 | **1.5–1.6×** | **1.10–1.17×** |
 | json citm | 2438 | 3062 | 3400–3800 | **1.4–1.6×** | **1.11–1.24×** |
-| json canada | 1231 | 1545 | 1850–2200 | **1.5–1.8×** | **1.20–1.42×** (NEON 17-digit lever) |
+| json canada | 1231 | 1545 | 1850–2200 | **1.5–1.8×** | **1.20–1.42×** |
 | json data_xl | 1179 | 1460 | 1650–1900 | **1.4–1.6×** | **1.13–1.30×** |
 | json data_s | 1746 | 2346 | 2500–2700 | **1.4–1.5×** | **1.07–1.15×** |
 | css normalize | 735 | — (lightningcss) | 1500–2200 | **2.0–3.0×** | n/a |
@@ -713,10 +687,10 @@ pathology in AW-IV). CSS / BBNF have no sonic-equivalent comparator;
 the vs-post-AU multiplier is the primary validation.
 
 **Document-parallel fork** stays out of this projection. When folded
-in for workload-size ≥ 1 MB (AW-VI scope, future tranche), fork
-amortises 2–4× on canada / citm / tailwind / data_xl — *on top of*
-these single-thread numbers. Fork is an amortisation multiplier;
-AW-V is the algorithmic exceed.
+in for workload-size ≥ 1 MB under AX's later wave, fork amortises
+2–4× on canada / citm / tailwind / data_xl — *on top of* these
+single-thread numbers. Fork is an amortisation multiplier; AW-V is
+the algorithmic exceed.
 
 ## Critical files
 
@@ -790,36 +764,82 @@ Inherits `docs/instructions/README.md` + `docs/instructions/PROFILING.md`
   `.profiles/samply/aw5-w{N}/` per-bench per-entry artefacts.
 - **Bootstrap regen per wave** where the IR or emitter changes.
 
+## Delete-manifest
+
+The historical scaffold retires inside AX, not AW-V. AW-V ships the
+consumer; AX deletes the substrate the consumer displaced. The three
+AW audit docs enumerate what comes down:
+
+- [`docs/tranches/AW/audit/dead-code-manifest.md`](audit/dead-code-manifest.md)
+  — per-file enumeration of reachable-but-consumer-less substrate
+  retired under AX.W0b.
+- [`docs/tranches/AW/audit/psi-and-dead-substrate.md`](audit/psi-and-dead-substrate.md)
+  — PSI scheduling + dead-tape surfaces that no shape emitter consumes.
+- [`docs/tranches/AW/audit/full-codebase-prune.md`](audit/full-codebase-prune.md)
+  — cross-crate prune pass: `bbnf-tape-codegen`, deprecated
+  `csp_strategy` aliases, `simd-scan::emit/*` surfaces, 7 dead
+  `GrammarProfile` slots, ~57k LOC of generated-output residue.
+
+Total reclaim per AX.md §Architectural-thesis item 2: ~78,500 LOC.
+
 ## Successor chain
 
-AW-V closes green → AW-VI opens (document-parallel fork over stage-1
-index as a workload-size amortisation multiplier *on top of* AW-V's
-single-thread exceed; canada / citm / tailwind / data_xl gain another
-2–4× on 4 cores) → AX opens (replay tooling, snapshot persistence,
-incremental re-parse, structural-default recovery, subsystem closures).
-AX substrate preserved verbatim under AW-V: `DTA_TABLE` const,
-`DtaSnapshot`, decision log, per-record snapshot metadata,
-`StructuralIndex`, cold-path `dispatch_one` + helpers. Stage-1 bitmap
-is deterministic; replay re-derives.
+AW-V closes green → AX opens (**the RD reckoning**: gate repair,
+routing, structural parity against sonic-rs / lightningcss /
+simdjson-OnDemand / serde_json / cssparser, shape-emission authority
+per AX invariant 20, e-graph grammar-rewrite subsumption, detector
+retirement, document-parallel fork as amortisation multiplier) → AY
+opens (**replay + JIT**: decision-log replay tooling, incremental
+re-parse, structural-default recovery, parse-step debugger, Cranelift
+per-schema). AW-VI is not in the chain.
 
 The AW arc:
 
 - AW-I: substrate landing.
 - AW-II: DTA self-host round-trip.
 - AW-III: correctness + architectural transposition scaffold.
-- AW-IV: interpreter abrogation (helper inlining + wire-contract fixes
-  + consumer activations + granular SIMD).
-- **AW-V**: compile DTA/PSI into hot-path code via shape-mining +
-  per-shape inline emitter + **six novel algorithmic levers that
-  exceed sonic-rs on single-thread NEON**. DTA IR preserved; DTA
-  interpreter demoted to cold-path AX replay; PSI selectively bypassed
-  on scalars.
-- AW-VI (future): document-parallel fork as workload-size multiplier.
-- AX: replay / recovery / incremental consumers over AW-V substrate.
+- AW-IV: helper inlining + wire-contract fixes + consumer activations
+  + granular SIMD.
+- **AW-V**: fn-per-rule over shape templates — DTA-era IR facts feed
+  the shape emitter; per-shape inline emission + algorithmic levers
+  that exceed sonic-rs on single-thread NEON. The scaffold came down
+  as the consumer emerged; AX completes the retirement.
 
-Indefatigable. DTA compiled, not abrogated. Consumer inverted at
-shape-granularity. Every parse entry exceeds post-AU on single-thread.
-Every JSON entry exceeds sonic-rs on single-thread NEON by ≥ 1.07×.
-sonic-rs + lightningcss parity CI-gated. Fork reserved as
-amortisation multiplier, not conflated with algorithmic advantage.
-AX unblocked.
+## Pivot
+
+The W0a.2.h pivot (landed 2026-04-19 in tranche AX) reframes the AW-V
+arc retroactively. AW-V.W3–W6 tracked correctness via tape-record
+parity against the then-active walker scaffold. That framing was a
+category error the plan inherited from the AW-II / AW-III
+retrospectives — neither priced in the scaffold distinction between
+substrate-as-oracle and substrate-as-consumer-target. Per
+`docs/benchmarks/post-AX-W0a2g-progress.md` §Remaining-blockers, four
+deferred walker-parity deltas (Flat Next/Skip flatten, Ref→HRegex
+Rule wrap, Repeat `iter_count < lo` leak, zero-length Seq elision)
+surfaced as irreducible shape-emitter vs walker divergences that no
+downstream consumer demands.
+
+Per `docs/tranches/AX/audit/R4-plan-redress.md`, AX closed the loop
+with **invariant 20 — Shape-emission authority**: tape shape is
+shape-emission-authoritative; correctness is asserted by AST-level
+`*_parity.rs` harnesses (JSON/CSS/Sheets/BBNF against sonic-rs /
+lightningcss / simdjson-OnDemand + self-parity), not by record-count
+or column-layout equivalence against the walker. Walker tape was a
+historical scaffold; consumers read through `Root::View` +
+`TapeCursor`, not raw records. The six AST-level semantic harnesses
+went green on master under the pivot; the walker came down in AX.W0b.
+
+The pivot is not a failure of the shape emitter. The emitter produces
+correct parse output at the AST layer. The failure mode was
+positioning the walker's emission as the correctness oracle when the
+walker was itself the scaffold being retired. Walker-parity chasing
+was a category-error the AW-V arc inherited, not an emitter defect.
+
+## Closing
+
+Fn-per-rule over shape templates. Every parse entry exceeds post-AU
+on single-thread. Every JSON entry exceeds sonic-rs on single-thread
+NEON by ≥ 1.07×. AST-level parity CI-gated against five external
+comparators. Fork reserved as amortisation multiplier, not conflated
+with algorithmic advantage. AX carries the reckoning; AY carries
+replay + JIT.

@@ -3289,3 +3289,21 @@ AW-V closes honestly. AW-VI opens on three bounded pieces:
 3. Lever-4 consumer activation + remaining AW-IV-carry-forwards (ShapeRef dedup in `close_compound`; Pratt LUT cold-path shadow deletion; CTNS / Bounded-Regex sound admission).
 
 AX preserved unchanged. AW-V's W1 substrate is additive — `bbnf-tape-codegen` exports helper bodies as fragments; runtime helpers remain for cold-path replay.
+
+## 2026-04-19 — AW-V.md rewrite close (AX.W0c)
+
+AW-V.md rewritten in RD language under AX.W0c. Strikethroughs:
+
+- **Lever 4 `push_compound_fused_v32`** struck from §Novel-levers table (slot 4 absent; levers renumbered 1/2/3/5/6/7 with explicit retirement marker in W2.3 table), §Wave-schedule W1 scope, and §Critical files. §Per-grammar projections preamble no longer lists column-parallel SoA as a compounding term.
+- **"17-digit NEON lever"** struck from §Per-grammar projections preamble and from the json canada row.
+- **"Compile DTA into hot-path code" branding** retired throughout. Title re-cast as *Fn-per-rule over shape templates*; opening paragraph re-cast on the thesis "DTA-era IR facts feed the shape emitter; the scaffold came down as the consumer emerged"; §"Compile DTA into hot-path code — not abrogate" renamed to §"Fn-per-rule over shape templates" with the DTA-interpreter row reframed as historical scaffold retired W0a/W0b; §Architectural-thesis items 1/2/4 de-branded; §Invariants.3 rewritten (cold-path replay hedge dropped — AY owns the broader replay contract per AX.md §Architectural-thesis); §Wave-schedule rows W1/W2.1/W3/W5/W6 re-cast on shape-emitter mechanisms; §W3.4 integration + §W4.2 hard gate reframed on AST-level semantic parity instead of walker-record parity; "Interpreter fallback" renamed to "Heterogeneous fallback" with per-rule generic emitter routing.
+- **§Successor chain** rewritten as `AW-V → AX (RD reckoning) → AY (replay + JIT)`. No AW-VI (explicit "AW-VI is not in the chain"). Deferred-to-successor-tranche block routed to AX (e-graph codegen, CPU autotune, PMC feedback) and AY (Cranelift JIT).
+- **§Delete-manifest** added, pointing to `docs/tranches/AW/audit/{dead-code-manifest,psi-and-dead-substrate,full-codebase-prune}.md`; cites ~78,500 LOC reclaim per AX.md.
+- **§Pivot** added (30 lines) documenting the W0a.2.h shape-emission-authoritative pivot: cites `docs/benchmarks/post-AX-W0a2g-progress.md` §Remaining-blockers (four deferred walker-parity deltas) + `docs/tranches/AX/audit/R4-plan-redress.md` (invariant 20). Positions walker-parity chasing as a category-error the arc inherited, not a shape-emitter defect.
+
+Hard-gate greps at close:
+- `grep -iE 'lever 4|push_compound_fused_v32|17-digit' docs/tranches/AW/AW-V.md` → ZERO.
+- `grep -E 'cold-path replay|dta_run_cold|compile.*DTA.*into.*hot' docs/tranches/AW/AW-V.md` → ZERO.
+- Every §Wave-schedule row references shape-emitter mechanisms; no walker or `__dta_walker_inline::run` mentions outside §Pivot (its subject).
+
+Document length: 825 → ~830 lines (§Pivot addition offset by DTA-branding strikethroughs). File bounds honoured: only `docs/tranches/AW/AW-V.md` + this PROGRESS.md entry touched.

@@ -29,7 +29,7 @@ use std::borrow::Cow;
 use parse_that::Span;
 
 use super::generated::{BbnfBootstrap, BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
-use crate::lower::tape_walk::find_descendant_by_kind;
+use crate::lower::tape_walk::{find_descendant_by_kind, find_rhs_expression_descendant};
 use crate::pipeline::directives::DirectiveMaps;
 use crate::runtime::Parsed;
 use crate::types::*;
@@ -303,12 +303,19 @@ fn absorb_item<'a, S: GrammarSink<'a>>(
             lo as usize + name_len,
             input,
         );
-        // The RHS is the `rhs` descendant compound. `rule = lhs , "=" ?w ,
-        // rhs ?w , ( ";" | "." ) ;` — picking the last non-identifier
-        // child erroneously lands on the terminator Alt under DTA's
-        // structural wrapping, so we descend explicitly.
-        let rhs = find_descendant_by_kind(item, BbnfBootstrapRuleKind::rhs)
-            .expect("rule: missing rhs descendant");
+        // The RHS is the `rhs` expression-head descendant.
+        // `rule = lhs , "=" ?w , rhs ?w , ( ";" | "." ) ;` — picking
+        // the last non-identifier child erroneously lands on the
+        // terminator Alt under DTA's structural wrapping, so we
+        // descend explicitly.
+        //
+        // `rhs` is a transparent `closure | alternation` Wrap alias.
+        // Walker tape preserves the named rhs compound; shape-
+        // authoritative tape elides it (the Wrap shape emitter
+        // dispatches directly to the chosen branch). `find_rhs_
+        // expression_descendant` handles both — see tape_walk.rs.
+        let rhs = find_rhs_expression_descendant(item)
+            .expect("rule: missing rhs expression descendant");
         sink.insert_rule(
             name,
             RuleEntry {
@@ -370,23 +377,26 @@ fn absorb_item<'a, S: GrammarSink<'a>>(
 // ------------------------------------------------------------------
 
 /// `@recover ruleName syncExpr ;` — extract rule_name (first
-/// identifier descendant) and sync_expr (the `rhs` descendant).
+/// identifier descendant) and sync_expr (the rhs expression-head
+/// descendant).
 ///
 /// Under DTA, the identifier is nested inside the Seq wrappers the
 /// lifter emits for the rule body; a descendant search handles that.
 /// The sync expression is a full `rhs` body (the directive grammar
 /// is `"@recover" ?w , identifier ?w , rhs ?w , ( ";" | "." ) ?`);
-/// we pick it by rule_kind so the `metadata.rs::build_rule_meta`
-/// caller can hand it straight to `lower_rhs` without tripping on
-/// the terminator Alt. Falls back to the whole directive if the
-/// lifter inlined the rhs wrapper away — `dispatch_expression`'s
-/// directive arm returns Epsilon in that case rather than panic.
+/// we pick it via `find_rhs_expression_descendant` so the
+/// `metadata.rs::build_rule_meta` caller can hand it straight to
+/// `lower_rhs` under either walker-routed tape (rhs compound
+/// preserved) or shape-authoritative tape (rhs Wrap elided; the
+/// closure / alternation branch is the direct descendant). Falls
+/// back to the whole directive when no expression is present —
+/// `dispatch_expression`'s directive arm returns Epsilon in that
+/// case rather than panic.
 fn decode_recover<'a>(item: BbnfBootstrapNodeView<'a>) -> Option<RecoverDirective<'a>> {
     let (lo, hi) = item.span();
     let input = item.input();
     let name_node = find_descendant_by_kind(item, BbnfBootstrapRuleKind::identifier)?;
-    let sync_expr = find_descendant_by_kind(item, BbnfBootstrapRuleKind::rhs)
-        .unwrap_or(item);
+    let sync_expr = find_rhs_expression_descendant(item).unwrap_or(item);
     Some(RecoverDirective {
         rule_name: name_node.span_text(),
         sync_expr,

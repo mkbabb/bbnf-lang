@@ -121,6 +121,49 @@ pub(crate) fn find_descendant_by_kind<'tape>(
     None
 }
 
+/// Find the rhs expression-head descendant under shape-authoritative
+/// OR walker-routed tape.
+///
+/// `rhs` is a transparent Wrap alias of `closure | alternation`
+/// (see `grammar/bbnf/bbnf.bbnf`). The Wrap shape emitter elides the
+/// `rhs` compound entirely at parse time — its chosen branch's shape
+/// fn owns the tape record directly (see
+/// `crates/core/src/backend/rust/emitter/shapes/wrap.rs::emit_alt_tape_
+/// dispatch`). The DTA walker, by contrast, pushes an explicit `rhs`
+/// Rule compound (variant_idx = 38) that wraps the chosen branch.
+///
+/// Callers ultimately hand the returned view to `lower_rhs`, which
+/// calls [`peel_transparent`] → `dispatch_expression`. That pipeline
+/// handles either the named wrapper OR the branch head directly —
+/// `rhs` is in the peel whitelist, and `closure` / `alternation` are
+/// explicit arms in `dispatch_expression`.
+///
+/// Search order:
+/// 1. `rhs` compound (walker-routed tape).
+/// 2. `closure` compound (shape-authoritative tape, grammar-closure
+///    branch — leading `|`).
+/// 3. `alternation` compound (shape-authoritative tape, standard
+///    expression branch).
+///
+/// Returns `None` only when the caller handed in a view that contains
+/// no expression at all (malformed rule with empty body).
+pub(crate) fn find_rhs_expression_descendant<'tape>(
+    view: BbnfBootstrapNodeView<'tape>,
+) -> Option<BbnfBootstrapNodeView<'tape>> {
+    if let Some(rhs) = find_descendant_by_kind(view, BbnfBootstrapRuleKind::rhs) {
+        return Some(rhs);
+    }
+    for alt in [
+        BbnfBootstrapRuleKind::closure,
+        BbnfBootstrapRuleKind::alternation,
+    ] {
+        if let Some(head) = find_descendant_by_kind(view, alt) {
+            return Some(head);
+        }
+    }
+    None
+}
+
 /// Find the first descendant of `view` whose `rule_kind()` matches
 /// `target`, descending only through structurally-anonymous wrappers
 /// (Seq / Alt / Repeat compounds whose own `rule_kind` is `Unknown`

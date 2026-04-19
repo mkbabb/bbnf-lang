@@ -74076,10 +74076,39 @@ mod __bbnfbootstrap_emit_impl {
     {
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-        match first {
-            124u8 => parse_flat_BbnfBootstrap_value_closure(input, p, state, builder),
-            _ => parse_BbnfBootstrap_grammar__value(input, p, state, builder),
+        'try_branches: loop {
+            match first {
+                124u8 => {
+                    let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len();
+                    match parse_flat_BbnfBootstrap_value_closure(input, p, state, builder) {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.columns_mut().truncate(attempt_len);
+                        }
+                    }
+                }
+                _ => {}
+            }
+            {
+                let attempt_p = *p;
+                let attempt_len = builder.columns_mut().len();
+                match parse_pratt_BbnfBootstrap_value_or(input, p, state, builder) {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                        builder.columns_mut().truncate(attempt_len);
+                    }
+                }
+            }
+            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            });
         }
+        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -76269,10 +76298,39 @@ mod __bbnfbootstrap_emit_impl {
     {
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-        match first {
-            124u8 => parse_flat_BbnfBootstrap_closure(input, p, state, builder),
-            _ => parse_BbnfBootstrap_grammar__value(input, p, state, builder),
+        'try_branches: loop {
+            match first {
+                124u8 => {
+                    let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len();
+                    match parse_flat_BbnfBootstrap_closure(input, p, state, builder) {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.columns_mut().truncate(attempt_len);
+                        }
+                    }
+                }
+                _ => {}
+            }
+            {
+                let attempt_p = *p;
+                let attempt_len = builder.columns_mut().len();
+                match parse_flat_BbnfBootstrap_alternation(input, p, state, builder) {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                        builder.columns_mut().truncate(attempt_len);
+                    }
+                }
+            }
+            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            });
         }
+        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -78128,11 +78186,63 @@ mod __bbnfbootstrap_emit_impl {
     {
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-        match first {
-            47u8 => parse_flat_BbnfBootstrap_comment(input, p, state, builder),
-            47u8 => parse_flat_BbnfBootstrap_big_comment(input, p, state, builder),
-            _ => parse_BbnfBootstrap_grammar__value(input, p, state, builder),
+        'try_branches: loop {
+            match first {
+                47u8 => {
+                    {
+                        let attempt_p = *p;
+                        let attempt_len = builder.columns_mut().len();
+                        match parse_flat_BbnfBootstrap_comment(input, p, state, builder) {
+                            Ok(_) => break 'try_branches,
+                            Err(_) => {
+                                *p = attempt_p;
+                                builder.columns_mut().truncate(attempt_len);
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        let attempt_len = builder.columns_mut().len();
+                        match parse_flat_BbnfBootstrap_big_comment(input, p, state, builder) {
+                            Ok(_) => break 'try_branches,
+                            Err(_) => {
+                                *p = attempt_p;
+                                builder.columns_mut().truncate(attempt_len);
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+            {
+                let attempt_p = *p;
+                let attempt_len = builder.columns_mut().len();
+                match parse_keyword_BbnfBootstrap_directive(input, p, first, builder) {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                        builder.columns_mut().truncate(attempt_len);
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                let attempt_len = builder.columns_mut().len();
+                match parse_flat_BbnfBootstrap_rule(input, p, state, builder) {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                        builder.columns_mut().truncate(attempt_len);
+                    }
+                }
+            }
+            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            });
         }
+        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
     }
     /// AX.W0a.2.a — per-grammar Array-shape parse function
     /// (Shape 2 — direct-Repeat entry-rule list,

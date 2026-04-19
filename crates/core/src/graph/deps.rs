@@ -65,19 +65,6 @@ pub fn collect_nonterminal_refs<'a>(
             }
         }
 
-        // term_1: identifier + optional call args.
-        BbnfBootstrapRuleKind::term_1 => {
-            if let Some(ident) = node.child(0) {
-                let text = ident.span_text().trim();
-                if !text.is_empty() && is_ident(text.as_bytes()) && !is_value_keyword(text) {
-                    refs.insert(text);
-                }
-            }
-            for c in node.children().skip(1) {
-                collect_nonterminal_refs(c, refs);
-            }
-        }
-
         // Structural: alternation, concatenation — iterate branches.
         BbnfBootstrapRuleKind::alternation | BbnfBootstrapRuleKind::concatenation => {
             for child in iter_tape_iteration_views(node) {
@@ -101,30 +88,65 @@ pub fn collect_nonterminal_refs<'a>(
             collect_refs_from_compound(node, refs);
         }
 
-        // Transparent wrappers — descend into the single inner child.
+        // Canonical `term` + transparent wrappers. Grammar:
+        //
+        //   term = "ε" | "epsilon"
+        //        | identifier , ( "(" , call_arg … ")" ) ?
+        //        | literal | regex
+        //        | "@{" , rhs ?w , "}"
+        //        | "(" , rhs ?w , ")"
+        //        | "[" , rhs ?w , "]"
+        //        | "{" , rhs ?w , "}" ;
+        //
+        // Walker-era emission stamped each Alt branch with a sub-
+        // variant name (`term_0` / `term_1` / `term_2`); AX.W0a.2.i.b
+        // retires those under shape-authoritative Wrap emission. The
+        // canonical `term` compound now carries the chosen Alt
+        // branch's children directly — either the grouped `rhs`
+        // descendant (branches 4–7), the `identifier` + optional
+        // `call_arg` children (branch 3), or a single leaf token
+        // (branches 1, 2, 5, 6).
+        //
+        // The unified handler: (a) descends into a grouped `rhs`
+        // descendant when present (former `term_2`), else (b)
+        // iterates every Rule child (former `term_1` identifier +
+        // call_args AND the canonical single-inner-child transparent
+        // descent), else (c) extracts a bare identifier from the
+        // compound's span (fully-inlined terminal). No keying on
+        // sub-variant NAMES — the projection is IR-structural.
+        //
+        // `grammar_item` / `directive` / `lhs` share the single-
+        // inner-child transparent semantics; they fold into the same
+        // Rule-iteration path.
         BbnfBootstrapRuleKind::term
         | BbnfBootstrapRuleKind::grammar_item
         | BbnfBootstrapRuleKind::directive
         | BbnfBootstrapRuleKind::lhs => {
-            if let Some(inner) = node.child(0) {
-                collect_nonterminal_refs(inner, refs);
-            }
-        }
-
-        // Grouped: "(" rhs ")" / "[" rhs "]" / "{" rhs "}" / "@{" rhs "}"
-        //
-        // Under DTA, the inner `rhs` compound may sit inside a Seq
-        // wrapper alongside the `(` / `)` delimiter leaves — a direct
-        // `child(1)` read can land on the Seq wrapper (rule_kind =
-        // Unknown) instead of the semantic `rhs`. Descend to the
-        // first `rhs` descendant to see through the wrapper. Mirrors
-        // AW-II.W1.1's `lower_grouped_term` fix and
-        // `grammar/host.rs::absorb_item`.
-        BbnfBootstrapRuleKind::term_2 | BbnfBootstrapRuleKind::value_atom_0 => {
+            // First: descend into a grouped `rhs` inner expression
+            // if present (covers former `term_2`).
             if let Some(inner) = find_descendant_by_kind(node, BbnfBootstrapRuleKind::rhs) {
                 collect_nonterminal_refs(inner, refs);
-            } else if let Some(inner) = node.child(1) {
-                collect_nonterminal_refs(inner, refs);
+                return;
+            }
+            // Second: iterate every Rule child — covers the former
+            // `term_1` identifier + call_args shape and the other
+            // transparent wrappers whose sub-expression pushes a
+            // Rule compound.
+            let initial = refs.len();
+            for c in node.children() {
+                if c.kind() == TapeKind::Rule {
+                    collect_nonterminal_refs(c, refs);
+                }
+            }
+            if refs.len() > initial {
+                return;
+            }
+            // Third: fully-inlined terminal — scan the compound's
+            // span for a bare identifier token so a single-token
+            // term still registers its reference.
+            let text = node.span_text().trim();
+            if !text.is_empty() && is_ident(text.as_bytes()) && !is_value_keyword(text) {
+                refs.insert(text);
             }
         }
 

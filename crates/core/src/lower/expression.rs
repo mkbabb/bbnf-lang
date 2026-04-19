@@ -198,9 +198,13 @@ fn dispatch_expression<'a>(
         // AU.2.5: the old `_0` sub-variants (`import_directive_0`,
         // `pretty_directive_0`, `debug_directive_0`) vanished once
         // Ref-scalar projection collapsed their owning Alt to
-        // homogeneous `Span`. The variants dispatched here anyway,
-        // so dropping the stale names closes the loop without
-        // losing any lowering capability.
+        // homogeneous `Span`. AX.W0a.2.i.b: the same fate befell
+        // `directive_0` + `grammar_item_0` once the shape-
+        // authoritative Wrap emitter stamped Rule compounds with
+        // the parent rule's id rather than walker-era sub-variant
+        // ids. Dispatch is keyed on the canonical rule-kind; stale
+        // `_0` sub-variant names are dropped from the match arm
+        // because shape-auth regen no longer produces them.
         BbnfBootstrapRuleKind::comment
         | BbnfBootstrapRuleKind::big_comment
         | BbnfBootstrapRuleKind::recover_directive
@@ -210,11 +214,7 @@ fn dispatch_expression<'a>(
         | BbnfBootstrapRuleKind::token_directive
         | BbnfBootstrapRuleKind::debug_directive
         | BbnfBootstrapRuleKind::host_directive
-        | BbnfBootstrapRuleKind::directive
-        | BbnfBootstrapRuleKind::directive_0
-        | BbnfBootstrapRuleKind::grammar_item_0 => {
-            IrNode::Epsilon
-        }
+        | BbnfBootstrapRuleKind::directive => IrNode::Epsilon,
 
         // Fallback: the bbnf grammar is closed at the expression
         // hierarchy layers above, so anything else is a term-shaped

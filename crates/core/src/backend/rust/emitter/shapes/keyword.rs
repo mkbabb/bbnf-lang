@@ -27,12 +27,22 @@
 
 use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 
-use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
+use super::dispatcher::{
+    emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident, visitor_shape_fn_ident,
+};
 
 /// Emit `pub fn parse_keyword_<grammar>_<rule>(input, p, first_byte,
-/// builder) -> Result<TapeOffset, DtaError>`.
+/// state, builder) -> Result<TapeOffset, DtaError>`.
+///
+/// AX.W0a.2.g — `state: &mut ScanState` threaded through the signature
+/// so Ref-led Alt branches can delegate to their target rule's shape
+/// fn via [`emit_ref_call_tape`]. Single-literal arms ignore `state`
+/// (no downstream skip_space); the Alt arm's Ref branches forward
+/// `state` into the target fn call. Legacy single-literal + pure-
+/// Literal Alt emission is byte-identical to the pre-W0a.2.g form
+/// modulo the extra parameter.
 pub fn emit_parse_keyword(
     grammar_suffix: &str,
     rule: &IrRule,
@@ -40,6 +50,7 @@ pub fn emit_parse_keyword(
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("keyword", grammar_suffix, rule_name);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let variant_idx = (rule.id & 0xFF) as u8;
     let _ = ir;
 
@@ -78,12 +89,18 @@ pub fn emit_parse_keyword(
             quote! {
                 /// AW-V.W3.2 — per-grammar Keyword-shape parse function
                 /// (single-literal body).
+                ///
+                /// AX.W0a.2.g — `state` parameter unused for single-
+                /// literal form (no downstream ws-skip / Ref delegation);
+                /// present so every `parse_keyword_<grammar>_<rule>`
+                /// shares one signature across sub-cases.
                 #[inline(always)]
                 #[allow(non_snake_case, clippy::too_many_arguments)]
                 pub fn #fn_ident(
                     input: &[u8],
                     p: &mut usize,
                     _first_byte: u8,
+                    _state: &mut #support_mod::ScanState,
                     builder: &mut ::bbnf::runtime::tape::TapeBuilder,
                 ) -> ::core::result::Result<
                     ::bbnf::runtime::tape::TapeOffset,
@@ -116,75 +133,172 @@ pub fn emit_parse_keyword(
             }
         }
         IrNode::Alt(branches, _) => {
-            // Alt-of-literals — emit a per-branch byte-dispatch.
-            let arms: Vec<TokenStream> = branches
-                .iter()
-                .enumerate()
-                .filter_map(|(branch_idx, branch)| {
-                    let body = unwrap_trivia(&branch.node);
-                    let IrNode::Literal(sid) = body else { return None };
-                    let bytes = ir.get_string(*sid).as_bytes();
-                    if bytes.is_empty() { return None; }
-                    let first = bytes[0];
-                    let len = bytes.len();
-                    let byte_lits: Vec<TokenStream> = bytes
-                        .iter()
-                        .map(|b| {
-                            let lit = *b;
-                            quote! { #lit }
-                        })
-                        .collect();
-                    let branch_payload = alt_branch_payload(rule, branch, branch_idx, ir);
-                    // AW-V.W3-fix (cursor parity): walker emits meta_idx=0
-                    // for every leaf — `push_leaf_fused` packs
-                    // `kind_meta = kind & 0x0F` with no meta_idx slot, and
-                    // the Alt frame's `cursor` (the branch index) is only
-                    // stamped into the COMPOUND's `flags` by close_compound,
-                    // not into leaf meta_idx. Using `branch_idx` here
-                    // diverges from the walker; stamp 0 to match.
-                    let _ = branch_idx;
-                    Some(quote! {
-                        #first => {
-                            let at = *p;
-                            let end = at + #len;
-                            if input.len() < end
-                                || input[at..end] != [#(#byte_lits),*]
-                            {
-                                return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                                    offset: at as u32,
-                                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                });
+            // AX.W0a.2.g — Alt arm admits both Literal-led and Ref-led
+            // branches. The W3.1 keyword detector accepts
+            // `leading_literal_rec(branch)` which follows Ref targets
+            // through to their body's literal prefix (BBNF `directive`
+            // canonical case). For each branch we emit per-first-byte
+            // arms; arms share a first byte when multiple branches'
+            // leading literals collide on byte 0 (BBNF: every directive
+            // branch starts with `@`). Inside a shared arm, each branch
+            // checks its full prefix (e.g. `@import`, `@recover`) before
+            // committing to its call.
+            use std::collections::BTreeMap;
+
+            // Collect `(leading_literal_bytes, branch_ref_or_literal)`
+            // for each branch. Literal-led branches carry `None` for
+            // the target; Ref-led branches carry `Some(rid)` so the
+            // emission dispatches to the target's shape fn via
+            // `emit_ref_call_tape`.
+            let per_branch: Vec<(Vec<u8>, Option<bbnf_ir::RuleId>, usize, &bbnf_ir::AltBranch)> =
+                branches
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(branch_idx, branch)| {
+                        let body = unwrap_trivia(&branch.node);
+                        match body {
+                            IrNode::Literal(sid) => {
+                                let bytes = ir.get_string(*sid).as_bytes().to_vec();
+                                if bytes.is_empty() {
+                                    return None;
+                                }
+                                Some((bytes, None, branch_idx, branch))
                             }
-                            *p = end;
-                            // Span + Aggregate — see null arm.
-                            let off = builder.push_leaf_with(
-                                ::bbnf::runtime::tape::TapeKind::Span,
-                                at as u32,
-                                end as u32,
-                                #variant_idx,
-                                0u8,
-                                #branch_payload,
-                            );
-                            Ok(off)
+                            IrNode::Ref(rid) => {
+                                let bytes = leading_literal_bytes(body, ir)?;
+                                if bytes.is_empty() {
+                                    return None;
+                                }
+                                Some((bytes, Some(*rid), branch_idx, branch))
+                            }
+                            _ => None,
                         }
                     })
+                    .collect();
+
+            // Group per-branch entries by their first byte; each group
+            // becomes one `#first => { ... }` match arm.
+            let mut by_first: BTreeMap<u8, Vec<&(Vec<u8>, Option<bbnf_ir::RuleId>, usize, &bbnf_ir::AltBranch)>> =
+                BTreeMap::new();
+            for entry in &per_branch {
+                by_first.entry(entry.0[0]).or_default().push(entry);
+            }
+
+            let arms: Vec<TokenStream> = by_first
+                .iter()
+                .map(|(first, group)| {
+                    // For each branch in this first-byte group, emit a
+                    // full-prefix check + commit. Branches are ordered
+                    // by their original Alt position (stable per the
+                    // per_branch build order).
+                    let tries: Vec<TokenStream> = group
+                        .iter()
+                        .map(|(bytes, target_ref, branch_idx, branch)| {
+                            let len = bytes.len();
+                            let byte_lits: Vec<TokenStream> =
+                                bytes.iter().map(|b| {
+                                    let lit = *b;
+                                    quote! { #lit }
+                                }).collect();
+                            if let Some(target_rid) = target_ref {
+                                // Ref branch — prefix check then delegate to the
+                                // target's shape fn. `emit_ref_call_tape`'s stream
+                                // already assumes a classified target; admission
+                                // guarantees that. The prefix check fires only
+                                // when the ENTIRE leading literal matches, so the
+                                // target's shape fn sees `*p` pointed at its own
+                                // recognizable prefix.
+                                let ref_call = emit_ref_call_tape(grammar_suffix, *target_rid, ir)
+                                    .unwrap_or_else(|| quote! {
+                                        ::core::result::Result::Err(
+                                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                                offset: *p as u32,
+                                                failing_state:
+                                                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                                                failing_rule:
+                                                    ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                            },
+                                        )
+                                    });
+                                let _ = (branch_idx, branch);
+                                quote! {
+                                    if input.len() >= *p + #len
+                                        && input[*p..*p + #len] == [#(#byte_lits),*]
+                                    {
+                                        return (#ref_call);
+                                    }
+                                }
+                            } else {
+                                // Literal branch — emit the legacy
+                                // byte-sequence-match + Literal leaf
+                                // push with per-branch payload.
+                                let branch_payload =
+                                    alt_branch_payload(rule, branch, *branch_idx, ir);
+                                // AW-V.W3-fix (cursor parity): walker
+                                // emits meta_idx=0 for every leaf —
+                                // `push_leaf_fused` packs `kind_meta =
+                                // kind & 0x0F` with no meta_idx slot,
+                                // and the Alt frame's `cursor` (branch
+                                // index) is stamped into the COMPOUND's
+                                // `flags` by close_compound, not into
+                                // leaf meta_idx.
+                                quote! {
+                                    if input.len() >= *p + #len
+                                        && input[*p..*p + #len] == [#(#byte_lits),*]
+                                    {
+                                        let at = *p;
+                                        let end = at + #len;
+                                        *p = end;
+                                        let off = builder.push_leaf_with(
+                                            ::bbnf::runtime::tape::TapeKind::Span,
+                                            at as u32,
+                                            end as u32,
+                                            #variant_idx,
+                                            0u8,
+                                            #branch_payload,
+                                        );
+                                        return Ok(off);
+                                    }
+                                }
+                            }
+                        })
+                        .collect();
+                    quote! {
+                        #first => {
+                            #(#tries)*
+                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        }
+                    }
                 })
                 .collect();
             quote! {
                 /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-                /// (Alt of literal-led branches).
+                /// (Alt of literal-led or Ref-led branches).
+                ///
+                /// AX.W0a.2.g — admits Ref-led branches whose target
+                /// resolves to a literal-prefix body (per `leading_
+                /// literal_bytes`). For each first-byte group, each
+                /// candidate's full prefix is checked before committing:
+                /// Literal branches emit the legacy leaf push;
+                /// Ref branches delegate to the target's shape fn via
+                /// [`emit_ref_call_tape`], threading `state` through.
                 #[inline(always)]
                 #[allow(non_snake_case, clippy::too_many_arguments)]
                 pub fn #fn_ident(
                     input: &[u8],
                     p: &mut usize,
                     first_byte: u8,
+                    state: &mut #support_mod::ScanState,
                     builder: &mut ::bbnf::runtime::tape::TapeBuilder,
                 ) -> ::core::result::Result<
                     ::bbnf::runtime::tape::TapeOffset,
                     ::bbnf::runtime::tape::DtaError,
                 > {
+                    let _ = state;
                     match first_byte {
                         #(#arms)*
                         _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
@@ -198,6 +312,45 @@ pub fn emit_parse_keyword(
         }
         _ => quote! {},
     }
+}
+
+/// Extract a leading literal byte-sequence from a branch body.
+/// Mirrors the recognizer-side `leading_literal_rec` walk so the emitter
+/// can cheaply recover the same prefix the keyword detector admitted.
+/// Handles Literal / Seq-prefix / Skip / Next / Map /
+/// OptionalWhitespace / Ref (one-step), with a simple depth bound to
+/// avoid cyclic Ref chains.
+fn leading_literal_bytes(node: &IrNode, ir: &GrammarIR) -> Option<Vec<u8>> {
+    fn rec(
+        node: &IrNode,
+        ir: &GrammarIR,
+        depth: u32,
+        visited: &mut std::collections::HashSet<bbnf_ir::RuleId>,
+    ) -> Option<Vec<u8>> {
+        if depth > 16 {
+            return None;
+        }
+        match node {
+            IrNode::Literal(sid) => Some(ir.get_string(*sid).as_bytes().to_vec()),
+            IrNode::Seq(children) if !children.is_empty() => {
+                rec(&children[0], ir, depth + 1, visited)
+            }
+            IrNode::Skip(a, _) | IrNode::Next(a, _) => rec(a, ir, depth + 1, visited),
+            IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+                rec(inner, ir, depth + 1, visited)
+            }
+            IrNode::Ref(rid) => {
+                if !visited.insert(*rid) {
+                    return None;
+                }
+                let rule = ir.rules.iter().find(|r| r.id == *rid)?;
+                rec(&rule.body, ir, depth + 1, visited)
+            }
+            _ => None,
+        }
+    }
+    let mut visited = std::collections::HashSet::new();
+    rec(node, ir, 0, &mut visited)
 }
 
 /// Extract the rule's `-> <const>` scalar payload if present. Returns
@@ -297,7 +450,14 @@ fn unwrap_trivia(node: &IrNode) -> &IrNode {
 // ─────────────────────────────────────────────────────────────────────
 
 /// Emit `pub fn parse_keyword_visitor_<grammar>_<rule><V: JsonVisitor>(
-/// input, p, first_byte, visitor) -> Result<(), ParseErr>`.
+/// input, p, first_byte, state, visitor) -> Result<(), ParseErr>`.
+///
+/// AX.W0a.2.g — mirrors tape-path signature extension: `state` parameter
+/// threaded through so Ref-led Alt branches can delegate to their
+/// target's visitor-path shape fn via [`emit_ref_call_visitor`]. For
+/// single-literal and pure-Literal Alt forms, `state` is unused — the
+/// parameter is present only so the signature stays uniform across
+/// sub-cases.
 pub fn emit_parse_keyword_visitor(
     grammar_suffix: &str,
     rule: &IrRule,
@@ -305,6 +465,7 @@ pub fn emit_parse_keyword_visitor(
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("keyword", grammar_suffix, rule_name);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
 
     let body = unwrap_trivia(&rule.body);
     match body {
@@ -345,16 +506,24 @@ pub fn emit_parse_keyword_visitor(
             quote! {
                 /// AW-V.W3-bench-fix — visitor-path Keyword-shape parse
                 /// function (single-literal body).
+                ///
+                /// AX.W0a.2.g — `state` parameter unused for single-
+                /// literal form.
                 #[inline(always)]
                 #[allow(non_snake_case, clippy::too_many_arguments)]
                 pub fn #fn_ident<V>(
                     input: &[u8],
                     p: &mut usize,
                     _first_byte: u8,
+                    _state: &mut #support_mod::ScanState,
                     visitor: &mut V,
                 ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
                 where
-                    V: ::bbnf::runtime::tape::KeywordVisitor,
+                    V: ::bbnf::runtime::tape::KeywordVisitor
+                       + ::bbnf::runtime::tape::ObjectVisitor
+                       + ::bbnf::runtime::tape::ArrayVisitor
+                       + ::bbnf::runtime::tape::StringVisitor
+                       + ::bbnf::runtime::tape::NumberVisitor,
                 {
                     let at = *p;
                     let end = at + #len;
@@ -369,71 +538,140 @@ pub fn emit_parse_keyword_visitor(
             }
         }
         IrNode::Alt(branches, _) => {
-            let arms: Vec<TokenStream> = branches
-                .iter()
-                .filter_map(|branch| {
-                    let body = unwrap_trivia(&branch.node);
-                    let IrNode::Literal(sid) = body else { return None };
-                    let bytes = ir.get_string(*sid).as_bytes();
-                    if bytes.is_empty() { return None; }
-                    let first = bytes[0];
-                    let len = bytes.len();
-                    let byte_lits: Vec<TokenStream> = bytes
-                        .iter()
-                        .map(|b| {
-                            let lit = *b;
-                            quote! { #lit }
-                        })
-                        .collect();
-                    let literal_str = std::str::from_utf8(bytes).unwrap_or("");
-                    let emit = match literal_str {
-                        "true" => quote! {
-                            visitor.bool(true).map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
-                                offset: at as u32, rule: None,
-                            })
-                        },
-                        "false" => quote! {
-                            visitor.bool(false).map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
-                                offset: at as u32, rule: None,
-                            })
-                        },
-                        _ => quote! {
-                            visitor.null().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
-                                offset: at as u32, rule: None,
-                            })
-                        },
-                    };
-                    Some(quote! {
-                        #first => {
-                            let at = *p;
-                            let end = at + #len;
-                            if input.len() < end
-                                || input[at..end] != [#(#byte_lits),*]
-                            {
-                                return Err(::bbnf::runtime::ParseErr::Syntax {
-                                    offset: at as u32, rule: None,
-                                });
+            use std::collections::BTreeMap;
+
+            // Collect `(leading_literal_bytes, branch_ref_or_literal)`
+            // for each branch; mirrors the tape-path collection logic.
+            let per_branch: Vec<(Vec<u8>, Option<bbnf_ir::RuleId>, usize, &bbnf_ir::AltBranch)> =
+                branches
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(branch_idx, branch)| {
+                        let body = unwrap_trivia(&branch.node);
+                        match body {
+                            IrNode::Literal(sid) => {
+                                let bytes = ir.get_string(*sid).as_bytes().to_vec();
+                                if bytes.is_empty() {
+                                    return None;
+                                }
+                                Some((bytes, None, branch_idx, branch))
                             }
-                            *p = end;
-                            #emit
+                            IrNode::Ref(rid) => {
+                                let bytes = leading_literal_bytes(body, ir)?;
+                                if bytes.is_empty() {
+                                    return None;
+                                }
+                                Some((bytes, Some(*rid), branch_idx, branch))
+                            }
+                            _ => None,
                         }
                     })
+                    .collect();
+
+            let mut by_first: BTreeMap<u8, Vec<&(Vec<u8>, Option<bbnf_ir::RuleId>, usize, &bbnf_ir::AltBranch)>> =
+                BTreeMap::new();
+            for entry in &per_branch {
+                by_first.entry(entry.0[0]).or_default().push(entry);
+            }
+
+            let arms: Vec<TokenStream> = by_first
+                .iter()
+                .map(|(first, group)| {
+                    let tries: Vec<TokenStream> = group
+                        .iter()
+                        .map(|(bytes, target_ref, _branch_idx, _branch)| {
+                            let len = bytes.len();
+                            let byte_lits: Vec<TokenStream> =
+                                bytes.iter().map(|b| {
+                                    let lit = *b;
+                                    quote! { #lit }
+                                }).collect();
+                            if let Some(target_rid) = target_ref {
+                                let ref_call =
+                                    emit_ref_call_visitor(grammar_suffix, *target_rid, ir)
+                                        .unwrap_or_else(|| quote! {
+                                            ::core::result::Result::Err(
+                                                ::bbnf::runtime::ParseErr::Syntax {
+                                                    offset: *p as u32, rule: None,
+                                                },
+                                            )
+                                        });
+                                quote! {
+                                    if input.len() >= *p + #len
+                                        && input[*p..*p + #len] == [#(#byte_lits),*]
+                                    {
+                                        return (#ref_call);
+                                    }
+                                }
+                            } else {
+                                let literal_str =
+                                    std::str::from_utf8(bytes).unwrap_or("");
+                                let emit = match literal_str {
+                                    "true" => quote! {
+                                        visitor.bool(true).map_err(
+                                            |_| ::bbnf::runtime::ParseErr::Syntax {
+                                                offset: at as u32, rule: None,
+                                            })
+                                    },
+                                    "false" => quote! {
+                                        visitor.bool(false).map_err(
+                                            |_| ::bbnf::runtime::ParseErr::Syntax {
+                                                offset: at as u32, rule: None,
+                                            })
+                                    },
+                                    _ => quote! {
+                                        visitor.null().map_err(
+                                            |_| ::bbnf::runtime::ParseErr::Syntax {
+                                                offset: at as u32, rule: None,
+                                            })
+                                    },
+                                };
+                                quote! {
+                                    if input.len() >= *p + #len
+                                        && input[*p..*p + #len] == [#(#byte_lits),*]
+                                    {
+                                        let at = *p;
+                                        let end = at + #len;
+                                        *p = end;
+                                        return #emit;
+                                    }
+                                }
+                            }
+                        })
+                        .collect();
+                    quote! {
+                        #first => {
+                            #(#tries)*
+                            return Err(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32, rule: None,
+                            });
+                        }
+                    }
                 })
                 .collect();
             quote! {
                 /// AW-V.W3-bench-fix — visitor-path Keyword-shape parse
-                /// function (Alt of literal-led branches).
+                /// function (Alt of literal-led or Ref-led branches).
+                ///
+                /// AX.W0a.2.g — admits Ref-led branches; threads `state`
+                /// for downstream visitor-path Ref calls.
                 #[inline(always)]
                 #[allow(non_snake_case, clippy::too_many_arguments)]
                 pub fn #fn_ident<V>(
                     input: &[u8],
                     p: &mut usize,
                     first_byte: u8,
+                    state: &mut #support_mod::ScanState,
                     visitor: &mut V,
                 ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
                 where
-                    V: ::bbnf::runtime::tape::KeywordVisitor,
+                    V: ::bbnf::runtime::tape::KeywordVisitor
+                       + ::bbnf::runtime::tape::ObjectVisitor
+                       + ::bbnf::runtime::tape::ArrayVisitor
+                       + ::bbnf::runtime::tape::StringVisitor
+                       + ::bbnf::runtime::tape::NumberVisitor,
                 {
+                    let _ = state;
                     match first_byte {
                         #(#arms)*
                         _ => Err(::bbnf::runtime::ParseErr::Syntax {

@@ -292,9 +292,13 @@ fn emit_wrap_branch_call_tape(
             let shape_name = shape_tag_name(tag)?;
             let target_fn =
                 shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
+            // AX.W0a.2.g — Keyword fn signature extended with `state`.
             let call = match tag {
-                ShapeTag::Number | ShapeTag::Keyword => quote! {
+                ShapeTag::Number => quote! {
                     #target_fn(input, p, first, builder)
+                },
+                ShapeTag::Keyword => quote! {
+                    #target_fn(input, p, first, state, builder)
                 },
                 _ => quote! {
                     #target_fn(input, p, state, builder)
@@ -476,9 +480,14 @@ fn emit_alt_visitor_dispatch(
         }
         let byte_pats: Vec<TokenStream> =
             first_bytes.iter().map(|b| quote! { #b }).collect();
+        // AX.W0a.2.g — visitor-path Keyword signature extended with
+        // `state` (see tape-path call).
         let call = match tag {
-            ShapeTag::Number | ShapeTag::Keyword => quote! {
+            ShapeTag::Number => quote! {
                 #target_fn(input, p, first, visitor)
+            },
+            ShapeTag::Keyword => quote! {
+                #target_fn(input, p, first, state, visitor)
             },
             ShapeTag::String => quote! {
                 #target_fn(input, p, state, visitor, /*is_key=*/ false)

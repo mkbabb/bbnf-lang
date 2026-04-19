@@ -454,10 +454,19 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
         let shape_name = shape_tag_name(root_tag);
         let target_ident = shape_fn_ident(shape_name, grammar_suffix, &root_name);
         match root_tag {
-            ShapeTag::Number | ShapeTag::Keyword => quote! {
+            // AX.W0a.2.g — Keyword signature extended with `state`.
+            // Number stays at `(input, p, first, builder)`; Keyword now
+            // takes `(input, p, first, state, builder)`. The split
+            // mirrors the Ref-call emitter's per-shape switch.
+            ShapeTag::Number => quote! {
                 let first = #support_mod::skip_space(input, p, state)
                     .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
                 #target_ident(input, p, first, builder)
+            },
+            ShapeTag::Keyword => quote! {
+                let first = #support_mod::skip_space(input, p, state)
+                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+                #target_ident(input, p, first, state, builder)
             },
             _ => quote! {
                 let _ = #support_mod::skip_space(input, p, state);
@@ -654,13 +663,19 @@ fn emit_alt_dispatch_body(
         .as_ref()
         .map(|f| quote! { b'-' | b'0'..=b'9' => { #f(input, p, first, builder) } })
         .unwrap_or_else(|| quote! {});
+    // AX.W0a.2.g — Keyword fn signature extended with `state: &mut
+    // ScanState` so Ref-led Alt branches can delegate via
+    // `emit_ref_call_tape`. Threading `state` here is a no-op for the
+    // JSON true_arm / null_arm single-literal forms (they ignore the
+    // argument via `_state`), and carries the Ref-branch delegation
+    // path for grammars that admit Ref-led Keyword branches.
     let true_arm = keyword_bool_fn
         .as_ref()
-        .map(|f| quote! { b't' | b'f' => { #f(input, p, first, builder) } })
+        .map(|f| quote! { b't' | b'f' => { #f(input, p, first, state, builder) } })
         .unwrap_or_else(|| quote! {});
     let null_arm = keyword_null_fn
         .as_ref()
-        .map(|f| quote! { b'n' => { #f(input, p, first, builder) } })
+        .map(|f| quote! { b'n' => { #f(input, p, first, state, builder) } })
         .unwrap_or_else(|| quote! {});
 
     quote! {
@@ -748,12 +763,21 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
         let shape_name = shape_tag_name(root_tag);
         let target_ident = visitor_shape_fn_ident(shape_name, grammar_suffix, &root_name);
         match root_tag {
-            ShapeTag::Number | ShapeTag::Keyword => quote! {
+            // AX.W0a.2.g — visitor-path Keyword signature extended with
+            // `state` for Ref-branch delegation (see tape-path).
+            ShapeTag::Number => quote! {
                 let first = #support_mod::skip_space(input, p, state)
                     .ok_or(::bbnf::runtime::ParseErr::Syntax {
                         offset: *p as u32, rule: None,
                     })?;
                 #target_ident(input, p, first, visitor)
+            },
+            ShapeTag::Keyword => quote! {
+                let first = #support_mod::skip_space(input, p, state)
+                    .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32, rule: None,
+                    })?;
+                #target_ident(input, p, first, state, visitor)
             },
             _ => quote! {
                 let _ = #support_mod::skip_space(input, p, state);
@@ -922,14 +946,27 @@ pub fn emit_ref_call_tape(
     };
     let target_fn = shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
     let support_mod = support_mod_ident(grammar_suffix);
+    // AX.W0a.2.g — Keyword's signature gained a `state` parameter so
+    // Ref-led Alt branches can delegate via this helper. Number keeps
+    // the legacy `(input, p, first, builder)` shape since its body
+    // never recurses.
     let expr = match tag {
-        ShapeTag::Number | ShapeTag::Keyword => quote! {
+        ShapeTag::Number => quote! {
             {
                 let __first = #support_mod::skip_space(input, p, state)
                     .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
                 #target_fn(input, p, __first, builder)
+            }
+        },
+        ShapeTag::Keyword => quote! {
+            {
+                let __first = #support_mod::skip_space(input, p, state)
+                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                        offset: *p as u32,
+                    })?;
+                #target_fn(input, p, __first, state, builder)
             }
         },
         _ => quote! {
@@ -971,14 +1008,25 @@ pub fn emit_ref_call_visitor(
     let target_fn =
         visitor_shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
     let support_mod = support_mod_ident(grammar_suffix);
+    // AX.W0a.2.g — visitor-path Keyword signature extended with
+    // `state` (see tape-path emit_ref_call_tape).
     let expr = match tag {
-        ShapeTag::Number | ShapeTag::Keyword => quote! {
+        ShapeTag::Number => quote! {
             {
                 let __first = #support_mod::skip_space(input, p, state)
                     .ok_or(::bbnf::runtime::ParseErr::Syntax {
                         offset: *p as u32, rule: None,
                     })?;
                 #target_fn(input, p, __first, visitor)
+            }
+        },
+        ShapeTag::Keyword => quote! {
+            {
+                let __first = #support_mod::skip_space(input, p, state)
+                    .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32, rule: None,
+                    })?;
+                #target_fn(input, p, __first, state, visitor)
             }
         },
         ShapeTag::String => quote! {
@@ -1125,13 +1173,15 @@ fn emit_visitor_alt_dispatch_body(
         .as_ref()
         .map(|f| quote! { b'-' | b'0'..=b'9' => { #f(input, p, first, visitor) } })
         .unwrap_or_else(|| quote! {});
+    // AX.W0a.2.g — visitor-path Keyword signature extended with
+    // `state` (see tape-path emit_alt_dispatch_body).
     let true_arm = keyword_bool_fn
         .as_ref()
-        .map(|f| quote! { b't' | b'f' => { #f(input, p, first, visitor) } })
+        .map(|f| quote! { b't' | b'f' => { #f(input, p, first, state, visitor) } })
         .unwrap_or_else(|| quote! {});
     let null_arm = keyword_null_fn
         .as_ref()
-        .map(|f| quote! { b'n' => { #f(input, p, first, visitor) } })
+        .map(|f| quote! { b'n' => { #f(input, p, first, state, visitor) } })
         .unwrap_or_else(|| quote! {});
 
     quote! {

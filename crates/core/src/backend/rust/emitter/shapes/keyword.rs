@@ -206,10 +206,32 @@ pub fn emit_parse_keyword(
                 .iter()
                 .map(|(first, group)| {
                     // For each branch in this first-byte group, emit a
-                    // full-prefix check + commit. Branches are ordered
-                    // by their original Alt position (stable per the
-                    // per_branch build order).
-                    let tries: Vec<TokenStream> = group
+                    // full-prefix check + commit.
+                    //
+                    // AX.W0a.2.p — branches are tried in descending
+                    // prefix-length order so longer literal prefixes
+                    // (`:is`, `:where`, `:dir`, ...) test before 1-byte
+                    // fallback candidates (`":", nthFunctionName` /
+                    // `":", selectorIdent`) that would false-positive on
+                    // every `:` input. Equal-length prefixes retain
+                    // their original Alt order for determinism.
+                    //
+                    // Ref branches use match + rollback on Err so a
+                    // successful prefix-match that trips the delegated
+                    // call's inner parse can hand control back to the
+                    // next candidate (CSS `pseudoClass` — nthPseudo's
+                    // 1-byte `:` prefix matches `:hover`, its inner
+                    // nthFunctionName parse fails, control must fall
+                    // through to simplePseudoClass. Pre-W0a.2.p's
+                    // early-return lost the Err outside the rule).
+                    let mut group_sorted: Vec<&(Vec<u8>, BranchKind<'_>, usize, &bbnf_ir::AltBranch)> =
+                        group.iter().copied().collect();
+                    group_sorted.sort_by_key(|entry| {
+                        // Descending prefix length; ties broken by
+                        // ascending Alt position for determinism.
+                        (std::cmp::Reverse(entry.0.len()), entry.2)
+                    });
+                    let tries: Vec<TokenStream> = group_sorted
                         .iter()
                         .map(|(bytes, kind, branch_idx, branch)| {
                             let len = bytes.len();
@@ -220,7 +242,10 @@ pub fn emit_parse_keyword(
                                 }).collect();
                             match kind {
                                 BranchKind::Ref(target_rid) => {
-                                    // Ref branch — prefix check then delegate.
+                                    // Ref branch — prefix check, delegate,
+                                    // rollback-and-fallthrough on Err so
+                                    // subsequent candidates in the same
+                                    // first-byte group get their chance.
                                     let ref_call = emit_ref_call_tape(
                                         grammar_suffix, *target_rid, ir,
                                     ).unwrap_or_else(|| quote! {
@@ -239,7 +264,19 @@ pub fn emit_parse_keyword(
                                         if input.len() >= *p + #len
                                             && input[*p..*p + #len] == [#(#byte_lits),*]
                                         {
-                                            return (#ref_call);
+                                            let __ref_save_p = *p;
+                                            let __ref_save_cols =
+                                                builder.columns_mut().len();
+                                            match (#ref_call) {
+                                                ::core::result::Result::Ok(__off) => {
+                                                    return ::core::result::Result::Ok(__off);
+                                                }
+                                                ::core::result::Result::Err(_) => {
+                                                    *p = __ref_save_p;
+                                                    builder.columns_mut()
+                                                        .truncate(__ref_save_cols);
+                                                }
+                                            }
                                         }
                                     }
                                 }

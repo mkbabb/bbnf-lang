@@ -62,14 +62,5 @@ pub mod view {
     /// `lightningcss::stylesheet::StyleSheet`. See
     /// `docs/tranches/AX/parity/css_divergence.md` for the variant
     /// coverage ledger.
-    pub mod css {
-        pub use crate::backend::rust::view::css::{
-            declarations, rules, selectors, stylesheet, values, AttributeCaseSensitivity,
-            AttributeOperator, CalcKind, Combinator, Component, CssGlobalKeyword, CssRule,
-            Declaration, DeclarationBlock, Dimension, DirKeyword, Keyframe, KeyframesName,
-            KeyframesRule, Location, MediaCondition, MediaFeature, MediaList, MediaQuery,
-            MediaRule, MediaType, NthKind, NthSelector, PropertyId, Selector, SelectorList,
-            StyleRule, StyleSheet, Unit, UnitKind, UnknownAtRule, Value, ValueList, VendorPrefix,
-        };
-    }
+    pub use crate::backend::rust::view::css;
 }

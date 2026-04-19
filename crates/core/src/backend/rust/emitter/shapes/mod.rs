@@ -406,6 +406,16 @@ pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
         // body contains one of these fallback-triggering positions
         // outside of a Ref (per-Ref routing already handles Refs
         // directly via `emit_ref_call_tape`).
+        //
+        // AX.W0a.2.g halt — predicate retained; Flat / ArgList emitter
+        // walker-parity issues (inline Alt compound vs ByteDispatch,
+        // emit_tape_repeat column-truncation on zero-width match,
+        // missing Next/Skip compound emission) were diagnosed during
+        // the widening probe but only partially fixed (Alt ByteDispatch
+        // split + emit_tape_repeat truncation landed). CSS / Sheets /
+        // EBNF / BBNF / BbnfBootstrap all revealed additional blockers
+        // beyond the two named in the W0a.2.f scope-reveal; halting
+        // per the "new blocker" non-negotiable in the task spec.
         if body_has_dispatcher_fallback_position(&rule.body) {
             return false;
         }
@@ -451,6 +461,15 @@ pub fn has_shape_dispatcher_entrypoint(ir: &GrammarIR) -> bool {
 /// (recursive walk that bottoms out at Refs/Literals), Seq / Next /
 /// Skip / Map / OptionalWhitespace (structural wrappers the walkers
 /// descend through).
+///
+/// AX.W0a.2.g — retained; the widening probe revealed walker-parity
+/// issues beyond the two named in the W0a.2.f scope-reveal (inline
+/// Alt compound vs ByteDispatch, Repeat-iter column leaks, missing
+/// Next/Skip compound emission). Partial fixes landed
+/// (`emit_alt_byte_dispatch_tape`, Flat repeat column-truncation,
+/// Seq-inner iter-Seq flattening, Array-list `variant=0` stamping)
+/// but the full walker-parity audit is deferred to W0a.2.h; the
+/// predicate stays load-bearing until that wave lands.
 fn body_has_dispatcher_fallback_position(node: &bbnf_ir::IrNode) -> bool {
     use bbnf_ir::IrNode;
     match node {

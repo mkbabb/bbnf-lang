@@ -10,4 +10,5 @@ mod csp_materialization;
 mod csp_types;
 mod materialization;
 mod materialization_eclass_gate;
+mod subvariants;
 mod types;

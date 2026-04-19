@@ -164,9 +164,9 @@ name = "bbnf_monolithic"
 path = "benches/bbnf/monolithic.rs"
 harness = false
 
-# AX.W1.A.5 — consumer bench for the Value projection API.
-# Lazy-field extraction over twitter.json; matched against sonic-rs
-# on the same corpus with the same extraction pattern.
+# AX.W1.A.5 + W1.D.3 — Value projection API consumer bench + AoS
+# sidecar. Lazy-field extraction over twitter.json. Value::from_tape
+# routes through the hybrid packed_cache from W1.D transparently.
 [[bench]]
 name = "twitter_lazy_field"
 path = "benches/twitter_lazy_field.rs"

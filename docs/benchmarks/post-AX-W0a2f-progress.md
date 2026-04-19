@@ -2,18 +2,31 @@
 
 ## Status
 
-Partial. D1 (inline-attr downgrade) landed idempotently. The LLVM
-`#[inline(always)]` cycle that SIGBUSed the predecessor's BBNF
-rollout is broken — compound shape fns now emit plain `#[inline]`
-and `cargo expand -p bbnf --test tape_parity_bbnf` completes
-without SIGBUS.
+Partial. D1 (inline-attr downgrade) + D2 (array-element structural
+emission) landed idempotently with bootstrap regen byte-identical
+across two cycles (96 839 lines). The LLVM `#[inline(always)]`
+cycle that SIGBUSed the predecessor's BBNF rollout is broken —
+compound shape fns now emit plain `#[inline]` and `cargo expand`
+completes without SIGBUS.
 
-Admission widening + array-element wiring landed but surfaced
-multiple walker-parity regressions in shape-dispatch emission
-that were previously masked by the
-`body_has_dispatcher_fallback_position` gate rejecting every non-
-Alt-rooted grammar. The blockers exceed W0a.2.f's allow-list and
-are documented in the §Remaining-blockers table below.
+Admission widening landed briefly (commit `030fb8aa`) then
+reverted (commit `7a311a28`) after surfacing two cascading
+downstream blockers documented in §Remaining-blockers. Per
+the W0a.2.f task spec's escape clause — "if a grammar's rollout
+reveals a new architectural blocker, halt with detailed diag"
+— the revert preserves test-green master while the follow-on
+sub-wave closes the surfaced blockers on disjoint file bounds.
+
+Final state (committed):
+
+- **Workspace test suite**: 1 614 passed, 0 failed.
+- **Bootstrap regen**: idempotent across two cycles at 96 839
+  lines (diff = 0).
+- **Per-grammar tape_parity**: JSON 7/7, BBNF 4/4 (walker-path
+  unchanged).
+- **Predicate table**: JSON admits shape-dispatch; 6 non-JSON
+  grammars remain walker-routed pending W0a.2.g downstream
+  wiring.
 
 ## What landed
 
@@ -21,30 +34,31 @@ are documented in the §Remaining-blockers table below.
 |---|---|
 | `8ae3330b` | D1 — every compound shape fn (Object / Array / Flat / Wrap / ArgList / Pratt / Unordered / AltDispatch / Scalar-Ref-delegation / top-level dispatchers + visitor-path analogues) downgraded from `#[inline(always)]` to plain `#[inline]`. Leaf shape fns (Keyword / Number / String / HRegex / literal-Scalar) retain `#[inline(always)]`. `shapes/mod.rs` doc header reflects the split. |
 | `a12fbf6f` | D2-probe #1 — `ax_w0a2f_fallback_probe` enumerates per-grammar fallback-position rules and tags each by ShapeTag so native-handling shapes (Wrap / Keyword / AltDispatch / HRegex / Number / String / Scalar) separate from fallback-risk shapes (Flat / ArgList / Array / Pratt / Unordered / Object). |
-| `030fb8aa` | D4 — `body_has_dispatcher_fallback_position` deleted; `has_shape_dispatcher_entrypoint` admits every grammar whose classified entry reaches only classified Refs. Wire-contract test + `aw_v_w5_2_per_ref_routing`'s Sheets-rejection test updated to reflect the flip. 7/7 predicate-table green. |
+| `030fb8aa` | D4 — `body_has_dispatcher_fallback_position` deleted; `has_shape_dispatcher_entrypoint` admits every grammar whose classified entry reaches only classified Refs. Wire-contract test + `aw_v_w5_2_per_ref_routing`'s Sheets-rejection test updated to reflect the flip. 7/7 predicate-table green. **Later reverted at `7a311a28` after downstream blockers surfaced.** |
 | `9e8d0603` | D2 #2 — `shapes/array.rs::emit_element_position_tape` replaces `extract_element_ref` + `#dispatcher_ident` fallback with structural per-position emission. Alt / Regex / Negate / Minus / TokenDispatch at Repeat-element positions route through `inline::emit_inline_position_tape`; Refs via `emit_ref_call_tape`; Literal via byte-match; Seq / Next / Skip recurse. Eliminates the runtime infinite-recursion observed on BBNF during the admission widening probe. |
 | `637e129b` | D2-probe #2 — `ax_w0a2f_extract_probe` dumps each grammar's entry-rule body tree so downstream sub-commits can reason about per-position emission shape at a glance. |
+| `e3664d5d` | Docs — `post-AX-W0a2f-progress.md` + `post-AX-W0a2f-predicate-table.md` + `post-AX-W0a2f-expand-bbnf.txt` capture the partial-close state and per-grammar blocker analysis. |
+| `7a311a28` | Revert of `030fb8aa` — admission widening rolled back so `cargo test --workspace` stays green while the Keyword Ref-branch + BNF walker-parity blockers resolve in W0a.2.g. |
+| `3497d986` | D1 follow-on — `array.rs.expected` / `object.rs.expected` goldens regenerated for the `#[inline(always)] → #[inline]` downgrade; `regen_shape_goldens.rs` `#[ignore]`-gated one-shot helper lands for future regen cycles. |
+| `2490dd4f` | Final — bootstrap regen idempotent; 96 839 lines, byte-identical across two cycles. Cumulative 291-line increase vs pre-W0a.2.f entirely doc-comment + `#[inline]` attribute propagation; emitted parse-fn bodies structurally unchanged. |
 
 ## Bootstrap regen status
 
-**Pre-widening (pre-`030fb8aa`):** `diff gen1 gen2 | wc -l = 0`
-across 96,548 lines (unchanged from the W0a.2.e baseline; D1 is a
-compile-time attr-only change that doesn't affect emitted code
-path).
+**Final (HEAD = `2490dd4f`):** `diff gen1 gen2 | wc -l = 0`
+across 96 839 lines. Two cycles byte-identical under the D1
+inline-attr downgrade; the 291-line increase versus W0a.2.e
+baseline (96 548 lines) is entirely doc-comment + `#[inline]`
+attribute propagation — the emitted parse-fn bodies are
+structurally unchanged.
 
-**Post-widening (current HEAD):** Cycle 1 produces 96,829 lines
-without SIGBUS — the `#[inline(always)]` → `#[inline]` cycle-break
-succeeded. Cycle 2 emits a 23-line stub: the new shape-dispatch
-`BbnfBootstrap::parse` cannot parse `bbnf.bbnf` itself because the
-Keyword emitter does not handle Ref-led Alt branches (see
-§Remaining-blockers #1 below).
-
-The self-host regen will remain blocked until the Keyword emitter
-is extended; the proper recipe at close of W0a.2.f is either (a)
-defer the regen to the follow-on sub-wave that ships the Keyword
-extension, or (b) restore the pre-widening predicate guard for
-BbnfBootstrap specifically until the Keyword fix lands. Choice
-belongs to the orchestrator; both are architecturally defensible.
+**Mid-rollout probe (under reverted `030fb8aa`):** Cycle 1
+produced 96 829 lines without SIGBUS — the `#[inline(always)]`
+→ `#[inline]` cycle-break succeeded. Cycle 2 collapsed to a
+23-line stub because the new shape-dispatch `BbnfBootstrap::parse`
+cannot parse `bbnf.bbnf` itself when the Keyword emitter does
+not handle Ref-led Alt branches (see §Remaining-blockers #1
+below). The revert at `7a311a28` restored the self-host loop
+closure.
 
 ## Per-grammar rollout status
 
@@ -60,27 +74,35 @@ belongs to the orchestrator; both are architecturally defensible.
 
 ## Hard-gate status
 
-| Gate | Status |
+| Gate | Status (final HEAD) |
 |---|---|
-| 1. `cargo expand` completes without SIGBUS post-downgrade | **Met** (verified via `cargo expand -p bbnf --test tape_parity_bbnf > /tmp/expand-bbnf.txt`, 91 524 lines, no abort). |
-| 2. BBNF bootstrap idempotent ≥ 90k lines | **Unmet** — cycle 1 produces 96 829 lines without SIGBUS, cycle 2 emits 23-line stub due to Keyword-Alt-Ref gap. |
-| 3. `has_shape_dispatcher_entrypoint == true` for all 7 grammars | **Met** — predicate flips for all 6 non-JSON grammars; `gate_predicate_wire_contract` 7/7 green. |
-| 4. `parse()` zero walker-reach for all 6 non-JSON grammars | **Met structurally** — `parse()` now calls `parse_<grammar>_<root>` directly; walker-reach = 0 in every `parse()` body. Confirmed via `cargo expand` slices (pending commit). |
-| 5. `cargo test --workspace --no-fail-fast` exit 0 | **Unmet** — `tape_parity_bbnf` / `tape_parity_bnf` / `tape_parity_ebnf` / `tape_parity_sheets` / `tape_parity_css_l4` fail due to the Keyword + walker-parity gaps documented above. |
-| 6. Bootstrap regen idempotent in final state | **Unmet** — blocked on gate 2. |
-| 7. `body_has_dispatcher_fallback_position` deleted | **Met** — deleted from `shapes/mod.rs`. |
+| 1. `cargo expand` completes without SIGBUS post-downgrade | **Met** — verified via `cargo expand -p bbnf --test tape_parity_bbnf > /tmp/expand-bbnf.txt` (91 524 lines, no abort). Artefact: `docs/benchmarks/post-AX-W0a2f-expand-bbnf.txt`. |
+| 2. BBNF bootstrap idempotent ≥ 90k lines | **Met** — 96 839 lines, byte-identical across two cycles in the final state. |
+| 3. `has_shape_dispatcher_entrypoint == true` for all 7 grammars | **Unmet in final HEAD** (admission widening reverted). The predicate narrowing is architecturally sound but the downstream emitter gaps it surfaced (§Remaining-blockers) must land first. Mid-rollout transient state met this gate but broke gates 5 + 6. |
+| 4. `parse()` zero walker-reach for all 6 non-JSON grammars | **Unmet in final HEAD** — same rationale as gate 3. JSON's `parse()` already walker-free (pre-W0a.2.f). |
+| 5. `cargo test --workspace --no-fail-fast` exit 0 | **Met** — 1 614 passed, 0 failed. |
+| 6. Bootstrap regen idempotent in final state | **Met** — see gate 2. |
+| 7. `body_has_dispatcher_fallback_position` deleted | **Unmet in final HEAD** — the deletion was bundled with the admission widening and reverted together. Ships in W0a.2.g alongside the Keyword + walker-parity fixes that unblock the downstream wiring. |
 
-## 7-grammar predicate table (final)
+## 7-grammar predicate table (final HEAD)
 
 | Grammar | `has_w4_classified` | `has_full_shape_coverage` | `has_shape_dispatcher_entrypoint` |
 |---|---|---|---|
 | JSON | false | true | **true** |
-| CSS L4 | true | true | **true** |
-| Sheets | true | true | **true** |
-| BBNF | true | true | **true** |
-| EBNF | false | true | **true** |
-| BNF | false | true | **true** |
-| BbnfBootstrap | true | true | **true** |
+| CSS L4 | true | true | false |
+| Sheets | true | true | false |
+| BBNF | true | true | false |
+| EBNF | false | true | false |
+| BNF | false | true | false |
+| BbnfBootstrap | true | true | false |
+
+The admission widening commit (`030fb8aa`) briefly flipped the
+six false entries to `true` and was reverted at `7a311a28` to
+keep master test-green. Mid-rollout predicate table snapshot
+preserved at `docs/benchmarks/post-AX-W0a2f-predicate-table.md`
+as evidence the widening would close hard gates 3 + 7 once
+W0a.2.g resolves the downstream emitter gaps documented in
+§Remaining-blockers.
 
 ## Remaining blockers — scope reveal
 

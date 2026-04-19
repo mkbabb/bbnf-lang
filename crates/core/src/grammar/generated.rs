@@ -72212,38 +72212,54 @@ mod __bbnfbootstrap_emit_impl {
                     }
                 }
                 40u8 => {
-                    let save_p = *p;
-                    let attempt = (|| -> ::core::result::Result<(), ()> {
+                    let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len();
+                    let attempt: ::core::result::Result<(), ()> = (|| {
                         let at = *p;
                         let end = at + 1usize;
                         if input.len() < end || input[at..end] != [40u8] {
                             return Err(());
                         }
                         *p = end;
-                        return Err(());
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        if ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder)
+                        })
+                        .is_err()
+                        {
+                            return Err(());
+                        }
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let at = *p;
                         let end = at + 1usize;
                         if input.len() < end || input[at..end] != [41u8] {
                             return Err(());
                         }
                         *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
                         Ok(())
                     })();
                     match attempt {
-                        Ok(_) => {
-                            let seq_lo = save_p as u32;
-                            let seq_hi = *p as u32;
-                            let _ = builder.push_leaf(
-                                ::bbnf::runtime::tape::TapeKind::Literal,
-                                seq_lo,
-                                seq_hi,
-                                0,
-                                0,
-                            );
-                            break 'try_branches;
-                        }
+                        Ok(_) => break 'try_branches,
                         Err(_) => {
-                            *p = save_p;
+                            *p = attempt_p;
+                            builder.columns_mut().truncate(attempt_len);
                         }
                     }
                 }
@@ -72944,94 +72960,48 @@ mod __bbnfbootstrap_emit_impl {
         'try_branches: loop {
             match first {
                 33u8 => {
-                    let save_p = *p;
-                    let attempt = (|| -> ::core::result::Result<(), ()> {
-                        {
-                            let mut alt_hit = false;
-                            if !alt_hit {
-                                let at = *p;
-                                let end = at + 1usize;
-                                if input.len() >= end && input[at..end] == [33u8] {
-                                    *p = end;
-                                    alt_hit = true;
-                                }
-                            }
-                            if !alt_hit {
-                                let at = *p;
-                                let end = at + 1usize;
-                                if input.len() >= end && input[at..end] == [45u8] {
-                                    *p = end;
-                                    alt_hit = true;
-                                }
-                            }
-                            if !alt_hit {
-                                return Err(());
-                            }
-                        }
+                    let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len();
+                    let attempt: ::core::result::Result<(), ()> = (|| {
                         return Err(());
+                        if ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            parse_altdispatch_BbnfBootstrap_value_atom(input, p, state, builder)
+                        })
+                        .is_err()
+                        {
+                            return Err(());
+                        }
                         Ok(())
                     })();
                     match attempt {
-                        Ok(_) => {
-                            let seq_lo = save_p as u32;
-                            let seq_hi = *p as u32;
-                            let _ = builder.push_leaf(
-                                ::bbnf::runtime::tape::TapeKind::Literal,
-                                seq_lo,
-                                seq_hi,
-                                0,
-                                0,
-                            );
-                            break 'try_branches;
-                        }
+                        Ok(_) => break 'try_branches,
                         Err(_) => {
-                            *p = save_p;
+                            *p = attempt_p;
+                            builder.columns_mut().truncate(attempt_len);
                         }
                     }
                 }
                 45u8 => {
-                    let save_p = *p;
-                    let attempt = (|| -> ::core::result::Result<(), ()> {
-                        {
-                            let mut alt_hit = false;
-                            if !alt_hit {
-                                let at = *p;
-                                let end = at + 1usize;
-                                if input.len() >= end && input[at..end] == [33u8] {
-                                    *p = end;
-                                    alt_hit = true;
-                                }
-                            }
-                            if !alt_hit {
-                                let at = *p;
-                                let end = at + 1usize;
-                                if input.len() >= end && input[at..end] == [45u8] {
-                                    *p = end;
-                                    alt_hit = true;
-                                }
-                            }
-                            if !alt_hit {
-                                return Err(());
-                            }
-                        }
+                    let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len();
+                    let attempt: ::core::result::Result<(), ()> = (|| {
                         return Err(());
+                        if ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            parse_altdispatch_BbnfBootstrap_value_atom(input, p, state, builder)
+                        })
+                        .is_err()
+                        {
+                            return Err(());
+                        }
                         Ok(())
                     })();
                     match attempt {
-                        Ok(_) => {
-                            let seq_lo = save_p as u32;
-                            let seq_hi = *p as u32;
-                            let _ = builder.push_leaf(
-                                ::bbnf::runtime::tape::TapeKind::Literal,
-                                seq_lo,
-                                seq_hi,
-                                0,
-                                0,
-                            );
-                            break 'try_branches;
-                        }
+                        Ok(_) => break 'try_branches,
                         Err(_) => {
-                            *p = save_p;
+                            *p = attempt_p;
+                            builder.columns_mut().truncate(attempt_len);
                         }
                     }
                 }
@@ -74086,7 +74056,7 @@ mod __bbnfbootstrap_emit_impl {
             }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -74150,6 +74120,9 @@ mod __bbnfbootstrap_emit_impl {
         builder: &mut ::bbnf::runtime::tape::TapeBuilder,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
+        let __wrap_enter_p = *p as u32;
+        let __wrap_enter_child = builder.mark_children();
+        let mut __wrap_chosen_meta: u8 = 0;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
         'try_branches: loop {
@@ -74158,7 +74131,10 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt_p = *p;
                     let attempt_len = builder.columns_mut().len();
                     match parse_flat_BbnfBootstrap_value_closure(input, p, state, builder) {
-                        Ok(_) => break 'try_branches,
+                        Ok(_) => {
+                            __wrap_chosen_meta = 0u8;
+                            break 'try_branches;
+                        }
                         Err(_) => {
                             *p = attempt_p;
                             builder.columns_mut().truncate(attempt_len);
@@ -74171,7 +74147,10 @@ mod __bbnfbootstrap_emit_impl {
                 let attempt_p = *p;
                 let attempt_len = builder.columns_mut().len();
                 match parse_pratt_BbnfBootstrap_value_or(input, p, state, builder) {
-                    Ok(_) => break 'try_branches,
+                    Ok(_) => {
+                        __wrap_chosen_meta = 1u8;
+                        break 'try_branches;
+                    }
                     Err(_) => {
                         *p = attempt_p;
                         builder.columns_mut().truncate(attempt_len);
@@ -74184,7 +74163,16 @@ mod __bbnfbootstrap_emit_impl {
                 failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+        let __wrap_exit_p = *p as u32;
+        let __wrap_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            __wrap_enter_child,
+            __wrap_enter_p,
+            __wrap_exit_p,
+            19u8,
+            __wrap_chosen_meta,
+        );
+        Ok(__wrap_off)
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -74560,6 +74548,240 @@ mod __bbnfbootstrap_emit_impl {
     {
         let _ = state;
         match first_byte {
+            34u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [34u8] {
+                    let span_lo = *p as u32;
+                    let seq_save_cols = builder.columns_mut().len();
+                    let seq_attempt: ::core::result::Result<(), ()> = (|| {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [34u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let span_lo = *p as u32;
+                        let Some(match_len) =
+                            __regex_scan_BbnfBootstrap("(\\\\.|[^\"\\\\])*", input, *p)
+                        else {
+                            return Err(());
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            span_lo,
+                            span_hi,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [34u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        Ok(())
+                    })();
+                    if seq_attempt.is_err() {
+                        *p = span_lo as usize;
+                        builder.columns_mut().truncate(seq_save_cols);
+                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: span_lo,
+                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                    let span_hi = *p as u32;
+                    builder.columns_mut().truncate(seq_save_cols);
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        span_lo,
+                        span_hi,
+                        23u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::None,
+                    );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            39u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [39u8] {
+                    let span_lo = *p as u32;
+                    let seq_save_cols = builder.columns_mut().len();
+                    let seq_attempt: ::core::result::Result<(), ()> = (|| {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [39u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let span_lo = *p as u32;
+                        let Some(match_len) =
+                            __regex_scan_BbnfBootstrap("(\\\\.|[^'\\\\])*", input, *p)
+                        else {
+                            return Err(());
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            span_lo,
+                            span_hi,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [39u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        Ok(())
+                    })();
+                    if seq_attempt.is_err() {
+                        *p = span_lo as usize;
+                        builder.columns_mut().truncate(seq_save_cols);
+                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: span_lo,
+                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                    let span_hi = *p as u32;
+                    builder.columns_mut().truncate(seq_save_cols);
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        span_lo,
+                        span_hi,
+                        23u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::None,
+                    );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            96u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [96u8] {
+                    let span_lo = *p as u32;
+                    let seq_save_cols = builder.columns_mut().len();
+                    let seq_attempt: ::core::result::Result<(), ()> = (|| {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [96u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let span_lo = *p as u32;
+                        let Some(match_len) =
+                            __regex_scan_BbnfBootstrap("(\\\\.|[^`\\\\])*", input, *p)
+                        else {
+                            return Err(());
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            span_lo,
+                            span_hi,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [96u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        Ok(())
+                    })();
+                    if seq_attempt.is_err() {
+                        *p = span_lo as usize;
+                        builder.columns_mut().truncate(seq_save_cols);
+                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: span_lo,
+                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                    let span_hi = *p as u32;
+                    builder.columns_mut().truncate(seq_save_cols);
+                    let off = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        span_lo,
+                        span_hi,
+                        23u8,
+                        0u8,
+                        ::bbnf::runtime::tape::PayloadData::None,
+                    );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
             _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
@@ -74948,38 +75170,52 @@ mod __bbnfbootstrap_emit_impl {
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let repeat_lo = *p as u32;
                         let repeat_child = builder.mark_children();
+                        let iter_save_p = *p;
+                        let iter_save_cols = builder.columns_mut().len();
                         let iter_lo = *p as u32;
                         let iter_child = builder.mark_children();
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [124u8] {
-                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                                offset: at as u32,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                            });
+                        let opt_attempt: ::core::result::Result<
+                            (),
+                            ::bbnf::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [124u8] {
+                                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            let _ = builder.push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                28u8,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                            Ok(())
+                        })();
+                        let matched = opt_attempt.is_ok();
+                        if !matched {
+                            *p = iter_save_p;
+                            builder.columns_mut().truncate(iter_save_cols);
+                        } else {
+                            let iter_hi = *p as u32;
+                            let _ = builder.push_compound(
+                                ::bbnf::runtime::tape::TapeKind::Seq,
+                                iter_child,
+                                iter_lo,
+                                iter_hi,
+                                0,
+                                0,
+                            );
                         }
-                        *p = end;
-                        let _ = builder.push_leaf_with(
-                            ::bbnf::runtime::tape::TapeKind::Literal,
-                            at as u32,
-                            end as u32,
-                            28u8,
-                            0,
-                            ::bbnf::runtime::tape::PayloadData::None,
-                        );
-                        let iter_hi = *p as u32;
-                        let _ = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
-                            iter_child,
-                            iter_lo,
-                            iter_hi,
-                            0,
-                            0,
-                        );
                         let repeat_hi = *p as u32;
                         let _ = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            ::bbnf::runtime::tape::TapeKind::Repeat,
                             repeat_child,
                             repeat_lo,
                             repeat_hi,
@@ -75017,7 +75253,7 @@ mod __bbnfbootstrap_emit_impl {
             }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -75102,38 +75338,54 @@ mod __bbnfbootstrap_emit_impl {
                     }
                 }
                 40u8 => {
-                    let save_p = *p;
-                    let attempt = (|| -> ::core::result::Result<(), ()> {
+                    let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len();
+                    let attempt: ::core::result::Result<(), ()> = (|| {
                         let at = *p;
                         let end = at + 1usize;
                         if input.len() < end || input[at..end] != [40u8] {
                             return Err(());
                         }
                         *p = end;
-                        return Err(());
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        if ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                        })
+                        .is_err()
+                        {
+                            return Err(());
+                        }
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let at = *p;
                         let end = at + 1usize;
                         if input.len() < end || input[at..end] != [41u8] {
                             return Err(());
                         }
                         *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
                         Ok(())
                     })();
                     match attempt {
-                        Ok(_) => {
-                            let seq_lo = save_p as u32;
-                            let seq_hi = *p as u32;
-                            let _ = builder.push_leaf(
-                                ::bbnf::runtime::tape::TapeKind::Literal,
-                                seq_lo,
-                                seq_hi,
-                                0,
-                                0,
-                            );
-                            break 'try_branches;
-                        }
+                        Ok(_) => break 'try_branches,
                         Err(_) => {
-                            *p = save_p;
+                            *p = attempt_p;
+                            builder.columns_mut().truncate(attempt_len);
                         }
                     }
                 }
@@ -75150,74 +75402,106 @@ mod __bbnfbootstrap_emit_impl {
                     }
                 }
                 64u8 => {
-                    let save_p = *p;
-                    let attempt = (|| -> ::core::result::Result<(), ()> {
+                    let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len();
+                    let attempt: ::core::result::Result<(), ()> = (|| {
                         let at = *p;
                         let end = at + 2usize;
                         if input.len() < end || input[at..end] != [64u8, 123u8] {
                             return Err(());
                         }
                         *p = end;
-                        return Err(());
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        if ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                        })
+                        .is_err()
+                        {
+                            return Err(());
+                        }
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let at = *p;
                         let end = at + 1usize;
                         if input.len() < end || input[at..end] != [125u8] {
                             return Err(());
                         }
                         *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
                         Ok(())
                     })();
                     match attempt {
-                        Ok(_) => {
-                            let seq_lo = save_p as u32;
-                            let seq_hi = *p as u32;
-                            let _ = builder.push_leaf(
-                                ::bbnf::runtime::tape::TapeKind::Literal,
-                                seq_lo,
-                                seq_hi,
-                                0,
-                                0,
-                            );
-                            break 'try_branches;
-                        }
+                        Ok(_) => break 'try_branches,
                         Err(_) => {
-                            *p = save_p;
+                            *p = attempt_p;
+                            builder.columns_mut().truncate(attempt_len);
                         }
                     }
                 }
                 91u8 => {
-                    let save_p = *p;
-                    let attempt = (|| -> ::core::result::Result<(), ()> {
+                    let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len();
+                    let attempt: ::core::result::Result<(), ()> = (|| {
                         let at = *p;
                         let end = at + 1usize;
                         if input.len() < end || input[at..end] != [91u8] {
                             return Err(());
                         }
                         *p = end;
-                        return Err(());
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        if ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                        })
+                        .is_err()
+                        {
+                            return Err(());
+                        }
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let at = *p;
                         let end = at + 1usize;
                         if input.len() < end || input[at..end] != [93u8] {
                             return Err(());
                         }
                         *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
                         Ok(())
                     })();
                     match attempt {
-                        Ok(_) => {
-                            let seq_lo = save_p as u32;
-                            let seq_hi = *p as u32;
-                            let _ = builder.push_leaf(
-                                ::bbnf::runtime::tape::TapeKind::Literal,
-                                seq_lo,
-                                seq_hi,
-                                0,
-                                0,
-                            );
-                            break 'try_branches;
-                        }
+                        Ok(_) => break 'try_branches,
                         Err(_) => {
-                            *p = save_p;
+                            *p = attempt_p;
+                            builder.columns_mut().truncate(attempt_len);
                         }
                     }
                 }
@@ -75254,38 +75538,54 @@ mod __bbnfbootstrap_emit_impl {
                     }
                 }
                 123u8 => {
-                    let save_p = *p;
-                    let attempt = (|| -> ::core::result::Result<(), ()> {
+                    let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len();
+                    let attempt: ::core::result::Result<(), ()> = (|| {
                         let at = *p;
                         let end = at + 1usize;
                         if input.len() < end || input[at..end] != [123u8] {
                             return Err(());
                         }
                         *p = end;
-                        return Err(());
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        if ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                        })
+                        .is_err()
+                        {
+                            return Err(());
+                        }
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let at = *p;
                         let end = at + 1usize;
                         if input.len() < end || input[at..end] != [125u8] {
                             return Err(());
                         }
                         *p = end;
+                        let _ = builder.push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            0,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
                         Ok(())
                     })();
                     match attempt {
-                        Ok(_) => {
-                            let seq_lo = save_p as u32;
-                            let seq_hi = *p as u32;
-                            let _ = builder.push_leaf(
-                                ::bbnf::runtime::tape::TapeKind::Literal,
-                                seq_lo,
-                                seq_hi,
-                                0,
-                                0,
-                            );
-                            break 'try_branches;
-                        }
+                        Ok(_) => break 'try_branches,
                         Err(_) => {
-                            *p = save_p;
+                            *p = attempt_p;
+                            builder.columns_mut().truncate(attempt_len);
                         }
                     }
                 }
@@ -75307,27 +75607,144 @@ mod __bbnfbootstrap_emit_impl {
                 _ => {}
             }
             {
-                let save_p = *p;
-                let attempt = (|| -> ::core::result::Result<(), ()> {
-                    return Err(());
-                    return Err(());
+                let attempt_p = *p;
+                let attempt_len = builder.columns_mut().len();
+                let attempt: ::core::result::Result<(), ()> = (|| {
+                    if ({
+                        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                        parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
+                    })
+                    .is_err()
+                    {
+                        return Err(());
+                    }
+                    {
+                        let mut iter_count: usize = 0;
+                        loop {
+                            if iter_count >= 1u32 as usize {
+                                break;
+                            }
+                            let iter_p = *p;
+                            let iter_len = builder.columns_mut().len();
+                            let iter_res: ::core::result::Result<(), ()> = (|| {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() < end || input[at..end] != [40u8] {
+                                    return Err(());
+                                }
+                                *p = end;
+                                let _ = builder.push_leaf_with(
+                                    ::bbnf::runtime::tape::TapeKind::Literal,
+                                    at as u32,
+                                    end as u32,
+                                    0,
+                                    0,
+                                    ::bbnf::runtime::tape::PayloadData::None,
+                                );
+                                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                                if ({
+                                    let _ =
+                                        __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                                    parse_flat_BbnfBootstrap_call_arg(input, p, state, builder)
+                                })
+                                .is_err()
+                                {
+                                    return Err(());
+                                }
+                                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                                {
+                                    let mut iter_count: usize = 0;
+                                    loop {
+                                        let iter_p = *p;
+                                        let iter_len = builder.columns_mut().len();
+                                        let iter_res: ::core::result::Result<(), ()> = (|| {
+                                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                input, p, state,
+                                            );
+                                            let at = *p;
+                                            let end = at + 1usize;
+                                            if input.len() < end || input[at..end] != [44u8] {
+                                                return Err(());
+                                            }
+                                            *p = end;
+                                            let _ = builder.push_leaf_with(
+                                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                                at as u32,
+                                                end as u32,
+                                                0,
+                                                0,
+                                                ::bbnf::runtime::tape::PayloadData::None,
+                                            );
+                                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                input, p, state,
+                                            );
+                                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                input, p, state,
+                                            );
+                                            if ({
+                                                let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                    input, p, state,
+                                                );
+                                                parse_flat_BbnfBootstrap_call_arg(
+                                                    input, p, state, builder,
+                                                )
+                                            })
+                                            .is_err()
+                                            {
+                                                return Err(());
+                                            }
+                                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                input, p, state,
+                                            );
+                                            Ok(())
+                                        })(
+                                        );
+                                        if iter_res.is_err() || *p == iter_p {
+                                            *p = iter_p;
+                                            builder.columns_mut().truncate(iter_len);
+                                            break;
+                                        }
+                                        iter_count += 1;
+                                    }
+                                    if iter_count < 0u32 as usize {
+                                        return Err(());
+                                    }
+                                }
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() < end || input[at..end] != [41u8] {
+                                    return Err(());
+                                }
+                                *p = end;
+                                let _ = builder.push_leaf_with(
+                                    ::bbnf::runtime::tape::TapeKind::Literal,
+                                    at as u32,
+                                    end as u32,
+                                    0,
+                                    0,
+                                    ::bbnf::runtime::tape::PayloadData::None,
+                                );
+                                Ok(())
+                            })(
+                            );
+                            if iter_res.is_err() || *p == iter_p {
+                                *p = iter_p;
+                                builder.columns_mut().truncate(iter_len);
+                                break;
+                            }
+                            iter_count += 1;
+                        }
+                        if iter_count < 0u32 as usize {
+                            return Err(());
+                        }
+                    }
                     Ok(())
                 })();
                 match attempt {
-                    Ok(_) => {
-                        let seq_lo = save_p as u32;
-                        let seq_hi = *p as u32;
-                        let _ = builder.push_leaf(
-                            ::bbnf::runtime::tape::TapeKind::Literal,
-                            seq_lo,
-                            seq_hi,
-                            0,
-                            0,
-                        );
-                        break 'try_branches;
-                    }
+                    Ok(_) => break 'try_branches,
                     Err(_) => {
-                        *p = save_p;
+                        *p = attempt_p;
+                        builder.columns_mut().truncate(attempt_len);
                     }
                 }
             }
@@ -75490,24 +75907,36 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let _ = ({
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_flat_BbnfBootstrap_big_comment(input, p, state, builder)
-            })?;
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                let _ = ({
+                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                    parse_flat_BbnfBootstrap_big_comment(input, p, state, builder)
+                })?;
+                Ok(())
+            })(
             );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
+                    0,
+                );
+            }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -75526,25 +75955,39 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let _ = ({
-                let __first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-                parse_keyword_BbnfBootstrap_modifier(input, p, __first, state, builder)
-            })?;
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                let _ = ({
+                    let __first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
+                        .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                            offset: *p as u32,
+                        })?;
+                    parse_keyword_BbnfBootstrap_modifier(input, p, __first, state, builder)
+                })?;
+                Ok(())
+            })(
             );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
+                    0,
+                );
+            }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -75555,24 +75998,36 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let _ = ({
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_flat_BbnfBootstrap_big_comment(input, p, state, builder)
-            })?;
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                let _ = ({
+                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                    parse_flat_BbnfBootstrap_big_comment(input, p, state, builder)
+                })?;
+                Ok(())
+            })(
             );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
+                    0,
+                );
+            }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -75633,81 +76088,105 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let at = *p;
-            let end = at + 2usize;
-            if input.len() < end || input[at..end] != [45u8, 62u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                });
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                let at = *p;
+                let end = at + 2usize;
+                if input.len() < end || input[at..end] != [45u8, 62u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let _ = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    at as u32,
+                    end as u32,
+                    32u8,
+                    0,
+                    ::bbnf::runtime::tape::PayloadData::None,
+                );
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                let seq_lo = *p as u32;
+                let seq_child = builder.mark_children();
+                let _ = ({
+                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                    parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder)
+                })?;
+                let repeat_lo = *p as u32;
+                let repeat_child = builder.mark_children();
+                let iter_save_p = *p;
+                let iter_save_cols = builder.columns_mut().len();
+                let iter_lo = *p as u32;
+                let iter_child = builder.mark_children();
+                let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> =
+                    (|| {
+                        let _ = ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            parse_flat_BbnfBootstrap_type_annotation(input, p, state, builder)
+                        })?;
+                        Ok(())
+                    })();
+                let matched = opt_attempt.is_ok();
+                if !matched {
+                    *p = iter_save_p;
+                    builder.columns_mut().truncate(iter_save_cols);
+                } else {
+                    let iter_hi = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        iter_child,
+                        iter_lo,
+                        iter_hi,
+                        0,
+                        0,
+                    );
+                }
+                let repeat_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    repeat_child,
+                    repeat_lo,
+                    repeat_hi,
+                    0,
+                    0,
+                );
+                let seq_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    seq_child,
+                    seq_lo,
+                    seq_hi,
+                    0,
+                    0,
+                );
+                Ok(())
+            })(
+            );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
+                    0,
+                );
             }
-            *p = end;
-            let _ = builder.push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Literal,
-                at as u32,
-                end as u32,
-                32u8,
-                0,
-                ::bbnf::runtime::tape::PayloadData::None,
-            );
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let seq_lo = *p as u32;
-            let seq_child = builder.mark_children();
-            let _ = ({
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder)
-            })?;
-            let repeat_lo = *p as u32;
-            let repeat_child = builder.mark_children();
-            let iter_lo = *p as u32;
-            let iter_child = builder.mark_children();
-            let _ = ({
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_flat_BbnfBootstrap_type_annotation(input, p, state, builder)
-            })?;
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
-            );
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
-                repeat_child,
-                repeat_lo,
-                repeat_hi,
-                0,
-                0,
-            );
-            let seq_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                seq_child,
-                seq_lo,
-                seq_hi,
-                0,
-                0,
-            );
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
-            );
-            let repeat_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -76049,38 +76528,52 @@ mod __bbnfbootstrap_emit_impl {
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let repeat_lo = *p as u32;
                         let repeat_child = builder.mark_children();
+                        let iter_save_p = *p;
+                        let iter_save_cols = builder.columns_mut().len();
                         let iter_lo = *p as u32;
                         let iter_child = builder.mark_children();
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [44u8] {
-                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                                offset: at as u32,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                            });
+                        let opt_attempt: ::core::result::Result<
+                            (),
+                            ::bbnf::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [44u8] {
+                                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            let _ = builder.push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                35u8,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                            Ok(())
+                        })();
+                        let matched = opt_attempt.is_ok();
+                        if !matched {
+                            *p = iter_save_p;
+                            builder.columns_mut().truncate(iter_save_cols);
+                        } else {
+                            let iter_hi = *p as u32;
+                            let _ = builder.push_compound(
+                                ::bbnf::runtime::tape::TapeKind::Seq,
+                                iter_child,
+                                iter_lo,
+                                iter_hi,
+                                0,
+                                0,
+                            );
                         }
-                        *p = end;
-                        let _ = builder.push_leaf_with(
-                            ::bbnf::runtime::tape::TapeKind::Literal,
-                            at as u32,
-                            end as u32,
-                            35u8,
-                            0,
-                            ::bbnf::runtime::tape::PayloadData::None,
-                        );
-                        let iter_hi = *p as u32;
-                        let _ = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
-                            iter_child,
-                            iter_lo,
-                            iter_hi,
-                            0,
-                            0,
-                        );
                         let repeat_hi = *p as u32;
                         let _ = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            ::bbnf::runtime::tape::TapeKind::Repeat,
                             repeat_child,
                             repeat_lo,
                             repeat_hi,
@@ -76118,7 +76611,7 @@ mod __bbnfbootstrap_emit_impl {
             }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -76189,38 +76682,52 @@ mod __bbnfbootstrap_emit_impl {
                         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                         let repeat_lo = *p as u32;
                         let repeat_child = builder.mark_children();
+                        let iter_save_p = *p;
+                        let iter_save_cols = builder.columns_mut().len();
                         let iter_lo = *p as u32;
                         let iter_child = builder.mark_children();
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [124u8] {
-                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                                offset: at as u32,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                            });
+                        let opt_attempt: ::core::result::Result<
+                            (),
+                            ::bbnf::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [124u8] {
+                                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            let _ = builder.push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                36u8,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                            Ok(())
+                        })();
+                        let matched = opt_attempt.is_ok();
+                        if !matched {
+                            *p = iter_save_p;
+                            builder.columns_mut().truncate(iter_save_cols);
+                        } else {
+                            let iter_hi = *p as u32;
+                            let _ = builder.push_compound(
+                                ::bbnf::runtime::tape::TapeKind::Seq,
+                                iter_child,
+                                iter_lo,
+                                iter_hi,
+                                0,
+                                0,
+                            );
                         }
-                        *p = end;
-                        let _ = builder.push_leaf_with(
-                            ::bbnf::runtime::tape::TapeKind::Literal,
-                            at as u32,
-                            end as u32,
-                            36u8,
-                            0,
-                            ::bbnf::runtime::tape::PayloadData::None,
-                        );
-                        let iter_hi = *p as u32;
-                        let _ = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
-                            iter_child,
-                            iter_lo,
-                            iter_hi,
-                            0,
-                            0,
-                        );
                         let repeat_hi = *p as u32;
                         let _ = builder.push_compound(
-                            ::bbnf::runtime::tape::TapeKind::Rule,
+                            ::bbnf::runtime::tape::TapeKind::Repeat,
                             repeat_child,
                             repeat_lo,
                             repeat_hi,
@@ -76258,7 +76765,7 @@ mod __bbnfbootstrap_emit_impl {
             }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -76402,7 +76909,7 @@ mod __bbnfbootstrap_emit_impl {
             }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -76468,6 +76975,9 @@ mod __bbnfbootstrap_emit_impl {
         builder: &mut ::bbnf::runtime::tape::TapeBuilder,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
+        let __wrap_enter_p = *p as u32;
+        let __wrap_enter_child = builder.mark_children();
+        let mut __wrap_chosen_meta: u8 = 0;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
         'try_branches: loop {
@@ -76476,7 +76986,10 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt_p = *p;
                     let attempt_len = builder.columns_mut().len();
                     match parse_flat_BbnfBootstrap_closure(input, p, state, builder) {
-                        Ok(_) => break 'try_branches,
+                        Ok(_) => {
+                            __wrap_chosen_meta = 0u8;
+                            break 'try_branches;
+                        }
                         Err(_) => {
                             *p = attempt_p;
                             builder.columns_mut().truncate(attempt_len);
@@ -76489,7 +77002,10 @@ mod __bbnfbootstrap_emit_impl {
                 let attempt_p = *p;
                 let attempt_len = builder.columns_mut().len();
                 match parse_flat_BbnfBootstrap_alternation(input, p, state, builder) {
-                    Ok(_) => break 'try_branches,
+                    Ok(_) => {
+                        __wrap_chosen_meta = 1u8;
+                        break 'try_branches;
+                    }
                     Err(_) => {
                         *p = attempt_p;
                         builder.columns_mut().truncate(attempt_len);
@@ -76502,7 +77018,16 @@ mod __bbnfbootstrap_emit_impl {
                 failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+        let __wrap_exit_p = *p as u32;
+        let __wrap_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            __wrap_enter_child,
+            __wrap_enter_p,
+            __wrap_exit_p,
+            38u8,
+            __wrap_chosen_meta,
+        );
+        Ok(__wrap_off)
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -76878,7 +77403,7 @@ mod __bbnfbootstrap_emit_impl {
             }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -77001,33 +77526,50 @@ mod __bbnfbootstrap_emit_impl {
                         _ => {}
                     }
                     {
-                        let save_p = *p;
-                        let attempt = (|| -> ::core::result::Result<(), ()> {
-                            return Err(());
+                        let attempt_p = *p;
+                        let attempt_len = builder.columns_mut().len();
+                        let attempt: ::core::result::Result<(), ()> = (|| {
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            if ({
+                                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                                parse_flat_BbnfBootstrap_import_items(input, p, state, builder)
+                            })
+                            .is_err()
+                            {
+                                return Err(());
+                            }
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                             let at = *p;
                             let end = at + 4usize;
                             if input.len() < end || input[at..end] != [102u8, 114u8, 111u8, 109u8] {
                                 return Err(());
                             }
                             *p = end;
-                            return Err(());
+                            let _ = builder.push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                            if ({
+                                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                                parse_flat_BbnfBootstrap_import_path(input, p, state, builder)
+                            })
+                            .is_err()
+                            {
+                                return Err(());
+                            }
                             Ok(())
                         })();
                         match attempt {
-                            Ok(_) => {
-                                let seq_lo = save_p as u32;
-                                let seq_hi = *p as u32;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    seq_lo,
-                                    seq_hi,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
-                            }
+                            Ok(_) => break 'try_branches,
                             Err(_) => {
-                                *p = save_p;
+                                *p = attempt_p;
+                                builder.columns_mut().truncate(attempt_len);
                             }
                         }
                     }
@@ -77052,75 +77594,90 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            {
-                let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-                let alt_lo = *p as u32;
-                let alt_child = builder.mark_children();
-                'try_branches: loop {
-                    match first {
-                        46u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [46u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                {
+                    let first = __shape_support_BbnfBootstrap::skip_space(input, p, state).ok_or(
+                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 },
+                    )?;
+                    let alt_lo = *p as u32;
+                    let alt_child = builder.mark_children();
+                    'try_branches: loop {
+                        match first {
+                            46u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [46u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
-                        }
-                        59u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [59u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+                            59u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [59u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
+                            _ => {}
                         }
-                        _ => {}
+                        return ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                    let alt_hi = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Alt,
+                        alt_child,
+                        alt_lo,
+                        alt_hi,
+                        42u8,
+                        0,
+                    );
                 }
-                let alt_hi = *p as u32;
+                Ok(())
+            })(
+            );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
                 let _ = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    alt_child,
-                    alt_lo,
-                    alt_hi,
-                    42u8,
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
                     0,
                 );
             }
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
-            );
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -77215,75 +77772,90 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            {
-                let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-                let alt_lo = *p as u32;
-                let alt_child = builder.mark_children();
-                'try_branches: loop {
-                    match first {
-                        46u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [46u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                {
+                    let first = __shape_support_BbnfBootstrap::skip_space(input, p, state).ok_or(
+                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 },
+                    )?;
+                    let alt_lo = *p as u32;
+                    let alt_child = builder.mark_children();
+                    'try_branches: loop {
+                        match first {
+                            46u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [46u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
-                        }
-                        59u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [59u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+                            59u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [59u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
+                            _ => {}
                         }
-                        _ => {}
+                        return ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                    let alt_hi = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Alt,
+                        alt_child,
+                        alt_lo,
+                        alt_hi,
+                        43u8,
+                        0,
+                    );
                 }
-                let alt_hi = *p as u32;
+                Ok(())
+            })(
+            );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
                 let _ = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    alt_child,
-                    alt_lo,
-                    alt_hi,
-                    43u8,
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
                     0,
                 );
             }
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
-            );
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -77344,76 +77916,90 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [40u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
-            *p = end;
-            let _ = builder.push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Literal,
-                at as u32,
-                end as u32,
-                44u8,
-                0,
-                ::bbnf::runtime::tape::PayloadData::None,
-            );
-            {
-                let span_lo = *p as u32;
-                let Some(match_len) = __regex_scan_BbnfBootstrap("[^)]*", input, *p) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: span_lo,
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [40u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
                         failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
                         failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
                     });
-                };
-                *p += match_len as usize;
-                let span_hi = *p as u32;
+                }
+                *p = end;
                 let _ = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
-                    span_lo,
-                    span_hi,
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    at as u32,
+                    end as u32,
                     44u8,
                     0,
                     ::bbnf::runtime::tape::PayloadData::None,
                 );
-            }
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [41u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
-            *p = end;
-            let _ = builder.push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Literal,
-                at as u32,
-                end as u32,
-                44u8,
-                0,
-                ::bbnf::runtime::tape::PayloadData::None,
+                {
+                    let span_lo = *p as u32;
+                    let Some(match_len) = __regex_scan_BbnfBootstrap("[^)]*", input, *p) else {
+                        return ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: span_lo,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
+                    };
+                    *p += match_len as usize;
+                    let span_hi = *p as u32;
+                    let _ = builder.push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        span_lo,
+                        span_hi,
+                        44u8,
+                        0,
+                        ::bbnf::runtime::tape::PayloadData::None,
+                    );
+                }
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [41u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let _ = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    at as u32,
+                    end as u32,
+                    44u8,
+                    0,
+                    ::bbnf::runtime::tape::PayloadData::None,
+                );
+                Ok(())
+            })(
             );
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
-            );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
+                    0,
+                );
+            }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -77595,7 +78181,7 @@ mod __bbnfbootstrap_emit_impl {
             }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -77606,75 +78192,90 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            {
-                let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-                let alt_lo = *p as u32;
-                let alt_child = builder.mark_children();
-                'try_branches: loop {
-                    match first {
-                        46u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [46u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                {
+                    let first = __shape_support_BbnfBootstrap::skip_space(input, p, state).ok_or(
+                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 },
+                    )?;
+                    let alt_lo = *p as u32;
+                    let alt_child = builder.mark_children();
+                    'try_branches: loop {
+                        match first {
+                            46u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [46u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
-                        }
-                        59u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [59u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+                            59u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [59u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
+                            _ => {}
                         }
-                        _ => {}
+                        return ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                    let alt_hi = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Alt,
+                        alt_child,
+                        alt_lo,
+                        alt_hi,
+                        45u8,
+                        0,
+                    );
                 }
-                let alt_hi = *p as u32;
+                Ok(())
+            })(
+            );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
                 let _ = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    alt_child,
-                    alt_lo,
-                    alt_hi,
-                    45u8,
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
                     0,
                 );
             }
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
-            );
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -77759,75 +78360,90 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            {
-                let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-                let alt_lo = *p as u32;
-                let alt_child = builder.mark_children();
-                'try_branches: loop {
-                    match first {
-                        46u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [46u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                {
+                    let first = __shape_support_BbnfBootstrap::skip_space(input, p, state).ok_or(
+                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 },
+                    )?;
+                    let alt_lo = *p as u32;
+                    let alt_child = builder.mark_children();
+                    'try_branches: loop {
+                        match first {
+                            46u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [46u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
-                        }
-                        59u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [59u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+                            59u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [59u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
+                            _ => {}
                         }
-                        _ => {}
+                        return ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                    let alt_hi = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Alt,
+                        alt_child,
+                        alt_lo,
+                        alt_hi,
+                        46u8,
+                        0,
+                    );
                 }
-                let alt_hi = *p as u32;
+                Ok(())
+            })(
+            );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
                 let _ = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    alt_child,
-                    alt_lo,
-                    alt_hi,
-                    46u8,
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
                     0,
                 );
             }
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
-            );
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -77912,75 +78528,90 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            {
-                let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-                let alt_lo = *p as u32;
-                let alt_child = builder.mark_children();
-                'try_branches: loop {
-                    match first {
-                        46u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [46u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                {
+                    let first = __shape_support_BbnfBootstrap::skip_space(input, p, state).ok_or(
+                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 },
+                    )?;
+                    let alt_lo = *p as u32;
+                    let alt_child = builder.mark_children();
+                    'try_branches: loop {
+                        match first {
+                            46u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [46u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
-                        }
-                        59u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [59u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+                            59u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [59u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
+                            _ => {}
                         }
-                        _ => {}
+                        return ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                    let alt_hi = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Alt,
+                        alt_child,
+                        alt_lo,
+                        alt_hi,
+                        47u8,
+                        0,
+                    );
                 }
-                let alt_hi = *p as u32;
+                Ok(())
+            })(
+            );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
                 let _ = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    alt_child,
-                    alt_lo,
-                    alt_hi,
-                    47u8,
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
                     0,
                 );
             }
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
-            );
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -78115,75 +78746,90 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            {
-                let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-                let alt_lo = *p as u32;
-                let alt_child = builder.mark_children();
-                'try_branches: loop {
-                    match first {
-                        46u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [46u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                {
+                    let first = __shape_support_BbnfBootstrap::skip_space(input, p, state).ok_or(
+                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 },
+                    )?;
+                    let alt_lo = *p as u32;
+                    let alt_child = builder.mark_children();
+                    'try_branches: loop {
+                        match first {
+                            46u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [46u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
-                        }
-                        59u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [59u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+                            59u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [59u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
+                            _ => {}
                         }
-                        _ => {}
+                        return ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                    let alt_hi = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Alt,
+                        alt_child,
+                        alt_lo,
+                        alt_hi,
+                        48u8,
+                        0,
+                    );
                 }
-                let alt_hi = *p as u32;
+                Ok(())
+            })(
+            );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
                 let _ = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    alt_child,
-                    alt_lo,
-                    alt_hi,
-                    48u8,
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
                     0,
                 );
             }
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
-            );
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -78268,46 +78914,58 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [58u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
-            *p = end;
-            let _ = builder.push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Literal,
-                at as u32,
-                end as u32,
-                49u8,
-                0,
-                ::bbnf::runtime::tape::PayloadData::None,
-            );
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let _ = ({
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                parse_altdispatch_BbnfBootstrap_type_name(input, p, state, builder)
-            })?;
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [58u8] {
+                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let _ = builder.push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    at as u32,
+                    end as u32,
+                    49u8,
+                    0,
+                    ::bbnf::runtime::tape::PayloadData::None,
+                );
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                let _ = ({
+                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                    parse_altdispatch_BbnfBootstrap_type_name(input, p, state, builder)
+                })?;
+                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+                Ok(())
+            })(
             );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
+                let _ = builder.push_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
+                    0,
+                );
+            }
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -78318,75 +78976,90 @@ mod __bbnfbootstrap_emit_impl {
         {
             let repeat_lo = *p as u32;
             let repeat_child = builder.mark_children();
+            let iter_save_p = *p;
+            let iter_save_cols = builder.columns_mut().len();
             let iter_lo = *p as u32;
             let iter_child = builder.mark_children();
-            {
-                let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
-                let alt_lo = *p as u32;
-                let alt_child = builder.mark_children();
-                'try_branches: loop {
-                    match first {
-                        46u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [46u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+            let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> = (|| {
+                {
+                    let first = __shape_support_BbnfBootstrap::skip_space(input, p, state).ok_or(
+                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 },
+                    )?;
+                    let alt_lo = *p as u32;
+                    let alt_child = builder.mark_children();
+                    'try_branches: loop {
+                        match first {
+                            46u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [46u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
-                        }
-                        59u8 => {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() >= end && input[at..end] == [59u8] {
-                                *p = end;
-                                let _ = builder.push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    0,
-                                    0,
-                                );
-                                break 'try_branches;
+                            59u8 => {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [59u8] {
+                                    *p = end;
+                                    let _ = builder.push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                    break 'try_branches;
+                                }
                             }
+                            _ => {}
                         }
-                        _ => {}
+                        return ::core::result::Result::Err(
+                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
                     }
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                    let alt_hi = *p as u32;
+                    let _ = builder.push_compound(
+                        ::bbnf::runtime::tape::TapeKind::Alt,
+                        alt_child,
+                        alt_lo,
+                        alt_hi,
+                        49u8,
+                        0,
+                    );
                 }
-                let alt_hi = *p as u32;
+                Ok(())
+            })(
+            );
+            let matched = opt_attempt.is_ok();
+            if !matched {
+                *p = iter_save_p;
+                builder.columns_mut().truncate(iter_save_cols);
+            } else {
+                let iter_hi = *p as u32;
                 let _ = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Alt,
-                    alt_child,
-                    alt_lo,
-                    alt_hi,
-                    49u8,
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_child,
+                    iter_lo,
+                    iter_hi,
+                    0,
                     0,
                 );
             }
-            let iter_hi = *p as u32;
-            let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_lo,
-                iter_hi,
-                0,
-                0,
-            );
             let repeat_hi = *p as u32;
             let _ = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                ::bbnf::runtime::tape::TapeKind::Repeat,
                 repeat_child,
                 repeat_lo,
                 repeat_hi,
@@ -78515,6 +79188,9 @@ mod __bbnfbootstrap_emit_impl {
         builder: &mut ::bbnf::runtime::tape::TapeBuilder,
     ) -> ::core::result::Result<::bbnf::runtime::tape::TapeOffset, ::bbnf::runtime::tape::DtaError>
     {
+        let __wrap_enter_p = *p as u32;
+        let __wrap_enter_child = builder.mark_children();
+        let mut __wrap_chosen_meta: u8 = 0;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
         'try_branches: loop {
@@ -78524,7 +79200,10 @@ mod __bbnfbootstrap_emit_impl {
                         let attempt_p = *p;
                         let attempt_len = builder.columns_mut().len();
                         match parse_flat_BbnfBootstrap_comment(input, p, state, builder) {
-                            Ok(_) => break 'try_branches,
+                            Ok(_) => {
+                                __wrap_chosen_meta = 0u8;
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = attempt_p;
                                 builder.columns_mut().truncate(attempt_len);
@@ -78535,7 +79214,10 @@ mod __bbnfbootstrap_emit_impl {
                         let attempt_p = *p;
                         let attempt_len = builder.columns_mut().len();
                         match parse_flat_BbnfBootstrap_big_comment(input, p, state, builder) {
-                            Ok(_) => break 'try_branches,
+                            Ok(_) => {
+                                __wrap_chosen_meta = 1u8;
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = attempt_p;
                                 builder.columns_mut().truncate(attempt_len);
@@ -78549,7 +79231,10 @@ mod __bbnfbootstrap_emit_impl {
                 let attempt_p = *p;
                 let attempt_len = builder.columns_mut().len();
                 match parse_keyword_BbnfBootstrap_directive(input, p, first, state, builder) {
-                    Ok(_) => break 'try_branches,
+                    Ok(_) => {
+                        __wrap_chosen_meta = 2u8;
+                        break 'try_branches;
+                    }
                     Err(_) => {
                         *p = attempt_p;
                         builder.columns_mut().truncate(attempt_len);
@@ -78560,7 +79245,10 @@ mod __bbnfbootstrap_emit_impl {
                 let attempt_p = *p;
                 let attempt_len = builder.columns_mut().len();
                 match parse_flat_BbnfBootstrap_rule(input, p, state, builder) {
-                    Ok(_) => break 'try_branches,
+                    Ok(_) => {
+                        __wrap_chosen_meta = 3u8;
+                        break 'try_branches;
+                    }
                     Err(_) => {
                         *p = attempt_p;
                         builder.columns_mut().truncate(attempt_len);
@@ -78573,7 +79261,16 @@ mod __bbnfbootstrap_emit_impl {
                 failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+        let __wrap_exit_p = *p as u32;
+        let __wrap_off = builder.push_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            __wrap_enter_child,
+            __wrap_enter_p,
+            __wrap_exit_p,
+            51u8,
+            __wrap_chosen_meta,
+        );
+        Ok(__wrap_off)
     }
     /// AX.W0a.2.a — per-grammar Array-shape parse function
     /// (Shape 2 — direct-Repeat entry-rule list,
@@ -96552,52 +97249,42 @@ mod __bbnfbootstrap_emit_impl {
             let mut builder = ::bbnf::runtime::tape::TapeBuilder::with_capacity(
                 GRAMMAR_PROFILE.capacity_for(input.len()),
             );
-            builder.enable_inline_frame_depth();
-            let mut psi = psi_with_capacity(input.len());
-            const STRUCTURAL_ALPHABET: ::bbnf::runtime::scan::StructuralAlphabet =
-                ::bbnf::runtime::scan::StructuralAlphabet::from_profile(&GRAMMAR_PROFILE);
-            let idx =
-                ::bbnf::runtime::scan::scan_structural(input.as_bytes(), &STRUCTURAL_ALPHABET);
             let root_off = {
-                let (columns, frame_depth) = builder.columns_and_frame_depth_mut();
-                if !GRAMMAR_PROFILE.list_rules.is_empty()
-                    && (input.as_bytes().len() as u32) > GRAMMAR_PROFILE.parallel_break_even_bytes
-                    && GRAMMAR_PROFILE.parallel_break_even_bytes > 0
-                {
-                    let n_workers = ::core::cmp::min(
-                        4usize,
-                        ::core::cmp::max(1usize, ::bbnf::runtime::tape::rayon_num_threads()),
-                    );
-                    let list_rule_id = GRAMMAR_PROFILE.list_rules[0].0;
-                    ::bbnf::runtime::tape::dta_run_parallel(
-                        input.as_bytes(),
-                        &idx,
-                        list_rule_id,
-                        n_workers,
-                        dta_run_BbnfBootstrap,
-                        columns,
-                        &mut psi,
-                        frame_depth,
-                    )
-                } else {
-                    dta_run_BbnfBootstrap(input.as_bytes(), &idx, columns, &mut psi, frame_depth)
-                }
-            }
-            .map_err(|e| match e {
-                ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
-                    ::bbnf::runtime::ParseErr::Syntax { offset, rule: None }
-                }
-                ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
-                    ::bbnf::runtime::ParseErr::Syntax { offset, rule: None }
-                }
-                ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
-                    ::bbnf::runtime::ParseErr::Syntax {
-                        offset: 0,
-                        rule: None,
+                let mut pos: usize = 0;
+                let mut state = __shape_support_BbnfBootstrap::ScanState::new();
+                let off = parse_BbnfBootstrap_grammar(
+                    input.as_bytes(),
+                    &mut pos,
+                    &mut state,
+                    &mut builder,
+                )
+                .map_err(|e| match e {
+                    ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
+                        ::bbnf::runtime::ParseErr::Syntax { offset, rule: None }
                     }
+                    ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                        ::bbnf::runtime::ParseErr::Syntax { offset, rule: None }
+                    }
+                    ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
+                        ::bbnf::runtime::ParseErr::Syntax {
+                            offset: 0,
+                            rule: None,
+                        }
+                    }
+                })?;
+                let _ = __shape_support_BbnfBootstrap::skip_space(
+                    input.as_bytes(),
+                    &mut pos,
+                    &mut state,
+                );
+                if pos != input.len() {
+                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: pos as u32,
+                        rule: None,
+                    });
                 }
-            })?;
-            psi.fill_columns(input.as_bytes(), builder.columns_mut(), &GRAMMAR_PROFILE);
+                off
+            };
             let tape = builder.finish().map_err(::bbnf::runtime::ParseErr::Tape)?;
             ::core::result::Result::Ok(::bbnf::runtime::Parsed::new(tape, input, root_off))
         }

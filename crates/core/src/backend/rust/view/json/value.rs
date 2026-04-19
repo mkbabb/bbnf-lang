@@ -186,6 +186,14 @@ impl<'input> Value<'input> {
 
     /// Project a `Value` from a tape cursor positioned on a value-
     /// producing record. Walks children recursively as needed.
+    ///
+    /// Dispatch key is `(kind, variant_idx)` because AW-III.W1.A
+    /// wires structural literals (`[`, `,`, `]`) to inherit their
+    /// enclosing rule's variant_idx — so `variant_idx == ids.array`
+    /// alone matches both the array compound and every structural
+    /// `[` / `,` / `]` under it. The kind discriminator rules those
+    /// out: value-producing leaves are always `TapeKind::Span`,
+    /// value-producing compounds are always `is_compound()`.
     pub fn from_cursor<'tape>(
         cursor: TapeCursor<'tape>,
         input: &'input str,
@@ -197,50 +205,48 @@ impl<'input> Value<'input> {
         let variant = cursor.variant_idx();
         let kind = cursor.kind();
 
-        // Rule-id dispatch first. Typed leaves emitted by
-        // `null` / `bool` / `number` / `string` present as
-        // `TapeKind::Span` records whose variant_idx identifies the
-        // rule. Compound rules (`array`, `object`, `pair`) present as
-        // `TapeKind::Rule` / `TapeKind::Seq` / `TapeKind::Alt`
-        // compounds; recurse through them.
-        if variant == ids.null {
-            return Self::decode_null(&cursor);
-        }
-        if variant == ids.bool_ {
-            return Self::decode_bool(&cursor);
-        }
-        if variant == ids.number {
-            return Self::decode_number(&cursor);
-        }
-        if variant == ids.string {
-            return Self::decode_string(&cursor, input);
-        }
-        if variant == ids.array {
-            return Self::decode_array(cursor, input, ids);
-        }
-        if variant == ids.object {
-            return Self::decode_object(cursor, input, ids);
+        // Typed leaves — the four `->`-annotated rules land on
+        // `TapeKind::Span` records. Routing keys on both kind and
+        // variant_idx so a structural `[` literal with `variant_idx
+        // == ids.array` (AW-III.W1.A variant-inheritance) doesn't
+        // hijack the leaf path.
+        if kind == TapeKind::Span {
+            if variant == ids.null {
+                return Self::decode_null(&cursor);
+            }
+            if variant == ids.bool_ {
+                return Self::decode_bool(&cursor);
+            }
+            if variant == ids.number {
+                return Self::decode_number(&cursor);
+            }
+            if variant == ids.string {
+                return Self::decode_string(&cursor, input);
+            }
         }
 
-        // Top-level `value` Alt, or any other structural wrapper
-        // (Rule, Seq, Alt with a wrapping variant_idx): recurse into
-        // the chosen child. The JSON grammar's entry rule wraps the
-        // chosen branch under a compound whose variant_idx is
-        // `ids.value`, so the first structural descendant whose
-        // variant_idx matches one of the value-producing rules is
-        // what the consumer wants.
+        // Compound rules — Rule/Seq/Alt compounds whose variant_idx
+        // identifies the `array` / `object` / `value` rule. `pair`
+        // compounds are consumed inside `decode_object`; they don't
+        // reach this top-level dispatch except via recursion.
         if kind.is_compound() {
+            if variant == ids.array {
+                return Self::decode_array(cursor, input, ids);
+            }
+            if variant == ids.object {
+                return Self::decode_object(cursor, input, ids);
+            }
+            // `value` Alt, any structural Seq/Rule wrapper: peel
+            // to the first value-producing descendant.
             return Self::project_first_matching_child(cursor, input, ids);
         }
 
         // Leaf record with a variant_idx that doesn't match any
-        // value-producing rule — this reaches the walker from
-        // structural-literal leaves (`[`, `,`, `:`, `]` under the
-        // `array`/`object`/`pair` rules), which the array/object
-        // paths filter out. Hitting it at the top level means the
-        // root cursor isn't a JSON value; treat as Null so the
-        // walker stays total for every possible tape input rather
-        // than panicking on an inconsistency.
+        // value-producing rule — reaches the walker from structural
+        // literals (`[`, `,`, `:`, `]`) or epsilon-whitespace
+        // records. Callers filter these via `is_value_producing`
+        // before recursing, so this path is defensive; return Null
+        // as the neutral element when encountered at the top level.
         Value::Null
     }
 
@@ -401,26 +407,32 @@ impl<'input> Value<'input> {
 }
 
 /// True when the cursor's record produces a `Value` node (rather
-/// than a structural filler). The six value-producing rules are
-/// `null`, `bool`, `number`, `string`, `array`, `object`; the
-/// `pair` rule is matched separately by the object walker.
+/// than a structural filler).
+///
+/// Six value-producing rules exist — four typed leaves on
+/// `TapeKind::Span` records (`null`, `bool`, `number`, `string`)
+/// plus two compounds (`array`, `object`). A `value` Alt compound
+/// wraps the chosen branch and also counts as value-producing
+/// (the walker peels it to the inner branch).
+///
+/// AW-III.W1.A variant inheritance: structural literals (`[`, `,`,
+/// `]`) within an array rule carry `variant_idx == ids.array`, so
+/// the kind discriminator matters. Typed leaves are always
+/// `TapeKind::Span`; value-producing compounds are always
+/// `is_compound()`. The pair rule is handled separately by
+/// [`visit_pairs`].
 #[inline]
 fn is_value_producing<'tape>(cursor: &TapeCursor<'tape>, ids: &JsonRuleIds) -> bool {
     let v = cursor.variant_idx();
-    if v == ids.null
-        || v == ids.bool_
-        || v == ids.number
-        || v == ids.string
-        || v == ids.array
-        || v == ids.object
+    let kind = cursor.kind();
+    // Typed leaves on Span records.
+    if kind == TapeKind::Span
+        && (v == ids.null || v == ids.bool_ || v == ids.number || v == ids.string)
     {
         return true;
     }
-    // Structural compounds that WRAP a value-producing branch also
-    // count — the `value` Alt's intermediate compound (Rule/Alt) has
-    // `variant_idx == ids.value`, and the chosen branch's compound
-    // sits inside it. We peel through these.
-    if v == ids.value && cursor.kind().is_compound() {
+    // Compounds — array / object / value (the entry-alt wrapper).
+    if kind.is_compound() && (v == ids.array || v == ids.object || v == ids.value) {
         return true;
     }
     false
@@ -464,7 +476,7 @@ fn visit_pairs<'tape, 'input, F>(
     F: FnMut(Cow<'input, str>, Value<'input>),
 {
     for child in cursor.children_zero_alloc() {
-        if child.variant_idx() == ids.pair {
+        if child.variant_idx() == ids.pair && child.kind().is_compound() {
             if let Some((key, value)) = extract_pair(child, input, ids) {
                 f(key, value);
             }

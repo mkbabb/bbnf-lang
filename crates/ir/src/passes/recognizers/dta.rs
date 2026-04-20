@@ -1414,29 +1414,43 @@ fn collect_operator_alternatives(
     op_rule_id: RuleId,
 ) -> Option<Vec<PrecedenceEntry>> {
     let body = strip_transparent_owned(&op_rule.body);
-    let branches = match body {
-        IrNode::Alt(branches, _) => branches,
-        _ => return None,
-    };
-    let mut out = Vec::new();
-    let mut discriminant: usize = 0;
-    for branch in branches.iter() {
-        let literals = extract_literal_set(&branch.node, ir)?;
-        for literal in literals {
-            let bytes = literal.as_bytes();
-            if bytes.is_empty() {
-                return None;
+
+    // Single-Literal op-rule body — `op = "+" -> Plus` and friends
+    // — projects to a one-entry chain. The Alt-of-Literal path
+    // below subsumes the n>=2 cases; the n=1 degenerate is the
+    // sibling fall-through. Without this projection the Pratt
+    // detector rejects every Ref-headed single-operator chain
+    // (`w4_pratt_detector_admits_skip_based_operator_chain` fixture
+    // and any grammar whose op-rule reduces to a single literal
+    // post-Map-strip).
+    let literals = match body {
+        IrNode::Alt(branches, _) => {
+            let mut out = Vec::new();
+            for branch in branches.iter() {
+                let lits = extract_literal_set(&branch.node, ir)?;
+                out.extend(lits);
             }
-            out.push(PrecedenceEntry {
-                byte: bytes[0],
-                second_byte: bytes.get(1).copied(),
-                precedence: 0, // filled in by caller
-                associativity: infer_associativity(&literal),
-                op_rule: op_rule_id,
-                op_discriminant: discriminant.min(u8::MAX as usize) as u8,
-            });
-            discriminant += 1;
+            out
         }
+        _ => extract_literal_set(&body, ir)?,
+    };
+
+    let mut out = Vec::with_capacity(literals.len());
+    let mut discriminant: usize = 0;
+    for literal in literals {
+        let bytes = literal.as_bytes();
+        if bytes.is_empty() {
+            return None;
+        }
+        out.push(PrecedenceEntry {
+            byte: bytes[0],
+            second_byte: bytes.get(1).copied(),
+            precedence: 0, // filled in by caller
+            associativity: infer_associativity(&literal),
+            op_rule: op_rule_id,
+            op_discriminant: discriminant.min(u8::MAX as usize) as u8,
+        });
+        discriminant += 1;
     }
     Some(out)
 }

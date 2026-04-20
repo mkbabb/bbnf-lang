@@ -946,6 +946,53 @@ mod __bbnfbootstrap_emit_impl {
     static __DTA_REGEX_169: &str = ".*";
     #[allow(dead_code)]
     static __DTA_REGEX_389: &str = "[^)]*";
+    /// AY.W4.3 — hoisted DFA byte-class equivalence table.
+    #[allow(dead_code)]
+    pub(crate) const __DFA_CLASSES_BbnfBootstrap_1: [u8; 256] = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2, 0, 3, 3, 3, 3, 3, 3,
+        3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 4, 0, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ];
+    /// AY.W4.3 — hoisted DFA flat transition table
+    /// (state * num_classes + class -> target_state |
+    /// 0xFF=DEAD).
+    #[allow(dead_code)]
+    pub(crate) const __DFA_TRANS_BbnfBootstrap_1: [u8; 36] = [
+        255, 255, 4, 0, 255, 255, 255, 255, 255, 1, 3, 2, 255, 5, 255, 3, 3, 3, 255, 255,
+        255, 3, 3, 3, 255, 255, 255, 1, 255, 255, 255, 255, 255, 3, 255, 255,
+    ];
+    /// AY.W4.3 — hoisted DFA accept-state bitset.
+    #[allow(dead_code)]
+    pub(crate) const __DFA_ACCEPT_BbnfBootstrap_1: [u64; 1] = [14];
+    /// AY.W4.3 — per-pattern (LAST-byte-set lo, hi) packed
+    /// `CharSet128` tuples. `(0, 0)` means narrowing is
+    /// disabled for that pattern (suffix not deterministic).
+    ///
+    /// The adapter consults this when invoked: if the pattern's
+    /// entry is non-zero AND the input slice from `pos` does not
+    /// contain any byte in the LAST set, the regex cannot
+    /// complete a match — skip the DFA walk entirely.
+    #[allow(dead_code)]
+    pub(crate) const __REGEX_LAST_BYTE_SET_BbnfBootstrap: [(u64, u64); 11] = [
+        (0, 0),
+        (0, 0),
+        (0, 0),
+        (0, 0),
+        (0, 0),
+        (0, 0),
+        (0, 0),
+        (0, 0),
+        (0, 0),
+        (0, 0),
+        (0, 0),
+    ];
     #[inline]
     #[cold]
     fn __regex_scan_BbnfBootstrap(
@@ -956,6 +1003,28 @@ mod __bbnfbootstrap_emit_impl {
         if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_0.as_ptr())
             || pattern == __DTA_REGEX_0
         {
+            let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_BbnfBootstrap[0];
+            if (__lb_lo | __lb_hi) != 0 {
+                let __scan_end = (pos + 256).min(input.len());
+                let __slice = &input[pos..__scan_end];
+                let mut __found = false;
+                for &__b in __slice {
+                    let __test = if __b < 64 {
+                        (__lb_lo >> __b) & 1
+                    } else if __b < 128 {
+                        (__lb_hi >> (__b - 64)) & 1
+                    } else {
+                        0
+                    };
+                    if __test != 0 {
+                        __found = true;
+                        break;
+                    }
+                }
+                if !__found && __scan_end == input.len() {
+                    return ::core::option::Option::None;
+                }
+            }
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -1003,88 +1072,51 @@ mod __bbnfbootstrap_emit_impl {
         if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1.as_ptr())
             || pattern == __DTA_REGEX_1
         {
+            let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_BbnfBootstrap[1];
+            if (__lb_lo | __lb_hi) != 0 {
+                let __scan_end = (pos + 256).min(input.len());
+                let __slice = &input[pos..__scan_end];
+                let mut __found = false;
+                for &__b in __slice {
+                    let __test = if __b < 64 {
+                        (__lb_lo >> __b) & 1
+                    } else if __b < 128 {
+                        (__lb_hi >> (__b - 64)) & 1
+                    } else {
+                        0
+                    };
+                    if __test != 0 {
+                        __found = true;
+                        break;
+                    }
+                }
+                if !__found && __scan_end == input.len() {
+                    return ::core::option::Option::None;
+                }
+            }
             return '__dfa: {
-                let mut __dfa_state: u32 = 0;
+                let mut __dfa_state: u8 = 0;
                 let mut __dfa_p: usize = pos;
                 let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
-                loop {
-                    let b = match input.get(__dfa_p) {
-                        ::core::option::Option::Some(&b) => b,
-                        ::core::option::Option::None => break,
+                let __end = input.len();
+                while __dfa_p < __end {
+                    let __b = unsafe { *input.get_unchecked(__dfa_p) };
+                    let __c = unsafe {
+                        *__DFA_CLASSES_BbnfBootstrap_1.get_unchecked(__b as usize)
                     };
-                    match __dfa_state {
-                        0 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 0;
-                                }
-                                46 => __dfa_state = 4,
-                                _ => break,
-                            }
-                        }
-                        1 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 1;
-                                }
-                                69 | 101 => __dfa_state = 2,
-                                65 | 66 | 67 | 68 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77
-                                | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89
-                                | 90 | 95 | 97 | 98 | 99 | 100 | 102 | 103 | 104 | 105 | 106
-                                | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116
-                                | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 3,
-                                _ => break,
-                            }
-                        }
-                        2 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65 | 66
-                                | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78
-                                | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90
-                                | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
-                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 3,
-                                43 | 45 => __dfa_state = 5,
-                                _ => break,
-                            }
-                        }
-                        3 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65 | 66
-                                | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78
-                                | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90
-                                | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
-                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 3,
-                                _ => break,
-                            }
-                        }
-                        4 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 1;
-                                }
-                                _ => break,
-                            }
-                        }
-                        5 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 3;
-                                }
-                                _ => break,
-                            }
-                        }
-                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    let __next = unsafe {
+                        *__DFA_TRANS_BbnfBootstrap_1
+                            .get_unchecked(__dfa_state as usize * 6 + __c as usize)
+                    };
+                    if __next == 0xFF {
+                        break;
                     }
+                    __dfa_state = __next;
                     __dfa_p += 1;
-                    match __dfa_state {
-                        1 | 2 | 3 => {
-                            __dfa_last_match = ::core::option::Option::Some(
-                                __dfa_p as u32,
-                            );
-                        }
-                        _ => {}
+                    if (__DFA_ACCEPT_BbnfBootstrap_1[__dfa_state as usize / 64]
+                        >> (__dfa_state as usize % 64)) & 1 != 0
+                    {
+                        __dfa_last_match = ::core::option::Option::Some(__dfa_p as u32);
                     }
                 }
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
@@ -1093,6 +1125,28 @@ mod __bbnfbootstrap_emit_impl {
         if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_6.as_ptr())
             || pattern == __DTA_REGEX_6
         {
+            let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_BbnfBootstrap[2];
+            if (__lb_lo | __lb_hi) != 0 {
+                let __scan_end = (pos + 256).min(input.len());
+                let __slice = &input[pos..__scan_end];
+                let mut __found = false;
+                for &__b in __slice {
+                    let __test = if __b < 64 {
+                        (__lb_lo >> __b) & 1
+                    } else if __b < 128 {
+                        (__lb_hi >> (__b - 64)) & 1
+                    } else {
+                        0
+                    };
+                    if __test != 0 {
+                        __found = true;
+                        break;
+                    }
+                }
+                if !__found && __scan_end == input.len() {
+                    return ::core::option::Option::None;
+                }
+            }
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -1182,6 +1236,28 @@ mod __bbnfbootstrap_emit_impl {
         if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_9.as_ptr())
             || pattern == __DTA_REGEX_9
         {
+            let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_BbnfBootstrap[3];
+            if (__lb_lo | __lb_hi) != 0 {
+                let __scan_end = (pos + 256).min(input.len());
+                let __slice = &input[pos..__scan_end];
+                let mut __found = false;
+                for &__b in __slice {
+                    let __test = if __b < 64 {
+                        (__lb_lo >> __b) & 1
+                    } else if __b < 128 {
+                        (__lb_hi >> (__b - 64)) & 1
+                    } else {
+                        0
+                    };
+                    if __test != 0 {
+                        __found = true;
+                        break;
+                    }
+                }
+                if !__found && __scan_end == input.len() {
+                    return ::core::option::Option::None;
+                }
+            }
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -1233,6 +1309,28 @@ mod __bbnfbootstrap_emit_impl {
         if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_143.as_ptr())
             || pattern == __DTA_REGEX_143
         {
+            let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_BbnfBootstrap[4];
+            if (__lb_lo | __lb_hi) != 0 {
+                let __scan_end = (pos + 256).min(input.len());
+                let __slice = &input[pos..__scan_end];
+                let mut __found = false;
+                for &__b in __slice {
+                    let __test = if __b < 64 {
+                        (__lb_lo >> __b) & 1
+                    } else if __b < 128 {
+                        (__lb_hi >> (__b - 64)) & 1
+                    } else {
+                        0
+                    };
+                    if __test != 0 {
+                        __found = true;
+                        break;
+                    }
+                }
+                if !__found && __scan_end == input.len() {
+                    return ::core::option::Option::None;
+                }
+            }
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -1284,6 +1382,28 @@ mod __bbnfbootstrap_emit_impl {
         if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_149.as_ptr())
             || pattern == __DTA_REGEX_149
         {
+            let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_BbnfBootstrap[5];
+            if (__lb_lo | __lb_hi) != 0 {
+                let __scan_end = (pos + 256).min(input.len());
+                let __slice = &input[pos..__scan_end];
+                let mut __found = false;
+                for &__b in __slice {
+                    let __test = if __b < 64 {
+                        (__lb_lo >> __b) & 1
+                    } else if __b < 128 {
+                        (__lb_hi >> (__b - 64)) & 1
+                    } else {
+                        0
+                    };
+                    if __test != 0 {
+                        __found = true;
+                        break;
+                    }
+                }
+                if !__found && __scan_end == input.len() {
+                    return ::core::option::Option::None;
+                }
+            }
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -1373,6 +1493,28 @@ mod __bbnfbootstrap_emit_impl {
         if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_153.as_ptr())
             || pattern == __DTA_REGEX_153
         {
+            let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_BbnfBootstrap[6];
+            if (__lb_lo | __lb_hi) != 0 {
+                let __scan_end = (pos + 256).min(input.len());
+                let __slice = &input[pos..__scan_end];
+                let mut __found = false;
+                for &__b in __slice {
+                    let __test = if __b < 64 {
+                        (__lb_lo >> __b) & 1
+                    } else if __b < 128 {
+                        (__lb_hi >> (__b - 64)) & 1
+                    } else {
+                        0
+                    };
+                    if __test != 0 {
+                        __found = true;
+                        break;
+                    }
+                }
+                if !__found && __scan_end == input.len() {
+                    return ::core::option::Option::None;
+                }
+            }
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -1462,6 +1604,28 @@ mod __bbnfbootstrap_emit_impl {
         if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_158.as_ptr())
             || pattern == __DTA_REGEX_158
         {
+            let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_BbnfBootstrap[7];
+            if (__lb_lo | __lb_hi) != 0 {
+                let __scan_end = (pos + 256).min(input.len());
+                let __slice = &input[pos..__scan_end];
+                let mut __found = false;
+                for &__b in __slice {
+                    let __test = if __b < 64 {
+                        (__lb_lo >> __b) & 1
+                    } else if __b < 128 {
+                        (__lb_hi >> (__b - 64)) & 1
+                    } else {
+                        0
+                    };
+                    if __test != 0 {
+                        __found = true;
+                        break;
+                    }
+                }
+                if !__found && __scan_end == input.len() {
+                    return ::core::option::Option::None;
+                }
+            }
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -1580,6 +1744,28 @@ mod __bbnfbootstrap_emit_impl {
         if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_162.as_ptr())
             || pattern == __DTA_REGEX_162
         {
+            let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_BbnfBootstrap[8];
+            if (__lb_lo | __lb_hi) != 0 {
+                let __scan_end = (pos + 256).min(input.len());
+                let __slice = &input[pos..__scan_end];
+                let mut __found = false;
+                for &__b in __slice {
+                    let __test = if __b < 64 {
+                        (__lb_lo >> __b) & 1
+                    } else if __b < 128 {
+                        (__lb_hi >> (__b - 64)) & 1
+                    } else {
+                        0
+                    };
+                    if __test != 0 {
+                        __found = true;
+                        break;
+                    }
+                }
+                if !__found && __scan_end == input.len() {
+                    return ::core::option::Option::None;
+                }
+            }
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -1639,6 +1825,28 @@ mod __bbnfbootstrap_emit_impl {
         if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_169.as_ptr())
             || pattern == __DTA_REGEX_169
         {
+            let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_BbnfBootstrap[9];
+            if (__lb_lo | __lb_hi) != 0 {
+                let __scan_end = (pos + 256).min(input.len());
+                let __slice = &input[pos..__scan_end];
+                let mut __found = false;
+                for &__b in __slice {
+                    let __test = if __b < 64 {
+                        (__lb_lo >> __b) & 1
+                    } else if __b < 128 {
+                        (__lb_hi >> (__b - 64)) & 1
+                    } else {
+                        0
+                    };
+                    if __test != 0 {
+                        __found = true;
+                        break;
+                    }
+                }
+                if !__found && __scan_end == input.len() {
+                    return ::core::option::Option::None;
+                }
+            }
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -1698,6 +1906,28 @@ mod __bbnfbootstrap_emit_impl {
         if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_389.as_ptr())
             || pattern == __DTA_REGEX_389
         {
+            let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_BbnfBootstrap[10];
+            if (__lb_lo | __lb_hi) != 0 {
+                let __scan_end = (pos + 256).min(input.len());
+                let __slice = &input[pos..__scan_end];
+                let mut __found = false;
+                for &__b in __slice {
+                    let __test = if __b < 64 {
+                        (__lb_lo >> __b) & 1
+                    } else if __b < 128 {
+                        (__lb_hi >> (__b - 64)) & 1
+                    } else {
+                        0
+                    };
+                    if __test != 0 {
+                        __found = true;
+                        break;
+                    }
+                }
+                if !__found && __scan_end == input.len() {
+                    return ::core::option::Option::None;
+                }
+            }
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
                 let mut __dfa_p: usize = pos;
@@ -1769,22 +1999,25 @@ mod __bbnfbootstrap_emit_impl {
         /// Per-parse SIMD scratch — 64-byte whitespace-bitmap
         /// cache mirroring `json-prototype::simd::ScanState`.
         ///
-        /// AY.W1.3 added a [`crate::tape::StructuralIndex`] field
-        /// here, populated eagerly at parse-entry to feed a probe
-        /// in [`skip_space_slow`] + a tape-capacity refinement.
-        /// AYW1-twitter-regression-diag shows that on JSON the
-        /// O(N) scan cost (~50% of twitter parse time) exceeded
-        /// the probe's per-call savings (probe rarely finds the
-        /// next structural byte within the 64-byte stripe; when
-        /// it does, the savings are at most a handful of SIMD
-        /// instructions). AY.W1-fix retires the consumer wiring;
-        /// the scan substrate ([`::bbnf::runtime::tape::scan_structural`])
-        /// stays in the tape crate awaiting AY.W4's regex-scan
-        /// specialisation work, which can wire it through a
-        /// CTNS-style predicate that delivers material savings.
+        /// AY.W4.3 — for grammars whose `structural_alphabet` is
+        /// non-empty, ScanState additionally carries a lazy
+        /// `OnceCell<StructuralIndex>` consumed by CTNS-style
+        /// probes. Lazy-init keeps the O(N) scan cost amortised
+        /// rather than paid eagerly at parse entry — see
+        /// `AYW1-twitter-regression-diag` for the eager-init
+        /// regression that motivates the OnceCell discipline.
         pub struct ScanState {
             pub(crate) nospace_bits: u64,
             pub(crate) nospace_start: isize,
+            /// AY.W4.3 — lazy structural-byte index. Populated on
+            /// first consumer query via `ensure_structural_index`;
+            /// `OnceCell` discipline keeps the O(N) scan cost
+            /// amortised across the parse rather than paid eagerly
+            /// at parse-entry (AY.W1-fix demonstrated eager scans
+            /// regress JSON twitter -64%).
+            pub(crate) structural_index: ::core::cell::OnceCell<
+                ::bbnf::runtime::tape::StructuralIndex,
+            >,
         }
         impl ScanState {
             #[inline]
@@ -1792,8 +2025,26 @@ mod __bbnfbootstrap_emit_impl {
                 Self {
                     nospace_bits: 0,
                     nospace_start: -1,
+                    structural_index: ::core::cell::OnceCell::new(),
                 }
             }
+        }
+        /// AY.W4.3 — lazy-init the per-parse structural index
+        /// against the grammar's mined `structural_alphabet`.
+        /// Idempotent; consumers may call freely.
+        #[inline]
+        pub(crate) fn ensure_structural_index<'a>(
+            state: &'a mut ScanState,
+            input: &[u8],
+        ) -> &'a ::bbnf::runtime::tape::StructuralIndex {
+            state
+                .structural_index
+                .get_or_init(|| {
+                    ::bbnf::runtime::tape::scan_structural(
+                        input,
+                        super::GRAMMAR_PROFILE.structural_alphabet,
+                    )
+                })
         }
         /// Skip JSON whitespace at `*p`, returning the first
         /// non-whitespace byte (or `None` on EOF). Hot-path fast-

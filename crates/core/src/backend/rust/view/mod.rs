@@ -69,9 +69,11 @@ mod leaves;
 pub mod named_types;
 mod repeat;
 mod seq;
+pub mod value;
 
 pub use color::{Color, ColorSpace, COLOR_PAYLOAD_BYTES};
 pub use named_types::RustNamedTypes;
+pub use value::{emit_value_surface, variant_entries_for, VariantInfo, VariantInfoShape};
 
 /// Generate the full view-type surface for a grammar.
 ///

@@ -164,17 +164,47 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
         return;
     }
 
-    // AY.W1.2 — stack-buffer scratch arrays keyed by depth. The
-    // [`STACK_DEPTH_HINT`] cap covers every grammar in the corpus
-    // (DTA frame stack peaks at depth 31 on the deepest CSS L4
-    // selector; bbnf-self peaks at 18); the assertion below
-    // guards against the rare deeper case. Pre-AY this allocated
-    // three `Vec<Option<u32>>` per parse — measurable per-parse
-    // overhead on small documents. Stack arrays are zero-cost.
+    // AY.W1.2 — stack-buffer-or-heap scratch arrays keyed by depth.
+    // The common case (DTA frame stack ≤ STACK_DEPTH_HINT = 64) hits
+    // the zero-alloc stack path; the rare deep case (twitter.json
+    // peaks at depth 66; pathological inputs can go deeper) falls
+    // through to a one-time heap allocation sized to the observed
+    // max. Pre-AY allocated `Vec<Option<u32>>` per parse on every
+    // parse regardless of depth — measurable per-parse overhead on
+    // small documents.
     const SCRATCH_LEN: usize = STACK_DEPTH_HINT + 2;
-    let mut prev_at_depth: [Option<u32>; SCRATCH_LEN] = [None; SCRATCH_LEN];
-    let mut first_at_depth: [Option<u32>; SCRATCH_LEN] = [None; SCRATCH_LEN];
-    let mut last_at_depth: [Option<u32>; SCRATCH_LEN] = [None; SCRATCH_LEN];
+    let max_depth = frame_depth.iter().copied().max().unwrap_or(0) as usize;
+    let mut stack_prev: [Option<u32>; SCRATCH_LEN] = [None; SCRATCH_LEN];
+    let mut stack_first: [Option<u32>; SCRATCH_LEN] = [None; SCRATCH_LEN];
+    let mut stack_last: [Option<u32>; SCRATCH_LEN] = [None; SCRATCH_LEN];
+    let mut heap_prev: Vec<Option<u32>> = Vec::new();
+    let mut heap_first: Vec<Option<u32>> = Vec::new();
+    let mut heap_last: Vec<Option<u32>> = Vec::new();
+    let use_heap = max_depth + 2 > SCRATCH_LEN;
+    let scratch_len = if use_heap {
+        let needed = max_depth + 2;
+        heap_prev = vec![None; needed];
+        heap_first = vec![None; needed];
+        heap_last = vec![None; needed];
+        needed
+    } else {
+        SCRATCH_LEN
+    };
+    let prev_at_depth: &mut [Option<u32>] = if use_heap {
+        heap_prev.as_mut_slice()
+    } else {
+        &mut stack_prev[..]
+    };
+    let first_at_depth: &mut [Option<u32>] = if use_heap {
+        heap_first.as_mut_slice()
+    } else {
+        &mut stack_first[..]
+    };
+    let last_at_depth: &mut [Option<u32>] = if use_heap {
+        heap_last.as_mut_slice()
+    } else {
+        &mut stack_last[..]
+    };
 
     // High-water mark for invalidation. Tracks the largest depth
     // currently populated in the scratch arrays so the invalidation
@@ -185,11 +215,11 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
     for i in 0..n {
         let d = frame_depth[i] as usize;
         debug_assert!(
-            d < SCRATCH_LEN,
-            "Stage-C: frame_depth[{}] = {} exceeds scratch capacity {} (raise STACK_DEPTH_HINT)",
+            d < scratch_len,
+            "Stage-C: frame_depth[{}] = {} exceeds scratch capacity {}",
             i,
             d,
-            SCRATCH_LEN,
+            scratch_len,
         );
         let i_u32 = i as u32;
 

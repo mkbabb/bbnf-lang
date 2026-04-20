@@ -163,6 +163,19 @@ impl TapeRec {
     /// pre-W1.A `flags` bit 7 alongside [`Self::HAS_CHILDREN_BIT`].
     pub const META_IDX_HI_BIT: u16 = 0x0008;
 
+    /// AY.W4.2 — bit in [`TapeRec::extra`] marking a numeric `f64`
+    /// leaf whose payload was written directly into
+    /// [`crate::Columns::pay_f64`] by the Eisel-Lemire fast path
+    /// (`crate::TapeBuilder::push_leaf_with_f64_direct`). When set,
+    /// the record's `child_off` carries the column rank into
+    /// `pay_f64`; the reader projects `f64::from_bits(pay_f64[rank])`
+    /// directly without the `pay_wide` / arena round-trip.
+    ///
+    /// Mutually exclusive with [`Self::PAYLOAD_IN_ARENA_BIT`] — the
+    /// arena-bit path slices `pay_agg` for an 8-byte LE encoding;
+    /// this bit selects the dense `pay_f64` column.
+    pub const PAYLOAD_F64_DIRECT_BIT: u16 = 0x0010;
+
     /// Pack a [`TapeKind`] and `meta_idx` into the `kind_meta` byte
     /// and an `extra` companion bit. Returns
     /// `(kind_meta, extra_meta_bit)` where `extra_meta_bit` is
@@ -254,6 +267,14 @@ impl TapeRec {
     #[inline]
     pub fn payload_in_arena(&self) -> bool {
         (self.extra & Self::PAYLOAD_IN_ARENA_BIT) != 0
+    }
+
+    /// AY.W4.2 — true iff this leaf's `child_off` is a column rank
+    /// into [`crate::Columns::pay_f64`] (the Eisel-Lemire direct-write
+    /// column). Set by [`crate::TapeBuilder::push_leaf_with_f64_direct`].
+    #[inline]
+    pub fn payload_f64_direct(&self) -> bool {
+        (self.extra & Self::PAYLOAD_F64_DIRECT_BIT) != 0
     }
 
     // ── ShapeRef accessors (AV.5.1) ──────────────────────────────
@@ -488,14 +509,21 @@ impl Tape {
 
     /// Read a wide (8-byte) scalar payload from the `pay_wide` column
     /// or — when [`TapeRec::payload_in_arena`] is set — from the
-    /// unified arena.
+    /// unified arena, or — when [`TapeRec::payload_f64_direct`] is
+    /// set (AY.W4.2) — from the dedicated `pay_f64` direct-column.
     #[inline]
     fn payload_wide<T: Copy>(&self, rec: TapeRec) -> Option<T> {
         debug_assert!(std::mem::size_of::<T>() == 8);
         if rec.child_off.is_none() {
             return None;
         }
-        let raw = if rec.payload_in_arena() {
+        let raw = if rec.payload_f64_direct() {
+            let rank = rec.child_off.0 as usize;
+            if rank >= self.columns.pay_f64.len() {
+                return None;
+            }
+            self.columns.pay_f64[rank].to_le_bytes()
+        } else if rec.payload_in_arena() {
             let off = rec.child_off.0 as usize;
             let arena = &self.columns.pay_agg;
             if off + 8 > arena.len() {

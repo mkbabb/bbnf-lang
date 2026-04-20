@@ -95,10 +95,25 @@ pub struct Columns {
     /// Inline scalars ≤ 4 B. The record's `child_off` holds the
     /// column rank.
     pub pay_narrow: Vec<u32>,
-    /// 8-byte scalars (`f64` / `u64` / `i64` / packed `Span`). Stored
-    /// as raw bits; readers reinterpret via `f64::from_bits` or the
-    /// typed cast. The record's `child_off` holds the column rank.
+    /// 8-byte scalars (`u64` / `i64` / packed `Span`). Stored as raw
+    /// bits; readers reinterpret via the typed cast. The record's
+    /// `child_off` holds the column rank.
+    ///
+    /// Numeric `f64` leaves whose value comes through the Eisel-Lemire
+    /// fast path (AY.W4.2) bypass this column entirely — they land in
+    /// [`Self::pay_f64`] and the record carries
+    /// [`TapeRec::PAYLOAD_F64_DIRECT_BIT`] so the reader knows which
+    /// column to consult.
     pub pay_wide: Vec<u64>,
+    /// AY.W4.2 — direct-write column for Eisel-Lemire-decoded `f64`
+    /// numeric leaves. Bypasses the arena and the generic `pay_wide`
+    /// `PayloadData::WideScalar` round-trip: the number-shape emitter
+    /// writes `f64::to_bits()` straight into this column and stamps
+    /// the record's `child_off` with the column rank +
+    /// [`TapeRec::PAYLOAD_F64_DIRECT_BIT`] so the reader hits this
+    /// column directly. Saves one load + one store per number literal
+    /// on heavy-numeric fixtures (canada).
+    pub pay_f64: Vec<u64>,
     /// Unified payload arena — aggregate tuple bytes, decoded
     /// strings, and byte-string frames all land here. Continues to
     /// back [`Tape::arena`](crate::Tape::arena) for external
@@ -133,6 +148,7 @@ impl Columns {
             sib_skip: Vec::with_capacity(expected),
             pay_narrow: Vec::new(),
             pay_wide: Vec::new(),
+            pay_f64: Vec::new(),
             pay_agg: Vec::with_capacity(expected / 8 * 8),
             packed_cache: OnceLock::new(),
         }
@@ -350,6 +366,22 @@ impl Columns {
     #[inline(always)]
     pub fn flags_at(&self, i: u32) -> u8 {
         self.records[i as usize].flags
+    }
+
+    /// AY.W4.2 — read a numeric `f64` payload from the dedicated
+    /// direct-write column at `idx`. Caller is responsible for having
+    /// stamped the leaf via [`crate::TapeBuilder::push_leaf_with_f64_direct`]
+    /// (which sets [`crate::TapeRec::PAYLOAD_F64_DIRECT_BIT`] and writes
+    /// the column rank into `child_off`).
+    #[inline(always)]
+    pub fn pay_f64_at(&self, idx: usize) -> u64 {
+        debug_assert!(
+            idx < self.pay_f64.len(),
+            "pay_f64_at: idx {} out of range (pay_f64 len {})",
+            idx,
+            self.pay_f64.len(),
+        );
+        self.pay_f64[idx]
     }
 
     /// Read a record's `extra` packed flag word directly.

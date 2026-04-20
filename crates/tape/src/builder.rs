@@ -594,6 +594,51 @@ impl TapeBuilder {
         TapeOffset(idx)
     }
 
+    /// AY.W4.2 — Eisel-Lemire direct-column f64 leaf push.
+    ///
+    /// Bypasses the [`PayloadData::WideScalar`] → `pay_wide` round-trip:
+    /// the supplied `f64_bits` are written straight into the dedicated
+    /// [`Columns::pay_f64`](crate::columns::Columns::pay_f64) column,
+    /// the record's `child_off` carries the column rank, and
+    /// [`TapeRec::PAYLOAD_F64_DIRECT_BIT`] is stamped on `extra` so
+    /// readers ([`crate::Tape::payload_f64`]) project the value via
+    /// `f64::from_bits(cols.pay_f64_at(rank))` directly.
+    ///
+    /// This saves one load + one store per number literal vs the
+    /// generic [`Self::push_leaf_with`] route — significant on heavy-
+    /// numeric fixtures (canada).
+    ///
+    /// `meta_idx` is fixed at `0` for number leaves; the number-shape
+    /// emitter uses `variant_idx` for the rule discriminant.
+    #[inline(always)]
+    pub fn push_leaf_with_f64_direct(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        f64_bits: u64,
+    ) -> TapeOffset {
+        debug_assert!(
+            kind.is_leaf(),
+            "push_leaf_with_f64_direct on compound kind {:?}",
+            kind
+        );
+        let rank = self.columns.pay_f64.len() as u32;
+        self.columns.pay_f64.push(f64_bits);
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, 0);
+        let extra = extra_meta_bit | TapeRec::PAYLOAD_F64_DIRECT_BIT;
+        let idx = self.columns.push_structural(
+            kind_meta,
+            variant_idx,
+            extra,
+            span_lo,
+            span_hi,
+            TapeOffset(rank),
+        );
+        TapeOffset(idx)
+    }
+
     /// Write the 4-byte length prefix at the `pay_agg` slot reserved
     /// by the decode kernel.
     ///
@@ -757,6 +802,7 @@ impl TapeBuilder {
         columns.sib_skip = self.columns.sib_skip.clone();
         columns.pay_narrow = self.columns.pay_narrow.clone();
         columns.pay_wide = self.columns.pay_wide.clone();
+        columns.pay_f64 = self.columns.pay_f64.clone();
         columns.pay_agg = self.columns.pay_agg.clone();
         Tape { columns }
     }

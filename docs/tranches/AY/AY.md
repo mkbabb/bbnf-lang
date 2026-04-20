@@ -102,20 +102,97 @@ emission workstream.
 | **W3** | ✅ Handle + Path substrate (W3a; consumer-less per audit) + `<Grammar>Value` enum emission + per-shape `materialize_*` inline fns (W3b; 8 grammars, 48 fns) + 12-entry Value bench lanes + round-trip parity + BEAT-sonic gate (**3.63× — MISSED**) | `waves/W3.md` + `docs/benchmarks/post-AY-W3-value.json` |
 | **W4** | ✅ SIMD unescape inline at `parse_string` emission (+5.95 % twitter) + `pay_f64` direct-column substrate (bench-neutral on canada; spec narrative incorrect about pre-W4.2 arena round-trip) + regex specialisation scaffolds (byte_class + phf + last_byte_set + DFA hoist; CSS tailwind `__regex_scan` self-time regressed +3.18 pp — SHIPPED soft-miss) + structural-scan consumer on Sheets only | `waves/W4.md` + `docs/benchmarks/post-AY-W4-close.json` |
 
-### Retirement / consolidation continuation (WR1-WR5)
+### AY closeover — C1 + Dev-infra + C2 + C3
 
-**No new features.** Every change retires complexity. Substrate-with-
-consumer verified per commit (grep + nm + samply).
+The W5/W6/W8 frame and my own initial WR1-WR5 frame both treated AY
+as a retirement-and-infra continuation. The corrective audit
+(`audit/AY-critique-path-forward-2026-04-20.md`) reframes: the
+canonical packed substrate work is **in AY closeover**, not deferred.
+The current tape-first contract is dead-substrate-shaped at the
+value/view edge; closing AY without replacing it leaves a contract
+that compounds debt every subsequent tranche.
 
-| Wave | Scope | LOC Δ | Primary artefact |
-|------|-------|------:|------------------|
-| **WR1** | Retire 13 dead e-graph rules (or fold G1-G4 + CommonSuffixFactor into the structural normalizer where they'd actually fire); delete W3a `handle.rs` (142 LOC, zero consumers); delete W4.3 `phf.rs` (zero callers); assess W1.3 `structural_scan` retire-or-consumer | **−1,100** | `waves/WR1.md` |
-| **WR2** | Replace classifier's 13-way if-cascade with `ShapeLattice` + partial order; fuse `shape_dispatch` into unified `mine_recognizers` walk (cached SCC topological order); retire 4× FIRST-set duplication; plumb `EClassFacts` from e-graph write-back (delete `classify.rs::compute_eclass_facts` 350 LOC duplicate) | **−1,450** | `waves/WR2.md` |
-| **WR3** | Wire `egraph::CostWeights` at `byte_class.rs` + `payload/layout.rs` (unified-cost consumers that bypass it today); wire `NogoodStore` (167 LOC on-shelf) into backtracker; rebuild payload-layout planner on CSP (admits CSS L4 Color at 16 B hot-path; closes A6 chronic) | **+100** net | `waves/WR3.md` |
-| **WR4** | Ship `scripts/prepare-profile-wave.sh` (PROFILING.md contract broken); apply W6 parse_that de-generic (~−37 s cold build); `codegen-units=256` on `ax-iter`; `scripts/bench-subset.sh` (−80-90 s per iteration); split `serialize_roundtrip.rs` per-grammar; bootstrap idempotency CI gate | infra | `waves/WR4.md` |
-| **WR5** | **FINAL** — bench matrix at retirement close; `FINAL.md` honest BEAT-sonic stance (not achieved single-tranche; substrate groundwork for AZ fused parse+value emission); AZ handoff contract | docs | `waves/WR5.md` |
+**Operating directive**: every change must remain grammar-derived
+(generality invariant). No JSON-only or CSS-only hand-routed paths.
+Salvage DTA/PSI **ideals** that survive as profitable single-path
+mechanisms; reject the legacy substrates as nostalgia projects.
 
-Total: **−2,450 LOC deletion; −55 % cold dev cycle; no new features.**
+**Sequence**: salvage audit → C1 (semantic closure) → dev-infra
+(between C1 and C2) → C2 (canonical packed substrate; the BEAT lever
+recast as "replace generic tape contract") → C3 (FINAL on truth).
+
+#### Salvage audit (precondition)
+
+Inventory the surviving DTA / PSI surface in code right now and mark
+each entry KEEP-as-mechanism or REJECT-as-substrate. ~1 agent, ~1 hour;
+output `audit/AYW-dta-psi-salvage.md`. Avoids re-deciding case-by-case
+during C2.
+
+#### C1 — Semantic closure
+
+| Phase | Scope |
+|---|---|
+| **C1.1** | **Fold** dead e-graph rules into the structural normalizer pipeline (`crates/ir/src/passes/transform/`). The dead rules become canonicalisation invariants where they'd actually fire, not orphan substrate. G1 + G2 + G4 + CommonSuffixFactor land as normalizer steps; G3 + HIR-tier folded with documented match-surface notes. |
+| **C1.2.a** | `ShapeLattice` replacing the 13-way if-cascade in `crates/ir/src/passes/recognizers/classify.rs`. Detectors become pure functions over an explicit partial order; convergence is real `Changed` bool, not full-HashMap structural compare. |
+| **C1.2.b** | Fuse `shape_dispatch` into unified `mine_recognizers` walk. Cached SCC topological order (one walk per compile, not N walks). |
+| **C1.2.c** | FIRST-set unification — eliminate the 4× duplication (`egraph/analysis/`, `sets/first_sets`, `shape_dispatch/unordered`, `recognizers/disjoint_first`) by promoting one canonical source. |
+| **C1.2.d** | Plumb `EClassFacts` from e-graph write-back. Delete `classify.rs::compute_eclass_facts` (~350 LOC duplicate). |
+| **C1.3** | **Resolver shape-inference fix AND CSP layout planner.** Both: extend `RustNamedTypes` resolver to derive scalar tuples from heterogeneous Alts (the W3-deferred work that left `color_named_type_admission_or_no_color_rules` ignored); rebuild the payload-layout planner on CSP consuming the now-feasible TypeDescs. |
+| **C1.4** | Replace smoke-level Value/get tests (`ay_w3b_value_api_smoke.rs`) with semantic round-trip assertions per consumer surface. Wire `named_type_preservation`, `wrap_compound_elision`, `value_api_apples_to_apples` as CI gates. |
+| **C1.5** | Remove non-matched-work bench lanes. The `bbnf_get_twitter` lazy lane is not matched work (bbnf parses the whole document; sonic-rs `get_by_path` is byte-scan only). Either land a real lazy parse path under C2's navigation metadata or remove the lane from `post-AY-W3-value.json`. |
+
+#### Dev infra (between C1 and C2)
+
+So C2 iterates fast.
+
+- `scripts/prepare-profile-wave.sh` (PROFILING.md contract — currently
+  broken; archaeology git log -S "prepare-profile-wave" before
+  authoring)
+- `scripts/bench-subset.sh` (per-fixture subset runner)
+- W6 parse_that de-generic (`cargo llvm-lines` top-10 monomorphisation
+  → enum dispatch / `impl Trait`)
+- `codegen-units = 256` + `split-debuginfo = "unpacked"` on `ax-iter`
+  profile
+- Remove perf loops from default test surfaces; split aggregate test
+  binaries
+
+Target: cold dev cycle 12-15 min → ≤ 5 min; warm cycle ≤ 90 s.
+
+#### C2 — Honest performance closure (canonical packed substrate)
+
+**The BEAT-sonic lever recast as substrate replacement, not feature
+addition.** The current tape contract is too generic (overloaded
+`child_off`, polymorphic payload interpretation, finalize burden,
+compatibility cursor, tape-then-walk to_value). C2 replaces the value/
+view substrate, keeps the parser path single, and obeys the generality
+invariant.
+
+| Phase | Scope |
+|---|---|
+| **C2.1** | Define + emit canonical packed node (explicit tag, span, subtree skip/count/length, direct scalar payload in final hot form, borrowed-or-arena strings, object key/value run layout, optional structural side tables only where they improve the same path). |
+| **C2.2** | Promote canonical packed substrate as primary write target; tape becomes parser/debug substrate (kept for replay/incremental per DTA/PSI salvage list). One parser entry path; many consumers reading the same output. |
+| **C2.3** | `to_value()` becomes wrapping/projecting, not reconstructing. `get()` uses navigation metadata rather than generic child iteration. View, debug UX, lazy/eager all read the same substrate. |
+| **C2.4** | **Limited two-phase fixed-point optimizer**: promote DAG as canonical optimization substrate (post-lowering); persist reusable fact summaries. **Full second extraction pass with global view deferred to AZ** per agreed scope. |
+| **C2.5** | `pay_f64` disposition: **attempt** to wire into canonical substrate's f64 leaf storage with samply proof of consumer-path shortening. If proof fails, revert (W4.2 added the column bench-neutrally; "negative information density" without a real consumer). |
+
+Generality invariant — every C2 mechanism stays grammar-derived:
+direct-to-struct as true projection, Pratt flattening as general
+operator-shape lowering, structural side info mined from grammar/IR
+facts, SIMD admission via recognizer/type facts not grammar name.
+
+#### C3 — Documentation closure
+
+- Update `docs/tranches/AY/PROGRESS.md` through W4 + C1 + dev-infra + C2
+  + closeover.
+- Record W5/W6/W8 disposition explicitly as **descaled**, not silently
+  deferred. Compile-time + parallel fork are orthogonal workstreams,
+  not AY blockers; they may open in AZ or as standalone work.
+- Author `docs/tranches/AY/FINAL.md` against what actually landed:
+  AU-restoration delta, BEAT-sonic disposition (not declared at AY
+  close; the lever is C2's canonical substrate which AZ would extend),
+  invariant 22-24 closure, deferred-ledger.
+- Rewrite `docs/tranches/AZ/AZ.md` to open on AY-close substrate, not
+  AX-close.
 
 ## AY → AZ handoff contract
 
@@ -147,28 +224,31 @@ Seven conditions must verify clean before AZ opens:
    satisfied).
 7. Bootstrap regen cycle-1 = cycle-2 byte-identical at every WR close.
 
-## Defensible floor (revised)
+## Defensible floor (post-critique)
 
-Per the post-audit `AYW-SYNTHESIS.md` honest accounting, the floor is
-**five items**:
+Per `audit/AY-critique-path-forward-2026-04-20.md`, AY closes only
+when the canonical substrate replacement (C2) lands alongside the
+semantic closure (C1) and documentation closure (C3). The floor is
+**six items**:
 
-1. **W0 legacy prune** — landed (~2,799 LOC tests + ~470 dta.rs + 78
-   shape_dict.rs + 2,098 profile files + 37 worktree orphans).
-2. **W1 AoS revert + finalise stack-buffer + Pratt Option C** — landed.
-   Closes half of AU regression (0.137 → 0.215 bytes/cyc on twitter).
-3. **W2 + W3b Named preservation + `<Grammar>Value` + `materialize_*`
-   inline fns** — landed, honestly (Value lane measured at 3.63× sonic,
-   not the projected ≤ 0.85×).
-4. **WR1 + WR2 + WR3 retirement + unification** — the substrate-truth
-   reconciliation. Without this, every subsequent tranche inherits the
-   dead-substrate debt AY surfaced.
-5. **WR5 FINAL** — bench matrix + `FINAL.md` + AZ handoff + CI gate
-   activation on retained wire-contract tests (`named_type_preservation`,
-   `wrap_compound_elision`, `value_api_apples_to_apples`).
+1. **W0–W4 landed** — substrate restoration (W1), Named preservation
+   partial (W2), Value API substrate (W3), SIMD/Eisel/regex (W4).
+2. **Salvage audit** — surviving DTA/PSI surface marked
+   KEEP-as-mechanism vs REJECT-as-substrate.
+3. **C1 semantic closure** — egraph rules folded into normalizer;
+   classifier consolidated in 4 sub-phases; resolver fix + CSP layout
+   planner; honest tests.
+4. **Dev-infra interlude** — `prepare-profile-wave.sh`, `bench-subset.sh`,
+   parse_that de-generic, `codegen-units=256`. So C2 iterates fast.
+5. **C2 canonical packed substrate** — replaces tape-first contract at
+   the value/view edge. Direct document/value as primary JSON consumer.
+   `pay_f64` admitted with samply proof or reverted.
+6. **C3 documentation closure** — PROGRESS through closeover; AY/FINAL
+   on truth; AZ rebased to AY-close.
 
-The path to BEAT-sonic is an AZ theme: **fused parse+value single-pass
-emission**. Items 1-4 deliver AZ a clean substrate; item 5 declares
-the honest stance.
+The path to BEAT-sonic runs through C2's canonical substrate. AY
+closes when that substrate lands and `to_value()` becomes
+wrapping/projecting rather than reconstructing.
 
 ## Post-tranche review candidates
 

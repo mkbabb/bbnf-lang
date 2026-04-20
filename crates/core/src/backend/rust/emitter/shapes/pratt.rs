@@ -141,7 +141,10 @@ pub fn emit_parse_pratt(
         ///       reduce emits a `TapeKind::Rule` reducer compound via
         ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
         ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-        ///       byte's u8 discriminant into `pay_agg`.
+        ///       byte's u8 discriminant into `pay_narrow` directly via
+        ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
+        ///       inline; bypasses the `arena_mut().push` round-trip
+        ///       AX.W0a.2.l routed through).
         ///    c. Push the operator onto the local op stack with its
         ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
         ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
@@ -176,6 +179,15 @@ pub fn emit_parse_pratt(
             // `PRECEDENCE_ENTRIES` row the LUT byte's bit 7 admits; one
             // indexed load + three shifts per op boundary (the
             // consumer-side unpack lives inline below).
+            //
+            // AY.W1.4 — initialised via `::core::array::from_fn` for
+            // the fixed-size stack array (the bootstrap postprocessor
+            // strips inner `#[derive(...)]` attributes that cargo
+            // expand emits into unstable internals; `from_fn` is the
+            // Copy-free idiom). Layout (after padding): 16 bytes —
+            // three 1-byte fields + two `u32`s + 5 padding. 16 entries
+            // × 16 bytes = 256 byte stack frame, well below the
+            // 8 KiB thread-stack budget the rayon work-stealer honours.
             struct LocalOpEntry {
                 op_discriminant: u8,
                 precedence: u8,
@@ -207,13 +219,36 @@ pub fn emit_parse_pratt(
             let _ = _operand_off;
 
             // ── Op stack ────────────────────────────────────────────
-            // Inline `Vec` bounded by the grammar's precedence-chain
-            // depth. Typical Pratt towers have ≤ 6 rungs (Sheets, CSS
-            // math); a small-capacity heap Vec avoids the bench
-            // pressure of a SmallVec dep while keeping allocation
-            // amortised across parses.
-            let mut op_stack: ::std::vec::Vec<LocalOpEntry> =
-                ::std::vec::Vec::with_capacity(4);
+            //
+            // AY.W1.4 — fixed-size stack array (`[LocalOpEntry; 16]` +
+            // `op_stack_len: usize`). The pre-AY heap `Vec::with_capacity(4)`
+            // burned an `alloc::alloc` per Pratt parse; the bench-pressure
+            // delta on Sheets `parse_stress` shows up as the
+            // `_platform_memset` self-time the W1.4 sub-gate targets.
+            //
+            // `OP_STACK_CAP = 16` matches the IR-mined max chain depth
+            // ceiling across production grammars (Sheets formula: 6
+            // rungs / `||` + `<>` + `<` + `+` + `*` + `^`; CSS calc:
+            // single-rung Pratt; BBNF `binary_factor` / `value_or`:
+            // single-rung). The runtime `debug_assert!` below traps
+            // any future grammar that exceeds this ceiling — the
+            // emitter caller verifies the bound at codegen via the
+            // mined operator-chain facts.
+            const OP_STACK_CAP: usize = 16;
+            // The `op_stack_len` cursor is the only valid-data witness;
+            // reads only touch indices `< op_stack_len`. Zero-init each
+            // entry so subsequent loads from
+            // unwritten slots remain deterministic in any future debug
+            // tooling that ignores the cursor.
+            let mut op_stack: [LocalOpEntry; OP_STACK_CAP] =
+                ::core::array::from_fn(|_| LocalOpEntry {
+                    op_discriminant: 0,
+                    precedence: 0,
+                    associativity_is_left: false,
+                    lhs_idx: 0,
+                    lhs_span_lo: 0,
+                });
+            let mut op_stack_len: usize = 0;
 
             // ── Reducer loop ────────────────────────────────────────
             //
@@ -255,10 +290,10 @@ pub fn emit_parse_pratt(
                 // (or ties + left-assoc). On EOF-op (new_prec = None)
                 // reduce all remaining entries.
                 loop {
-                    let top_op = match op_stack.last() {
-                        ::core::option::Option::Some(e) => e,
-                        ::core::option::Option::None => break,
-                    };
+                    if op_stack_len == 0 {
+                        break;
+                    }
+                    let top_op = &op_stack[op_stack_len - 1];
                     let should_reduce = match new_prec {
                         ::core::option::Option::None => true,
                         ::core::option::Option::Some(p_new) => {
@@ -270,13 +305,16 @@ pub fn emit_parse_pratt(
                     if !should_reduce {
                         break;
                     }
-                    let top_op = op_stack.pop().unwrap();
+                    let lhs_idx = top_op.lhs_idx;
+                    let lhs_span_lo = top_op.lhs_span_lo;
+                    let op_discriminant = top_op.op_discriminant;
+                    op_stack_len -= 1;
                     let compound_idx = builder.push_compound(
                         ::bbnf::runtime::tape::TapeKind::Rule,
-                        ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
-                        top_op.lhs_span_lo,
+                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        lhs_span_lo,
                         *p as u32,
-                        top_op.op_discriminant,
+                        op_discriminant,
                         0,
                     );
                     this_operand_root = compound_idx.0;
@@ -352,21 +390,36 @@ pub fn emit_parse_pratt(
                 }
 
                 // Advance past the op bytes + emit a payload-bearing
-                // Span leaf carrying the 1-byte op_discriminant via
-                // `push_leaf_with_arena_payload` (AX.W0a.2.l).
+                // Span leaf carrying the 1-byte op_discriminant.
+                //
+                // AY.W1.4 (Pratt Option C inline) — direct
+                // `push_leaf_with(PayloadData::InlineScalar(disc as u32))`
+                // routes the op_discriminant straight into the
+                // `pay_narrow` column. Pre-AY.W1.4 the code took a
+                // `arena_mut().push(disc)` + `push_leaf_with_arena_payload`
+                // detour: one extra arena store + one extra pointer
+                // load on the read side, plus the `PAYLOAD_IN_ARENA_BIT`
+                // routing branch in `payload_inline<T>`. Inline-scalar
+                // reads short-circuit that branch (the bit stays
+                // clear) and resolve to a single `pay_narrow[rank]`
+                // load. The reducer-compound emission downstream is
+                // unchanged — `top_op.op_discriminant` is captured in
+                // the LocalOpEntry above and stamped into the
+                // `push_compound`'s `variant_idx`, preserving the
+                // walker-compatible reduced-tree byte layout that
+                // W0a.2.k regressed CSS+Sheets parity by breaking.
                 let op_lo: u32 = *p as u32;
                 *p = (*p).saturating_add(op_width as usize);
                 let op_hi: u32 = *p as u32;
-                let arena_off: u32 = builder.arena_mut().len() as u32;
-                builder.arena_mut().push(op_discriminant);
-                let _op_rec = builder.push_leaf_with_arena_payload(
+                let _op_rec = builder.push_leaf_with(
                     ::bbnf::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    arena_off,
-                    1,
+                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                        op_discriminant as u32,
+                    ),
                 );
 
                 // Capture LHS span_lo for the reducer compound. The
@@ -380,23 +433,34 @@ pub fn emit_parse_pratt(
                     op_hi
                 };
 
-                op_stack.push(LocalOpEntry {
+                // AY.W1.4 — overflow guard. Production grammars peak
+                // at 6 rungs (Sheets formula); reaching 16 indicates
+                // a new grammar whose precedence chain blew past the
+                // ceiling — codegen needs to widen `OP_STACK_CAP`.
+                debug_assert!(
+                    op_stack_len < OP_STACK_CAP,
+                    "Pratt op_stack overflow at depth {} (cap {})",
+                    op_stack_len,
+                    OP_STACK_CAP,
+                );
+                op_stack[op_stack_len] = LocalOpEntry {
                     op_discriminant,
                     precedence,
                     associativity_is_left,
                     lhs_idx: this_operand_root,
                     lhs_span_lo,
-                });
+                };
+                op_stack_len += 1;
 
                 // ── RHS operand ─────────────────────────────────────
                 let _ = #support_mod::skip_space(input, p, state);
                 // AW-V.W5.2 — per-Ref RHS call.
                 #rhs_call
                 // Re-point `this_operand_root` at the RHS root (first
-                // record the RHS emitted). The `push_leaf_with_arena_payload`
-                // above sits at this_operand_root + 1 when the operand
-                // was a single leaf; for compound operands the root
-                // sits at the position right after the op leaf.
+                // record the RHS emitted). The `push_leaf_with` above
+                // sits at this_operand_root + 1 when the operand was
+                // a single leaf; for compound operands the root sits
+                // at the position right after the op leaf.
                 //
                 // Mirrors the walker's SY reducer: after the op leaf
                 // fires, the next operand's first record becomes the
@@ -524,6 +588,11 @@ pub fn emit_parse_pratt_visitor(
             // reducer thread needs. No `lhs_idx` / `lhs_span_lo` —
             // the visitor receives the operator via its `operator`
             // method and synthesises AST nodes on its own side.
+            //
+            // AY.W1.4 — initialised via `::core::array::from_fn` for
+            // the fixed-size stack array (the bootstrap postprocessor
+            // strips inner derive attributes; `from_fn` is the
+            // Copy-free idiom).
             struct LocalOpEntry {
                 op_discriminant: u8,
                 precedence: u8,
@@ -541,8 +610,20 @@ pub fn emit_parse_pratt_visitor(
                 offset: *p as u32, rule: None,
             })?;
 
-            let mut op_stack: ::std::vec::Vec<LocalOpEntry> =
-                ::std::vec::Vec::with_capacity(4);
+            // AY.W1.4 — fixed-size stack array (mirrors tape-path
+            // emitter; 16 entries × 4 bytes = 64 byte stack frame).
+            // The pre-AY heap `Vec::with_capacity(4)` allocated per
+            // Pratt parse and freed at function exit; the bench delta
+            // is measurable on Sheets `parse_stress` whose
+            // `parse_pratt_visitor_*` frames recur every formula.
+            const OP_STACK_CAP: usize = 16;
+            let mut op_stack: [LocalOpEntry; OP_STACK_CAP] =
+                ::core::array::from_fn(|_| LocalOpEntry {
+                    op_discriminant: 0,
+                    precedence: 0,
+                    associativity_is_left: false,
+                });
+            let mut op_stack_len: usize = 0;
 
             // AX.W0a.2.n — Whitespace-aware operator peek (mirrors
             // tape-path emitter). Dispatch on the current byte
@@ -567,10 +648,10 @@ pub fn emit_parse_pratt_visitor(
 
                 // Reduce: fire `operator` for each op we pop.
                 loop {
-                    let top_op = match op_stack.last() {
-                        ::core::option::Option::Some(e) => e,
-                        ::core::option::Option::None => break,
-                    };
+                    if op_stack_len == 0 {
+                        break;
+                    }
+                    let top_op = &op_stack[op_stack_len - 1];
                     let should_reduce = match new_prec {
                         ::core::option::Option::None => true,
                         ::core::option::Option::Some(p_new) => {
@@ -582,9 +663,11 @@ pub fn emit_parse_pratt_visitor(
                     if !should_reduce {
                         break;
                     }
-                    let top_op = op_stack.pop().unwrap();
+                    let op_disc = top_op.op_discriminant;
+                    let op_prec = top_op.precedence;
+                    op_stack_len -= 1;
                     visitor
-                        .operator(top_op.op_discriminant, top_op.precedence)
+                        .operator(op_disc, op_prec)
                         .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
                             offset: *p as u32, rule: None,
                         })?;
@@ -643,11 +726,18 @@ pub fn emit_parse_pratt_visitor(
 
                 *p = (*p).saturating_add(op_width as usize);
 
-                op_stack.push(LocalOpEntry {
+                debug_assert!(
+                    op_stack_len < OP_STACK_CAP,
+                    "Pratt visitor op_stack overflow at depth {} (cap {})",
+                    op_stack_len,
+                    OP_STACK_CAP,
+                );
+                op_stack[op_stack_len] = LocalOpEntry {
                     op_discriminant,
                     precedence,
                     associativity_is_left,
-                });
+                };
+                op_stack_len += 1;
 
                 let _ = #support_mod::skip_space(input, p, state);
                 // AW-V.W5.2 — per-Ref RHS operand call.

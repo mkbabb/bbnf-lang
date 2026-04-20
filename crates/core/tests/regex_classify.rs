@@ -139,14 +139,20 @@ fn known_patterns() {
         classify_regex(r"(?s)(?:\s|/\*.*?\*/)*"),
         RegexClass::WhitespaceWithBlockComment,
     );
-    assert!(matches!(
+    // Mixed-quote Alt — `try_classify_quoted_string` deliberately
+    // returns None when an Alt's branches disagree on `quote_char`
+    // (`parse-that` commit `919d77d`, AX.W0a.2.s). Pre-fix the
+    // classifier silently dropped the second branch and admitted the
+    // first; the String shape emitter is hardcoded to a single
+    // `quote_char` and could not serve a mixed-delimiter rule, so
+    // CSS `string = /"…"/ | /'…'/` was rejecting every single-
+    // quoted literal at the dispatcher boundary. Mixed-quote Alts
+    // now fall through to HRegex, whose scan honours the regex's
+    // actual pattern.
+    assert_eq!(
         classify_regex(r#""(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'"#),
-        RegexClass::QuotedString {
-            quote_char: b'"',
-            allows_escapes: true,
-            allows_u_escapes: false,
-        }
-    ));
+        RegexClass::Unknown,
+    );
 }
 
 #[test]

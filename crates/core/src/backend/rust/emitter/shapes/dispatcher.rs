@@ -86,26 +86,44 @@ fn ws_is_comment_aware(ir: &GrammarIR) -> bool {
 }
 
 /// AY.W4.3 — whether the grammar's mined `structural_alphabet` is
-/// non-empty AND the grammar's `@ws` is comment-aware. The CTNS
-/// probe pays for itself only on grammars with predictable long
-/// whitespace+comment runs — measured: CSS L4 tailwind (3.6 MB
-/// input, ~15% comment bytes) recoups the lazy `scan_structural`
-/// cost easily; Sheets parse_stress (1.8 KB input, near-zero
-/// whitespace) regresses ~16% when the probe is wired in. The
-/// substrate (OnceCell field + `ensure_structural_index` helper)
-/// emits whenever the alphabet is non-empty so future tranches
-/// (tape-capacity refinement, structural-bounded regex skips) can
-/// wire additional consumers without re-emitting the substrate.
+/// non-empty AND suitable for substrate emission. Gates the
+/// OnceCell field + ensure_structural_index helper — the probe
+/// gating (`ctns_probe_admits` below) is strictly tighter.
 fn has_structural_alphabet(ir: &GrammarIR) -> bool {
     !ir.profile().structural_alphabet.is_empty()
 }
 
 /// AY.W4.3 — whether the CTNS probe should be emitted at the head
-/// of `skip_space_slow`. Gates on comment-aware-ness AND a
-/// non-empty alphabet — the substrate emission gate (above) is
-/// strictly weaker.
+/// of `skip_space_slow`. Conditions:
+///
+/// 1. Non-empty alphabet (probe needs something to skip toward).
+/// 2. Comment-aware grammar (predictable long whitespace+comment
+///    runs recoup the OnceCell scan_structural init cost); OR
+///    sparse non-whitespace alphabet of moderate size (12..=24
+///    bytes, excluding the near-empty JSON case which is faster
+///    with pure bitmap).
+/// 3. Alphabet excludes whitespace bytes — landing on whitespace
+///    would break skip_space's "first non-whitespace byte"
+///    contract.
+///
+/// In practice this admits Sheets (19 bytes, no whitespace, plain
+/// @ws) and excludes JSON (6 bytes — too sparse to beat bitmap),
+/// BBNF (28 bytes including whitespace), CSS L4 (53 bytes — over-
+/// broad mining). The probe substrate (OnceCell + helper) emits
+/// for any non-empty alphabet so future tranches can wire
+/// additional consumers.
 fn ctns_probe_admits(ir: &GrammarIR) -> bool {
-    has_structural_alphabet(ir) && ws_is_comment_aware(ir)
+    let alphabet = ir.profile().structural_alphabet;
+    if alphabet.is_empty() {
+        return false;
+    }
+    if alphabet.iter().any(|&b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r') {
+        return false;
+    }
+    // Sparse-alphabet threshold: at least 12 bytes to beat the
+    // bitmap loop's constant cost, at most 24 bytes to keep the
+    // structural index density reasonable.
+    alphabet.len() >= 12 && alphabet.len() <= 24
 }
 
 /// AY.W4.3 — emit a CTNS-style structural-index probe to inject at
@@ -120,6 +138,7 @@ fn ctns_probe_admits(ir: &GrammarIR) -> bool {
 /// letting the surrounding loop dispatch on the landed byte
 /// (comment-skip for `/*`, bitmap loop for whitespace, return
 /// for semantic byte).
+///
 fn ctns_probe_tokens() -> TokenStream {
     quote! {
         // AY.W4.3 — CTNS probe. Gated on gap > 64 B (one SIMD
@@ -456,11 +475,15 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
     let mod_ident = format_ident!("__shape_support_{}", grammar_suffix);
     let comment_aware = ws_is_comment_aware(ir);
     let has_structural = has_structural_alphabet(ir);
-    // AY.W4.3 — CTNS probe temporarily disabled while exploring
-    // perf characteristics. See `ctns_probe_tokens` for the probe
-    // code; `ctns_probe_admits` for the gate.
-    let _ = ctns_probe_admits(ir);
-    let ctns_probe = quote! {};
+    // AY.W4.3 — CTNS probe gated on `ctns_probe_admits`: sparse
+    // (<= 24 bytes) non-whitespace alphabet. Sheets (19 bytes,
+    // no whitespace) qualifies; CSS L4 (53 bytes, over-broad
+    // mining) does not.
+    let ctns_probe = if ctns_probe_admits(ir) {
+        ctns_probe_tokens()
+    } else {
+        quote! {}
+    };
     let skip_space_body = if comment_aware {
         emit_skip_space_comment_aware_inner(ctns_probe)
     } else {

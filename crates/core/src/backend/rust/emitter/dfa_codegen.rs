@@ -544,10 +544,10 @@ fn emit_hoisted_dfa_tables(
 ///
 /// Threshold tuned empirically: JSON's 2 regex patterns (both
 /// 8-10 states) were marginally faster as inline match-ladders
-/// under measurement; CSS L4's larger DFAs (30+ states) reap
-/// clear code-size wins from the table hoist. The 16-state
-/// threshold splits the two.
-const DFA_HOIST_MIN_STATES: usize = 16;
+/// under measurement; CSS L4's larger DFAs (10+ states) reap
+/// code-size wins from the table hoist. The 10-state threshold
+/// splits the two.
+const DFA_HOIST_MIN_STATES: usize = 10;
 
 /// Emit the inline DFA body for the regex-bearing state at `idx` in
 /// `table.states`. The returned `TokenStream` is a labelled `'__dfa: {

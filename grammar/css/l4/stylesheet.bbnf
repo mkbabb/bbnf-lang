@@ -42,3 +42,19 @@ atRule   = mediaRule | keyframesRule | genericAtRule ;
 ruleItem = qualifiedRule | atRule ;
 ruleList = (ruleItem ?w) * ;
 stylesheet = ruleList ?w ;
+
+// Prettify directives — match lightningcss's default PrinterOptions
+// output shape for W1r.3a canonical-form parity. Separator + wrapper
+// choices align with `grammar/css/pretty.bbnf` (the L2 reference) so
+// the two grammars emit structurally similar output on shared
+// fixtures. The `token_normalize` pipeline in
+// `crates/core/tests/common/css_normalize.rs` cancels any residual
+// syntactic divergences.
+@pretty stylesheet block ;
+@pretty ruleList blankline ;
+@pretty blockContent block indent ;
+@pretty qualifiedRule group ;
+@pretty mediaRule group indent ;
+@pretty keyframesRule group indent ;
+@pretty genericAtRule group ;
+@pretty atRule group ;

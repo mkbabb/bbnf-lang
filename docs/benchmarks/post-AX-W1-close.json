@@ -1,0 +1,43 @@
+{
+  "commit": "6516086f",
+  "profile": "release",
+  "allocator": "mimalloc",
+  "date_utc": "2026-04-20T08:00:55Z",
+  "notes": "AX FINAL close bench. AX W1r sub-waves 0-7 completed (3429aaba..ab7c218d); 13 parity + canonical harnesses green on master (247 passed, 1 ignored). All 19 bench entries numeric (0 panics). 18 matrix entries per README §Tranche-completion (json:5 + css:3 + sheets:3 + bbnf:6) + 2 sheets format_* entries (matches post-AU schema). AY opens.",
+  "entries": {
+    "json_monolithic": {
+      "canada":  {"ns_per_iter": 11480645, "bytes_per_ns": 0.196},
+      "citm":    {"ns_per_iter":  3835158, "bytes_per_ns": 0.450},
+      "data_s":  {"ns_per_iter":    80176, "bytes_per_ns": 0.442},
+      "data_xl": {"ns_per_iter": 71835253, "bytes_per_ns": 0.296},
+      "twitter": {"ns_per_iter":  1407518, "bytes_per_ns": 0.448}
+    },
+    "css_l4": {
+      "bootstrap": {"ns_per_iter":  2368076, "bytes_per_ns": 0.118},
+      "normalize": {"ns_per_iter":    32041, "bytes_per_ns": 0.191},
+      "tailwind":  {"ns_per_iter": 25208254, "bytes_per_ns": 0.144}
+    },
+    "google_sheets_monolithic": {
+      "parse_simple":  {"ns_per_iter":  31841, "bytes_per_ns": 0.015},
+      "parse_nested":  {"ns_per_iter":  72215, "bytes_per_ns": 0.020},
+      "parse_stress":  {"ns_per_iter": 100865, "bytes_per_ns": 0.018},
+      "format_simple": {"ns_per_iter":    148, "bytes_per_ns": 0.040},
+      "format_stress": {"ns_per_iter":   4260, "bytes_per_ns": 0.046}
+    },
+    "bbnf_monolithic": {
+      "bbnf_self":      {"ns_per_iter":  58408, "bytes_per_ns": 0.087},
+      "css_l4_grammar": {"ns_per_iter": 444114, "bytes_per_ns": 0.125},
+      "css_pretty":     {"ns_per_iter":  17241, "bytes_per_ns": 0.148},
+      "ebnf":           {"ns_per_iter":  31309, "bytes_per_ns": 0.046},
+      "google_sheets":  {"ns_per_iter":  36973, "bytes_per_ns": 0.202},
+      "json":           {"ns_per_iter":   7405, "bytes_per_ns": 0.072}
+    }
+  },
+  "wall_time_seconds": {
+    "json_monolithic": 70,
+    "css_l4": 32,
+    "google_sheets_monolithic": 13,
+    "bbnf_monolithic": 16,
+    "total": 131
+  }
+}

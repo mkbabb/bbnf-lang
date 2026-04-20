@@ -1767,10 +1767,21 @@ mod __bbnfbootstrap_emit_impl {
     #[allow(dead_code, non_snake_case)]
     pub(crate) mod __shape_support_BbnfBootstrap {
         /// Per-parse SIMD scratch — 64-byte whitespace-bitmap
-        /// cache mirroring `json-prototype::simd::ScanState`.
+        /// cache mirroring `json-prototype::simd::ScanState`,
+        /// plus the AY.W1.3 structural-byte index keyed off
+        /// [`super::GRAMMAR_PROFILE.structural_alphabet`].
+        ///
+        /// `structural_index` is populated once at parse entry by
+        /// [`Self::init_for_input`] (which delegates to
+        /// [`::bbnf::runtime::tape::scan_structural`]) and then
+        /// queried by per-rule fns and the parse-entry capacity
+        /// estimate. Empty when the grammar has no structural
+        /// alphabet — the populator short-circuits before iterating
+        /// the input.
         pub struct ScanState {
             pub(crate) nospace_bits: u64,
             pub(crate) nospace_start: isize,
+            pub(crate) structural_index: ::bbnf::runtime::tape::StructuralIndex,
         }
         impl ScanState {
             #[inline]
@@ -1778,7 +1789,26 @@ mod __bbnfbootstrap_emit_impl {
                 Self {
                     nospace_bits: 0,
                     nospace_start: -1,
+                    structural_index: ::bbnf::runtime::tape::StructuralIndex::new(),
                 }
+            }
+            /// AY.W1.3 — populate the structural-byte index from
+            /// `input` against the grammar's mined alphabet
+            /// (`super::GRAMMAR_PROFILE.structural_alphabet`). Called
+            /// once per parse from the `<Parser>::parse` entry.
+            ///
+            /// The result feeds (a) the
+            /// [`super::GRAMMAR_PROFILE.capacity_for`] tape
+            /// pre-allocation (the index length is a tight upper
+            /// bound on the per-parse compound-record count), and
+            /// (b) per-rule next-structural-byte queries via
+            /// [`::bbnf::runtime::tape::next_structural_at_or_after`].
+            #[inline]
+            pub fn init_for_input(&mut self, input: &[u8]) {
+                self.structural_index = ::bbnf::runtime::tape::scan_structural(
+                    input,
+                    super::GRAMMAR_PROFILE.structural_alphabet,
+                );
             }
         }
         /// Skip JSON whitespace at `*p`, returning the first
@@ -1807,6 +1837,28 @@ mod __bbnfbootstrap_emit_impl {
             p: &mut usize,
             state: &mut ScanState,
         ) {
+            if let Some(__next_struct) = ::bbnf::runtime::tape::next_structural_at_or_after(
+                &state.structural_index,
+                *p as u32,
+            ) {
+                let __next = __next_struct as usize;
+                if __next < *p + 64 && __next <= input.len() {
+                    let mut __probe = *p;
+                    let mut __all_ws = true;
+                    while __probe < __next {
+                        let __b = input[__probe];
+                        if __b != b' ' && __b != b'\t' && __b != b'\n' && __b != b'\r' {
+                            __all_ws = false;
+                            break;
+                        }
+                        __probe += 1;
+                    }
+                    if __all_ws {
+                        *p = __next;
+                        return;
+                    }
+                }
+            }
             loop {
                 let cache_base = state.nospace_start;
                 if cache_base >= 0 && (*p as isize) >= cache_base {
@@ -2344,7 +2396,10 @@ mod __bbnfbootstrap_emit_impl {
     ///       reduce emits a `TapeKind::Rule` reducer compound via
     ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_agg`.
+    ///       byte's u8 discriminant into `pay_narrow` directly via
+    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
+    ///       inline; bypasses the `arena_mut().push` round-trip
+    ///       AX.W0a.2.l routed through).
     ///    c. Push the operator onto the local op stack with its
     ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
     ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
@@ -2393,9 +2448,15 @@ mod __bbnfbootstrap_emit_impl {
             parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
         })?;
         let _ = _operand_off;
-        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(
-            4,
-        );
+        const OP_STACK_CAP: usize = 16;
+        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
+            op_discriminant: 0,
+            precedence: 0,
+            associativity_is_left: false,
+            lhs_idx: 0,
+            lhs_span_lo: 0,
+        });
+        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_value_path[op_byte as usize];
@@ -2410,10 +2471,10 @@ mod __bbnfbootstrap_emit_impl {
                 ::core::option::Option::Some(lut_byte & 0x0Fu8)
             };
             loop {
-                let top_op = match op_stack.last() {
-                    ::core::option::Option::Some(e) => e,
-                    ::core::option::Option::None => break,
-                };
+                if op_stack_len == 0 {
+                    break;
+                }
+                let top_op = &op_stack[op_stack_len - 1];
                 let should_reduce = match new_prec {
                     ::core::option::Option::None => true,
                     ::core::option::Option::Some(p_new) => {
@@ -2425,14 +2486,17 @@ mod __bbnfbootstrap_emit_impl {
                 if !should_reduce {
                     break;
                 }
-                let top_op = op_stack.pop().unwrap();
+                let lhs_idx = top_op.lhs_idx;
+                let lhs_span_lo = top_op.lhs_span_lo;
+                let op_discriminant = top_op.op_discriminant;
+                op_stack_len -= 1;
                 let compound_idx = builder
                     .push_compound(
                         ::bbnf::runtime::tape::TapeKind::Rule,
-                        ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
-                        top_op.lhs_span_lo,
+                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        lhs_span_lo,
                         *p as u32,
-                        top_op.op_discriminant,
+                        op_discriminant,
                         0,
                     );
                 this_operand_root = compound_idx.0;
@@ -2485,17 +2549,16 @@ mod __bbnfbootstrap_emit_impl {
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let arena_off: u32 = builder.arena_mut().len() as u32;
-            builder.arena_mut().push(op_discriminant);
             let _op_rec = builder
-                .push_leaf_with_arena_payload(
+                .push_leaf_with(
                     ::bbnf::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    arena_off,
-                    1,
+                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                        op_discriminant as u32,
+                    ),
                 );
             let lhs_span_lo: u32 = if (this_operand_root as usize)
                 < builder.columns().len()
@@ -2504,14 +2567,23 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            op_stack
-                .push(LocalOpEntry {
-                    op_discriminant,
-                    precedence,
-                    associativity_is_left,
-                    lhs_idx: this_operand_root,
-                    lhs_span_lo,
-                });
+            if true {
+                if !(op_stack_len < OP_STACK_CAP) {
+                    { panic!(
+                                "Pratt op_stack overflow at depth {0} (cap {1})",
+                                op_stack_len,
+                                OP_STACK_CAP,
+                            ); }
+                }
+            }
+            op_stack[op_stack_len] = LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            };
+            op_stack_len += 1;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -4019,7 +4091,10 @@ mod __bbnfbootstrap_emit_impl {
     ///       reduce emits a `TapeKind::Rule` reducer compound via
     ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_agg`.
+    ///       byte's u8 discriminant into `pay_narrow` directly via
+    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
+    ///       inline; bypasses the `arena_mut().push` round-trip
+    ///       AX.W0a.2.l routed through).
     ///    c. Push the operator onto the local op stack with its
     ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
     ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
@@ -4068,9 +4143,15 @@ mod __bbnfbootstrap_emit_impl {
             parse_altdispatch_BbnfBootstrap_value_unary(input, p, state, builder)
         })?;
         let _ = _operand_off;
-        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(
-            4,
-        );
+        const OP_STACK_CAP: usize = 16;
+        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
+            op_discriminant: 0,
+            precedence: 0,
+            associativity_is_left: false,
+            lhs_idx: 0,
+            lhs_span_lo: 0,
+        });
+        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_value_mul[op_byte as usize];
@@ -4085,10 +4166,10 @@ mod __bbnfbootstrap_emit_impl {
                 ::core::option::Option::Some(lut_byte & 0x0Fu8)
             };
             loop {
-                let top_op = match op_stack.last() {
-                    ::core::option::Option::Some(e) => e,
-                    ::core::option::Option::None => break,
-                };
+                if op_stack_len == 0 {
+                    break;
+                }
+                let top_op = &op_stack[op_stack_len - 1];
                 let should_reduce = match new_prec {
                     ::core::option::Option::None => true,
                     ::core::option::Option::Some(p_new) => {
@@ -4100,14 +4181,17 @@ mod __bbnfbootstrap_emit_impl {
                 if !should_reduce {
                     break;
                 }
-                let top_op = op_stack.pop().unwrap();
+                let lhs_idx = top_op.lhs_idx;
+                let lhs_span_lo = top_op.lhs_span_lo;
+                let op_discriminant = top_op.op_discriminant;
+                op_stack_len -= 1;
                 let compound_idx = builder
                     .push_compound(
                         ::bbnf::runtime::tape::TapeKind::Rule,
-                        ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
-                        top_op.lhs_span_lo,
+                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        lhs_span_lo,
                         *p as u32,
-                        top_op.op_discriminant,
+                        op_discriminant,
                         0,
                     );
                 this_operand_root = compound_idx.0;
@@ -4160,17 +4244,16 @@ mod __bbnfbootstrap_emit_impl {
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let arena_off: u32 = builder.arena_mut().len() as u32;
-            builder.arena_mut().push(op_discriminant);
             let _op_rec = builder
-                .push_leaf_with_arena_payload(
+                .push_leaf_with(
                     ::bbnf::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    arena_off,
-                    1,
+                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                        op_discriminant as u32,
+                    ),
                 );
             let lhs_span_lo: u32 = if (this_operand_root as usize)
                 < builder.columns().len()
@@ -4179,14 +4262,23 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            op_stack
-                .push(LocalOpEntry {
-                    op_discriminant,
-                    precedence,
-                    associativity_is_left,
-                    lhs_idx: this_operand_root,
-                    lhs_span_lo,
-                });
+            if true {
+                if !(op_stack_len < OP_STACK_CAP) {
+                    { panic!(
+                                "Pratt op_stack overflow at depth {0} (cap {1})",
+                                op_stack_len,
+                                OP_STACK_CAP,
+                            ); }
+                }
+            }
+            op_stack[op_stack_len] = LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            };
+            op_stack_len += 1;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -4229,7 +4321,10 @@ mod __bbnfbootstrap_emit_impl {
     ///       reduce emits a `TapeKind::Rule` reducer compound via
     ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_agg`.
+    ///       byte's u8 discriminant into `pay_narrow` directly via
+    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
+    ///       inline; bypasses the `arena_mut().push` round-trip
+    ///       AX.W0a.2.l routed through).
     ///    c. Push the operator onto the local op stack with its
     ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
     ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
@@ -4278,9 +4373,15 @@ mod __bbnfbootstrap_emit_impl {
             parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder)
         })?;
         let _ = _operand_off;
-        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(
-            4,
-        );
+        const OP_STACK_CAP: usize = 16;
+        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
+            op_discriminant: 0,
+            precedence: 0,
+            associativity_is_left: false,
+            lhs_idx: 0,
+            lhs_span_lo: 0,
+        });
+        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_value_add[op_byte as usize];
@@ -4295,10 +4396,10 @@ mod __bbnfbootstrap_emit_impl {
                 ::core::option::Option::Some(lut_byte & 0x0Fu8)
             };
             loop {
-                let top_op = match op_stack.last() {
-                    ::core::option::Option::Some(e) => e,
-                    ::core::option::Option::None => break,
-                };
+                if op_stack_len == 0 {
+                    break;
+                }
+                let top_op = &op_stack[op_stack_len - 1];
                 let should_reduce = match new_prec {
                     ::core::option::Option::None => true,
                     ::core::option::Option::Some(p_new) => {
@@ -4310,14 +4411,17 @@ mod __bbnfbootstrap_emit_impl {
                 if !should_reduce {
                     break;
                 }
-                let top_op = op_stack.pop().unwrap();
+                let lhs_idx = top_op.lhs_idx;
+                let lhs_span_lo = top_op.lhs_span_lo;
+                let op_discriminant = top_op.op_discriminant;
+                op_stack_len -= 1;
                 let compound_idx = builder
                     .push_compound(
                         ::bbnf::runtime::tape::TapeKind::Rule,
-                        ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
-                        top_op.lhs_span_lo,
+                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        lhs_span_lo,
                         *p as u32,
-                        top_op.op_discriminant,
+                        op_discriminant,
                         0,
                     );
                 this_operand_root = compound_idx.0;
@@ -4370,17 +4474,16 @@ mod __bbnfbootstrap_emit_impl {
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let arena_off: u32 = builder.arena_mut().len() as u32;
-            builder.arena_mut().push(op_discriminant);
             let _op_rec = builder
-                .push_leaf_with_arena_payload(
+                .push_leaf_with(
                     ::bbnf::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    arena_off,
-                    1,
+                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                        op_discriminant as u32,
+                    ),
                 );
             let lhs_span_lo: u32 = if (this_operand_root as usize)
                 < builder.columns().len()
@@ -4389,14 +4492,23 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            op_stack
-                .push(LocalOpEntry {
-                    op_discriminant,
-                    precedence,
-                    associativity_is_left,
-                    lhs_idx: this_operand_root,
-                    lhs_span_lo,
-                });
+            if true {
+                if !(op_stack_len < OP_STACK_CAP) {
+                    { panic!(
+                                "Pratt op_stack overflow at depth {0} (cap {1})",
+                                op_stack_len,
+                                OP_STACK_CAP,
+                            ); }
+                }
+            }
+            op_stack[op_stack_len] = LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            };
+            op_stack_len += 1;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -4439,7 +4551,10 @@ mod __bbnfbootstrap_emit_impl {
     ///       reduce emits a `TapeKind::Rule` reducer compound via
     ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_agg`.
+    ///       byte's u8 discriminant into `pay_narrow` directly via
+    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
+    ///       inline; bypasses the `arena_mut().push` round-trip
+    ///       AX.W0a.2.l routed through).
     ///    c. Push the operator onto the local op stack with its
     ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
     ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
@@ -4488,9 +4603,15 @@ mod __bbnfbootstrap_emit_impl {
             parse_pratt_BbnfBootstrap_value_add(input, p, state, builder)
         })?;
         let _ = _operand_off;
-        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(
-            4,
-        );
+        const OP_STACK_CAP: usize = 16;
+        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
+            op_discriminant: 0,
+            precedence: 0,
+            associativity_is_left: false,
+            lhs_idx: 0,
+            lhs_span_lo: 0,
+        });
+        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_value_cmp[op_byte as usize];
@@ -4505,10 +4626,10 @@ mod __bbnfbootstrap_emit_impl {
                 ::core::option::Option::Some(lut_byte & 0x0Fu8)
             };
             loop {
-                let top_op = match op_stack.last() {
-                    ::core::option::Option::Some(e) => e,
-                    ::core::option::Option::None => break,
-                };
+                if op_stack_len == 0 {
+                    break;
+                }
+                let top_op = &op_stack[op_stack_len - 1];
                 let should_reduce = match new_prec {
                     ::core::option::Option::None => true,
                     ::core::option::Option::Some(p_new) => {
@@ -4520,14 +4641,17 @@ mod __bbnfbootstrap_emit_impl {
                 if !should_reduce {
                     break;
                 }
-                let top_op = op_stack.pop().unwrap();
+                let lhs_idx = top_op.lhs_idx;
+                let lhs_span_lo = top_op.lhs_span_lo;
+                let op_discriminant = top_op.op_discriminant;
+                op_stack_len -= 1;
                 let compound_idx = builder
                     .push_compound(
                         ::bbnf::runtime::tape::TapeKind::Rule,
-                        ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
-                        top_op.lhs_span_lo,
+                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        lhs_span_lo,
                         *p as u32,
-                        top_op.op_discriminant,
+                        op_discriminant,
                         0,
                     );
                 this_operand_root = compound_idx.0;
@@ -4580,17 +4704,16 @@ mod __bbnfbootstrap_emit_impl {
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let arena_off: u32 = builder.arena_mut().len() as u32;
-            builder.arena_mut().push(op_discriminant);
             let _op_rec = builder
-                .push_leaf_with_arena_payload(
+                .push_leaf_with(
                     ::bbnf::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    arena_off,
-                    1,
+                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                        op_discriminant as u32,
+                    ),
                 );
             let lhs_span_lo: u32 = if (this_operand_root as usize)
                 < builder.columns().len()
@@ -4599,14 +4722,23 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            op_stack
-                .push(LocalOpEntry {
-                    op_discriminant,
-                    precedence,
-                    associativity_is_left,
-                    lhs_idx: this_operand_root,
-                    lhs_span_lo,
-                });
+            if true {
+                if !(op_stack_len < OP_STACK_CAP) {
+                    { panic!(
+                                "Pratt op_stack overflow at depth {0} (cap {1})",
+                                op_stack_len,
+                                OP_STACK_CAP,
+                            ); }
+                }
+            }
+            op_stack[op_stack_len] = LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            };
+            op_stack_len += 1;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -4649,7 +4781,10 @@ mod __bbnfbootstrap_emit_impl {
     ///       reduce emits a `TapeKind::Rule` reducer compound via
     ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_agg`.
+    ///       byte's u8 discriminant into `pay_narrow` directly via
+    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
+    ///       inline; bypasses the `arena_mut().push` round-trip
+    ///       AX.W0a.2.l routed through).
     ///    c. Push the operator onto the local op stack with its
     ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
     ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
@@ -4698,9 +4833,15 @@ mod __bbnfbootstrap_emit_impl {
             parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder)
         })?;
         let _ = _operand_off;
-        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(
-            4,
-        );
+        const OP_STACK_CAP: usize = 16;
+        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
+            op_discriminant: 0,
+            precedence: 0,
+            associativity_is_left: false,
+            lhs_idx: 0,
+            lhs_span_lo: 0,
+        });
+        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_value_and[op_byte as usize];
@@ -4715,10 +4856,10 @@ mod __bbnfbootstrap_emit_impl {
                 ::core::option::Option::Some(lut_byte & 0x0Fu8)
             };
             loop {
-                let top_op = match op_stack.last() {
-                    ::core::option::Option::Some(e) => e,
-                    ::core::option::Option::None => break,
-                };
+                if op_stack_len == 0 {
+                    break;
+                }
+                let top_op = &op_stack[op_stack_len - 1];
                 let should_reduce = match new_prec {
                     ::core::option::Option::None => true,
                     ::core::option::Option::Some(p_new) => {
@@ -4730,14 +4871,17 @@ mod __bbnfbootstrap_emit_impl {
                 if !should_reduce {
                     break;
                 }
-                let top_op = op_stack.pop().unwrap();
+                let lhs_idx = top_op.lhs_idx;
+                let lhs_span_lo = top_op.lhs_span_lo;
+                let op_discriminant = top_op.op_discriminant;
+                op_stack_len -= 1;
                 let compound_idx = builder
                     .push_compound(
                         ::bbnf::runtime::tape::TapeKind::Rule,
-                        ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
-                        top_op.lhs_span_lo,
+                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        lhs_span_lo,
                         *p as u32,
-                        top_op.op_discriminant,
+                        op_discriminant,
                         0,
                     );
                 this_operand_root = compound_idx.0;
@@ -4790,17 +4934,16 @@ mod __bbnfbootstrap_emit_impl {
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let arena_off: u32 = builder.arena_mut().len() as u32;
-            builder.arena_mut().push(op_discriminant);
             let _op_rec = builder
-                .push_leaf_with_arena_payload(
+                .push_leaf_with(
                     ::bbnf::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    arena_off,
-                    1,
+                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                        op_discriminant as u32,
+                    ),
                 );
             let lhs_span_lo: u32 = if (this_operand_root as usize)
                 < builder.columns().len()
@@ -4809,14 +4952,23 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            op_stack
-                .push(LocalOpEntry {
-                    op_discriminant,
-                    precedence,
-                    associativity_is_left,
-                    lhs_idx: this_operand_root,
-                    lhs_span_lo,
-                });
+            if true {
+                if !(op_stack_len < OP_STACK_CAP) {
+                    { panic!(
+                                "Pratt op_stack overflow at depth {0} (cap {1})",
+                                op_stack_len,
+                                OP_STACK_CAP,
+                            ); }
+                }
+            }
+            op_stack[op_stack_len] = LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            };
+            op_stack_len += 1;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -4859,7 +5011,10 @@ mod __bbnfbootstrap_emit_impl {
     ///       reduce emits a `TapeKind::Rule` reducer compound via
     ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_agg`.
+    ///       byte's u8 discriminant into `pay_narrow` directly via
+    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
+    ///       inline; bypasses the `arena_mut().push` round-trip
+    ///       AX.W0a.2.l routed through).
     ///    c. Push the operator onto the local op stack with its
     ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
     ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
@@ -4908,9 +5063,15 @@ mod __bbnfbootstrap_emit_impl {
             parse_pratt_BbnfBootstrap_value_and(input, p, state, builder)
         })?;
         let _ = _operand_off;
-        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(
-            4,
-        );
+        const OP_STACK_CAP: usize = 16;
+        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
+            op_discriminant: 0,
+            precedence: 0,
+            associativity_is_left: false,
+            lhs_idx: 0,
+            lhs_span_lo: 0,
+        });
+        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_value_or[op_byte as usize];
@@ -4925,10 +5086,10 @@ mod __bbnfbootstrap_emit_impl {
                 ::core::option::Option::Some(lut_byte & 0x0Fu8)
             };
             loop {
-                let top_op = match op_stack.last() {
-                    ::core::option::Option::Some(e) => e,
-                    ::core::option::Option::None => break,
-                };
+                if op_stack_len == 0 {
+                    break;
+                }
+                let top_op = &op_stack[op_stack_len - 1];
                 let should_reduce = match new_prec {
                     ::core::option::Option::None => true,
                     ::core::option::Option::Some(p_new) => {
@@ -4940,14 +5101,17 @@ mod __bbnfbootstrap_emit_impl {
                 if !should_reduce {
                     break;
                 }
-                let top_op = op_stack.pop().unwrap();
+                let lhs_idx = top_op.lhs_idx;
+                let lhs_span_lo = top_op.lhs_span_lo;
+                let op_discriminant = top_op.op_discriminant;
+                op_stack_len -= 1;
                 let compound_idx = builder
                     .push_compound(
                         ::bbnf::runtime::tape::TapeKind::Rule,
-                        ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
-                        top_op.lhs_span_lo,
+                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        lhs_span_lo,
                         *p as u32,
-                        top_op.op_discriminant,
+                        op_discriminant,
                         0,
                     );
                 this_operand_root = compound_idx.0;
@@ -5000,17 +5164,16 @@ mod __bbnfbootstrap_emit_impl {
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let arena_off: u32 = builder.arena_mut().len() as u32;
-            builder.arena_mut().push(op_discriminant);
             let _op_rec = builder
-                .push_leaf_with_arena_payload(
+                .push_leaf_with(
                     ::bbnf::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    arena_off,
-                    1,
+                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                        op_discriminant as u32,
+                    ),
                 );
             let lhs_span_lo: u32 = if (this_operand_root as usize)
                 < builder.columns().len()
@@ -5019,14 +5182,23 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            op_stack
-                .push(LocalOpEntry {
-                    op_discriminant,
-                    precedence,
-                    associativity_is_left,
-                    lhs_idx: this_operand_root,
-                    lhs_span_lo,
-                });
+            if true {
+                if !(op_stack_len < OP_STACK_CAP) {
+                    { panic!(
+                                "Pratt op_stack overflow at depth {0} (cap {1})",
+                                op_stack_len,
+                                OP_STACK_CAP,
+                            ); }
+                }
+            }
+            op_stack[op_stack_len] = LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            };
+            op_stack_len += 1;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -7677,7 +7849,10 @@ mod __bbnfbootstrap_emit_impl {
     ///       reduce emits a `TapeKind::Rule` reducer compound via
     ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_agg`.
+    ///       byte's u8 discriminant into `pay_narrow` directly via
+    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
+    ///       inline; bypasses the `arena_mut().push` round-trip
+    ///       AX.W0a.2.l routed through).
     ///    c. Push the operator onto the local op stack with its
     ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
     ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
@@ -7726,9 +7901,15 @@ mod __bbnfbootstrap_emit_impl {
             parse_flat_BbnfBootstrap_mapped_factor(input, p, state, builder)
         })?;
         let _ = _operand_off;
-        let mut op_stack: ::std::vec::Vec<LocalOpEntry> = ::std::vec::Vec::with_capacity(
-            4,
-        );
+        const OP_STACK_CAP: usize = 16;
+        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
+            op_discriminant: 0,
+            precedence: 0,
+            associativity_is_left: false,
+            lhs_idx: 0,
+            lhs_span_lo: 0,
+        });
+        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_binary_factor[op_byte as usize];
@@ -7743,10 +7924,10 @@ mod __bbnfbootstrap_emit_impl {
                 ::core::option::Option::Some(lut_byte & 0x0Fu8)
             };
             loop {
-                let top_op = match op_stack.last() {
-                    ::core::option::Option::Some(e) => e,
-                    ::core::option::Option::None => break,
-                };
+                if op_stack_len == 0 {
+                    break;
+                }
+                let top_op = &op_stack[op_stack_len - 1];
                 let should_reduce = match new_prec {
                     ::core::option::Option::None => true,
                     ::core::option::Option::Some(p_new) => {
@@ -7758,14 +7939,17 @@ mod __bbnfbootstrap_emit_impl {
                 if !should_reduce {
                     break;
                 }
-                let top_op = op_stack.pop().unwrap();
+                let lhs_idx = top_op.lhs_idx;
+                let lhs_span_lo = top_op.lhs_span_lo;
+                let op_discriminant = top_op.op_discriminant;
+                op_stack_len -= 1;
                 let compound_idx = builder
                     .push_compound(
                         ::bbnf::runtime::tape::TapeKind::Rule,
-                        ::bbnf::runtime::tape::TapeOffset(top_op.lhs_idx),
-                        top_op.lhs_span_lo,
+                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        lhs_span_lo,
                         *p as u32,
-                        top_op.op_discriminant,
+                        op_discriminant,
                         0,
                     );
                 this_operand_root = compound_idx.0;
@@ -7818,17 +8002,16 @@ mod __bbnfbootstrap_emit_impl {
             let op_lo: u32 = *p as u32;
             *p = (*p).saturating_add(op_width as usize);
             let op_hi: u32 = *p as u32;
-            let arena_off: u32 = builder.arena_mut().len() as u32;
-            builder.arena_mut().push(op_discriminant);
             let _op_rec = builder
-                .push_leaf_with_arena_payload(
+                .push_leaf_with(
                     ::bbnf::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    arena_off,
-                    1,
+                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                        op_discriminant as u32,
+                    ),
                 );
             let lhs_span_lo: u32 = if (this_operand_root as usize)
                 < builder.columns().len()
@@ -7837,14 +8020,23 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            op_stack
-                .push(LocalOpEntry {
-                    op_discriminant,
-                    precedence,
-                    associativity_is_left,
-                    lhs_idx: this_operand_root,
-                    lhs_span_lo,
-                });
+            if true {
+                if !(op_stack_len < OP_STACK_CAP) {
+                    { panic!(
+                                "Pratt op_stack overflow at depth {0} (cap {1})",
+                                op_stack_len,
+                                OP_STACK_CAP,
+                            ); }
+                }
+            }
+            op_stack[op_stack_len] = LocalOpEntry {
+                op_discriminant,
+                precedence,
+                associativity_is_left,
+                lhs_idx: this_operand_root,
+                lhs_span_lo,
+            };
+            op_stack_len += 1;
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             let _rhs_off = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -29001,14 +29193,22 @@ mod __bbnfbootstrap_emit_impl {
             ::bbnf::runtime::Parsed<'_, Self>,
             ::bbnf::runtime::ParseErr,
         > {
+            let __input_bytes = input.as_bytes();
+            let mut state = __shape_support_BbnfBootstrap::ScanState::new();
+            state.init_for_input(__input_bytes);
+            let __profile_capacity = GRAMMAR_PROFILE.capacity_for(input.len());
+            let __scan_capacity = state.structural_index.len() * 2 + 2;
             let mut builder = ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                GRAMMAR_PROFILE.capacity_for(input.len()),
+                if __scan_capacity > __profile_capacity {
+                    __scan_capacity
+                } else {
+                    __profile_capacity
+                },
             );
             let root_off = {
                 let mut pos: usize = 0;
-                let mut state = __shape_support_BbnfBootstrap::ScanState::new();
                 let off = parse_BbnfBootstrap_grammar(
-                        input.as_bytes(),
+                        __input_bytes,
                         &mut pos,
                         &mut state,
                         &mut builder,
@@ -29034,7 +29234,7 @@ mod __bbnfbootstrap_emit_impl {
                         }
                     })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(
-                    input.as_bytes(),
+                    __input_bytes,
                     &mut pos,
                     &mut state,
                 );

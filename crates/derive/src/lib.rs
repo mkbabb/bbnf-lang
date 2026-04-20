@@ -63,7 +63,14 @@ use parse_that::utils::get_cargo_root_path;
 // from pre-W1r.3a versions emits ASCII-only `trim_leading_whitespace_mut`
 // and produces 0-byte output on grammars whose inputs begin with a block
 // comment (bootstrap.css / normalize.css).
-const BBNF_SCHEMA_VERSION: u64 = 13;
+// AY.W0d: bumped from 13 — `__regex_scan_<grammar>` adapter now also
+// dispatches on `IrNode::Regex` patterns harvested from rule bodies
+// (HRegex-shaped rules + Map-wrapped regex rules whose patterns the
+// shape-emitter passes by literal). Cached codegen pre-W0d had only the
+// DTA-table patterns as dispatch arms, so HRegex calls into the adapter
+// fell through to `None` and parses failed at offset 0 with `Syntax {
+// rule: None }` (CSV `textdata = /[^,"\r\n]+/` regression).
+const BBNF_SCHEMA_VERSION: u64 = 14;
 
 /// Recursively collect all grammar file contents for hashing.
 ///

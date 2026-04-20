@@ -79,7 +79,7 @@
 //! `dispatch_one` / `try_branch` callers only.
 
 use bbnf_ir::passes::recognizers::dta::{DtaState, DtaTable};
-use bbnf_ir::GrammarIR;
+use bbnf_ir::{GrammarIR, IrNode};
 use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 
@@ -117,6 +117,13 @@ fn dta_ws_static_ident(idx: usize) -> proc_macro2::Ident {
     format_ident!("__DTA_WS_{}", idx)
 }
 
+/// Pattern-static identifier for a non-DTA-classified IR-regex pattern.
+/// Disambiguated from the per-state idents above by the `__DTA_HREGEX_`
+/// prefix so dedup against `__DTA_REGEX_` / `__DTA_WS_` is mechanical.
+fn ir_regex_static_ident(idx: usize) -> proc_macro2::Ident {
+    format_ident!("__DTA_HREGEX_{}", idx)
+}
+
 /// Resolve the pattern string for a regex-bearing state at `idx` in
 /// `table.states`. Returns `None` if the state at that index is not a
 /// `Regex` variant or a `WsTrim` with a pattern — the caller should
@@ -136,36 +143,120 @@ fn pattern_for_state<'a>(
     }
 }
 
-/// Collect every state index in `table.states` whose state carries a
-/// regex pattern — Regex + WsTrim-with-pattern. Returns `(state_idx,
-/// resolved_pattern_string, pattern_static_ident)` triples.
+/// Collect every regex pattern the per-grammar `__regex_scan_` adapter
+/// must dispatch on. Two sources merge:
 ///
-/// Patterns are resolved against `ir`'s string table — the IR-side
-/// `DtaState` carries `StringId`, the `dta.rs` emitter already resolves
-/// them via `ir.get_string`, and this pass composes with that emission
-/// so the static identifiers and the per-state DFA bodies line up by
-/// state index.
+/// 1. **`DtaTable.states`** — `Regex` + `WsTrim { pattern: Some(_) }`.
+///    These are the patterns the DTA lifter classified as regex-bearing.
+///    Each emits its `__DTA_REGEX_K` / `__DTA_WS_K` pattern static.
+/// 2. **`ir.rules` `IrNode::Regex` walk** — patterns that bypass the
+///    DTA classifier entirely (HRegex-shaped rules, `Map { Regex, .. }`
+///    typed-payload rules) still call the adapter via byte-equality on
+///    the rule's pattern literal. Without an adapter dispatch arm the
+///    call returns `None` and the parse fails at offset 0 with
+///    `Syntax { rule: None }` — observed for CSV's `textdata =
+///    /[^,"\r\n]+/` rule (failure shape resolved here, not papered
+///    over with `#[ignore]`).
+///
+/// Patterns appearing in both sources dedupe by string value: the
+/// DTA-classified entry wins (preserves the table-state indexing the
+/// `emit_dfa_inline_body` splice consumers depend on).
+///
+/// Returns `(synth_idx, resolved_pattern_string, pattern_static_ident)`
+/// triples. `synth_idx` is the dispatch-arm ordinal — for DTA-table
+/// patterns it is the state index; for IR-walk patterns it is a
+/// post-table monotonic counter.
 fn collect_regex_bearing_states<'a>(
     ir: &'a GrammarIR,
     table: &'a DtaTable,
 ) -> Vec<(usize, &'a str, proc_macro2::Ident)> {
     let mut out = Vec::new();
+    let mut seen: std::collections::HashSet<&'a str> =
+        std::collections::HashSet::new();
+
     for (idx, state) in table.states.iter().enumerate() {
         match state {
             DtaState::Regex { pattern, .. } => {
                 let pat = ir.get_string(*pattern);
-                out.push((idx, pat, dta_regex_static_ident(idx)));
+                if seen.insert(pat) {
+                    out.push((idx, pat, dta_regex_static_ident(idx)));
+                }
             }
             DtaState::WsTrim {
                 pattern: Some(pattern),
             } => {
                 let pat = ir.get_string(*pattern);
-                out.push((idx, pat, dta_ws_static_ident(idx)));
+                if seen.insert(pat) {
+                    out.push((idx, pat, dta_ws_static_ident(idx)));
+                }
             }
             _ => {}
         }
     }
+
+    // Walk IR rule bodies for `IrNode::Regex(sid)` patterns not yet
+    // captured by the DTA table — HRegex-shaped rules + Map-wrapped
+    // regex rules whose patterns the shape-emitter passes to the
+    // adapter by literal string. Synth indices follow the DTA table.
+    let mut synth_idx = table.states.len();
+    for rule in &ir.rules {
+        collect_ir_regex_patterns(&rule.body, ir, &mut seen, &mut out, &mut synth_idx);
+    }
+
     out
+}
+
+/// Recursively walk `node` collecting every `IrNode::Regex` pattern
+/// not yet in `seen`. Emits a synthetic `__DTA_HREGEX_K` triple for
+/// each new pattern.
+fn collect_ir_regex_patterns<'a>(
+    node: &IrNode,
+    ir: &'a GrammarIR,
+    seen: &mut std::collections::HashSet<&'a str>,
+    out: &mut Vec<(usize, &'a str, proc_macro2::Ident)>,
+    synth_idx: &mut usize,
+) {
+    match node {
+        IrNode::Regex(sid) => {
+            let pat = ir.get_string(*sid);
+            if seen.insert(pat) {
+                out.push((*synth_idx, pat, ir_regex_static_ident(*synth_idx)));
+                *synth_idx += 1;
+            }
+        }
+        IrNode::Seq(children) => {
+            for c in children {
+                collect_ir_regex_patterns(c, ir, seen, out, synth_idx);
+            }
+        }
+        IrNode::Alt(branches, _) => {
+            for b in branches {
+                collect_ir_regex_patterns(&b.node, ir, seen, out, synth_idx);
+            }
+        }
+        IrNode::Repeat { inner, .. }
+        | IrNode::Map { inner, .. }
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Negate(inner) => {
+            collect_ir_regex_patterns(inner, ir, seen, out, synth_idx);
+        }
+        IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
+            collect_ir_regex_patterns(l, ir, seen, out, synth_idx);
+            collect_ir_regex_patterns(r, ir, seen, out, synth_idx);
+        }
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            collect_ir_regex_patterns(token, ir, seen, out, synth_idx);
+            for arm in arms {
+                collect_ir_regex_patterns(&arm.continuation, ir, seen, out, synth_idx);
+            }
+            collect_ir_regex_patterns(fallback, ir, seen, out, synth_idx);
+        }
+        IrNode::Literal(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
+    }
 }
 
 /// Compile `pattern` and emit the DFA's `loop { match state { ... } }`

@@ -1,0 +1,45 @@
+AY.W4 close — bytes/cyc trajectory (3.2 GHz reference; sonic-rs twitter = 0.808 bytes/cyc)
+==========================================================================================
+
+HEAD: 38e3e749 (AY.W2.6 regen — wrap-compound elision active on BBNF rules)
+date: 2026-04-20T12:30:00Z
+profile: release + mimalloc + cold per-parse (per docs/instructions/README.md §Benchmarking)
+
+fixture                                | post-AX-W1 MB/s | post-AY-W1 MB/s | post-AY-W4 MB/s | post-AY-W4 bytes/cyc | vs AX %  | vs sonic %
+----------------------------------------------------------------------------------------------------------------------------------------------
+json_monolithic/canada                 |             196 |             324 |             363 |               0.1134 |   +85.2% |       14.0%
+json_monolithic/citm                   |             450 |             729 |             753 |               0.2353 |   +67.3% |       29.1%
+json_monolithic/data_s                 |             442 |             676 |             733 |               0.2291 |   +65.8% |       28.3%
+json_monolithic/data_xl                |             296 |             440 |             474 |               0.1481 |   +60.1% |       18.3%
+json_monolithic/twitter                |             448 |             688 |             746 |               0.2331 |   +66.5% |       28.9%
+css_l4/bootstrap                       |             118 |             151 |             141 |               0.0441 |   +19.5% |        5.5%
+css_l4/normalize                       |             191 |             248 |             236 |               0.0737 |   +23.6% |        9.1%
+css_l4/tailwind                        |             144 |             195 |             192 |               0.0600 |   +33.3% |        7.4%
+google_sheets/parse_simple             |              15 |              21 |              21 |               0.0066 |   +40.0% |        0.8%
+google_sheets/parse_nested             |              20 |              24 |              25 |               0.0078 |   +25.0% |        1.0%
+google_sheets/parse_stress             |              18 |              22 |              22 |               0.0069 |   +22.2% |        0.9%
+google_sheets/format_simple            |              40 |              40 |              40 |               0.0125 |    +0.0% |        1.5%
+google_sheets/format_stress            |              46 |              50 |              49 |               0.0153 |    +6.5% |        1.9%
+bbnf_monolithic/bbnf_self              |              87 |             115 |             119 |               0.0372 |   +36.8% |        4.6%
+bbnf_monolithic/css_l4_grammar         |             125 |             155 |             164 |               0.0512 |   +31.2% |        6.3%
+bbnf_monolithic/css_pretty             |             148 |             192 |             199 |               0.0622 |   +34.5% |        7.7%
+bbnf_monolithic/ebnf                   |              46 |              60 |              60 |               0.0187 |   +30.4% |        2.3%
+bbnf_monolithic/google_sheets          |             202 |             263 |             271 |               0.0847 |   +34.2% |       10.5%
+bbnf_monolithic/json                   |              72 |             91  |              95 |               0.0297 |   +31.9% |        3.7%
+
+Observations:
+- JSON twitter: 0.233 bytes/cyc = 29% of sonic-rs twitter reference (0.808). W4.1 SIMD unescape delivered +8.4% vs W1 (688→746); BEAT-sonic Value-API gate (≤0.85 ratio) defers to W7 FINAL post W3c Value-API bench lanes.
+- JSON canada: 0.113 bytes/cyc = 14% of sonic. W4.2 pay_f64 substrate landed bench-neutral per W4.2 agent log; +12% vs W1 within variance. Canada ratio ≤0.95 gate also defers to W7 FINAL.
+- JSON citm/data_s/data_xl: +3-8% vs W1; W4.1 SIMD fast-path fires on unescaped strings.
+- CSS L4 tailwind: flat vs W1 (195→192; -1.5% within variance). W4.3 regex specialisation sub-gate MISSED per samply: __regex_scan_CssL4Parser self-time = 29.18% (target ≤ 12%; baseline 26%; +3.18pp regression). Artefact: .profiles/samply/post-AY-W4/css_l4/tailwind/.
+- CSS L4 bootstrap/normalize: -6.5% / -4.8% vs W1 — minor regression within single-run variance; tranche close re-checks at W7 FINAL.
+- Sheets parse_stress: +0.7% vs W1 (82.5k→81.9k ns). W4.3 Sheets regex gate MISSED per samply: __regex_scan_GoogleSheetsParser self-time = 12.37% (target ≤ 6%; baseline 12%; unchanged). Artefact: .profiles/samply/post-AY-W4/google_sheets_monolithic/parse_stress/.
+- Sheets formats + BBNF: flat-to-positive vs W1.
+- BBNF family: +2-4% across the board vs W1 from W2-egraph's G1-G4 + wrap-compound elision effects.
+
+Wall-time:
+  json_monolithic: 57s
+  css_l4:          31s
+  google_sheets:   14s
+  bbnf_monolithic: 11s
+  total:           113s

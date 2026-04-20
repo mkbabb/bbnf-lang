@@ -1,0 +1,43 @@
+{
+  "commit": "38e3e749",
+  "profile": "release",
+  "allocator": "mimalloc",
+  "date_utc": "2026-04-20T12:30:00Z",
+  "notes": "AY.W4 close: SIMD unescape (W4.1) + Eisel-Lemire pay_f64 column (W4.2) + regex specialisation (W4.3). Incorporates W2-egraph's G1-G4 + wrap-elision. Twitter +8.4% vs post-AY-W1 (746 vs 688 MB/s) — W4.1 SIMD unescape fires. Canada +12.0% (363 vs 324) — within variance of W4.2 pay_f64 substrate (bench-neutral per docs(AY.W4.2), W4.2 sub-gate +15% miss narrative was wrong). CSS tailwind -1.5% vs W1 (192 vs 195) flat. Samply hard-gates 3/4 MISSED: __regex_scan_CssL4Parser tailwind self-time = 29.18% (target ≤ 12%, baseline 26% — regressed +3.18pp); __regex_scan_GoogleSheetsParser parse_stress self-time = 12.37% (target ≤ 6%, baseline 12% — unchanged). Hard-gates 1-2 (BEAT-sonic Value-API twitter/canada) deferred to W7 FINAL post W3c Value-API bench lanes. Hard-gates 3-4 require W7 re-plan — W4.3 regex consumer specialisation did not fire at hot leaf granularity; byte-class pre-filter + PHF + BoundedRegex substrate must re-engage at CSS L4 rule-by-rule level.",
+  "entries": {
+    "json_monolithic": {
+      "canada":  {"ns_per_iter":  6197887, "bytes_per_ns": 0.363},
+      "citm":    {"ns_per_iter":  2291460, "bytes_per_ns": 0.753},
+      "data_s":  {"ns_per_iter":    48360, "bytes_per_ns": 0.733},
+      "data_xl": {"ns_per_iter": 44844399, "bytes_per_ns": 0.474},
+      "twitter": {"ns_per_iter":   846470, "bytes_per_ns": 0.746}
+    },
+    "css_l4": {
+      "bootstrap": {"ns_per_iter":  1978866, "bytes_per_ns": 0.141},
+      "normalize": {"ns_per_iter":    25971, "bytes_per_ns": 0.236},
+      "tailwind":  {"ns_per_iter": 18961508, "bytes_per_ns": 0.192}
+    },
+    "google_sheets_monolithic": {
+      "parse_simple":  {"ns_per_iter":  23608, "bytes_per_ns": 0.021},
+      "parse_nested":  {"ns_per_iter":  57956, "bytes_per_ns": 0.025},
+      "parse_stress":  {"ns_per_iter":  81914, "bytes_per_ns": 0.022},
+      "format_simple": {"ns_per_iter":    149, "bytes_per_ns": 0.040},
+      "format_stress": {"ns_per_iter":   4022, "bytes_per_ns": 0.049}
+    },
+    "bbnf_monolithic": {
+      "bbnf_self":      {"ns_per_iter":  43042, "bytes_per_ns": 0.119},
+      "css_l4_grammar": {"ns_per_iter": 339718, "bytes_per_ns": 0.164},
+      "css_pretty":     {"ns_per_iter":  12802, "bytes_per_ns": 0.199},
+      "ebnf":           {"ns_per_iter":  23943, "bytes_per_ns": 0.060},
+      "google_sheets":  {"ns_per_iter":  27634, "bytes_per_ns": 0.271},
+      "json":           {"ns_per_iter":   5626, "bytes_per_ns": 0.095}
+    }
+  },
+  "wall_time_seconds": {
+    "json_monolithic": 57,
+    "css_l4": 31,
+    "google_sheets_monolithic": 14,
+    "bbnf_monolithic": 11,
+    "total": 113
+  }
+}

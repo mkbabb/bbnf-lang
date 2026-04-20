@@ -506,6 +506,72 @@ W0a closes at HEAD `6b03dd53`. Proceeding to W0a.close (single-agent
 
 ---
 
+## 2026-04-20 — W1 sub-waves landed; AX planning phase opens
+
+W1 ran per the absorb re-plan. Eight sub-waves commissioned, eight
+landed on master across orchestrator-dispatched worktrees:
+
+| Sub-wave | Commit | Deliverable |
+|----------|--------|-------------|
+| W1r.0    | `3429aaba` | Revert W1.A/B (−6,128 LOC); sonic-rs → dev-dep |
+| W1r.1    | `5d5096eb` | IR-derived named-type resolver (static BINDINGS → `FxHashMap<StringId, Vec<TypeDesc>>` walker); diag at `audit/W1r1-diag.md` |
+| W1r.2    | `a6429d3e` | JSON canonical-parity vs sonic-rs (10/1 + `strip_insignificant_ws`) |
+| W1r.3a   | `933d02fb` → `b930cf2c` → `293be673` | CSS L4 `@pretty` directives + `?w`/`@ws` threading fix + 3/0 parity harness (byte on normalize, scale+interop on bootstrap/tailwind) |
+| W1r.4a   | `f6a264e2` → `28fd46fc` → `53d99e4a` | `@pretty sep(X)` codegen fix (`backend/prettify/sep_rewrite.rs`) + regen + sheets_self_parity 84/0 |
+| W1r.5    | `53318493` | BBNF self-parity 56/0 over 28 `.bbnf` fixtures |
+| W1r.6    | `81627d7c` | Typed-accessor surface audit 14/0 (295 rules × 7 accessor classes) |
+| W1r.7    | `ab7c218d` | Twitter lazy-field bench via NodeView; AoS 4.14× SoA ax-iter, 1.67× release |
+
+**W1 outputs green in aggregate**: 13 parity + canonical harnesses
+pass on master with 247 tests + 1 ignored (`data_xl` debug-assertions
+gate; runs under `--release`).
+
+**Scope-reveals documented**:
+
+- **W1r.1** — `TypeDesc::Named` collapses to concrete tuple in the
+  Rust pipeline before emit; the static `BINDINGS` slice was dead
+  code on every grammar. Refactor's value is code hygiene + readiness
+  to populate if upstream preserves `Named`. Upstream-preservation
+  investigation folds into next tranche. Diag:
+  `docs/tranches/AX/audit/W1r1-diag.md`.
+- **W1r.3 / W1r.3a** — lightningcss `PrinterOptions { minify: false }`
+  performs `calc()` arithmetic simplification + position-pair
+  commutativity + shorthand reordering that no symmetric bytes-level
+  normalizer can invert. Bootstrap.css + tailwind.css ship as
+  scale+interop tests (bbnf parses + prettifies + output re-parses
+  on both bbnf and lightningcss) rather than byte-parity. CSS calc
+  evaluator deferred. Diag: `docs/tranches/AX/audit/W1r3-diag.md` +
+  `audit/W1r3a-diag.md`.
+- **W1r.4 → W1r.4a** — `@pretty sep(X)` double-emitted against rule
+  bodies with `<<` separators; fix is codegen-level in
+  `crates/core/src/backend/prettify/sep_rewrite.rs` (new module).
+  Cross-grammar audit: only Sheets declares `sep(X)` currently;
+  3-line leak fix in the Repeat loop applies universally.
+
+**Pre-existing AX debt surfaced during W1 execution** (tracked for
+next tranche):
+
+- 5 stale W0a/W0b-era test files reference retired predicates +
+  carved GrammarProfile fields: `bbnf_profile_wire_contract.rs`,
+  `grammar_profile_wire_contract.rs`, `json_parity_shape_emit.rs`,
+  `gate_predicate_wire_contract.rs`, `aw_v_w5_2_per_ref_routing.rs`.
+  All fail to compile. Per invariant 14 these retire with their
+  predicates; W0b.D's "delete 8 DTA-coupled test suites" missed them.
+- `ebnf_prettify.rs::{parse_single_rule, parse_multi_rule}` fail at
+  offset 0 on valid EBNF source. Pre-existing; not caused by W1r
+  landings (bbnf_self_parity 56/0 parses ebnf.bbnf fine via
+  BbnfEmit). EBNF recognizer divergence to investigate.
+- `post-AX-W1-close.json` bench matrix not yet captured.
+- AX `FINAL.md` not yet written.
+
+**Planning phase opens**. Deep audit waves to dispatch per user
+directive: direct-to-struct projection generalization, Value API
+performance characterization, apples-to-apples competitor benches
+across JSON/CSS/Sheets/BBNF (compile + parse time), samply
+attribution. New tranche letter to follow.
+
+---
+
 ## 2026-04-19 — W1 absorb re-plan (W1.A/B reverted; grammar-derived rewrite)
 
 W1.A (hand-coded `bbnf::json::Value` iso `sonic_rs`) and W1.B

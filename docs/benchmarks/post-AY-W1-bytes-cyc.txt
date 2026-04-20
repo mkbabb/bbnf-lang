@@ -1,0 +1,109 @@
+post-AY-W1-close bytes/cyc attribution — HEAD 49d468f2
+=======================================================
+
+Methodology
+-----------
+
+bytes_per_ns derived from data file size / ns_per_iter (cargo bench).
+bytes_per_cyc = bytes_per_ns / 3.2 GHz (Apple M-series P-core).
+MB/s figures use base-10 (1 MB = 1,000,000 bytes), matching cargo bench convention.
+
+AU reference: post-AU.json (commit 3b8b757d, 2026-04-15).
+post-AX-W1 reference: post-AX-W1-close.json (commit 6516086f, 2026-04-20).
+Sonic reference (twitter): 2587 MB/s = 0.808 bytes/cyc, derived per AY.md AU
+archaeology (post-AU twitter at 0.615 bytes/cyc = 76% of sonic, hence sonic =
+0.615 / 0.76 = 0.808 bytes/cyc).
+
+Attribution table
+-----------------
+
+fixture                                     AU MB/s  post-AX-W1 MB/s  post-AY-W1 MB/s   post-AY-W1 bytes/cyc    vs AU %   vs sonic %
+------------------------------------------------------------------------------------------------------------------------------------
+json_monolithic/canada                         1231            196.0            289.0                 0.0903      23.5%          N/A
+json_monolithic/citm                           2438            450.0            384.5                 0.1202      15.8%          N/A
+json_monolithic/data_s                         1746            442.0            451.2                 0.1410      25.8%          N/A
+json_monolithic/data_xl                        1179            296.0            249.7                 0.0780      21.2%          N/A
+json_monolithic/twitter                        1967            448.0            420.2                 0.1313      21.4%        16.2%
+css_l4/bootstrap                                454            118.0            129.7                 0.0405      28.6%          N/A
+css_l4/normalize                                735            191.0            198.5                 0.0620      27.0%          N/A
+css_l4/tailwind                                 496            144.0            160.4                 0.0501      32.3%          N/A
+google_sheets_monolithic/parse_simple            95             15.0             20.0                 0.0062      21.1%          N/A
+google_sheets_monolithic/parse_nested           128             20.0             24.0                 0.0075      18.8%          N/A
+google_sheets_monolithic/parse_stress           121             18.0             22.0                 0.0069      18.2%          N/A
+google_sheets_monolithic/format_simple           42             40.0             42.0                 0.0131     100.0%          N/A
+google_sheets_monolithic/format_stress           52             46.0             48.0                 0.0150      92.3%          N/A
+bbnf_monolithic/bbnf_self                       394             87.0             95.0                 0.0297      24.1%          N/A
+bbnf_monolithic/css_l4_grammar                  496            125.0            128.0                 0.0400      25.8%          N/A
+bbnf_monolithic/css_pretty                      647            148.0            154.0                 0.0481      23.8%          N/A
+bbnf_monolithic/ebnf                            223             46.0             52.0                 0.0162      23.3%          N/A
+bbnf_monolithic/google_sheets                   858            202.0            193.0                 0.0603      22.5%          N/A
+bbnf_monolithic/json                            283             72.0             77.0                 0.0241      27.2%          N/A
+
+W1 hard-gate readout
+--------------------
+
+Per AY.W1.md §Hard gate. Bench-evidenced gates only (1, 2, 6); non-bench gates
+(3, 4, 5, 7, 8) verified separately.
+
+| # | Gate                                              | Required        | Measured              | Status |
+|---|---------------------------------------------------|-----------------|-----------------------|--------|
+| 1 | bytes/cyc twitter (AU citm floor)                 | >= 0.45         | 0.131                 | MISS   |
+| 2 | bbnf/sonic twitter ratio                          | <= 3x           | 6.16x (2587 / 420.2)  | MISS   |
+| 6 | CSS L4 tailwind delta vs post-AX-W1               | >= +8%          | +11.4% (160.4 / 144)  | PASS   |
+
+AU restoration trajectory (twitter)
+-----------------------------------
+
+Reference points:
+- post-AU (3b8b757):     1967 MB/s = 0.615 bytes/cyc =  76% of sonic
+- pre-AY  (411eabfd):     437 MB/s = 0.137 bytes/cyc =  17% of sonic  (AY.md cite)
+- post-AX-W1 (6516086f):  448 MB/s = 0.140 bytes/cyc =  17% of sonic
+- post-AY-W1 (49d468f2):  420 MB/s = 0.131 bytes/cyc =  16% of sonic
+- target  (W1 close):      ~1438 MB/s = 0.450 bytes/cyc = 56% of sonic (AU citm floor)
+
+W1 close shows a -6% twitter regression vs post-AX-W1 close (448 -> 420 MB/s)
+and falls 71% short of the AU restoration target (0.131 vs 0.45 bytes/cyc).
+The AU substrate revert + finalise stack-buffer + Pratt Option C inline +
+structural-scan substrate landed cleanly at the symbol level (gates 3, 4
+verified per phase1-nm + phase2c-nm artefacts), but the throughput recovery
+the AU revert was projected to deliver did not materialise on twitter.
+
+Cross-grammar trajectory
+------------------------
+
+JSON twitter regressed -6% vs AX-W1; canada +47%, data_s +2%, citm -15%,
+data_xl -16%. Mixed JSON picture.
+
+CSS L4: bootstrap +9.9%, normalize +3.9%, tailwind +11.4%. Tailwind
+materially benefits from structural-scan activation (gate 6 PASS).
+
+Sheets: parse_simple +33%, parse_nested +20%, parse_stress +22%; format_*
+flat. Materially helped by Pratt Option C op_stack hoist + push_fingerprint.
+
+BBNF: bbnf_self +9.2%, ebnf +13%, css_l4_grammar +2.4%, css_pretty +4.1%,
+google_sheets -4.5%, json +6.9%. Net positive.
+
+Sonic gap (twitter)
+-------------------
+
+bbnf/sonic twitter ratio at W1 close: 6.16x (sonic 2587 MB/s / bbnf 420.2 MB/s).
+Pre-AY ratio cited at 7.93x; post-AX-W1 ratio (using same sonic reference)
+was 5.77x (2587 / 448). W1 widened the gap relative to AX-W1 by ~7%.
+
+The W1.1 AoS substrate revert + W1.2 finalise fusion + W1.3 structural-scan
+substrate + W1.4 Pratt Option C landed as substrate but did not collapse the
+twitter sonic gap. JSON twitter remains 6.16x slower than sonic. The 0.45
+bytes/cyc gate is missed by ~3.4x; the 3x sonic-ratio gate is missed by
+~2.05x.
+
+Verification artefacts
+----------------------
+
+- post-AY-W1-close.json (this run, 19 entries)
+- post-AY-W1-phase1-nm.txt (gate 3 push_structural absent — orchestrator)
+- post-AY-W1-phase2c-nm.txt (gate 4 scan_structural present + StructuralIndex
+  drop_in_place 4/4 — orchestrator)
+- Bootstrap regen idempotency + workspace tests 1490/0/40 — orchestrator
+
+Optional samply gate 5 (top-10 self-time on canada + tailwind + parse_stress
++ bbnf_self) skipped per orchestrator authority; can be filled later.

@@ -1,0 +1,43 @@
+{
+  "commit": "49d468f2",
+  "profile": "release",
+  "allocator": "mimalloc",
+  "date_utc": "2026-04-20T08:00:00Z",
+  "notes": "AY.W1 close: AU AoS substrate revert + finalise stack-buffer + Pratt Option C inline + structural-scan substrate. 4 hard gates closed; bytes/cyc attribution to follow in -bytes-cyc.txt.",
+  "entries": {
+    "json_monolithic": {
+      "canada":  {"ns_per_iter":  7789045, "bytes_per_ns": 0.289},
+      "citm":    {"ns_per_iter":  4491522, "bytes_per_ns": 0.385},
+      "data_s":  {"ns_per_iter":    78663, "bytes_per_ns": 0.451},
+      "data_xl": {"ns_per_iter": 85238145, "bytes_per_ns": 0.250},
+      "twitter": {"ns_per_iter":  1502872, "bytes_per_ns": 0.420}
+    },
+    "css_l4": {
+      "bootstrap": {"ns_per_iter":  2161110, "bytes_per_ns": 0.130},
+      "normalize": {"ns_per_iter":    30928, "bytes_per_ns": 0.198},
+      "tailwind":  {"ns_per_iter": 22707329, "bytes_per_ns": 0.160}
+    },
+    "google_sheets_monolithic": {
+      "parse_simple":  {"ns_per_iter":  25129, "bytes_per_ns": 0.020},
+      "parse_nested":  {"ns_per_iter":  59341, "bytes_per_ns": 0.024},
+      "parse_stress":  {"ns_per_iter":  82816, "bytes_per_ns": 0.022},
+      "format_simple": {"ns_per_iter":    142, "bytes_per_ns": 0.042},
+      "format_stress": {"ns_per_iter":   4084, "bytes_per_ns": 0.048}
+    },
+    "bbnf_monolithic": {
+      "bbnf_self":      {"ns_per_iter":  53654, "bytes_per_ns": 0.095},
+      "css_l4_grammar": {"ns_per_iter": 433970, "bytes_per_ns": 0.128},
+      "css_pretty":     {"ns_per_iter":  16596, "bytes_per_ns": 0.154},
+      "ebnf":           {"ns_per_iter":  27773, "bytes_per_ns": 0.052},
+      "google_sheets":  {"ns_per_iter":  38635, "bytes_per_ns": 0.193},
+      "json":           {"ns_per_iter":   6907, "bytes_per_ns": 0.077}
+    }
+  },
+  "wall_time_seconds": {
+    "json_monolithic": 77,
+    "css_l4": 29,
+    "google_sheets_monolithic": 13,
+    "bbnf_monolithic": 10,
+    "total": 129
+  }
+}

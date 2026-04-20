@@ -182,9 +182,26 @@ pub fn collect_references(node: BbnfBootstrapNodeView<'_>, refs: &mut Vec<Refere
             collect_refs_from_compound(node, refs);
         }
 
-        // Transparent wrappers — descend into the single inner child.
-        BbnfBootstrapRuleKind::term
-        | BbnfBootstrapRuleKind::rhs
+        // `term` is a polymorphic alt: the eight branches each produce
+        // a different child layout (`literal`, `regex`, `identifier`,
+        // `identifier , ( ... )`, `"(" rhs ")"`, `"[" rhs "]"`,
+        // `"{" rhs "}"`, `"@{" rhs "}"`) but every variant pushes the
+        // same `term` rule compound (variant_idx = 29) — `term_0` /
+        // `term_1` / `term_2` enum names exist on the discriminator
+        // table but the parser never emits those sub-variant indices,
+        // so the runtime rule_kind is always `term`. Descend into
+        // every child: the `identifier` branch self-matches in its
+        // own arm; the leaf branches contribute nothing; the
+        // grouped branches recurse through the inner `rhs` subtree
+        // sandwiched between the bracket literals.
+        BbnfBootstrapRuleKind::term => {
+            for c in node.children() {
+                collect_references(c, refs);
+            }
+        }
+
+        // Single-child transparent wrappers — descend into child(0).
+        BbnfBootstrapRuleKind::rhs
         | BbnfBootstrapRuleKind::grammar_item
         | BbnfBootstrapRuleKind::directive
         | BbnfBootstrapRuleKind::lhs => {
@@ -193,8 +210,12 @@ pub fn collect_references(node: BbnfBootstrapNodeView<'_>, refs: &mut Vec<Refere
             }
         }
 
-        // Grouped: "(" rhs ")" / "[" rhs "]" / "{" rhs "}" / "@{" rhs "}"
-        //   term_2 / value_atom_0 layout: child(0) = open, child(1) = inner, child(2) = close
+        // Grouped: "(" rhs ")" — `term_2` is dead-coded today (the
+        // term branches all collapse to variant_idx = 29 above);
+        // `value_atom_0` is live and uses the open/inner/close child
+        // layout. Kept here so any future emitter that reactivates
+        // `term_2` continues to descend into the body, not the
+        // surrounding bracket leaves.
         BbnfBootstrapRuleKind::term_2 | BbnfBootstrapRuleKind::value_atom_0 => {
             if let Some(inner) = node.child(1) {
                 collect_references(inner, refs);

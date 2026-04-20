@@ -5835,8 +5835,6 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
     > {
-        let __wrap_enter_p = *p as u32;
-        let __wrap_enter_child = builder.mark_children();
         let mut __wrap_chosen_meta: u8 = 0;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
@@ -5885,17 +5883,8 @@ mod __bbnfbootstrap_emit_impl {
                 failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        let __wrap_exit_p = *p as u32;
-        let __wrap_off = builder
-            .push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
-                __wrap_enter_child,
-                __wrap_enter_p,
-                __wrap_exit_p,
-                19u8,
-                __wrap_chosen_meta,
-            );
-        Ok(__wrap_off)
+        let _ = __wrap_chosen_meta;
+        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -9001,8 +8990,6 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
     > {
-        let __wrap_enter_p = *p as u32;
-        let __wrap_enter_child = builder.mark_children();
         let mut __wrap_chosen_meta: u8 = 0;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
@@ -9046,17 +9033,8 @@ mod __bbnfbootstrap_emit_impl {
                 failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        let __wrap_exit_p = *p as u32;
-        let __wrap_off = builder
-            .push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
-                __wrap_enter_child,
-                __wrap_enter_p,
-                __wrap_exit_p,
-                38u8,
-                __wrap_chosen_meta,
-            );
-        Ok(__wrap_off)
+        let _ = __wrap_chosen_meta;
+        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -11529,8 +11507,6 @@ mod __bbnfbootstrap_emit_impl {
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
     > {
-        let __wrap_enter_p = *p as u32;
-        let __wrap_enter_child = builder.mark_children();
         let mut __wrap_chosen_meta: u8 = 0;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
@@ -11620,17 +11596,8 @@ mod __bbnfbootstrap_emit_impl {
                 failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        let __wrap_exit_p = *p as u32;
-        let __wrap_off = builder
-            .push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
-                __wrap_enter_child,
-                __wrap_enter_p,
-                __wrap_exit_p,
-                51u8,
-                __wrap_chosen_meta,
-            );
-        Ok(__wrap_off)
+        let _ = __wrap_chosen_meta;
+        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
     }
     /// AX.W0a.2.a — per-grammar Array-shape parse function
     /// (Shape 2 — direct-Repeat entry-rule list,

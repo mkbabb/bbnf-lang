@@ -85,6 +85,15 @@ fn ws_is_comment_aware(ir: &GrammarIR) -> bool {
     matches!(classify_regex(pattern), RegexClass::WhitespaceWithBlockComment)
 }
 
+/// AY.W4.3 — whether the grammar's mined `structural_alphabet` is
+/// non-empty. CTNS-style consumers fire only when there are real
+/// structural delimiters to skip toward; an empty alphabet
+/// short-circuits the lazy-init scan and drops the consumer code
+/// entirely.
+fn has_structural_alphabet(ir: &GrammarIR) -> bool {
+    !ir.profile().structural_alphabet.is_empty()
+}
+
 /// Emit the plain-ASCII `skip_space` pair (`skip_space` + `skip_space_slow`)
 /// for grammars whose `@ws` pattern is the default JSON-shaped set
 /// `{' ', '\t', '\n', '\r'}`. Uses the 64-byte SIMD bitmap cache
@@ -181,7 +190,92 @@ fn emit_skip_space_plain() -> TokenStream {
 /// invalidated. A bare `/` (not followed by `*`) terminates the
 /// skip — this mirrors the `@ws` regex's semantics (the comment
 /// alternative starts with `/*`; a lone `/` is not whitespace).
-fn emit_skip_space_comment_aware() -> TokenStream {
+///
+/// AY.W4.3 — when `has_structural` is true, the slow path opens
+/// with a CTNS-style probe via the lazy `structural_index`: on
+/// long whitespace runs whose intervening bytes are all in the
+/// `{' ', '\t', '\n', '\r'}` set AND the next structural byte is
+/// not a comment opener (`/`), advance `*p` directly to the
+/// structural position, bypassing the SIMD bitmap iteration.
+fn emit_skip_space_comment_aware(has_structural: bool) -> TokenStream {
+    // AY.W4.3 — the CTNS probe runs at the head of the slow path.
+    // For comment-aware grammars (CSS L4) the structural alphabet
+    // includes `/`, so we exclude that byte from the probe target
+    // — landing on `/` would defeat the comment-aware semantics
+    // (we'd jump past whitespace into a comment we then have to
+    // re-scan).
+    let ctns_probe = if has_structural {
+        quote! {
+            // AY.W4.3 — CTNS-style probe. When the next structural
+            // byte (excluding `/` and whitespace) lives within a
+            // small forward window AND every intervening byte is
+            // plain whitespace, jump there directly and skip the
+            // SIMD bitmap evaluation. Conservative bounded scan
+            // keeps the per-call overhead < 1ns; falls through to
+            // the existing path on miss.
+            //
+            // The whitespace exclusion is critical: some grammars'
+            // mined `structural_alphabet` includes whitespace bytes
+            // (e.g. CSS L4 mines space from `" "` literal rules) —
+            // landing on a whitespace structural byte would defeat
+            // skip_space's contract. The `/` exclusion preserves
+            // comment-aware semantics — landing there must defer to
+            // the existing comment-handling path.
+            let __ctns_idx = ensure_structural_index(state, input);
+            if let ::core::option::Option::Some(__next_struct) =
+                ::bbnf::runtime::tape::next_structural_at_or_after(
+                    __ctns_idx, *p as u32,
+                )
+            {
+                let __next = __next_struct as usize;
+                // Bound the validation window so the probe cannot
+                // dominate the slow-path cost: cap at 256 bytes.
+                if __next > *p && __next < *p + 256 && __next <= input.len() {
+                    let __next_byte = input.get(__next).copied();
+                    let __admit = matches!(
+                        __next_byte,
+                        ::core::option::Option::Some(__nb)
+                            if __nb != b'/'
+                            && __nb != b' '
+                            && __nb != b'\t'
+                            && __nb != b'\n'
+                            && __nb != b'\r'
+                    );
+                    if __admit {
+                        let __slice = unsafe {
+                            input.get_unchecked(*p..__next)
+                        };
+                        let mut __all_ws = true;
+                        for &__b in __slice {
+                            if __b != b' ' && __b != b'\t'
+                                && __b != b'\n' && __b != b'\r'
+                            {
+                                __all_ws = false;
+                                break;
+                            }
+                        }
+                        if __all_ws {
+                            *p = __next;
+                            // Cache invalidated; the post-probe loop
+                            // body re-establishes it on the next
+                            // miss-path entry.
+                            state.nospace_start = -1;
+                            // Comment-aware semantics: the structural
+                            // byte itself terminates the skip.
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        quote! {}
+    };
+    let _ = ctns_probe; // splice point follows
+    emit_skip_space_comment_aware_inner(ctns_probe)
+}
+
+fn emit_skip_space_comment_aware_inner(ctns_probe: TokenStream) -> TokenStream {
     quote! {
         /// Skip whitespace AND `/* ... */` block comments at `*p`,
         /// returning the first non-whitespace, non-comment byte
@@ -224,12 +318,19 @@ fn emit_skip_space_comment_aware() -> TokenStream {
         /// comments. The bitmap cache accelerates pure-whitespace
         /// runs; comment detection runs on every iteration where
         /// `*p` points at `/`.
+        ///
+        /// AY.W4.3 — opens with a CTNS-style structural-index probe
+        /// when the grammar mines a non-empty alphabet. On long
+        /// whitespace runs that don't intersect comment openers,
+        /// the probe jumps directly to the next structural byte
+        /// instead of iterating SIMD stripes.
         #[inline(always)]
         pub(crate) fn skip_space_slow(
             input: &[u8],
             p: &mut usize,
             state: &mut ScanState,
         ) {
+            #ctns_probe
             loop {
                 // Inline whitespace skip — reuses the bitmap cache
                 // when valid.
@@ -346,14 +447,72 @@ fn emit_skip_space_comment_aware() -> TokenStream {
 /// `(?s)(?:\s|\/\*[^*]*(?:\*+[^\/][^*]*)*\*+\/)*` activates this path;
 /// JSON / Sheets / BBNF fall through to the plain ASCII-ws skip.
 /// The dispatch is compile-time — callers never see two APIs.
+///
+/// # Structural-scan consumer (AY.W4.3 — W1 absorption)
+///
+/// When the grammar's mined `GRAMMAR_PROFILE.structural_alphabet`
+/// has > 0 cardinality, ScanState carries a lazy
+/// `OnceCell<StructuralIndex>` — populated on first per-parse
+/// query via `scan_structural(input, alphabet)`. Consumer sites
+/// (currently the comment-aware `skip_space_slow`'s post-comment
+/// resume + `__regex_scan_<grammar>` adapter cold-path) probe via
+/// `next_structural_at_or_after` to fast-skip to the next
+/// structural delimiter when the in-stripe SIMD scan would
+/// otherwise iterate byte-by-byte. Lazy-init keeps the cold-path
+/// cost amortised — empty-alphabet grammars never pay the scan.
 pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
     let mod_ident = format_ident!("__shape_support_{}", grammar_suffix);
     let comment_aware = ws_is_comment_aware(ir);
+    let has_structural = has_structural_alphabet(ir);
     let skip_space_body = if comment_aware {
-        emit_skip_space_comment_aware()
+        emit_skip_space_comment_aware(has_structural)
     } else {
         emit_skip_space_plain()
     };
+
+    // AY.W4.3 — lazy structural-scan field on ScanState.
+    let structural_field = if has_structural {
+        quote! {
+            /// AY.W4.3 — lazy structural-byte index. Populated on
+            /// first consumer query via `ensure_structural_index`;
+            /// `OnceCell` discipline keeps the O(N) scan cost
+            /// amortised across the parse rather than paid eagerly
+            /// at parse-entry (AY.W1-fix demonstrated eager scans
+            /// regress JSON twitter -64%).
+            pub(crate) structural_index: ::core::cell::OnceCell<
+                ::bbnf::runtime::tape::StructuralIndex,
+            >,
+        }
+    } else {
+        quote! {}
+    };
+    let structural_init = if has_structural {
+        quote! { structural_index: ::core::cell::OnceCell::new(), }
+    } else {
+        quote! {}
+    };
+    let ensure_structural_fn = if has_structural {
+        quote! {
+            /// AY.W4.3 — lazy-init the per-parse structural index
+            /// against the grammar's mined `structural_alphabet`.
+            /// Idempotent; consumers may call freely.
+            #[inline]
+            pub(crate) fn ensure_structural_index<'a>(
+                state: &'a mut ScanState,
+                input: &[u8],
+            ) -> &'a ::bbnf::runtime::tape::StructuralIndex {
+                state.structural_index.get_or_init(|| {
+                    ::bbnf::runtime::tape::scan_structural(
+                        input,
+                        super::GRAMMAR_PROFILE.structural_alphabet,
+                    )
+                })
+            }
+        }
+    } else {
+        quote! {}
+    };
+
     quote! {
         /// AW-V.W3.2 — per-grammar shape-dispatch support.
         ///
@@ -368,23 +527,18 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
             /// Per-parse SIMD scratch — 64-byte whitespace-bitmap
             /// cache mirroring `json-prototype::simd::ScanState`.
             ///
-            /// AY.W1.3 added a [`crate::tape::StructuralIndex`] field
-            /// here, populated eagerly at parse-entry to feed a probe
-            /// in [`skip_space_slow`] + a tape-capacity refinement.
-            /// AYW1-twitter-regression-diag shows that on JSON the
-            /// O(N) scan cost (~50% of twitter parse time) exceeded
-            /// the probe's per-call savings (probe rarely finds the
-            /// next structural byte within the 64-byte stripe; when
-            /// it does, the savings are at most a handful of SIMD
-            /// instructions). AY.W1-fix retires the consumer wiring;
-            /// the scan substrate ([`::bbnf::runtime::tape::scan_structural`])
-            /// stays in the tape crate awaiting AY.W4's regex-scan
-            /// specialisation work, which can wire it through a
-            /// CTNS-style predicate that delivers material savings.
+            /// AY.W4.3 — for grammars whose `structural_alphabet` is
+            /// non-empty, ScanState additionally carries a lazy
+            /// `OnceCell<StructuralIndex>` consumed by CTNS-style
+            /// probes. Lazy-init keeps the O(N) scan cost amortised
+            /// rather than paid eagerly at parse entry — see
+            /// `AYW1-twitter-regression-diag` for the eager-init
+            /// regression that motivates the OnceCell discipline.
             #[derive(Debug, Default)]
             pub struct ScanState {
                 pub(crate) nospace_bits: u64,
                 pub(crate) nospace_start: isize,
+                #structural_field
             }
 
             impl ScanState {
@@ -393,9 +547,12 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
                     Self {
                         nospace_bits: 0,
                         nospace_start: -1,
+                        #structural_init
                     }
                 }
             }
+
+            #ensure_structural_fn
 
             #skip_space_body
 

@@ -70,7 +70,15 @@ use parse_that::utils::get_cargo_root_path;
 // DTA-table patterns as dispatch arms, so HRegex calls into the adapter
 // fell through to `None` and parses failed at offset 0 with `Syntax {
 // rule: None }` (CSV `textdata = /[^,"\r\n]+/` regression).
-const BBNF_SCHEMA_VERSION: u64 = 14;
+// AY.W4.3: bumped from 14 — `__regex_scan_<grammar>` adapter adds
+// byte-class first-byte admission LUT + LAST-byte set narrowing table
+// + module-scope hoisted DFA byte-class / transition / accept tables
+// (patterns >= 6 states). ScanState gains `structural_index:
+// OnceCell<StructuralIndex>` for grammars with a mined alphabet;
+// comment-aware `skip_space_slow` opens with a CTNS probe via
+// `ensure_structural_index`. Pre-W4.3 cached codegen references the
+// pre-probe ScanState and the inline-match-ladder DFA body shape.
+const BBNF_SCHEMA_VERSION: u64 = 15;
 
 /// Recursively collect all grammar file contents for hashing.
 ///

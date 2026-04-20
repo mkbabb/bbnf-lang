@@ -1,66 +1,90 @@
 # Tranche BA — Beyond Parity: Exceedance and Cross-Grammar Scale-Out
 
-BA begins after AY closes near parity.
-
-AY's job is one-path near-parity closure on the canonical packed
-substrate. BA's job is to push beyond parity and broaden the same
-generalized hybrid architecture across grammars and machine scales.
-
-BA is explicitly a performance tranche, not a tooling tranche and not a
-compile-time tranche.
+BA begins after AY closes near parity. AY establishes the canonical
+runtime path; BA exploits it. This tranche is for exceedance: pushing
+past sonic-rs-class parity on selected JSON fixtures, broadening the
+same grammar-derived hybrid architecture across CSS, Sheets, and BBNF,
+and deploying larger-scale accelerants such as stronger global
+optimization, structural-side leverage, and optional scale-out
+mechanisms that preserve the one-substrate model.
 
 ## Architectural thesis
 
 1. **BA starts from a correct substrate.** It does not redefine the
-   runtime contract; it exploits it.
-
-2. **BA is where exceedance lives.** If bbnf is to beat sonic-rs on
-   some JSON fixtures, widen CSS leads, recover Sheets/BBNF hot paths,
-   or scale with document-parallel/JIT/specialized dispatch, that work
-   belongs here.
-
-3. **BA stays grammar-derived.** The same generality invariant as AY
-   applies: no grammar-name hot paths, no special JSON-only product
-   parser, no abandoning BBNF as the semantic source.
-
-## Scope
-
-1. **A0 — Global optimizer second pass.** Promote the limited AY
-   objective sharing into a fuller second extraction/optimization pass
-   spanning grammar extraction, regex extraction, projection, structural
-   side information, and specialization decisions.
-
-2. **A1 — Cross-grammar hybrid expansion.** Carry the AY substrate and
-   specialization discipline into CSS, Sheets, and BBNF hot paths where
-   grammar facts admit it.
-
-3. **A2 — Structural-side leverage at scale.** Multi-key/object
-   dispatch, bounded regex where facts admit it, structural index
-   refinements, and other same-path accelerants.
-
-4. **A3 — Beyond-parity scale-out.** Document-parallel parsing, opt-in
-   JIT/specialization, and other post-parity throughput multipliers that
-   preserve the one-substrate model.
-
-5. **A4 — FINAL.** Close on exceedance, scale-out, and cross-grammar
-   broadening.
+   runtime contract landed in AY.
+2. **BA is where exceedance lives.** Any attempt to beat peers or scale
+   materially beyond AY belongs here, not back in AY.
+3. **Generality is preserved.** Every exceedance mechanism remains
+   grammar-derived and BBNF-led.
+4. **Same-path accelerants only.** BA may add stronger dispatch,
+   specialization, and scale-out, but not alternate parsers.
 
 ## Invariants
 
-1. **No new runtime substrate.** BA exploits AY's substrate.
-2. **Performance-only concern.** Replay/recovery/incremental/debug stay
-   in AZ; compile/build/tooling stay in BB.
-3. **Generality preserved.** Every exceedance mechanism remains
-   grammar-derived.
-4. **Same-path accelerants only.** No alternate parser for “fast mode”.
+1. No new runtime substrate.
+2. No replay/debug/tooling concern creep from AZ.
+3. No compile/build/tooling concern creep from BB.
+4. No grammar-name fast paths.
+5. Exceedance claims close on measured truth, not isolated probe wins.
 
-## Closing direction
+## Operational posture
 
-BA is the tranche where the generalized hybrid architecture tries to
-exceed peers rather than merely match them:
+1. BA only opens once AY has closed on the declared near-parity gates.
+2. Every accelerant proves consumer benefit on the canonical path.
+3. Cross-grammar expansion must show the same mechanism surviving on
+   more than one grammar family whenever the facts permit it.
+4. Optional specialization or scale-out stays opt-in unless the default
+   path proves it can absorb the cost cleanly.
+5. BA retirements are explicit: dead or weak accelerants are deleted,
+   not left dormant.
 
-- beat or match sonic-rs on more JSON fixtures,
-- preserve or extend CSS advantages,
-- recover Sheets/BBNF where the same mechanisms generalize,
-- exploit multi-core and optional specialization only after the base
-  path is correct.
+## Wave summary
+
+| Wave | Spec | Headline | Opens after |
+|---|---|---|---|
+| **W0** | [waves/W0.md](waves/W0.md) | Shared-cost optimizer second pass | AY close |
+| **W1** | [waves/W1.md](waves/W1.md) | Cross-grammar hybrid expansion | W0 |
+| **W2** | [waves/W2.md](waves/W2.md) | Structural-side leverage at scale | W1 |
+| **W3** | [waves/W3.md](waves/W3.md) | Beyond-parity scale-out and optional specialization | W2 |
+| **W4** | [waves/W4.md](waves/W4.md) | FINAL and exceedance close | W3 |
+
+## BA handoff contract
+
+BA does not close until all of the following are true:
+
+1. The shared-cost optimizer meaningfully coordinates grammar
+   extraction, regex extraction, projection, and specialization
+   decisions on the same facts.
+2. At least one beyond-AY accelerant proves out on the canonical path
+   with a committed artefact trail.
+3. Cross-grammar expansion demonstrates that the hybrid architecture is
+   not JSON-only.
+4. Any optional specialization or scale-out feature preserves the
+   one-substrate invariant and has a clear activation contract.
+
+## Defensible floor
+
+BA's defensible floor is:
+
+1. A real shared-cost second optimization pass.
+2. At least one cross-grammar hot-path broadening win beyond AY.
+3. At least one structural-side or specialization-based exceedance win
+   with hard runtime evidence.
+
+Anything less is merely AY maintenance, not a new tranche.
+
+## Post-tranche review candidates
+
+Decision at W4 close, not mid-wave:
+
+- Which optional specializations deserve default activation.
+- Whether any scale-out mechanism should remain opt-in for size or
+  compile-time reasons.
+- Whether any grammar families still need dedicated fact extraction
+  improvements before a later performance tranche.
+
+## Indefatigability
+
+When BA closes correctly, bbnf has moved from parity closure to
+genuine exceedance work without forfeiting the one-parser, one-substrate,
+grammar-derived architecture.

@@ -1,119 +1,97 @@
 # Tranche AZ — Replay, Recovery, Incremental, and Debug UX on the AY Substrate
 
-AZ is the tooling tranche over the AY-close canonical substrate.
-
-AY's job is near-parity hot-path closure. AZ's job is everything that
-must remain on the same substrate but is not required to hit that
-parity bar:
-
-- replay,
-- recovery,
-- incremental reparse,
-- parse-step/debug UX,
-- richer provenance and navigation side data,
-- test-case minimisation and inspection tooling.
-
-AZ opens only after AY closes on one parser and one canonical packed
-runtime substrate.
+AZ is the tooling tranche over AY's close substrate. AY's job is near
+parity on the canonical runtime path; AZ's job is to enrich that same
+path with replay, recovery, incremental reparse, and debug UX without
+reopening architectural duality. AZ therefore treats the AY substrate
+as fixed runtime truth and layers provenance, decision logging,
+snapshotting, recovery, and inspection on top of it with tightly
+bounded feature-off cost.
 
 ## Architectural thesis
 
-Four propositions govern AZ.
-
-1. **AZ builds on AY's substrate; it does not replace it.** Replay,
-   recovery, incremental, and debug are properties of the AY substrate,
-   not alternate parsers or alternate runtime outputs.
-
-2. **Every AZ feature stays one-path.** Feature-on and feature-off may
-   add metadata, logging, or side tables, but they may not create a new
-   parser architecture.
-
-3. **Richer provenance belongs here.** Any side metadata or substrate
-   refinement that is not parity-critical for AY but is needed for
-   replay/recovery/incremental/debug lands in AZ.
-
-4. **Feature-off regression is tightly bounded.** AZ is valuable for
-   tooling, not for perturbing the hot path. Its feature-off path must
-   remain close to AY close.
+1. **AZ builds on AY; it does not replace it.** Replay, recovery,
+   incremental, and debug are properties of the AY substrate.
+2. **Every AZ feature stays one-path.** Metadata and logs may be added;
+   alternate parsers and alternate runtime outputs may not.
+3. **Richer provenance belongs here.** AY carries only the minimum
+   provenance needed not to block AZ; AZ owns the richer surfaces.
+4. **Feature-off cost stays bounded.** Tooling value must not come from
+   perturbing the default AY hot path.
 
 ## Invariants
 
-1. **No second parser.** Replay/resume/recovery operate by re-entering
-   the same AY shape-emitted parser architecture.
+1. No second parser or replay-only runtime path.
+2. No DTA-style state resurrection.
+3. Every metadata addition ships with a same-wave consumer.
+4. Feature-off regression versus AY close stays within the declared
+   budget.
+5. Debug truth comes from AY substrate spans, nodes, and provenance.
 
-2. **No legacy DTA state resurrection.** No `dispatch_one`, no
-   `DtaSnapshot`, no DTA-style interpreter runtime.
+## Operational posture
 
-3. **Substrate with consumer.** Every snapshot/log/side-table addition
-   ships with a production consumer and an end-to-end test.
+1. Every AZ wave proves substrate identity, not merely functional
+   similarity, against the cold-parse AY path.
+2. Feature-gated logging and metadata are measured both on and off at
+   each wave boundary.
+3. Recovery and incremental work reopen no grammar-name routing and no
+   hand-built side parsers.
+4. Every debugging or inspection tool consumes production provenance or
+   replay surfaces, not bespoke trace models.
+5. Any AZ refinement that materially improves throughput rather than
+   tooling ergonomics routes to BA at tranche close.
 
-4. **Feature-off first.** Default-feature regression versus AY close
-   must stay within the declared budget.
+## Wave summary
 
-5. **Debug truth comes from the substrate.** Debug tooling reads stable
-   node/span/provenance data from the AY substrate, not a parallel trace
-   model.
+| Wave | Spec | Headline | Opens after |
+|---|---|---|---|
+| **W0** | [waves/W0.md](waves/W0.md) | Provenance side metadata on the AY substrate | AY close |
+| **W1** | [waves/W1.md](waves/W1.md) | Decision log and substrate-identical replay | W0 |
+| **W2** | [waves/W2.md](waves/W2.md) | Snapshot and resume at stable shape boundaries | W1 |
+| **W3** | [waves/W3.md](waves/W3.md) | Edit-local incremental reparse and substrate splice | W2 |
+| **W4** | [waves/W4.md](waves/W4.md) | Recovery semantics and sync-point resume | W3 |
+| **W5** | [waves/W5.md](waves/W5.md) | Debug, inspect, and minimise tooling on the same surfaces | W4 |
+| **W6** | [waves/W6.md](waves/W6.md) | FINAL and bounded-cost closure | W5 |
 
-## Scope
+## AZ handoff contract
 
-1. **Z0 — Provenance side metadata.** Extend the AY substrate with the
-   minimum stable node/rule/span/shape provenance needed for replay,
-   resume, and debug inspection.
+AZ does not close until all of the following are true:
 
-2. **Z1 — Decision log + replay.** Record shape-emitter decisions as a
-   feature-gated property and provide a replay path that re-enters the
-   same parser against that log.
+1. Replay, resume, incremental, and recovery all operate on AY's
+   substrate with no alternate parser architecture.
+2. Feature-off regression stays within `<= 5%` of AY close.
+3. Debug and minimise tooling consume the same provenance and replay
+   surfaces emitted by production code.
+4. Recovery semantics are grammar-derived and do not introduce
+   grammar-name branching.
+5. The close ledger identifies any throughput-oriented lessons that
+   belong in BA rather than leaving them mixed into tooling work.
 
-3. **Z2 — Snapshot/resume.** Capture resumable parser/substrate state at
-   stable shape boundaries and emit `parse_resume_<grammar>` entrypoints.
+## Defensible floor
 
-4. **Z3 — Incremental reparse.** Localize edits against substrate spans,
-   resume from stable boundaries, and splice the same canonical
-   substrate.
+AZ's defensible floor is:
 
-5. **Z4 — Recovery.** Structural-default recovery plus grammar-declared
-   override semantics where needed.
+1. Stable provenance and decision logging.
+2. Replay and resume that reproduce substrate-identical suffixes.
+3. Incremental splice correctness on canonical edit suites.
+4. Recovery that resumes downstream parse at declared sync points.
+5. Feature-off cost bounded within the declared budget.
 
-6. **Z5 — Debug/inspect/minimise tooling.** CLI and test tooling over
-   the same logs/provenance substrate.
+Anything less is an incomplete tooling tranche.
 
-7. **Z6 — FINAL.** Close on tooling correctness and bounded feature-off
-   cost.
+## Post-tranche review candidates
 
-## Wave schedule
+Decision at W6 close, not mid-wave:
 
-| Wave | Scope | Agents | Hard gate |
-|------|-------|--------|-----------|
-| **Z0** | Provenance side metadata on the AY substrate | 3 parallel | required provenance present with feature-off regression `<= 3%` |
-| **Z1** | Decision log + replay | 3 parallel | replay reproduces substrate-identical output on corpus fixtures |
-| **Z2** | Snapshot/resume | 2 parallel | `parse_resume_<grammar>` reproduces cold-parse suffix results at stable boundaries |
-| **Z3** | Incremental reparse | 2 parallel | edit-local incremental reparse is substrate-identical to cold reparse on canonical edit suites |
-| **Z4** | Recovery | 2 parallel | malformed corpus recovers to declared sync points and resumes downstream parse |
-| **Z5** | Debug/inspect/minimise | 3 parallel | tooling emits stable traces/minimised repros over the same substrate |
-| **Z6** | FINAL | 1 serial | default-feature regression `<= 5%` vs AY close; tooling harnesses green |
+- Whether any provenance field should migrate from substrate proper to
+  an optional side table.
+- Whether incremental splice granularity should be widened or narrowed
+  before any future editor-facing tranche.
+- Whether any replay or debug artefact ought to become a standing CI
+  harness rather than a tooling-only surface.
 
-## Refinements shifted from AY into AZ
+## Indefatigability
 
-The following belong in AZ rather than AY because they are not required
-for AY's near-parity closure:
-
-- richer provenance side tables beyond AY's minimum hot-path needs,
-- snapshot-friendly metadata and resumable shape-boundary bookkeeping,
-- replay decision logs and inspector/readback tooling,
-- debug-oriented navigation metadata and trace presentation,
-- recovery sync metadata and `@recover` semantics refinement,
-- ergonomic inspection/minimisation workflows.
-
-AY provides the canonical substrate. AZ enriches it for developer and
-editor tooling.
-
-## Hard gates
-
-AZ closes only if:
-
-1. replay, resume, incremental, and recovery all operate on the AY
-   substrate with no alternate parser path,
-2. feature-off regression stays within `<= 5%` of AY close,
-3. debug/inspect tools consume the same provenance/logging surfaces the
-   parser emits,
-4. no DTA-style runtime substrate or state model reappears.
+When AZ closes correctly, bbnf still has one parser and one substrate,
+but now also has truthful replay, recovery, incremental, and debug
+tooling that reads the same runtime shape rather than shadowing it.

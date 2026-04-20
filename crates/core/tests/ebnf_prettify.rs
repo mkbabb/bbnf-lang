@@ -27,20 +27,12 @@ fn prettify(input: &str) -> Option<String> {
 
 // ── Parsing ──────────────────────────────────────────────────────────
 
-// AY.W0.2 deferred — `EbnfParser::parse` fails at offset 0 because the
-// EBNF `terminal` rule's `character - '"'` (Minus) inside a Keyword-
-// classified Seq branch hits the catch-all stub at
-// `crates/core/src/backend/rust/emitter/shapes/inline.rs:633-639`
-// (`return Err(())`). See `docs/tranches/AY/audit/AYW0-ebnf-diag.md`
-// for full diagnosis + recommended landing (AY.W2 codegen extension).
 #[test]
-#[ignore = "AY.W0.2 deferred — see audit/AYW0-ebnf-diag.md"]
 fn parse_single_rule() {
     parse_grammar(r#"digit = "0" | "1" | "2" ;"#);
 }
 
 #[test]
-#[ignore = "AY.W0.2 deferred — see audit/AYW0-ebnf-diag.md"]
 fn parse_multi_rule() {
     parse_grammar("digit = \"0\" | \"1\" ;\nnumber = digit , { digit } ;");
 }

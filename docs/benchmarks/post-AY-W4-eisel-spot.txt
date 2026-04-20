@@ -1,0 +1,68 @@
+# AY.W4.2 — Eisel-Lemire direct-to-column spot bench (canada)
+
+## Hardware: aarch64 (Apple Silicon, M-series)
+## Profile: release (lto=thin, codegen-units=1)
+## Allocator: mimalloc (#[global_allocator] in bench harness)
+
+## Methodology
+Cold per-parse; 3 fresh runs each, after `cargo clean -p tape -p bbnf -p gorgeous` and
+`rm -rf target/.bbnf-cache`. Re-build chain is identical for both A/B halves.
+
+## Pre-W4.2 baseline (HEAD = b708e955)
+Run 1: 7,555,312 ns/iter — 297 MB/s
+Run 2: 7,169,618 ns/iter — 313 MB/s
+Run 3: 7,759,800 ns/iter — 290 MB/s
+Range: 290–313 MB/s (variance ±10%)
+
+## Post-W4.2 (HEAD = 7f8d4d90 — this wave)
+Run 1: 7,665,191 ns/iter — 293 MB/s
+Run 2: 7,258,599 ns/iter — 310 MB/s
+Run 3: 7,321,268 ns/iter — 307 MB/s
+Range: 293–310 MB/s (variance ±6%)
+
+## Delta
+Within run-to-run variance. No measurable change.
+
+## Architectural finding
+The W4.2 spec narrative — "bypass arena wide-slot write" — assumed the
+existing `PayloadData::WideScalar` path went through `pay_agg` (the
+unified arena). It did not: `WideScalar` already routed to `pay_wide`
+(a dedicated `Vec<u64>` column). The change adds a SECOND f64-only
+column (`pay_f64`) and a discriminator bit (`PAYLOAD_F64_DIRECT_BIT`)
+to route number leaves through it instead of the shared `pay_wide`.
+The micro-arch difference is one extra `OR` in `extra` and a `Vec::push`
+on a different but identically-shaped column — no load/store reduction.
+
+The substrate is in place per W4 wave plan:
+- `Columns::pay_f64: Vec<u64>` field + `pay_f64_at(idx)` accessor.
+- `TapeBuilder::push_leaf_with_f64_direct(kind, span_lo, span_hi,
+  variant_idx, f64_bits)` entry.
+- `TapeRec::PAYLOAD_F64_DIRECT_BIT` (extra bit 4).
+- `Tape::payload_wide<T>` branches on `payload_f64_direct()` first.
+- Number-shape emitter (`emit_parse_number`) routes through the new
+  direct entry.
+
+The expected +15% gain hinges on the `pay_wide` column carrying
+contention from non-numeric 8-byte writes (`u64`/`i64`/packed `Span`).
+On canada (pure JSON numbers + structural compounds), `pay_wide` was
+already homogeneous f64 — separating it into `pay_f64` did not change
+the locality.
+
+## Hard-gate readout
+- pay_f64 column added to Columns: PASS
+- push_leaf_with_f64_direct added to TapeBuilder: PASS
+- number-shape emitter routes via new direct path: PASS
+- Bootstrap regen cycle-1 = cycle-2: PASS (diff empty)
+- cargo test --workspace --profile ax-iter --no-fail-fast: PASS (0 failed)
+- canada bench delta vs W1-fix doc-cited 324 MB/s: 297-310 MB/s on
+  this machine; baseline re-measure on same machine = 290-313 MB/s,
+  i.e. machine-state delta (not a real regression).
+
+## Next-wave seeds
+The substrate is ready for a follow-up where `pay_f64`'s separation
+unlocks SIMD-summed reductions on numeric-only payload streams without
+filtering the heterogeneous `pay_wide` column. AY.W4 reductions
+(`SumF64`, `MinF64`, `MaxF64`) currently go through `PayWideF64`
+reinterpret; switching them to `PayF64` (column tag for `pay_f64`)
+admits dense `vaddq_f64`/`_mm256_add_pd` lanes without the
+`Vec<u64> → &[f64]` reinterpret cast.

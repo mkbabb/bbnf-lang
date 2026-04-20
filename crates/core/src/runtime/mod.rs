@@ -24,7 +24,7 @@ pub mod path;
 
 pub use error::ParseErr;
 pub use handle::{CompoundHandle, StringHandle};
-pub use parsed::{Parsed, Root};
+pub use parsed::{Parsed, PathQuery, Root, ValueRoot};
 pub use path::{IntoPathSegment, Path, PathSegment};
 
 /// Re-export the full `tape` public surface from `bbnf::runtime`.

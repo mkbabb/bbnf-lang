@@ -38,6 +38,8 @@ use std::marker::PhantomData;
 
 use tape::{Tape, TapeOffset};
 
+use crate::runtime::path::Path;
+
 /// Binding between a grammar marker type and the root view it
 /// produces over a parsed tape.
 ///
@@ -134,5 +136,80 @@ impl<'p, R: Root> Parsed<'p, R> {
     #[inline]
     pub fn view(&self) -> R::View<'_> {
         R::make_view(&self.tape, self.input, self.root_offset)
+    }
+}
+
+/// Grammars that can materialise their full parsed tree into an
+/// eager `<Grammar>Value` enum.
+///
+/// AY.W3a substrate; the emitted impl lands in AY.W3b. The contract:
+/// `Value<'p>` borrows from the tape / input for lifetime `'p`, and
+/// `view_to_value` is the pure transformation `View<'p> ->
+/// Value<'p>` — no new allocation beyond the Value enum itself.
+///
+/// A10 §d correction: `ValueRoot` is supplied directly on the
+/// grammar marker; there is no user-facing `ToValue` trait bound
+/// layered on top. Callers reach `to_value` exclusively through
+/// [`Parsed::to_value`].
+pub trait ValueRoot: Root {
+    /// The grammar's root value type, parameterised by the lifetime
+    /// of the borrow on the owning [`Parsed`]. Mirrors the shape of
+    /// [`Root::View`] — same lifetime, same `Self: 'p` bound.
+    type Value<'p>
+    where
+        Self: 'p;
+
+    /// Eagerly materialise a root view into the grammar's value
+    /// enum. Emitted per-grammar by AY.W3b; dispatches through the
+    /// per-shape inline fns (`materialize_object_*`, etc.) to match
+    /// the json-prototype speed ceiling.
+    fn view_to_value<'p>(view: Self::View<'p>) -> Self::Value<'p>
+    where
+        Self: 'p;
+}
+
+/// Grammars that support lazy `get_by_path` queries yielding a
+/// single leaf of type `T`.
+///
+/// `T` is the leaf shape the caller wants — `&str`, `f64`, `bool`,
+/// or the grammar's own `Value<'p>` enum. The emitted impl walks
+/// the tape from the root, following [`PathSegment`](crate::runtime::PathSegment)
+/// steps without materialising intermediate compounds, and returns
+/// `None` if any step misses.
+pub trait PathQuery<T>: Root {
+    /// Resolve `path` against `view`, yielding the extracted leaf
+    /// or `None` if the path does not match.
+    fn query<'p>(view: Self::View<'p>, path: Path<'_>) -> Option<T>
+    where
+        Self: 'p;
+}
+
+impl<'p, R> Parsed<'p, R> {
+    /// Eagerly materialise the parsed tree into the grammar's
+    /// `<Grammar>Value` enum. Implemented per-grammar in AY.W3b;
+    /// dispatches through `ValueRoot::view_to_value`.
+    ///
+    /// The returned value borrows from `self` — specifically from
+    /// the tape and the input slice — for the duration of the
+    /// re-borrow on `&self`.
+    #[inline]
+    pub fn to_value(&self) -> R::Value<'_>
+    where
+        R: ValueRoot,
+    {
+        R::view_to_value(self.view())
+    }
+
+    /// Resolve a lazy path query against the parsed tree. Returns
+    /// `None` if any segment of `path` does not match.
+    ///
+    /// Implemented per-grammar in AY.W3b for the common leaf types
+    /// (`&str`, `f64`, `bool`, `<Grammar>Value<'p>`).
+    #[inline]
+    pub fn get<T>(&self, path: Path<'_>) -> Option<T>
+    where
+        R: PathQuery<T>,
+    {
+        R::query(self.view(), path)
     }
 }

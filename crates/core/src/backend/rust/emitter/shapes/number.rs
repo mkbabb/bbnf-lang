@@ -9,11 +9,14 @@
 //! feeds them to `parse_that::parsers::eisel_lemire::compute_f64`,
 //! falls back to `f64::from_str` on overflow / ambiguous rounding.
 //!
-//! The emitted function pushes a `TapeKind::Regex` leaf carrying the
-//! `f64` payload via [`TapeBuilder::push_leaf_with`] with
-//! [`PayloadData::WideScalar`]. The `variant_idx` on the leaf is the
-//! rule's low-8-bit id; this matches the AW-IV walker's emit shape so
-//! the bench's `tape.payload_f64(rec)` accessor resolves.
+//! The emitted function pushes a `TapeKind::Span` leaf carrying the
+//! `f64` payload via [`TapeBuilder::push_leaf_with_f64_direct`]
+//! (AY.W4.2). The Eisel-Lemire-decoded bits land in the dedicated
+//! [`Columns::pay_f64`] direct-write column, bypassing the
+//! generic `PayloadData::WideScalar` → `pay_wide` round-trip; the
+//! leaf carries [`TapeRec::PAYLOAD_F64_DIRECT_BIT`] so
+//! `tape.payload_f64(rec)` projects through the dense column directly.
+//! The `variant_idx` on the leaf is the rule's low-8-bit id.
 
 use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
@@ -157,17 +160,17 @@ pub fn emit_parse_number(
                 }
             };
 
-            // Span kind + WideScalar payload matches the existing
-            // walker's JSON `number` emission shape; the bench's
-            // `tape.payload_f64(rec)` reader consumes the 8-byte
-            // arena-backed slot via `PAYLOAD_IN_ARENA_BIT`.
-            let off = builder.push_leaf_with(
+            // AY.W4.2 — direct-column f64 emit. Eisel-Lemire bits
+            // land straight into `Columns::pay_f64`; the leaf carries
+            // `TapeRec::PAYLOAD_F64_DIRECT_BIT` so the reader projects
+            // via `f64::from_bits(cols.pay_f64_at(child_off))` without
+            // the `pay_wide` / arena round-trip.
+            let off = builder.push_leaf_with_f64_direct(
                 ::bbnf::runtime::tape::TapeKind::Span,
                 start as u32,
                 end as u32,
                 #variant_idx,
-                0,
-                ::bbnf::runtime::tape::PayloadData::WideScalar(value.to_bits()),
+                value.to_bits(),
             );
             Ok(off)
         }

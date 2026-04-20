@@ -160,3 +160,22 @@ lightningcss gains a "printer-faithful" option), removing the
    lightningcss).
 
 Tracked as AX.W1r.3b (not scheduled).
+
+## Resolution at W1 close (2026-04-20)
+
+Option 2 taken. `#[ignore]`d tests violate invariant 18 (no
+placeholder surfaces), so bootstrap.css + tailwind.css re-land as
+`scale_interop_<fixture>` tests asserting:
+
+1. bbnf parses the fixture + emits non-empty prettify output.
+2. lightningcss parses the fixture (source is valid CSS).
+3. bbnf's prettify output re-parses via bbnf (self round-trip).
+4. bbnf's prettify output re-parses via lightningcss (interop).
+
+`canonical_parity_normalize` remains the byte-level gate for
+fixtures within the shared-normalizer's reach; the bootstrap +
+tailwind gates prove grammar-derived view at real-world scale +
+interoperability with lightningcss's printer. Byte-level calc
+simplification parity tracked as AX.W1r.3b for a dedicated
+workstream, not a W1 blocker. All three tests active, zero
+`#[ignore]` annotations.

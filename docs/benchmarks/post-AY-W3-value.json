@@ -1,0 +1,51 @@
+{
+  "commit": "14cc3fdc",
+  "profile": "release",
+  "allocator": "mimalloc",
+  "date_utc": "2026-04-20T14:58:00Z",
+  "notes": "AY.W3c Value-API bench matrix. Lazy lane (twitter x 2) + eager lane (5 fixtures x 2 = 10). BEAT-sonic ratio at twitter eager = 3.63x (W3 target <= 1.0, AY close target <= 0.85). W3c lands the measurement surface; W4 (SIMD unescape + Eisel-Lemire direct-to-column) is the BEAT-sonic lever. Single cargo bench run, json_monolithic_value bench binary.",
+  "entries": {
+    "lazy": {
+      "bbnf_get_twitter":  {"ns_per_iter":   859364, "bytes_per_ns": 0.734},
+      "sonic_get_twitter": {"ns_per_iter":      291, "bytes_per_ns": 2170.151}
+    },
+    "eager": {
+      "bbnf_value_data_s":   {"ns_per_iter":    49847, "bytes_per_ns": 0.711},
+      "bbnf_value_twitter":  {"ns_per_iter":   864403, "bytes_per_ns": 0.730},
+      "bbnf_value_citm":     {"ns_per_iter":  2317562, "bytes_per_ns": 0.745},
+      "bbnf_value_canada":   {"ns_per_iter":  6326543, "bytes_per_ns": 0.355},
+      "bbnf_value_data_xl":  {"ns_per_iter": 46892199, "bytes_per_ns": 0.453},
+      "sonic_value_data_s":  {"ns_per_iter":    14374, "bytes_per_ns": 2.469},
+      "sonic_value_twitter": {"ns_per_iter":   237966, "bytes_per_ns": 2.653},
+      "sonic_value_citm":    {"ns_per_iter":   561466, "bytes_per_ns": 3.076},
+      "sonic_value_canada":  {"ns_per_iter":  1457125, "bytes_per_ns": 1.544},
+      "sonic_value_data_xl": {"ns_per_iter": 14270391, "bytes_per_ns": 1.491}
+    },
+    "ratios": {
+      "twitter_eager": {"bbnf_ns":   864403, "sonic_ns":   237966, "ratio": 3.633, "target_w3": 1.00, "target_w7": 0.85},
+      "citm_eager":    {"bbnf_ns":  2317562, "sonic_ns":   561466, "ratio": 4.128, "target_w3": 1.00, "target_w7": 0.85},
+      "canada_eager":  {"bbnf_ns":  6326543, "sonic_ns":  1457125, "ratio": 4.342, "target_w3": 1.00, "target_w7": 0.85},
+      "data_s_eager":  {"bbnf_ns":    49847, "sonic_ns":    14374, "ratio": 3.469, "target_w3": 1.00, "target_w7": 0.85},
+      "data_xl_eager": {"bbnf_ns": 46892199, "sonic_ns": 14270391, "ratio": 3.286, "target_w3": 1.00, "target_w7": 0.85},
+      "twitter_lazy":  {"bbnf_ns":   859364, "sonic_ns":      291, "ratio": 2953.12, "note": "bbnf parses full tape; sonic's get scans bytes only. Lazy-lane divergence expected until W5+ introduces a true bail-out parse."}
+    },
+    "beat_sonic_sanity_test": {
+      "measurement": "release single-run, 10 cold iters, Instant::elapsed",
+      "bbnf_ns_per_iter": 894379,
+      "sonic_ns_per_iter": 246062,
+      "ratio": 3.63,
+      "gate": "gross-regression floor <= 5.0x (AY.W7 FINAL enforces <= 0.85x via cargo bench)",
+      "status": "pass"
+    }
+  },
+  "wall_time_seconds": {
+    "json_monolithic_value": 320
+  },
+  "hardware": {
+    "cpu": "Apple M-series (Darwin 25.4.0)",
+    "allocator": "mimalloc",
+    "profile": "release (opt-level 3, lto=fat)"
+  },
+  "bench_invocation": "cargo bench -p bbnf --bench json_monolithic_value --profile release",
+  "entries_count": 12
+}

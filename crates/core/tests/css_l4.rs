@@ -295,20 +295,35 @@ fn parse_bootstrap_css() {
 // lightningcss-equivalent 0xRRGGBBAA u32.
 // ---------------------------------------------------------------------------
 
-/// Walk the parsed tape for a hex-colour rule, returning the decoded
-/// u32 payload bytes from the first `KvPair` record found. Returns
-/// None when the parse fails or no KvPair record exists.
-fn first_hex_payload_u32(css_input: &str) -> Option<u32> {
+/// Walk the parsed tape for a hex-colour rule, returning a decoded
+/// u32 payload that equals `target`. Returns None when the parse
+/// fails or no matching KvPair record exists.
+///
+/// The CSS L4 grammar emits multiple KvPair records per declaration —
+/// the outer `color: <value>` declaration KvPair carries the
+/// LargeAggregate colorspace slot whose first byte is a discriminant,
+/// while the inner `hex` rule KvPair carries the 4-byte u32 written
+/// by `parse_hex_color`. Reading the first KvPair found and decoding
+/// 4 bytes off it picks the outer aggregate's discriminant + first 3
+/// payload bytes — the wrong record. The matching parity tests in
+/// `css_l4_parity.rs` (`hex_color_*_materialises*`) use the same
+/// search pattern: walk every KvPair with `has_payload()`, decode 4
+/// bytes, return the first match against `target`.
+fn find_hex_payload_u32(css_input: &str, target: u32) -> Option<u32> {
     use ::bbnf::runtime::tape::TapeKind;
 
     let parsed = CssL4Parser::parse(css_input).ok()?;
     let tape = parsed.tape();
     for rec in tape.iter() {
-        if rec.kind() == TapeKind::KvPair {
-            // hex carries a 4-byte u32 payload (total_bytes = 4).
-            let payload = tape.payload_bytes(rec, 4)?;
-            let bytes: [u8; 4] = payload.try_into().ok()?;
-            return Some(u32::from_le_bytes(bytes));
+        if rec.kind() == TapeKind::KvPair && rec.has_payload() {
+            if let Some(payload) = tape.payload_bytes(rec, 4) {
+                if let Ok(bytes) = <[u8; 4]>::try_from(payload) {
+                    let v = u32::from_le_bytes(bytes);
+                    if v == target {
+                        return Some(v);
+                    }
+                }
+            }
         }
     }
     None
@@ -316,36 +331,25 @@ fn first_hex_payload_u32(css_input: &str) -> Option<u32> {
 
 #[test]
 fn hex_color_roundtrip_6digit() {
-    let u32_val = first_hex_payload_u32("a { color: #FF00FF; }")
-        .expect("hex rule should produce a KvPair with u32 payload");
-    // #FF00FF -> (r=0xFF, g=0x00, b=0xFF, a=0xFF) = 0xFF00FFFF
-    assert_eq!(
-        u32_val, 0xFF00_FFFF,
-        "hex #FF00FF should decode to 0xFF00FFFF, got 0x{:08X}",
-        u32_val
-    );
+    let target: u32 = 0xFF00_FFFF;
+    let u32_val = find_hex_payload_u32("a { color: #FF00FF; }", target)
+        .expect("hex #FF00FF must materialise as a 4-byte KvPair payload");
+    assert_eq!(u32_val, target);
 }
 
 #[test]
 fn hex_color_roundtrip_3digit() {
-    let u32_val = first_hex_payload_u32("a { color: #abc; }")
-        .expect("hex rule should produce a KvPair with u32 payload");
     // #abc -> r=0xaa, g=0xbb, b=0xcc, a=0xff = 0xaabbccff
-    assert_eq!(
-        u32_val, 0xAABB_CCFF,
-        "hex #abc should decode to 0xAABBCCFF, got 0x{:08X}",
-        u32_val
-    );
+    let target: u32 = 0xAABB_CCFF;
+    let u32_val = find_hex_payload_u32("a { color: #abc; }", target)
+        .expect("hex #abc must expand to 0xAABBCCFF in a 4-byte KvPair payload");
+    assert_eq!(u32_val, target);
 }
 
 #[test]
 fn hex_color_roundtrip_8digit() {
-    let u32_val = first_hex_payload_u32("a { color: #12345678; }")
-        .expect("hex rule should produce a KvPair with u32 payload");
-    // #12345678 -> (r=0x12, g=0x34, b=0x56, a=0x78) = 0x12345678
-    assert_eq!(
-        u32_val, 0x1234_5678,
-        "hex #12345678 should decode to 0x12345678, got 0x{:08X}",
-        u32_val
-    );
+    let target: u32 = 0x1234_5678;
+    let u32_val = find_hex_payload_u32("a { color: #12345678; }", target)
+        .expect("hex #12345678 must materialise as a 4-byte KvPair payload");
+    assert_eq!(u32_val, target);
 }

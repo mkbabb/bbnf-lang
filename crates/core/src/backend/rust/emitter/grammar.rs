@@ -328,9 +328,32 @@ impl RustEmitter {
         let direct_to_struct =
             emit_direct_to_struct_projection(ir, ir_ctx.ident.to_string().as_str());
 
+        // AY.W3b.1 — `<Grammar>Value` enum + `impl ValueRoot` + narrow
+        // `impl PathQuery<T>` impls. Emitted per-grammar via
+        // TypeDesc-equivalence-class collapse (one variant per
+        // non-transparent rule today; the collapse map widens in a
+        // follow-on without disturbing consumers).
+        let grammar_name_s = ir_ctx.ident.to_string();
+        let value_surface = crate::backend::rust::view::emit_value_surface(
+            ir,
+            grammar_name_s.as_str(),
+        );
+
+        // AY.W3b.2 — json-prototype per-shape inline fns. The BEAT-
+        // sonic lever: five `#[inline(always)]` per-shape fns +
+        // the root dispatcher, monomorphised at the
+        // `parsed.to_value()` call site so LLVM inlines the entire
+        // tree-build into a single flat function.
+        let materialize_fns = super::shapes::value_materialize::emit_materialize_fns(
+            ir,
+            grammar_name_s.as_str(),
+        );
+
         quote! {
             #views
             #direct_to_struct
+            #value_surface
+            #materialize_fns
         }
     }
 

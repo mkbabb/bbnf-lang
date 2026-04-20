@@ -365,7 +365,7 @@ impl Tape {
     /// structural columns. Callers that used to bind `&TapeRec` now
     /// bind owned `TapeRec`; all access is through `Copy` methods so
     /// the ergonomic surface is unchanged.
-    #[inline]
+    #[inline(always)]
     pub fn get(&self, offset: TapeOffset) -> TapeRec {
         debug_assert!(
             !offset.is_none(),
@@ -386,7 +386,7 @@ impl Tape {
     ///
     /// [`TapeBuilder::push_leaf`]: crate::builder::TapeBuilder::push_leaf
     /// [`TapeBuilder::push_compound`]: crate::builder::TapeBuilder::push_compound
-    #[inline]
+    #[inline(always)]
     pub unsafe fn get_unchecked(&self, offset: TapeOffset) -> TapeRec {
         debug_assert!(
             !offset.is_none(),

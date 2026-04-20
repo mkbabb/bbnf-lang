@@ -84,6 +84,7 @@ pub mod pratt;
 pub mod scalar;
 pub mod string;
 pub mod unordered;
+pub mod value_materialize;
 pub mod wrap;
 
 use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;

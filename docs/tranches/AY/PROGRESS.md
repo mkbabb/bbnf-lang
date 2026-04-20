@@ -151,3 +151,157 @@ idempotent), pruned tape crate (dta.rs 80 LOC, shape_dict.rs gone),
 pruned profile slots, retired stale tests, AX/FINAL.md baseline
 captured, ~37 orphan worktrees out of the way for fresh W1 sub-agent
 worktrees. Master HEAD `e4d535ca`.
+
+---
+
+## 2026-04-20 — W1 closes
+
+**Three-phase dispatch** (Phase 1 serial, Phase 2 two parallel,
+W1-fix Absorb-mode after bench-revealed regression). Total: 1+2+1+1
+= 5 sub-agents + 1 bench agent.
+
+The W1 spec declared 4 parallel agents but file-overlap analysis
+(columns.rs / builder.rs / shapes/*.rs) forced phased dispatch
+per SPEC §Wave stipulation §Disjoint file bounds.
+
+### W1 Phase 1 — AU AoS substrate revert (W1-A serial, 8 commits)
+
+- `f603f549` AY.W1.1 AoS revert: `Columns` 7 structural Vec
+  columns → 1 `Vec<TapeRec>` + parallel `sib_skip: Vec<u32>`.
+  `columns.rs` 1618 → 1119 LOC (-31%).
+- `599abb8a` AY.W1.2 finaliser: stack-buffer scratch (3×
+  `Vec<Option<u32>>` heap allocs → `[Option<u32>; STACK_DEPTH_HINT]`
+  arrays).
+- `3e5a12cc` AY.W1.1 packed: sidecar transpose source = flat AoS.
+- `d93b4292` AY.W1.4 tape: `with_capacity_for(profile, input_len)`
+  convenience.
+- `b6ff6fe0`/`b649d794` AY.W1.5 tape: `#[inline(always)]` cross-
+  crate hot helpers + `Tape::get`.
+- `cc9bc86e` AY.W1.2 finaliser: heap fallback for depth >
+  `STACK_DEPTH_HINT` (twitter depth = 66 forced).
+- `1b101207` AY.W1.5 nm hard-gate: `inline(always)` finaliser +
+  builder finish; `docs/benchmarks/post-AY-W1-phase1-nm.txt`.
+
+Phase 1 sanity bench: twitter 437 → 699 MB/s (+60%); 1.6× of
+pre-AY baseline.
+
+### W1 Phase 2 — structural-scan + Pratt Option C (parallel)
+
+**W1-C structural-scan (4 commits)**:
+- `d0a633c6` AY.W1.3 tape: `structural_scan` substrate
+  (`scan_structural` + `StructuralIndex` re-export).
+- `8a1d7adb` AY.W1.3 emitter: parse-entry `scan_structural` call +
+  `ScanState.structural_index`.
+- `5fe281ef` AY.W1.3 emitter: `skip_space_slow` consumer probe
+  (`shapes/dispatcher.rs`).
+- `f5b5ba94` AY.W1.3 docs: `nm` artefact +
+  `docs/tranches/AY/audit/AYW1-structural-scan-consumer-coverage.md`
+  (deferred CSS L4 comment-aware variant to AY.W4).
+
+**W1-D Pratt Option C (2 commits cherry-picked, regen folded into orchestrator regen)**:
+- `f9c26308` AY.W1.4 pratt: Option C inline +
+  `[LocalOpEntry; OP_STACK_CAP=16]` op_stack hoist; mined
+  `max_chain_len = 4` across 17 production Pratt rules. Reducer-
+  compound emission preserved verbatim.
+- `7351ea0c` AY.W1.4 sheets_parity: helper accessor switched to
+  `payload_u8` (InlineScalar landing in `pay_narrow` not
+  `pay_agg`).
+
+**Orchestrator regen** (W1-D + W1-C combined):
+- `49d468f2` AY.W1.6 regen — combined Pratt Option C + structural-
+  scan emit. Bootstrap regen cycle-1 = cycle-2 byte-identical.
+
+### W1 close bench (W1-bench, 1 commit)
+
+- `e12fac25` `docs/benchmarks/post-AY-W1-close.json` 19-entry
+  matrix + `docs/benchmarks/post-AY-W1-bytes-cyc.txt` trajectory.
+
+**Bench surfaced regression**: twitter Phase 1 699 → Phase 2 close
+420 MB/s. JSON twitter -6% vs `post-AX-W1-close`. Per AY operational
+posture §1, regression ≥ 5% triggers re-plan. Dispatched W1-fix
+absorb agent.
+
+### W1-fix — Absorb-mode regression remediation (3 commits)
+
+Samply diagnostic (saved at `.profiles/samply/post-AY-W1-fix/json_monolithic/twitter/`)
+surfaced top self-time:
+
+```
+50.88% <JsonParser>::parse        ← inlined eager scan_structural loop
+32.20% parse_object_JsonParser_object
+ 9.71% parse_wrap_JsonParser_value
+ 2.41% parse_array_JsonParser_array
+ 1.97% parse_string_escaped
+ 0.48% tape::structural_scan::next_structural_at_or_after
+```
+
+Root cause: W1-C's eager parse-entry `scan_structural` ran an O(N)
+byte-class scan over 632KB of twitter input every parse, costing
+~750µs of the 1479µs total parse (~50%) — and the only consumer
+on JSON is a marginal capacity refinement against
+`GRAMMAR_PROFILE.capacity_for`'s AR-floor and a `skip_space_slow`
+probe that rarely terminated within the next 64-byte stripe (JSON
+whitespace runs are 1-3 bytes).
+
+**Fix A applied** (eager-scan retirement):
+- `42573c31` retire eager `scan_structural` — twitter +64% (420 →
+  688 MB/s). Removes the parse-entry call at both tape-path +
+  visitor-path emitters; removes the redundant `structural_index`
+  field from `ScanState`; removes the `skip_space_slow` probe.
+- `c33ea914` regen — generated.rs reflects the eager-call
+  retirement.
+- `fb34e008` audit doc + bench updates —
+  `docs/tranches/AY/audit/AYW1-twitter-regression-diag.md`;
+  bench artefacts updated post-fix.
+
+`tape::structural_scan::{scan_structural, next_structural_at_or_after}`
+retained as substrate for AY.W4's regex-scan specialisation
+(CTNS-style consumers will deliver material savings; per W4 spec
+§AY.W4.3). Substrate-with-consumer cycle binds at tranche close
+per SPEC §Transitional fallback during elimination waves; W4
+absorbs the consumer landing.
+
+### W1 hard-gate ledger (post-fix)
+
+| # | Gate | Required | Measured | Status |
+|---|------|----------|----------|--------|
+| 1 | twitter bytes/cyc | ≥ 0.45 | **0.215** | SOFT-MISS — W2 G3 wrap-elision lever |
+| 2 | bbnf/sonic twitter ratio | ≤ 3× | **3.76×** | NEAR — W2 lever (was 6.16× pre-fix) |
+| 3 | `nm` push_structural absent (4/4 bins) | yes | yes | PASS (`post-AY-W1-phase1-nm.txt`) |
+| 4 | `nm` scan_structural symbol ≥ 1 | yes | inlined per LTO; `StructuralIndex drop_in_place` 4/4 | PASS (`post-AY-W1-phase2c-nm.txt`) |
+| 5 | samply self-time on tape substrate < 5% total | yes | tape ≤ 1% post-fix; per-rule parse fns dominate | PASS (`post-AY-W1-fix/json_monolithic/twitter/`) |
+| 6 | CSS L4 tailwind ≥ +8% vs post-AX | +8% | **+35.4%** | PASS |
+| 7 | 13 parity + canonical harnesses green | yes | 1490 passed / 0 failed / 40 ignored | PASS |
+| 8 | Bootstrap regen cycle-1 = cycle-2 | yes | empty diff | PASS |
+
+**SOFT-MISS rationale (gates 1, 2)**: per AY.md §Architectural thesis,
+the BEAT-sonic margin requires W2 (G3 wrap-elision cuts twitter
+record count 50%) + W3 (json-prototype shape: 0.91× sonic ceiling) +
+W4 (SIMD unescape + Eisel-Lemire direct-column: +15-40% margin).
+W1 alone restores the AU substrate; the throughput gates close
+cumulatively at W7. Per defensible-floor item 2, the W1 AoS revert
+delivered (twitter 437 → 688 MB/s = +57%); items 4-6 (W2 + W3)
+deliver the remaining bytes/cyc.
+
+### W1 → W2/W4 handoff
+
+Master HEAD `fb34e008`. W2 + W4 may dispatch in parallel per
+AY.md `{W2 ∥ W4}` chain. W1 substrate state:
+
+- Tape: flat AoS `Vec<TapeRec>` + parallel `sib_skip` write path;
+  `pay_narrow`/`pay_wide`/`pay_agg` payload columns retained.
+- Finaliser: stack-buffer post-pass (heap fallback ≥ depth 64).
+  Full inline-into-`close_compound` deferred to W4 if profile-
+  evidenced as still hot.
+- structural-scan substrate present (lazy-only); consumer wiring
+  in W4.
+- Pratt Option C: stack op_stack + InlineScalar op_discriminant.
+- `Tape::with_capacity_for(profile, input_len)` available.
+
+**Known flaky test**: `tape::tests::packed_cache::packed_cache_read_beats_soa_materialise`
+asserts a 1.3× perf threshold near system noise floor; intermittent
+(passes ~3 of 5 runs across pre-fix and post-fix HEAD). Pre-existing,
+not introduced by AY. Standalone retry green at master HEAD `fb34e008`.
+
+`scan_structural` deferred-consumer landing absorbed into AY.W4 per
+`docs/tranches/AY/audit/AYW1-structural-scan-consumer-coverage.md`.

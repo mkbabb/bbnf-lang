@@ -1,4 +1,4 @@
-# AZ Planning — A3 Sheets + BBNF Parse Fresh Profile
+# AY Planning — A3 Sheets + BBNF Parse Fresh Profile
 
 Scope: Google Sheets and BBNF self-hosting parse paths at master HEAD
 `9074a685`. Self-baseline vs `docs/benchmarks/post-AX-W0a-close.json`

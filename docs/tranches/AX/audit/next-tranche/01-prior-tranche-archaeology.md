@@ -1,8 +1,8 @@
-# AZ Planning — Prior-Tranche Archaeology
+# AY Planning — Prior-Tranche Archaeology
 
 Archaeology-only audit of direct-to-struct projection, Value API, and
 external-comparator parity lineage bearing on the next tranche (letter
-AZ). Read-only; every claim cites a commit hash.
+AY). Read-only; every claim cites a commit hash.
 
 ## 1. Chronic-debt ledger
 
@@ -74,10 +74,10 @@ Per `AU/profiling-2.md`, `audit/last10-slowdown-census.md`: `JsonParser::__value
 
 3. **Do not gate off working benches to admit new classifications.** AW-V.W4-fix-rest widened Flat/Wrap, tripping `has_w4_classified` at `emitter/grammar.rs:718`, breaking the prototype-matching `json_monolithic_value` bench (`FINAL-V.md:162`). Classification widenings carry a per-grammar wire-contract test on the gate's output (invariant 14) and re-run the full bench matrix at the widening commit (invariant 16).
 
-4. **Substrate-without-consumer is not a close.** The Named-projection chain (AS.2.3 → AU.4.2 → AW.0.5 → AW-III.W6.4 → AW-IV.W3.5a) never fired at runtime; W1r.1 confirms `resolve_named_type` returns `None` on every grammar. If AZ introduces a Named-preservation pass, pair it with a runtime consumer test asserting the call fires (samply / `nm` / wire-contract end-to-end).
+4. **Substrate-without-consumer is not a close.** The Named-projection chain (AS.2.3 → AU.4.2 → AW.0.5 → AW-III.W6.4 → AW-IV.W3.5a) never fired at runtime; W1r.1 confirms `resolve_named_type` returns `None` on every grammar. If AY introduces a Named-preservation pass, pair it with a runtime consumer test asserting the call fires (samply / `nm` / wire-contract end-to-end).
 
 5. **`grep` + `cargo expand` are supplementary, not load-bearing.** AT.1 passed its grep gate while every typed capture was a dead store (`AT-retro.md:22–25`); AW-IV.W3.5a emitted `PROJECTION_DIRECT_TO_STRUCT` with zero runtime fires. Gates cite samply self-time, `nm` symbol presence/absence, or end-to-end wire-contract tests.
 
-6. **Attack the Named collapse at the upstream pass.** W1r.1 diag names it: Rust backend's `prepare_grammar → analyze_grammar → project_types`. The collapse has no introducing commit — it is emergent from type-inference + projection unioning. AZ must make the preservation deliberate (e.g. a dedicated pass that keeps `Named(sid)` through `project_types`), then ship a consumer that reads it.
+6. **Attack the Named collapse at the upstream pass.** W1r.1 diag names it: Rust backend's `prepare_grammar → analyze_grammar → project_types`. The collapse has no introducing commit — it is emergent from type-inference + projection unioning. AY must make the preservation deliberate (e.g. a dedicated pass that keeps `Named(sid)` through `project_types`), then ship a consumer that reads it.
 
-7. **Byte-parity vs canonical-form vs scale+interop is a plan-time decision.** W1r.3 → W1r.3a retreat (`audit/W1r3a-diag.md`) burned a sub-wave because lightningcss `calc()` arithmetic + shorthand reordering defeats symmetric byte-parity. If AZ scopes cssparser / simdjson / simd-json, declare per comparator × corpus which parity tier applies — small corpora often admit byte, large usually do not.
+7. **Byte-parity vs canonical-form vs scale+interop is a plan-time decision.** W1r.3 → W1r.3a retreat (`audit/W1r3a-diag.md`) burned a sub-wave because lightningcss `calc()` arithmetic + shorthand reordering defeats symmetric byte-parity. If AY scopes cssparser / simdjson / simd-json, declare per comparator × corpus which parity tier applies — small corpora often admit byte, large usually do not.

@@ -323,7 +323,7 @@ cross-language FFI (Python bindings need owned trees). Both
 surfaces are legitimate; neither is optional once the comparator
 story is honest.
 
-## 9. Proposed next-tranche scope (AZ candidate)
+## 9. Proposed next-tranche scope (AY candidate)
 
 Per recap 00-session-recap.md:212-236 item 7 (Value API
 materialisation, medium priority — elevated by this audit to

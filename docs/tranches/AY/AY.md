@@ -1,461 +1,105 @@
-# Tranche AY — Replay, Recovery, Incremental Re-Parse
+# Tranche AY — Tape Substrate + Direct-to-Struct + Value API Eager Lane
 
-AY ships the developer-tooling layer over the AX substrate: decision-log replay, structural-default recovery, incremental re-parse, test-case minimisation, parse-step debugging. The old AX (pre-reckoning) carried these as X0–X3; they moved out of AX because AX's architectural scope — interpreter deletion + novel-lever portfolio + parity harnesses — was load-bearing enough on its own. AY is the tooling tranche it deserves to be.
+AY is the performance + projection tranche. Successor to AX; predecessor to AY. AX closed the interpreter (W0b), landed the shape-emission-authoritative tape (W0a), reverted hand-coded Value duplicates (W1r.0), proved grammar-derived view surface via canonical-serialization byte equality (W1r.2/3a/4a/5), and audited the typed-accessor surface (W1r.6). Eight W1r sub-waves landed (`3429aaba`..`ab7c218d`), 13 parity + canonical harnesses green on master (247/1 ignored).
 
-AY operates on an AX-clean substrate: no DTA, no `DtaSnapshot`, no `dispatch_one`-based replay. Every AY primitive is built freshly on the shape-emitter's decision points — RD-native by construction. No legacy hooks, no shims from the DTA era are carried forward; AX deleted them at W0, and AY does not re-introduce them.
+Six fresh audits (A1–A6, `docs/tranches/AX/audit/next-tranche/A{1..6}-*.md`) at master HEAD `9074a685` establish the performance floor: **JSON 5.5-8.2× slower than sonic-rs; CSS L4 beats lightningcss by 19-40% at scale; Sheets/BBNF stable**. The universal hot-path union across all four grammar families is `Columns::push_structural` (23-43% self-time) + `tape::finaliser::finalise` (12-27%) = **50-70% of every bench's runtime**. No scanner, no dispatch, no allocator is the primary loss — the tape substrate's write + post-pass IS the loss.
+
+AX's W1r.1 scope-reveal that `TypeDesc::Named(_)` collapses before Rust emit on every grammar remains unaddressed; AX invariants 20/21 (shape-emission authority + grammar-derived view surface) require this to be surgically repaired. AX's 5 W0a/W0b-era wire-contract tests that retired when their predicates retired (invariant 14) remain on disk unbuildable. AX's bench matrix + FINAL.md remain uncaptured.
+
+AY discharges all three. No deferrals. No hand-coded Value duplicates. No third-party comparator bridges. No new grammar directives (invariant 4). Every wave ships substrate + consumer (invariant 2). All AY invariants are AX's 1-21 plus three new architectural gates: tape substrate inline (22), Named preservation end-to-end (23), and Value API apples-to-apples work-matching (24).
 
 ## Architectural thesis
 
 Four propositions:
 
-1. **Replay is a re-walk of the shape emitter's decision sequence, not a DTA state-id trace.** At every Alt / Wrap / Keyword-dispatch / ByteDispatch call site, the shape emitter (under `AY::feature("replay")`) records a `DecisionRecord { rule_id: RuleId, shape_tag: ShapeTag, branch_idx: u8 }`. Replay re-enters `parse_<grammar>_<root>` with the log as a branch-hint source; the walker dispatches per-record against log entries instead of byte predicates. When the log is consistent with the input, the walker produces a bit-identical tape without re-inspecting bytes at dispatch points (bytes are still read for string/number/regex bodies where the log is insufficient). The log is compact — ~1 byte per shape-level decision, far smaller than the input.
+1. **The tape substrate's write path is the universal floor.** Every grammar, every fixture, every profile points to `push_structural + finalise` as the dominant self-time. The fix is substrate-level: inline `push_structural` into per-rule emit call sites, fuse `finalise` back-patches into compound-close points. Both changes are semantics-preserving; the parity harnesses + generated.rs regen verify correctness. Expected delta: JSON gap 7-8× → 3-4× vs sonic-rs; CSS/Sheets/BBNF absolute throughput +20-40%.
 
-2. **Snapshot-and-resume is a shape-stack capture, not a frame-stack capture.** The `ShapeSnapshot` records the shape emitter's call-graph position via `(pos, columns_len, shape_stack: [ShapeTag; 32], depth: u8, slot: u32)`. Resume is a function call into the shape emitter's `parse_resume_<grammar>(snapshot, input, visitor)` entrypoint — re-enters the call graph at the saved shape, NOT a re-hydrated interpreter state. Stack depth ≤ 32 (matches AW-V FrameStack cap); snapshot is ~80 bytes; O(1) in input size.
+2. **Direct-to-struct must reach emit, or AX's invariant 20/21 is unenforced.** The W1r.1 revelation — that `TypeDesc::Named(sid)` never reaches the Rust backend's `emit_direct_to_struct_projection` — means 18 months of architectural work (AS.2.3 → AU.4.2 → AW.0.5 → AW-III.W6.4 → AW-IV.W3.5a → AX.W1r.1) built a consumer-ready pathway for a declaration (`-> input : <Name>`) the pipeline silently discards. A6 narrows the collapse to two IR-pass hypotheses (egraph cost-guided extraction or alias/transparent stamping); AY empirically discriminates, ships the surgical fix, and gates with a wire-contract test enforcing invariant-14-style closure.
 
-3. **Incremental re-parse is two snapshots, a subtree re-walk, and a Columns splice.** Given `Edit { old_lo, old_hi, new_bytes }`:
-   - Binary-search master tape's `span_lo` for highest record fully containing `[old_lo, old_hi]`.
-   - That record's snapshot metadata (populated during original parse at every shape-begin boundary) gives the `ShapeSnapshot` to resume from.
-   - Call `parse_resume_<grammar>(snapshot, new_input_slice, visitor)`.
-   - Splice resulting Columns at the affected record range; shift downstream `span_lo`/`span_hi` by byte delta.
-   - `SHAPE_DICT` + bloom+GADT dedup re-fire on the spliced slice; structurally identical re-parses hit the prior tape verbatim.
-   
-   Tree-sitter ships this as its headline feature; AY ships it over RD because the shape emitter's decision points are already natural snapshot boundaries. No bytecode interpreter required.
+3. **Apples-to-apples comparison requires three lanes, not one.** Current bench matrices compare bbnf parse-only to sonic-rs parse+materialize (A1 §6) — measuring 11.15× bbnf/sonic on twitter via `json_monolithic_value` obscures which half is dispatch vs materialization. A5 proposes three matched lanes: (canonical-serialize, landed W1r.2); (lazy-cursor-to-lazy-cursor via sonic-rs `get_by_path`, new); (eager-to-eager via grammar-emitted `<Grammar>Value` + `parsed.to_value()`, new). Lane-3 clarifies the residual-gap story after W1 closes the substrate loss.
 
-4. **Recovery walks the shape stack upward for a structural-sync byte.** Every shape has a mined "sync byte set" (from `structural_alphabet.rs`): CSS `{`, `}`, `;`; JSON `,`, `]`, `}`; BBNF `;`, `.`; Sheets newline. On dispatch failure:
-   - For current shape, look up sync bytes from `GRAMMAR_PROFILE.sync_bytes[shape_tag]`.
-   - Jump pos to next sync byte via stage-1 kind-separated stream (AX.2.3 substrate) or SIMD `find_next_of`.
-   - Pop current shape frame; resume at parent shape.
-   - Emit `RecoveryEvent { failed_at, synced_to, recovered_shape }` to the decision log.
-   
-   `@recover ruleName syncExpr ;` grammar directive refines to an override on the structural default — per the old AX Phase 3 audit, with deprecation analysis shipped in `recover-audit.md`.
+4. **Compile-time urgency halved since doc 06.** W1r.3a's `@pretty` refactor (`933d02fb`..`b930cf2c`) quietly removed a super-linear rustc codepath on CSS L4: doc 06 reported 5.81s wall + 877 MB RSS; A4 measures 1.81s + 636 MB on HEAD `9074a685` — a **69% wall drop + 27% RSS drop**. Compile-time levers remain worthwhile but no longer urgent; AY schedules them after the runtime + correctness waves.
 
 ## Invariants
 
-1. **No DTA carry-forward.** No `DtaSnapshot`, no `dispatch_one`, no `DtaTable`. If any AY design needs these primitives, the design is wrong — re-architect over the shape emitter's decision points.
+All AX invariants 1-21 carry forward verbatim. AY adds three:
 
-2. **Substrate with consumer.** Every AY wave ships substrate + consumer in one unit; no substrate-without-consumer landings. `ShapeSnapshot` without `parse_resume_<grammar>` consumer = not landed. Decision log without inspector CLI consumer = not landed.
+22. **Tape substrate inline.** `tape::columns::Columns::push_structural`, `tape::finaliser::finalise`-equivalent back-patch paths, and `TapeBuilder::push_leaf_with` inline at every emit call site. No cross-crate call-boundary overhead on hot-path record emission. Wave close verifies via `nm` + samply self-time shifting from the `tape` crate into per-rule `parse_<shape>_<grammar>_<rule>` functions.
 
-3. **One recovery mechanism.** Structural-default is the primary recovery path; `@recover` is an override. No per-grammar recovery hacks, no fallback parsers, no dual paths.
+23. **Named preservation end-to-end.** Every grammar-declared `-> input : <Name>` annotation (where `<Name>` is non-scalar per scalar-name table) reaches the Rust tape emitter as `TypeDesc::Named(sid)`. `emit_direct_to_struct_projection` admits the rule and emits the runtime shim + aggregate payload pathway. Enforced by per-grammar `named_type_preservation.rs` wire-contract test; pipeline-close assertion `for each rule with named projection: ir.types[rule.id] == TypeDesc::Named(<Name>_sid)`.
 
-4. **Wire-contract end-to-end tests per AY output.** Every emitted `pub const` AY introduces (per-grammar `SYNC_BYTES[shape_tag]`, `RESUME_ENTRYPOINTS[rule_id]`) carries a wire-contract test.
+24. **Value API apples-to-apples.** Bench comparisons vs external comparators are work-matched along one of three lanes: (a) canonical-serialize text equality (W1r.2 template), (b) lazy-cursor-to-lazy-cursor per-field access (bbnf `NodeView::get` vs sonic-rs `get_by_path`), (c) eager-to-eager materialized-tree (bbnf `parsed.to_value::<T>()` vs sonic-rs `from_str::<Value>`). Mixed-work comparisons forbidden in reported headline ratios.
 
-5. **Replay is a property, not a mode.** Under `dta-replay` — rename to `replay` — feature flag, the shape emitter emits `record_decision(rule_id, shape_tag, branch_idx)` calls inline at each dispatch point. Feature-off: no runtime cost. Feature-on: ~5% cold-parse regression (measured in Y0 close ledger). No separate "replay parser"; one emitter, two feature-gated variants.
+## Operational posture
 
-6. **Incremental is a property, not a path.** One shape emitter, one `parse_<grammar>_<root>` entrypoint; `parse_resume_<grammar>` is a sibling that shares the emitter's shape templates — it consumes a snapshot as initial state instead of parsing from position 0. No alternate "incremental parser" with divergent semantics.
+1. **Bench-checkpoint every wave.** `cargo bench` at wave close, saved to `docs/benchmarks/post-AY-W<N>.json`. Regression ≥ 5% triggers re-plan per AX invariant 10.
 
-7. **AX closes first.** AY opens only after AX.W12 close per wave-verification-ledger discipline. AX's substrate (shape emitter, Value API, hybrid tape, parity harnesses) is authoritative ground truth.
+2. **Fresh profile-prepare at mid-tranche.** Re-run `scripts/prepare-profile-wave.sh` at W3 close (half-tranche) to re-ground W4+ agent profiles. Stale-profile prevention per `docs/tranches/AX/audit/next-tranche/00-session-recap.md` §5.
 
-## Scope
+3. **Wire-contract tests for every new invariant.** Invariant 22 → `docs/benchmarks/post-AY-W1-close-nm.txt` + samply shift document. Invariant 23 → `crates/core/tests/named_type_preservation.rs`. Invariant 24 → `crates/core/tests/value_api_apples_to_apples.rs`.
 
-1. **Y0 — Substrate: `ShapeSnapshot` + per-record metadata + decision log emit.** Shape emitter extension to emit snapshot capture at every shape-begin + decision record at every dispatch point, both feature-gated. Per-record snapshot column populated during parse.
+4. **Scope-reveal Absorb.** Per SPEC. Wave scope-reveal reopens as sub-wave in place; no letter pivot mid-execution.
 
-2. **Y1 — `parse_resume_<grammar>` entrypoint + snapshot serde.** Shape emitter emits `parse_resume_<grammar>(snapshot, input, visitor)` alongside `parse_<grammar>_<root>`. `ShapeSnapshot` stable bincode serde with round-trip parity tests per grammar.
+5. **No grammar DSL additions.** Invariant 4 preserved. Every change is IR pipeline / tape substrate / codegen / bench-harness.
 
-3. **Y2 — Incremental re-parse.** Edit-localisation via span binary-search; subtree re-walk via `parse_resume`; Columns splice + span-shift in one linear pass. Per-grammar incremental parity harness: edit + incremental re-parse produces bit-identical tape to cold re-parse of post-edit buffer.
+## Wave summary
 
-4. **Y3 — Recovery + `@recover` audit.** Structural-default recovery in shape emitter (dispatch-failure → sync-byte walk); `@recover` semantics refined to override per rule level; `recover-audit.md` ships per-site disposition.
+Eight waves.
 
-5. **Y4 — Replay tooling.** CLI: `inspect-log` (per-transition trace dump), `minimise` (O(log n × parse) shrink loop), `replay-test` (#[test] macro capturing log + asserting bit-identical re-walk).
+| Wave | Spec | Headline | Opens after |
+|------|------|----------|-------------|
+| **AY.W0** | [waves/W0.md](waves/W0.md) | Stale-test retirement + ebnf_prettify diagnosis + AX.FINAL (bench + close doc) | tranche open |
+| **AY.W1** | [waves/W1.md](waves/W1.md) | Tape substrate inline + finalise fusion (universal hot-path) | W0 |
+| **AY.W2** | [waves/W2.md](waves/W2.md) | Named-type preservation + direct-to-struct activation + wire-contract | W1 |
+| **AY.W3** | [waves/W3.md](waves/W3.md) | Grammar-emitted `<Grammar>Value` + `parsed.to_value()` + eager bench lane | W2 |
+| **AY.W4** | [waves/W4.md](waves/W4.md) | Regex-scan specialisation (byte-class pre-filter + PHF) | W1 |
+| **AY.W5** | [waves/W5.md](waves/W5.md) | CSS L4 @import split + DFA hoist + shared PHF (compile A/B/D) | W3 |
+| **AY.W6** | [waves/W6.md](waves/W6.md) | parse_that de-generic-ify + ax-iter profile config (compile C/E) | W5 |
+| **AY.W7** | [waves/W7.md](waves/W7.md) | FINAL — bench matrix + FINAL.md + AY handoff | W6 |
 
-6. **Y5 — Cranelift JIT per-schema** (moved from AX per scope re-sequencing). Opt-in per-grammar JIT + SHA cache. Separate from replay/recovery/incremental substrate but lives in AY as post-performance-terminus feature.
+W4 depends on W1 but not W2/W3 — regex work is independent of Named + Value lanes. All other waves are linearly dependent.
 
-7. **Y6 — FINAL.** FINAL.md + `post-AY.json` (bench regression ≤ 5% vs AX close default-features; tranche value is feature-correctness + JIT option, not throughput on default path).
+## AY → AY handoff contract
 
-## Wave schedule
+Six conditions must verify clean before AY opens:
 
-Seven waves.
+1. `cargo test --workspace` green (AX's 5 stale tests retired in W0; ebnf_prettify fixed in W0).
+2. `post-AY.json` bench matrix captured (invariant 10).
+3. AY-W2 `named_type_preservation.rs` test passes for every grammar with `-> input : <Name>` annotations.
+4. AY-W3 eager-lane bench: JSON `bbnf.to_value::<JsonValue>(twitter)` within 3× of `sonic_rs::from_str::<Value>(twitter)` (relaxed target; a 3× eager-to-eager gap is post-tape-fix acceptable floor).
+5. `nm` on all 4 prebuilt bench binaries shows zero `__push_structural` / cross-crate tape symbol exports (invariant 22).
+6. AY's Y0 substrate design locks against a stable shape emitter — `shape_emitter` + tape columns schema frozen.
 
-| Wave | Scope | Agents | Opens after | Hard gate |
-|------|-------|--------|-------------|-----------|
-| **Y0** Substrate | `ShapeSnapshot` type + decision-log emit (feature-gated) + per-record snapshot column | 3 parallel (snapshot type, emitter extension, per-record column) | AX.W12 close | Feature-off: no regression. Feature-on: ≤ 5% cold-parse regression (documented in `post-AY-Y0.json`). Per-record snapshot column populated on every list-rule / array-element / rule / formula-line boundary. |
-| **Y1** Resume entrypoint | `parse_resume_<grammar>` emit + `ShapeSnapshot` bincode serde + round-trip parity | 2 parallel (emitter, serde) | Y0 | `ShapeSnapshot` bincode round-trips for every grammar; `parse_resume` re-enters at snapshot state and produces tape-identical output to a cold parse from the snapshot's `pos`. |
-| **Y2** Incremental re-parse | Edit-localisation + subtree re-walk + Columns splice | 2 parallel (edit-local + splice, incremental harness) | Y1 | 100 KB CSS edit median ≤ 200 µs; 10 KB JSON edit ≤ 50 µs; 1 KB Sheets edit ≤ 10 µs; incremental-parity harness: per-grammar canonical edits (insert / delete / replace) produce bit-identical tapes vs cold re-parse on ≥ 50 test cases per grammar. |
-| **Y3** Recovery + `@recover` audit | Structural-default recovery in shape emitter + `@recover` semantics refinement + deprecation audit | 2 parallel (recovery impl, audit) | Y2 | Per-grammar recovery harness: malformed inputs (truncated CSS rules, missing JSON braces, BBNF syntax errors mid-grammar, Sheets formula errors mid-row) each assert a specific recovery point + downstream continuation. `recover-audit.md` ships per-site verdict for every `@recover` annotation in BBNF self-host; deprecation decision recorded. |
-| **Y4** Replay tooling | `inspect-log` CLI + `minimise` CLI + `replay-test` #[test] macro | 3 parallel (one per tool) | Y3 | `bbnf-cli inspect-log <grammar> <input>` emits a per-transition trace dump with (byte_offset, rule_id, shape_tag, branch_idx, frame_depth). `minimise` shrinks a 1 KB malformed input to ≤ 32 bytes in O(log n) parse calls. `replay-test` macro: log-record → replay → assert tape-identical across all corpus fixtures. |
-| **Y5** Cranelift JIT per-schema | Opt-in JIT (`jit` crate) + SHA cache on grammar AST hash + workload-profile-informed specialization | 2 parallel (JIT emitter, cache) | Y4 | Canada JIT 1.10-1.25× AOT; JIT compile ≤ 5 ms per grammar; cache cold-start < 1 µs; `ParseOptions::jit = true` default off; feature-off: no change from Y4 |
-| **Y6** FINAL | `FINAL.md`, `post-AY.json`, aggregator | 1 serial | Y5 | Replay/recovery/incremental + JIT feature complete; `cargo test --workspace` green; `cargo test --features replay` green; `cargo test --features jit` green; default-features cold-parse regression ≤ 5% vs AX close |
+## Defensible floor
 
-## Phases
+Per the fresh audits, AY's defensible floor is five items:
 
-### Phase 0 — Substrate (Y0)
+1. **W0 stale-test retirement** — 5 files deleted, `cargo test --workspace` unblocked.
+2. **W1 tape-inline** — push_structural `#[inline(always)]` on single cross-crate call site; profile shifts.
+3. **W2 Named preservation** — single pass guard in metadata.rs or egraph cost function; wire-contract test + `.as_color()` fires on fresh profiles.
+4. **W3 `<Grammar>Value` emission** — codegen-only addition; doesn't require W1/W2 success to ship.
+5. **W7 FINAL artefacts** — bench matrix + FINAL.md + AY handoff doc.
 
-Three agents, parallel.
+These five land even if W4/W5/W6 face scope-reveals. Historically (per `docs/tranches/AX/audit/next-tranche/01-prior-tranche-archaeology.md` §1 chronic-debt patterns), W1+W2 are high-confidence substrate landings; W3 is medium; W4/W5/W6 are lever-portfolio items subject to samply-verified attribution pre-admission.
 
-#### AY.0.1 — `ShapeSnapshot` type
+## Post-tranche review candidates
 
-Owner: `crates/bbnf-tape/src/snapshot.rs` (**new**).
+Decision at AY.W7 close, not mid-wave:
 
-```rust
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct ShapeSnapshot {
-    pub pos: u32,                    // byte offset in input
-    pub columns_len: u32,            // tape records committed so far
-    pub shape_stack: [ShapeTag; 32], // grammar nesting, LIFO
-    pub depth: u8,                   // current stack depth (0..=32)
-    pub slot: u32,                   // stage-1 kind-separated stream cursor (or 0 if not used)
-    pub payload_stream_len: u32,     // payload arena cursor for rollback
-}
-
-impl ShapeSnapshot {
-    pub fn new() -> Self { /* zero-init */ }
-    pub fn push(&mut self, tag: ShapeTag) { /* bounds-check depth < 32 */ }
-    pub fn pop(&mut self) -> ShapeTag { /* bounds-check depth > 0 */ }
-    pub fn current(&self) -> ShapeTag { self.shape_stack[self.depth as usize - 1] }
-}
-```
-
-No `DtaState`, no `FrameStack`, no `Vec`. 32-element stack-allocated shape-tag array (max depth 32 per AW-V). Total size ~80 bytes.
-
-#### AY.0.2 — Shape emitter decision-log extension
-
-Owner: `crates/core/src/backend/rust/emitter/shapes/*.rs`; `crates/core/src/backend/rust/emitter/decision_log.rs` (**new**).
-
-At every dispatch point in a shape emitter output, splice a feature-gated `record_decision` call:
-
-```rust
-match input[pos] {
-    b'{' => {
-        #[cfg(feature = "replay")]
-        replay::record_decision(RULE_ID, ShapeTag::Object, 0);
-        parse_object(...)
-    }
-    b'[' => {
-        #[cfg(feature = "replay")]
-        replay::record_decision(RULE_ID, ShapeTag::Array, 1);
-        parse_array(...)
-    }
-    // ...
-}
-```
-
-The `#[cfg(feature = "replay")]` gate compiles the call away under default features; under `replay` feature, calls emit to a thread-local `DecisionLog`.
-
-#### AY.0.3 — Per-record snapshot column
-
-Owner: `crates/bbnf-tape/src/columns.rs` (**extend**).
-
-New SoA column: `snapshot_at: Vec<ShapeSnapshot>`, sparse. Populated during parse at every list-rule / array-element / rule / formula-line boundary via `Columns::mark_snapshot(pos, shape_stack)` called from shape emitter at shape-begin boundaries.
-
-Cost per tailwind.css (~12k rulesets): ~12k × 80 B ≈ 960 KB, comparable to tape size. Cheaper grammars carry proportionally fewer snapshots.
-
-**Hard gate** (Y0): feature-off cold-parse bench identical to AX close (replay calls compiled away); feature-on cold-parse regression ≤ 5% (measured and recorded in `post-AY-Y0.json`); per-record snapshot column populated at every list-rule boundary per per-grammar fixture assertion.
-
-### Phase 1 — Resume entrypoint (Y1)
-
-Two agents, parallel.
-
-#### AY.1.1 — `parse_resume_<grammar>` emission
-
-Owner: `crates/core/src/backend/rust/emitter/resume.rs` (**new**).
-
-Shape emitter emits a sibling entrypoint per grammar:
-
-```rust
-pub fn parse_resume_<grammar><V: GrammarVisitor>(
-    snapshot: &ShapeSnapshot,
-    input: &[u8],
-    visitor: &mut V,
-) -> Result<(), ParseError> {
-    // Re-enter at snapshot's current shape with appropriate state
-    match snapshot.current() {
-        ShapeTag::Object => parse_<grammar>_object_resume(snapshot, input, visitor),
-        ShapeTag::Array => parse_<grammar>_array_resume(snapshot, input, visitor),
-        ShapeTag::Pratt => parse_<grammar>_pratt_resume(snapshot, input, visitor),
-        // ...
-    }
-}
-```
-
-Each per-shape `*_resume` function is emitted by the same per-shape emitter module (adds a `_resume` variant to each template). The variant takes the snapshot's `shape_stack` as pre-populated state instead of starting from the shape's begin-boundary.
-
-#### AY.1.2 — `ShapeSnapshot` serde + round-trip tests
-
-Owner: `crates/bbnf-tape/src/snapshot.rs` (**extend**); `crates/core/tests/snapshot_roundtrip.rs` (**new**).
-
-bincode derive on `ShapeSnapshot`. Per-grammar round-trip tests: `snapshot → bytes → snapshot` produces identical value; `parse → capture snapshot at boundary → serialize → deserialize → parse_resume → tape compare` produces bit-identical continuation.
-
-**Hard gate** (Y1): `ShapeSnapshot` round-trips via bincode for every grammar; `parse_resume_<grammar>(snapshot, input, visitor)` produces tape-identical output to a cold parse from `snapshot.pos` across ≥ 50 fixture cases per grammar.
-
-### Phase 2 — Incremental re-parse (Y2)
-
-Two agents, parallel.
-
-#### AY.2.1 — Edit-localisation + subtree re-walk
-
-Owner: `crates/bbnf-tape/src/incremental.rs` (**new**).
-
-```rust
-pub struct Edit<'a> {
-    pub old_lo: u32,
-    pub old_hi: u32,
-    pub new_bytes: &'a [u8],
-}
-
-pub fn incremental_reparse<V: GrammarVisitor>(
-    master_tape: &mut Tape,
-    master_input: &mut Vec<u8>,
-    edit: Edit<'_>,
-    visitor: &mut V,
-) -> Result<(), ParseError> {
-    // 1. Binary-search master_tape.span_lo for highest record fully containing [old_lo, old_hi]
-    let record_idx = master_tape.locate_covering_record(edit.old_lo, edit.old_hi)?;
-    let snapshot = master_tape.snapshot_at[record_idx];
-    
-    // 2. Apply edit to input buffer
-    master_input.splice(edit.old_lo as usize .. edit.old_hi as usize, edit.new_bytes.iter().copied());
-    
-    // 3. parse_resume from snapshot
-    let new_columns = parse_resume_<grammar>(&snapshot, &master_input[snapshot.pos as usize..], visitor)?;
-    
-    // 4. Splice new_columns into master at affected record range
-    master_tape.splice_records(record_idx, record_idx + affected_count, new_columns);
-    
-    // 5. Shift downstream span_lo/span_hi by byte delta
-    let delta = edit.new_bytes.len() as i64 - (edit.old_hi - edit.old_lo) as i64;
-    master_tape.shift_spans_after(record_idx + affected_count, delta);
-    
-    Ok(())
-}
-```
-
-Splice is a linear pass per affected column; span-shift is a second linear pass. `SHAPE_DICT` + bloom+GADT re-fire on the spliced slice (AX.2.6 substrate), so structurally identical re-parses hit prior tape verbatim.
-
-#### AY.2.2 — Incremental parity harness
-
-Owner: `crates/core/tests/incremental_parity.rs` (**new**).
-
-Per grammar × edit-kind × scope:
-
-| Grammar | Edit kinds | Scopes |
-|---|---|---|
-| JSON | insert / delete / replace | scalar value, object key, array element, nested object |
-| CSS | insert / delete / replace | declaration, selector, at-rule, nested rule |
-| Sheets | insert / delete / replace | cell ref, operator, function call |
-| BBNF | insert / delete / replace | rule body, alt branch, regex literal |
-
-50 cases per grammar = 200 cases total. Each asserts: `cold_parse(post_edit_buffer).tape == incremental_reparse(cold_parse(pre_edit_buffer), edit).tape` bit-for-bit.
-
-**Hard gate** (Y2): 100 KB CSS edit median ≤ 200 µs (measured on `data/css/bootstrap.css` edits); 10 KB JSON edit ≤ 50 µs; 1 KB Sheets edit ≤ 10 µs; incremental-parity harness 200/200 green.
-
-### Phase 3 — Recovery + `@recover` audit (Y3)
-
-Two agents, parallel.
-
-#### AY.3.1 — Structural-default recovery
-
-Owner: `crates/bbnf-tape/src/recovery.rs` (**new**); `crates/core/src/backend/rust/emitter/shapes/*.rs` (**extend with recovery branches**).
-
-Each shape emitter's dispatcher gains a recovery branch when every byte-arm has failed:
-
-```rust
-match input[pos] {
-    b'{' => parse_object(...),
-    b'[' => parse_array(...),
-    // ... all the admitted bytes ...
-    Some(b) => {
-        #[cfg(feature = "replay")]
-        replay::record_event(RecoveryEvent::DispatchFailed { at: pos, byte: b });
-        
-        // Walk shape stack upward to find sync byte
-        let sync_bytes = GRAMMAR_PROFILE.sync_bytes[shape_stack.current()];
-        let sync_pos = find_next_of(input, pos, sync_bytes);
-        
-        match sync_pos {
-            Some(p) => {
-                pos = p;
-                shape_stack.pop();
-                // Continue at parent shape
-            }
-            None => return Err(ParseError::UnrecoverableDispatchFailure(pos, b)),
-        }
-    }
-    None => return Err(ParseError::Eof(pos)),
-}
-```
-
-`find_next_of` uses the AX.2.3 kind-separated stream when available OR a SIMD `multi_cmp_scan`.
-
-`RecoveryEvent` enum:
-```rust
-pub enum RecoveryEvent {
-    DispatchFailed { at: u32, byte: u8, recovered_shape: ShapeTag, resumed_at: u32 },
-    RecoverDirectiveFired { rule_id: RuleId, sync_expr: &'static str, at: u32, resumed_at: u32 },
-    Unrecoverable { at: u32, reason: UnrecoverableReason },
-}
-```
-
-#### AY.3.2 — `@recover` semantics refinement + deprecation audit
-
-Owner: `crates/ir/src/passes/recognizers/recover.rs` (**extend**); `docs/tranches/AY/recover-audit.md` (**new**).
-
-`@recover ruleName syncExpr ;` refines: `syncExpr` overrides the structural-default `sync_bytes[shape_tag]` for `ruleName`'s level. Existing BBNF recovery annotations work unchanged; rules without `@recover` get the structural default.
-
-**Deprecation audit**: enumerate every `@recover` site in the BBNF self-host grammar (`grammar/bbnf/*.bbnf`). JSON / CSS / Sheets declare none. For each site:
-
-1. Name the site: `(file:line, rule_name, sync_expr)`.
-2. Derive the structural-default sync byte for that rule's shape.
-3. Compare: does the explicit `syncExpr` differ from the default?
-4. Per-site verdict: `redundant` (remove in a follow-on cleanup) OR `required` (keep; document why).
-5. Aggregate: if every site is redundant, route `@recover` for removal in a future cleanup tranche (grammar-syntax simplification). If any is required, retain.
-
-The audit ships as `docs/tranches/AY/recover-audit.md` with a table of sites + verdicts + aggregate recommendation.
-
-**Hard gate** (Y3): per-grammar recovery harness (canonical malformed inputs per grammar, each asserting specific recovery point + downstream continuation); `@recover` preserves AT/AU bootstrap-recovery behaviour (BBNF self-hosting recovery test suite passes unchanged); `RecoveryEvent` stream consumable by the Y4 CLI inspector; `recover-audit.md` lands with every site's verdict.
-
-### Phase 4 — Replay tooling (Y4)
-
-Three agents, parallel.
-
-#### AY.4.1 — `inspect-log` CLI
-
-Owner: `crates/bbnf-cli/src/inspect_log.rs` (**new**).
-
-```bash
-cargo run -p bbnf-cli -- inspect-log <grammar> <input>
-```
-
-Parses with `--features replay` enabled; dumps the decision log with per-transition annotation:
-
-```
-byte_offset  rule_id     shape_tag  branch_idx  frame_depth
-0            root        Object     0           0
-1            pair        Object     0           1
-1            string      String     0           2
-15           string      String     EOF         2
-16           value       Value      0           1
-...
-```
-
-Also emits `RecoveryEvent` stream entries inline. Reads as a parse trace at the shape-level granularity.
-
-#### AY.4.2 — `minimise` CLI
-
-Owner: `crates/bbnf-cli/src/minimise.rs` (**new**).
-
-```bash
-cargo run -p bbnf-cli -- minimise <grammar> <input>
-```
-
-Given a malformed input that triggers a parse error, produce the shortest substring that triggers the same error. Binary-search prefixes and suffixes; the decision log identifies when the failing transition first appears. O(log n × parse cost) shrink.
-
-#### AY.4.3 — `replay-test` `#[test]` macro
-
-Owner: `crates/bbnf-tape/src/replay.rs` (**new**); `crates/bbnf-tape-macros/src/replay.rs` (**new proc-macro crate**).
-
-```rust
-#[bbnf_tape::replay_test(grammar = "json", input = "data/json/twitter.json")]
-fn twitter_replay_roundtrip() { /* macro generates body */ }
-```
-
-Macro expansion:
-1. Parse input with `--features replay`; capture decision log + tape.
-2. Replay: re-run the parser with log injected as branch hints; capture replay-tape.
-3. Assert `original_tape == replay_tape` bit-for-bit.
-
-Catches regressions in the shape emitter that would change decision sequence even when the final tape matches.
-
-**Hard gate** (Y4): `inspect-log` produces per-transition trace for every grammar; `minimise` shrinks a 1 KB malformed input to ≤ 32 bytes in O(log n) parse calls; `replay_test` macro generates passing tests across all corpus fixtures for every grammar.
-
-### Phase 5 — FINAL (Y5)
-
-One serial agent.
-
-`docs/tranches/AY/FINAL.md` + `docs/benchmarks/post-AY.json`.
-
-Bench posture: AY's feature value is tooling, not throughput. Default-features cold-parse regression ≤ 5% vs AX close (the `mark_snapshot` per list-rule boundary has a small cost even feature-off — documented). `--features replay` cold-parse regression ≤ 10% vs default-features (documented).
-
-Tranche summary:
-- Per-wave ledger with verification artefacts (Y0 substrate; Y1 round-trip harness; Y2 incremental parity; Y3 recovery harness + audit; Y4 CLI output samples).
-- Ignored tests: 0 (inherit from AX.W11).
-- Cross-tranche invariants: `cargo test --workspace` green; `cargo test --features replay` green.
-
-**Hard gate** (Y5):
-- `cargo test --workspace` green; zero `#[ignore]` additions.
-- `cargo test --features replay` green on every grammar.
-- Incremental-parity harness green (200/200 cases).
-- Recovery harness green per grammar.
-- `inspect-log` / `minimise` / `replay-test` CLI + macro functional across all primary grammars.
-- Default-features bench regression ≤ 5% vs AX close.
-- `recover-audit.md` ships with aggregate recommendation.
-
-## Critical files
-
-| File | Phase |
-|------|-------|
-| `crates/bbnf-tape/src/snapshot.rs` (**new** — `ShapeSnapshot` type + serde) | 0, 1 |
-| `crates/core/src/backend/rust/emitter/decision_log.rs` (**new** — record_decision splice) | 0 |
-| `crates/core/src/backend/rust/emitter/shapes/*.rs` (**extend** — decision-log splice + recovery branches) | 0, 3 |
-| `crates/bbnf-tape/src/columns.rs` (**extend** — `snapshot_at` sparse column) | 0 |
-| `crates/core/src/backend/rust/emitter/resume.rs` (**new** — `parse_resume_<grammar>` emit) | 1 |
-| `crates/bbnf-tape/src/incremental.rs` (**new** — edit-localisation + splice + span-shift) | 2 |
-| `crates/core/tests/incremental_parity.rs` (**new** — 200-case harness) | 2 |
-| `crates/bbnf-tape/src/recovery.rs` (**new** — structural-default + `RecoveryEvent`) | 3 |
-| `crates/ir/src/passes/recognizers/recover.rs` (**extend** — `@recover` refinement) | 3 |
-| `crates/core/tests/recovery_parity.rs` (**new** — per-grammar recovery harness) | 3 |
-| `docs/tranches/AY/recover-audit.md` (**new** — per-site audit) | 3 |
-| `crates/bbnf-cli/src/inspect_log.rs` (**new** — log inspector CLI) | 4 |
-| `crates/bbnf-cli/src/minimise.rs` (**new** — test-case minimiser CLI) | 4 |
-| `crates/bbnf-tape/src/replay.rs` (**new** — replay substrate) | 4 |
-| `crates/bbnf-tape-macros/src/replay.rs` (**new** — `replay_test` proc macro) | 4 |
-| `crates/core/tests/replay_roundtrip.rs` (**new** — per-grammar `replay_test` invocations) | 4 |
-| `docs/tranches/AY/{PROGRESS,FINAL}.md` + `docs/benchmarks/{post-AY,post-AY-Y{0..5}}.json` | 0–5 |
-
-## Hard gates summary
-
-### Y0 — Substrate
-1. `ShapeSnapshot` type + bincode derive.
-2. `#[cfg(feature = "replay")]` decision-log splice at every dispatch point in every shape emitter.
-3. `snapshot_at` sparse column populated at every list-rule / array-element / rule / formula-line boundary.
-4. Default-features cold-parse: no regression vs AX close.
-5. `--features replay` cold-parse: ≤ 5% regression, documented in `post-AY-Y0.json`.
-
-### Y1 — Resume
-6. `parse_resume_<grammar>` emitted per grammar.
-7. `ShapeSnapshot` bincode round-trips for every grammar.
-8. Per-grammar fixture: `parse_resume` from snapshot produces tape-identical output to cold parse from same `pos` (≥ 50 cases per grammar).
-
-### Y2 — Incremental
-9. 100 KB CSS edit median ≤ 200 µs.
-10. 10 KB JSON edit ≤ 50 µs.
-11. 1 KB Sheets edit ≤ 10 µs.
-12. Incremental-parity harness: 200/200 green (insert / delete / replace × scalar / compound × 4 grammars × scopes).
-13. `SHAPE_DICT` + bloom+GADT re-fire on spliced slice (structurally identical re-parses hit prior tape verbatim).
-
-### Y3 — Recovery + audit
-14. Per-grammar recovery harness green (malformed inputs each assert recovery point + continuation).
-15. `@recover` preserves AT/AU bootstrap-recovery behaviour.
-16. `recover-audit.md` ships per-site verdicts + aggregate recommendation.
-17. `RecoveryEvent` stream consumable by `inspect-log` CLI.
-
-### Y4 — Replay tooling
-18. `inspect-log <grammar> <input>` produces per-transition trace for every grammar.
-19. `minimise` shrinks 1 KB → ≤ 32 B in O(log n) parse calls.
-20. `replay_test` macro: log-record → replay → assert tape-identical across all corpus fixtures for every grammar.
-
-### Y5 — FINAL
-21. `cargo test --workspace` green; 0 `#[ignore]`.
-22. `cargo test --features replay` green per grammar.
-23. Default-features bench regression ≤ 5% vs AX close.
-24. `--features replay` bench regression ≤ 10% vs default-features.
-25. `FINAL.md` + `post-AY.json` land.
+- **CSS `calc()` semantic evaluator** (W1r.3a scope-reveal) — if bootstrap/tailwind byte-parity becomes plan-priority, schedule dedicated workstream in AY or a follow-on letter. Not AY scope.
+- **Cranelift JIT per-schema** (AY.Y5 per existing AY.md draft) — move to AY as planned.
+- **W4 Regex engine Bounded-HIR rewrite** — if W4's byte-class + PHF fails to land 8-15% CSS gain, defer to post-AY with bench-delta-gated decision.
 
 ## Indefatigability
 
-AY is the tooling tranche. Performance is not the gate; feature-correctness is. When AY closes:
+When AY closes:
 
-- RD-native replay: decision log is a trace of shape-emitter dispatches, not a DTA state-id log.
-- RD-native incremental: `parse_resume_<grammar>` re-enters the shape emitter's call graph from a captured `ShapeSnapshot`.
-- RD-native recovery: structural-default sync walks the shape stack, not a frame stack.
-- CLI tooling: `inspect-log`, `minimise`, `replay-test` all operational.
-- Zero DTA carry-forward: no `DtaSnapshot`, no `dispatch_one`, no `DtaTable` is consumed anywhere. The AX deletion holds.
-- `cargo test --workspace` green; zero ignored.
-
-Post-AY, the codebase has:
-- One codegen path (AX).
-- One runtime shape (shape emitter).
-- One snapshot primitive (`ShapeSnapshot`).
-- One replay mechanism (decision log over shape dispatches).
-- One recovery mechanism (structural-default + `@recover` override).
-- One incremental mechanism (edit → snapshot → resume → splice).
-
-The architectural terminus. AX proved performance; AY proved developer ergonomics. Successor tranches — if any — address new language features, new target backends, or new performance horizons on top of this substrate.
+- Tape hot-path inline + finalise fused; no cross-crate call boundary on emit.
+- Direct-to-struct projection fires for every grammar-declared `-> input : <Name>`.
+- Apples-to-apples bench matrix populated across canonical-serialize + lazy-lazy + eager-eager lanes.
+- JSON gap vs sonic-rs cut from 7-8× to 3-4× (substrate fix) + 1.5-2.5× (eager materialization via `to_value`).
+- CSS L4 compile-time + cache-size reduction on top of W1r.3a's 69% drop.
+- Five stale wire-contract tests retired; ebnf_prettify recognizer green; `cargo test --workspace` clean.
+- AX FINAL.md written; AY handoff artefacts ready.
+- No hand-coded Value duplicates; no third-party comparator bridges; no substrate-without-consumer landings; no placeholder variants.
+- Invariants 22-24 + AX 1-21 all gated by per-wave wire-contract tests and samply attribution.

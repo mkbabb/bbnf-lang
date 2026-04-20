@@ -199,7 +199,7 @@ Read all 6 reports + integrate. Decide tranche letter:
 
 - **AY is reserved for replay/recovery/incremental** per existing
   `docs/tranches/AY/AY.md` (461 lines, fully drafted). Do NOT reuse.
-- **AZ is the next available letter** for a performance + projection
+- **AY is the next available letter** for a performance + projection
   tranche addressing: direct-to-struct preservation, tape hot-path
   optimization (push_structural/finalise/regex-scan), Value API
   materialization, compile-time reduction, stale-test retirement,
@@ -207,11 +207,11 @@ Read all 6 reports + integrate. Decide tranche letter:
   FINAL.md).
 
 Parent tranche doc + per-wave specs authored per `WAVE_SPEC.md`.
-Committed together as `docs(AZ): open tranche`.
+Committed together as `docs(AY): open tranche`.
 
 ## 7. Deferred items — folded as HIGH PRIORITY per user directive
 
-Every item below lands in AZ (or absorbed-AX) waves; no deferrals:
+Every item below lands in AY (or absorbed-AX) waves; no deferrals:
 
 1. **Named-type preservation + direct-to-struct projection (HIGH)** —
    `->  input : <Name>` must reach emit-time; `emit_direct_to_struct_projection`
@@ -228,8 +228,8 @@ Every item below lands in AZ (or absorbed-AX) waves; no deferrals:
    13 MB cache. Per-shape emitter fusion, expand-time token reduction.
 5. **Stale test retirement + ebnf_prettify fix (MEDIUM)** — 5
    compile-fail tests delete; EBNF recognizer parse-at-0 investigation.
-6. **AX close artefacts (MEDIUM)** — `post-AZ-open.json` bench
-   baseline; optional AX `FINAL.md` if AZ absorbs AX closure.
+6. **AX close artefacts (MEDIUM)** — `post-AY-open.json` bench
+   baseline; optional AX `FINAL.md` if AY absorbs AX closure.
 7. **Value API materialization (MEDIUM)** — opt-in
    `parsed.to_value::<T>() -> T` grammar-emitted surface for apples-to-
    apples vs `sonic_rs::Value` / `lightningcss::StyleSheet`. Must be

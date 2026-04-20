@@ -329,7 +329,7 @@ referencing a 40 B arena slot. Cache-line analysis:
 
 The aggregate path should be faster on the hot path (single push vs four,
 one arena allocation vs four column writes). Confirmation is deferred to the
-AZ implementation wave's bench delta (`css_l4` × bootstrap + tailwind).
+AY implementation wave's bench delta (`css_l4` × bootstrap + tailwind).
 `bbnf-tape`'s `builder.rs:64–72` confirms `LargeAggregate` is a
 first-class variant, so no new substrate.
 
@@ -339,7 +339,7 @@ fix lands — currently absent per A5 profile tables.
 
 ## 8. Validation plan
 
-Wave-close gates for the AZ tranche sub-wave that lands this fix:
+Wave-close gates for the AY tranche sub-wave that lands this fix:
 
 1. **Wire-contract test** (§5) — green on master after fix.
 2. **`emit_direct_to_struct_projection` activation** — `cargo expand -p
@@ -416,4 +416,4 @@ through `PayloadData::LargeAggregate` for colour values.
 
 **Performance**: aggregate path (1 push, 40 B arena slot) expected to
 beat compound path (4 pushes, 64 B record headers). Bench delta
-quantified in AZ wave close.
+quantified in AY wave close.

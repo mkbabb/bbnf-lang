@@ -186,7 +186,7 @@ via the grammar-emitted `to_value::<StyleSheet>()` surface proposed
 by A5's Value API workstream, (b) adding a lightningcss variant that
 parses with `ParserOptions { parse_values: false }` and skips typed
 projection, or (c) comparing rule-counter variants only (cssparser's
-approach — see §6). Option (a) is the AZ-tranche apples-to-apples
+approach — see §6). Option (a) is the AY-tranche apples-to-apples
 target; it does not invalidate the raw parse numbers above but
 contextualises bbnf's tailwind advantage (1.67× lightningcss) as
 partly a by-product of deferred typed projection.

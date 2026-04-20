@@ -1,6 +1,6 @@
-# AZ-A4 — Fresh Compile-Time Audit on Master HEAD `9074a685`
+# AY-A4 — Fresh Compile-Time Audit on Master HEAD `9074a685`
 
-Sub-agent: `AZ.planning A4`. Worktree: `../bbnf-wt-az-a4`, branch
+Sub-agent: `AY.planning A4`. Worktree: `../bbnf-wt-az-a4`, branch
 `az-a4-compile-fresh`. Dedicated target:
 `/Users/mkbabb/Programming/bbnf-wt-az-a4-target`. Rustc
 `1.96.0-nightly (9602bda1d 2026-04-05)` (identical to doc 06 baseline).
@@ -300,5 +300,5 @@ scaling super-linearly inside CSS L4's emission; the emitter output is
 unchanged but the rustc cost per line collapsed. Compile-time levers
 remain valuable — `macro_expand_crate` still dominates at 47 % of
 css_l4 self-time and 295 MB RSS — but the **urgency has reduced by
-over half** and tranche AZ can weight other priorities (direct-to-
+over half** and tranche AY can weight other priorities (direct-to-
 struct projection, tape hot-path) above compile-time.

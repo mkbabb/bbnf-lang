@@ -27,6 +27,7 @@ rustc-ice-*.txt
 
 # Local profiling artifacts
 .profiles/
+.profile-target/
 
 # Screenshot artifacts (root only, not assets/)
 /*.png

@@ -1,8 +1,8 @@
-# AZ Planning — Synthesis of Six Fresh Audits
+# AY Planning — Synthesis of Six Fresh Audits
 
 Unified findings from A1–A6 on master HEAD `9074a685`, all agents
 working off the Apr 20 01:43 fresh prepare. This document ties the
-six reports into a single priority matrix + opens AZ.
+six reports into a single priority matrix + opens AY.
 
 ## 1. Performance landscape (fresh, walker retired)
 
@@ -188,7 +188,7 @@ From `00-session-recap.md §3`, unchanged:
 - `aw_v_w5_2_per_ref_routing.rs` (2 compile errors)
 
 All reference retired predicates + carved GrammarProfile fields. Per
-invariant 14 retire with their predicates. **AZ opens with a
+invariant 14 retire with their predicates. **AY opens with a
 `retire-stale-tests` wave** clearing all five in one commit.
 
 ### 3.2 ebnf_prettify recognizer bug
@@ -196,44 +196,44 @@ invariant 14 retire with their predicates. **AZ opens with a
 `EbnfParser::parse("digit = \"0\" ;")` fails at offset 0. Pre-existing
 — unrelated to W1r landings (bbnf_self_parity 56/0 parses same source
 successfully via `BbnfEmit::parse`). Divergence is in the
-ebnf.bbnf-derived `EbnfParser::parse`. Investigation in AZ.
+ebnf.bbnf-derived `EbnfParser::parse`. Investigation in AY.
 
 ### 3.3 AX close artefacts
 
 - `post-AX-W1-close.json` bench matrix: NOT CAPTURED (invariant 10).
 - AX `FINAL.md`: NOT WRITTEN.
 
-AZ decides: AX closes via a dedicated AX.FINAL wave, OR AZ absorbs AX closure
-(treats W0a+W0b+W0c+W1 as AX's complete scope, skips W2-W15, opens AZ
+AY decides: AX closes via a dedicated AX.FINAL wave, OR AY absorbs AX closure
+(treats W0a+W0b+W0c+W1 as AX's complete scope, skips W2-W15, opens AY
 directly). **Given W2-W15 are largely unaligned with fresh-audit
-priorities, AZ should declare AX closed via AX.FINAL wave that captures
-the bench matrix + writes FINAL.md referencing AZ as continuation.**
+priorities, AY should declare AX closed via AX.FINAL wave that captures
+the bench matrix + writes FINAL.md referencing AY as continuation.**
 
 ## 4. Tranche letter decision
 
 - **AY** is reserved for replay/recovery/incremental per existing
   `docs/tranches/AY/AY.md` (461 lines, fully drafted tooling tranche).
-- **AZ** is the next available letter for a performance + projection tranche.
-- AZ follows AX per SPEC ("Successor to AX close").
-- AY opens AFTER AZ per AX→AY handoff contract ("AX closes first;
+- **AY** is the next available letter for a performance + projection tranche.
+- AY follows AX per SPEC ("Successor to AX close").
+- AY opens AFTER AY per AX→AY handoff contract ("AX closes first;
   AY's Y0 substrate depends on stable shape emitter").
 
-**Decision: AZ is allocated for direct-to-struct + tape hot-path + Value API + compile-time.**
+**Decision: AY is allocated for direct-to-struct + tape hot-path + Value API + compile-time.**
 
-## 5. AZ wave schedule (proposed)
+## 5. AY wave schedule (proposed)
 
 Six numbered waves + one close wave:
 
 | Wave | Scope | Agents | Opens after |
 |------|-------|--------|-------------|
-| **AZ.W0** | Retire 5 stale W0a/W0b tests + diagnose ebnf_prettify + AX.FINAL (bench matrix + AX close doc) | 1 serial (cleanup + bench) + 1 parallel (ebnf_prettify diagnosis) | tranche open |
-| **AZ.W1** | L-tape-inline + L-finalise-fuse (tape substrate hot-path) | 2 parallel (inline + finalise-fuse) | W0 |
-| **AZ.W2** | L-named-preserve (Named-type preservation + direct-to-struct activation + wire-contract) | 1 serial (preservation fix) → 1 serial (consumer verify) | W1 |
-| **AZ.W3** | L-value-eager (grammar-emitted `<Grammar>Value` + `to_value` + eager bench lane) | 2 parallel (emitter + bench) | W2 |
-| **AZ.W4** | L-regex-specialise (byte-class pre-filter + PHF + DFA hoist) | 2 parallel (CSS + Sheets) | W1 (regex is independent of Named) |
-| **AZ.W5** | L-compile-A/B/D (CSS L4 @import split + DFA hoist + shared PHF) | 3 parallel | W3 |
-| **AZ.W6** | L-compile-C + L-compile-E (parse_that de-generic + ax-iter config) | 2 parallel | W5 |
-| **AZ.W7** | FINAL — bench matrix + FINAL.md + AY handoff | 1 serial | W6 |
+| **AY.W0** | Retire 5 stale W0a/W0b tests + diagnose ebnf_prettify + AX.FINAL (bench matrix + AX close doc) | 1 serial (cleanup + bench) + 1 parallel (ebnf_prettify diagnosis) | tranche open |
+| **AY.W1** | L-tape-inline + L-finalise-fuse (tape substrate hot-path) | 2 parallel (inline + finalise-fuse) | W0 |
+| **AY.W2** | L-named-preserve (Named-type preservation + direct-to-struct activation + wire-contract) | 1 serial (preservation fix) → 1 serial (consumer verify) | W1 |
+| **AY.W3** | L-value-eager (grammar-emitted `<Grammar>Value` + `to_value` + eager bench lane) | 2 parallel (emitter + bench) | W2 |
+| **AY.W4** | L-regex-specialise (byte-class pre-filter + PHF + DFA hoist) | 2 parallel (CSS + Sheets) | W1 (regex is independent of Named) |
+| **AY.W5** | L-compile-A/B/D (CSS L4 @import split + DFA hoist + shared PHF) | 3 parallel | W3 |
+| **AY.W6** | L-compile-C + L-compile-E (parse_that de-generic + ax-iter config) | 2 parallel | W5 |
+| **AY.W7** | FINAL — bench matrix + FINAL.md + AY handoff | 1 serial | W6 |
 
 Hard-gate design per wave uses the WAVE_SPEC.md canonical form:
 concrete measurements, artefact paths, no narrative gates, no
@@ -241,7 +241,7 @@ substrate-without-consumer.
 
 ## 6. Invariants carried forward
 
-AX invariants 1-21 survive unchanged. AZ adds:
+AX invariants 1-21 survive unchanged. AY adds:
 
 - **Invariant 22** (tape substrate inline): `push_structural` +
   `finalise` paths are always inlined at emit call sites; no
@@ -268,5 +268,5 @@ No grammar DSL additions (invariant 4 preserved).
 ## 7. Commit checkpoint
 
 This synthesis doc commits as `docs(next-tranche): synthesis of A1–A6
-findings (AZ.planning)`. Phase 2 continues with AZ parent doc +
+findings (AY.planning)`. Phase 2 continues with AY parent doc +
 per-wave specs.

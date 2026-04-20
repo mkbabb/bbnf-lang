@@ -34,7 +34,6 @@
 
 use crate::columns::Columns;
 use crate::kind::TapeKind;
-use crate::profile::ShapeEntry;
 use crate::tape::{Tape, TapeOffset, TapeRec};
 
 /// Monotonic per-column rank maintained by a walker stepping through
@@ -271,54 +270,6 @@ impl<'tape> TapeCursor<'tape> {
         self.children()
     }
 
-    // ── ShapeRef lazy expansion (AV.5.1) ─────────────────────────
-
-    /// Lazily expand the children of a `ShapeRef` record using the
-    /// supplied [`ShapeEntry`] template.
-    ///
-    /// Returns an iterator that synthesises child cursors from the
-    /// packed payload blob. Each child's `TapeKind` comes from
-    /// `entry.child_kinds`; leaf-hole children read their span from
-    /// the packed blob at the offset given by
-    /// `entry.leaf_payload_offsets`.
-    ///
-    /// For compound (non-hole) children in the skeleton, the iterator
-    /// yields a cursor at a synthetic position whose kind is read
-    /// from `child_kinds` but whose span is inherited from the parent
-    /// ShapeRef. Callers (the generated view layer) use the child
-    /// kind to dispatch into the appropriate typed accessor.
-    ///
-    /// Returns an empty iterator when the current record is not
-    /// `TapeKind::ShapeRef`.
-    #[inline]
-    pub fn shape_ref_children(self, entry: &'tape ShapeEntry) -> ShapeRefChildIter<'tape> {
-        if self.kind() != TapeKind::ShapeRef {
-            return ShapeRefChildIter::empty(self.tape);
-        }
-        let rec = self.record();
-        let payload_start = if rec.shape_ref_has_payload() {
-            rec.child_off.0 as usize
-        } else {
-            0
-        };
-        ShapeRefChildIter {
-            tape: self.tape,
-            parent_offset: self.offset,
-            payload_start,
-            entry,
-            child_idx: 0,
-        }
-    }
-
-    /// Number of children a `ShapeRef` record expands to, given its
-    /// [`ShapeEntry`] template.
-    #[inline]
-    pub fn shape_ref_child_count(self, entry: &ShapeEntry) -> usize {
-        if self.kind() != TapeKind::ShapeRef {
-            return 0;
-        }
-        entry.child_kinds.len()
-    }
 }
 
 /// Forward-order iterator over a compound's direct children.
@@ -361,136 +312,6 @@ impl<'tape> Iterator for ChildIter<'tape> {
         })
     }
 }
-
-// ── ShapeRef lazy child expansion (AV.5.1) ───────────────────────
-
-/// Forward-order iterator over the synthetic children of a
-/// `ShapeRef` record. Each item is a [`ShapeRefSyntheticChild`]
-/// that carries the child's `TapeKind`, its span (read from the
-/// packed blob for leaf holes, or inherited from the parent for
-/// structural positions), and the byte offset into the packed blob
-/// where the child's typed payload begins (for leaf holes).
-///
-/// Zero heap allocation.
-#[derive(Clone, Copy, Debug)]
-pub struct ShapeRefChildIter<'tape> {
-    tape: &'tape Tape,
-    parent_offset: TapeOffset,
-    payload_start: usize,
-    entry: &'tape ShapeEntry,
-    child_idx: usize,
-}
-
-impl<'tape> ShapeRefChildIter<'tape> {
-    /// Iterator that immediately yields `None`.
-    #[inline]
-    fn empty(tape: &'tape Tape) -> Self {
-        Self {
-            tape,
-            parent_offset: TapeOffset::NONE,
-            payload_start: 0,
-            entry: &EMPTY_SHAPE_ENTRY,
-            child_idx: 0,
-        }
-    }
-}
-
-/// Sentinel used by `ShapeRefChildIter::empty`.
-static EMPTY_SHAPE_ENTRY: ShapeEntry = ShapeEntry {
-    shape_hash: 0,
-    rule: crate::profile::RuleId(0),
-    child_kinds: &[],
-    leaf_payload_offsets: &[],
-    payload_bytes: 0,
-};
-
-/// A synthetic child yielded by [`ShapeRefChildIter`].
-///
-/// Not backed by a real tape record — the `TapeKind` and span are
-/// derived from the shape template + packed blob. Callers use the
-/// kind and blob offset to decode the child's typed payload via the
-/// same `Tape::payload_*` family (keyed by arena byte offset).
-#[derive(Clone, Copy, Debug)]
-pub struct ShapeRefSyntheticChild {
-    /// The child's `TapeKind` from the shape template skeleton.
-    pub kind: TapeKind,
-    /// Source span start, read from the packed blob for leaf holes
-    /// or inherited from the parent for structural positions.
-    pub span_lo: u32,
-    /// Source span end.
-    pub span_hi: u32,
-    /// Byte offset into `pay_agg` where this child's typed payload
-    /// begins. `u32::MAX` for structural (non-hole) children.
-    pub payload_offset: u32,
-    /// True iff this child is a leaf hole (its data lives in the
-    /// packed blob).
-    pub is_leaf_hole: bool,
-}
-
-impl<'tape> Iterator for ShapeRefChildIter<'tape> {
-    type Item = ShapeRefSyntheticChild;
-
-    #[inline]
-    fn next(&mut self) -> Option<ShapeRefSyntheticChild> {
-        if self.child_idx >= self.entry.child_kinds.len() {
-            return None;
-        }
-        let idx = self.child_idx;
-        self.child_idx += 1;
-
-        let kind = TapeKind::from_u8(self.entry.child_kinds[idx]);
-        let hole_offset = self.entry.leaf_payload_offsets[idx];
-        let is_leaf_hole = hole_offset != u16::MAX;
-
-        if is_leaf_hole {
-            // Leaf hole: read span (lo, hi) as two u32 LE values from
-            // the packed blob at the declared offset.
-            let abs_offset = self.payload_start + hole_offset as usize;
-            let arena = self.tape.arena();
-            let (span_lo, span_hi) = if abs_offset + 8 <= arena.len() {
-                let lo = u32::from_le_bytes(
-                    arena[abs_offset..abs_offset + 4].try_into().unwrap_or([0; 4]),
-                );
-                let hi = u32::from_le_bytes(
-                    arena[abs_offset + 4..abs_offset + 8].try_into().unwrap_or([0; 4]),
-                );
-                (lo, hi)
-            } else {
-                (0, 0)
-            };
-            Some(ShapeRefSyntheticChild {
-                kind,
-                span_lo,
-                span_hi,
-                payload_offset: abs_offset as u32 + 8, // after the span pair
-                is_leaf_hole: true,
-            })
-        } else {
-            // Structural (non-hole) child: inherit parent span.
-            let columns = self.tape.columns();
-            let (span_lo, span_hi) = if !self.parent_offset.is_none() {
-                columns.span_at(self.parent_offset.0)
-            } else {
-                (0, 0)
-            };
-            Some(ShapeRefSyntheticChild {
-                kind,
-                span_lo,
-                span_hi,
-                payload_offset: u32::MAX,
-                is_leaf_hole: false,
-            })
-        }
-    }
-
-    #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining = self.entry.child_kinds.len() - self.child_idx;
-        (remaining, Some(remaining))
-    }
-}
-
-impl ExactSizeIterator for ShapeRefChildIter<'_> {}
 
 // ── First-child seed (O(1) pre-order, fallback post-order walk) ─
 

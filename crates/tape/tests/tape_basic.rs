@@ -14,8 +14,7 @@
 //!    the shared arena.
 
 use tape::{
-    GrammarProfile, PayloadData, RuleId, Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset,
-    TapeRec,
+    GrammarProfile, PayloadData, Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset, TapeRec,
 };
 
 #[test]
@@ -831,11 +830,7 @@ const _EMPTY_WITNESS: GrammarProfile = GrammarProfile::EMPTY;
 // is a numeric literal.
 static _SAMPLE_ALPHABET: [u8; 3] = [b'{', b'}', b','];
 static _SAMPLE_DIGRAPHS: [(u8, u8); 1] = [(b'/', b'*')];
-static _SAMPLE_LIST_RULES: [RuleId; 2] = [RuleId(0), RuleId(7)];
 const _SAMPLE_PROFILE: GrammarProfile = GrammarProfile {
-    push_compound_count: 7,
-    push_leaf_count: 2,
-    push_leaf_with_count: 3,
     compounds_per_input_byte: 0.5,
     leaves_per_input_byte: 0.25,
     parallel_break_even_bytes: 65_536,
@@ -843,22 +838,14 @@ const _SAMPLE_PROFILE: GrammarProfile = GrammarProfile {
     structural_digraphs: &_SAMPLE_DIGRAPHS,
     structural_digraph_mask: [0u64; 4],
     structural_quote_classes: &[],
-    list_rules: &_SAMPLE_LIST_RULES,
-    shape_dict: &[],
 };
 
 #[test]
 fn grammar_profile_empty_is_zero_everywhere() {
-    assert_eq!(GrammarProfile::EMPTY.total_push_sites(), 0);
     assert!(GrammarProfile::EMPTY.structural_alphabet.is_empty());
     assert!(GrammarProfile::EMPTY.structural_digraphs.is_empty());
-    assert!(GrammarProfile::EMPTY.list_rules.is_empty());
-    assert!(GrammarProfile::EMPTY.shape_dict.is_empty());
-}
-
-#[test]
-fn grammar_profile_total_push_sites_sums_three_counts() {
-    assert_eq!(_SAMPLE_PROFILE.total_push_sites(), 12);
+    assert!(GrammarProfile::EMPTY.structural_quote_classes.is_empty());
+    assert_eq!(GrammarProfile::EMPTY.parallel_break_even_bytes, 0);
 }
 
 #[test]
@@ -891,9 +878,6 @@ fn grammar_profile_slices_reference_rodata() {
         _SAMPLE_PROFILE.structural_digraphs,
         &[(b'/', b'*')] as &[(u8, u8)],
     );
-    assert_eq!(_SAMPLE_PROFILE.list_rules.len(), 2);
-    assert_eq!(_SAMPLE_PROFILE.list_rules[0].0, 0);
-    assert_eq!(_SAMPLE_PROFILE.list_rules[1].0, 7);
 }
 
 // ── Tranche AV Phase 2 — Columns SoA substrate ────────────────────

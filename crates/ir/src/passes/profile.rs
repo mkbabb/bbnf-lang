@@ -23,36 +23,9 @@
 //! [`EClassFacts`]: crate::egraph::analysis::EClassFacts
 
 use crate::GrammarIR;
-use crate::passes::recognizers::list_rules::mine_list_rules;
-use crate::passes::recognizers::shape_dict::TemplatePiece;
 use crate::passes::recognizers::shape_dict_bbnf::{
     mine_bbnf_shape_templates, BbnfShapeTemplate,
 };
-/// IR-side counterpart of [`tape::ShapeEntry`]. Carries the
-/// shape hash, owning rule id, per-child kind discriminants, per-hole
-/// payload offsets, and total packed payload byte width.
-///
-/// AW-IV.W1.δ — populated from [`GrammarIR::shape_dict_templates`] +
-/// [`GrammarIR::shape_dict_selection`]. The selection pruned the
-/// candidate pool under the 256-entry budget; this projection lowers
-/// the survivors to the runtime-consumable shape.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ShapeEntryIr {
-    /// Canonical 64-bit shape hash — matches
-    /// [`ShapeTemplate::shape_hash`](crate::passes::recognizers::shape_dict::ShapeTemplate::shape_hash).
-    pub shape_hash: u64,
-    /// Rule id the shape-ref expands to at view time.
-    pub rule_id: u32,
-    /// Per-child [`tape::TapeKind`] discriminants declaring the
-    /// skeleton. Length = number of direct children the collapsed
-    /// compound would have emitted.
-    pub child_kinds: Vec<u8>,
-    /// Per-child byte offset into the packed payload blob for each
-    /// leaf hole. `u16::MAX` marks structural (non-hole) children.
-    pub leaf_payload_offsets: Vec<u16>,
-    /// Total byte width of the packed payload blob.
-    pub payload_bytes: u16,
-}
 
 /// Consolidated per-grammar fingerprint — the owned IR-side
 /// counterpart of [`tape::GrammarProfile`].
@@ -78,20 +51,6 @@ pub struct ShapeEntryIr {
 /// current state.
 #[derive(Clone, Debug, Default)]
 pub struct GrammarProfile {
-    // ── Push-site counts (V1) ────────────────────────────────────────
-
-    /// Rules whose emitted function terminates with
-    /// `push_compound(...)`.
-    pub push_compound_count: u16,
-
-    /// Rules whose emitted function terminates with a plain
-    /// `push_leaf(...)` — no payload.
-    pub push_leaf_count: u16,
-
-    /// Rules whose emitted function terminates with
-    /// `push_leaf_with_*(...)` — scalar or aggregate payload.
-    pub push_leaf_with_count: u16,
-
     // ── Per-byte density estimates (V1) ──────────────────────────────
 
     /// Estimated compound records produced per input byte.
@@ -154,32 +113,6 @@ pub struct GrammarProfile {
     /// Populated by [`mine_bbnf_shape_templates`] via
     /// [`GrammarIR::profile`]. Empty for non-BBNF grammars.
     pub bbnf_shape_templates: Vec<BbnfShapeTemplate>,
-
-    // ── Document-level parallel parse (V6, AW-IV.W4.4 wired) ────────
-
-    /// Rules eligible for chunked parallel parse (top-level lists).
-    /// Populated by
-    /// [`mine_list_rules`](crate::passes::recognizers::list_rules::mine_list_rules):
-    /// admits the grammar's entry rule when its body (stripped of
-    /// transparent wrappers) is a `Repeat` over an `Alt` / `Ref` /
-    /// `Seq`. Non-empty for CSS L4 (`stylesheet = rule*`), BBNF
-    /// (`grammar = directive* rule*`), Sheets (`file = cell*`);
-    /// empty for JSON (entry `value` is an Alt). W9 wires the
-    /// runtime parallel-fork consumer; today the slot flows the
-    /// mined data through the codegen without a live call site.
-    pub list_rules: Vec<u32>,
-
-    // ── Shape dictionary runtime entries (V5, AW-IV.W1.δ wire-contract)
-
-    /// Shape-dictionary entries for `ShapeRef` deduplication at the
-    /// runtime tape. Populated from the CSP-pruned subset of
-    /// [`GrammarIR::shape_dict_templates`] indexed by
-    /// [`GrammarIR::shape_dict_selection`]. Each entry carries the
-    /// canonical shape hash, owning rule id, per-child kind
-    /// discriminants, per-hole payload offsets, and the total packed
-    /// payload byte width the runtime uses to rebuild the collapsed
-    /// subtree at view time.
-    pub shape_dict: Vec<ShapeEntryIr>,
 }
 
 impl GrammarIR {
@@ -238,143 +171,22 @@ impl GrammarIR {
         // branch). Empty for non-BBNF grammars.
         let bbnf_shape_templates = mine_bbnf_shape_templates(self);
 
-        // AW-IV.W1.δ — shape_dict projection.
-        //
-        // The CSP shape-dict selection prunes the candidate pool
-        // ([`GrammarIR::shape_dict_templates`]) to the admitted set
-        // ([`GrammarIR::shape_dict_selection`]). Project the admitted
-        // templates to the runtime-consumable [`tape::ShapeEntry`]
-        // shape: each template's `skeleton` maps to per-child
-        // `TapeKind` discriminants; each `LeafHole` contributes a
-        // packed-payload offset; constant positions carry the
-        // `u16::MAX` sentinel.
-        let shape_dict: Vec<ShapeEntryIr> = {
-            let mut entries: Vec<ShapeEntryIr> = Vec::new();
-            for &idx in &self.shape_dict_selection {
-                let Some((node_id, template)) = self.shape_dict_templates.get(idx) else {
-                    continue;
-                };
-                // Resolve the owning rule by finding the rule whose
-                // body DAG node matches this template's NodeId.
-                let Some(dag) = self.dag.as_ref() else { continue };
-                let owning_rule_id = self
-                    .rules
-                    .iter()
-                    .find(|rule| dag.node_for(&rule.body) == Some(*node_id))
-                    .map(|rule| rule.id);
-                let Some(rule_id) = owning_rule_id else {
-                    // Template references an interior node; without
-                    // an enclosing rule id the runtime cannot route
-                    // `ShapeRef` dispatch back to a view type. Skip.
-                    continue;
-                };
-
-                // Build the parallel `child_kinds` + `leaf_payload_offsets`
-                // arrays from the skeleton. Per-piece mapping mirrors the
-                // AW-III.W6.1 mapping in
-                // [`crate::backend::rust::emitter::dta::template_piece_to_kind_byte`]
-                // (kept in lockstep; see module doc-comment at the
-                // bottom of this file for the stable discriminant
-                // table).
-                let mut child_kinds: Vec<u8> = Vec::with_capacity(template.skeleton.len());
-                let mut leaf_payload_offsets: Vec<u16> =
-                    Vec::with_capacity(template.skeleton.len());
-                let mut offset_cursor: u16 = 0;
-                for piece in &template.skeleton {
-                    match piece {
-                        TemplatePiece::Literal(_) => {
-                            child_kinds.push(TAPE_KIND_LITERAL);
-                            leaf_payload_offsets.push(u16::MAX);
-                        }
-                        TemplatePiece::LeafHole => {
-                            child_kinds.push(TAPE_KIND_SPAN);
-                            leaf_payload_offsets.push(offset_cursor);
-                            // Each hole contributes an (lo, hi) span
-                            // pair = 8 bytes; typed payload (if any)
-                            // is appended by the codegen in a later
-                            // wave. V1 carries the span-only offset.
-                            offset_cursor = offset_cursor.saturating_add(8);
-                        }
-                        TemplatePiece::Whitespace => {
-                            // Whitespace pieces carry no distinct record
-                            // at view time — the `emit_dta::template_piece_to_kind_byte`
-                            // mapping treats them as `Span` so the
-                            // synthetic cursor has a uniform shape.
-                            child_kinds.push(TAPE_KIND_SPAN);
-                            leaf_payload_offsets.push(u16::MAX);
-                        }
-                        TemplatePiece::Epsilon => {
-                            child_kinds.push(TAPE_KIND_EPSILON);
-                            leaf_payload_offsets.push(u16::MAX);
-                        }
-                    }
-                }
-
-                entries.push(ShapeEntryIr {
-                    shape_hash: template.shape_hash,
-                    rule_id,
-                    child_kinds,
-                    leaf_payload_offsets,
-                    payload_bytes: offset_cursor,
-                });
-            }
-            // Deterministic output: by (rule_id, shape_hash).
-            entries.sort_by_key(|e| (e.rule_id, e.shape_hash));
-            entries
-        };
-
-        // AW-IV.W4.4 — list_rules projection.
-        //
-        // `mine_list_rules` admits the grammar's entry rule when its
-        // body (after stripping transparent wrappers) is a Repeat
-        // over an Alt / Ref / Seq — the canonical fork-candidate
-        // shape. For targets where the entry is a top-level list
-        // (CSS `stylesheet`, BBNF `grammar`, Sheets `file`), the
-        // projection carries a single rule id; for grammars whose
-        // entry is not list-shaped (JSON `value` Alt), the slot is
-        // empty and parse() routes through the single-thread walker.
-        //
-        // The emitter lowers this Vec to `&'static [RuleId]`; the
-        // runtime parse() entry consults the slot plus
-        // `parallel_break_even_bytes` to decide whether to route
-        // through `dta_run_parallel`.
-        let list_rules: Vec<u32> = mine_list_rules(self);
-
         // AW-IV.W4.4 — parallel break-even threshold.
         //
         // Below this input-byte count, spawning rayon workers + the
         // join-phase memcpy cost outweighs the per-worker parse win.
-        // The threshold is set at 1 MiB (1 << 20): CSS inputs below
-        // this size parse faster single-threaded because the rayon
-        // spawn + join overhead exceeds the per-shard parse savings,
-        // while inputs at or above 1 MiB (tailwind.css at 3.5 MB is
-        // the canonical target) amortise the overhead across their
+        // The threshold is set at 1 MiB (1 << 20): inputs below this
+        // size parse faster single-threaded because the rayon spawn +
+        // join overhead exceeds the per-shard parse savings, while
+        // inputs at or above 1 MiB amortise the overhead across their
         // workers.
         //
-        // The AW-IV.W4.4-fix re-setting (256 KiB → 1 MiB) follows
-        // the measured break-even on the reference 4-core platform:
-        // bootstrap.css (280 KB) gains no throughput from the 4-way
-        // fork because its worker-join cost overwhelms the parallel
-        // parse time, and its tape-parity golden reflects the
-        // single-thread emit shape. Tailwind.css (3.5 MB) clears the
-        // threshold and exercises the parallel path — its tape
-        // golden is generated from the parallel-forked tape and
-        // consumed in that shape by the parity harness.
-        //
-        // When `list_rules` is empty, the threshold is irrelevant
-        // (parse() never consults the parallel path), but it still
-        // populates the const literal uniformly so the projection
-        // is always well-formed.
-        let parallel_break_even_bytes: u32 = if list_rules.is_empty() {
-            0
-        } else {
-            1 << 20
-        };
+        // The threshold is uniformly emitted; AW-IV.W4.4-fix's setting
+        // matches the measured break-even on the reference 4-core
+        // platform.
+        let parallel_break_even_bytes: u32 = 1 << 20;
 
         GrammarProfile {
-            push_compound_count,
-            push_leaf_count,
-            push_leaf_with_count,
             compounds_per_input_byte,
             leaves_per_input_byte,
             parallel_break_even_bytes,
@@ -383,23 +195,6 @@ impl GrammarIR {
             structural_digraph_mask,
             structural_quote_classes,
             bbnf_shape_templates,
-            list_rules,
-            shape_dict,
         }
     }
 }
-
-// ── TapeKind discriminant constants ──────────────────────────────────
-//
-// AW-IV.W1.δ — carried as `const u8` values so the IR crate doesn't
-// need an upward import of `tape`. The values match the
-// `#[repr(u8)]` discriminants declared on `tape::TapeKind`; see
-// `crates/tape/src/kind.rs` for the canonical source. Kept in
-// lockstep with
-// [`crate::backend::rust::emitter::dta::template_piece_to_kind_byte`]
-// (the existing `SHAPE_DICT` emitter): that function uses
-// `TapeKind::Literal as u8` / `TapeKind::Span as u8` /
-// `TapeKind::Epsilon as u8` directly; the literal values below match.
-const TAPE_KIND_SPAN: u8 = 1;
-const TAPE_KIND_EPSILON: u8 = 2;
-const TAPE_KIND_LITERAL: u8 = 3;

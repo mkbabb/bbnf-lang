@@ -111,9 +111,9 @@ pub enum TapeKind {
     /// The packed payload blob in `pay_agg` holds the non-constant
     /// leaf spans and typed payloads following the shape template's
     /// layout. `TapeCursor::children(ShapeRef)` lazily expands via
-    /// [`ShapeEntry`](crate::ShapeEntry) lookup — the template
-    /// declares which child positions are structural (emit synthetic
-    /// sub-cursors) and which resolve to actual tape records.
+    /// the per-grammar shape-template lookup — the template declares
+    /// which child positions are structural (emit synthetic sub-
+    /// cursors) and which resolve to actual tape records.
     ShapeRef = 13,
 
     /// Leaf KV-pair — a flattened key-value pair where the key is a

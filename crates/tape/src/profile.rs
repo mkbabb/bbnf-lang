@@ -20,25 +20,22 @@
 //! profile field. The struct is entirely `const`-constructible; no
 //! runtime initialisation is ever performed.
 //!
-//! Some fields are populated today from existing IR facts
-//! (`compute_push_fingerprint`, `compute_structural_alphabet`); the
-//! remaining slots are empty slices that later AV waves fill in:
+//! Per-wave slot population:
 //!
 //! | Field | Populated in |
 //! |-------|--------------|
-//! | `push_compound_count`, `push_leaf_count`, `push_leaf_with_count` | V1 (from `PushFingerprint`) |
-//! | `compounds_per_input_byte`, `leaves_per_input_byte`, `payload_bytes_per_input_byte` | V1 (derived from `PushFingerprint::capacity_ratio` + class ratios) |
-//! | `expected_ns_per_byte`, `parallel_break_even_bytes` | V6 (doc-level parallel parse) |
+//! | `compounds_per_input_byte`, `leaves_per_input_byte` | V1 (derived from `PushFingerprint::capacity_ratio` + class ratios) |
+//! | `parallel_break_even_bytes` | V6 (doc-level parallel parse) |
 //! | `structural_alphabet`, `structural_digraphs` | V1 (from `StructuralAlphabet`) |
-//! | `list_rules` | V6 (document-level parallel parse) |
-//! | `shape_dict` | V5 (ShapeDictionary) |
 //!
 //! AX.W0b.A — seven dead slots retired (active_columns,
 //! branch_priors, reorder_unroll_visitors, keyword_tables,
 //! dedup_eligible_rules, payload_bytes_per_input_byte,
-//! expected_ns_per_byte). They shipped substrate-side without a
-//! downstream consumer wiring; W9 reintroduces the predictive ones
-//! (`expected_ns_per_byte` from `compounds_per_input_byte × 1.5`).
+//! expected_ns_per_byte). AY.W0.4 — five further dead slots
+//! retired (`push_compound_count`, `push_leaf_count`,
+//! `push_leaf_with_count`, `list_rules`, `shape_dict`); each shipped
+//! substrate-side at the emitter without a downstream runtime
+//! consumer.
 
 /// Identifier for an IR rule. Mirrors `bbnf_ir::RuleId` (which is a
 /// `u32`) but lives on the tape-side of the codegen boundary so the
@@ -47,37 +44,6 @@
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RuleId(pub u32);
-
-/// A shape-dictionary entry ([`GrammarProfile::shape_dict`], wave V5).
-///
-/// Each entry describes one fixed-shape compound subtree that the
-/// parser collapses to a single `TapeKind::ShapeRef` record at parse
-/// time. The cursor reconstitutes children from the template at
-/// read time.
-///
-/// `child_kinds` declares the skeleton: each byte is the
-/// [`TapeKind`](crate::TapeKind) discriminant of the corresponding
-/// child position. `leaf_holes` gives the byte offset within the
-/// packed payload blob where each non-constant leaf's span/payload
-/// begins. The two slices are parallel with `child_kinds`; entries
-/// where the child is structural (not a leaf hole) carry
-/// `u16::MAX` as the sentinel.
-#[derive(Debug, Clone, Copy)]
-pub struct ShapeEntry {
-    /// Canonical shape-hash from `RecognizerSignature`.
-    pub shape_hash: u64,
-    /// Rule id the shape-ref expands to.
-    pub rule: RuleId,
-    /// Per-child `TapeKind` discriminants declaring the skeleton.
-    /// Length = number of direct children the collapsed compound
-    /// would have emitted.
-    pub child_kinds: &'static [u8],
-    /// Per-child byte offset into the packed payload blob for each
-    /// leaf hole. `u16::MAX` marks structural (non-hole) children.
-    pub leaf_payload_offsets: &'static [u16],
-    /// Total byte width of the packed payload blob.
-    pub payload_bytes: u16,
-}
 
 /// Per-grammar codegen fingerprint. Emitted once per grammar as
 /// `const GRAMMAR_PROFILE: GrammarProfile = GrammarProfile { ... };`
@@ -88,21 +54,6 @@ pub struct ShapeEntry {
 /// profile literal, so the entire profile lives in `.rodata`.
 #[derive(Debug, Clone, Copy)]
 pub struct GrammarProfile {
-    // ── Push-site counts (V1, from PushFingerprint) ──────────────────
-
-    /// Count of emitted rule functions that terminate with
-    /// `push_compound(...)` — `MaterializationClass::MustTape`.
-    pub push_compound_count: u16,
-
-    /// Count of emitted rule functions that terminate with a plain
-    /// `push_leaf(...)` — `TapeSpanOnly` without a payload.
-    pub push_leaf_count: u16,
-
-    /// Count of emitted rule functions that terminate with
-    /// `push_leaf_with_*(...)` — `TapeSpanOnly` with a scalar or
-    /// aggregate payload layout.
-    pub push_leaf_with_count: u16,
-
     // ── Per-byte density estimates (V1, derived from push counts) ────
 
     /// Estimated compound records produced per input byte. Drives the
@@ -150,18 +101,6 @@ pub struct GrammarProfile {
     /// are masked off. Mined from `IrNode::Regex` whose
     /// classification is `RegexClass::QuotedString`. AW-III.W5.a.
     pub structural_quote_classes: &'static [u8],
-
-    // ── Document-level parallel parse (V6) ───────────────────────────
-
-    /// Rules eligible for chunked parallel parse (top-level lists).
-    /// V6 populates.
-    pub list_rules: &'static [RuleId],
-
-    // ── Shape dictionary (V5) ────────────────────────────────────────
-
-    /// Fixed-shape e-class entries eligible for `ShapeRef` deduplication.
-    /// V5 populates.
-    pub shape_dict: &'static [ShapeEntry],
 }
 
 impl GrammarProfile {
@@ -169,9 +108,6 @@ impl GrammarProfile {
     /// a `Default` and as the identity value for tests that do not
     /// depend on a concrete grammar's fingerprint.
     pub const EMPTY: GrammarProfile = GrammarProfile {
-        push_compound_count: 0,
-        push_leaf_count: 0,
-        push_leaf_with_count: 0,
         compounds_per_input_byte: 0.0,
         leaves_per_input_byte: 0.0,
         parallel_break_even_bytes: 0,
@@ -179,8 +115,6 @@ impl GrammarProfile {
         structural_digraphs: &[],
         structural_digraph_mask: [0u64; 4],
         structural_quote_classes: &[],
-        list_rules: &[],
-        shape_dict: &[],
     };
 
     /// Reserve size for `TapeBuilder::with_capacity` given an input
@@ -238,12 +172,6 @@ impl GrammarProfile {
         density_based.max(ar_floor) + 2
     }
 
-    /// Total emitted push-site count — `push_compound + push_leaf +
-    /// push_leaf_with`. Zero for the empty profile.
-    #[inline]
-    pub const fn total_push_sites(&self) -> u16 {
-        self.push_compound_count + self.push_leaf_count + self.push_leaf_with_count
-    }
 }
 
 impl Default for GrammarProfile {

@@ -125,13 +125,12 @@ pub fn parse_number_JsonFixture_number(
         }
     };
     let off = builder
-        .push_leaf_with(
+        .push_leaf_with_f64_direct(
             ::bbnf::runtime::tape::TapeKind::Span,
             start as u32,
             end as u32,
             2u8,
-            0,
-            ::bbnf::runtime::tape::PayloadData::WideScalar(value.to_bits()),
+            value.to_bits(),
         );
     Ok(off)
 }

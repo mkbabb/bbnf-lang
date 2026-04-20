@@ -33,7 +33,7 @@ pub use regex::{
     DeduplicateAltBranches, FuseAltRegexBranches, SupersetAbsorbAlt, UnionMergeAlt,
 };
 pub use suffix::CommonSuffixFactor;
-pub use universal::{AltOfSingle, RepeatOfSingle};
+pub use universal::{AltOfSingle, RepeatOfSingle, WrapOfEpsilonScalar};
 
 use rustc_hash::FxHashMap;
 
@@ -41,7 +41,7 @@ use egraph::{Analysis, Id, RewriteFn};
 
 use super::interner::SharedStrings;
 use super::node::GrammarENode;
-use crate::{GrammarIR, RuleId};
+use crate::{GrammarIR, RuleId, TypeDesc};
 
 /// Default rule set.
 ///
@@ -68,11 +68,22 @@ use crate::{GrammarIR, RuleId};
 /// Universal family (AY.W2.3):
 /// - [`AltOfSingle`] — `Alt([x]) ≡ x` (G1).
 /// - [`RepeatOfSingle`] — `Repeat { lo: 1, hi: 1 } ≡ inner` (G2).
+/// - [`WrapOfEpsilonScalar`] — `Alt([leaf, ε]) ≡ leaf` when `leaf`'s
+///   projection is scalar (G3; **PRIMARY LEVER** per AY.md prop 2 for
+///   JSON wrap-compound elision).
 pub fn default_rules<A: Analysis<GrammarENode> + 'static>(
-    _ir: &GrammarIR,
+    ir: &GrammarIR,
     pool: &SharedStrings,
     _rule_body_ids: FxHashMap<RuleId, Id>,
 ) -> Vec<Box<dyn RewriteFn<GrammarENode, A>>> {
+    // AY.W2.3 G3 — snapshot the per-rule `TypeDesc` side-table so the
+    // rewrite's search path can resolve a `Ref` branch's projection
+    // without holding a live IR borrow.
+    let rule_types: FxHashMap<RuleId, TypeDesc> = ir
+        .types
+        .iter()
+        .map(|(rid, ty)| (*rid, ty.clone()))
+        .collect();
     vec![
         Box::new(DeduplicateAltBranches),
         Box::new(SupersetAbsorbAlt::new(pool.clone())),
@@ -81,5 +92,6 @@ pub fn default_rules<A: Analysis<GrammarENode> + 'static>(
         Box::new(CommonSuffixFactor),
         Box::new(AltOfSingle),
         Box::new(RepeatOfSingle),
+        Box::new(WrapOfEpsilonScalar::new(rule_types)),
     ]
 }

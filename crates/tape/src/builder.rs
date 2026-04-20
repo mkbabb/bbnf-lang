@@ -169,7 +169,7 @@ impl TapeBuilder {
     /// Call this before pushing a compound's children. The returned
     /// offset is passed to [`Self::push_compound`] as the `child_off`
     /// field.
-    #[inline]
+    #[inline(always)]
     pub fn mark_children(&self) -> TapeOffset {
         TapeOffset(self.columns.len() as u32)
     }
@@ -182,7 +182,7 @@ impl TapeBuilder {
     /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
     /// everything else). Packed into `TapeRec::kind_meta` (high 4
     /// bits) and `TapeRec::flags` (bit 7). 5-bit range: 0-31.
-    #[inline]
+    #[inline(always)]
     pub fn push_leaf(
         &mut self,
         kind: TapeKind,
@@ -215,7 +215,7 @@ impl TapeBuilder {
     /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
     /// everything else). Packed into `TapeRec::kind_meta` (high 4
     /// bits) and `TapeRec::flags` (bit 7). 5-bit range: 0-31.
-    #[inline]
+    #[inline(always)]
     pub fn push_compound(
         &mut self,
         kind: TapeKind,
@@ -271,7 +271,7 @@ impl TapeBuilder {
     /// taxonomy; the record's `child_off` ends up holding a column
     /// rank (for scalar payloads) or an arena byte offset (for
     /// aggregates and byte frames).
-    #[inline]
+    #[inline(always)]
     pub fn push_leaf_with(
         &mut self,
         kind: TapeKind,
@@ -428,14 +428,14 @@ impl TapeBuilder {
     /// 3. Back-stamp the length via [`Self::stamp_arena_len_prefix`].
     /// 4. Push the leaf via [`Self::push_leaf_with_arena_frame`] with
     ///    the offset of the prefix.
-    #[inline]
+    #[inline(always)]
     pub fn arena_mut(&mut self) -> &mut Vec<u8> {
         &mut self.columns.pay_agg
     }
 
     /// The current length of the `pay_agg` arena — equivalently, the
     /// byte offset where the next write will land.
-    #[inline]
+    #[inline(always)]
     pub fn arena_len(&self) -> u32 {
         self.columns.pay_agg.len() as u32
     }
@@ -451,7 +451,7 @@ impl TapeBuilder {
     /// [`Self::stamp_arena_len_prefix`] after decoding.
     ///
     /// `meta_idx` range is 0-31 (5-bit packed field).
-    #[inline]
+    #[inline(always)]
     pub fn push_leaf_with_arena_frame(
         &mut self,
         kind: TapeKind,
@@ -507,7 +507,7 @@ impl TapeBuilder {
     /// `meta_idx` range is 0-31 (5-bit packed field).
     /// `payload_width` must be one of 1 / 2 / 4 / 8 — the widths the
     /// scalar readers honour; asserted in debug builds.
-    #[inline]
+    #[inline(always)]
     pub fn push_leaf_with_arena_payload(
         &mut self,
         kind: TapeKind,
@@ -562,7 +562,7 @@ impl TapeBuilder {
     /// `source[span_lo + 1 .. span_hi - 1]`.
     ///
     /// `meta_idx` range is 0-31 (5-bit packed field).
-    #[inline]
+    #[inline(always)]
     pub fn push_leaf_borrowed_string(
         &mut self,
         kind: TapeKind,
@@ -602,7 +602,7 @@ impl TapeBuilder {
     /// `extend_from_slice(&[0u8; 4])`). Once the bytes have been
     /// decoded, the kernel calls this helper to stamp the actual
     /// length into the reserved slot. The slot must exist.
-    #[inline]
+    #[inline(always)]
     pub fn stamp_arena_len_prefix(&mut self, arena_offset: u32, len: u32) {
         let start = arena_offset as usize;
         debug_assert!(

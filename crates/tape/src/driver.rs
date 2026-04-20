@@ -75,7 +75,7 @@ pub enum DtaError {
 /// Mirrors the `WsTrim { pattern: None }` semantics: advances `pos`
 /// past every `' '` / `'\t'` / `'\n'` / `'\r'` byte at the current
 /// offset, leaving `pos` at the first non-ws byte.
-#[inline]
+#[inline(always)]
 pub fn trim_ascii_ws(input: &[u8], pos: &mut u32) {
     let mut p = *pos as usize;
     while let Some(&b) = input.get(p) {
@@ -91,7 +91,7 @@ pub fn trim_ascii_ws(input: &[u8], pos: &mut u32) {
 /// semantics. When `pattern` carries a regex pattern, scan via the
 /// supplied `regex_scan` fn pointer; otherwise fall back to
 /// [`trim_ascii_ws`].
-#[inline]
+#[inline(always)]
 pub fn trim_with_pattern(
     regex_scan: fn(&str, &[u8], usize) -> Option<u32>,
     pattern: Option<&'static str>,
@@ -112,7 +112,7 @@ pub fn trim_with_pattern(
 /// the first regex pattern the emitted regex-scan adapter is
 /// willing to match, or `None` when no whitespace regex was mined
 /// for the grammar.
-#[inline]
+#[inline(always)]
 pub fn first_ws_pattern(_patterns: &[&'static str]) -> Option<&'static str> {
     None
 }
@@ -126,7 +126,7 @@ pub fn first_ws_pattern(_patterns: &[&'static str]) -> Option<&'static str> {
 /// `u16::MAX` saturate (grammar-level `*` unbounds are represented
 /// as `u16::MAX`, treated as "no upper bound" by the emitted
 /// iteration driver).
-#[inline]
+#[inline(always)]
 pub fn saturating_u16(v: u32) -> u16 {
     if v >= u16::MAX as u32 {
         u16::MAX
@@ -204,7 +204,7 @@ pub fn emit_leaf_with_payload(
 /// back at the LHS operand's tape row. Post-order layout for
 /// reducer-produced compounds; the cursor's bounded backward-walk
 /// fallback resolves the first-child lookup at read time.
-#[inline]
+#[inline(always)]
 pub fn emit_reducer_compound(
     columns: &mut Columns,
     frame_depth: &mut Vec<u8>,

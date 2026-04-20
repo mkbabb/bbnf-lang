@@ -47,109 +47,11 @@ mod __bbnfbootstrap_emit_impl {
         (124, 124),
         (206, 181),
     ];
-    static __GRAMMAR_PROFILE_LIST_RULES: [::bbnf::runtime::tape::RuleId; 1usize] = [
-        ::bbnf::runtime::tape::RuleId(52),
-    ];
-    static __GRAMMAR_PROFILE_SHAPE_0_KINDS: [u8; 3usize] = [3, 1, 3];
-    static __GRAMMAR_PROFILE_SHAPE_0_OFFSETS: [u16; 3usize] = [65535, 0, 65535];
-    static __GRAMMAR_PROFILE_SHAPE_1_KINDS: [u8; 2usize] = [1, 1];
-    static __GRAMMAR_PROFILE_SHAPE_1_OFFSETS: [u16; 2usize] = [0, 8];
-    static __GRAMMAR_PROFILE_SHAPE_2_KINDS: [u8; 2usize] = [3, 1];
-    static __GRAMMAR_PROFILE_SHAPE_2_OFFSETS: [u16; 2usize] = [65535, 0];
-    static __GRAMMAR_PROFILE_SHAPE_3_KINDS: [u8; 4usize] = [1, 3, 1, 3];
-    static __GRAMMAR_PROFILE_SHAPE_3_OFFSETS: [u16; 4usize] = [0, 65535, 8, 65535];
-    static __GRAMMAR_PROFILE_SHAPE_4_KINDS: [u8; 5usize] = [3, 1, 1, 3, 1];
-    static __GRAMMAR_PROFILE_SHAPE_4_OFFSETS: [u16; 5usize] = [65535, 0, 8, 65535, 16];
-    static __GRAMMAR_PROFILE_SHAPE_5_KINDS: [u8; 4usize] = [1, 1, 1, 1];
-    static __GRAMMAR_PROFILE_SHAPE_5_OFFSETS: [u16; 4usize] = [0, 8, 16, 24];
-    static __GRAMMAR_PROFILE_SHAPE_6_KINDS: [u8; 4usize] = [1, 3, 1, 1];
-    static __GRAMMAR_PROFILE_SHAPE_6_OFFSETS: [u16; 4usize] = [0, 65535, 8, 16];
-    static __GRAMMAR_PROFILE_SHAPE_7_KINDS: [u8; 4usize] = [3, 1, 1, 3];
-    static __GRAMMAR_PROFILE_SHAPE_7_OFFSETS: [u16; 4usize] = [65535, 0, 8, 65535];
-    static __GRAMMAR_PROFILE_SHAPE_8_KINDS: [u8; 3usize] = [3, 1, 1];
-    static __GRAMMAR_PROFILE_SHAPE_8_OFFSETS: [u16; 3usize] = [65535, 0, 8];
-    static __GRAMMAR_PROFILE_SHAPE_9_KINDS: [u8; 4usize] = [3, 1, 1, 1];
-    static __GRAMMAR_PROFILE_SHAPE_9_OFFSETS: [u16; 4usize] = [65535, 0, 8, 16];
-    static __GRAMMAR_PROFILE_SHAPE_DICT: [::bbnf::runtime::tape::ShapeEntry; 10usize] = [
-        ::bbnf::runtime::tape::ShapeEntry {
-            shape_hash: 2825624961820939012,
-            rule: ::bbnf::runtime::tape::RuleId(3),
-            child_kinds: &__GRAMMAR_PROFILE_SHAPE_0_KINDS,
-            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_0_OFFSETS,
-            payload_bytes: 8,
-        },
-        ::bbnf::runtime::tape::ShapeEntry {
-            shape_hash: 6396768038867141257,
-            rule: ::bbnf::runtime::tape::RuleId(5),
-            child_kinds: &__GRAMMAR_PROFILE_SHAPE_1_KINDS,
-            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_1_OFFSETS,
-            payload_bytes: 16,
-        },
-        ::bbnf::runtime::tape::ShapeEntry {
-            shape_hash: 17638471073072642298,
-            rule: ::bbnf::runtime::tape::RuleId(6),
-            child_kinds: &__GRAMMAR_PROFILE_SHAPE_2_KINDS,
-            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_2_OFFSETS,
-            payload_bytes: 8,
-        },
-        ::bbnf::runtime::tape::ShapeEntry {
-            shape_hash: 10771097919717133086,
-            rule: ::bbnf::runtime::tape::RuleId(7),
-            child_kinds: &__GRAMMAR_PROFILE_SHAPE_3_KINDS,
-            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_3_OFFSETS,
-            payload_bytes: 16,
-        },
-        ::bbnf::runtime::tape::ShapeEntry {
-            shape_hash: 14644283236504918401,
-            rule: ::bbnf::runtime::tape::RuleId(18),
-            child_kinds: &__GRAMMAR_PROFILE_SHAPE_4_KINDS,
-            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_4_OFFSETS,
-            payload_bytes: 24,
-        },
-        ::bbnf::runtime::tape::ShapeEntry {
-            shape_hash: 4871589534026976350,
-            rule: ::bbnf::runtime::tape::RuleId(31),
-            child_kinds: &__GRAMMAR_PROFILE_SHAPE_5_KINDS,
-            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_5_OFFSETS,
-            payload_bytes: 32,
-        },
-        ::bbnf::runtime::tape::ShapeEntry {
-            shape_hash: 15576067703920521532,
-            rule: ::bbnf::runtime::tape::RuleId(39),
-            child_kinds: &__GRAMMAR_PROFILE_SHAPE_6_KINDS,
-            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_6_OFFSETS,
-            payload_bytes: 24,
-        },
-        ::bbnf::runtime::tape::ShapeEntry {
-            shape_hash: 4956789208849799176,
-            rule: ::bbnf::runtime::tape::RuleId(41),
-            child_kinds: &__GRAMMAR_PROFILE_SHAPE_7_KINDS,
-            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_7_OFFSETS,
-            payload_bytes: 16,
-        },
-        ::bbnf::runtime::tape::ShapeEntry {
-            shape_hash: 2287542396738729071,
-            rule: ::bbnf::runtime::tape::RuleId(42),
-            child_kinds: &__GRAMMAR_PROFILE_SHAPE_8_KINDS,
-            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_8_OFFSETS,
-            payload_bytes: 16,
-        },
-        ::bbnf::runtime::tape::ShapeEntry {
-            shape_hash: 15032356378685040353,
-            rule: ::bbnf::runtime::tape::RuleId(43),
-            child_kinds: &__GRAMMAR_PROFILE_SHAPE_9_KINDS,
-            leaf_payload_offsets: &__GRAMMAR_PROFILE_SHAPE_9_OFFSETS,
-            payload_bytes: 24,
-        },
-    ];
     /// Per-grammar codegen fingerprint — consolidated static
     /// profile emitted by Tranche AV Phase 1. Every downstream
-    /// consumer (tape capacity, scanner dispatch, shape
-    /// dictionary) reads the matching field.
+    /// consumer (tape capacity, scanner dispatch) reads the
+    /// matching field.
     pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile = ::bbnf::runtime::tape::GrammarProfile {
-        push_compound_count: 53u16,
-        push_leaf_count: 0u16,
-        push_leaf_with_count: 0u16,
         compounds_per_input_byte: 1f32,
         leaves_per_input_byte: 0f32,
         parallel_break_even_bytes: 1048576u32,
@@ -157,8 +59,6 @@ mod __bbnfbootstrap_emit_impl {
         structural_digraphs: &__GRAMMAR_PROFILE_DIGRAPHS,
         structural_digraph_mask: [17582233548629213184, 1161928703861587969, 0, 16384],
         structural_quote_classes: &[],
-        list_rules: &__GRAMMAR_PROFILE_LIST_RULES,
-        shape_dict: &__GRAMMAR_PROFILE_SHAPE_DICT,
     };
     /// AW-III.W6.2 — PHF keyword table.
     ///

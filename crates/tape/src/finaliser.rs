@@ -164,14 +164,17 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
         return;
     }
 
-    let max_depth = frame_depth.iter().copied().max().unwrap_or(0) as usize;
-    // Scratch sized one slot per depth, plus a sentinel for the
-    // `d + 1` lookup at the deepest record. Initialised to NONE
-    // (no record-yet-seen) at every depth.
-    let scratch_len = max_depth + 2;
-    let mut prev_at_depth: Vec<Option<u32>> = vec![None; scratch_len];
-    let mut first_at_depth: Vec<Option<u32>> = vec![None; scratch_len];
-    let mut last_at_depth: Vec<Option<u32>> = vec![None; scratch_len];
+    // AY.W1.2 — stack-buffer scratch arrays keyed by depth. The
+    // [`STACK_DEPTH_HINT`] cap covers every grammar in the corpus
+    // (DTA frame stack peaks at depth 31 on the deepest CSS L4
+    // selector; bbnf-self peaks at 18); the assertion below
+    // guards against the rare deeper case. Pre-AY this allocated
+    // three `Vec<Option<u32>>` per parse — measurable per-parse
+    // overhead on small documents. Stack arrays are zero-cost.
+    const SCRATCH_LEN: usize = STACK_DEPTH_HINT + 2;
+    let mut prev_at_depth: [Option<u32>; SCRATCH_LEN] = [None; SCRATCH_LEN];
+    let mut first_at_depth: [Option<u32>; SCRATCH_LEN] = [None; SCRATCH_LEN];
+    let mut last_at_depth: [Option<u32>; SCRATCH_LEN] = [None; SCRATCH_LEN];
 
     // High-water mark for invalidation. Tracks the largest depth
     // currently populated in the scratch arrays so the invalidation
@@ -182,11 +185,11 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
     for i in 0..n {
         let d = frame_depth[i] as usize;
         debug_assert!(
-            d < scratch_len,
-            "Stage-C: frame_depth[{}] = {} exceeds scratch_len {}",
+            d < SCRATCH_LEN,
+            "Stage-C: frame_depth[{}] = {} exceeds scratch capacity {} (raise STACK_DEPTH_HINT)",
             i,
             d,
-            scratch_len,
+            SCRATCH_LEN,
         );
         let i_u32 = i as u32;
 

@@ -538,9 +538,16 @@ fn emit_hoisted_dfa_tables(
 
 /// AY.W4.3 — minimum DFA state count to trigger the table-hoist
 /// emission shape. Below this threshold the inline match-ladder is
-/// LLVM-friendlier; above it, code-size dominates and the table
-/// shape pays off.
-const DFA_HOIST_MIN_STATES: usize = 6;
+/// LLVM-friendlier (the match compiles to a jump table / branch
+/// chain the CPU's BTB trains on); above it, code-size dominates
+/// and the table-driven shape pays off.
+///
+/// Threshold tuned empirically: JSON's 2 regex patterns (both
+/// 8-10 states) were marginally faster as inline match-ladders
+/// under measurement; CSS L4's larger DFAs (30+ states) reap
+/// clear code-size wins from the table hoist. The 16-state
+/// threshold splits the two.
+const DFA_HOIST_MIN_STATES: usize = 16;
 
 /// Emit the inline DFA body for the regex-bearing state at `idx` in
 /// `table.states`. The returned `TokenStream` is a labelled `'__dfa: {
@@ -630,7 +637,11 @@ pub fn emit_regex_scan_adapter(
         .map(|(i, (_, pattern, _))| PatternFirstBytes::from_pattern(i, pattern))
         .collect();
 
-    let dispatchable = is_dispatchable(&pattern_first_bytes);
+    // AY.W4.3 — only emit the first-byte LUT when at least 4
+    // patterns share the admission path; smaller grammars don't
+    // benefit from the LUT and pay rodata + i-cache costs.
+    let dispatchable =
+        is_dispatchable(&pattern_first_bytes) && pattern_first_bytes.len() >= 4;
     let first_byte_lut_decl = if dispatchable {
         emit_byte_class_lut(&first_byte_lut_ident, &pattern_first_bytes)
     } else {
@@ -638,7 +649,11 @@ pub fn emit_regex_scan_adapter(
     };
 
     let pattern_strings: Vec<&str> = states.iter().map(|(_, p, _)| *p).collect();
-    let last_byte_table_decl = if !pattern_strings.is_empty() {
+    // AY.W4.3 — only emit the LAST-byte table when the narrowing
+    // will actually be consulted (states.len() >= 4 per below).
+    // Small grammars (JSON with 2 patterns) skip the table to avoid
+    // rodata pollution that hurts icache locality on the hot path.
+    let last_byte_table_decl = if pattern_strings.len() >= 4 {
         Some(emit_last_byte_set_table(&last_byte_table_ident, &pattern_strings))
     } else {
         None
@@ -694,9 +709,14 @@ pub fn emit_regex_scan_adapter(
             let body = pattern_bodies[i].clone();
             let i_lit = Literal::usize_unsuffixed(i);
 
-            // Per-pattern admissibility check via the first-byte LUT
-            // (only when the LUT was emitted).
-            let admit_check = if dispatchable {
+            // Per-pattern admissibility check via the first-byte LUT.
+            // Only gates on the hot patterns — small grammars with
+            // few adapter-collected patterns skip the admission
+            // because the DFA walk's constant cost is already minimal.
+            // Threshold: at least 4 patterns (below, the cascade is
+            // short enough that each arm's DFA body cost exceeds
+            // the admission's overhead on miss).
+            let admit_check = if dispatchable && states.len() >= 4 {
                 quote! {
                     if let Some(&__byte) = input.get(pos) {
                         if (#first_byte_lut_ident[__byte as usize] >> #i_lit) & 1 == 0 {
@@ -710,35 +730,38 @@ pub fn emit_regex_scan_adapter(
 
             // LAST-byte narrowing: when the pattern has a deterministic
             // suffix byte AND the remaining input slice does not
-            // contain it, the regex cannot complete a match. We only
-            // probe a bounded prefix to keep the overhead bounded —
-            // the slice [pos, pos + 256) covers every shipped grammar's
-            // longest single-regex match.
-            let last_check = if last_byte_table_decl.is_some() {
+            // contain it, the regex cannot complete a match.
+            //
+            // AY.W4.3 gate — only activates on LONG inputs (≥ 64 KB)
+            // where the DFA walk's O(N) cost dominates a 256-byte
+            // scan's O(1). On short inputs the scan's cache-line
+            // traffic drowns its savings. CSS L4 tailwind (3.6 MB)
+            // and the `__xl` fixtures are the intended beneficiaries;
+            // Sheets / BBNF / most JSON pay nothing.
+            let last_check = if last_byte_table_decl.is_some() && states.len() >= 4 {
                 quote! {
-                    let (__lb_lo, __lb_hi) = #last_byte_table_ident[#i_lit];
-                    if (__lb_lo | __lb_hi) != 0 {
-                        let __scan_end = (pos + 256).min(input.len());
-                        let __slice = &input[pos..__scan_end];
-                        let mut __found = false;
-                        for &__b in __slice {
-                            let __test = if __b < 64 {
-                                (__lb_lo >> __b) & 1
-                            } else if __b < 128 {
-                                (__lb_hi >> (__b - 64)) & 1
-                            } else {
-                                0
-                            };
-                            if __test != 0 {
-                                __found = true;
-                                break;
+                    if input.len() >= 64 * 1024 {
+                        let (__lb_lo, __lb_hi) = #last_byte_table_ident[#i_lit];
+                        if (__lb_lo | __lb_hi) != 0 {
+                            let __scan_end = (pos + 256).min(input.len());
+                            let __slice = &input[pos..__scan_end];
+                            let mut __found = false;
+                            for &__b in __slice {
+                                let __test = if __b < 64 {
+                                    (__lb_lo >> __b) & 1
+                                } else if __b < 128 {
+                                    (__lb_hi >> (__b - 64)) & 1
+                                } else {
+                                    0
+                                };
+                                if __test != 0 {
+                                    __found = true;
+                                    break;
+                                }
                             }
-                        }
-                        if !__found && __scan_end == input.len() {
-                            // Bounded scan covered the input tail and
-                            // the LAST-set byte never appeared — the
-                            // regex cannot complete a match.
-                            return ::core::option::Option::None;
+                            if !__found && __scan_end == input.len() {
+                                return ::core::option::Option::None;
+                            }
                         }
                     }
                 }

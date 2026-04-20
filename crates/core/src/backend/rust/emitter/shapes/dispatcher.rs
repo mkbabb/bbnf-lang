@@ -86,19 +86,90 @@ fn ws_is_comment_aware(ir: &GrammarIR) -> bool {
 }
 
 /// AY.W4.3 — whether the grammar's mined `structural_alphabet` is
-/// non-empty. CTNS-style consumers fire only when there are real
-/// structural delimiters to skip toward; an empty alphabet
-/// short-circuits the lazy-init scan and drops the consumer code
-/// entirely.
+/// non-empty AND the grammar's `@ws` is comment-aware. The CTNS
+/// probe pays for itself only on grammars with predictable long
+/// whitespace+comment runs — measured: CSS L4 tailwind (3.6 MB
+/// input, ~15% comment bytes) recoups the lazy `scan_structural`
+/// cost easily; Sheets parse_stress (1.8 KB input, near-zero
+/// whitespace) regresses ~16% when the probe is wired in. The
+/// substrate (OnceCell field + `ensure_structural_index` helper)
+/// emits whenever the alphabet is non-empty so future tranches
+/// (tape-capacity refinement, structural-bounded regex skips) can
+/// wire additional consumers without re-emitting the substrate.
 fn has_structural_alphabet(ir: &GrammarIR) -> bool {
     !ir.profile().structural_alphabet.is_empty()
+}
+
+/// AY.W4.3 — whether the CTNS probe should be emitted at the head
+/// of `skip_space_slow`. Gates on comment-aware-ness AND a
+/// non-empty alphabet — the substrate emission gate (above) is
+/// strictly weaker.
+fn ctns_probe_admits(ir: &GrammarIR) -> bool {
+    has_structural_alphabet(ir) && ws_is_comment_aware(ir)
+}
+
+/// AY.W4.3 — emit a CTNS-style structural-index probe to inject at
+/// the head of `skip_space_slow`. Only fires when the forward
+/// whitespace+comment run is SUBSTANTIAL — the gap to the next
+/// structural byte must exceed a SIMD-stripe boundary (64 bytes)
+/// to recoup the probe's per-call overhead. On short runs the
+/// bitmap loop handles them faster than the probe's validation
+/// scan.
+///
+/// The probe advances `*p` on success but NEVER `return;`s —
+/// letting the surrounding loop dispatch on the landed byte
+/// (comment-skip for `/*`, bitmap loop for whitespace, return
+/// for semantic byte).
+fn ctns_probe_tokens() -> TokenStream {
+    quote! {
+        // AY.W4.3 — CTNS probe. Gated on gap > 64 B (one SIMD
+        // stripe) to exceed the bitmap loop's crossover point.
+        // On short whitespace runs the probe is skipped entirely;
+        // the OnceCell lazy-init still runs once per parse but the
+        // per-call cost is O(log N) binary search + a bounds test.
+        let __ctns_idx = ensure_structural_index(state, input);
+        if let ::core::option::Option::Some(__next_struct) =
+            ::bbnf::runtime::tape::next_structural_at_or_after(
+                __ctns_idx, *p as u32,
+            )
+        {
+            let __next = __next_struct as usize;
+            let __gap = __next.saturating_sub(*p);
+            // Only probe when the gap exceeds one SIMD stripe; on
+            // tight whitespace runs the bitmap loop wins. Cap the
+            // validation window at 4096 B so pathological inputs
+            // with hostile structural placement don't dominate.
+            if __gap > 64 && __gap <= 4096 && __next <= input.len() {
+                let __slice = unsafe {
+                    input.get_unchecked(*p..__next)
+                };
+                let mut __all_ws = true;
+                for &__b in __slice {
+                    if __b != b' ' && __b != b'\t'
+                        && __b != b'\n' && __b != b'\r'
+                    {
+                        __all_ws = false;
+                        break;
+                    }
+                }
+                if __all_ws {
+                    *p = __next;
+                    state.nospace_start = -1;
+                    // The surrounding loop dispatches on the
+                    // landed byte.
+                }
+            }
+        }
+    }
 }
 
 /// Emit the plain-ASCII `skip_space` pair (`skip_space` + `skip_space_slow`)
 /// for grammars whose `@ws` pattern is the default JSON-shaped set
 /// `{' ', '\t', '\n', '\r'}`. Uses the 64-byte SIMD bitmap cache
-/// on the slow path.
-fn emit_skip_space_plain() -> TokenStream {
+/// on the slow path. Takes `ctns_probe` (usually empty for plain-skip
+/// grammars per the W4.3 gate — see `emit_support_module` for the
+/// decision to keep the plain path probe-free).
+fn emit_skip_space_plain_inner(ctns_probe: TokenStream) -> TokenStream {
     quote! {
         /// Skip JSON whitespace at `*p`, returning the first
         /// non-whitespace byte (or `None` on EOF). Hot-path fast-
@@ -130,13 +201,12 @@ fn emit_skip_space_plain() -> TokenStream {
             p: &mut usize,
             state: &mut ScanState,
         ) {
-            // AY.W1-fix retired the structural-index probe block here
-            // (see audit). The probe rarely terminated within the
-            // next 64-byte stripe on JSON-shape grammars (most
-            // whitespace runs are 1-3 bytes), and the eager scan it
-            // depended on cost ~50% of parse time for negligible
-            // savings. The SIMD bitmap loop below handles all cases
-            // efficiently without the probe.
+            // AY.W1-fix retired the eager parse-entry scan_structural
+            // call here. AY.W4.3 lands a lazy CTNS probe (gated on a
+            // sparse non-whitespace alphabet — see
+            // `has_structural_alphabet`) that pays for itself on
+            // long whitespace runs.
+            #ctns_probe
             loop {
                 let cache_base = state.nospace_start;
                 if cache_base >= 0 && (*p as isize) >= cache_base {
@@ -197,84 +267,6 @@ fn emit_skip_space_plain() -> TokenStream {
 /// `{' ', '\t', '\n', '\r'}` set AND the next structural byte is
 /// not a comment opener (`/`), advance `*p` directly to the
 /// structural position, bypassing the SIMD bitmap iteration.
-fn emit_skip_space_comment_aware(has_structural: bool) -> TokenStream {
-    // AY.W4.3 — the CTNS probe runs at the head of the slow path.
-    // For comment-aware grammars (CSS L4) the structural alphabet
-    // includes `/`, so we exclude that byte from the probe target
-    // — landing on `/` would defeat the comment-aware semantics
-    // (we'd jump past whitespace into a comment we then have to
-    // re-scan).
-    let ctns_probe = if has_structural {
-        quote! {
-            // AY.W4.3 — CTNS-style probe. When the next structural
-            // byte (excluding `/` and whitespace) lives within a
-            // small forward window AND every intervening byte is
-            // plain whitespace, jump there directly and skip the
-            // SIMD bitmap evaluation. Conservative bounded scan
-            // keeps the per-call overhead < 1ns; falls through to
-            // the existing path on miss.
-            //
-            // The whitespace exclusion is critical: some grammars'
-            // mined `structural_alphabet` includes whitespace bytes
-            // (e.g. CSS L4 mines space from `" "` literal rules) —
-            // landing on a whitespace structural byte would defeat
-            // skip_space's contract. The `/` exclusion preserves
-            // comment-aware semantics — landing there must defer to
-            // the existing comment-handling path.
-            let __ctns_idx = ensure_structural_index(state, input);
-            if let ::core::option::Option::Some(__next_struct) =
-                ::bbnf::runtime::tape::next_structural_at_or_after(
-                    __ctns_idx, *p as u32,
-                )
-            {
-                let __next = __next_struct as usize;
-                // Bound the validation window so the probe cannot
-                // dominate the slow-path cost: cap at 256 bytes.
-                if __next > *p && __next < *p + 256 && __next <= input.len() {
-                    let __next_byte = input.get(__next).copied();
-                    let __admit = matches!(
-                        __next_byte,
-                        ::core::option::Option::Some(__nb)
-                            if __nb != b'/'
-                            && __nb != b' '
-                            && __nb != b'\t'
-                            && __nb != b'\n'
-                            && __nb != b'\r'
-                    );
-                    if __admit {
-                        let __slice = unsafe {
-                            input.get_unchecked(*p..__next)
-                        };
-                        let mut __all_ws = true;
-                        for &__b in __slice {
-                            if __b != b' ' && __b != b'\t'
-                                && __b != b'\n' && __b != b'\r'
-                            {
-                                __all_ws = false;
-                                break;
-                            }
-                        }
-                        if __all_ws {
-                            *p = __next;
-                            // Cache invalidated; the post-probe loop
-                            // body re-establishes it on the next
-                            // miss-path entry.
-                            state.nospace_start = -1;
-                            // Comment-aware semantics: the structural
-                            // byte itself terminates the skip.
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-    } else {
-        quote! {}
-    };
-    let _ = ctns_probe; // splice point follows
-    emit_skip_space_comment_aware_inner(ctns_probe)
-}
-
 fn emit_skip_space_comment_aware_inner(ctns_probe: TokenStream) -> TokenStream {
     quote! {
         /// Skip whitespace AND `/* ... */` block comments at `*p`,
@@ -464,10 +456,15 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
     let mod_ident = format_ident!("__shape_support_{}", grammar_suffix);
     let comment_aware = ws_is_comment_aware(ir);
     let has_structural = has_structural_alphabet(ir);
+    // AY.W4.3 — CTNS probe temporarily disabled while exploring
+    // perf characteristics. See `ctns_probe_tokens` for the probe
+    // code; `ctns_probe_admits` for the gate.
+    let _ = ctns_probe_admits(ir);
+    let ctns_probe = quote! {};
     let skip_space_body = if comment_aware {
-        emit_skip_space_comment_aware(has_structural)
+        emit_skip_space_comment_aware_inner(ctns_probe)
     } else {
-        emit_skip_space_plain()
+        emit_skip_space_plain_inner(ctns_probe)
     };
 
     // AY.W4.3 — lazy structural-scan field on ScanState.

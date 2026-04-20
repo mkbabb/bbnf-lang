@@ -250,9 +250,9 @@ colorSpace = "srgb-linear" -> 1u8 | "srgb" -> 0u8
 //     24      c3      8 B    colorValue #3 (f64)
 //     32      alpha   8 B    optional alpha (f64; NaN = absent)
 //     ──────                 33 payload B → 40 B slot
-colorFn = "color" , "(" >>
+colorFn = ( "color" , "(" >>
     colorSpace , colorValue , colorValue , colorValue , ("/" >> colorValue)?
-    << ")" -> input : Color ;
+    << ")" ) -> input : Color ;
 
 // --- color-mix() (CSS Color Level 5) ---
 // hue-method u8 + mix-space u8 discriminants.
@@ -296,11 +296,11 @@ mixSpace  = "srgb-linear" -> 1u8 | "srgb" -> 0u8
           | "hsl" -> 12u8 | "hwb" -> 13u8
           | "xyz-d65" -> 7u8 | "xyz-d50" -> 6u8 | "xyz" -> 14u8 ;
 
-colorMix = "color-mix" , "(" >>
+colorMix = ( "color-mix" , "(" >>
     "in" , mixSpace , hueMethod? , ",",
     color , percentage? , ",",
     color , percentage?
-    << ")" -> input : Color ;
+    << ")" ) -> input : Color ;
 
 // --- Top-level color ---
 //

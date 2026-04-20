@@ -1,43 +1,43 @@
 {
-  "commit": "49d468f2",
+  "commit": "64ad2b3e",
   "profile": "release",
   "allocator": "mimalloc",
-  "date_utc": "2026-04-20T08:00:00Z",
-  "notes": "AY.W1 close: AU AoS substrate revert + finalise stack-buffer + Pratt Option C inline + structural-scan substrate. 4 hard gates closed; bytes/cyc attribution to follow in -bytes-cyc.txt.",
+  "date_utc": "2026-04-20T11:35:00Z",
+  "notes": "AY.W1-fix close: AU AoS substrate revert + finalise stack-buffer + Pratt Option C inline land cleanly; W1.3's eager scan_structural retired (per AYW1-twitter-regression-diag) — substrate stays in tape crate for AY.W4 wiring. Twitter recovered to 688 MB/s (+64% vs pre-fix 420; 1.6x post-AX-W1 baseline 448). Every JSON / CSS L4 / BBNF entry exceeds post-AX-W1 baseline; Sheets parse_* hold steady.",
   "entries": {
     "json_monolithic": {
-      "canada":  {"ns_per_iter":  7789045, "bytes_per_ns": 0.289},
-      "citm":    {"ns_per_iter":  4491522, "bytes_per_ns": 0.385},
-      "data_s":  {"ns_per_iter":    78663, "bytes_per_ns": 0.451},
-      "data_xl": {"ns_per_iter": 85238145, "bytes_per_ns": 0.250},
-      "twitter": {"ns_per_iter":  1502872, "bytes_per_ns": 0.420}
+      "canada":  {"ns_per_iter":  6930968, "bytes_per_ns": 0.324},
+      "citm":    {"ns_per_iter":  2368699, "bytes_per_ns": 0.729},
+      "data_s":  {"ns_per_iter":    52477, "bytes_per_ns": 0.676},
+      "data_xl": {"ns_per_iter": 48312029, "bytes_per_ns": 0.440},
+      "twitter": {"ns_per_iter":   916958, "bytes_per_ns": 0.688}
     },
     "css_l4": {
-      "bootstrap": {"ns_per_iter":  2161110, "bytes_per_ns": 0.130},
-      "normalize": {"ns_per_iter":    30928, "bytes_per_ns": 0.198},
-      "tailwind":  {"ns_per_iter": 22707329, "bytes_per_ns": 0.160}
+      "bootstrap": {"ns_per_iter":  1847410, "bytes_per_ns": 0.151},
+      "normalize": {"ns_per_iter":    24661, "bytes_per_ns": 0.248},
+      "tailwind":  {"ns_per_iter": 18595529, "bytes_per_ns": 0.195}
     },
     "google_sheets_monolithic": {
-      "parse_simple":  {"ns_per_iter":  25129, "bytes_per_ns": 0.020},
-      "parse_nested":  {"ns_per_iter":  59341, "bytes_per_ns": 0.024},
-      "parse_stress":  {"ns_per_iter":  82816, "bytes_per_ns": 0.022},
-      "format_simple": {"ns_per_iter":    142, "bytes_per_ns": 0.042},
-      "format_stress": {"ns_per_iter":   4084, "bytes_per_ns": 0.048}
+      "parse_simple":  {"ns_per_iter":  24020, "bytes_per_ns": 0.021},
+      "parse_nested":  {"ns_per_iter":  58285, "bytes_per_ns": 0.024},
+      "parse_stress":  {"ns_per_iter":  82463, "bytes_per_ns": 0.022},
+      "format_simple": {"ns_per_iter":    149, "bytes_per_ns": 0.040},
+      "format_stress": {"ns_per_iter":   3934, "bytes_per_ns": 0.050}
     },
     "bbnf_monolithic": {
-      "bbnf_self":      {"ns_per_iter":  53654, "bytes_per_ns": 0.095},
-      "css_l4_grammar": {"ns_per_iter": 433970, "bytes_per_ns": 0.128},
-      "css_pretty":     {"ns_per_iter":  16596, "bytes_per_ns": 0.154},
-      "ebnf":           {"ns_per_iter":  27773, "bytes_per_ns": 0.052},
-      "google_sheets":  {"ns_per_iter":  38635, "bytes_per_ns": 0.193},
-      "json":           {"ns_per_iter":   6907, "bytes_per_ns": 0.077}
+      "bbnf_self":      {"ns_per_iter":  44520, "bytes_per_ns": 0.115},
+      "css_l4_grammar": {"ns_per_iter": 358861, "bytes_per_ns": 0.155},
+      "css_pretty":     {"ns_per_iter":  13266, "bytes_per_ns": 0.192},
+      "ebnf":           {"ns_per_iter":  23898, "bytes_per_ns": 0.060},
+      "google_sheets":  {"ns_per_iter":  28458, "bytes_per_ns": 0.263},
+      "json":           {"ns_per_iter":   5856, "bytes_per_ns": 0.091}
     }
   },
   "wall_time_seconds": {
-    "json_monolithic": 77,
-    "css_l4": 29,
+    "json_monolithic": 60,
+    "css_l4": 26,
     "google_sheets_monolithic": 13,
-    "bbnf_monolithic": 10,
-    "total": 129
+    "bbnf_monolithic": 9,
+    "total": 108
   }
 }

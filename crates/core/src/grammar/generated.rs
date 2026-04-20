@@ -29280,6 +29280,9 @@ mod __bbnfbootstrap_emit_impl {
                             break;
                         }
                         if state.offset == __rep_cp412 {
+                            if let Some(__bcp) = __iter_cp {
+                                __builder.restore(__bcp);
+                            }
                             break;
                         }
                         __rep_count411 += 1;

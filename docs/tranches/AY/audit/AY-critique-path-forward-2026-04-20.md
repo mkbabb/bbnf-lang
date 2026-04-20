@@ -191,7 +191,7 @@ Do not target “beat sonic by 20-40%” as the tranche premise anymore.
 Target instead:
 
 - restore a defensible, truthful JSON floor,
-- move the primary value API off tape-then-walk,
+- replace the current generic tape-first value path with the canonical hot substrate,
 - prove runtime gains on matched work.
 
 If that then beats sonic, good. It cannot remain a planning assumption.
@@ -203,54 +203,82 @@ If that then beats sonic, good. It cannot remain a planning assumption.
 - write AY FINAL against what actually landed,
 - rewrite AZ to open on AY-close, not AX-close.
 
-## Architectural direction: the real hybrid
+## Architectural direction: one path, one canonical substrate
 
 Do not pivot back to legacy DTA.
 
-Do not treat the tape as the only noble substrate.
+Do not split the system into orthogonal parse paths.
 
-The right path is a true hybrid:
+The right path is a single RD/shape-emitted parser writing a single canonical packed substrate.
 
-- keep the current flat AoS tape as the parser/debug/grammar substrate,
-- add a first-class packed document/value substrate for hot eager/lazy consumer paths.
+That means:
 
-The hybrid should look like this:
+- one structural/dispatch front end,
+- one shape-emitted recursive-descent parse,
+- one write target,
+- many consumers layered on the same output.
 
-### Parse substrate
+What changes is not the existence of a second runtime. What changes is the definition of the runtime substrate itself.
+
+The current tape is still too generic:
+
+- overloaded fields,
+- polymorphic payload interpretation,
+- finalize burden,
+- compatibility-oriented cursor logic,
+- tape-then-walk value materialization.
+
+That is the wrong bias if throughput dominates all other concerns.
+
+The canonical substrate should instead be a packed parse/value/view substrate that the parser writes directly once.
+
+### Canonical packed substrate
 
 Responsibilities:
 
-- grammar-derived parse/debug/incremental provenance,
-- direct emission/backpatch,
-- spans, rule views, diagnostics,
-- recovery/replay hooks.
-
-Keep:
-
-- flat AoS structural primary,
-- compact typed payload routing where it is actually consumed,
-- parser-oriented metadata.
-
-### Value/document substrate
-
-Responsibilities:
-
+- maximum parse throughput,
 - eager value materialization,
 - lazy field/path lookup,
 - object/array skipping,
-- cache-local DOM-style access.
-
-Build directly from visitor emission first for JSON, then selectively for CSS values.
+- view/debug/incremental provenance,
+- cache-local consumer access.
 
 Properties:
 
-- explicit subtree span/skip metadata,
-- object-as-key/value run layout,
+- explicit tag,
+- explicit span,
+- explicit subtree skip/count/length semantics,
+- direct scalar payload storage in final hot form,
 - borrowed-or-arena string storage,
-- one fixed interpretation per node lane,
-- pre-order/value-order traversal friendliness.
+- object-as-key/value run layout,
+- enough stable structural metadata that debug UX, replay, and incremental work read the same substrate rather than demanding a second one.
 
-This is closer to sonic-rs/simdjson and closer to the repository’s own `json-prototype` than the current tape-first value path.
+This should replace the current “generic tape first, value/view second” bias. It should not coexist as a separate dominant path.
+
+### Consumer model
+
+Every consumer should read this same substrate:
+
+- `view()` reads node headers, spans, and child/entry metadata directly,
+- `to_value()` becomes wrapping/projecting rather than reconstructing,
+- lazy `get()` uses object navigation metadata rather than generic child iteration,
+- debug UX reads rule/span/provenance side data from the same output,
+- incremental/replay/recovery build on stable node spans and resumable shape boundaries from the same output.
+
+The parser path remains one path.
+
+## Immediate implication for the current code
+
+Do not keep optimizing the current tape abstraction as though it were the final form.
+
+The right move is to redesign the canonical output layout so that it is already the fastest value/view substrate the parser can produce, then make every API consume that.
+
+That means:
+
+- keep RD/shape emission,
+- keep the single parser entry path,
+- replace the current general-purpose tape contract with a stricter packed substrate contract,
+- preserve whatever provenance/debug metadata is needed for future UX and incremental work inside or alongside that same substrate.
 
 ## Sonic-rs / simdjson lessons to actually absorb
 
@@ -260,16 +288,17 @@ They are:
 
 - one-pass write of the hot representation,
 - spend bits where they save branches and skips,
-- let the dominant consumer dictate layout,
+- let the dominant hot operations dictate layout,
 - keep object/array skip information explicit,
-- make lazy and eager APIs consume the representation they actually want.
+- store enough structural truth once so lazy, eager, view, and debug consumers do not rebuild it.
 
 Applied here, that means:
 
-- stop making `packed_cache` a transpose cache and make it a real document mode or replace it,
+- stop making `packed_cache` a transpose cache and either promote or replace it with the canonical packed node layout,
 - stop making `child_off` the universal polymorphic slot for every consumer,
 - stop paying finalize work when shape emission already knows enough to write close-time structure directly,
-- stop proliferating payload columns that no hot consumer scans directly.
+- stop proliferating payload columns that no hot consumer scans directly,
+- stop treating tape-to-value reconstruction as an acceptable steady-state hot path.
 
 `pay_f64` is a good cautionary example: a specialization is only good if it shortens a real consumer path. If it only creates another routing distinction, it is negative information density.
 

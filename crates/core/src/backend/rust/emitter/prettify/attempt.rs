@@ -40,6 +40,36 @@ impl RustEmitter {
         }
     }
 
+    /// Silent-parse wrapper: executes `expr`'s parse but discards any
+    /// FmtOps it appends to the builder. The state `offset` advances on
+    /// success; the builder is light-restored so no ops leak through.
+    /// On parse failure, propagates the failure up by `return false;`
+    /// from the enclosing rule function — consistent with the
+    /// Seq-statement convention where children short-circuit via early
+    /// return rather than boolean plumbing.
+    ///
+    /// Used by Repeat + `@pretty sep(...)` to consume body-emitted
+    /// separator tokens without double-emitting when `sep(...)` is the
+    /// canonical inter-iteration separator.
+    pub(in crate::backend::rust::emitter) fn emit_prettify_silent_impl(
+        &mut self,
+        expr: TokenStream,
+        ctx: &mut RustEmitCtx,
+    ) -> TokenStream {
+        let state_cp = ctx.fresh("silent_cp");
+        let builder_cp = ctx.fresh("silent_bcp");
+        quote! {{
+            let #state_cp = state.offset;
+            let #builder_cp = __builder.light_checkpoint();
+            let __ok = (|| -> bool { #expr; true })();
+            __builder.light_restore(#builder_cp);
+            if !__ok {
+                state.offset = #state_cp;
+                return false;
+            }
+        }}
+    }
+
     pub(in crate::backend::rust::emitter) fn emit_prettify_attempt_impl(
         &mut self,
         expr: TokenStream,

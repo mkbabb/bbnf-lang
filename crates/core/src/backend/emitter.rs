@@ -485,6 +485,29 @@ pub trait Emitter {
     fn emit_prettify_attempt(&mut self, _expr: Self::Output, _rollback_builder: bool, _use_light: bool, _ctx: &mut Self::Ctx) -> Self::Output {
         unimplemented!("prettify not supported")
     }
+    /// Wrap an expression so it parses (advances state) but emits no
+    /// formatting ops — the builder is restored to its pre-expression
+    /// checkpoint after the expression completes, win or lose. On parse
+    /// failure, the expression returns false per the standard contract.
+    ///
+    /// Used by the Repeat + `@pretty sep(...)` path to consume the body's
+    /// natively-parsed separator token while letting `sep(...)` remain the
+    /// sole emitter of the inter-iteration separator bytes.
+    fn emit_prettify_silent(&mut self, _expr: Self::Output, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
+    /// Emit a pprint custom-sep call inline at this position. `sep` is the
+    /// flat-mode text; break-mode uses empty `brk` (newline + indent) per
+    /// the convention established in `emit_separator_ops`.
+    ///
+    /// Used by the `SilentPosition::Before` branch of the Repeat + sep
+    /// lowering to emit the separator at the start of every iteration
+    /// (including the first), where the pprint-level between-iteration
+    /// sep cannot reach because iter 1 needs a leading sep relative to
+    /// the pre-Repeat body content.
+    fn emit_prettify_sep_inline(&mut self, _sep: &str, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
     fn emit_prettify_rule_function(&mut self, _rule: &IrRule, _body: Self::Output, _policy: &PrettyPolicy, _ir: &GrammarIR, _ctx: &mut Self::Ctx) -> Self::Output {
         unimplemented!("prettify not supported")
     }

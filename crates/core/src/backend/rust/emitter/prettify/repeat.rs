@@ -95,6 +95,13 @@ impl RustEmitter {
         if has_separator {
             // With separator: checkpoint covers sep + inner so we can undo the
             // separator if the inner expression fails on the next iteration.
+            //
+            // Additionally, if the inner expression succeeds *nullably* (state
+            // didn't advance because it bottomed out into an all-optional
+            // branch), we must also rollback the checkpoint — otherwise the
+            // just-emitted separator leaks into the output as a trailing
+            // `, ` / `; ` with no subsequent item, breaking prettify
+            // idempotency for rules whose body is `(X? << sep?) +`.
             quote! { {
                 #loop_cp
                 let mut #count_var = 0usize;
@@ -116,6 +123,9 @@ impl RustEmitter {
                         break;
                     }
                     if state.offset == #cp_var {
+                        if let Some(__bcp) = __iter_cp {
+                            __builder.restore(__bcp);
+                        }
                         break;
                     }
                     #count_var += 1;

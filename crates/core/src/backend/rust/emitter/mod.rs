@@ -363,6 +363,21 @@ impl Emitter for RustEmitter {
     ) -> TokenStream {
         self.emit_prettify_attempt_impl(expr, rollback_builder, use_light, ctx)
     }
+    fn emit_prettify_silent(
+        &mut self,
+        expr: TokenStream,
+        ctx: &mut Self::Ctx,
+    ) -> TokenStream {
+        self.emit_prettify_silent_impl(expr, ctx)
+    }
+    fn emit_prettify_sep_inline(
+        &mut self,
+        sep: &str,
+        _ctx: &mut Self::Ctx,
+    ) -> TokenStream {
+        let sep_lit = proc_macro2::Literal::string(sep);
+        quote::quote! { __builder.sep(#sep_lit, ""); }
+    }
     fn emit_prettify_rule_function(
         &mut self,
         rule: &IrRule,

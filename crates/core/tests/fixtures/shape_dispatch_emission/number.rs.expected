@@ -1,6 +1,6 @@
 /// AW-V.W3.2 — per-grammar Number-shape parse function.
 ///
-/// Mirrors `bbnf_json_prototype::number::parse_number_body`.
+/// Mirrors `json_prototype::number::parse_number_body`.
 /// `first_byte` is the byte the dispatcher already matched;
 /// passing it avoids a redundant re-read for the sign check.
 #[inline(always)]

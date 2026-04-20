@@ -1,6 +1,6 @@
 /// AW-V.W3.2 — per-grammar String-shape parse function.
 ///
-/// Mirrors `bbnf_json_prototype::string::parse_string_body`.
+/// Mirrors `json_prototype::string::parse_string_body`.
 /// `"` must NOT be consumed by the caller — this function
 /// reads it, scans for the closing quote, and pushes a Span
 /// leaf with appropriate borrow / arena-decode metadata.

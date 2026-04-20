@@ -171,6 +171,52 @@ fn alt_branch_payload_value_for_wrap(
     }
 }
 
+/// AY.W2.6 — whether a Wrap rule's outer `push_compound` is safe to
+/// elide. The elision is sound when every Alt branch's shape-fn call
+/// already emits a self-contained tape record (either a compound via
+/// `push_compound` or a leaf via `push_leaf_with`), so the outer
+/// Rule-compound merely double-wraps the branch's own record.
+///
+/// # Criterion
+///
+/// The wrap body must be an `Alt` whose every branch is either:
+///
+/// - A `Ref(rid)` where the target rule carries a classified
+///   `ShapeTag` (Object / Array / String / Number / Keyword /
+///   Scalar / Pratt / Unordered / ArgList / Flat / HRegex / Wrap /
+///   AltDispatch). Classified branches route through shape fns that
+///   push their own record.
+/// - A `Regex` branch — the `emit_wrap_branch_call_tape` path
+///   already calls `push_leaf_with` on a successful scan.
+///
+/// Rules that don't satisfy this criterion (e.g. bare Alt of
+/// Literal branches, or Alt branches whose target shape is
+/// unclassified) retain the outer wrap for safety.
+///
+/// Per AY.md prop 2 / invariant 23 part 2: JSON's `value` rule
+/// matches this criterion — cutting twitter tape record count from
+/// ~158K to ~80K (sonic-rs-node-count parity).
+fn wrap_can_elide_compound(rule: &IrRule, ir: &GrammarIR) -> bool {
+    use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
+    let body = unwrap_outer(&rule.body);
+    let IrNode::Alt(branches, _) = body else {
+        return false;
+    };
+    if branches.is_empty() {
+        return false;
+    }
+    branches.iter().all(|b| {
+        match unwrap_outer(&b.node) {
+            IrNode::Ref(rid) => {
+                let tag = ir.shape_assignments.get(*rid);
+                !matches!(tag, ShapeTag::None)
+            }
+            IrNode::Regex(_) => true,
+            _ => false,
+        }
+    })
+}
+
 /// Emit `pub fn parse_wrap_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>`.
 pub fn emit_parse_wrap(
@@ -192,6 +238,12 @@ pub fn emit_parse_wrap(
     };
 
     let body = unwrap_outer(&rule.body);
+    // AY.W2.6 — wrap-compound elision: when every Alt branch's call
+    // already emits its own tape record, the outer Rule-compound is a
+    // no-op wrapper that doubles the record count. Per AY.md prop 2 /
+    // invariant 23 part 2, skip the outer compound emission for such
+    // rules (JSON `value` is the canonical case).
+    let elide_compound = wrap_can_elide_compound(rule, ir);
     let dispatch = match body {
         IrNode::Alt(branches, _) => emit_alt_tape_dispatch(
             branches,
@@ -200,6 +252,7 @@ pub fn emit_parse_wrap(
             ir,
             rule_variant_idx,
             rule,
+            elide_compound,
         ),
         IrNode::Ref(rid) => {
             // Non-Alt Wrap body — single Ref transparent alias. Resolve
@@ -307,6 +360,7 @@ fn emit_alt_tape_dispatch(
     ir: &GrammarIR,
     rule_variant_idx: u8,
     rule: &IrRule,
+    elide_compound: bool,
 ) -> TokenStream {
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let _ = dispatcher_ident; // retained for trait-level compat; not emitted.
@@ -418,40 +472,70 @@ fn emit_alt_tape_dispatch(
                 })?;
         }
     };
-    quote! {
-        let __wrap_enter_p = *p as u32;
-        let __wrap_enter_child = builder.mark_children();
-        let mut __wrap_chosen_meta: u8 = 0;
-        #first_peek
-        'try_branches: loop {
-            match first {
-                #(#byte_arms)*
-                _ => {}
+    if elide_compound {
+        // AY.W2.6 — wrap-compound elision. Every branch's call already
+        // pushes its own tape record; the outer Rule-compound would
+        // merely double-wrap. Skip the `mark_children` bracket, the
+        // `push_compound` emission, and return the branch's own offset
+        // (`TapeOffset::NONE` — wrap is transparent at the call site
+        // per AW-V.W4-fix).
+        let _ = (rule_variant_idx, quote! { __wrap_chosen_meta });
+        quote! {
+            let mut __wrap_chosen_meta: u8 = 0;
+            #first_peek
+            'try_branches: loop {
+                match first {
+                    #(#byte_arms)*
+                    _ => {}
+                }
+                #(#linear_arms)*
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    },
+                );
             }
-            #(#linear_arms)*
-            return ::core::result::Result::Err(
-                ::bbnf::runtime::tape::DtaError::Syntax {
-                    offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                },
-            );
+            let _ = __wrap_chosen_meta;
+            Ok(::bbnf::runtime::tape::TapeOffset::NONE)
         }
-        // AX.W0a.2.j — push the Wrap rule's parent compound so the
-        // downstream IR-lowering re-sees the `Alt(...)` structure on
-        // self-host cycle-N+1. `variant_idx = rule.id` drives
-        // `rule_kind()` to the Wrap rule's kind; `meta_idx = branch
-        // ordinal` lets sub-variant projection distinguish branches.
-        let __wrap_exit_p = *p as u32;
-        let __wrap_off = builder.push_compound(
-            ::bbnf::runtime::tape::TapeKind::Rule,
-            __wrap_enter_child,
-            __wrap_enter_p,
-            __wrap_exit_p,
-            #rule_variant_idx,
-            __wrap_chosen_meta,
-        );
-        Ok(__wrap_off)
+    } else {
+        quote! {
+            let __wrap_enter_p = *p as u32;
+            let __wrap_enter_child = builder.mark_children();
+            let mut __wrap_chosen_meta: u8 = 0;
+            #first_peek
+            'try_branches: loop {
+                match first {
+                    #(#byte_arms)*
+                    _ => {}
+                }
+                #(#linear_arms)*
+                return ::core::result::Result::Err(
+                    ::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    },
+                );
+            }
+            // AX.W0a.2.j — push the Wrap rule's parent compound so the
+            // downstream IR-lowering re-sees the `Alt(...)` structure on
+            // self-host cycle-N+1. `variant_idx = rule.id` drives
+            // `rule_kind()` to the Wrap rule's kind; `meta_idx = branch
+            // ordinal` lets sub-variant projection distinguish branches.
+            let __wrap_exit_p = *p as u32;
+            let __wrap_off = builder.push_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                __wrap_enter_child,
+                __wrap_enter_p,
+                __wrap_exit_p,
+                #rule_variant_idx,
+                __wrap_chosen_meta,
+            );
+            Ok(__wrap_off)
+        }
     }
 }
 

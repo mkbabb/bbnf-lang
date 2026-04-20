@@ -405,6 +405,13 @@ fn emit_alt_branch_body_tape(
                 emit_structural_branch_tape(inner, support_mod, grammar_suffix, ir)
             }
         }
+        // AY.W2.6b — Epsilon branches always succeed without consuming.
+        // EBNF's `factor = term, S, ("?" | "*" | "+" | "-", S, term | ε)`
+        // hits this arm after post-prefix-factoring. First-byte-set is
+        // empty so the branch lands in the fallback path; emission must
+        // `break 'try_branches` unconditionally to signal the Alt
+        // succeeded on the zero-byte branch.
+        IrNode::Epsilon => quote! { break 'try_branches; },
         _ => quote! {},
     }
 }
@@ -623,19 +630,83 @@ fn emit_branch_position_core(
                 }
             }
         }
-        // Negate, Minus, Alt, TokenDispatch — rare inside an Alt
-        // branch's Seq (the grammar usually routes these through
-        // outer rules). Emit a guard-only best-effort so admission
-        // doesn't reject; if the grammar lands on this edge case a
-        // follow-on specialisation pins the body. Today's grammars
-        // (JSON / CSS L4 / Sheets / BBNF / EBNF / BNF /
-        // BbnfBootstrap) route these at rule boundaries.
-        IrNode::Alt(_, _)
-        | IrNode::Negate(_)
-        | IrNode::Minus(_, _)
-        | IrNode::TokenDispatch { .. } => {
-            // Fall through — parent attempt rolls back.
-            quote! { return Err(()); }
+        // AY.W2.6b — Negate / Minus / Alt / TokenDispatch can appear
+        // at position level inside a Keyword-shape Seq branch. EBNF's
+        // `terminal` rule body `"'" , character - "'" , { character -
+        // "'" } , "'"` places Minus inline between literal positions;
+        // the keyword detector correctly admits the branch on the
+        // leading `'` / `"` byte. The per-position emission delegates
+        // to the rule-level helpers, wrapped through an inner closure
+        // that converts `DtaError` rejections into the attempt
+        // closure's `Err(())`. Variant index is 0 at position level —
+        // the owning rule's Alt / Keyword compound stamps the rule
+        // discriminant on the outer record.
+        IrNode::Alt(branches, Some(_)) => {
+            let inner =
+                emit_alt_byte_dispatch_tape(branches, support_mod, grammar_suffix, ir);
+            wrap_dta_err_to_unit(inner)
+        }
+        IrNode::Alt(branches, None) => {
+            let inner = emit_alt_tape(branches, 0, support_mod, grammar_suffix, ir);
+            wrap_dta_err_to_unit(inner)
+        }
+        IrNode::Negate(inner_node) => {
+            let inner =
+                emit_negate_tape(inner_node, support_mod, grammar_suffix, ir);
+            wrap_dta_err_to_unit(inner)
+        }
+        IrNode::Minus(primary, excluded) => {
+            let inner = emit_minus_tape(
+                primary,
+                excluded,
+                0,
+                support_mod,
+                grammar_suffix,
+                ir,
+            );
+            wrap_dta_err_to_unit(inner)
+        }
+        IrNode::TokenDispatch { token, arms, fallback } => {
+            let inner = emit_token_dispatch_tape(
+                token,
+                arms,
+                fallback,
+                0,
+                support_mod,
+                grammar_suffix,
+                ir,
+            );
+            wrap_dta_err_to_unit(inner)
+        }
+    }
+}
+
+/// Wrap a rule-level tape-emit block (whose early-return uses
+/// `DtaError`) inside an inner closure that converts any
+/// `DtaError` rejection into the per-position attempt closure's
+/// `Err(())`. Used by [`emit_branch_position_core`] to delegate the
+/// Minus / Negate / Alt / TokenDispatch emit helpers without
+/// duplicating ~300 LOC of emission logic.
+///
+/// The inner closure isolates the rule-level `return Err(DtaError)`
+/// exits: on success the outer attempt continues with the records
+/// already pushed to `builder`; on rejection the outer attempt
+/// returns `Err(())`, and the caller (`emit_structural_branch_tape`
+/// / `emit_seq_branch_structural_tape`) handles rollback of `*p` +
+/// `builder.columns_mut().truncate(...)`.
+fn wrap_dta_err_to_unit(rule_emit: TokenStream) -> TokenStream {
+    quote! {
+        {
+            let __pos_attempt: ::core::result::Result<
+                (),
+                ::bbnf::runtime::tape::DtaError,
+            > = (|| {
+                #rule_emit
+                ::core::result::Result::Ok(())
+            })();
+            if __pos_attempt.is_err() {
+                return ::core::result::Result::Err(());
+            }
         }
     }
 }

@@ -32,7 +32,7 @@ pub use lr::{eliminate_direct_lr, eliminate_indirect_lr};
 pub use materialization::{
     MaterializationClass, classify_materialization, mat_join,
 };
-pub use metadata::{compute_aliases, compute_transparent};
+pub use metadata::{compute_aliases, compute_transparent, has_named_return_type};
 pub use payload::{
     compute_payload_layouts, compute_payload_layouts_with_resolver, is_kv_pair_shape, plan_layout,
     plan_layout_with_cap, scalar_range_includes_sentinel, NamedTypeResolver, NullResolver,

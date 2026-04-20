@@ -12,7 +12,7 @@ use std::collections::HashSet;
 use csp_solver::Csp;
 use csp_solver::constraint::VarId;
 
-use crate::{GrammarIR, IrNode, RuleId};
+use crate::{FnDescriptor, GrammarIR, IrNode, RuleId, TypeDesc};
 
 use super::csp_domains::{BoolAndConstraint, BoolDomain, BoolEqualConstraint, BoolGroundConstraint};
 
@@ -176,7 +176,11 @@ pub fn compute_sp_method_rules(ir: &mut GrammarIR) {
                 continue;
             }
             // Unwrap Map wrappers (EnumWrap, BoxWrap) — SpanParser doesn't do enum wrapping.
-            let body = unwrap_map_node(&rule.body);
+            // Defensive: a Map carrying a Named return type is NOT transparent — its annotation
+            // must reach the Rust emitter via the rule's `TypeDesc::Named(_)` projection.
+            // `unwrap_map_node` halts at any Named-bearing Map and the Map node itself fails
+            // `can_be_span_parser`, so the rule never gets `_sp()` admission.
+            let body = unwrap_map_node(&rule.body, ir);
             if can_be_span_parser(body, &sp_set) {
                 sp_set.insert(rule.id);
                 changed = true;
@@ -195,9 +199,28 @@ pub fn compute_sp_method_rules(ir: &mut GrammarIR) {
 }
 
 /// Unwrap Map nodes (enum/box wrappers are transparent for span purposes).
-fn unwrap_map_node(node: &IrNode) -> &IrNode {
+///
+/// Defensive guard (AY.W2.2): a Map whose `FnDescriptor::Expr.return_type`
+/// is `Some(TypeDesc::Named(_))` is NOT transparent — the annotation
+/// changes the rule's projected type. Returning the Map node itself
+/// preserves the original behaviour for non-Named maps (`EnumWrap`,
+/// `BoxWrap`, `SpanCapture`, `Expr` without Named annotation) while
+/// stopping the unwrap walk at any Named-bearing wrapper. The caller
+/// then sees an `IrNode::Map { .. }` which `can_be_span_parser` rejects,
+/// so a Named-annotated rule never gains `_sp()` admission and its
+/// Named-ness reaches the emitter via the normal projection path.
+fn unwrap_map_node<'a>(node: &'a IrNode, ir: &GrammarIR) -> &'a IrNode {
     match node {
-        IrNode::Map { inner, .. } => unwrap_map_node(inner),
+        IrNode::Map { inner, fn_id } => {
+            if let FnDescriptor::Expr {
+                return_type: Some(TypeDesc::Named(_)),
+                ..
+            } = &ir.fns[*fn_id as usize]
+            {
+                return node;
+            }
+            unwrap_map_node(inner, ir)
+        }
         other => other,
     }
 }

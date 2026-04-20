@@ -14,12 +14,11 @@
 //! 3. On a `"` hit: borrowed-string path — push a Span leaf with
 //!    `STRING_BORROW_BIT` set; the tape reader slices bytes directly
 //!    from the input.
-//! 4. On a `\\` hit: cold path — emit a borrowed-string push with the
-//!    full span (including trailing quote). The tape's
-//!    `payload_string_with_source` reads via arena, but the prototype
-//!    defers the decode to a visitor side call; for the shape emitter
-//!    we match the AW-IV walker's decode-into-arena path so the
-//!    bench's `payload_string` accessor resolves.
+//! 4. On a `\\` hit: cold path — `parse_string_escaped` routes
+//!    through `parse_that::parsers::scan::decode_json_string_to_arena`
+//!    (AY.W4.1; the kernel's SIMD `u8x16` scan + stripe-copy escape
+//!    decoder). The tape's `payload_string` reader resolves via the
+//!    arena's `(len: u32 LE, bytes: [u8; len])` frame.
 //!
 //! The `-> decode_json_string_to_arena(input) : String` annotation
 //! on JSON's `string` rule means every string leaf must either
@@ -119,6 +118,14 @@ pub fn emit_parse_string(
 /// kernel's body is identical per-grammar; only the `variant_idx`
 /// tag varies per rule).
 ///
+/// AY.W4.1 — slow-path decode now routes through
+/// [`parse_that::parsers::scan::decode_json_string_to_arena`], which
+/// is a fully-fused SIMD `u8x16` scan + `vst1q_u8`/`_mm_storeu_si128`
+/// stripe-copy escape-decoder. The previous body walked input
+/// scalar-byte-by-byte and dominated `decode_json_string_to_arena`
+/// self-time on twitter at 4-6%. The replacement reuses the kernel
+/// landed in AU.3.1 + extended in AV.4.3.
+///
 /// This function is referenced by the emitted shape fns; it lives
 /// outside the dispatcher's `__shape_support_<grammar>` module to
 /// keep the emitter token stream composition simple. Emit once per
@@ -126,10 +133,26 @@ pub fn emit_parse_string(
 pub fn emit_escape_helper(grammar_suffix: &str) -> TokenStream {
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     quote! {
-        /// AW-V.W3.2 — string escape-path decoder. Cold path; decodes
-        /// RFC 8259 escape sequences into the tape's arena and pushes
-        /// a Span leaf with `PAYLOAD_IN_ARENA_BIT` set so the reader
-        /// resolves via `tape.payload_string`.
+        /// AY.W4.1 — string escape-path decoder. Cold path; routes
+        /// through `parse_that::parsers::scan::decode_json_string_to_arena`,
+        /// a fully-SIMD scan + escape-decode kernel. The kernel
+        /// internally does its own SIMD `u8x16` re-scan from `open`
+        /// (a few dozen bytes of redundant work vs. the fast-path
+        /// SIMD scan that already located the first `\\`), then
+        /// performs SIMD-stride copies of escape-free runs between
+        /// each escape sequence.
+        ///
+        /// The arena layout is `(len: u32 LE, bytes: [u8; len])` per
+        /// `Tape::payload_string_bytes`'s contract. We reserve 4
+        /// bytes for the length prefix before invoking the kernel,
+        /// then back-stamp the decoded length once the kernel
+        /// returns.
+        ///
+        /// In the rare case where the SIMD fast-path scan flagged a
+        /// backslash that was actually escaped (impossible given
+        /// odd-parity tracking but defensive), the kernel may return
+        /// `StringPayload::Borrowed` — we rewind the reserved prefix
+        /// bytes and push a borrow-safe leaf instead.
         #[cold]
         #[inline(never)]
         #[allow(non_snake_case)]
@@ -143,177 +166,75 @@ pub fn emit_escape_helper(grammar_suffix: &str) -> TokenStream {
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
         > {
-            let body_start = open + 1;
-            // Reserve arena space: 4-byte length prefix + worst-case
-            // body size (every escape shrinks output).
-            let max_body = input.len().saturating_sub(body_start);
             let arena = builder.arena_mut();
-            let arena_offset = arena.len() as u32;
-            arena.extend_from_slice(&(0u32).to_le_bytes());
-            let decoded_start = arena.len();
-            arena.reserve(max_body);
+            let frame_offset = arena.len() as u32;
+            // Reserve the 4-byte length prefix; the kernel writes
+            // body bytes directly after it.
+            arena.extend_from_slice(&[0u8; 4]);
+            let body_start_in_arena = arena.len();
 
-            let mut cur = body_start;
-            while cur < input.len() {
-                let b = input[cur];
-                match b {
-                    b'"' => {
-                        *p = cur + 1;
-                        let arena_final = builder.arena_mut();
-                        let decoded_len = (arena_final.len() - decoded_start) as u32;
-                        // Stamp the length prefix.
-                        let start = arena_offset as usize;
-                        arena_final[start..start + 4]
-                            .copy_from_slice(&decoded_len.to_le_bytes());
-                        let lo = open as u32;
-                        let hi = *p as u32;
-                        // Push a Span leaf with PAYLOAD_IN_ARENA_BIT
-                        // via `push_leaf_with_arena_frame`.
-                        let leaf = builder.push_leaf_with_arena_frame(
-                            ::bbnf::runtime::tape::TapeKind::Span,
-                            lo,
-                            hi,
-                            variant_idx,
-                            0,
-                            arena_offset,
-                        );
-                        return Ok(leaf);
-                    }
-                    b'\\' => {
-                        if cur + 1 >= input.len() {
-                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                                offset: cur as u32,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                            });
-                        }
-                        let esc = input[cur + 1];
-                        let arena = builder.arena_mut();
-                        match esc {
-                            b'"' => arena.push(b'"'),
-                            b'\\' => arena.push(b'\\'),
-                            b'/' => arena.push(b'/'),
-                            b'b' => arena.push(0x08),
-                            b'f' => arena.push(0x0C),
-                            b'n' => arena.push(b'\n'),
-                            b'r' => arena.push(b'\r'),
-                            b't' => arena.push(b'\t'),
-                            b'u' => {
-                                if cur + 6 > input.len() {
-                                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                                        offset: cur as u32,
-                                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                    });
-                                }
-                                let cp = parse_u4(&input[cur + 2..cur + 6]).ok_or(
-                                    ::bbnf::runtime::tape::DtaError::Syntax {
-                                        offset: cur as u32,
-                                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                    },
-                                )?;
-                                let (code, consumed) = if (0xD800..=0xDBFF).contains(&cp) {
-                                    if cur + 12 > input.len()
-                                        || input[cur + 6] != b'\\'
-                                        || input[cur + 7] != b'u'
-                                    {
-                                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                                            offset: cur as u32,
-                                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                        });
-                                    }
-                                    let lo = parse_u4(&input[cur + 8..cur + 12]).ok_or(
-                                        ::bbnf::runtime::tape::DtaError::Syntax {
-                                            offset: cur as u32,
-                                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                        },
-                                    )?;
-                                    if !(0xDC00..=0xDFFF).contains(&lo) {
-                                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                                            offset: cur as u32,
-                                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                        });
-                                    }
-                                    (
-                                        0x10000
-                                            + (((cp - 0xD800) as u32) << 10)
-                                            + (lo - 0xDC00) as u32,
-                                        12,
-                                    )
-                                } else if (0xDC00..=0xDFFF).contains(&cp) {
-                                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                                        offset: cur as u32,
-                                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                    });
-                                } else {
-                                    (cp as u32, 6)
-                                };
-                                encode_utf8_to(arena, code);
-                                cur += consumed;
-                                continue;
-                            }
-                            _ => {
-                                return Err(::bbnf::runtime::tape::DtaError::Syntax {
-                                    offset: cur as u32,
-                                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            }
-                        }
-                        cur += 2;
-                    }
-                    _ => {
-                        let arena = builder.arena_mut();
-                        arena.push(b);
-                        cur += 1;
-                    }
+            match ::parse_that::parsers::scan::decode_json_string_to_arena(
+                input, open, arena,
+            ) {
+                Some((
+                    ::parse_that::parsers::scan::StringPayload::Owned { .. },
+                    end_pos,
+                )) => {
+                    *p = end_pos;
+                    let arena_final = builder.arena_mut();
+                    let decoded_len =
+                        (arena_final.len() - body_start_in_arena) as u32;
+                    let prefix = frame_offset as usize;
+                    arena_final[prefix..prefix + 4]
+                        .copy_from_slice(&decoded_len.to_le_bytes());
+                    let lo = open as u32;
+                    let hi = *p as u32;
+                    let leaf = builder.push_leaf_with_arena_frame(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        lo,
+                        hi,
+                        variant_idx,
+                        0,
+                        frame_offset,
+                    );
+                    Ok(leaf)
                 }
-            }
-            Err(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
-                offset: open as u32,
-            })
-        }
-
-        /// Parse a 4-hex-digit sequence into a `u16`.
-        #[inline]
-        #[allow(non_snake_case)]
-        fn parse_u4(bytes: &[u8]) -> ::core::option::Option<u16> {
-            if bytes.len() != 4 { return None; }
-            let mut out: u16 = 0;
-            for &b in bytes {
-                let v = match b {
-                    b'0'..=b'9' => b - b'0',
-                    b'a'..=b'f' => b - b'a' + 10,
-                    b'A'..=b'F' => b - b'A' + 10,
-                    _ => return None,
-                };
-                out = out.wrapping_shl(4) | (v as u16);
-            }
-            Some(out)
-        }
-
-        /// Encode a Unicode code point as UTF-8.
-        #[inline]
-        #[allow(non_snake_case)]
-        fn encode_utf8_to(buf: &mut Vec<u8>, code: u32) {
-            if code < 0x80 { buf.push(code as u8); }
-            else if code < 0x800 {
-                buf.push(0xC0 | (code >> 6) as u8);
-                buf.push(0x80 | (code & 0x3F) as u8);
-            } else if code < 0x10000 {
-                buf.push(0xE0 | (code >> 12) as u8);
-                buf.push(0x80 | ((code >> 6) & 0x3F) as u8);
-                buf.push(0x80 | (code & 0x3F) as u8);
-            } else {
-                buf.push(0xF0 | (code >> 18) as u8);
-                buf.push(0x80 | ((code >> 12) & 0x3F) as u8);
-                buf.push(0x80 | ((code >> 6) & 0x3F) as u8);
-                buf.push(0x80 | (code & 0x3F) as u8);
+                Some((
+                    ::parse_that::parsers::scan::StringPayload::Borrowed {
+                        ..
+                    },
+                    end_pos,
+                )) => {
+                    // Defensive: kernel saw no real backslashes (the
+                    // fast-path scan's parity tracker is permissive).
+                    // Rewind the reserved prefix and emit a borrowed
+                    // leaf; semantically equivalent to the fast path.
+                    let arena_final = builder.arena_mut();
+                    arena_final.truncate(frame_offset as usize);
+                    *p = end_pos;
+                    let leaf = builder.push_leaf_borrowed_string(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        open as u32,
+                        *p as u32,
+                        variant_idx,
+                        0,
+                    );
+                    Ok(leaf)
+                }
+                None => {
+                    // Kernel rejected the input (unterminated, invalid
+                    // escape, bad surrogate). Roll back the reserved
+                    // prefix bytes the kernel may not have touched.
+                    let arena_final = builder.arena_mut();
+                    arena_final.truncate(frame_offset as usize);
+                    Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: open as u32,
+                        failing_state:
+                            ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule:
+                            ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    })
+                }
             }
         }
 
@@ -421,24 +342,30 @@ pub fn emit_parse_string_visitor(
 
 /// Pre-emitted visitor-path escape helper fn — one per grammar.
 ///
-/// Mirrors `json_prototype::string::parse_string_escaped::<V>`.
-/// Decodes RFC 8259 escapes into a fresh buffer and emits the decoded
-/// bytes via `visitor.string` / `visitor.key`. Cold path by design —
-/// `#[cold]` + `#[inline(never)]`.
+/// AY.W4.1 — routes through
+/// [`parse_that::parsers::scan::decode_json_string_to_arena`] using a
+/// stack-local `Vec<u8>` buffer as the arena, then dispatches to
+/// `visitor.string` / `visitor.key` with the decoded bytes. The
+/// kernel performs SIMD `u8x16` scan + stripe-copy escape decoding;
+/// the previous body walked input scalar-byte-by-byte.
 pub fn emit_visitor_escape_helper(grammar_suffix: &str) -> TokenStream {
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let helper_ident =
         format_ident!("parse_string_visitor_escaped_{}", grammar_suffix);
     quote! {
-        /// AW-V.W3-bench-fix — visitor-path escape decoder. Cold path.
+        /// AY.W4.1 — visitor-path escape decoder. Cold path.
+        ///
+        /// Reuses the SIMD-fused `decode_json_string_to_arena` kernel
+        /// against a stack-local `Vec<u8>` buffer; the borrow / owned
+        /// dispatch is unified at the visitor call site.
         #[cold]
         #[inline(never)]
-        #[allow(non_snake_case, clippy::too_many_arguments)]
+        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
         fn #helper_ident<V>(
             input: &[u8],
             p: &mut usize,
             body_start: usize,
-            mut cur: usize,
+            _esc_start: usize,
             visitor: &mut V,
             is_key: bool,
             open: usize,
@@ -447,143 +374,72 @@ pub fn emit_visitor_escape_helper(grammar_suffix: &str) -> TokenStream {
             V: ::bbnf::runtime::tape::StringVisitor
                 + ::bbnf::runtime::tape::ObjectVisitor,
         {
-            let mut buf: Vec<u8> = Vec::with_capacity(cur - body_start + 16);
-            buf.extend_from_slice(&input[body_start..cur]);
-            while cur < input.len() {
-                let b = input[cur];
-                match b {
-                    b'"' => {
-                        *p = cur + 1;
-                        return if is_key {
-                            visitor.key(&buf)
-                                .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
-                                    offset: open as u32, rule: None,
-                                })
-                        } else {
-                            visitor.string(&buf)
-                                .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
-                                    offset: open as u32, rule: None,
-                                })
-                        };
-                    }
-                    b'\\' => {
-                        if cur + 1 >= input.len() {
-                            return Err(::bbnf::runtime::ParseErr::Syntax {
-                                offset: cur as u32, rule: None,
-                            });
-                        }
-                        let esc = input[cur + 1];
-                        match esc {
-                            b'"' => buf.push(b'"'),
-                            b'\\' => buf.push(b'\\'),
-                            b'/' => buf.push(b'/'),
-                            b'b' => buf.push(0x08),
-                            b'f' => buf.push(0x0C),
-                            b'n' => buf.push(b'\n'),
-                            b'r' => buf.push(b'\r'),
-                            b't' => buf.push(b'\t'),
-                            b'u' => {
-                                if cur + 6 > input.len() {
-                                    return Err(::bbnf::runtime::ParseErr::Syntax {
-                                        offset: cur as u32, rule: None,
-                                    });
-                                }
-                                let cp = __parse_u4_v(&input[cur + 2..cur + 6])
-                                    .ok_or(::bbnf::runtime::ParseErr::Syntax {
-                                        offset: cur as u32, rule: None,
-                                    })?;
-                                let code = if (0xD800..=0xDBFF).contains(&cp) {
-                                    if cur + 12 > input.len()
-                                        || input[cur + 6] != b'\\'
-                                        || input[cur + 7] != b'u'
-                                    {
-                                        return Err(::bbnf::runtime::ParseErr::Syntax {
-                                            offset: cur as u32, rule: None,
-                                        });
-                                    }
-                                    let lo = __parse_u4_v(&input[cur + 8..cur + 12])
-                                        .ok_or(::bbnf::runtime::ParseErr::Syntax {
-                                            offset: cur as u32, rule: None,
-                                        })?;
-                                    if !(0xDC00..=0xDFFF).contains(&lo) {
-                                        return Err(::bbnf::runtime::ParseErr::Syntax {
-                                            offset: cur as u32, rule: None,
-                                        });
-                                    }
-                                    cur += 6;
-                                    0x10000
-                                        + (((cp - 0xD800) as u32) << 10)
-                                        + (lo - 0xDC00) as u32
-                                } else if (0xDC00..=0xDFFF).contains(&cp) {
-                                    return Err(::bbnf::runtime::ParseErr::Syntax {
-                                        offset: cur as u32, rule: None,
-                                    });
-                                } else {
-                                    cp as u32
-                                };
-                                __encode_utf8_to_v(&mut buf, code);
-                                cur += 6;
-                                continue;
+            let mut buf: Vec<u8> = Vec::with_capacity(
+                input.len().saturating_sub(body_start),
+            );
+            match ::parse_that::parsers::scan::decode_json_string_to_arena(
+                input, open, &mut buf,
+            ) {
+                Some((
+                    ::parse_that::parsers::scan::StringPayload::Owned { .. },
+                    end_pos,
+                )) => {
+                    *p = end_pos;
+                    if is_key {
+                        visitor.key(&buf).map_err(|_| {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset: open as u32,
+                                rule: None,
                             }
-                            _ => return Err(::bbnf::runtime::ParseErr::Syntax {
-                                offset: cur as u32, rule: None,
-                            }),
-                        }
-                        cur += 2;
-                    }
-                    _ => {
-                        let tail = &input[cur..];
-                        match #support_mod::first_quote_or_backslash(tail) {
-                            Some((off, _)) => {
-                                buf.extend_from_slice(&tail[..off]);
-                                cur += off;
+                        })
+                    } else {
+                        visitor.string(&buf).map_err(|_| {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset: open as u32,
+                                rule: None,
                             }
-                            None => return Err(::bbnf::runtime::ParseErr::Syntax {
-                                offset: open as u32, rule: None,
-                            }),
-                        }
+                        })
                     }
                 }
+                Some((
+                    ::parse_that::parsers::scan::StringPayload::Borrowed {
+                        start,
+                        end,
+                    },
+                    end_pos,
+                )) => {
+                    // Defensive: kernel saw no real backslashes; emit
+                    // the borrowed body slice directly.
+                    *p = end_pos;
+                    let body = &input[start as usize..end as usize];
+                    if is_key {
+                        visitor.key(body).map_err(|_| {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset: open as u32,
+                                rule: None,
+                            }
+                        })
+                    } else {
+                        visitor.string(body).map_err(|_| {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset: open as u32,
+                                rule: None,
+                            }
+                        })
+                    }
+                }
+                None => Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: open as u32,
+                    rule: None,
+                }),
             }
-            Err(::bbnf::runtime::ParseErr::Syntax {
-                offset: open as u32, rule: None,
-            })
         }
 
-        #[inline]
-        #[allow(non_snake_case)]
-        fn __parse_u4_v(bytes: &[u8]) -> ::core::option::Option<u16> {
-            if bytes.len() != 4 { return None; }
-            let mut out: u16 = 0;
-            for &b in bytes {
-                let v = match b {
-                    b'0'..=b'9' => b - b'0',
-                    b'a'..=b'f' => b - b'a' + 10,
-                    b'A'..=b'F' => b - b'A' + 10,
-                    _ => return None,
-                };
-                out = out.wrapping_shl(4) | (v as u16);
-            }
-            Some(out)
-        }
-
-        #[inline]
-        #[allow(non_snake_case)]
-        fn __encode_utf8_to_v(buf: &mut Vec<u8>, code: u32) {
-            if code < 0x80 { buf.push(code as u8); }
-            else if code < 0x800 {
-                buf.push(0xC0 | (code >> 6) as u8);
-                buf.push(0x80 | (code & 0x3F) as u8);
-            } else if code < 0x10000 {
-                buf.push(0xE0 | (code >> 12) as u8);
-                buf.push(0x80 | ((code >> 6) & 0x3F) as u8);
-                buf.push(0x80 | (code & 0x3F) as u8);
-            } else {
-                buf.push(0xF0 | (code >> 18) as u8);
-                buf.push(0x80 | ((code >> 12) & 0x3F) as u8);
-                buf.push(0x80 | ((code >> 6) & 0x3F) as u8);
-                buf.push(0x80 | (code & 0x3F) as u8);
-            }
-        }
+        // Suppress unused-warning for the support module reference —
+        // sibling visitor-path fns already consume it.
+        #[allow(dead_code)]
+        const __VISITOR_ESCAPE_HELPER_MARKER: () = {
+            use #support_mod as _;
+        };
     }
 }

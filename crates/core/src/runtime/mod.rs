@@ -57,10 +57,4 @@ pub use simd_scan as scan;
 /// depending on crate-internal `backend::rust::view::*` paths.
 pub mod view {
     pub use crate::backend::rust::view::color::{Color, ColorSpace, COLOR_PAYLOAD_BYTES};
-
-    /// AX.W1.B: first-class CSS Value API isomorphic to
-    /// `lightningcss::stylesheet::StyleSheet`. See
-    /// `docs/tranches/AX/parity/css_divergence.md` for the variant
-    /// coverage ledger.
-    pub use crate::backend::rust::view::css;
 }

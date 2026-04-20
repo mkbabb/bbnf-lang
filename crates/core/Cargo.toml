@@ -25,11 +25,6 @@ syn = { version = "2", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
 indexmap = "2"
-# AX.W1.A — sonic-rs is a runtime dep because `bbnf::json::Value`
-# ships `PartialEq<sonic_rs::Value>` + `From<sonic_rs::Value>` bridges
-# as first-class API (not dev-only). Downstream benches + tests
-# continue to use sonic-rs directly through the same crate edge.
-sonic-rs = "0.5"
 dhat = { version = "0.3", optional = true }
 
 [features]
@@ -47,6 +42,7 @@ gorgeous = { version = "0.1", features = ["vm"] }
 parse_that = "0.4"
 bencher = "0.1"
 mimalloc = "0.1"
+sonic-rs = "0.5"
 
 # JSON competitor parsers
 serde_json = "1"
@@ -164,10 +160,3 @@ name = "bbnf_monolithic"
 path = "benches/bbnf/monolithic.rs"
 harness = false
 
-# AX.W1.A.5 + W1.D.3 — Value projection API consumer bench + AoS
-# sidecar. Lazy-field extraction over twitter.json. Value::from_tape
-# routes through the hybrid packed_cache from W1.D transparently.
-[[bench]]
-name = "twitter_lazy_field"
-path = "benches/twitter_lazy_field.rs"
-harness = false

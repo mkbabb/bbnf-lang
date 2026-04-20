@@ -74,14 +74,10 @@ pub use dedup::{columns_range_eq, push_compound_referring, BloomDedup, N_WORDS};
 // these helpers (leaf emission, compound close, payload staging,
 // whitespace skip, Pratt-operator lookup).
 pub use driver::{
-    close_compound, emit_leaf, emit_leaf_with_payload, emit_reducer_compound,
-    first_ws_pattern, lookup_precedence, saturating_u16,
-    stage_literal_payload_in_arena, trim_ascii_ws, trim_with_pattern, DtaError,
+    close_compound, emit_leaf, emit_leaf_with_payload, emit_reducer_compound, first_ws_pattern,
+    lookup_precedence, saturating_u16, trim_ascii_ws, trim_with_pattern, DtaError,
 };
-pub use dta::{
-    DtaAssociativity, DtaCounterOptional, DtaDiagnostic, DtaFrameKind, DtaPrecedenceEntry,
-    DtaRuleEntry, DtaRuleId, DtaState, DtaStateId, DtaTable, LiteralPayload, SeqPromote,
-};
+pub use dta::{DtaAssociativity, DtaPrecedenceEntry, DtaRuleId, DtaStateId};
 pub use finaliser::{derive_frame_depth, finalise, STACK_DEPTH_HINT};
 pub use kind::TapeKind;
 pub use packed::PackedRecord;

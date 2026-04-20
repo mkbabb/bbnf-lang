@@ -23,8 +23,6 @@
 //! - [`emit_reducer_compound`] — Pratt / ShuntingYard reducer write.
 //! - [`close_compound`] — seal a reserved compound row with the
 //!   observed span and child offset.
-//! - [`stage_literal_payload_in_arena`] — write a constant
-//!   [`LiteralPayload`] into the tape arena and return the offset.
 //! - [`trim_with_pattern`] / [`trim_ascii_ws`] / [`first_ws_pattern`]
 //!   — whitespace skip helpers (regex-driven and default-ASCII).
 //! - [`saturating_u16`] — Repeat-bound saturation helper.
@@ -32,7 +30,7 @@
 //! - [`DtaError`] — error surface shared with the emitted parse().
 
 use crate::columns::Columns;
-use crate::dta::{DtaPrecedenceEntry, DtaRuleId, DtaStateId, LiteralPayload};
+use crate::dta::{DtaPrecedenceEntry, DtaRuleId, DtaStateId};
 use crate::kind::TapeKind;
 use crate::tape::TapeOffset;
 
@@ -198,30 +196,6 @@ pub fn emit_leaf_with_payload(
     let idx = columns.push_leaf_fused(kind, variant, extra, span_lo, span_hi, child_off);
     frame_depth.push(depth);
     idx
-}
-
-/// AW-III.W1 — write a `LiteralPayload` constant into the tape's
-/// arena (`pay_agg`) and return its byte offset.
-///
-/// Constants from `Map { Literal, MapExpr::IntLit/BoolLit/FloatLit }`
-/// are grammar-fixed; the lifter computes the value at compile time
-/// (see [`LiteralPayload`]). The emitter stages it into the arena
-/// post-match so downstream readers find a single source of truth at
-/// `arena[child_off..child_off + width]`.
-#[inline(always)]
-pub fn stage_literal_payload_in_arena(
-    columns: &mut Columns,
-    payload: LiteralPayload,
-) -> TapeOffset {
-    let mut buf = [0u8; 8];
-    let width = payload.write_le(&mut buf);
-    if width == 0 {
-        return TapeOffset::NONE;
-    }
-    let arena = &mut columns.pay_agg;
-    let offset = arena.len() as u32;
-    arena.extend_from_slice(&buf[..width]);
-    TapeOffset(offset)
 }
 
 /// Emit a binary-operator compound for the ShuntingYard reducer.

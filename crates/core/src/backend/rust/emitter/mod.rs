@@ -10,7 +10,6 @@
 //! entry), `dta`/`profile`/`visitor` (codegen data), `prettify`
 //! sub-dir (separate emission channel).
 
-pub mod classify_byte;
 pub mod dfa_codegen;
 mod grammar;
 pub mod keyword_dispatch;

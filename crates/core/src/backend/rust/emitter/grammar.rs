@@ -504,29 +504,21 @@ impl RustEmitter {
             );
             quote! {
                 let __input_bytes = input.as_bytes();
-                // AY.W1.3 — pre-pass byte-class index over the input.
-                // `init_for_input` short-circuits to an empty index for
-                // grammars without a mined structural alphabet; for
-                // alphabet-bearing grammars (JSON, CSS L4, BBNF, Sheets)
-                // the index drives the tape capacity refinement below
-                // and seeds per-rule next-structural-byte queries.
+                // AY.W1-fix — `ScanState::new()` constructs the
+                // per-parse SIMD scratch (whitespace bitmap cache only).
+                // AY.W1.3's eager `scan_structural` call retired here
+                // after AYW1-twitter-regression-diag identified the
+                // O(N) scan cost as ~50% of twitter parse self-time
+                // for negligible probe benefit. The substrate stays in
+                // the tape crate awaiting AY.W4's regex-scan
+                // specialisation — which can wire it through CTNS-style
+                // predicates that deliver material savings. Tape
+                // capacity falls back to the per-grammar density
+                // estimate via `GRAMMAR_PROFILE.capacity_for`.
                 let mut state = #support_mod_ident::ScanState::new();
-                state.init_for_input(__input_bytes);
-                // The structural-index length is a tight upper bound on
-                // the parse's compound-record count; widen the capacity
-                // when the index reveals more structure than the
-                // grammar's per-byte density estimate would imply.
-                let __profile_capacity =
-                    GRAMMAR_PROFILE.capacity_for(input.len());
-                let __scan_capacity =
-                    state.structural_index.len() * 2 + 2;
                 let mut builder =
                     ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                        if __scan_capacity > __profile_capacity {
-                            __scan_capacity
-                        } else {
-                            __profile_capacity
-                        },
+                        GRAMMAR_PROFILE.capacity_for(input.len()),
                     );
                 let root_off = {
                     let mut pos: usize = 0;
@@ -624,12 +616,11 @@ impl RustEmitter {
                 {
                     let bytes = input.as_bytes();
                     let mut pos: usize = 0;
-                    // AY.W1.3 — populate the structural-byte index so
-                    // the visitor-path shape fns can short-circuit
-                    // their next-structural-byte queries via the
-                    // shared `state.structural_index` column.
+                    // AY.W1-fix — `ScanState::new()` carries only the
+                    // whitespace bitmap cache. AY.W1.3's eager
+                    // structural-scan call retired (see
+                    // AYW1-twitter-regression-diag).
                     let mut state = #support_mod_ident::ScanState::new();
-                    state.init_for_input(bytes);
                     #visitor_dispatcher(bytes, &mut pos, &mut state, visitor)?;
                     // Trailing whitespace tolerant.
                     let _ = #support_mod_ident::skip_space(bytes, &mut pos, &mut state);

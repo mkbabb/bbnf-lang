@@ -121,51 +121,13 @@ fn emit_skip_space_plain() -> TokenStream {
             p: &mut usize,
             state: &mut ScanState,
         ) {
-            // AY.W1.3 — structural-index probe. The probe reads the
-            // mined alphabet's pre-pass index for the next delimiter
-            // at or after `*p`. The result tightens the loop's
-            // termination bound: a structural byte that lies WITHIN
-            // the next 64-byte stripe is necessarily the loop's
-            // termination point (alphabet bytes are non-whitespace
-            // by mining contract — see `compute_structural_alphabet`
-            // exclusion of byte-class regexes), so we can short-
-            // circuit the SIMD bitmap evaluation and advance `*p`
-            // directly to that position. Empty-alphabet grammars
-            // (no W1.3 mining) hit `None` and fall through unchanged.
-            if let Some(__next_struct) = ::bbnf::runtime::tape
-                ::next_structural_at_or_after(
-                    &state.structural_index,
-                    *p as u32,
-                )
-            {
-                let __next = __next_struct as usize;
-                if __next < *p + 64 && __next <= input.len() {
-                    // The structural byte sits within the next
-                    // stripe. Validate the intervening slice is
-                    // whitespace via the existing scalar predicate
-                    // (small, ≤ 64 bytes; LLVM unrolls trivially)
-                    // and advance `*p` to it on success. On a
-                    // non-whitespace mid-byte we fall through to
-                    // the SIMD loop below — the structural byte is
-                    // farther than the first non-ws.
-                    let mut __probe = *p;
-                    let mut __all_ws = true;
-                    while __probe < __next {
-                        let __b = input[__probe];
-                        if __b != b' ' && __b != b'\t'
-                            && __b != b'\n' && __b != b'\r'
-                        {
-                            __all_ws = false;
-                            break;
-                        }
-                        __probe += 1;
-                    }
-                    if __all_ws {
-                        *p = __next;
-                        return;
-                    }
-                }
-            }
+            // AY.W1-fix retired the structural-index probe block here
+            // (see audit). The probe rarely terminated within the
+            // next 64-byte stripe on JSON-shape grammars (most
+            // whitespace runs are 1-3 bytes), and the eager scan it
+            // depended on cost ~50% of parse time for negligible
+            // savings. The SIMD bitmap loop below handles all cases
+            // efficiently without the probe.
             loop {
                 let cache_base = state.nospace_start;
                 if cache_base >= 0 && (*p as isize) >= cache_base {
@@ -404,23 +366,25 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
         #[allow(dead_code, non_snake_case)]
         pub(crate) mod #mod_ident {
             /// Per-parse SIMD scratch — 64-byte whitespace-bitmap
-            /// cache mirroring `json-prototype::simd::ScanState`,
-            /// plus the AY.W1.3 structural-byte index keyed off
-            /// [`super::GRAMMAR_PROFILE.structural_alphabet`].
+            /// cache mirroring `json-prototype::simd::ScanState`.
             ///
-            /// `structural_index` is populated once at parse entry by
-            /// [`Self::init_for_input`] (which delegates to
-            /// [`::bbnf::runtime::tape::scan_structural`]) and then
-            /// queried by per-rule fns and the parse-entry capacity
-            /// estimate. Empty when the grammar has no structural
-            /// alphabet — the populator short-circuits before iterating
-            /// the input.
+            /// AY.W1.3 added a [`crate::tape::StructuralIndex`] field
+            /// here, populated eagerly at parse-entry to feed a probe
+            /// in [`skip_space_slow`] + a tape-capacity refinement.
+            /// AYW1-twitter-regression-diag shows that on JSON the
+            /// O(N) scan cost (~50% of twitter parse time) exceeded
+            /// the probe's per-call savings (probe rarely finds the
+            /// next structural byte within the 64-byte stripe; when
+            /// it does, the savings are at most a handful of SIMD
+            /// instructions). AY.W1-fix retires the consumer wiring;
+            /// the scan substrate ([`::bbnf::runtime::tape::scan_structural`])
+            /// stays in the tape crate awaiting AY.W4's regex-scan
+            /// specialisation work, which can wire it through a
+            /// CTNS-style predicate that delivers material savings.
             #[derive(Debug, Default)]
             pub struct ScanState {
                 pub(crate) nospace_bits: u64,
                 pub(crate) nospace_start: isize,
-                pub(crate) structural_index:
-                    ::bbnf::runtime::tape::StructuralIndex,
             }
 
             impl ScanState {
@@ -429,29 +393,7 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
                     Self {
                         nospace_bits: 0,
                         nospace_start: -1,
-                        structural_index:
-                            ::bbnf::runtime::tape::StructuralIndex::new(),
                     }
-                }
-
-                /// AY.W1.3 — populate the structural-byte index from
-                /// `input` against the grammar's mined alphabet
-                /// (`super::GRAMMAR_PROFILE.structural_alphabet`). Called
-                /// once per parse from the `<Parser>::parse` entry.
-                ///
-                /// The result feeds (a) the
-                /// [`super::GRAMMAR_PROFILE.capacity_for`] tape
-                /// pre-allocation (the index length is a tight upper
-                /// bound on the per-parse compound-record count), and
-                /// (b) per-rule next-structural-byte queries via
-                /// [`::bbnf::runtime::tape::next_structural_at_or_after`].
-                #[inline]
-                pub fn init_for_input(&mut self, input: &[u8]) {
-                    self.structural_index =
-                        ::bbnf::runtime::tape::scan_structural(
-                            input,
-                            super::GRAMMAR_PROFILE.structural_alphabet,
-                        );
                 }
             }
 

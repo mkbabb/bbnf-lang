@@ -63,46 +63,112 @@ Invariant 2 (substrate-with-consumer) discharges retroactively for `structural_a
 
 ## Wave summary
 
-Nine waves. Dependency chain: **W0 → W1 → {W2 ∥ W4} → W3 → W5 → W6 → W8 → W7**. W2 and W4 parallelize after W1; W8 (parallel fork) sits after W6.
+**W0-W4 executed as originally planned** (landed per `PROGRESS.md`).
+At W3c close: twitter eager `bbnf_value / sonic_value = 3.63×` (target
+was ≤ 0.85× for BEAT-sonic declaration).
 
-| Wave | Spec | Headline | AU-delta target (twitter bytes/cyc) |
-|------|------|----------|-----------:|
-| **AY.W0** | [waves/W0.md](waves/W0.md) | Legacy prune (~2,300 LOC) + stale tests + ebnf_prettify + housekeeping + AX.FINAL | — (no perf) |
-| **AY.W1** | [waves/W1.md](waves/W1.md) | **AU AoS substrate revert** + finalise fusion + structural-alphabet activation + Pratt Option C + unified `push_leaf_with` | 0.137 → **~0.45** (AU restoration floor; matches AU citm) |
-| **AY.W2** | [waves/W2.md](waves/W2.md) | Named preservation + **E-graph G1-G9 canonicalisation** + **Wrap-compound elision** + detector retirement | 0.45 → **~0.85** (match sonic) |
-| **AY.W3** | [waves/W3.md](waves/W3.md) | Value API: runtime substrate (W3a) + `<Grammar>Value` + **json-prototype per-shape inline fn pattern** (W3b) + two bench lanes + correctness test (W3c) | 0.85 → **~1.00** (beat sonic on eager lane) |
-| **AY.W4** | [waves/W4.md](waves/W4.md) | Regex-scan specialisation + **SIMD unescape for strings** + **Eisel-Lemire direct-to-column** + BoundedRegex | 1.00 → **~1.15-1.40** (BEAT sonic by 20-40%) |
-| **AY.W5** | [waves/W5.md](waves/W5.md) | CSS L4 @import split + DFA hoist + shared PHF (compile-time A/B/D) | — |
-| **AY.W6** | [waves/W6.md](waves/W6.md) | parse_that de-generic + ax-iter profile tuning (compile-time C/E) | — |
-| **AY.W8** | [waves/W8.md](waves/W8.md) | Document-parallel fork (AX.W9 demoted) | 1.40 → **2.0+** with parallelism multiplier on ≥ 1 MB inputs |
-| **AY.W7** | [waves/W7.md](waves/W7.md) | FINAL — bench matrix + FINAL.md + cssparser parity + CI-gate activation + AZ handoff + BEAT-sonic declaration | — |
+A six-agent retrospective audit (`audit/AYW-SYNTHESIS.md`) at master
+HEAD `f352bcdc` surfaced:
+
+- 13 of 14 e-graph rules fire zero times on production grammars
+  (normalizer subsumes their match surface before e-graph runs)
+- W3a `handle.rs` (142 LOC) + W4.3 `phf.rs` + W1.3 `structural_scan`
+  all zero runtime consumers (invariant-2 violations)
+- Classifier 8,114 LOC with 4× duplicated FIRST-sets, 3× `is_operator_
+  chain`, 4× wrap-pattern, 4× Alt-of-literal detection
+- `egraph::CostWeights` unified at substrate but under-wired at two
+  consumers (`byte_class.rs`, `payload/layout.rs`)
+- Twitter parse self-time: 55 % `<JsonParser>::parse` (LTO-inlined
+  body), 24 % `parse_object`, 12 % `parse_wrap`, ≤ 1 % tape substrate
+- Cold dev cycle 12-15 min; 45-90 s achievable per `AYW-dev-expedite.md`
+
+**Revised continuation**: retire dead surfaces first, wire unified
+cost model at existing consumers, ship the missing dev infrastructure,
+close on documented evidence. The BEAT-sonic multiplier (4.27× from
+W3c) lives in **fused parse+value single-pass emission** — a cross-
+tranche theme AZ owns. AY closes honestly on substrate groundwork.
+
+**Waves W5 / W6 / W8 are superseded** by WR1-WR4. The deferred scopes
+(CSS L4 @import split, parallel fork) move to AZ with the fused
+emission workstream.
+
+### Executed waves (W0-W4)
+
+| Wave | Outcome | Artefact |
+|------|---------|----------|
+| **W0** | ✅ Legacy prune + AX.FINAL + housekeeping (−2,799 LOC tests + −470 dta.rs + −78 shape_dict.rs + −2,098 profile files + 37 worktree orphans) | `waves/W0.md` + `PROGRESS.md` |
+| **W1** | ✅ AU AoS substrate revert + finalise stack-buffer + Pratt Option C + structural-scan substrate. W1-fix absorbed twitter regression (420 → 688 MB/s). Closes 2× of the AU regression (0.137 → 0.215 bytes/cyc; SOFT-MISS on the 0.45 floor) | `waves/W1.md` + `audit/AYW1-twitter-regression-diag.md` |
+| **W2** | ✅ Named preservation (Fix A — colorFn/colorMix precedence wrap; Fix B reachability deferred due to Wrap-emitter Alt-priority regression) + defensive guards + G1-G4 egraph rules (shipped; 13/14 dead on production grammars per audit) + wrap-compound elision (9 % record-count reduction on 3 BBNF rules; G3 precondition absent on JSON) + EBNF Minus codegen fix + wire-contract tests | `waves/W2.md` + `audit/AYW2-named-collapse-probe.md` |
+| **W3** | ✅ Handle + Path substrate (W3a; consumer-less per audit) + `<Grammar>Value` enum emission + per-shape `materialize_*` inline fns (W3b; 8 grammars, 48 fns) + 12-entry Value bench lanes + round-trip parity + BEAT-sonic gate (**3.63× — MISSED**) | `waves/W3.md` + `docs/benchmarks/post-AY-W3-value.json` |
+| **W4** | ✅ SIMD unescape inline at `parse_string` emission (+5.95 % twitter) + `pay_f64` direct-column substrate (bench-neutral on canada; spec narrative incorrect about pre-W4.2 arena round-trip) + regex specialisation scaffolds (byte_class + phf + last_byte_set + DFA hoist; CSS tailwind `__regex_scan` self-time regressed +3.18 pp — SHIPPED soft-miss) + structural-scan consumer on Sheets only | `waves/W4.md` + `docs/benchmarks/post-AY-W4-close.json` |
+
+### Retirement / consolidation continuation (WR1-WR5)
+
+**No new features.** Every change retires complexity. Substrate-with-
+consumer verified per commit (grep + nm + samply).
+
+| Wave | Scope | LOC Δ | Primary artefact |
+|------|-------|------:|------------------|
+| **WR1** | Retire 13 dead e-graph rules (or fold G1-G4 + CommonSuffixFactor into the structural normalizer where they'd actually fire); delete W3a `handle.rs` (142 LOC, zero consumers); delete W4.3 `phf.rs` (zero callers); assess W1.3 `structural_scan` retire-or-consumer | **−1,100** | `waves/WR1.md` |
+| **WR2** | Replace classifier's 13-way if-cascade with `ShapeLattice` + partial order; fuse `shape_dispatch` into unified `mine_recognizers` walk (cached SCC topological order); retire 4× FIRST-set duplication; plumb `EClassFacts` from e-graph write-back (delete `classify.rs::compute_eclass_facts` 350 LOC duplicate) | **−1,450** | `waves/WR2.md` |
+| **WR3** | Wire `egraph::CostWeights` at `byte_class.rs` + `payload/layout.rs` (unified-cost consumers that bypass it today); wire `NogoodStore` (167 LOC on-shelf) into backtracker; rebuild payload-layout planner on CSP (admits CSS L4 Color at 16 B hot-path; closes A6 chronic) | **+100** net | `waves/WR3.md` |
+| **WR4** | Ship `scripts/prepare-profile-wave.sh` (PROFILING.md contract broken); apply W6 parse_that de-generic (~−37 s cold build); `codegen-units=256` on `ax-iter`; `scripts/bench-subset.sh` (−80-90 s per iteration); split `serialize_roundtrip.rs` per-grammar; bootstrap idempotency CI gate | infra | `waves/WR4.md` |
+| **WR5** | **FINAL** — bench matrix at retirement close; `FINAL.md` honest BEAT-sonic stance (not achieved single-tranche; substrate groundwork for AZ fused parse+value emission); AZ handoff contract | docs | `waves/WR5.md` |
+
+Total: **−2,450 LOC deletion; −55 % cold dev cycle; no new features.**
 
 ## AY → AZ handoff contract
 
-Eight conditions must verify clean before AZ opens:
+AY closes on **substrate restoration + honest consumer audit + dead-
+surface retirement**, not on BEAT-sonic declaration. The BEAT-sonic
+multiplier lives in AZ's fused parse+value emission workstream.
 
-1. `cargo test --workspace` green (AY.W0 retires 5 stale tests + fixes ebnf_prettify; all subsequent waves maintain).
-2. `post-AY.json` bench matrix captured over 18 parse entries + 12 Value-API-lane entries (2 lanes × 5 fixtures + 2 lazy-get spot).
-3. **BEAT-sonic**: `bbnf_value_twitter / sonic_value_twitter ≤ 0.85` (bbnf at least 15% faster than sonic eager). Ideal: ≤ 0.75 (25% faster).
-4. **BEAT-sonic (multiple)**: same ratio holds on ≥ 3 of the 5 JSON fixtures.
-5. `named_type_preservation.rs` + `wrap_compound_elision.rs` + `value_api_apples_to_apples.rs` all green.
-6. `nm` on all 4 prebuilt bench binaries: zero `push_structural` / `finalise::finalise` cross-crate exports (invariant 22); zero `DtaState::` constructions (DTA prune verified).
-7. `PROJECTION_DIRECT_TO_STRUCT` const has ≥ 4 entries (invariant 23).
-8. `structural_alphabet` has a runtime consumer (`nm` shows `scan_structural` symbol).
+Seven conditions must verify clean before AZ opens:
 
-## Defensible floor
+1. `cargo test --workspace` green (1490+ passed / 0 failed, within
+   documented Category-A ignore budget).
+2. `post-AY.json` bench matrix captured over 19 parse entries + 12
+   Value-API-lane entries; ratios documented with honest disposition
+   (no BEAT-sonic declaration).
+3. `named_type_preservation.rs` + `wrap_compound_elision.rs` +
+   `value_api_apples_to_apples.rs` all green; BEAT-sonic sanity gate
+   documented as ignored with explicit ratio in `docs/benchmarks/
+   post-AY-W3-value.json`.
+4. `nm` on all 4 prebuilt bench binaries: zero `push_structural` /
+   `finalise::finalise` cross-crate exports (invariant 22 verified at
+   W1 close).
+5. **Dead substrate retired**: `handle.rs`, `phf.rs`, and ≥ 12 of 14
+   dead e-graph rules either folded into the normalizer or deleted
+   (WR1). Classifier LOC reduced by ≥ 1,200 (WR2). Unified
+   `CostWeights` consumed at `byte_class.rs` + `payload/layout.rs`
+   (WR3).
+6. `scripts/prepare-profile-wave.sh` present + working (the
+   operational contract in `docs/instructions/PROFILING.md` is
+   satisfied).
+7. Bootstrap regen cycle-1 = cycle-2 byte-identical at every WR close.
 
-Per A7-A10 integrated findings + AU archaeology, the floor is **seven items**:
+## Defensible floor (revised)
 
-1. **W0 legacy prune** — ~2,300 LOC deletions; no architectural risk.
-2. **W1 AoS revert** — flat `Vec<TapeRec>` write path restoration. Single 16-byte store per record. Closes 2× of the AU regression.
-3. **W1 finalise fusion + Pratt Option C + structural-scan activation** — substrate-only; matches AU's flat-tape write hot path.
-4. **W2 Named preservation + e-graph G1-G9** — single IR-passes fix; wire-contract tested.
-5. **W2 wrap-compound elision (G3)** — IR canonicalisation cuts tape record count 50%.
-6. **W3a + W3b Value emitter + json-prototype shape** — runtime handle substrate + TypeDesc-collapse `<Grammar>Value` emission + per-shape inline fn pattern.
-7. **W7 FINAL** — bench matrix + BEAT-sonic declaration + FINAL.md + AZ handoff.
+Per the post-audit `AYW-SYNTHESIS.md` honest accounting, the floor is
+**five items**:
 
-These seven land even under scope-reveals in W4/W5/W6/W8. Items 1-6 deliver bytes/cyc ≥ 0.85 on twitter (match sonic). Item 4's SIMD unescape + Eisel-Lemire direct-to-column in W4 is the BEAT margin.
+1. **W0 legacy prune** — landed (~2,799 LOC tests + ~470 dta.rs + 78
+   shape_dict.rs + 2,098 profile files + 37 worktree orphans).
+2. **W1 AoS revert + finalise stack-buffer + Pratt Option C** — landed.
+   Closes half of AU regression (0.137 → 0.215 bytes/cyc on twitter).
+3. **W2 + W3b Named preservation + `<Grammar>Value` + `materialize_*`
+   inline fns** — landed, honestly (Value lane measured at 3.63× sonic,
+   not the projected ≤ 0.85×).
+4. **WR1 + WR2 + WR3 retirement + unification** — the substrate-truth
+   reconciliation. Without this, every subsequent tranche inherits the
+   dead-substrate debt AY surfaced.
+5. **WR5 FINAL** — bench matrix + `FINAL.md` + AZ handoff + CI gate
+   activation on retained wire-contract tests (`named_type_preservation`,
+   `wrap_compound_elision`, `value_api_apples_to_apples`).
+
+The path to BEAT-sonic is an AZ theme: **fused parse+value single-pass
+emission**. Items 1-4 deliver AZ a clean substrate; item 5 declares
+the honest stance.
 
 ## Post-tranche review candidates
 

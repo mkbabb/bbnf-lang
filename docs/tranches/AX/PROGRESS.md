@@ -506,4 +506,51 @@ W0a closes at HEAD `6b03dd53`. Proceeding to W0a.close (single-agent
 
 ---
 
+## 2026-04-19 — W1 absorb re-plan (W1.A/B reverted; grammar-derived rewrite)
+
+W1.A (hand-coded `bbnf::json::Value` iso `sonic_rs`) and W1.B
+(hand-coded `bbnf::css::StyleSheet` iso `lightningcss` with 22
+`TypeOnly` stubs) violated invariants 4 (no new grammar
+directives), 11 (no per-grammar prototypes), 18 (no placeholder
+surfaces). Per SPEC §Scope-reveal Absorb: revert + re-scope W1 in
+place; no letter pivot.
+
+**Landed during this session, to preserve**:
+
+- W0a through W0a.2.s (77/77 parity harnesses, real-CSS 3/3).
+  Master HEAD `5dab5175` at cascade close.
+- W0a.close bench baseline — `docs/benchmarks/post-AX-W0a-close.json`
+  with 18/18 numeric entries after CSS real-corpus fix. Commit
+  `1241e7ac`.
+- W0b (DTA interpreter deletion ~85K LOC, crates renamed,
+  simd-scan/emit purged, tests carved). HEAD `0adabb23`.
+- W0c (AW-V.md RD-language rewrite). HEAD `db9c4e06`.
+- W1.D (hybrid SoA+AoS tape + `stp_span` + twitter bench 1.8×).
+  Commits `abb4c956` / `e3a28fce` / `52e633cc`. Preserved
+  unchanged through the revert.
+
+**To be reverted in W1r.0**:
+
+- `crates/core/src/backend/rust/view/json/` (W1.A, ~450 LOC)
+- `crates/core/src/backend/rust/view/css/` (W1.B, ~3,050 LOC)
+- `crates/core/tests/json_value_api.rs`
+- `crates/core/tests/css_l4_value_api.rs`
+- `docs/tranches/AX/parity/css_divergence.md`
+- `Cargo.toml` sonic-rs runtime → dev-dep.
+
+**Re-dispatch W1** per `waves/W1.md` revised — 7 sub-waves:
+W1r.0 revert serial → W1r.1/2/3/4/5/7 parallel → W1r.6 after
+W1r.1. Six-wide fan-out after revert. Worktree naming
+`../bbnf-wt-ax-w1r-{0..7}`. Parity proves via
+canonical-serialization byte equality on both parser sides; no
+`From<third-party>` / `PartialEq<third-party>` bridges anywhere
+in source (test harnesses call comparators through the
+comparator's own public API, not through a bbnf bridge).
+
+AX.md invariant 21 added (grammar-derived view surface);
+§Indefatigability bullet 3 revised; W1 wave-summary row
+rewritten.
+
+---
+
 ## 2026-04-18 — W0a.2.a + W0a.2.b dispatch

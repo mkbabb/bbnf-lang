@@ -41,6 +41,7 @@ Six propositions:
 18. **No stubs, no shims, no placeholder surfaces.** Every Value API variant ships field-complete on day one of its wave. No `todo!()` arms, no `_` variants placeholdered for later, no `#[allow(dead_code)]` on struct fields awaiting a populator. Shape-emission output is likewise field-complete — no emitted parse fn emits a placeholder compound awaiting walker-parity later; the shape emitter decides the tape shape, ships it, and downstream consumers project from it.
 19. **Per-wave spec documents.** Each wave carries its own `docs/tranches/AX/waves/W<N>.md` spec. The AX.md parent is the index; the spec documents are the orchestrator's dispatch inputs.
 20. **Tape shape is shape-emission-authoritative.** Downstream correctness is asserted by AST-level `*_parity.rs` harnesses (JSON/CSS/Sheets/BBNF against sonic-rs / lightningcss / simdjson-OnDemand + self-parity), not by record-count or column-layout equivalence against the walker. Walker tape is a historical scaffold retired in W0b; the shape emitter's own output is the one source of truth for `TapeCursor` + `Root::View` consumers. Per W0a.2.h pivot; diag `docs/benchmarks/post-AX-W0a2g-progress.md` §Remaining-blockers + audit `docs/tranches/AX/audit/R4-plan-redress.md`.
+21. **Grammar-derived view surface.** No hand-coded AST enum duplicates grammar structure. The user-facing AST is `NodeView<'p>` + `TapeCursor<'p>` + per-rule typed accessors emitted by the shape emitters from IR's `TypeDesc` inference, composed with `#[parser(serialize)]`-derived `serialize_compact` and `#[parser(prettify)]`-derived `_prettify` surfaces. External-comparator parity (sonic-rs, lightningcss, simdjson, serde_json, cssparser) holds via canonical-serialization byte equality on both sides — no `From<T>`, `PartialEq<T>`, or hand-written adapter module where `T` is a third-party type. If a fixture diverges, the fix lands in bbnf's `@pretty` directives or a shared grammar-derived normalizer, not in a per-comparator bridge. Per W1 absorb re-plan (2026-04-19); supersedes the hand-coded `bbnf::json::Value` / `bbnf::css::StyleSheet` path W1.A/W1.B briefly landed.
 
 ## AX operational posture
 
@@ -59,7 +60,7 @@ Nineteen waves. Each row links to its spec document. Block A is correctness + AP
 | **W0a.close** | [waves/W0a.close.md](waves/W0a.close.md) | Pre-W0b 17-entry bench baseline (`docs/benchmarks/post-AX-W0a-close.json`) — attribution anchor for every downstream wave | W0a |
 | **W0b** | [waves/W0b.md](waves/W0b.md) | Interpreter deletion + substrate-without-consumer purge + crate renames; `tape_parity_*.rs` retire (walker scaffold; semantic `*_parity.rs` survive) | W0a.close |
 | **W0c** | [waves/W0c.md](waves/W0c.md) | AW-V.md rewrite in RD language | W0b |
-| **W1** | [waves/W1.md](waves/W1.md) | Value API + hybrid tape + named_types BINDINGS widening (L8) | W0c |
+| **W1** | [waves/W1.md](waves/W1.md) | Grammar-derived view surface + canonical-form parity + IR-derived `BINDINGS` widening | W0c |
 | **W2** | [waves/W2.md](waves/W2.md) | Parity harnesses CI-gated (5 comparators) | W1 |
 | **W3** | [waves/W3.md](waves/W3.md) | Subsystem closures + W0b investigation-queue resolution | W2 |
 | **W4** | [waves/W4.md](waves/W4.md) | JSON SIMD levers + L1/L2 miner inheritance + scanner generalization | W3 |
@@ -112,7 +113,7 @@ When AX closes:
 - One codegen path reached by ALL FOUR grammars.
 - No interpreter. No gates masquerading as admission predicates. No prototypes per grammar.
 - Workspace-local crates are `tape`, `simd-scan`, `json-prototype`, `jit` — no `bbnf-` prefix.
-- First-class Value API with structural parity vs sonic-rs + lightningcss.
+- Grammar-derived view surface (`NodeView<'p>` + typed accessors + `serialize_compact` + `_prettify`) with canonical-serialization parity vs sonic-rs + lightningcss. No hand-coded value-type duplicates, no third-party-comparator bridges.
 - SoA primary tape with AoS sidecar.
 - Every viable novel lever deployed or rejected with rationale.
 - Structural-parity CI gates on five external comparators.

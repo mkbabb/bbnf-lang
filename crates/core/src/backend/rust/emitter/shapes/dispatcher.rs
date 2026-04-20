@@ -359,17 +359,54 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
         #[allow(dead_code, non_snake_case)]
         pub(crate) mod #mod_ident {
             /// Per-parse SIMD scratch — 64-byte whitespace-bitmap
-            /// cache mirroring `json-prototype::simd::ScanState`.
+            /// cache mirroring `json-prototype::simd::ScanState`,
+            /// plus the AY.W1.3 structural-byte index keyed off
+            /// [`super::GRAMMAR_PROFILE.structural_alphabet`].
+            ///
+            /// `structural_index` is populated once at parse entry by
+            /// [`Self::init_for_input`] (which delegates to
+            /// [`::bbnf::runtime::tape::scan_structural`]) and then
+            /// queried by per-rule fns and the parse-entry capacity
+            /// estimate. Empty when the grammar has no structural
+            /// alphabet — the populator short-circuits before iterating
+            /// the input.
             #[derive(Debug, Default)]
             pub struct ScanState {
                 pub(crate) nospace_bits: u64,
                 pub(crate) nospace_start: isize,
+                pub(crate) structural_index:
+                    ::bbnf::runtime::tape::StructuralIndex,
             }
 
             impl ScanState {
                 #[inline]
                 pub fn new() -> Self {
-                    Self { nospace_bits: 0, nospace_start: -1 }
+                    Self {
+                        nospace_bits: 0,
+                        nospace_start: -1,
+                        structural_index:
+                            ::bbnf::runtime::tape::StructuralIndex::new(),
+                    }
+                }
+
+                /// AY.W1.3 — populate the structural-byte index from
+                /// `input` against the grammar's mined alphabet
+                /// (`super::GRAMMAR_PROFILE.structural_alphabet`). Called
+                /// once per parse from the `<Parser>::parse` entry.
+                ///
+                /// The result feeds (a) the
+                /// [`super::GRAMMAR_PROFILE.capacity_for`] tape
+                /// pre-allocation (the index length is a tight upper
+                /// bound on the per-parse compound-record count), and
+                /// (b) per-rule next-structural-byte queries via
+                /// [`::bbnf::runtime::tape::next_structural_at_or_after`].
+                #[inline]
+                pub fn init_for_input(&mut self, input: &[u8]) {
+                    self.structural_index =
+                        ::bbnf::runtime::tape::scan_structural(
+                            input,
+                            super::GRAMMAR_PROFILE.structural_alphabet,
+                        );
                 }
             }
 

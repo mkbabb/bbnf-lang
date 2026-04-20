@@ -310,10 +310,29 @@ impl Tape {
     }
 
     /// Construct an empty tape sized for `expected` records.
+    ///
+    /// Callers presize via the per-grammar push fingerprint:
+    /// `GRAMMAR_PROFILE.capacity_for(input.len())`. The reservation
+    /// covers `records` (16 B AoS rows) + `sib_skip` (4 B parallel
+    /// column) in lockstep so the hot push path never trips a
+    /// `Vec::push` realloc on corpus input.
     pub fn with_capacity(expected: usize) -> Self {
         Self {
             columns: Columns::with_capacity(expected),
         }
+    }
+
+    /// Construct an empty tape sized from a [`crate::GrammarProfile`]
+    /// + `input_len`.
+    ///
+    /// Convenience for the parser entry point — equivalent to
+    /// `Tape::with_capacity(profile.capacity_for(input_len))`. The
+    /// per-grammar density coefficients (`compounds_per_input_byte`
+    /// + `leaves_per_input_byte`, AU.6.2) drive the reservation,
+    /// with the AR-audit `input_len / 2 + 2` floor as backstop.
+    #[inline]
+    pub fn with_capacity_for(profile: &crate::GrammarProfile, input_len: usize) -> Self {
+        Self::with_capacity(profile.capacity_for(input_len))
     }
 
     /// Number of records appended to the tape so far.

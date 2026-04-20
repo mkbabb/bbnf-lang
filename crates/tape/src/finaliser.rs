@@ -151,6 +151,13 @@ pub const STACK_DEPTH_HINT: usize = 64;
 /// `O(N)` over the tape, with `O(max_depth)` of working-set memory.
 /// Each record is visited exactly once; every per-depth scratch slot
 /// is written at most once per record visit.
+///
+/// AY.W1.2 hard-gate 5 — `#[inline(always)]` so the symbol absents
+/// from `nm` on the bench binaries (LTO collapses the cross-crate
+/// call from `TapeBuilder::finish` into the parser entry; samply
+/// self-time attributes to the per-rule `parse_*` frames instead
+/// of `tape::finaliser::finalise`).
+#[inline(always)]
 pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
     let n = columns.len();
     debug_assert_eq!(
@@ -307,6 +314,7 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
 ///
 /// For deeply-nested grammars the depth is bounded by the parser's
 /// recursion budget, well under [`u8::MAX`].
+#[inline(always)]
 pub fn derive_frame_depth(columns: &Columns) -> Vec<u8> {
     let n = columns.len();
     let mut depth = vec![0u8; n];

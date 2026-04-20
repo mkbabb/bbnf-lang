@@ -650,6 +650,12 @@ impl TapeBuilder {
     ///
     /// The flag is the AW.0.1 substrate; the win materialises at
     /// W1 when the DTA begins emitting `frame_depth` inline.
+    ///
+    /// AY.W1.5 — `#[inline(always)]` so the cross-crate call from
+    /// the emitted `<Grammar>::parse` entry collapses; the finalise
+    /// pass becomes part of the parser's straight-line code rather
+    /// than a function-call boundary at the tape-crate edge.
+    #[inline(always)]
     pub fn finish(mut self) -> Result<Tape, TapeBuildError> {
         match self.error {
             Some(err) => Err(err),

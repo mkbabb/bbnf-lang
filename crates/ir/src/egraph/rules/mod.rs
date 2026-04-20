@@ -33,7 +33,7 @@ pub use regex::{
     DeduplicateAltBranches, FuseAltRegexBranches, SupersetAbsorbAlt, UnionMergeAlt,
 };
 pub use suffix::CommonSuffixFactor;
-pub use universal::{AltOfSingle, RepeatOfSingle, WrapOfEpsilonScalar};
+pub use universal::{AltOfSingle, ConcatLiterals, RepeatOfSingle, WrapOfEpsilonScalar};
 
 use rustc_hash::FxHashMap;
 
@@ -71,6 +71,8 @@ use crate::{GrammarIR, RuleId, TypeDesc};
 /// - [`WrapOfEpsilonScalar`] — `Alt([leaf, ε]) ≡ leaf` when `leaf`'s
 ///   projection is scalar (G3; **PRIMARY LEVER** per AY.md prop 2 for
 ///   JSON wrap-compound elision).
+/// - [`ConcatLiterals`] — `Seq([.., Literal(a), Literal(b), ..])
+///   ≡ Seq([.., Literal(ab), ..])` (G4).
 pub fn default_rules<A: Analysis<GrammarENode> + 'static>(
     ir: &GrammarIR,
     pool: &SharedStrings,
@@ -93,5 +95,6 @@ pub fn default_rules<A: Analysis<GrammarENode> + 'static>(
         Box::new(AltOfSingle),
         Box::new(RepeatOfSingle),
         Box::new(WrapOfEpsilonScalar::new(rule_types)),
+        Box::new(ConcatLiterals::new(pool.clone())),
     ]
 }

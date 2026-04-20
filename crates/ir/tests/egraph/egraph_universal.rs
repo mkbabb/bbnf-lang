@@ -1,4 +1,4 @@
-//! Per-rule unit tests for the AY.W2.3 universal rewrites (G1-G3).
+//! Per-rule unit tests for the AY.W2.3 universal rewrites (G1-G4).
 //!
 //! - [`alt_of_single_collapses_to_inner`] — G1 `Alt([x]) ≡ x`.
 //! - [`alt_of_single_abstains_on_multi_branch`] — G1 negative case.
@@ -10,12 +10,16 @@
 //! - [`wrap_of_epsilon_non_scalar_abstains`] — G3 composite-type
 //!   negative case.
 //! - [`wrap_of_epsilon_three_branch_abstains`] — G3 shape guard.
+//! - [`concat_literals_fuses_adjacent_run`] — G4 fuses a run.
+//! - [`concat_literals_leaves_non_adjacent_alone`] — G4 negative case.
+//! - [`concat_literals_fuses_multi_run`] — G4 multi-run fusion.
 
 use rustc_hash::FxHashMap;
 
 use bbnf_ir::egraph::node::GrammarENode;
-use bbnf_ir::egraph::rules::{AltOfSingle, RepeatOfSingle, WrapOfEpsilonScalar};
-use bbnf_ir::{RuleId, TypeDesc};
+use bbnf_ir::egraph::rules::{AltOfSingle, ConcatLiterals, RepeatOfSingle, WrapOfEpsilonScalar};
+use bbnf_ir::egraph::SharedStrings;
+use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
 use egraph::{EGraph, NoAnalysis, Rewrite};
 
 // ── G1 ───────────────────────────────────────────────────────────────────────
@@ -214,5 +218,154 @@ fn wrap_of_epsilon_three_branch_abstains() {
         matches.is_empty(),
         "G3 should abstain on 3-branch Alt, got {} matches",
         matches.len()
+    );
+}
+
+// ── G4 ───────────────────────────────────────────────────────────────────────
+
+fn make_pool() -> (GrammarIR, SharedStrings) {
+    let ir = GrammarIR {
+        entry: 0,
+        rules: vec![],
+        strings: vec!["a".to_string(), "b".to_string(), "c".to_string()],
+        fns: vec![],
+        types: vec![],
+        follow_sets: std::collections::HashMap::new(),
+        ws_pattern: None,
+        collapse_simple_spans: false,
+        debug_all: false,
+        debug_labels: vec![],
+        type_map: None,
+        pattern_annotations: std::collections::HashMap::new(),
+        regex_info: std::collections::HashMap::new(),
+        node_facts: std::collections::HashMap::new(),
+        recognizer_decisions: std::collections::HashMap::new(),
+        delim_scan_configs: std::collections::HashMap::new(),
+        key_dispatch_configs: std::collections::HashMap::new(),
+        context_facts: std::collections::HashMap::new(),
+        has_family_recognizers: false,
+        regex_engine_decisions: std::collections::HashMap::new(),
+        dag: None,
+        cost_config: bbnf_ir::CostConfig::default(),
+        type_desc_interner: bbnf_ir::TypeDescInterner::new(),
+        materialization: std::collections::HashMap::new(),
+        payload_layouts: std::collections::HashMap::new(),
+        string_index: Default::default(),
+        structural_alphabet: None,
+        push_fingerprint: None,
+        dedup_eligible_rules: Vec::new(),
+        shape_assignments:
+            bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        eclass_facts: std::collections::HashMap::new(),
+        shape_dict_templates: Vec::new(),
+        shape_dict_selection: Vec::new(),
+        keyword_branches: std::collections::HashMap::new(),
+        disjoint_first_tables: std::collections::HashMap::new(),
+        pattern_alphabets: std::collections::HashMap::new(),
+        ctns_lifts: std::collections::HashSet::new(),
+    };
+    let pool = SharedStrings::from_ir(&ir);
+    (ir, pool)
+}
+
+#[test]
+fn concat_literals_fuses_adjacent_run() {
+    // Seq([Lit("a"), Lit("b"), Lit("c")]) → one fused Literal("abc").
+    let (_ir, pool) = make_pool();
+    let mut eg: EGraph<GrammarENode, NoAnalysis> = EGraph::new();
+    let a = eg.add(GrammarENode::Literal(0));
+    let b = eg.add(GrammarENode::Literal(1));
+    let c = eg.add(GrammarENode::Literal(2));
+    let seq = eg.add(GrammarENode::Seq(Box::new([a, b, c])));
+    eg.rebuild();
+
+    let rule = ConcatLiterals::new(pool.clone());
+    let matches = rule.search(&eg);
+    assert_eq!(matches.len(), 1, "G4 expected to match 3-literal Seq");
+    for (class_id, m) in matches {
+        rule.apply(&mut eg, class_id, m);
+    }
+    eg.rebuild();
+
+    // The Seq class should now contain a Literal node whose StringId
+    // resolves to "abc". Search for it.
+    let seq_class = eg.class(eg.find_ref(seq));
+    let fused_sid = seq_class.iter().find_map(|n| match n {
+        GrammarENode::Literal(sid) => Some(*sid),
+        _ => None,
+    });
+    assert!(
+        fused_sid.is_some(),
+        "G4: Seq class should contain the fused Literal after rewrite; got {:?}",
+        seq_class.iter().collect::<Vec<_>>()
+    );
+    assert_eq!(
+        pool.get(fused_sid.unwrap()),
+        "abc",
+        "G4: fused literal should concatenate children's strings"
+    );
+}
+
+#[test]
+fn concat_literals_leaves_non_adjacent_alone() {
+    // Seq([Lit("a"), Ref, Lit("b")]) — no adjacent run; G4 abstains.
+    let (_ir, pool) = make_pool();
+    let mut eg: EGraph<GrammarENode, NoAnalysis> = EGraph::new();
+    let a = eg.add(GrammarENode::Literal(0));
+    let ref_node = eg.add(GrammarENode::Ref(99));
+    let b = eg.add(GrammarENode::Literal(1));
+    let _seq = eg.add(GrammarENode::Seq(Box::new([a, ref_node, b])));
+    eg.rebuild();
+
+    let matches = ConcatLiterals::new(pool).search(&eg);
+    assert!(
+        matches.is_empty(),
+        "G4 should abstain on non-adjacent literals, got {} matches",
+        matches.len()
+    );
+}
+
+#[test]
+fn concat_literals_fuses_multi_run() {
+    // Seq([Lit("a"), Lit("b"), Ref, Lit("a"), Lit("c")]) — two runs
+    // of length 2 each. Both should fuse in one apply.
+    let (_ir, pool) = make_pool();
+    let mut eg: EGraph<GrammarENode, NoAnalysis> = EGraph::new();
+    let a = eg.add(GrammarENode::Literal(0));
+    let b = eg.add(GrammarENode::Literal(1));
+    let ref_node = eg.add(GrammarENode::Ref(99));
+    let a2 = eg.add(GrammarENode::Literal(0));
+    let c = eg.add(GrammarENode::Literal(2));
+    let seq = eg.add(GrammarENode::Seq(Box::new([a, b, ref_node, a2, c])));
+    eg.rebuild();
+
+    let rule = ConcatLiterals::new(pool.clone());
+    let matches = rule.search(&eg);
+    assert_eq!(
+        matches.len(),
+        1,
+        "G4 expected one match with two internal runs"
+    );
+    for (class_id, m) in matches {
+        assert_eq!(
+            m.runs.len(),
+            2,
+            "G4 match should carry both literal runs"
+        );
+        rule.apply(&mut eg, class_id, m);
+    }
+    eg.rebuild();
+
+    // The Seq class should now contain a Seq node of length 3:
+    // [Literal("ab"), Ref, Literal("ac")].
+    let seq_class = eg.class(eg.find_ref(seq));
+    let fused_seq = seq_class.iter().find_map(|n| match n {
+        GrammarENode::Seq(children) if children.len() == 3 => Some(children.clone()),
+        _ => None,
+    });
+    assert!(
+        fused_seq.is_some(),
+        "G4: Seq class should contain a 3-child rewritten form; got {:?}",
+        seq_class.iter().collect::<Vec<_>>()
     );
 }

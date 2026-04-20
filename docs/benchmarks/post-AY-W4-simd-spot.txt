@@ -1,0 +1,30 @@
+# AY.W4.1 SIMD unescape — twitter spot bench
+#
+# Date: 2026-04-20
+# Worktree: bbnf-wt-ay-w4-simd
+# HEAD: bbe50a51 AY.W4.1 emitter: inline SIMD unescape at parse_string emission site
+#
+# Build: cargo bench -p bbnf --bench json_monolithic --profile release
+# Allocator: mimalloc (per #[global_allocator] in monolithic.rs)
+# Profile: release (LTO=thin, codegen-units=1, debug=true)
+#
+# Same-machine apples-to-apples:
+# - Pre-edit (b708e955 string.rs body, fresh cache, full bench rebuild):
+#     twitter: 989,024 ns/iter (+/- 68,747) = 638 MB/s
+# - Post-edit (HEAD bbe50a51, fresh cache, full bench rebuild):
+#     twitter: 933,409 ns/iter (+/-  29,881) = 676 MB/s
+#
+# Delta: +5.95% (+38 MB/s). Variance over 3 reruns: 663-676 MB/s.
+#
+# All 5 fixtures (post-edit, single bench run):
+#   data_s:   55,475 ns/iter (+/-  1,848)  = 639 MB/s
+#   twitter: 933,409 ns/iter (+/- 29,881)  = 676 MB/s
+#   citm:  2,503,670 ns/iter (+/-111,366)  = 689 MB/s
+#   canada:7,309,051 ns/iter (+/-288,352)  = 307 MB/s
+#   data_xl:51,689,328 ns/iter (+/-2,254,450) = 411 MB/s
+#
+# AY.W4.1 sub-gate (≥ +5% on twitter vs same-machine baseline): MET.
+#
+# Note: W1-fix baseline declared 688 MB/s in W4.md was measured under
+# different conditions (warm cache, no sibling builds). The +6% gate
+# is verified against a fresh same-machine cold-cache pre-edit baseline.

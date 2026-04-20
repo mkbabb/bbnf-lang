@@ -25,6 +25,27 @@
 //! materialising into a packed `ValueVisitor` that mirrors the
 //! prototype's `json_prototype::ValueVisitor` shape. Gate: within
 //! ±5% of prototype's `proto_value_*` on every entry.
+//!
+//! AY.W3c.1: adds two Value-API perf lanes matching invariant 24
+//! (apples-to-apples).
+//!
+//! - **Lazy lane** (`bbnf_get_twitter` vs `sonic_get_twitter`): parses
+//!   `twitter.json` and extracts a single scalar via path query
+//!   `["statuses", 0, "text"]`. bbnf uses the grammar-emitted
+//!   `Parsed::get::<&str>(path)`; sonic uses `sonic_rs::get` (the
+//!   lazy get-by-path entry). 2 bench entries — twitter only.
+//! - **Eager lane** (`bbnf_value_<fx>` vs `sonic_value_<fx>`):
+//!   materialises the full typed value tree. bbnf uses
+//!   `Parsed::to_value()` dispatching through the per-shape inline
+//!   `materialize_*` fns emitted by W3b; sonic uses
+//!   `sonic_rs::from_str::<sonic_rs::Value>`. 10 bench entries — 5
+//!   fixtures × 2 parsers.
+//!
+//! The BEAT-sonic headline is `bbnf_value_twitter / sonic_value_twitter`
+//! on the eager lane; target at AY close is ≤ 0.85 (beat by 15%). The
+//! existing `bench_bbnf` (tape-walk) and `bench_sonic` (typed value)
+//! lanes remain as the raw-parse comparison; the new `bench_bbnf_value`
+//! / `bench_sonic_value` lanes are the Value-API headline.
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -428,6 +449,123 @@ bench_proto_value!(proto_value_citm, "citm_catalog.json");
 bench_proto_value!(proto_value_canada, "canada.json");
 bench_proto_value!(proto_value_data_xl, "data_xl.json");
 
+// ── AY.W3c.1 Lazy lane (`Parsed::get::<&str>` vs `sonic_rs::get`) ───────────
+//
+// Twitter-only: path `["statuses", 0, "text"]` extracts a single `&str`
+// leaf. Both parties do the minimum work: parse enough of the input to
+// reach the leaf, then return it. sonic's `get` is its lazy-query API
+// (pointer-walk without materialising downstream nodes); bbnf's
+// `Parsed::get::<T>(path)` is the grammar-emitted `PathQuery<T>` impl
+// emitted by W3b. The bench pairs the two so the per-iter wall time is
+// directly comparable.
+//
+// Note: bbnf's `parse()` currently builds the full tape — the "lazy"
+// aspect is in the post-parse scalar extraction; W5+ may introduce a
+// true bail-out lazy parse.
+
+use bbnf::path;
+
+fn bbnf_get_twitter(b: &mut Bencher) {
+    let input = load("twitter.json");
+    b.bytes = input.len() as u64;
+    {
+        let parsed = JsonParser::parse(&input)
+            .unwrap_or_else(|e| panic!("twitter.json: parse failed: {:?}", e));
+        let segs = path!["statuses", 0_usize, "text"];
+        let p = bbnf::runtime::Path::new(segs);
+        black_box(parsed.get::<&str>(p));
+    }
+    bench_with_timeout(b, limits::JSON_PARSE, || {
+        let parsed = JsonParser::parse(black_box(&input)).unwrap();
+        let segs = path!["statuses", 0_usize, "text"];
+        let p = bbnf::runtime::Path::new(segs);
+        let got: Option<&str> = parsed.get(p);
+        black_box(got);
+        black_box(parsed);
+    });
+}
+
+fn sonic_get_twitter(b: &mut Bencher) {
+    let input = load("twitter.json");
+    b.bytes = input.len() as u64;
+    // Warm-up: sonic_rs::get accepts the path as an `IntoIterator` of
+    // `Index` values. Mixed string/integer keys round-trip via the
+    // `JsonPointer!` macro or a heterogeneous vec of `PointerNode`
+    // values — bbnf_get_twitter's path is `statuses.0.text`, a field
+    // / index / field mix.
+    {
+        let node_path: sonic_rs::PointerTree = {
+            let mut t = sonic_rs::PointerTree::new();
+            t.add_path(sonic_rs::pointer!["statuses", 0usize, "text"]);
+            t
+        };
+        let nodes = sonic_rs::get_many(&input, &node_path)
+            .unwrap_or_else(|e| panic!("twitter.json: sonic_rs::get_many warm-up failed: {e}"));
+        black_box(nodes);
+    }
+    b.iter(|| {
+        // Use `sonic_rs::get` with a path iterator — the idiomatic
+        // lazy-extract entry. `JsonInput::from_subset` slices `&input`
+        // so the returned `LazyValue<'_>` borrows from it.
+        let got = sonic_rs::get(black_box(&input), sonic_rs::pointer!["statuses", 0usize, "text"]);
+        let _ = black_box(got);
+    });
+}
+
+// ── AY.W3c.1 Eager lane (`Parsed::to_value` vs `sonic_rs::from_str`) ────────
+//
+// Materialises the full typed value tree on both sides. bbnf uses
+// `Parsed::to_value()` dispatching through the per-shape inline
+// `materialize_*` fns (W3b); sonic uses `from_str::<sonic_rs::Value>`.
+// The ratio `bbnf_value_twitter / sonic_value_twitter` is AY's headline
+// BEAT-sonic metric. Cold per-parse discipline (no warm benches per
+// `feedback_no_warm_benches`): every iter reparses + rematerialises.
+
+macro_rules! bench_bbnf_value {
+    ($name:ident, $file:expr) => {
+        fn $name(b: &mut Bencher) {
+            let input = load($file);
+            b.bytes = input.len() as u64;
+            {
+                let parsed = JsonParser::parse(&input)
+                    .unwrap_or_else(|e| panic!(concat!($file, ": parse failed: {:?}"), e));
+                let v = parsed.to_value();
+                black_box(v);
+            }
+            bench_with_timeout(b, limits::JSON_PARSE, || {
+                let parsed = JsonParser::parse(black_box(&input)).unwrap();
+                let v = parsed.to_value();
+                black_box(v);
+                black_box(parsed);
+            });
+        }
+    };
+}
+
+bench_bbnf_value!(bbnf_value_data_s, "data.json");
+bench_bbnf_value!(bbnf_value_twitter, "twitter.json");
+bench_bbnf_value!(bbnf_value_citm, "citm_catalog.json");
+bench_bbnf_value!(bbnf_value_canada, "canada.json");
+bench_bbnf_value!(bbnf_value_data_xl, "data_xl.json");
+
+macro_rules! bench_sonic_value {
+    ($name:ident, $file:expr) => {
+        fn $name(b: &mut Bencher) {
+            let input = load($file);
+            b.bytes = input.len() as u64;
+            sonic_rs::from_str::<sonic_rs::Value>(&input)
+                .expect(concat!($file, ": sonic-rs parse failed"));
+            b.iter(|| sonic_rs::from_str::<sonic_rs::Value>(black_box(&input)).unwrap());
+        }
+    };
+}
+
+bench_sonic_value!(sonic_value_data_s, "data.json");
+bench_sonic_value!(sonic_value_twitter, "twitter.json");
+bench_sonic_value!(sonic_value_citm, "citm_catalog.json");
+bench_sonic_value!(sonic_value_canada, "canada.json");
+bench_sonic_value!(sonic_value_data_xl, "data_xl.json");
+
 // ── Groups ──────────────────────────────────────────────────────────────────
 
 benchmark_group!(
@@ -462,5 +600,34 @@ benchmark_group!(
     proto_value_canada,
     proto_value_data_xl,
 );
+benchmark_group!(
+    bench_lazy_lane,
+    bbnf_get_twitter,
+    sonic_get_twitter,
+);
+benchmark_group!(
+    bench_bbnf_value,
+    bbnf_value_data_s,
+    bbnf_value_twitter,
+    bbnf_value_citm,
+    bbnf_value_canada,
+    bbnf_value_data_xl,
+);
+benchmark_group!(
+    bench_sonic_value,
+    sonic_value_data_s,
+    sonic_value_twitter,
+    sonic_value_citm,
+    sonic_value_canada,
+    sonic_value_data_xl,
+);
 
-benchmark_main!(bench_bbnf, bench_sonic, bench_bbnf_visitor, bench_proto_value);
+benchmark_main!(
+    bench_bbnf,
+    bench_sonic,
+    bench_bbnf_visitor,
+    bench_proto_value,
+    bench_lazy_lane,
+    bench_bbnf_value,
+    bench_sonic_value,
+);

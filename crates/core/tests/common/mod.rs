@@ -3,3 +3,6 @@
 
 #[allow(dead_code)]
 pub mod json_normalize;
+
+#[allow(dead_code)]
+pub mod css_normalize;

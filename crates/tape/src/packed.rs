@@ -1,44 +1,35 @@
 //! `PackedRecord` — the AoS sidecar record format for the hybrid tape
-//! layout landing in AX.W1.D.
+//! layout (AX.W1.D substrate, AY.W1.1 source-of-truth shift).
 //!
 //! # Role
 //!
-//! The [`Columns`](crate::columns::Columns) SoA primary is the write-
-//! side substrate — every parser push lands in the six structural
-//! columns plus `child_off`, keeping the dense payload columns
-//! cache-friendly for bulk typed visitors (the `reduce_column<C, R>`
-//! kernels the AW-IV.W5.1 SIMD reducer walks). That layout is
-//! pathological for single-record random-access reads: a consumer
-//! materialising one record via
-//! [`Columns::materialize`](crate::columns::Columns::materialize) pays
-//! seven distinct column loads plus the field-packing, each a separate
-//! cache line in the SoA substrate. On a hot lazy-field extractor —
-//! the Twitter `statuses[].text` shape — the seven cache misses per
-//! record dominate the access cost.
-//!
-//! The AoS sidecar makes those reads single 32-byte cache-line loads.
-//! Every `PackedRecord` is 32 bytes — tighter than the six-column SoA
-//! scatter yet wider than the 16-byte [`TapeRec`](crate::TapeRec) view
-//! so both span endpoints plus the `sib_skip` + `child_off` fit without
-//! unpacking bit-layouts. At `align(32)` the records sit on cache-line
-//! boundaries, so a random-access read of a single record is ONE
-//! 32-byte aligned load + a pointer fixup — no column hops, no 16-byte
-//! reconstruction.
+//! The [`Columns`](crate::columns::Columns) primary is the flat-AoS
+//! `Vec<TapeRec>` write-side substrate (post-AY.W1.1) plus a parallel
+//! `Vec<u32>` for `sib_skip`. The 16-byte `TapeRec` is small enough
+//! that single-record reads from `records[i]` are already a single
+//! load; the AoS sidecar widens this to 32 bytes (cache-line aligned)
+//! and inlines the `sib_skip` lane so a random-access read of one
+//! record + its sibling stride is ONE 32-byte aligned load with no
+//! parallel-column fixup.
 //!
 //! # Hybrid contract
 //!
-//! The SoA primary is ALWAYS the source of truth for writes. The AoS
-//! sidecar is populated lazily by
+//! The flat-AoS primary is ALWAYS the source of truth for writes.
+//! The 32-byte sidecar is populated lazily by
 //! [`Columns::packed_cache`](crate::columns::Columns::packed_cache) on
 //! first random-access read; every push-site through
 //! [`Columns::push_structural`](crate::columns::Columns::push_structural)
 //! / [`Columns::push_compound_fused`](crate::columns::Columns::push_compound_fused)
 //! / [`Columns::push_leaf_fused`](crate::columns::Columns::push_leaf_fused)
 //! invalidates the cache so subsequent readers re-transpose from the
-//! updated SoA. The [`std::sync::OnceLock`] guard is the
-//! thread-safety primitive: readers on separate threads observe the
-//! same immutable transpose without racing; mutators take `&mut self`
-//! and therefore cannot race with any reader.
+//! updated primary. Post-AY.W1.1 the transpose is near-identity:
+//! copy each [`TapeRec`] into a [`PackedRecord`] paired with the
+//! parallel `sib_skip` lane.
+//!
+//! The [`std::sync::OnceLock`] guard is the thread-safety primitive:
+//! readers on separate threads observe the same immutable transpose
+//! without racing; mutators take `&mut self` and therefore cannot
+//! race with any reader.
 //!
 //! # Layout
 //!

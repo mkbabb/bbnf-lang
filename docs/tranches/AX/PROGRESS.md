@@ -620,3 +620,47 @@ rewritten.
 ---
 
 ## 2026-04-18 — W0a.2.a + W0a.2.b dispatch
+
+(Trailing dispatch-record entry preserved out of strict chronological
+order; the substantive close is the W0a cascade entry above. Wave-
+boundary closures W0a.2.a + W0a.2.b have their own dated entries
+upstream in this log.)
+
+---
+
+## 2026-04-20 — AX closes; AY opens
+
+AX final state: HEAD `411eabfd`. 13 parity + canonical harnesses
+green (247 passed, 1 ignored). Bench matrix saved to
+`docs/benchmarks/post-AX-W1-close.json`. FINAL.md authored at
+`docs/tranches/AX/FINAL.md`.
+
+AX shipped substrate-and-API closure across W0a (gate repair +
+emitter cascade closing 5/5 defects), W0a.close (intra-AX bench
+baseline), W0b (interpreter deletion + crate renames), W0c (AW-V
+RD-language rewrite), and W1r (eight sub-waves landing the
+grammar-derived view surface with canonical-serialisation parity
+on JSON, CSS L4, Sheets, and BBNF). The W1 absorb re-plan reverted
+W1.A/W1.B's hand-coded value duplicates and added invariant 21
+(grammar-derived view surface); no third-party comparator bridges
+ship anywhere. Bootstrap idempotent at 98,270 lines, 8 per-rule
+Pratt LUTs, 4 heterogeneous `*Value<'p>` enums, reducer-compound
+emission preserved.
+
+Block B (W2-W14: parity CI gating, lever portfolio, e-graph
+rewriting, document-parallel) did not execute under AX's letter.
+Per SPEC §Scope-reveal "new letter" response mode, the W1 audits
+surfaced an AU-substrate ~4.5× regression and a json-prototype
+speed-ceiling reveal that together exceed any single-wave
+extension; Block B routes wholesale into AY, the BEAT-sonic
+tranche. Five wire-contract test files and two emitter-shape test
+files compile-fail at AX HEAD because their predicates retired in
+W0a.2.j and their fields carved in W0b.A; AY.W0 retires them per
+the invariant 14 discharge as the precondition for AY.W1 substrate
+restoration.
+
+AY opens at `docs/tranches/AY/AY.md` — BEAT-sonic via AU substrate
+restoration (W1) + e-graph G1-G9 + wrap-compound elision (W2) +
+json-prototype per-shape inline emission (W3) + SIMD unescape +
+Eisel-Lemire direct-to-column (W4). AY.W0 retires legacy debt as
+precondition; AY.W7 declares BEAT-sonic at close.

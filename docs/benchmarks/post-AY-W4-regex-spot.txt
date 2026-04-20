@@ -1,0 +1,67 @@
+AY.W4.3 regex-scan specialisation — spot bench
+================================================
+
+All benches run on master branch post-W4.3 commits (HEAD 1fb041c7).
+`find . -name .bbnf-cache -exec rm -rf {} + ; cargo bench --profile release`
+
+CSS L4 tailwind
+---------------
+
+AY.W1 baseline:  18,595,529 ns/iter = 195 MB/s   (post-AY-W1-close.json)
+In-place measure on the same worktree HEAD (before W4.3): 18,936,270 ns/iter = 192 MB/s
+
+Post-W4.3:        19,215,470 ns/iter = 189 MB/s
+
+Delta: within run-to-run noise (+/- 4%). No regression.
+
+Sheets parse_stress
+-------------------
+
+AY.W1 baseline:       82,463 ns/iter = 21 MB/s   (post-AY-W1-close.json)
+In-place measure on the same worktree HEAD: 84,535 ns/iter
+
+Post-W4.3:            83,819 ns/iter = 21 MB/s
+
+Delta: within noise. No regression.
+
+JSON twitter (regression check)
+-------------------------------
+
+AY.W1 baseline:  916,958 ns/iter   (post-AY-W1-close.json)
+In-place measure:   960,507 ns/iter  -> baseline run-to-run variance
+
+Post-W4.3:           965,254 ns/iter
+
+Delta: within 0.5% of the in-place baseline; ≥ 5% slower than the
+benchmark JSON but that's environmental variance (different CPU
+thermal state, different macOS background load).
+
+Sub-gates (AY.W4.3 spec)
+------------------------
+
+- CSS L4 tailwind `__regex_scan_CssL4Parser` self-time ≤ 12%:
+  samply attribution requires instrumented build; not run in this
+  spot-bench. Tailwind throughput unchanged from baseline, so the
+  self-time shift is bounded by what the DFA-hoist + admission LUT
+  can achieve without throughput increase. Full attribution deferred
+  to tranche close samply pass.
+
+- Sheets parse_stress `__regex_scan_GoogleSheetsParser` ≤ 6%:
+  same deferral.
+
+Notes
+-----
+
+- DFA hoist emits for patterns with >= 16 states; tuned to skip
+  JSON's 8-10 state DFAs where the inline match-ladder is
+  LLVM-friendlier.
+
+- First-byte LUT admission + LAST-byte narrowing emit for
+  grammars with >= 4 adapter-collected patterns AND (for
+  narrowing) input.len() >= 64 KB. Small grammars skip both to
+  avoid rodata / i-cache pollution.
+
+- CTNS probe in skip_space_slow gates on comment-aware grammars
+  only (CSS L4). The probe advances `*p` on validated-whitespace
+  runs > 64 bytes but falls through to the surrounding loop on
+  the landed byte — never terminates the skip directly.

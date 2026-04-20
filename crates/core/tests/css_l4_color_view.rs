@@ -444,46 +444,36 @@ fn large_payload_max_admits_color_shape_at_64b_cap() {
 }
 
 #[test]
-fn rust_named_types_resolves_color_but_not_foreign_names() {
+fn rust_named_types_resolver_is_ir_derived() {
     use bbnf::backend::rust::view::named_types::RustNamedTypes;
     use bbnf_ir::passes::NamedTypeResolver;
 
-    // Build a minimal IR with a string table just for the resolver
-    // lookup — no grammar compile needed. This isolates the
-    // resolver's name-matching contract from upstream pipeline
-    // variance.
+    // AX.W1r.1: the resolver's shape table is now populated by
+    // walking `ir.types` for `TypeDesc::Named(sid)` entries. An IR
+    // with only strings and no grammar-declared Named rule projects
+    // produces an empty binding map — the resolver rejects every
+    // sid. This is the inverse of the pre-W1r.1 static table that
+    // admitted `"Color"` / `"ColorMix"` by name regardless of
+    // whether the grammar declared them.
     let mut ir = bbnf_ir::GrammarIR::default();
-    ir.strings.push("Color".to_string()); // sid 0
-    ir.strings.push("ColorMix".to_string()); // sid 1
-    ir.strings.push("Widget".to_string()); // sid 2
-    ir.strings.push("Stylesheet".to_string()); // sid 3
+    ir.strings.push("Color".to_string());
+    ir.strings.push("ColorMix".to_string());
+    ir.strings.push("Widget".to_string());
+    ir.strings.push("Stylesheet".to_string());
 
     let resolver = RustNamedTypes::from_ir(&ir);
 
-    // "Color" and "ColorMix" resolve to the 5-field scalar tuple.
-    for (sid, expected_name) in [(0u32, "Color"), (1, "ColorMix")] {
-        let td = resolver.resolve_named(sid).unwrap_or_else(|| {
-            panic!("RustNamedTypes should resolve {expected_name}")
-        });
-        match td {
-            bbnf_ir::TypeDesc::Tuple(fields) => {
-                assert_eq!(fields.len(), 5, "{expected_name} tuple arity");
-                assert!(matches!(fields[0], bbnf_ir::TypeDesc::U8), "space: U8");
-                for (i, f) in fields[1..].iter().enumerate() {
-                    assert!(
-                        matches!(f, bbnf_ir::TypeDesc::F64),
-                        "{expected_name} channel {}: F64",
-                        i + 1,
-                    );
-                }
-            }
-            other => panic!("{expected_name} resolved to {other:?}, expected Tuple"),
-        }
+    // No Named rules in ir.types → no bindings admitted.
+    assert_eq!(
+        resolver.binding_count(),
+        0,
+        "resolver builder admits only grammar-declared Named rules",
+    );
+    for sid in 0..ir.strings.len() as u32 {
+        assert!(
+            resolver.resolve_named(sid).is_none(),
+            "sid {} must not resolve — not a grammar-declared Named",
+            sid,
+        );
     }
-
-    // Unknown names (including grammar-internal identifiers) do not
-    // resolve — the resolver is strict and only knows Color /
-    // ColorMix.
-    assert!(resolver.resolve_named(2).is_none(), "Widget must not resolve");
-    assert!(resolver.resolve_named(3).is_none(), "Stylesheet must not resolve");
 }

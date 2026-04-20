@@ -1,28 +1,23 @@
-//! AW-III.W6.4 — CSS L4 color parity gate.
+//! AX.W1r.1 — CSS L4 color parity gate.
 //!
-//! Verifies the backend-resolved `Named("Color") → (U8, F64, F64, F64,
-//! F64)` binding via [`bbnf::backend::rust::view::named_types`]. The
-//! resolver table is data-driven (`BINDINGS`) so this test doubles as
-//! the smoke check for the W6.4 extraction: the row lookup must
-//! return the canonical 5-field tuple for every known colour name,
-//! and the planner must admit that tuple at the `LARGE_PAYLOAD_MAX`
-//! cap.
+//! Exercises the IR-derived [`RustNamedTypes`] resolver introduced
+//! in W1r.1. The pre-W1r.1 static `BINDINGS` slice +
+//! `resolve_named_type` free function are deleted; the resolver now
+//! builds its shape table by walking `ir.types` at `from_ir` time.
 //!
 //! The end-to-end `rgb(...)` → `Color` struct projection is already
-//! covered by the decoder tests in `css_l4_color_view.rs`; this file
-//! focuses on the resolver table contract.
+//! covered by the decoder tests in `css_l4_color_view.rs`; this
+//! file focuses on the resolver contract.
 
-use bbnf::backend::rust::view::named_types::{
-    resolve_named_type, NamedTypeBinding, RustNamedTypes, BINDINGS,
-};
+use bbnf::backend::rust::view::named_types::RustNamedTypes;
 use bbnf_ir::passes::{plan_layout_with_cap, NamedTypeResolver};
-use bbnf_ir::{GrammarIR, StringId, TypeDesc};
+use bbnf_ir::{GrammarIR, IrNode, IrRule, RuleId, RuleMeta, StringId, TypeDesc};
 
 // ─── Helpers ──────────────────────────────────────────────────────────
 
 /// Build a minimal `GrammarIR` whose string table carries the given
-/// names at their corresponding `StringId`s. Used so the resolver
-/// can be exercised without a full grammar compile.
+/// names at their corresponding `StringId`s. Used so the resolver's
+/// lookup surface can be exercised without a full grammar compile.
 fn ir_with_names(names: &[&str]) -> GrammarIR {
     let mut ir = GrammarIR::default();
     for n in names {
@@ -31,189 +26,191 @@ fn ir_with_names(names: &[&str]) -> GrammarIR {
     ir
 }
 
-// ─── Binding table invariants ─────────────────────────────────────────
-
-#[test]
-fn bindings_table_carries_color_and_colormix() {
-    // W6.4 invariant: the universal binding table admits at least
-    // the two AW.0.5 colour names. Future rows append below these.
-    let names: Vec<&str> = BINDINGS.iter().map(|b| b.name).collect();
-    assert!(
-        names.contains(&"Color"),
-        "BINDINGS must admit \"Color\"; got {:?}",
-        names,
-    );
-    assert!(
-        names.contains(&"ColorMix"),
-        "BINDINGS must admit \"ColorMix\"; got {:?}",
-        names,
-    );
+/// Build a minimal `GrammarIR` whose `ir.types` declares a single
+/// rule projecting `TypeDesc::Named(sid)`. The rule's body is the
+/// supplied `IrNode`. Lets us drive the W1r.1 inference walker with
+/// hand-crafted bodies without spinning up the whole compile
+/// pipeline.
+fn ir_with_named_rule(rule_name: &str, sid_name: &str, body: IrNode) -> GrammarIR {
+    let mut ir = GrammarIR::default();
+    let name_sid = ir.strings.len() as StringId;
+    ir.strings.push(rule_name.to_string());
+    let type_sid = ir.strings.len() as StringId;
+    ir.strings.push(sid_name.to_string());
+    let rule_id: RuleId = 0;
+    ir.rules.push(IrRule {
+        id: rule_id,
+        name: name_sid,
+        body,
+        meta: RuleMeta::default(),
+        source_span: None,
+    });
+    ir.types.push((rule_id, TypeDesc::Named(type_sid)));
+    ir
 }
 
-#[test]
-fn bindings_color_fields_are_five_scalar_tuple() {
-    let binding = BINDINGS
-        .iter()
-        .find(|b| b.name == "Color")
-        .expect("Color binding present");
-    assert_eq!(
-        binding.fields.len(),
-        5,
-        "Color tuple arity: expected 5 (u8 space + 4 f64 channels), got {}",
-        binding.fields.len(),
-    );
-    assert!(
-        matches!(binding.fields[0], TypeDesc::U8),
-        "Color field 0 must be U8 (space discriminant); got {:?}",
-        binding.fields[0],
-    );
-    for (i, f) in binding.fields[1..].iter().enumerate() {
-        assert!(
-            matches!(f, TypeDesc::F64),
-            "Color field {}: expected F64, got {:?}",
-            i + 1,
-            f,
-        );
-    }
-}
+// ─── Resolver returns None when no Named types exist ─────────────────
 
 #[test]
-fn bindings_colormix_shape_matches_color() {
-    // W6.4 constraint: ColorMix reuses the canonical colour tuple —
-    // the mix-space u8 sits in the space slot, the four f64 slots
-    // hold left/right colour refs + percentages. Shape equality
-    // guarantees `aggregate_payload_ctor`'s 40 B routing fires for
-    // both.
-    let color = BINDINGS.iter().find(|b| b.name == "Color").unwrap();
-    let mix = BINDINGS.iter().find(|b| b.name == "ColorMix").unwrap();
-    assert_eq!(color.fields.len(), mix.fields.len(), "tuple arity parity");
-    for (i, (c, m)) in color.fields.iter().zip(mix.fields.iter()).enumerate() {
-        assert_eq!(c, m, "field {}: Color={:?} ColorMix={:?}", i, c, m);
-    }
-}
-
-// ─── resolve_named_type contract ──────────────────────────────────────
-
-#[test]
-fn resolve_named_type_admits_color() {
-    let ir = ir_with_names(&["Color"]);
-    let binding: Option<&NamedTypeBinding> =
-        resolve_named_type(&TypeDesc::Named(0), &ir.strings);
-    let binding = binding.expect("Color must resolve via universal lookup");
-    assert_eq!(binding.name, "Color");
-    assert_eq!(binding.fields.len(), 5);
-}
-
-#[test]
-fn resolve_named_type_admits_colormix() {
-    let ir = ir_with_names(&["ColorMix"]);
-    let binding = resolve_named_type(&TypeDesc::Named(0), &ir.strings)
-        .expect("ColorMix must resolve via universal lookup");
-    assert_eq!(binding.name, "ColorMix");
-}
-
-#[test]
-fn resolve_named_type_rejects_unknown() {
-    // W6.4 invariant: names that do not appear in the binding table
-    // resolve to `None`. The layout pass then falls through to the
-    // structural compound form — no panic, no accidental admission.
-    let ir = ir_with_names(&["Widget", "Stylesheet", "UnknownNamed"]);
+fn resolver_empty_when_no_named_types() {
+    // Baseline: `ir.types` carries no `Named(sid)` entries, so the
+    // resolver's binding map is empty and every `resolve_named` call
+    // returns `None`.
+    let ir = ir_with_names(&["Widget", "Stylesheet"]);
+    let resolver = RustNamedTypes::from_ir(&ir);
+    assert_eq!(resolver.binding_count(), 0);
     for sid in 0..ir.strings.len() as StringId {
         assert!(
-            resolve_named_type(&TypeDesc::Named(sid), &ir.strings).is_none(),
-            "Unknown name {:?} must not resolve",
+            resolver.resolve_named(sid).is_none(),
+            "unknown name {:?} must not resolve",
             ir.strings[sid as usize],
         );
     }
 }
 
+// ─── Single-leaf body infers (U32, U32) arena-handle shape ───────────
+
 #[test]
-fn resolve_named_type_rejects_non_named_typedesc() {
-    // W6.4 invariant: a `TypeDesc` that is not `Named` returns `None`
-    // regardless of the string table contents. The universal lookup
-    // is a pass-through for unrelated variants.
-    let ir = ir_with_names(&["Color"]);
-    let non_named: &[TypeDesc] = &[
-        TypeDesc::Span,
-        TypeDesc::F64,
-        TypeDesc::U8,
-        TypeDesc::Bool,
-        TypeDesc::Tuple(vec![TypeDesc::U8]),
-        TypeDesc::Vec(Box::new(TypeDesc::F64)),
-    ];
-    for td in non_named {
-        assert!(
-            resolve_named_type(td, &ir.strings).is_none(),
-            "non-Named TypeDesc {:?} must not resolve",
-            td,
-        );
-    }
+fn regex_body_infers_arena_handle_shape() {
+    // JSON-like: `rule = /regex/ -> ... : String` — the body kernel
+    // is a bare regex, the resolver projects `(U32 offset, U32
+    // length)` as the arena-backed owned-bytes shape.
+    let mut ir = GrammarIR::default();
+    let regex_sid = ir.strings.len() as StringId;
+    ir.strings.push(r#"[a-z]+"#.to_string());
+    let body = IrNode::Regex(regex_sid);
+    let ir = {
+        let _ = ir;
+        ir_with_named_rule("string", "String", body)
+    };
+    let resolver = RustNamedTypes::from_ir(&ir);
+    let type_sid = ir.strings.len() as StringId - 1;
+    let resolved =
+        resolver.resolve_named(type_sid).expect("String must resolve");
+    assert_eq!(
+        resolved,
+        TypeDesc::Tuple(vec![TypeDesc::U32, TypeDesc::U32]),
+        "owned-bytes projection shape",
+    );
 }
 
-// ─── RustNamedTypes field-for-field parity ───────────────────────────
+// ─── Seq body infers per-child scalar tuple ──────────────────────────
 
 #[test]
-fn rust_named_types_mirrors_binding_table() {
-    // W6.4 core parity: every row in `BINDINGS` resolves via
-    // `RustNamedTypes::resolve_named` to the tuple the row declares.
-    // Proves the delegation fold removed the hardcoded match without
-    // drifting.
-    let names: Vec<&'static str> = BINDINGS.iter().map(|b| b.name).collect();
-    let ir = ir_with_names(&names);
-    let resolver = RustNamedTypes::from_ir(&ir);
+fn seq_body_infers_scalar_tuple_from_type_map() {
+    // Hand-shaped Seq body whose children project to distinct
+    // scalars via the IR's `type_map` dag-keyed lookup. The
+    // resolver walks the Seq, picks up each child's type, and
+    // returns a `TypeDesc::Tuple(...)` of the scalars.
+    //
+    // This test is the shape of the CSS L4 colorFunction body —
+    // `(colorType, colorValue, colorValue, colorValue, colorValue)`
+    // with the types `(U8, F64, F64, F64, F64)`. The grammar's own
+    // `-> input : Color` is not activated in current grammars (the
+    // colorFunction rule is eliminated pre-type projection); this
+    // hand-constructed IR exercises the shape inference surface
+    // directly.
+    use bbnf_ir::dag::GrammarDag;
 
-    for (idx, binding) in BINDINGS.iter().enumerate() {
-        let resolved = resolver
-            .resolve_named(idx as StringId)
-            .unwrap_or_else(|| panic!("{} must resolve", binding.name));
-        match resolved {
-            TypeDesc::Tuple(fields) => {
-                assert_eq!(
-                    fields.len(),
-                    binding.fields.len(),
-                    "{}: resolved tuple arity mismatch",
-                    binding.name,
-                );
-                for (i, (res, decl)) in
-                    fields.iter().zip(binding.fields.iter()).enumerate()
-                {
-                    assert_eq!(
-                        res, decl,
-                        "{}: field {}: resolved={:?} declared={:?}",
-                        binding.name, i, res, decl,
-                    );
-                }
-            }
-            other => panic!("{} resolved to {:?}, expected Tuple", binding.name, other),
-        }
-    }
+    let mut ir = GrammarIR::default();
+    let string_name = "colorLike";
+    let named = "ColorLike";
+    let name_sid = ir.strings.len() as StringId;
+    ir.strings.push(string_name.to_string());
+    let type_sid = ir.strings.len() as StringId;
+    ir.strings.push(named.to_string());
+
+    // Helper rules: `u8_leaf = ... -> 0u8`, `f64_leaf = /regex/ -> f64`.
+    // Structural bodies do not matter — only the rule types that
+    // `ir.types` reports through `Ref` resolution.
+    let u8_rule_id: RuleId = 1;
+    let f64_rule_id: RuleId = 2;
+    ir.rules.push(IrRule {
+        id: u8_rule_id,
+        name: name_sid,
+        body: IrNode::Epsilon,
+        meta: RuleMeta::default(),
+        source_span: None,
+    });
+    ir.rules.push(IrRule {
+        id: f64_rule_id,
+        name: name_sid,
+        body: IrNode::Epsilon,
+        meta: RuleMeta::default(),
+        source_span: None,
+    });
+    ir.types.push((u8_rule_id, TypeDesc::U8));
+    ir.types.push((f64_rule_id, TypeDesc::F64));
+
+    let body = IrNode::Seq(vec![
+        IrNode::Ref(u8_rule_id),
+        IrNode::Ref(f64_rule_id),
+        IrNode::Ref(f64_rule_id),
+        IrNode::Ref(f64_rule_id),
+        IrNode::Ref(f64_rule_id),
+    ]);
+    let rule_id: RuleId = 0;
+    ir.rules.insert(
+        0,
+        IrRule {
+            id: rule_id,
+            name: name_sid,
+            body,
+            meta: RuleMeta::default(),
+            source_span: None,
+        },
+    );
+    ir.types.push((rule_id, TypeDesc::Named(type_sid)));
+    ir.types.sort_by_key(|(id, _)| *id);
+    ir.dag = Some(GrammarDag::from_ir(&ir));
+
+    let resolver = RustNamedTypes::from_ir(&ir);
+    let resolved = resolver
+        .resolve_named(type_sid)
+        .expect("ColorLike must resolve via Seq walker");
+    assert_eq!(
+        resolved,
+        TypeDesc::Tuple(vec![
+            TypeDesc::U8,
+            TypeDesc::F64,
+            TypeDesc::F64,
+            TypeDesc::F64,
+            TypeDesc::F64,
+        ]),
+    );
 }
 
 // ─── Planner admits the resolved tuple at LARGE_PAYLOAD_MAX ──────────
 
 #[test]
-fn color_tuple_plans_at_40_bytes_under_large_cap() {
-    // W6.4 + AW.0.5: the 5-field colour tuple must plan to 40 B at
-    // natural alignment under the `LARGE_PAYLOAD_MAX = 64` cap. This
-    // is the final piece the planner relies on to route colour
-    // records through `PayloadData::LargeAggregate`.
-    let binding = BINDINGS.iter().find(|b| b.name == "Color").unwrap();
-    let fields: Vec<TypeDesc> = binding.fields.to_vec();
+fn resolved_color_like_tuple_plans_at_40_bytes_under_large_cap() {
+    // AX.W1r.1 + AW.0.5: the 5-field (U8, F64, F64, F64, F64) tuple
+    // the resolver infers for a colour-function-shaped rule must
+    // plan to 40 B at natural alignment under the 64 B
+    // `LARGE_PAYLOAD_MAX` cap. This is the layout the emitter's
+    // `PayloadData::LargeAggregate` routing relies on.
+    let fields: Vec<TypeDesc> = vec![
+        TypeDesc::U8,
+        TypeDesc::F64,
+        TypeDesc::F64,
+        TypeDesc::F64,
+        TypeDesc::F64,
+    ];
 
     // 16 B cap rejects (40 > 16).
     assert!(
         plan_layout_with_cap(&fields, 16).is_none(),
-        "Color must NOT fit under 16 B MAX_PAYLOAD_BYTES",
+        "5-field colour tuple must NOT fit under 16 B MAX_PAYLOAD_BYTES",
     );
 
     // 64 B cap admits and plans to 40 B.
     let layout = plan_layout_with_cap(&fields, 64)
-        .expect("Color must fit under 64 B LARGE_PAYLOAD_MAX");
+        .expect("5-field colour tuple must fit under 64 B LARGE_PAYLOAD_MAX");
     assert_eq!(layout.total_bytes, 40, "total bytes");
     assert_eq!(layout.fields.len(), 5, "field count");
-    assert_eq!(layout.fields[0].offset, 0, "u8 space @ 0");
-    assert_eq!(layout.fields[1].offset, 8, "f64 c1 @ 8 (align-bump)");
-    assert_eq!(layout.fields[2].offset, 16, "f64 c2 @ 16");
-    assert_eq!(layout.fields[3].offset, 24, "f64 c3 @ 24");
-    assert_eq!(layout.fields[4].offset, 32, "f64 alpha @ 32");
+    assert_eq!(layout.fields[0].offset, 0, "u8 @ 0");
+    assert_eq!(layout.fields[1].offset, 8, "f64 @ 8 (align-bump)");
+    assert_eq!(layout.fields[2].offset, 16, "f64 @ 16");
+    assert_eq!(layout.fields[3].offset, 24, "f64 @ 24");
+    assert_eq!(layout.fields[4].offset, 32, "f64 @ 32");
 }

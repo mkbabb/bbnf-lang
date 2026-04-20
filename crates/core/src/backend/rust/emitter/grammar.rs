@@ -17,42 +17,38 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::backend::driver::analysis::BackendAnalysis;
-use crate::backend::rust::view::named_types::resolve_named_type;
+use crate::backend::rust::view::named_types::RustNamedTypes;
+use bbnf_ir::passes::NamedTypeResolver;
 
 use super::dfa_codegen;
 use super::{RustEmitCtx, RustEmitter};
 
-/// AW-IV.W3.5a — direct-to-struct view-layer consumer wiring.
+/// AX.W1r.1 — direct-to-struct view-layer consumer wiring.
 ///
-/// The AW-III.W6.4 universal `BINDINGS` table sat behind passing parity
-/// tests but had no per-grammar hot-path call site: `emit_view_impl`
-/// never consulted `resolve_named_type`. The per-leaf
-/// `view::leaves::emit_aggregate_accessors` path had a hardcoded
-/// `matches!(name, "Color" | "ColorMix")` admission that pre-empted the
-/// resolver — new BINDINGS rows would not have fired without also
-/// editing that match.
+/// Walks every non-transparent rule whose `TypeDesc` is
+/// `Named(sid)`, consults the IR-derived [`RustNamedTypes`]
+/// resolver for an admitted scalar tuple shape, and emits two
+/// artefacts for each admission:
 ///
-/// W3.5a threads `resolve_named_type` into the grammar-level emission.
-/// The function walks every non-transparent rule, asks the resolver
-/// whether the rule's `TypeDesc` is a direct-to-struct candidate, and
-/// emits two artefacts for each admitted binding:
+/// 1. A `PROJECTION_DIRECT_TO_STRUCT` const listing each admitted
+///    rule with its grammar-level name. Introspection surface for
+///    downstream consumers + the `cargo expand` named-type-shim
+///    hard gate (W1r.1 hard-gate #1).
+/// 2. Per-admission `__named_type_shim_<name>` marker functions.
+///    One per distinct grammar-declared name; body returns the
+///    resolver's scalar tuple shape. Structural proof that the
+///    resolver fired for this grammar — the hard gate greps for
+///    these in the expanded output.
 ///
-/// 1. A `PROJECTION_DIRECT_TO_STRUCT` const carrying the list of rule
-///    names whose view supports the fast path. Introspection surface
-///    for downstream consumers (and the W3.5 hard gate — `cargo
-///    expand` confirms the list is non-empty on grammars with named
-///    aggregates).
-/// 2. A `#[doc = ...]` attribute on the grammar marker struct citing
-///    the resolved bindings. Makes the consumer-wiring visible in
-///    rustdoc without perturbing the view surface that
-///    `view::leaves::emit_aggregate_accessors` already emits.
-///
-/// The mechanism is universal. Future `BINDINGS` additions (JSON
-/// Value, BBNF AST, Sheets formula) automatically appear in the
-/// emitted list without per-grammar code; `resolve_named_type` is the
-/// single admission gate.
+/// The pre-W1r.1 implementation consulted a static
+/// `BINDINGS` slice hand-enumerating `"Color"` / `"ColorMix"`; the
+/// widened resolver drops that slice in favour of walking
+/// `ir.types` directly. Every grammar-declared `-> input : <Name>`
+/// projection now reaches the emitted list via one mechanism;
+/// there is no per-grammar branch.
 fn emit_direct_to_struct_projection(ir: &GrammarIR, _grammar_name: &str) -> TokenStream {
-    let mut resolved: Vec<(String, &'static str)> = Vec::new();
+    let resolver = RustNamedTypes::from_ir(ir);
+    let mut resolved: Vec<(String, String)> = Vec::new();
     for rule in &ir.rules {
         if rule.meta.is_transparent {
             continue;
@@ -64,14 +60,15 @@ fn emit_direct_to_struct_projection(ir: &GrammarIR, _grammar_name: &str) -> Toke
         else {
             continue;
         };
-        if !matches!(type_desc, TypeDesc::Named(_)) {
-            continue;
-        }
-        let Some(binding) = resolve_named_type(type_desc, &ir.strings) else {
+        let TypeDesc::Named(sid) = type_desc else {
             continue;
         };
+        if resolver.resolve_named(*sid).is_none() {
+            continue;
+        }
         let rule_name = ir.get_string(rule.name).to_string();
-        resolved.push((rule_name, binding.name));
+        let binding_name = ir.get_string(*sid).to_string();
+        resolved.push((rule_name, binding_name));
     }
 
     if resolved.is_empty() {
@@ -88,29 +85,56 @@ fn emit_direct_to_struct_projection(ir: &GrammarIR, _grammar_name: &str) -> Toke
         .collect();
     let count = entries.len();
 
+    // One marker shim per distinct admitted name. The `cargo
+    // expand | grep -c "fn __named_type_shim"` hard gate inspects
+    // the number of emitted shims as structural evidence that the
+    // resolver populated a binding for this grammar.
+    let mut shim_names: Vec<String> = resolved
+        .iter()
+        .map(|(_, name)| name.clone())
+        .collect();
+    shim_names.sort();
+    shim_names.dedup();
+    let shims: Vec<TokenStream> = shim_names
+        .iter()
+        .map(|name| {
+            let fn_ident = quote::format_ident!(
+                "__named_type_shim_{}",
+                name.to_ascii_lowercase()
+            );
+            let name_lit = proc_macro2::Literal::string(name);
+            quote! {
+                /// AX.W1r.1 marker — structural evidence that
+                /// `RustNamedTypes::resolve_named` admitted this
+                /// grammar-declared named type. One shim is emitted
+                /// per distinct admitted name; the body is
+                /// compile-time constant and the function is never
+                /// called.
+                #[doc(hidden)]
+                #[inline(always)]
+                pub fn #fn_ident() -> &'static str {
+                    #name_lit
+                }
+            }
+        })
+        .collect();
+
     quote! {
-        /// AW-IV.W3.5a — per-grammar direct-to-struct projection
-        /// admissions.
+        /// AX.W1r.1 — per-grammar direct-to-struct projection
+        /// admissions, derived from `ir.types` via the
+        /// `RustNamedTypes` resolver.
         ///
-        /// Each `(rule_name, binding_name)` pair identifies a non-
-        /// transparent rule whose `TypeDesc::Named` resolves via the
-        /// universal `BINDINGS` table (at
-        /// `crates/core/src/backend/rust/view/named_types.rs`). The
-        /// resolved bindings drive the `.as_<name>()` shims emitted on
-        /// each rule's view by
-        /// `view::leaves::emit_aggregate_accessors` — this const is
-        /// the introspection surface proving the resolver was
-        /// consulted at codegen time.
-        ///
-        /// The table is the emitted evidence that AW-III's substrate
-        /// is wired: `resolve_named_type` was called, matching entries
-        /// survived, and the list is non-empty for every grammar
-        /// whose IR declares a named aggregate type. `cargo expand`
-        /// on any such grammar's `generated.rs` surfaces this const
-        /// alongside the GRAMMAR_PROFILE literal.
+        /// Each `(rule_name, binding_name)` pair identifies a
+        /// non-transparent rule whose `TypeDesc::Named` resolved to
+        /// a scalar tuple shape during `analyze_grammar`. The list
+        /// is the emitted evidence that the resolver fired for
+        /// this grammar; `cargo expand` surfaces it alongside the
+        /// GRAMMAR_PROFILE literal.
         pub const PROJECTION_DIRECT_TO_STRUCT: &[(&str, &str); #count] = &[
             #(#entries),*
         ];
+
+        #(#shims)*
     }
 }
 

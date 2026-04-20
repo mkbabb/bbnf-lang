@@ -3,176 +3,222 @@
 //!
 //! AW.0.5: implements [`bbnf_ir::passes::NamedTypeResolver`] for the
 //! Rust backend. The IR crate owns the trait (pass-side); this
-//! module owns the Rust-specific name table. Per AU.4.2's stated
+//! module owns the Rust-specific shape table. Per AU.4.2's stated
 //! path — "codegen handles struct projections via per-backend type
 //! tables, not a central registry" — each backend carries its own
 //! sibling resolver module.
 //!
-//! ## AW-III.W6.4 — universal resolver table
+//! ## AX.W1r.1 — IR-derived shape table
 //!
-//! Pre-W6.4 the resolver's match arm hardcoded `"Color" | "ColorMix"`
-//! to one tuple shape. W6.4 extracts the binding table into a
-//! `static &[NamedTypeBinding]` slice so every named type a
-//! production grammar declares reaches the same admission path.
-//! Adding a new aggregate payload — JSON `Value` tree fields, BBNF
-//! `RuleEntry` / `RhsNode` variants, Sheets `Expr` / `Literal` /
-//! `Cell` / `FnCall` variants — is a two-line append at the
-//! `BINDINGS` table; no ad-hoc pattern matches, no per-grammar
-//! conditional branches.
+//! Pre-W1r.1 the resolver held a `static &[NamedTypeBinding]` slice
+//! hand-enumerating `"Color"` / `"ColorMix"` with their
+//! `(U8, F64, F64, F64, F64)` tuple shape. The table was
+//! invariant-violating on two counts: (a) the shape was hand-encoded
+//! rather than derived from the grammar's own `-> input : <Name>`
+//! projection; (b) the row set was cherry-picked rather than driven
+//! off `ir.types`.
 //!
-//! Known-name table (data, not code):
+//! W1r.1 replaces the static slice with a builder that walks
+//! `ir.types` once at `from_ir` time. For every
+//! `(rule_id, TypeDesc::Named(sid))` entry we inspect the declaring
+//! rule's body, kernel-walk through structural wrappers
+//! ([`IrNode::Map`] / [`IrNode::OptionalWhitespace`] /
+//! [`IrNode::Skip`] / [`IrNode::Next`]) to the structural core, and
+//! infer the scalar tuple shape from that kernel:
 //!
-//! | name       | rust field tuple                   | bytes |
-//! |------------|-------------------------------------|-------|
-//! | `Color`    | `(U8, F64, F64, F64, F64)`          | 40    |
-//! | `ColorMix` | `(U8, F64, F64, F64, F64)`          | 40    |
+//! - **Seq kernel** (e.g. a CSS L4 `colorFunction` body) — collect
+//!   each child's projected scalar [`TypeDesc`] from `ir.type_map`,
+//!   falling back to the child's declared rule type when the node
+//!   map is unpopulated for that node (conservative).
+//!   `Option<scalar>` children unwrap to the scalar itself so the
+//!   field layout matches the NaN-absent / 0xFF-absent convention
+//!   the emitter applies.
+//! - **Leaf kernel** (Regex / Literal / a standalone Map over a
+//!   regex) — the projected value is an arena handle
+//!   `(U32 offset, U32 length)`. Mirrors the
+//!   [`compute_payload_layouts_with_resolver`] universal fallback
+//!   at the Named admission arm.
+//! - **Everything else** — no shape; the resolver declines and the
+//!   layout pass's universal fallback (consulted after the resolver)
+//!   carries the owned-string / byte-vec names. Keeps the backend
+//!   resolver clean of speculative shapes.
 //!
-//! The byte layout `[u8 @ 0][7 B pad][f64 c1 @ 8][f64 c2 @ 16]
-//! [f64 c3 @ 24][f64 alpha @ 32]` falls out of the planner's natural-
-//! alignment arithmetic. Consumers on the view side decode via
-//! [`super::color::Color::decode`].
+//! The resulting `FxHashMap<StringId, Vec<TypeDesc>>` is the
+//! resolver's entire state. No static table survives; no
+//! per-grammar branches.
 //!
-//! TS / WASM backends carry their own sibling resolvers
-//! (`crates/core/src/backend/ts/view/named_types.rs`,
-//! `crates/core/src/backend/wasm/view/named_types.rs`) when those
-//! backends land AW.0.5 parity. The shape of the binding table
-//! mirrors the Rust one.
+//! [`compute_payload_layouts_with_resolver`]: bbnf_ir::passes::compute_payload_layouts_with_resolver
+
+use rustc_hash::FxHashMap;
 
 use bbnf_ir::passes::NamedTypeResolver;
-use bbnf_ir::{GrammarIR, StringId, TypeDesc};
-
-/// AW-III.W6.4 — one row in the universal named-type binding table.
-///
-/// Each entry pins a grammar-level name to the concrete scalar-tuple
-/// shape the Rust backend admits for it. The `name` match is
-/// case-sensitive and matches the StringId-interned text emitted by
-/// the BBNF lowering pass (`-> input : <Name>`).
-///
-/// The struct is `#[derive(Clone, Copy)]` so table rows can be
-/// pointer-embedded into `static` context and passed through
-/// `resolve_named_type` without allocation.
-#[derive(Clone, Copy)]
-pub struct NamedTypeBinding {
-    /// Interned grammar-level name (matched case-sensitively against
-    /// the `GrammarIR` string table).
-    pub name: &'static str,
-    /// Concrete scalar-tuple shape the planner admits for this name.
-    /// Returned to the layout pass as a `TypeDesc::Tuple(fields)`.
-    pub fields: &'static [TypeDesc],
-}
-
-/// AW-III.W6.4 — canonical Color / ColorMix field tuple
-/// `(U8, F64, F64, F64, F64)`.
-///
-/// Factored into a named constant so future colour-like bindings
-/// (e.g. lightningcss's per-channel aggregate projections) reuse the
-/// same shape without re-declaring the primitive list inline.
-const COLOR_FIELDS: &[TypeDesc] = &[
-    TypeDesc::U8,
-    TypeDesc::F64,
-    TypeDesc::F64,
-    TypeDesc::F64,
-    TypeDesc::F64,
-];
-
-/// AW-III.W6.4 — universal Rust-backend binding table.
-///
-/// Append a row here to admit a new named type at the planner's
-/// aggregate-payload seam. Every entry resolves to a
-/// `TypeDesc::Tuple(fields)` during layout admission; no ad-hoc
-/// variant dispatch is emitted downstream.
-///
-/// Current rows mirror the AW.0.5 colour-function tuple (CSS L4
-/// `colorFunction`, `colorFn`, `colorMix`). Rows for BBNF, JSON, and
-/// Sheets named aggregates land when those grammars adopt the
-/// `-> input : <Name>` projection form (AU.6.7 — arena-carried
-/// decoded structs).
-pub static BINDINGS: &[NamedTypeBinding] = &[
-    NamedTypeBinding {
-        name: "Color",
-        fields: COLOR_FIELDS,
-    },
-    NamedTypeBinding {
-        name: "ColorMix",
-        fields: COLOR_FIELDS,
-    },
-];
-
-/// AW-III.W6.4 — universal name-to-binding lookup.
-///
-/// Takes an already-resolved `TypeDesc` (mined by upstream passes
-/// from `-> input : <Name>` annotations) and returns the concrete
-/// binding row that admits it. Returns `None` for every other
-/// `TypeDesc` variant — the layout pass then falls through to the
-/// structural compound form.
-///
-/// The API accepts `&TypeDesc` plus the interned string table so
-/// future callers on the TS / WASM side (carrying their own
-/// [`NamedTypeResolver`] impl) mirror this signature without
-/// reaching into the Rust-backend's private state.
-#[inline]
-pub fn resolve_named_type<'a>(
-    type_desc: &TypeDesc,
-    strings: &[String],
-) -> Option<&'a NamedTypeBinding> {
-    let sid = match type_desc {
-        TypeDesc::Named(sid) => *sid,
-        _ => return None,
-    };
-    let name = strings.get(sid as usize)?;
-    BINDINGS.iter().find(|b| b.name == name.as_str())
-}
+use bbnf_ir::{GrammarIR, IrNode, RuleId, StringId, TypeDesc};
 
 /// Rust-backend resolver for backend-specific named types.
 ///
-/// Borrows the grammar's string table so [`Self::resolve_named`]
-/// can map a `StringId` back to its interned `&str` form and
-/// pattern-match on the well-known Rust-side type names.
+/// Holds a precomputed map from interned name [`StringId`] to the
+/// scalar tuple shape the layout pass admits for that name.
+/// Population happens once at [`Self::from_ir`] time from
+/// `ir.types` + `ir.type_map`; the resolver trait impl does a
+/// single hash-map lookup per call.
 pub struct RustNamedTypes<'ir> {
     strings: &'ir [String],
+    bindings: FxHashMap<StringId, Vec<TypeDesc>>,
 }
 
 impl<'ir> RustNamedTypes<'ir> {
-    /// Construct the resolver from a borrow of the IR's string table.
+    /// Build the resolver by walking `ir.types` for every
+    /// `TypeDesc::Named(sid)` entry and inferring the scalar tuple
+    /// shape from the declaring rule's body.
     ///
-    /// Cheap; the resolver is a thin wrapper over `&[String]` with
-    /// no heap allocation. Build once per backend-analysis run and
-    /// pass into [`bbnf_ir::passes::compute_payload_layouts_with_resolver`].
-    #[inline]
+    /// O(rules + named_types); cheap enough to build once per
+    /// compile. See module docs for the inference strategy.
     pub fn from_ir(ir: &'ir GrammarIR) -> Self {
-        Self { strings: &ir.strings }
+        let mut bindings: FxHashMap<StringId, Vec<TypeDesc>> = FxHashMap::default();
+        for (rule_id, td) in &ir.types {
+            let TypeDesc::Named(sid) = td else { continue };
+            if bindings.contains_key(sid) {
+                // Multiple rules may project the same `Named(sid)`
+                // (e.g. CSS L4 `colorFunction` / `colorFn` /
+                // `colorMix` all carry `-> input : Color`). First
+                // rule wins — all declaring rules share the same
+                // shape by grammar invariant.
+                continue;
+            }
+            if let Some(shape) = infer_named_shape(ir, *rule_id) {
+                bindings.insert(*sid, shape);
+            }
+        }
+        Self { strings: &ir.strings, bindings }
     }
 
-    /// Borrow the underlying string table. Exposed so callers that
-    /// hold a [`RustNamedTypes`] can drive [`resolve_named_type`]
-    /// directly with their own `TypeDesc`.
+    /// Borrow the underlying string table.
     #[inline]
     pub fn strings(&self) -> &'ir [String] {
         self.strings
     }
+
+    /// Number of grammar-declared named types the resolver admits.
+    /// Useful for diagnostics + tests.
+    #[inline]
+    pub fn binding_count(&self) -> usize {
+        self.bindings.len()
+    }
 }
 
 impl<'ir> NamedTypeResolver for RustNamedTypes<'ir> {
+    #[inline]
     fn resolve_named(&self, sid: StringId) -> Option<TypeDesc> {
-        // AW-III.W6.4: delegate to the universal binding table.
-        // The legacy `match` over `"Color" | "ColorMix"` folded into
-        // the data-driven lookup below; the only per-backend knob is
-        // which rows populate `BINDINGS`.
-        //
-        // Discriminant encoding for every resolved name is pinned by
-        // the grammar's own `-> Nu8` annotations — e.g. `Color` /
-        // `ColorMix` use `ColorSpace` (see
-        // `crates/core/src/backend/rust/view/color.rs`). Consumers
-        // apply their own discriminant policy above the raw tuple.
-        //
-        // `alpha` may be `f64::NAN` when the input carried no alpha
-        // channel (the emitter's alpha-less arm writes
-        // `NAN.to_le_bytes()` into the slot). Consumers distinguish
-        // via `<Color>::alpha.is_nan()`.
-        let name = self.strings.get(sid as usize).map(String::as_str)?;
-        BINDINGS
+        self.bindings
+            .get(&sid)
+            .map(|fields| TypeDesc::Tuple(fields.clone()))
+    }
+}
+
+/// Infer the scalar tuple shape for a rule whose projected
+/// [`TypeDesc`] is `Named(sid)`.
+///
+/// Returns `Some(fields)` when the rule body's kernel yields a
+/// well-formed scalar tuple; `None` when inference declines (the
+/// layout pass's universal fallback then carries names like
+/// `"String"` / `"Bytes"`). Never panics.
+fn infer_named_shape(ir: &GrammarIR, rule_id: RuleId) -> Option<Vec<TypeDesc>> {
+    let rule = ir.get_rule(rule_id);
+    let kernel = unwrap_structural_wrappers(&rule.body);
+
+    match kernel {
+        IrNode::Seq(children) => {
+            // Collect each child's scalar projection. A child Ref
+            // resolves through `ir.types`; other nodes consult the
+            // TypeMap. Unwrap `Option<scalar>` so the layout matches
+            // the NaN-absent convention.
+            let mut fields = Vec::with_capacity(children.len());
+            for child in children {
+                let child_kernel = unwrap_structural_wrappers(child);
+                let ty = child_scalar_type(ir, child_kernel)?;
+                fields.push(ty);
+            }
+            // A bare `Span` tuple element would survive
+            // `is_scalar_payload` but the KV-pair shape arm in the
+            // layout pass already handles the `[Span, scalar]`
+            // case. Still admit — the layout planner re-checks via
+            // `plan_layout`.
+            Some(fields)
+        }
+        // Single-leaf kernel (e.g. JSON `string = /regex/ ->
+        // decode_json_string_to_arena(input) : String`). The
+        // grammar is projecting an opaque owned-bytes value into
+        // an arena handle; the runtime layout is the `(offset,
+        // length)` pair regardless of which name the grammar
+        // chose.
+        IrNode::Regex(_) | IrNode::Literal(_) => {
+            Some(vec![TypeDesc::U32, TypeDesc::U32])
+        }
+        // Alt / Repeat / Ref / Epsilon / TokenDispatch / unwrapped
+        // Map / OptionalWhitespace / Skip / Next kernels are not
+        // structurally scalar — decline. The layout pass's
+        // universal fallback picks up `"String"` / `"Bytes"` names
+        // below this.
+        _ => None,
+    }
+}
+
+/// Strip structural wrappers (`Map`, `OptionalWhitespace`, `Skip`,
+/// `Next`) from a node, returning the inner kernel. For `Skip` /
+/// `Next` the left operand is followed — the right operand is the
+/// discarded boundary (closing delimiter, trailing whitespace).
+fn unwrap_structural_wrappers(node: &IrNode) -> &IrNode {
+    let mut cur = node;
+    loop {
+        match cur {
+            IrNode::Map { inner, .. }
+            | IrNode::OptionalWhitespace(inner)
+            | IrNode::Negate(inner) => {
+                cur = inner.as_ref();
+            }
+            IrNode::Skip(l, _) | IrNode::Next(l, _) => {
+                cur = l.as_ref();
+            }
+            _ => return cur,
+        }
+    }
+}
+
+/// Project a child node of a Seq body to its scalar-tuple field
+/// type. Follows `Ref`s through `ir.types`; consults `ir.type_map`
+/// for other nodes. Unwraps `Option<scalar>` to the scalar itself.
+/// Returns `None` when the child does not admit a scalar projection
+/// (then the parent's shape inference declines, and the layout pass
+/// falls through to its universal fallback).
+fn child_scalar_type(ir: &GrammarIR, child: &IrNode) -> Option<TypeDesc> {
+    let ty = match child {
+        IrNode::Ref(target) => ir
+            .types
             .iter()
-            .find(|b| b.name == name)
-            .map(|b| TypeDesc::Tuple(b.fields.to_vec()))
+            .find(|(id, _)| *id == *target)
+            .map(|(_, t)| t.clone())?,
+        IrNode::Repeat { inner, lo: 0, hi: 1 } => {
+            // Collapsed `(scalar)?` — recurse into the inner and
+            // keep the scalar. The layout pass's NaN-absent / tag=
+            // sentinel convention covers the absence.
+            let inner_kernel = unwrap_structural_wrappers(inner);
+            return child_scalar_type(ir, inner_kernel);
+        }
+        _ => {
+            let dag = ir.dag.as_ref()?;
+            let nid = dag.node_for(child)?;
+            let map = ir.type_map.as_ref()?;
+            map.node_type(nid).cloned()?
+        }
+    };
+    Some(unwrap_option_scalar(ty))
+}
+
+/// Unwrap `TypeDesc::Option(inner)` when the inner is itself a
+/// scalar payload. Leaves non-Option types untouched.
+fn unwrap_option_scalar(ty: TypeDesc) -> TypeDesc {
+    match ty {
+        TypeDesc::Option(inner) if inner.is_scalar_payload() => *inner,
+        other => other,
     }
 }

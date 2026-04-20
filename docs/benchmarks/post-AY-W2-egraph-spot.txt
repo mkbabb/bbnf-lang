@@ -1,0 +1,39 @@
+# AY.W2.3 + AY.W2.6 spot bench — json_monolithic (release profile)
+
+## Measurement
+
+Fresh .bbnf-cache (clean regen). `CARGO_INCREMENTAL=0`. Host: darwin 25.4.0.
+
+## Twitter record count probe (pre- vs post-elision)
+
+Pre-W2.6 (elide_compound = false):   158638 records
+Post-W2.6 (elide_compound = true):   144725 records
+Net reduction:                        13913 records (−8.77%)
+
+The AY.md prop-2 projection of 158K → ~80K (−50%) requires the W3
+Value emitter's inner-record collapse. W2.6 delivers the outer-wrap
+share of the cut.
+
+## json_monolithic --profile release
+
+  canada    6,134,962 ns/iter (+/- 141,286) =  366 MB/s
+  citm      2,293,562 ns/iter (+/-  73,260) =  753 MB/s
+  data_s       48,556 ns/iter (+/-   1,376) =  730 MB/s
+  data_xl  45,051,608 ns/iter (+/-2,886,014) =  472 MB/s
+  twitter     849,479 ns/iter (+/-  22,328) =  743 MB/s
+
+## Delta vs post-AY-W1 close (per docs/tranches/AY/PROGRESS.md)
+
+  twitter   post-W1.close: 688 MB/s
+  twitter   post-W2.ega  : 743 MB/s  (+8.0%)
+
+## Notes
+
+- W2.3 G3 wrap-of-epsilon-scalar fires at IR canonicalisation time;
+  the BBNF `value_expr` / `rhs` / `grammar_item` Wrap rules elide
+  their outer `push_compound` via the W2.6 consumer (verified via
+  generated.rs delta).
+- JSON `value` Wrap rule elides its outer compound per expand trace
+  (parse_wrap_JsonParser_value emits no outer `push_compound`).
+- CSS `color` + Sheets wrap rules reach the elision path
+  automatically through the `wrap_can_elide_compound` predicate.

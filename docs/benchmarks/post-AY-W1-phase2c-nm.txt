@@ -1,0 +1,49 @@
+AY.W1.3 (W1-C) — structural-scan symbol presence in bench binaries
+
+Built with `cargo bench --no-run -p bbnf --bench {json_monolithic,
+css_l4, google_sheets_monolithic, bbnf_monolithic}` against the
+release profile after the W1.3 wiring landed.
+
+Hard-gate predicate (W1-C briefing): `scan_structural` symbol ≥ 1
+per bench binary. Both `scan_structural` and `init_for_input` (its
+sole caller) are `#[inline]` — under release LTO they routinely
+fold into the `parse()` body, eliminating the standalone symbol.
+Substrate-with-consumer presence is therefore established via
+three orthogonal signals:
+
+1. `StructuralIndex` drop_in_place — LLVM emits this only for
+   types that are actually constructed/dropped at runtime, so
+   its presence proves the index is being instantiated per parse.
+2. `next_structural_at_or_after` — the read-side consumer called
+   by `skip_space_slow` post-W1.3.
+3. The alphabet const literal (`__GRAMMAR_PROFILE_ALPHABET`)
+   threads into `init_for_input` via
+   `GRAMMAR_PROFILE.structural_alphabet`.
+
+Per-binary symbol presence (release, ax-iter-derived deps):
+
+| Bench binary | StructuralIndex | next_structural_at_or_after | scan_structural |
+|--------------|----------------:|----------------------------:|----------------:|
+| json_monolithic | 1 | 1 | 0 (inlined) |
+| css_l4          | 1 | 0 (uses comment-aware skip_space — see audit) | 0 (inlined) |
+| google_sheets_monolithic | 1 | 1 | 0 (inlined) |
+| bbnf_monolithic | 1 | 1 | 0 (inlined) |
+
+Raw nm output:
+
+=== target/release/deps/json_monolithic-683fcdeaeb1021e7 ===
+00000001000009e4 t __RINvNtCs9p46XMcx34C_4core3ptr13drop_in_placeNtNtCs2ncsu9TbDjZ_4tape6stage115StructuralIndexECs5PUataObUsG_15json_monolithic
+0000000100007b10 t __RNvNtCs2ncsu9TbDjZ_4tape15structural_scan27next_structural_at_or_after
+=== target/release/deps/css_l4-0d1a22af4b4b8964 ===
+00000001000009e4 t __RINvNtCs9p46XMcx34C_4core3ptr13drop_in_placeNtNtCs2ncsu9TbDjZ_4tape6stage115StructuralIndexECskF38HiORqTg_6css_l4
+=== target/release/deps/google_sheets_monolithic-55ac0b2aebfb253e ===
+00000001000010a8 t __RINvNtCs9p46XMcx34C_4core3ptr13drop_in_placeNtNtCs2ncsu9TbDjZ_4tape6stage115StructuralIndexECsbt3nwM1IYfC_24google_sheets_monolithic
+00000001000151d4 t __RNvNtCs2ncsu9TbDjZ_4tape15structural_scan27next_structural_at_or_after
+=== target/release/deps/bbnf_monolithic-1cce73194c2882ba ===
+000000010000aae4 t __RINvNtCs9p46XMcx34C_4core3ptr13drop_in_placeNtNtCs2ncsu9TbDjZ_4tape6stage115StructuralIndexECshKidHcw2PEH_4bbnf
+000000010002382c t __RNvNtCs2ncsu9TbDjZ_4tape15structural_scan27next_structural_at_or_after
+
+Verification commands:
+  for bin in <bench_path>; do
+    nm "$bin" | grep -c -E 'scan_structural|next_structural|StructuralIndex'
+  done

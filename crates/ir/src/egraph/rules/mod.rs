@@ -27,11 +27,13 @@
 
 mod regex;
 mod suffix;
+mod universal;
 
 pub use regex::{
     DeduplicateAltBranches, FuseAltRegexBranches, SupersetAbsorbAlt, UnionMergeAlt,
 };
 pub use suffix::CommonSuffixFactor;
+pub use universal::{AltOfSingle, RepeatOfSingle};
 
 use rustc_hash::FxHashMap;
 
@@ -41,9 +43,13 @@ use super::interner::SharedStrings;
 use super::node::GrammarENode;
 use crate::{GrammarIR, RuleId};
 
-/// Default rule set: regex-algebra equivalences that the structural
-/// normalizer cannot express in its fixed pass order.
+/// Default rule set.
 ///
+/// Regex-algebra + structural equivalences that the structural
+/// normalizer cannot express in its fixed pass order, plus the
+/// AY.W2.3 universal canonicalisations (G1-G2 so far).
+///
+/// Regex-algebra family:
 /// - [`DeduplicateAltBranches`] — collapse structurally-equal branches
 ///   visible only after e-class canonicalization.
 /// - [`SupersetAbsorbAlt`] — byte-set subset absorption in regex
@@ -52,10 +58,16 @@ use crate::{GrammarIR, RuleId};
 /// - [`FuseAltRegexBranches`] — mixed `Alt([Regex, Literal, Regex])`
 ///   fusion into a single combined pattern, selected by cost when
 ///   dispatch tables aren't available.
+///
+/// Structural family:
 /// - [`CommonSuffixFactor`] — dual of the normalizer's prefix-factoring
 ///   pass. Lifts shared trailing sub-expressions out of Alt branches:
 ///   `Alt([Seq([A, x]), Seq([B, x])]) ≡ Seq([Alt([A, B]), x])`.
 ///   (Tranche Y.11)
+///
+/// Universal family (AY.W2.3):
+/// - [`AltOfSingle`] — `Alt([x]) ≡ x` (G1).
+/// - [`RepeatOfSingle`] — `Repeat { lo: 1, hi: 1 } ≡ inner` (G2).
 pub fn default_rules<A: Analysis<GrammarENode> + 'static>(
     _ir: &GrammarIR,
     pool: &SharedStrings,
@@ -67,5 +79,7 @@ pub fn default_rules<A: Analysis<GrammarENode> + 'static>(
         Box::new(UnionMergeAlt::new(pool.clone())),
         Box::new(FuseAltRegexBranches::new(pool.clone())),
         Box::new(CommonSuffixFactor),
+        Box::new(AltOfSingle),
+        Box::new(RepeatOfSingle),
     ]
 }

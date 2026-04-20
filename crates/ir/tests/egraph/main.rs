@@ -10,4 +10,5 @@ mod egraph_grammar;
 mod egraph_interner;
 mod egraph_roundtrip;
 mod egraph_suffix;
+mod egraph_universal;
 mod type_desc_interner;

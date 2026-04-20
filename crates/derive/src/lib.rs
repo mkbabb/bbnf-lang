@@ -57,7 +57,13 @@ use parse_that::utils::get_cargo_root_path;
 // u32` field adds the cursor-aware savepoint snapshot. `reserve_compound`
 // helper deleted in favour of `Columns::push_compound_fused` direct calls;
 // every cached emitter output references the deleted helper.
-const BBNF_SCHEMA_VERSION: u64 = 12;
+// AX.W1r.3a: bumped from 12 — `?w` / OptionalWhitespace prettify codegen
+// now threads `@ws` through the regex emitter for comment-aware trimming,
+// matching the recognizer's `Op::TrimWsPattern` dispatch. Cached codegen
+// from pre-W1r.3a versions emits ASCII-only `trim_leading_whitespace_mut`
+// and produces 0-byte output on grammars whose inputs begin with a block
+// comment (bootstrap.css / normalize.css).
+const BBNF_SCHEMA_VERSION: u64 = 13;
 
 /// Recursively collect all grammar file contents for hashing.
 ///

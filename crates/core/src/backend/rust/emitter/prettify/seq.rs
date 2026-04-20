@@ -1,5 +1,6 @@
 //! Prettify codegen for Seq, Skip, Next, and OptionalWhitespace nodes.
 
+use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -51,14 +52,20 @@ impl RustEmitter {
         &mut self,
         inner: TokenStream,
         is_atomic: bool,
+        ir: &GrammarIR,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        // Emit ws trim code. In prettify context, OptionalWhitespace nodes
-        // contain the ws pattern baked into the IR via the @ws directive lowering.
-        // The actual trim comes from the standard whitespace trimmer.
-        let ws_trim = quote! {
-            ::parse_that::trim_leading_whitespace_mut(state);
-        };
+        // Emit ws trim code. `?w` must trim identically to the recognizer:
+        // when `@ws` declares a comment-aware pattern, the prettify side
+        // must consume the same byte-run so the builder advances through
+        // leading/trailing comments. Falling back to ASCII-only trim here
+        // is the root cause of the 0-byte leading-comment failure mode
+        // documented in `docs/tranches/AX/audit/W1r3-diag.md`: the
+        // recognizer traverses `/* ... */` via `Op::TrimWsPattern` while
+        // the prettify emitter previously called ASCII-only
+        // `trim_leading_whitespace_mut`, leaving the parse state stuck at
+        // the opening `/` and producing zero ops.
+        let ws_trim = emit_ws_trim_tokens(ir);
 
         if is_atomic {
             // Deferred pattern: scan leading ws, try inner, then emit ws only
@@ -100,5 +107,47 @@ impl RustEmitter {
                 }
             } }
         }
+    }
+}
+
+/// Emit comment-aware whitespace trim tokens for `?w` / OptionalWhitespace.
+///
+/// Threads the grammar's `@ws` pattern through the regex emitter when
+/// declared so the prettify side performs the same DFA walk the
+/// recognizer (`Op::TrimWsPattern`) uses. Falls back to ASCII-only
+/// `trim_leading_whitespace_mut` when the grammar has no `@ws` directive
+/// — the pre-W1r.3a behaviour, preserved for grammars that don't opt
+/// into comment-aware whitespace.
+///
+/// Why this lives in prettify codegen (not the grammar layer): `?w` is
+/// a structural modifier whose semantics are defined grammar-wide by
+/// `@ws`. The recognizer's `IrNode::OptionalWhitespace` arm already
+/// dispatches on `ir.ws_pattern`; parity demands the prettify emitter
+/// do the same. A grammar-level workaround (explicit `ws = /.../`
+/// rule + rewriting `?w` to `ws >> X << ws`) would fork every
+/// `?w`-using grammar and duplicate the `@ws` regex, violating
+/// `feedback_no_workarounds_arch` + `feedback_system_cohesion`.
+fn emit_ws_trim_tokens(ir: &GrammarIR) -> TokenStream {
+    match ir.ws_pattern {
+        Some(sid) => {
+            let pattern = ir.get_string(sid);
+            let ws_pat = Some(pattern);
+            let opts = crate::generate::regex::EmitOpts::new(
+                &crate::generate::regex::CostModel::DEFAULT,
+            )
+            .with_ir(ir)
+            .with_ws_pattern(ws_pat);
+            // `@ws /...*/` matches zero-or-more ws/comment — the regex
+            // scan always succeeds. Bind its Option return but discard
+            // the value; the side effect of advancing `state.offset`
+            // is what we want.
+            let code = crate::generate::regex::emit_regex(pattern, &opts);
+            quote! {
+                let _ = #code;
+            }
+        }
+        None => quote! {
+            ::parse_that::trim_leading_whitespace_mut(state);
+        },
     }
 }

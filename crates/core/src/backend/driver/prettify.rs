@@ -191,7 +191,7 @@ fn compile_prettify_node<E: Emitter>(
         IrNode::OptionalWhitespace(inner) => {
             let is_atomic = analysis::emits_only_on_success(inner, plans, ir);
             let inner_out = compile_prettify_node(inner, current_rule, plans, ir, emitter, ctx);
-            emitter.emit_prettify_optional_ws(inner_out, is_atomic, ctx)
+            emitter.emit_prettify_optional_ws(inner_out, is_atomic, ir, ctx)
         }
 
         IrNode::Map { inner, .. } => {

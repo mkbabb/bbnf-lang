@@ -350,9 +350,10 @@ impl Emitter for RustEmitter {
         &mut self,
         inner: TokenStream,
         is_atomic: bool,
+        ir: &GrammarIR,
         ctx: &mut Self::Ctx,
     ) -> TokenStream {
-        self.emit_prettify_optional_ws_impl(inner, is_atomic, ctx)
+        self.emit_prettify_optional_ws_impl(inner, is_atomic, ir, ctx)
     }
     fn emit_prettify_attempt(
         &mut self,

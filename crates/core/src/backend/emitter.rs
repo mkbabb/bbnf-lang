@@ -479,7 +479,7 @@ pub trait Emitter {
     fn emit_prettify_next(&mut self, _left: Self::Output, _right: Self::Output, _ctx: &mut Self::Ctx) -> Self::Output {
         unimplemented!("prettify not supported")
     }
-    fn emit_prettify_optional_ws(&mut self, _inner: Self::Output, _is_atomic: bool, _ctx: &mut Self::Ctx) -> Self::Output {
+    fn emit_prettify_optional_ws(&mut self, _inner: Self::Output, _is_atomic: bool, _ir: &GrammarIR, _ctx: &mut Self::Ctx) -> Self::Output {
         unimplemented!("prettify not supported")
     }
     fn emit_prettify_attempt(&mut self, _expr: Self::Output, _rollback_builder: bool, _use_light: bool, _ctx: &mut Self::Ctx) -> Self::Output {

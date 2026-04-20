@@ -57,7 +57,6 @@ pub mod kind;
 pub mod packed;
 pub mod profile;
 pub mod psi;
-pub mod shape_dict;
 pub mod stage1;
 pub mod tape;
 pub mod visitor;
@@ -83,7 +82,6 @@ pub use kind::TapeKind;
 pub use packed::PackedRecord;
 pub use profile::{GrammarProfile, RuleId};
 pub use psi::{PayloadJob, PayloadKind, PayloadStream};
-pub use shape_dict::{BbnfShapeEntry, BbnfShapeKind};
 pub use stage1::StructuralIndex;
 pub use tape::{Tape, TapeIter, TapeOffset, TapeRec};
 pub use visitor::{

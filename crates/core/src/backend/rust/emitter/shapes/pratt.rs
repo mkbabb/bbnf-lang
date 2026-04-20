@@ -370,15 +370,15 @@ pub fn emit_parse_pratt(
                 );
 
                 // Capture LHS span_lo for the reducer compound. The
-                // walker reads `columns.span_lo[this_operand_root]`
-                // — this emitter mirrors via the builder's column
-                // accessor.
-                let lhs_span_lo: u32 = builder
-                    .columns()
-                    .span_lo
-                    .get(this_operand_root as usize)
-                    .copied()
-                    .unwrap_or(op_hi);
+                // walker reads the LHS row's `span_lo` directly via
+                // the AoS column accessor (AY.W1.1).
+                let lhs_span_lo: u32 = if (this_operand_root as usize)
+                    < builder.columns().len()
+                {
+                    builder.columns().span_lo_at(this_operand_root)
+                } else {
+                    op_hi
+                };
 
                 op_stack.push(LocalOpEntry {
                     op_discriminant,

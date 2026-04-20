@@ -262,6 +262,10 @@ pub fn lookup_precedence(
 /// the compound, the byte-range end, and the index of the first
 /// child row. `has_children` is stamped when any child row actually
 /// landed (i.e. `first_child < columns.len()` at call time).
+///
+/// AY.W1.1 — flat-AoS substrate: the three back-patches land as field
+/// updates on the AoS row directly via [`Columns::set_span_hi_at`],
+/// [`Columns::set_child_off_at`], [`Columns::or_extra_at`].
 #[inline(always)]
 pub fn close_compound(
     columns: &mut Columns,
@@ -269,11 +273,10 @@ pub fn close_compound(
     span_hi: u32,
     first_child: u32,
 ) {
-    let parent = parent_rec as usize;
     let has_children = (columns.len() as u32) > first_child;
-    columns.span_hi[parent] = span_hi;
+    columns.set_span_hi_at(parent_rec, span_hi);
     if has_children {
-        columns.child_off[parent] = TapeOffset(first_child);
-        columns.extra[parent] |= crate::tape::TapeRec::HAS_CHILDREN_BIT;
+        columns.set_child_off_at(parent_rec, TapeOffset(first_child));
+        columns.or_extra_at(parent_rec, crate::tape::TapeRec::HAS_CHILDREN_BIT);
     }
 }

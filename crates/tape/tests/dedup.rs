@@ -11,7 +11,7 @@ use tape::{columns_range_eq, push_compound_referring, BloomDedup};
 
 fn push_compound_row(columns: &mut Columns, kind: TapeKind, span_lo: u32, span_hi: u32) -> u32 {
     let idx = columns.push_compound_fused(kind, span_lo);
-    columns.span_hi[idx as usize] = span_hi;
+    columns.set_span_hi_at(idx, span_hi);
     idx
 }
 
@@ -109,5 +109,5 @@ fn push_compound_referring_emits_single_row() {
     assert_eq!(columns.child_off_at(ref_idx), TapeOffset(0));
     assert!(columns.has_children_at(ref_idx), "HAS_CHILDREN_BIT set");
     // flags holds the rule_id's low byte.
-    assert_eq!(columns.flags[ref_idx as usize], 42);
+    assert_eq!(columns.flags_at(ref_idx), 42);
 }

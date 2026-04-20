@@ -207,14 +207,15 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
         // (legacy fn-per-rule) carry a `child_off == NONE` placeholder
         // at close time; those still need the re-derivation.
         if columns.has_children_at(i_u32)
-            && columns.child_off[i] == TapeOffset::NONE
+            && columns.child_off_at(i_u32) == TapeOffset::NONE
         {
             let child_d = d + 1;
             if let (Some(first), Some(last)) =
                 (first_at_depth[child_d], last_at_depth[child_d])
             {
-                columns.child_off[i] = TapeOffset(first);
-                columns.span_hi[i] = columns.span_hi[last as usize];
+                columns.set_child_off_at(i_u32, TapeOffset(first));
+                let last_span_hi = columns.span_hi_at(last);
+                columns.set_span_hi_at(i_u32, last_span_hi);
             }
         }
 
@@ -236,7 +237,7 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
         // ── Step 3: stamp sib_skip on the previous same-depth record
         //    in the current frame ────────────────────────────────────
         if let Some(prev) = prev_at_depth[d] {
-            columns.sib_skip[prev as usize] = i_u32 - prev;
+            columns.set_sib_skip_at(prev, i_u32 - prev);
         }
 
         // ── Step 4: update tracking for THIS record at depth d ────

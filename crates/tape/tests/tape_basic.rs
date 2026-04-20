@@ -893,15 +893,12 @@ fn columns_struct_holds_soa_layout() {
     b.push_leaf(TapeKind::Literal, 1, 2, 1, 0);
     let tape = b.finish().unwrap();
 
+    // AY.W1.1 — flat-AoS substrate: structural rows live in
+    // `records` (16 B AoS) + parallel `sib_skip`. The legacy SoA
+    // accessors `cols.kinds.len()` etc. collapse into the single
+    // `cols.len()` query.
     let cols = tape.columns();
     assert_eq!(cols.len(), 2);
-    assert_eq!(cols.kinds.len(), 2);
-    assert_eq!(cols.flags.len(), 2);
-    assert_eq!(cols.extra.len(), 2);
-    assert_eq!(cols.span_lo.len(), 2);
-    assert_eq!(cols.span_hi.len(), 2);
-    assert_eq!(cols.sib_skip.len(), 2);
-    assert_eq!(cols.child_off.len(), 2);
 
     // Typed payload columns stay empty for pure-span leaves.
     assert_eq!(cols.pay_narrow.len(), 0);

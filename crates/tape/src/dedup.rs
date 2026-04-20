@@ -201,38 +201,34 @@ const FNV_PRIME: u64 = 0x00000100000001B3;
 /// Fold the structural column bytes for rows
 /// `[start..start + count]` into a 64-bit FNV-1a hash.
 ///
-/// Each row contributes [`COLUMN_LANES_PER_RECORD`] lanes: the seven
-/// structural columns plus a zero tail so the lane count stays a
-/// power of two (lets LLVM vectorise the folding loop).
+/// Each row contributes [`COLUMN_LANES_PER_RECORD`] lanes: the AoS
+/// `TapeRec` fields + parallel `sib_skip` + a zero tail so the lane
+/// count stays a power of two (lets LLVM vectorise the folding loop).
 #[inline]
 fn hash_record_range(columns: &Columns, start: u32, count: u32) -> u64 {
     let mut h: u64 = FNV_OFFSET_BASIS;
     let s = start as usize;
     let e = s + count as usize;
-    if e > columns.kinds.len() {
+    if e > columns.len() {
         // Defensive: record range out of bounds. Return an impossible
         // hash so the caller never matches on it.
         return 0;
     }
+    let records = columns.records();
     for i in s..e {
-        // SAFETY: the guard above ensures i < columns.kinds.len(), and
-        // the structural columns grow in lockstep per
+        // SAFETY: the guard above ensures i < columns.len(), and the
+        // `sib_skip` column grows in lockstep with `records` per
         // `push_structural` / `push_compound_fused` / `push_leaf_fused`.
         unsafe {
-            let kind = *columns.kinds.get_unchecked(i) as u64;
-            let flags = *columns.flags.get_unchecked(i) as u64;
-            let extra = *columns.extra.get_unchecked(i) as u64;
-            let span_lo = *columns.span_lo.get_unchecked(i) as u64;
-            let span_hi = *columns.span_hi.get_unchecked(i) as u64;
+            let rec = *records.get_unchecked(i);
             let sib_skip = *columns.sib_skip.get_unchecked(i) as u64;
-            let child_off = columns.child_off.get_unchecked(i).0 as u64;
-            h = fnv_fold(h, kind);
-            h = fnv_fold(h, flags);
-            h = fnv_fold(h, extra);
-            h = fnv_fold(h, span_lo);
-            h = fnv_fold(h, span_hi);
+            h = fnv_fold(h, (rec.kind_meta) as u64);
+            h = fnv_fold(h, rec.flags as u64);
+            h = fnv_fold(h, rec.extra as u64);
+            h = fnv_fold(h, rec.span_lo as u64);
+            h = fnv_fold(h, rec.span_hi as u64);
             h = fnv_fold(h, sib_skip);
-            h = fnv_fold(h, child_off);
+            h = fnv_fold(h, rec.child_off.0 as u64);
             // Padding lane — keeps COLUMN_LANES_PER_RECORD a power of
             // two so the fold loop aligns with 8-lane SIMD widths.
             h = fnv_fold(h, 0);
@@ -269,13 +265,21 @@ fn bloom_bit_positions(hash: u64) -> (u32, u32, u32) {
     (b0, b1, b2)
 }
 
-/// Byte-for-byte equality check over the seven structural columns for
+/// Byte-for-byte equality check over the AoS structural columns for
 /// two record ranges `[a_start..a_start + count]` and
 /// `[b_start..b_start + count]`.
 ///
 /// Used by [`BloomDedup::try_dedup`] to confirm a bloom+GADT hit.
 /// Inline-friendly: the loop unrolls at small record counts and LLVM
 /// can vectorise the per-column compares.
+///
+/// `span_lo` / `span_hi` intentionally excluded from the equality
+/// test: identical compound shapes at different source offsets
+/// should still dedup. The hash above folds them in for probing,
+/// but the confirm compares only the invariant structural fields
+/// (kind, flags, extra, sib_skip, child_off) — span differences
+/// don't block reuse of the same skeleton when the variant +
+/// children match.
 #[inline]
 pub fn columns_range_eq(
     columns: &Columns,
@@ -286,37 +290,30 @@ pub fn columns_range_eq(
     let a = a_start as usize;
     let b = b_start as usize;
     let n = count as usize;
-    if a + n > columns.kinds.len() || b + n > columns.kinds.len() {
+    if a + n > columns.len() || b + n > columns.len() {
         return false;
     }
+    let records = columns.records();
     // SAFETY: guarded by the length check above; structural columns
     // grow in lockstep.
     unsafe {
         for i in 0..n {
-            if *columns.kinds.get_unchecked(a + i) != *columns.kinds.get_unchecked(b + i) {
+            let ra = records.get_unchecked(a + i);
+            let rb = records.get_unchecked(b + i);
+            if ra.kind_meta != rb.kind_meta {
                 return false;
             }
-            if *columns.flags.get_unchecked(a + i) != *columns.flags.get_unchecked(b + i) {
+            if ra.flags != rb.flags {
                 return false;
             }
-            if *columns.extra.get_unchecked(a + i) != *columns.extra.get_unchecked(b + i) {
+            if ra.extra != rb.extra {
                 return false;
             }
-            // span_lo and span_hi intentionally excluded from the
-            // equality test: identical compound shapes at different
-            // source offsets should still dedup. The hash above
-            // folds them in for probing, but the confirm compares
-            // only the invariant structural fields (kind, flags,
-            // extra, sib_skip, child_off) — span differences don't
-            // block reuse of the same skeleton when the variant +
-            // children match.
             if *columns.sib_skip.get_unchecked(a + i) != *columns.sib_skip.get_unchecked(b + i)
             {
                 return false;
             }
-            let ca = columns.child_off.get_unchecked(a + i);
-            let cb = columns.child_off.get_unchecked(b + i);
-            if ca.0 != cb.0 {
+            if ra.child_off.0 != rb.child_off.0 {
                 return false;
             }
         }
@@ -348,20 +345,19 @@ pub fn push_compound_referring(
     existing: u32,
     span: (u32, u32),
 ) -> u32 {
-    // Reserve one structural row. `push_compound_fused` handles the
-    // capacity check + seven unchecked stores; we overwrite the
-    // `child_off` with the referent's row index + the `flags` with
-    // the rule id's low byte so the read side can identify the owning
-    // rule on a dedup hit.
+    // Reserve one structural row. `push_compound_fused` writes one
+    // 16-byte AoS row + one 4-byte sib_skip; we then patch the row's
+    // `flags` (rule id low byte for identification on dedup hits),
+    // `span_hi` (the duplicate instance's span end), `child_off` (the
+    // referent's row index), and `extra` (HAS_CHILDREN so cursor
+    // traversal follows `child_off`).
     let idx = columns.push_compound_fused(kind, span.0);
-    unsafe {
-        *columns.flags.as_mut_ptr().add(idx as usize) = (rule_id & 0xFF) as u8;
-        *columns.span_hi.as_mut_ptr().add(idx as usize) = span.1;
-        *columns.child_off.as_mut_ptr().add(idx as usize) =
-            crate::tape::TapeOffset(existing);
-        // Mark HAS_CHILDREN so cursor traversal follows child_off.
-        *columns.extra.as_mut_ptr().add(idx as usize) =
-            crate::tape::TapeRec::HAS_CHILDREN_BIT;
-    }
+    let records = columns.records_mut();
+    let rec = &mut records[idx as usize];
+    rec.flags = (rule_id & 0xFF) as u8;
+    rec.span_hi = span.1;
+    rec.child_off = crate::tape::TapeOffset(existing);
+    rec.extra = crate::tape::TapeRec::HAS_CHILDREN_BIT;
+    columns.invalidate_packed();
     idx
 }

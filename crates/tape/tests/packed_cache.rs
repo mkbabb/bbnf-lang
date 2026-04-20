@@ -89,15 +89,10 @@ fn sib_skip_reflected_in_packed_record() {
     cols.push_compound_fused(TapeKind::Seq, 0);
     cols.push_leaf_fused(TapeKind::Literal, 0, 0, 0, 1, TapeOffset::NONE);
 
-    // Hand-patch sib_skip on the leaf; the AoS sidecar should reflect
-    // the update after invalidation on the next read.
-    cols.sib_skip[0] = 5;
-    // Pretend a push happened: direct mutation on a `pub` column is
-    // currently uncaptured by the invalidation contract. The correct
-    // production path goes through the finaliser, which runs after
-    // pushes and re-invalidates via a subsequent push-equivalent
-    // call. Here we force invalidation directly.
-    cols.invalidate_packed();
+    // Hand-patch sib_skip on the leaf via the AoS column accessor;
+    // the sidecar invalidates on the write so the next read re-
+    // transposes with the updated skip.
+    cols.set_sib_skip_at(0, 5);
 
     let view = cols.packed_cache();
     assert_eq!(view[0].sib_skip, 5);
@@ -180,10 +175,10 @@ fn stp_span_patches_both_columns_and_invalidates() {
     cols.stp_span(1, 30, 40);
     assert!(!cols.packed_cache_populated());
 
-    assert_eq!(cols.span_lo[0], 10);
-    assert_eq!(cols.span_hi[0], 20);
-    assert_eq!(cols.span_lo[1], 30);
-    assert_eq!(cols.span_hi[1], 40);
+    assert_eq!(cols.span_lo_at(0), 10);
+    assert_eq!(cols.span_hi_at(0), 20);
+    assert_eq!(cols.span_lo_at(1), 30);
+    assert_eq!(cols.span_hi_at(1), 40);
 
     let view = cols.packed_cache();
     assert_eq!(view[0].span_lo, 10);

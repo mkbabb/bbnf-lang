@@ -739,20 +739,16 @@ impl TapeBuilder {
     /// columns; useful in tests that want to inspect mid-build
     /// state. Sibling-skip is NOT computed on this snapshot — the
     /// authoritative path is [`Self::finish`].
+    ///
+    /// AY.W1.1 — flat-AoS substrate: the snapshot clones the
+    /// `records` AoS column + `sib_skip` parallel column + the three
+    /// payload columns. The `packed_cache` AoS sidecar is never
+    /// cloned; the snapshot starts with a fresh `OnceLock` so the
+    /// first reader on the snapshot re-transposes.
     pub fn tape_snapshot(&self) -> Tape {
-        // AX.W1.D — the AoS `packed_cache` sidecar is never cloned;
-        // the snapshot starts with a fresh `OnceLock` so the first
-        // reader on the snapshot re-transposes from its own SoA
-        // copy. The snapshot is a debug-only helper; a rebuild on
-        // first access is well under the snapshot's semantic cost.
         let mut columns = Columns::new();
-        columns.kinds = self.columns.kinds.clone();
-        columns.flags = self.columns.flags.clone();
-        columns.extra = self.columns.extra.clone();
-        columns.span_lo = self.columns.span_lo.clone();
-        columns.span_hi = self.columns.span_hi.clone();
+        *columns.records_mut() = self.columns.records().to_vec();
         columns.sib_skip = self.columns.sib_skip.clone();
-        columns.child_off = self.columns.child_off.clone();
         columns.pay_narrow = self.columns.pay_narrow.clone();
         columns.pay_wide = self.columns.pay_wide.clone();
         columns.pay_agg = self.columns.pay_agg.clone();

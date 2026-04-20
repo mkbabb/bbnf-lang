@@ -2497,12 +2497,13 @@ mod __bbnfbootstrap_emit_impl {
                     arena_off,
                     1,
                 );
-            let lhs_span_lo: u32 = builder
-                .columns()
-                .span_lo
-                .get(this_operand_root as usize)
-                .copied()
-                .unwrap_or(op_hi);
+            let lhs_span_lo: u32 = if (this_operand_root as usize)
+                < builder.columns().len()
+            {
+                builder.columns().span_lo_at(this_operand_root)
+            } else {
+                op_hi
+            };
             op_stack
                 .push(LocalOpEntry {
                     op_discriminant,
@@ -4171,12 +4172,13 @@ mod __bbnfbootstrap_emit_impl {
                     arena_off,
                     1,
                 );
-            let lhs_span_lo: u32 = builder
-                .columns()
-                .span_lo
-                .get(this_operand_root as usize)
-                .copied()
-                .unwrap_or(op_hi);
+            let lhs_span_lo: u32 = if (this_operand_root as usize)
+                < builder.columns().len()
+            {
+                builder.columns().span_lo_at(this_operand_root)
+            } else {
+                op_hi
+            };
             op_stack
                 .push(LocalOpEntry {
                     op_discriminant,
@@ -4380,12 +4382,13 @@ mod __bbnfbootstrap_emit_impl {
                     arena_off,
                     1,
                 );
-            let lhs_span_lo: u32 = builder
-                .columns()
-                .span_lo
-                .get(this_operand_root as usize)
-                .copied()
-                .unwrap_or(op_hi);
+            let lhs_span_lo: u32 = if (this_operand_root as usize)
+                < builder.columns().len()
+            {
+                builder.columns().span_lo_at(this_operand_root)
+            } else {
+                op_hi
+            };
             op_stack
                 .push(LocalOpEntry {
                     op_discriminant,
@@ -4589,12 +4592,13 @@ mod __bbnfbootstrap_emit_impl {
                     arena_off,
                     1,
                 );
-            let lhs_span_lo: u32 = builder
-                .columns()
-                .span_lo
-                .get(this_operand_root as usize)
-                .copied()
-                .unwrap_or(op_hi);
+            let lhs_span_lo: u32 = if (this_operand_root as usize)
+                < builder.columns().len()
+            {
+                builder.columns().span_lo_at(this_operand_root)
+            } else {
+                op_hi
+            };
             op_stack
                 .push(LocalOpEntry {
                     op_discriminant,
@@ -4798,12 +4802,13 @@ mod __bbnfbootstrap_emit_impl {
                     arena_off,
                     1,
                 );
-            let lhs_span_lo: u32 = builder
-                .columns()
-                .span_lo
-                .get(this_operand_root as usize)
-                .copied()
-                .unwrap_or(op_hi);
+            let lhs_span_lo: u32 = if (this_operand_root as usize)
+                < builder.columns().len()
+            {
+                builder.columns().span_lo_at(this_operand_root)
+            } else {
+                op_hi
+            };
             op_stack
                 .push(LocalOpEntry {
                     op_discriminant,
@@ -5007,12 +5012,13 @@ mod __bbnfbootstrap_emit_impl {
                     arena_off,
                     1,
                 );
-            let lhs_span_lo: u32 = builder
-                .columns()
-                .span_lo
-                .get(this_operand_root as usize)
-                .copied()
-                .unwrap_or(op_hi);
+            let lhs_span_lo: u32 = if (this_operand_root as usize)
+                < builder.columns().len()
+            {
+                builder.columns().span_lo_at(this_operand_root)
+            } else {
+                op_hi
+            };
             op_stack
                 .push(LocalOpEntry {
                     op_discriminant,
@@ -7824,12 +7830,13 @@ mod __bbnfbootstrap_emit_impl {
                     arena_off,
                     1,
                 );
-            let lhs_span_lo: u32 = builder
-                .columns()
-                .span_lo
-                .get(this_operand_root as usize)
-                .copied()
-                .unwrap_or(op_hi);
+            let lhs_span_lo: u32 = if (this_operand_root as usize)
+                < builder.columns().len()
+            {
+                builder.columns().span_lo_at(this_operand_root)
+            } else {
+                op_hi
+            };
             op_stack
                 .push(LocalOpEntry {
                     op_discriminant,

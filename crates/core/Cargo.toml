@@ -160,3 +160,8 @@ name = "bbnf_monolithic"
 path = "benches/bbnf/monolithic.rs"
 harness = false
 
+[[bench]]
+name = "twitter_lazy_field"
+path = "benches/twitter_lazy_field.rs"
+harness = false
+

@@ -22810,6 +22810,487 @@ mod __bbnfbootstrap_emit_impl {
             "grammar"
         }
     }
+    /// AY.W3b.1 — grammar-emitted value enum. Eager materialisation
+    /// target for `Parsed::to_value()`. Variants enumerate
+    /// non-transparent rules (TypeDesc-equivalence-class collapse
+    /// applied per the emitter); compound variants carry
+    /// child values in declaration order.
+    pub enum BbnfBootstrapValue<'p> {
+        int_lit(i64),
+        float_lit(f64),
+        bool_lit(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        string_lit(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        value_ident(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        value_path(&'p str),
+        value_input(&'p str),
+        value_fn_call(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        value_atom(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        mul_op(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        add_op(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        cmp_op(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        value_unary(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        value_mul(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        value_add(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        value_cmp(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        value_and(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        value_or(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        value_closure(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        value_expr(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        type_annotation(&'p str),
+        type_name(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        identifier(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        literal(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        regex(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        big_comment(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        comment(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        lhs(&'p str),
+        call_arg(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        term(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        modifier(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        factor(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        mapped_factor(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        binary_operators(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        binary_factor(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        concatenation(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        alternation(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        closure(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        rhs(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        rule(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        import_path(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        import_items(&'p str),
+        import_directive(&'p str),
+        recover_directive(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        pretty_hint(&'p str),
+        pretty_directive(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        ws_directive(&'p str),
+        token_directive(&'p str),
+        debug_directive(&'p str),
+        host_directive(&'p str),
+        directive(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        grammar_item(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        grammar(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        /// Fallback for records whose `variant_idx` is not a
+        /// known rule discriminator (recovered records, stray
+        /// sub-variant indices).
+        Unknown(BbnfBootstrapNodeView<'p>),
+    }
+    impl ::bbnf::runtime::ValueRoot for BbnfBootstrap {
+        type Value<'p> = BbnfBootstrapValue<'p>;
+        #[inline]
+        fn view_to_value<'p>(view: Self::View<'p>) -> Self::Value<'p>
+        where
+            Self: 'p,
+        {
+            let __node = BbnfBootstrapNodeView::from_cursor(view.cursor(), view.input());
+            materialize_value_BbnfBootstrap(__node)
+        }
+    }
+    /// AY.W3b.1 — shared path walker. Descends from `view` per
+    /// the given path, returning the narrowed NodeView on hit
+    /// or `None` when any step misses.
+    ///
+    /// `Field` steps match by comparing the child's source span
+    /// against the requested key; for object-like compounds the
+    /// key is the Span leaf at child index `2*i`, and the value
+    /// is at `2*i+1` (see per-grammar object materialisation).
+    /// `Index` steps select the `i`-th child directly.
+    ///
+    /// The walker intentionally treats every compound uniformly —
+    /// the emitter does not specialise per rule body today; the
+    /// binary-search packed-cache variant is a follow-on.
+    #[inline]
+    fn __path_walk<'p>(
+        view: BbnfBootstrapNodeView<'p>,
+        path: ::bbnf::runtime::Path<'_>,
+    ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+        let mut cur = view;
+        for seg in path.iter() {
+            match seg {
+                ::bbnf::runtime::PathSegment::Field(key) => {
+                    let mut it = cur.children();
+                    let mut found = None;
+                    loop {
+                        let k = match it.next() {
+                            Some(k) => k,
+                            None => break,
+                        };
+                        let v = match it.next() {
+                            Some(v) => v,
+                            None => break,
+                        };
+                        let raw = k.span_text();
+                        let key_text = if raw.as_bytes().first() == Some(&b'"')
+                            && raw.as_bytes().last() == Some(&b'"') && raw.len() >= 2
+                        {
+                            &raw[1..raw.len() - 1]
+                        } else {
+                            raw
+                        };
+                        if key_text == *key {
+                            found = Some(v);
+                            break;
+                        }
+                    }
+                    cur = match found {
+                        Some(v) => v,
+                        None => return None,
+                    };
+                }
+                ::bbnf::runtime::PathSegment::Index(i) => {
+                    cur = cur.child(*i)?;
+                }
+            }
+        }
+        Some(cur)
+    }
+    impl ::bbnf::runtime::PathQuery<&'static str> for BbnfBootstrap {
+        #[inline]
+        fn query<'p>(
+            view: Self::View<'p>,
+            path: ::bbnf::runtime::Path<'_>,
+        ) -> ::core::option::Option<&'static str>
+        where
+            Self: 'p,
+        {
+            let node = BbnfBootstrapNodeView::from_cursor(view.cursor(), view.input());
+            let _hit = __path_walk(node, path)?;
+            None
+        }
+    }
+    impl ::bbnf::runtime::PathQuery<f64> for BbnfBootstrap {
+        #[inline]
+        fn query<'p>(
+            view: Self::View<'p>,
+            path: ::bbnf::runtime::Path<'_>,
+        ) -> ::core::option::Option<f64>
+        where
+            Self: 'p,
+        {
+            let node = BbnfBootstrapNodeView::from_cursor(view.cursor(), view.input());
+            let hit = __path_walk(node, path)?;
+            let tape = hit.cursor().tape();
+            let rec = hit.cursor().record();
+            if let Some(v) = tape.payload_f64(rec) {
+                return Some(v);
+            }
+            hit.span_text().parse::<f64>().ok()
+        }
+    }
+    impl ::bbnf::runtime::PathQuery<bool> for BbnfBootstrap {
+        #[inline]
+        fn query<'p>(
+            view: Self::View<'p>,
+            path: ::bbnf::runtime::Path<'_>,
+        ) -> ::core::option::Option<bool>
+        where
+            Self: 'p,
+        {
+            let node = BbnfBootstrapNodeView::from_cursor(view.cursor(), view.input());
+            let hit = __path_walk(node, path)?;
+            let tape = hit.cursor().tape();
+            let rec = hit.cursor().record();
+            if let Some(v) = tape.payload_bool(rec) {
+                return Some(v);
+            }
+            match hit.span_text() {
+                "true" => Some(true),
+                "false" => Some(false),
+                _ => None,
+            }
+        }
+    }
+    /// AY.W3b.2 — object shape walker. Returns the compound's
+    /// children recursively materialised, ready for the root
+    /// dispatcher to wrap in its grammar-specific Compound variant.
+    #[inline(always)]
+    fn materialize_object_BbnfBootstrap<'p>(
+        view: BbnfBootstrapNodeView<'p>,
+    ) -> ::std::vec::Vec<BbnfBootstrapValue<'p>> {
+        let mut out: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
+            view.cursor().child_count().max(1) * 2,
+        );
+        for child in view.children() {
+            out.push(materialize_value_BbnfBootstrap(child));
+        }
+        out
+    }
+    /// AY.W3b.2 — array shape walker. Produces a
+    /// `Vec<<Grammar>Value>` of the compound's children in
+    /// declaration order.
+    #[inline(always)]
+    fn materialize_array_BbnfBootstrap<'p>(
+        view: BbnfBootstrapNodeView<'p>,
+    ) -> ::std::vec::Vec<BbnfBootstrapValue<'p>> {
+        let mut out: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
+            view.cursor().child_count(),
+        );
+        for child in view.children() {
+            out.push(materialize_value_BbnfBootstrap(child));
+        }
+        out
+    }
+    /// AY.W3b.2 — string (Span) materialiser. Zero-copy borrow
+    /// from the input slice.
+    #[inline(always)]
+    fn materialize_string_BbnfBootstrap<'p>(view: BbnfBootstrapNodeView<'p>) -> &'p str {
+        let tape = view.cursor().tape();
+        let rec = view.cursor().record();
+        if let Some((lo, hi)) = tape.payload_Span(rec) {
+            return &view.input()[lo as usize..hi as usize];
+        }
+        view.span_text()
+    }
+    /// AY.W3b.2 — number (f64) materialiser. Payload-first
+    /// read with a span-parse fallback.
+    #[inline(always)]
+    fn materialize_number_BbnfBootstrap<'p>(view: BbnfBootstrapNodeView<'p>) -> f64 {
+        let tape = view.cursor().tape();
+        let rec = view.cursor().record();
+        if let Some(v) = tape.payload_f64(rec) {
+            return v;
+        }
+        view.span_text().parse::<f64>().unwrap_or(0.0)
+    }
+    /// AY.W3b.2 — literal / keyword materialiser.
+    #[inline(always)]
+    fn materialize_literal_BbnfBootstrap<'p>(view: BbnfBootstrapNodeView<'p>) -> bool {
+        let tape = view.cursor().tape();
+        let rec = view.cursor().record();
+        if let Some(v) = tape.payload_bool(rec) {
+            return v;
+        }
+        view.span_text() == "true"
+    }
+    /// AY.W3b.2 — root value materialiser. Dispatches on
+    /// `rule_kind()` and constructs the grammar's
+    /// `<Grammar>Value` variant directly. Every per-shape fn
+    /// it calls is `#[inline(always)]`; this root is `#[inline]`
+    /// so the whole tree collapses into a single flat function
+    /// at the `parsed.to_value()` call site.
+    #[inline]
+    fn materialize_value_BbnfBootstrap<'p>(
+        view: BbnfBootstrapNodeView<'p>,
+    ) -> BbnfBootstrapValue<'p> {
+        match view.rule_kind() {
+            BbnfBootstrapRuleKind::int_lit => {
+                let tape = view.cursor().tape();
+                let rec = view.cursor().record();
+                let v: i64 = if let Some(v) = tape.payload_i64(rec) {
+                    v
+                } else {
+                    view.span_text().parse::<i64>().unwrap_or(0)
+                };
+                BbnfBootstrapValue::int_lit(v)
+            }
+            BbnfBootstrapRuleKind::float_lit => {
+                BbnfBootstrapValue::float_lit(materialize_number_BbnfBootstrap(view))
+            }
+            BbnfBootstrapRuleKind::bool_lit => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::bool_lit(children)
+            }
+            BbnfBootstrapRuleKind::string_lit => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::string_lit(children)
+            }
+            BbnfBootstrapRuleKind::value_ident => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::value_ident(children)
+            }
+            BbnfBootstrapRuleKind::value_path => {
+                BbnfBootstrapValue::value_path(materialize_string_BbnfBootstrap(view))
+            }
+            BbnfBootstrapRuleKind::value_input => {
+                BbnfBootstrapValue::value_input(materialize_string_BbnfBootstrap(view))
+            }
+            BbnfBootstrapRuleKind::value_fn_call => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::value_fn_call(children)
+            }
+            BbnfBootstrapRuleKind::value_atom => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::value_atom(children)
+            }
+            BbnfBootstrapRuleKind::mul_op => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::mul_op(children)
+            }
+            BbnfBootstrapRuleKind::add_op => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::add_op(children)
+            }
+            BbnfBootstrapRuleKind::cmp_op => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::cmp_op(children)
+            }
+            BbnfBootstrapRuleKind::value_unary => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::value_unary(children)
+            }
+            BbnfBootstrapRuleKind::value_mul => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::value_mul(children)
+            }
+            BbnfBootstrapRuleKind::value_add => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::value_add(children)
+            }
+            BbnfBootstrapRuleKind::value_cmp => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::value_cmp(children)
+            }
+            BbnfBootstrapRuleKind::value_and => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::value_and(children)
+            }
+            BbnfBootstrapRuleKind::value_or => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::value_or(children)
+            }
+            BbnfBootstrapRuleKind::value_closure => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::value_closure(children)
+            }
+            BbnfBootstrapRuleKind::value_expr => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::value_expr(children)
+            }
+            BbnfBootstrapRuleKind::type_annotation => {
+                BbnfBootstrapValue::type_annotation(
+                    materialize_string_BbnfBootstrap(view),
+                )
+            }
+            BbnfBootstrapRuleKind::type_name => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::type_name(children)
+            }
+            BbnfBootstrapRuleKind::identifier => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::identifier(children)
+            }
+            BbnfBootstrapRuleKind::literal => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::literal(children)
+            }
+            BbnfBootstrapRuleKind::regex => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::regex(children)
+            }
+            BbnfBootstrapRuleKind::big_comment => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::big_comment(children)
+            }
+            BbnfBootstrapRuleKind::comment => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::comment(children)
+            }
+            BbnfBootstrapRuleKind::lhs => {
+                BbnfBootstrapValue::lhs(materialize_string_BbnfBootstrap(view))
+            }
+            BbnfBootstrapRuleKind::call_arg => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::call_arg(children)
+            }
+            BbnfBootstrapRuleKind::term => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::term(children)
+            }
+            BbnfBootstrapRuleKind::modifier => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::modifier(children)
+            }
+            BbnfBootstrapRuleKind::factor => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::factor(children)
+            }
+            BbnfBootstrapRuleKind::mapped_factor => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::mapped_factor(children)
+            }
+            BbnfBootstrapRuleKind::binary_operators => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::binary_operators(children)
+            }
+            BbnfBootstrapRuleKind::binary_factor => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::binary_factor(children)
+            }
+            BbnfBootstrapRuleKind::concatenation => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::concatenation(children)
+            }
+            BbnfBootstrapRuleKind::alternation => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::alternation(children)
+            }
+            BbnfBootstrapRuleKind::closure => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::closure(children)
+            }
+            BbnfBootstrapRuleKind::rhs => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::rhs(children)
+            }
+            BbnfBootstrapRuleKind::rule => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::rule(children)
+            }
+            BbnfBootstrapRuleKind::import_path => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::import_path(children)
+            }
+            BbnfBootstrapRuleKind::import_items => {
+                BbnfBootstrapValue::import_items(materialize_string_BbnfBootstrap(view))
+            }
+            BbnfBootstrapRuleKind::import_directive => {
+                BbnfBootstrapValue::import_directive(
+                    materialize_string_BbnfBootstrap(view),
+                )
+            }
+            BbnfBootstrapRuleKind::recover_directive => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::recover_directive(children)
+            }
+            BbnfBootstrapRuleKind::pretty_hint => {
+                BbnfBootstrapValue::pretty_hint(materialize_string_BbnfBootstrap(view))
+            }
+            BbnfBootstrapRuleKind::pretty_directive => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::pretty_directive(children)
+            }
+            BbnfBootstrapRuleKind::ws_directive => {
+                BbnfBootstrapValue::ws_directive(materialize_string_BbnfBootstrap(view))
+            }
+            BbnfBootstrapRuleKind::token_directive => {
+                BbnfBootstrapValue::token_directive(
+                    materialize_string_BbnfBootstrap(view),
+                )
+            }
+            BbnfBootstrapRuleKind::debug_directive => {
+                BbnfBootstrapValue::debug_directive(
+                    materialize_string_BbnfBootstrap(view),
+                )
+            }
+            BbnfBootstrapRuleKind::host_directive => {
+                BbnfBootstrapValue::host_directive(
+                    materialize_string_BbnfBootstrap(view),
+                )
+            }
+            BbnfBootstrapRuleKind::directive => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::directive(children)
+            }
+            BbnfBootstrapRuleKind::grammar_item => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::grammar_item(children)
+            }
+            BbnfBootstrapRuleKind::grammar => {
+                let children = materialize_object_BbnfBootstrap(view);
+                BbnfBootstrapValue::grammar(children)
+            }
+            _ => BbnfBootstrapValue::Unknown(view),
+        }
+    }
     impl BbnfBootstrap {
         fn __int_lit_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,

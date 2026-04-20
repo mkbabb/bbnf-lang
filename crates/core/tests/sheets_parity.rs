@@ -78,18 +78,28 @@ fn parse_records(input: &str) -> Vec<(TapeKind, u8, u8, bool)> {
     out
 }
 
-/// Collect every typed-leaf record (Span or KvPair) with a 1-byte
-/// aggregate payload. The codegen uses `TapeKind::KvPair` for Alt-
-/// bodied rules with explicit `-> Nu8` annotations and
-/// `TapeKind::Span` for plain Span / single-discriminator paths.
+/// Collect every typed-leaf record (Span or KvPair) carrying a 1-byte
+/// payload. The codegen uses `TapeKind::KvPair` for Alt-bodied rules
+/// with explicit `-> Nu8` annotations and `TapeKind::Span` for plain
+/// Span / single-discriminator paths.
+///
+/// AY.W1.4: routed through `payload_u8` rather than
+/// `payload_bytes(rec, 1)` because the Pratt-emitter Option C inline
+/// switch landed the operator-discriminant byte in `pay_narrow`
+/// (`PayloadData::InlineScalar`) instead of `pay_agg` (the pre-AY
+/// `arena_mut().push + push_leaf_with_arena_payload` route). Both
+/// `add_op` / `mul_op` / `unary_prefix` Alt-as-KvPair records and the
+/// in-Pratt op-leaf Span records now carry their 1-byte discriminant
+/// via the inline-scalar column. `payload_u8` consults the
+/// `PAYLOAD_IN_ARENA_BIT` bit and fans out to the correct column.
 fn typed_u8_payloads(input: &str) -> Vec<(u8, u8)> {
     let parsed = SheetsParser::parse(input).expect("parse");
     let tape = parsed.tape();
     let mut out = Vec::new();
     for rec in tape.iter() {
         if (rec.kind() == TapeKind::Span || rec.kind() == TapeKind::KvPair) && rec.has_payload() {
-            if let Some(b) = tape.payload_bytes(rec, 1) {
-                out.push((rec.variant_idx(), b[0]));
+            if let Some(b) = tape.payload_u8(rec) {
+                out.push((rec.variant_idx(), b));
             }
         }
     }

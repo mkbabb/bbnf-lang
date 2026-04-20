@@ -10,6 +10,20 @@ This document is intentionally corrective. It does not propose quick fixes, benc
 
 AY is not closeable as written.
 
+The correct AY target is also narrower and sharper than the current tranche prose:
+
+- not “copy sonic-rs,”
+- not “copy simdjson,”
+- not “revive DTA,”
+- not “accumulate every interesting mechanism into one tranche.”
+
+The real target is a generalized hybrid architecture that absorbs:
+
+- sonic-rs-class direct hot-path construction,
+- simdjson-class explicit structural/skip semantics where they genuinely pay,
+- the repo’s own surviving research on mining, direct-to-struct, Pratt flattening, and structural side information,
+- while preserving one parser, one runtime substrate, and one grammar-derived mechanism surface.
+
 The tranche landed real work through W4:
 
 - W1 restored the flat AoS write path and materially recovered the post-AW floor.
@@ -56,6 +70,10 @@ The central lesson is simple:
 
 Optimize the executing parser, not the architecture sketch.
 
+The second lesson is equally important:
+
+Keep only the ideas that survive as general, grammar-derived mechanisms. Do not carry forward failed substrates as nostalgia projects.
+
 ## Why gains are still marginal
 
 Three reasons dominate.
@@ -74,14 +92,14 @@ But the default user-facing path is still:
 2. finish/finalize tape,
 3. walk/materialize from tape.
 
-That remains fundamentally different from sonic-rs, where the direct document/value path is primary.
+That remains fundamentally different from the best lessons of sonic-rs and simdjson, where the hot representation is primary rather than reconstructed after a generic intermediate.
 
 The repository’s own numbers show the consequence:
 
 - W3 eager twitter remains multiple times slower than sonic-rs,
 - the lazy lane is not actually matched work, because bbnf still parses the whole document first.
 
-### 2. The value/document layer is still compatibility-oriented
+### 2. The runtime substrate is still compatibility-oriented
 
 The current tape substrate is good enough as a parser substrate:
 
@@ -95,7 +113,7 @@ But the read/value side is still over-generalized:
 - finalization remains a meaningful second structural pass,
 - emitted `to_value()` paths still allocate `Vec<...>` compounds and dispatch through large grammar enums.
 
-That is acceptable for grammar/debug/view surfaces. It is not the optimal dominant representation for eager/lazy value APIs.
+That is acceptable for transitional compatibility. It is not the right canonical runtime if throughput dominates.
 
 ### 3. Optimization is staged, not globally informed
 
@@ -123,6 +141,17 @@ The current break is this:
 
 This means shared cost weights exist, but shared optimization does not.
 
+### 4. The current critique must be refined away from “be sonic”
+
+The correct standard is not “look like sonic-rs.”
+
+It is:
+
+- match or exceed sonic-rs-class hot-path discipline,
+- absorb simdjson-class structural indexing and skip semantics where they improve the single path,
+- absorb only the repo’s novel levers that are both general and empirically live,
+- reject everything else.
+
 ## What is wired, what is dead, and what is duplicated
 
 ### Wired and active
@@ -137,6 +166,7 @@ This means shared cost weights exist, but shared optimization does not.
 - Shape-dict mining/selection still runs, but the product boundary no longer carries a runtime/emitter consumer. That is wasted compile work and misleading architecture.
 - Visitor/direct-document infrastructure exists for JSON, but it is not the primary value path.
 - Backend kernel modules still appear underused from emitted JSON/CSS output.
+- Large parts of the old DTA/PSI conceptual stack survive only as historical ideas; they are not valid as runtime-first architecture in their old form.
 
 ### Duplicated or weakly coordinated
 
@@ -179,8 +209,8 @@ Close the correctness and surface-truth debt on the value/tape side:
 
 Run one integrated JSON-focused optimization pass over the actual bottleneck chain:
 
-- tape record count,
-- finalize burden,
+- canonical packed node layout,
+- write-time structure closure,
 - direct document/value construction,
 - string path,
 - number path,
@@ -209,11 +239,19 @@ Do not pivot back to legacy DTA.
 
 Do not split the system into orthogonal parse paths.
 
-The right path is a single RD/shape-emitted parser writing a single canonical packed substrate.
+Do not treat this as a direct sonic-rs port or a direct simdjson port.
+
+The right path is a generalized hybrid:
+
+- one RD/shape-emitted parser,
+- one canonical packed substrate,
+- one grammar-derived emitter architecture,
+- one optimization stack that chooses among general mechanisms,
+- many consumers reading the same output.
 
 That means:
 
-- one structural/dispatch front end,
+- one structural/dispatch front end, potentially with explicit structural side information where profitable,
 - one shape-emitted recursive-descent parse,
 - one write target,
 - many consumers layered on the same output.
@@ -231,6 +269,12 @@ The current tape is still too generic:
 That is the wrong bias if throughput dominates all other concerns.
 
 The canonical substrate should instead be a packed parse/value/view substrate that the parser writes directly once.
+
+Its design should be informed by three families of ideas:
+
+- sonic-rs: direct hot-path construction, borrowed-string fast path, per-shape monomorphised emission,
+- simdjson: explicit subtree/skip/count semantics and structural-stage leverage,
+- bbnf-native research: grammar-derived direct-to-struct, Pratt flattening, structural mining, and any PSI/DTA-era insight that still survives as a profitable general emitter mechanism.
 
 ### Canonical packed substrate
 
@@ -251,9 +295,28 @@ Properties:
 - direct scalar payload storage in final hot form,
 - borrowed-or-arena string storage,
 - object-as-key/value run layout,
+- optional structural side tables or compact indices only where they improve the same runtime path rather than introduce a second one,
 - enough stable structural metadata that debug UX, replay, and incremental work read the same substrate rather than demanding a second one.
 
 This should replace the current “generic tape first, value/view second” bias. It should not coexist as a separate dominant path.
+
+### Generality invariant
+
+This architecture must remain fully grammar-derived.
+
+The rules are:
+
+- BBNF grammars are the sole source of semantic and structural information within reason.
+- The host/type/projection system may enrich that information, but not replace it with hand-authored grammar-specific parser logic.
+- No hand-written JSON-only or CSS-only semantic parser path becomes the real product.
+- Every mechanism must be expressible as a general emitter/miner/projection decision driven by IR, type inference, recognizer facts, or grammar-declared structure.
+
+That means:
+
+- direct-to-struct must become a true grammar-derived projection mechanism,
+- Pratt flattening must be a general operator-shape lowering/emission path,
+- structural side information must be mined from grammar/IR facts,
+- any SIMD/string/number specialization must be admitted by recognizer/type facts, not hand-routed by grammar name.
 
 ### Consumer model
 
@@ -279,8 +342,9 @@ That means:
 - keep the single parser entry path,
 - replace the current general-purpose tape contract with a stricter packed substrate contract,
 - preserve whatever provenance/debug metadata is needed for future UX and incremental work inside or alongside that same substrate.
+- reject any “temporary” architecture that becomes a second real runtime.
 
-## Sonic-rs / simdjson lessons to actually absorb
+## Sonic-rs / simdjson / bbnf-native lessons to actually absorb
 
 The useful lessons are not “copy their tape.”
 
@@ -292,6 +356,23 @@ They are:
 - keep object/array skip information explicit,
 - store enough structural truth once so lazy, eager, view, and debug consumers do not rebuild it.
 
+And from the repo’s own research:
+
+- retain only the DTA/PSI ideals that can be recast as profitable single-path mechanisms,
+- exploit direct-to-struct where type inference/projection can prove the layout,
+- flatten Pratt/operator structures where grammar facts make the emitted path simpler and hotter,
+- use structural mining and recognizer facts to select mechanisms globally rather than bolting them on locally.
+
+The failed parts matter too:
+
+- old DTA as the dominant runtime path did not justify its dispatch/interpretation cost,
+- PSI as a broad architectural center did not pay for itself,
+- substrate-without-consumer landings repeatedly hid regression behind mechanism count.
+
+So the rule is:
+
+salvage the ideals, not the substrate.
+
 Applied here, that means:
 
 - stop making `packed_cache` a transpose cache and either promote or replace it with the canonical packed node layout,
@@ -299,8 +380,42 @@ Applied here, that means:
 - stop paying finalize work when shape emission already knows enough to write close-time structure directly,
 - stop proliferating payload columns that no hot consumer scans directly,
 - stop treating tape-to-value reconstruction as an acceptable steady-state hot path.
+- stop treating DTA/PSI history as an all-or-nothing decision; keep only the parts that strengthen the one canonical path.
 
 `pay_f64` is a good cautionary example: a specialization is only good if it shortens a real consumer path. If it only creates another routing distinction, it is negative information density.
+
+### What to salvage from DTA / PSI
+
+Only the following class of ideas remains defensible:
+
+- explicit structural side information when it lowers cost on the same path,
+- mined dispatch/precedence/shape facts that let the emitter choose hotter code,
+- replay/debug metadata that reads the same canonical substrate,
+- grammar-wide structural observations that improve skip/seek/object/array handling.
+
+What should not return:
+
+- an interpreter-shaped dominant hot path,
+- a second runtime substrate justified only by “future tooling,”
+- generic PSI payload streams on the hot path when the packed substrate can store final-form values directly.
+
+### Pratt flattening and direct-to-struct
+
+These should become first-class AY levers, but only as general mechanisms.
+
+Pratt:
+
+- not a special Sheets trick,
+- not a grammar-name admission,
+- but a general operator-shape lowering and packed emission strategy driven by grammar facts.
+
+Direct-to-struct:
+
+- not a sidecar novelty,
+- not a view-only convenience,
+- but the grammar-derived projection mechanism that lets the canonical substrate store typed structure directly where inference/projection proves it safe.
+
+Both are central because they reduce reconstruction work while preserving grammar authorship as the semantic source.
 
 ## What to do with CSP, e-graph, and structural mining
 
@@ -319,6 +434,7 @@ Concretely:
 - unify compile-scoped optimization objective data across grammar extraction, regex extraction, strategy CSP, and backend inline analysis,
 - either make the e-graph scheduler truly dirty-search-aware or simplify it,
 - either reintroduce a real shape-dict consumer or delete the pass.
+- make direct-to-struct, Pratt flattening, and structural-side-information decisions participants in the same global objective rather than isolated post-hoc refinements.
 
 ## What to descale or move out of AY critical path
 

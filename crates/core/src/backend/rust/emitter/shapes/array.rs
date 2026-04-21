@@ -187,13 +187,32 @@ fn emit_parse_array_wrapped(
                 });
             }
 
-            // Outer compound: Skip(Next("[", rest), "]") — the array rule itself.
-            // Walker variant_idx comes from the Ref's pending stamp = rule.id & 0xFF.
-            let outer_child = builder.mark_children();
+            // AY.W5.2 — pre-order emission via open_compound. Every
+            // compound this shape emits lands write-time with
+            // `close_compound` back-patching span_hi / child_off /
+            // HAS_CHILDREN on the parent row and stamping each direct
+            // child's SIB_SKIP_STAMPED_BIT. Value calls inside the loop
+            // either emit leaves or nested pre-order subtrees; both
+            // participate in the open-frame's push hook automatically.
+            //
+            // Outer compound: Skip(Next("[", rest), "]") — the array
+            // rule itself. Variant_idx comes from the Ref's pending
+            // stamp = rule.id & 0xFF.
+            let outer_off = builder.open_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                span_lo,
+                #variant_idx,
+                0,
+            );
 
-            // Inner Next compound: Next("[", OptionalWhitespace(Repeat(...)))
+            // Inner Next compound: Next("[", OptionalWhitespace(Repeat(...))).
             let lbracket_open = *p as u32;
-            let next_child = builder.mark_children();
+            let next_off = builder.open_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                lbracket_open,
+                0,
+                0,
+            );
 
             // Leaf: "[" Literal (payload-less; TapeKind::Literal per
             // walker). Walker stamps variant_idx from the enclosing
@@ -214,49 +233,36 @@ fn emit_parse_array_wrapped(
 
             // OptionalWhitespace Seq compound — contains the Repeat.
             let opt_ws_open = *p as u32;
-            let opt_ws_child = builder.mark_children();
+            let opt_ws_off = builder.open_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                opt_ws_open,
+                0,
+                0,
+            );
 
             // Leading whitespace trim.
             let _ = #support_mod::skip_space(input, p, state);
             let repeat_open = *p as u32;
 
             // Repeat compound — one per rule invocation, regardless of iterations.
-            let repeat_child = builder.mark_children();
+            let repeat_off = builder.open_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_open,
+                0,
+                0,
+            );
 
             // Fast-empty check: `]` immediately closes everything.
             let maybe_close = input.get(*p).copied();
             if maybe_close == Some(b']') {
                 // Close Repeat (no iterations), OptionalWhitespace, Next, outer.
                 let repeat_close = *p as u32;
-                let _repeat_off = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    repeat_child,
-                    repeat_open,
-                    repeat_close,
-                    0,
-                    0,
-                );
+                builder.close_compound(repeat_off, repeat_close);
                 let opt_ws_close = *p as u32;
-                let _opt_ws_off = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Seq,
-                    opt_ws_child,
-                    opt_ws_open,
-                    opt_ws_close,
-                    0,
-                    0,
-                );
-                let next_close = *p as u32;
-                let _next_off = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Seq,
-                    next_child,
-                    lbracket_open,
-                    next_close,
-                    0,
-                    0,
-                );
+                builder.close_compound(opt_ws_off, opt_ws_close);
                 // Consume the ].
                 *p += 1;
-                let rbracket_lo = next_close;
+                let rbracket_lo = opt_ws_close;
                 let rbracket_hi = *p as u32;
                 let _ = builder.push_leaf_with(
                     ::bbnf::runtime::tape::TapeKind::Literal,
@@ -266,15 +272,10 @@ fn emit_parse_array_wrapped(
                     0,
                     ::bbnf::runtime::tape::PayloadData::None,
                 );
+                let next_close = rbracket_hi;
+                builder.close_compound(next_off, next_close);
                 let outer_close = *p as u32;
-                let outer_off = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Seq,
-                    outer_child,
-                    span_lo,
-                    outer_close,
-                    #variant_idx,
-                    0,
-                );
+                builder.close_compound(outer_off, outer_close);
                 return Ok(outer_off);
             }
 
@@ -299,7 +300,12 @@ fn emit_parse_array_wrapped(
             //    NOT in the Repeat compound span, NOT in any iter Seq span.
             loop {
                 let iter_open = *p as u32;
-                let iter_child = builder.mark_children();
+                let iter_off = builder.open_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    iter_open,
+                    0,
+                    0,
+                );
 
                 // AW-V.W5.2 — per-Ref direct call when classified.
                 #value_call
@@ -311,7 +317,12 @@ fn emit_parse_array_wrapped(
                 // at arm entry; there is no OW between `value` and
                 // `Repeat(comma)` in the iter-body IR.
                 let comma_repeat_open = *p as u32;
-                let comma_repeat_child = builder.mark_children();
+                let comma_repeat_off = builder.open_compound(
+                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    comma_repeat_open,
+                    0,
+                    0,
+                );
 
                 // Attempt one iter of comma_repeat. Iter body is
                 // `Seq[leading WsTrim, Literal(","), trailing WsTrim]`.
@@ -326,7 +337,12 @@ fn emit_parse_array_wrapped(
                     // WsTrim (same shape as the walker's Seq-wrapper for
                     // `OptionalWhitespace(Literal(","))`).
                     let comma_iter_open = comma_iter_save_p as u32;
-                    let comma_iter_child = builder.mark_children();
+                    let comma_iter_off = builder.open_compound(
+                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        comma_iter_open,
+                        0,
+                        0,
+                    );
                     let comma_lo = *p as u32;
                     *p += 1;
                     let comma_hi = *p as u32;
@@ -341,41 +357,19 @@ fn emit_parse_array_wrapped(
                     // Trailing WsTrim inside the comma Seq.
                     let _ = #support_mod::skip_space(input, p, state);
                     let comma_iter_close = *p as u32;
-                    let _ = builder.push_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
-                        comma_iter_child,
-                        comma_iter_open,
-                        comma_iter_close,
-                        0,
-                        0,
-                    );
+                    builder.close_compound(comma_iter_off, comma_iter_close);
                 } else {
                     // Walker-parity rollback: on comma-iter failure,
                     // handle_repeat_failure restores `*pos = sp.pos` = the
                     // iter's saved entry position. No records have been
-                    // pushed (mark_children is just a length marker, not
-                    // a commit), so just reset `*p`.
+                    // pushed — just reset `*p`.
                     *p = comma_iter_save_p;
                 }
                 let comma_repeat_close = *p as u32;
-                let _ = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    comma_repeat_child,
-                    comma_repeat_open,
-                    comma_repeat_close,
-                    0,
-                    0,
-                );
+                builder.close_compound(comma_repeat_off, comma_repeat_close);
 
                 let iter_close = *p as u32;
-                let _ = builder.push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Seq,
-                    iter_child,
-                    iter_open,
-                    iter_close,
-                    0,
-                    0,
-                );
+                builder.close_compound(iter_off, iter_close);
 
                 // Decide continue vs close without consuming ws. The walker's
                 // outer Repeat re-enters the value Ref; its ByteDispatch fails
@@ -397,25 +391,11 @@ fn emit_parse_array_wrapped(
                 if !is_value_start {
                     // Close Repeat at current *p (BEFORE OW-Seq trailing ws).
                     let repeat_close = *p as u32;
-                    let _ = builder.push_compound(
-                        ::bbnf::runtime::tape::TapeKind::Rule,
-                        repeat_child,
-                        repeat_open,
-                        repeat_close,
-                        0,
-                        0,
-                    );
+                    builder.close_compound(repeat_off, repeat_close);
                     // OW-Seq trailing WsTrim: advance past ws.
                     let _ = #support_mod::skip_space(input, p, state);
                     let opt_ws_close = *p as u32;
-                    let _ = builder.push_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
-                        opt_ws_child,
-                        opt_ws_open,
-                        opt_ws_close,
-                        0,
-                        0,
-                    );
+                    builder.close_compound(opt_ws_off, opt_ws_close);
                     // Expect "]"; anything else (EOF, garbage) is a
                     // well-formed error identical to the walker's path
                     // (Skip's RHS literal mismatches).
@@ -431,35 +411,21 @@ fn emit_parse_array_wrapped(
                             },
                         });
                     }
-                    let next_close = *p as u32;
-                    let _ = builder.push_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
-                        next_child,
-                        lbracket_open,
-                        next_close,
-                        0,
-                        0,
-                    );
                     // Consume "]".
                     *p += 1;
                     let rbracket_hi = *p as u32;
                     let _ = builder.push_leaf_with(
                         ::bbnf::runtime::tape::TapeKind::Literal,
-                        next_close,
+                        opt_ws_close,
                         rbracket_hi,
                         #variant_idx,
                         0,
                         ::bbnf::runtime::tape::PayloadData::None,
                     );
+                    let next_close = rbracket_hi;
+                    builder.close_compound(next_off, next_close);
                     let outer_close = *p as u32;
-                    let outer_off = builder.push_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
-                        outer_child,
-                        span_lo,
-                        outer_close,
-                        #variant_idx,
-                        0,
-                    );
+                    builder.close_compound(outer_off, outer_close);
                     return Ok(outer_off);
                 }
                 // Continue: next iter's dispatcher call handles its own

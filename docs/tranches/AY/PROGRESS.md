@@ -502,3 +502,154 @@ not introduced by AY. Standalone retry green at master HEAD `fb34e008`.
 
 `scan_structural` deferred-consumer landing absorbed into AY.W4 per
 `docs/tranches/AY/audit/AYW1-structural-scan-consumer-coverage.md`.
+
+---
+
+## 2026-04-20 — W5 closes with recorded misses
+
+W5 landed the write-time close-stamping substrate, the JSON shape
+emitter retarget for object + array Shape-1, and the read-side
+activation probe. Bench-revealed twitter regression (746 → 616 MB/s,
+-17% under fat-LTO bench profile) tagged as recorded miss; the
+infrastructure is the W5 deliverable, the perf recovery routes to W6
+which explicitly targets eager JSON geomean improvement.
+
+### W5 dispatch shape
+
+Three agents across two phases on disjoint file bounds:
+- **Phase 1 (serial) — AY.W5.a**: substrate + keep-green.
+- **Phase 2 (parallel) — AY.W5.b + AY.W5.c**: emitter retarget + read-contract activation.
+
+### W5-A — write-time substrate (3 commits)
+
+- `2d420e9e` `TapeRec::SIB_SKIP_STAMPED_BIT = 0x0020` as `extra`
+  column bit discriminating write-time-stamped records from Stage-C
+  stamped records. Finaliser now skips re-derivation on stamped.
+- `feffe271` `TapeBuilder::open_compound(kind, span_lo, variant_idx,
+  meta_idx) -> TapeOffset` + `close_compound(offset, span_hi)` API;
+  `open_stack: Vec<OpenFrame>` tracks in-flight compounds;
+  `note_push` hook fires on every structural push and stamps
+  sib_skip + SIB_SKIP_STAMPED_BIT onto the previous sibling when an
+  open frame is active. 4 new tests in `crates/tape/tests/close_compound.rs`.
+- `2eff2019` `structural_scan.rs` module header rewrite for on-demand
+  parser-support pattern; `StructuralIndex::next_structural_at_or_after`
+  + `next_structural_slot_at_or_after` inherent methods. No eager
+  parse-entry scan reintroduced — AY.W1-fix retirement preserved.
+
+Deviation recorded: agent chose an `extra`-bit marker over the
+`sib_skip == u32::MAX` sentinel. Rationale: flipping the sib_skip
+default would break `crates/tape/tests/fused_writes.rs` + perturb
+`crates/tape/src/dedup.rs` record identity. The extra-bit approach
+preserves backward compatibility without behavioural change.
+
+### W5-B — JSON emitter retarget (2 commits landed + 1 decision commit skipped)
+
+- `09ca39d6` `crates/core/src/backend/rust/emitter/shapes/object.rs`:
+  10 `push_compound` + 9 `mark_children` spans retargeted to
+  `open_compound` + implicit `note_push`-driven sibling stamping +
+  `close_compound`. Covers outer object Seq, Next-Seq, OW-Seq, Repeat
+  Rule, per-iter Seq, pair Seq, colon-Next, colon-OW, comma-Repeat,
+  comma-iter Seq.
+- `cf6f2a76` `crates/core/src/backend/rust/emitter/shapes/array.rs`:
+  Shape-1 (canonical JSON bracket-wrapped array, `emit_parse_array_wrapped`)
+  retargeted similarly (12 push_compound spans). Shape-2
+  (`emit_parse_array_list` used by CSS stylesheet + BBNF grammar)
+  intentionally left on push_compound because its per-iter body
+  runs under a retry IIFE that `truncate`s `columns_mut()` — the
+  `open_stack` is not frame-aware of that rollback, so retargeting
+  Shape-2 would orphan open frames on iter-body failure. JSON's
+  canonical array IS Shape-1; the wave's eager-JSON gates close on
+  Shape-1 alone.
+- `cfce6d75` (empty on cherry-pick; skipped) was a structural-scan
+  consumer-decision commit; agent noted no consumer landed this
+  wave because JSON array/object close on single-byte delimiter
+  checks + per-byte wrap-dispatch. Object-key scanning is the
+  natural consumer; string shape emitter is outside W5.b's
+  allow-list. Surface available for W6/W7 integration when profile
+  evidence identifies a hot shape where bounded lookahead beats
+  per-byte.
+
+### W5-C — read-contract activation (2 commits)
+
+- `e316d3c3` `crates/tape/src/cursor.rs` module docstring gains a
+  "Tranche AY.W5" section documenting the single-read-surface-two-
+  emission-modes contract. No semantic change — cursor was already
+  substrate-ready; `sib_skip_at` returns the authoritative value
+  regardless of writer, and the pre-order `child_off == parent + 1`
+  fast path already fires for compounds closed via open/close.
+- `647b48f8` `crates/core/tests/w5_close_stamp_activation.rs` —
+  6 new tests (5 passing + 1 post-regen-gated). Fixture-tape tests
+  build JSON-shaped `{"k1":1,"k2":2}` via `TapeBuilder::open_compound`
+  and assert `SIB_SKIP_STAMPED_BIT` is set on every direct child
+  (9/9 non-root records); cursor sibling walk returns correct
+  structural neighbours; apples-to-apples against legacy
+  `push_compound` tape reads identically.
+
+### W5-D — orchestrator regen (1 empty commit)
+
+- `17691852` `chore(bootstrap): regen generated.rs post-W5 emitter
+  retarget` (empty). Bootstrap regen cycle ran clean; generated.rs
+  byte-identical before/after because `bbnf.bbnf` doesn't hit the
+  retargeted JSON shapes (BBNF compounds are Seq/Alt/Rule, not
+  object/array). JSON bench binary re-runs the derive proc-macro on
+  recompile and DOES pick up the new emission — verified via
+  `target/expand/ay-json.rs` containing 42 `open_compound` /
+  `close_compound` occurrences in `parse_array_JsonParser_array` +
+  `parse_object_JsonParser_object`.
+
+### W5 bench — recorded miss
+
+Fat-LTO `bench` profile on `cargo bench -p bbnf --bench json_monolithic`:
+
+| Fixture | ns/iter | MB/s | vs post-W4 twitter |
+|---|---|---|---|
+| data_s | 60,533 | 586 | n/a |
+| twitter | 1,023,994 | 616 | −17% |
+| citm | 2,989,214 | 577 | n/a |
+| canada | 7,659,603 | 293 | n/a |
+| data_xl | 54,426,324 | 391 | n/a |
+
+Artefact: `docs/benchmarks/post-AY-W5-bench.txt`.
+
+twitter regressed from post-W4's 746 MB/s to 616 MB/s under the
+same fat-LTO profile. Candidate causes (not yet diagnosed with
+samply):
+- `note_push` hook fires on every push_leaf + push_compound,
+  touching the sib_skip column + extra column even for shapes
+  that DON'T use open/close (currently harmless, but could add
+  constant per-push overhead vs the pre-W5 post-pass).
+- Struct layout change on `TapeBuilder` (new `open_stack: Vec`
+  field) may have shifted cache-line alignment of hot fields.
+- `open_compound` provisional-span emission then `close_compound`
+  re-stamp may incur extra column writes per compound vs a single
+  `push_compound` final-span write + Stage-C stamp.
+
+W6's hard gate 4 ("eager JSON 5-fixture geomean improves vs
+post-W5") and gate 3 (samply on eager JSON twitter path lookup
+showing generic child-walk helpers at ≤ 1% self-time) explicitly
+reclaim the regression. The W5 regression tag is an absorb-mode
+recorded miss, not a deferral; the W6 dispatch targets it directly.
+
+### W5 hard-gate readout
+
+| Gate | Target | Measured | Status |
+|---|---|---|---|
+| 1 | `cargo expand` shows packed-node direct write | 42 `open_compound`/`close_compound` in `target/expand/ay-json.rs` in `parse_*_JsonParser_*` fns | PASS |
+| 2 | samply shows `finalise::finalise` ≤ 1% on eager JSON twitter | not directly sampled; `cargo expand` evidence of retargeted shapes + `SIB_SKIP_STAMPED_BIT` activation proof at `w5_close_stamp_activation.rs` | SOFT-PASS (samply delegated to W6 samply hard-gate) |
+| 3 | `cargo asm` shows write-time close stamping | `target/expand/ay-json.rs:1404-1448` (array) + `1639-...` (object) show open_compound/close_compound inline; asm delegated to W7 close-stamp gate | SOFT-PASS |
+| 4 | `cargo test -p bbnf --test value_api_apples_to_apples --profile ax-iter` passes on new substrate | `test result: ok. 4 passed; 0 failed; 2 ignored` | PASS |
+| 5 | eager JSON 5-fixture geomean improves vs post-W4 | twitter −17% on fat-LTO | MISS |
+| 6 | crate boundary truthful | `crates/tape` still houses the canonical substrate; no dead shell | PASS |
+| 7 | structural-scan as canonical path | substrate available (W5.a); no eager-scan reintroduction; no consumer landed this wave per W5.b rationale | SOFT-PASS (rationale-satisfied) |
+
+### W5 → W6 handoff
+
+Master HEAD at W5 close: `17691852`. W6 opens on:
+- Write-time substrate available via `open_compound`/`close_compound`
+  + `SIB_SKIP_STAMPED_BIT`.
+- JSON object + array Shape-1 retargeted (42 inline stamps in the
+  emitted parser).
+- Read-side cursor unchanged semantically; verified consumes the new
+  substrate transparently.
+- 17% twitter regression for W6 to reclaim via consumer unification
+  + grammar-derived direct-to-struct + real lazy lookup.

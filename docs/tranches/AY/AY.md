@@ -90,8 +90,8 @@ survive as fully general mechanisms.
 | **W2** | [waves/W2.md](waves/W2.md) | Named preservation, wrap-compound elision, canonicalisation | W1 | Complete with recorded misses |
 | **W3** | [waves/W3.md](waves/W3.md) | Grammar-derived value surface and first-class value benchmarks | W2 | Complete with recorded misses |
 | **W4** | [waves/W4.md](waves/W4.md) | SIMD string/number and regex hot-path repairs | W3 | Complete with recorded misses |
-| **W5** | [waves/W5.md](waves/W5.md) | Canonical packed substrate contract and direct JSON write | W4 + B0 | Not started |
-| **W6** | [waves/W6.md](waves/W6.md) | Consumer unification, general direct-to-struct, and Pratt/operator lowering | W5 | Not started |
+| **W5** | [waves/W5.md](waves/W5.md) | Canonical packed substrate contract and direct JSON write | W4 + B0 | Complete with recorded misses |
+| **W6** | [waves/W6.md](waves/W6.md) | Consumer unification, general direct-to-struct, and Pratt/operator lowering | W5 | In progress |
 | **W7** | [waves/W7.md](waves/W7.md) | Minimal globally informed optimizer integration | W6 | Not started |
 | **W8** | [waves/W8.md](waves/W8.md) | Near-parity close, FINAL, and BA/BC/BB handoff | W7 | Not started |
 

@@ -1,0 +1,14 @@
+# AY.W5 close bench — json_monolithic, fat-LTO bench profile
+# HEAD: 17691852 (post-W5.a substrate + W5.b emitter retarget + W5.c read-contract)
+# 2026-04-20
+
+test canada  ... bench:   7,659,603 ns/iter (+/- 606,783) = 293 MB/s
+test citm    ... bench:   2,989,214 ns/iter (+/- 258,785) = 577 MB/s
+test data_s  ... bench:      60,533 ns/iter (+/- 6,807)   = 586 MB/s
+test data_xl ... bench:  54,426,324 ns/iter (+/- 1,918,394) = 391 MB/s
+test twitter ... bench:   1,023,994 ns/iter (+/- 59,169)  = 616 MB/s
+
+# post-AY-W4 reference (from AY/PROGRESS.md §W4):
+# twitter: 746 MB/s
+# canada:  not cited; numeric column missing from W4 close doc
+# W5 delta: twitter -17% (regression)

@@ -12,8 +12,9 @@ mechanisms that preserve the one-substrate model.
 
 1. **BA starts from a correct substrate.** It does not redefine the
    runtime contract landed in AY.
-2. **BA is where exceedance lives.** Any attempt to beat peers or scale
-   materially beyond AY belongs here, not back in AY.
+2. **BA is where exceedance lives after parity.** Any attempt to beat
+   peers materially beyond AY's declared close gates belongs here, not
+   in AZ and not as a hedge against unfinished AY parity work.
 3. **Generality is preserved.** Every exceedance mechanism remains
    grammar-derived and BBNF-led.
 4. **Same-path accelerants only.** BA may add stronger dispatch,
@@ -37,6 +38,8 @@ mechanisms that preserve the one-substrate model.
    path proves it can absorb the cost cleanly.
 5. BA retirements are explicit: dead or weak accelerants are deleted,
    not left dormant.
+6. BA does not inherit unfinished AY parity debt. If AY still needs a
+   runtime change to hit its own close gates, AY is not closed.
 
 ## Wave summary
 

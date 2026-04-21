@@ -49,6 +49,8 @@ survive as fully general mechanisms.
     parity closure.
 11. Any runtime work required to hit `W8` stays in AY; it does not get
     deferred into BA, BB, or an annex.
+12. Crate/module names have no protection. If `crates/tape` no longer
+    houses the canonical substrate honestly, it is renamed or deleted.
 
 ## Operational posture
 
@@ -62,7 +64,10 @@ survive as fully general mechanisms.
    CSS-only, or Sheets-only handwritten semantic paths.
 5. The only pre-AY support tranche is `B0`, and it may touch only the
    command/profile/bench runway required to execute `W5-W7` rapidly.
-6. When a lever does not prove out, it is documented in AY and routed
+6. Structural-side accelerants are judged on same-path global benefit.
+   If a structural index or scan does not become a real shared hot-path
+   consumer, it is deleted rather than preserved as substrate lore.
+7. When a lever does not prove out, it is documented in AY and routed
    cleanly to AZ/BA/BB at tranche close rather than left as a dead
    surface.
 

@@ -40,6 +40,9 @@ bounded feature-off cost.
    replay surfaces, not bespoke trace models.
 5. Any AZ refinement that materially improves throughput rather than
    tooling ergonomics routes to BA at tranche close.
+6. AZ is not the exceedance tranche. Throughput wins discovered here
+   are routed out precisely so replay/debug/incremental work does not
+   become another mixed-concern performance tranche.
 
 ## Wave summary
 

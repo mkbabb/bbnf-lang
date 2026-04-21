@@ -204,6 +204,13 @@ The corrective action is:
 - close that annex quickly,
 - then execute `AY.W5-W8` without allowing runtime work to drift back out into tooling tranches.
 
+Two further corrections are required:
+
+- crate names get no privilege: if `crates/tape` stops being the honest
+  home of the canonical substrate, it should be absorbed or deleted;
+- structural scan should not persist as a niche sidecar: it must become
+  a real same-path global consumer surface or be deleted.
+
 ## Proper path forward for AY
 
 AY should not proceed as “W5/W6/W8 then W7 theatrics.”

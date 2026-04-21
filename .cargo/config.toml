@@ -85,3 +85,14 @@ expand-sheets = "expand -p bbnf --bench google_sheets_monolithic"
 # verification). Callers append `--bench <name> <fn>`, e.g.
 # `cargo asm-parse --bench json_monolithic json::close_compound`.
 asm-parse = "asm -p bbnf --profile release"
+
+# B0.W1.a — profile-tier aliases.
+# `cargo prep-bench -p bbnf --bench <name>` builds a samply-able bench
+# binary under target/profiling-prep/ without running it; reach for it
+# when preparing a wave's samply captures (expand/asm/samply stages
+# reuse the same binary).
+prep-bench = "bench --profile profiling-prep --no-run"
+# `cargo final-bench -p bbnf --bench <name>` runs the fat-LTO
+# publish-grade bench; reach for it at AY.W5-W7 hard-gate close, not in
+# iteration loops.
+final-bench = "bench --profile bench"

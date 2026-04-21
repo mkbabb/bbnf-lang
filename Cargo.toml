@@ -3,6 +3,28 @@ members = ["crates/core", "crates/derive", "crates/analysis", "crates/ir", "crat
 exclude = ["wasm"]
 resolver = "2"
 
+# ─── Profile tiers (B0.W1.a) ────────────────────────────────────────────
+#
+# Three intentional tiers cover routine iteration, profiling preparation,
+# and final-proof numerics. Do not cross-wire them — each tier has a
+# distinct cost model and a distinct consumer.
+#
+#   Routine        → `ax-iter`        compile-gate / non-samply tests;
+#                                     inherits dev, strips DWARF, fast link.
+#   Profiling-prep → `profiling-prep` build bench/test binaries once for
+#                                     repeatable samply capture; inherits
+#                                     release + re-asserts DWARF invariants
+#                                     that samply symbol resolution needs
+#                                     (see docs/instructions/PROFILING.md
+#                                     §Samply invocation rules).
+#   Final-proof    → `bench`          fat LTO publish-grade numerics;
+#                                     AY.W5-W7 close gates run here.
+#
+# `release` remains the baseline for non-bench binaries; the three tiers
+# above are what AY iteration, profiling, and final-proof actually hit.
+#
+# ────────────────────────────────────────────────────────────────────────
+
 [profile.release]
 lto = "thin"
 codegen-units = 1
@@ -21,6 +43,30 @@ split-debuginfo = "packed"
 lto = "fat"
 codegen-units = 1
 debug = true
+
+# B0.W1.a — profiling-prep profile. Build bench/test binaries once,
+# samply them many times, match final-proof numerics. Intent: reusable
+# prepared binaries for AY.W5-W7 samply gates without paying the fat-LTO
+# cost of `[profile.bench]` on every capture.
+#
+# Inherits `release` (thin LTO, codegen-units=1). The three keys below
+# are load-bearing and re-stated explicitly even though `release` already
+# sets them — profile provenance is part of the discipline, and samply
+# symbol resolution depends on every one:
+#   debug = true             → DWARF emitted so samply resolves frames
+#                              (feedback_samply_symbols: samply needs
+#                              debug=true to name hot-path symbols).
+#   strip = false            → DWARF survives the link step; otherwise
+#                              samply falls back to address-only frames.
+#   split-debuginfo = "packed" → DWARF travels in a sibling artefact
+#                              alongside the binary so profile-headless
+#                              symbol load finds it from the bench binary
+#                              path alone.
+[profile.profiling-prep]
+inherits = "release"
+debug = true
+strip = false
+split-debuginfo = "packed"
 
 [profile.dev]
 incremental = true

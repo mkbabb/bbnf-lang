@@ -176,12 +176,9 @@ impl TapeRec {
     /// this bit selects the dense `pay_f64` column.
     pub const PAYLOAD_F64_DIRECT_BIT: u16 = 0x0010;
 
-    // Bit `0x0020` reserved. Vacated in AY-II.W0.a when the W5-era
-    // write-time close-stamping experiment (open-frame stack +
-    // `note_push` hook + `SIB_SKIP_STAMPED_BIT`) retired in favour of
-    // a single finaliser sweep over `sib_skip`. Kept as a doc-slot so
-    // future bit assignments don't accidentally alias legacy-layout
-    // readers that might still be inspecting this position.
+    // Bit `0x0020` reserved for future packed metadata. Vacated in
+    // AY-II.W0.a when write-time sibling-skip stamping retired and
+    // the finaliser became the sole writer of `sib_skip`.
 
     /// Pack a [`TapeKind`] and `meta_idx` into the `kind_meta` byte
     /// and an `extra` companion bit. Returns

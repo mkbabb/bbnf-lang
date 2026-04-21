@@ -175,8 +175,8 @@ impl Columns {
     }
 
     /// Mutable reference to the flat AoS row column. Used by the
-    /// finaliser back-patch (sib_skip + child_off + span_hi at
-    /// `close_compound` time) and by the `driver::close_compound`
+    /// finaliser's back-patch pass (sib_skip + child_off + span_hi at
+    /// tree-close time) and by the [`crate::driver::close_compound`]
     /// shape-emitter helper.
     #[inline(always)]
     pub(crate) fn records_mut(&mut self) -> &mut Vec<TapeRec> {

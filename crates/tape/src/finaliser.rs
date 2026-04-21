@@ -24,14 +24,10 @@
 //!
 //! # AY-II.W0.a — finaliser-as-sole-writer restoration
 //!
-//! Tranche AY.W5.1 had experimented with write-time stamping of
-//! `sib_skip` via an open-frame stack on the builder, gated by
-//! `TapeRec::SIB_SKIP_STAMPED_BIT`. AY-II.W0.a retired that path
-//! wholesale — the per-push `note_push` hook paid two column writes
-//! on every direct child on every JSON / CSS / Sheets / BBNF parse
-//! (-27% twitter regression AY.W4 → AY.W6). Post-AY-II the finaliser
-//! is once again the sole writer of `sib_skip`, deriving every row
-//! unconditionally from the forward scan below.
+//! The finaliser derives `sib_skip` unconditionally across every
+//! record via the forward scan below. Write-time experiments that
+//! stamped `sib_skip` during parse retired in AY-II.W0.a; the
+//! single-sweep derivation restores pre-W5 discipline.
 //!
 //! # Algorithm
 //!
@@ -288,10 +284,8 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
         // ── Step 3: stamp sib_skip on the previous same-depth record
         //    in the current frame ────────────────────────────────────
         //
-        // AY-II.W0.a — unconditional derivation. The write-time
-        // stamping path (SIB_SKIP_STAMPED_BIT + `TapeBuilder::
-        // close_compound`) retired; the finaliser is again the sole
-        // writer of `sib_skip`.
+        // AY-II.W0.a — unconditional derivation: the finaliser is the
+        // sole writer of the sibling-skip column.
         if let Some(prev) = prev_at_depth[d] {
             columns.set_sib_skip_at(prev, i_u32 - prev);
         }

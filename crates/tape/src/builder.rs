@@ -5,25 +5,17 @@
 //! the growing [`Tape`] plus sticky error state so failed sub-tree
 //! matches don't poison the rest of the parse.
 //!
-//! Tranche AV.2.1 flipped the underlying storage from a flat
+//! Tranche AV.2.1 flipped the underlying storage from row-major
 //! `Vec<TapeRec>` to the columnar [`Columns`](crate::columns::Columns)
-//! substrate. The push entry points (`push_leaf`, `push_compound`,
-//! `push_leaf_with`, `push_leaf_borrowed_string`,
-//! `push_leaf_with_arena_frame`) keep their pre-AV signatures so the
-//! generated code's push sites are untouched; internally, each push
-//! writes into the structural + payload columns instead of allocating
-//! a 16-byte `TapeRec`.
+//! substrate; push entry points keep their pre-AV signatures.
 //!
-//! Tranche AY-II.W0.a retired the per-push open-frame stack experiment
-//! (W5-era `open_compound` / `close_compound` / `note_push` /
-//! `SIB_SKIP_STAMPED_BIT`). The unified compound emission API —
-//! [`Self::begin_compound`] + [`Self::end_compound`] — writes the
-//! compound row at open time with provisional `span_hi` / `child_off`,
-//! and back-patches both on close without touching `sib_skip`. The
-//! finaliser is once again the sole writer of the sibling-skip column.
-//! Emitter retry paths roll the row-count back via
-//! [`Columns::rollback_to`] instead of ad-hoc `columns_mut().truncate`
-//! calls.
+//! Tranche AY-II.W0.a retired the write-time close-stamping
+//! experiment. The unified compound surface
+//! [`Self::begin_compound`] + [`Self::end_compound`] writes the
+//! compound row at open time and back-patches `span_hi` / `child_off`
+//! on close without touching `sib_skip`; the finaliser is once again
+//! the sole writer of that column. Emitter retry sites rewind via
+//! [`Self::rollback_to`].
 
 use crate::columns::Columns;
 use crate::kind::TapeKind;
@@ -185,14 +177,20 @@ impl TapeBuilder {
         TapeOffset(self.columns.len() as u32)
     }
 
+    /// Opt this builder into inline `frame_depth` emission.
+    /// Pre-order emission via [`Self::begin_compound`] requires it —
+    /// [`crate::finaliser::derive_frame_depth`] can only reconstruct
+    /// depth for post-order tapes. Legacy `push_compound` paths stay
+    /// on the default (disabled) so the post-order derivation runs.
+    #[inline(always)]
+    pub fn enable_inline_frame_depth(&mut self) {
+        self.has_inline_frame_depth = true;
+    }
+
     /// Rewind both the structural columns and the inline
-    /// `frame_depth` stream back to `open_offset` slots.
-    ///
-    /// Delegates to [`Columns::rollback_to`] for the per-record
-    /// structural columns and truncates [`Self::frame_depth`] in
-    /// lockstep when inline frame-depth is active. Emitter retry-IIFE
-    /// sites call this to restore the full builder checkpoint in one
-    /// step.
+    /// `frame_depth` stream back to `open_offset` slots. Delegates to
+    /// [`Columns::rollback_to`] and truncates [`Self::frame_depth`]
+    /// in lockstep when inline frame-depth is active.
     #[inline(always)]
     pub fn rollback_to(&mut self, open_offset: u32) {
         self.columns.rollback_to(open_offset);

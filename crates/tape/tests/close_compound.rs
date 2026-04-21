@@ -1,113 +1,109 @@
-//! AY.W5.1 — `TapeBuilder::open_compound` / `close_compound` contract.
+//! AY-II.W0.a — `TapeBuilder::begin_compound` / `end_compound` contract.
 //!
-//! Verifies the write-time close-stamping substrate:
-//!
-//! 1. `open_compound` pushes the parent row in pre-order (offset
-//!    `parent`); subsequent pushes at offsets `parent + 1`, `parent
-//!    + 2`, … become the compound's direct children, and nested
-//!    `open_compound` / `close_compound` pairs preserve the stack
-//!    ordering.
-//! 2. `close_compound` stamps `span_hi`, `child_off`, and the
-//!    `HAS_CHILDREN_BIT` on the parent row.
-//! 3. Each direct child gets `SIB_SKIP_STAMPED_BIT` set exactly once
-//!    (the last sibling at close time, the non-last siblings at the
-//!    moment their next sibling was pushed).
-//! 4. Direct children's `sib_skip` column carries the inter-sibling
-//!    root distance inline — finaliser has nothing to re-derive.
-//! 5. The finished `Tape`'s `TapeCursor` reads the tree exactly as it
-//!    would for a `push_compound`-based tape (same children,
-//!    same order, same spans).
+//! 1. `begin_compound` emits a compound row with provisional
+//!    `span_hi == span_lo`, `child_off = NONE`, and the
+//!    `HAS_CHILDREN_BIT` cleared. No sibling-skip column write.
+//! 2. `end_compound` back-patches `span_hi` unconditionally; when at
+//!    least one child landed (`open_offset + 1 < columns.len()`) it
+//!    also stamps `child_off = open_offset + 1` (pre-order fast path)
+//!    and `HAS_CHILDREN_BIT`. Still no sibling-skip write.
+//! 3. `TapeBuilder::rollback_to(open_offset)` discards every row
+//!    pushed at or after `open_offset` and a subsequent
+//!    `begin_compound` reuses that offset cleanly.
+//! 4. The finaliser derives `sib_skip` unconditionally on a
+//!    pre-order tape whose inline `frame_depth` stream is populated
+//!    in lockstep with the columns.
 
-use tape::{Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset, TapeRec};
+use tape::{Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset};
 
-/// Build `(root (inner a b) c)` via open/close_compound:
+/// Build `(root (inner a b) c)` via `begin_compound` / `end_compound`
+/// with the inline-frame-depth path active:
 ///
-/// - open_compound(root)       → row 0   (compound)
-///   - open_compound(inner)    → row 1   (compound)
-///     - push_leaf(a)          → row 2   (leaf, first child of inner)
-///     - push_leaf(b)          → row 3   (leaf, last child of inner)
-///   - close_compound(inner)   pops row 1's frame
-///   - push_leaf(c)            → row 4   (leaf, last child of root)
-/// - close_compound(root)      pops row 0's frame
+/// - row 0: root compound        (depth 0)
+/// - row 1: inner compound       (depth 1)
+/// - row 2: leaf a               (depth 2)
+/// - row 3: leaf b               (depth 2)
+/// - row 4: leaf c               (depth 1)
 #[test]
-fn nested_open_close_produces_pre_order_tape() {
+fn nested_begin_end_produces_pre_order_tape() {
     let mut b = TapeBuilder::new();
+    b.enable_inline_frame_depth();
 
-    let root = b.open_compound(TapeKind::Seq, 0, 0, 0);
-    assert_eq!(root, TapeOffset(0));
+    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0);
+    assert_eq!(root, 0);
 
-    let inner = b.open_compound(TapeKind::Seq, 0, 0, 0);
-    assert_eq!(inner, TapeOffset(1));
+    let inner = b.begin_compound(TapeKind::Seq, 0, 1, 0);
+    assert_eq!(inner, 1);
 
+    // Leaf pushes don't auto-stamp depth; callers that use the
+    // begin/end API either route through `driver::emit_leaf*` (which
+    // takes `frame_depth` explicitly) or stamp depth inline as the
+    // tests below do.
+    b.frame_depth_mut().push(2);
     let a = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     assert_eq!(a, TapeOffset(2));
+    b.frame_depth_mut().push(2);
     let bl = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
     assert_eq!(bl, TapeOffset(3));
 
-    b.close_compound(inner, 2);
+    b.end_compound(inner, 2);
 
+    b.frame_depth_mut().push(1);
     let c = b.push_leaf(TapeKind::Literal, 2, 3, 0, 0);
     assert_eq!(c, TapeOffset(4));
 
-    b.close_compound(root, 3);
+    b.end_compound(root, 3);
 
-    // Before `finish()` runs the finaliser, we can observe every
-    // close-stamped value directly on the columns.
+    // Immediately after end_compound (before finalise): parent rows
+    // carry the back-patched span_hi + child_off + HAS_CHILDREN_BIT.
     let cols = b.columns();
+    assert_eq!(cols.span_lo_at(root), 0);
+    assert_eq!(cols.span_hi_at(root), 3);
+    assert_eq!(cols.span_lo_at(inner), 0);
+    assert_eq!(cols.span_hi_at(inner), 2);
+    assert_eq!(cols.child_off_at(root), TapeOffset(1));
+    assert_eq!(cols.child_off_at(inner), TapeOffset(2));
+    assert!(cols.has_children_at(root));
+    assert!(cols.has_children_at(inner));
 
-    // Parent rows carry the write-time close stamps.
-    assert_eq!(cols.span_hi_at(root.0), 3);
-    assert_eq!(cols.span_hi_at(inner.0), 2);
-    assert_eq!(cols.child_off_at(root.0), TapeOffset(1));
-    assert_eq!(cols.child_off_at(inner.0), TapeOffset(2));
-    assert!(cols.has_children_at(root.0));
-    assert!(cols.has_children_at(inner.0));
+    // begin_compound / end_compound MUST NOT touch sib_skip — every
+    // slot still reads the default 0 until finalise runs.
+    for i in 0..cols.len() as u32 {
+        assert_eq!(
+            cols.sib_skip_at(i),
+            0,
+            "row {i} sib_skip must be 0 pre-finalise; AY-II.W0.a delegates sib_skip solely to the finaliser",
+        );
+    }
 
-    // Sib-skip stamps on direct children.
-    //
-    // root's direct children: inner (row 1) and c (row 4).
-    //   sib_skip[1] = 4 - 1 = 3  (inner → c, stamped by note_push when c arrived)
-    //   sib_skip[4] = 0          (c is last sibling; stamped by close_compound(root))
-    //
-    // inner's direct children: a (row 2) and b (row 3).
-    //   sib_skip[2] = 3 - 2 = 1  (a → b, stamped by note_push when b arrived)
-    //   sib_skip[3] = 0          (b is last sibling; stamped by close_compound(inner))
-    assert_eq!(cols.sib_skip_at(1), 3);
-    assert_eq!(cols.sib_skip_at(4), 0);
-    assert_eq!(cols.sib_skip_at(2), 1);
-    assert_eq!(cols.sib_skip_at(3), 0);
-
-    // Every direct-child record carries the SIB_SKIP_STAMPED_BIT.
-    assert_ne!(cols.extra_at(1) & TapeRec::SIB_SKIP_STAMPED_BIT, 0);
-    assert_ne!(cols.extra_at(2) & TapeRec::SIB_SKIP_STAMPED_BIT, 0);
-    assert_ne!(cols.extra_at(3) & TapeRec::SIB_SKIP_STAMPED_BIT, 0);
-    assert_ne!(cols.extra_at(4) & TapeRec::SIB_SKIP_STAMPED_BIT, 0);
-
-    // The root compound itself is never a direct child of any open
-    // frame, so its sib_skip stays at the default 0 and the bit
-    // stays clear — the finaliser would (correctly) leave it alone
-    // as well.
-    assert_eq!(cols.sib_skip_at(0), 0);
-    assert_eq!(cols.extra_at(0) & TapeRec::SIB_SKIP_STAMPED_BIT, 0);
-
-    // finish() still runs the finaliser; the SIB_SKIP_STAMPED_BIT
-    // gates keep the close-stamped values untouched.
+    // finish() runs the finaliser; every `sib_skip` slot is derived
+    // unconditionally from the inline frame_depth stream.
     let tape: Tape = b.finish().expect("finish() should succeed");
     assert_eq!(tape.len(), 5);
     let cols = tape.columns();
+
+    // root's direct children at depth 1: inner (row 1), c (row 4).
+    //   sib_skip[1] = 4 - 1 = 3; sib_skip[4] = 0 (last sibling).
     assert_eq!(cols.sib_skip_at(1), 3);
+    assert_eq!(cols.sib_skip_at(4), 0);
+
+    // inner's direct children at depth 2: a (row 2), b (row 3).
+    //   sib_skip[2] = 1; sib_skip[3] = 0 (last sibling).
     assert_eq!(cols.sib_skip_at(2), 1);
+    assert_eq!(cols.sib_skip_at(3), 0);
+
+    // root's own sib_skip stays at 0 (no outer frame at depth 0).
+    assert_eq!(cols.sib_skip_at(0), 0);
 
     // Pre-order cursor walk descends via the write-time child_off
-    // without falling through to the post-order backward-walk
-    // fallback.
-    let cursor = TapeCursor::new(&tape, root);
+    // fast path (child_off == parent + 1 at every compound).
+    let cursor = TapeCursor::new(&tape, TapeOffset(root));
     assert_eq!(cursor.kind(), TapeKind::Seq);
     assert_eq!(cursor.span(), (0, 3));
     assert_eq!(cursor.child_count(), 2);
 
     let inner_cursor = cursor.child(0).unwrap();
-    assert_eq!(inner_cursor.offset(), inner);
+    assert_eq!(inner_cursor.offset(), TapeOffset(inner));
     assert_eq!(inner_cursor.child_count(), 2);
 
     let c_cursor = cursor.child(1).unwrap();
@@ -115,33 +111,114 @@ fn nested_open_close_produces_pre_order_tape() {
     assert_eq!(c_cursor.span(), (2, 3));
 }
 
-/// A compound that closes without any children records the
-/// correct provisional state: `child_off` stays at `NONE`,
-/// `has_children` stays clear, and the finaliser leaves the empty
-/// compound alone.
+/// A compound that closes with zero children keeps `child_off` at
+/// `NONE` and `HAS_CHILDREN_BIT` clear. `end_compound` back-patches
+/// `span_hi` regardless.
 #[test]
-fn close_compound_without_children() {
+fn end_compound_without_children() {
     let mut b = TapeBuilder::new();
-    let root = b.open_compound(TapeKind::Seq, 5, 0, 0);
-    b.close_compound(root, 5);
+    b.enable_inline_frame_depth();
+    let root = b.begin_compound(TapeKind::Seq, 5, 0, 0);
+    b.end_compound(root, 5);
 
     let cols = b.columns();
-    assert_eq!(cols.span_lo_at(root.0), 5);
-    assert_eq!(cols.span_hi_at(root.0), 5);
-    assert_eq!(cols.child_off_at(root.0), TapeOffset::NONE);
-    assert!(!cols.has_children_at(root.0));
+    assert_eq!(cols.span_lo_at(root), 5);
+    assert_eq!(cols.span_hi_at(root), 5);
+    assert_eq!(cols.child_off_at(root), TapeOffset::NONE);
+    assert!(!cols.has_children_at(root));
 
     let tape = b.finish().unwrap();
     assert_eq!(tape.len(), 1);
 }
 
-/// Independent `mark_children` + `push_compound` builds continue to
-/// work unchanged — an emitter that never uses `open_compound` stays
-/// on the legacy path and the finaliser derives its sib_skips via
-/// the step-3 scan. Proves the open-frame stack stays empty on the
-/// legacy path and the close-stamping API is opt-in.
+/// `TapeBuilder::rollback_to(open_offset)` unwinds every row pushed
+/// at or after `open_offset`, restoring the builder to its pre-
+/// `begin_compound` state. A subsequent `begin_compound` reuses the
+/// same offset. The inline `frame_depth` stream rewinds in lockstep.
 #[test]
-fn push_compound_legacy_path_still_closes_via_finaliser() {
+fn rollback_to_unwinds_begin_compound_cleanly() {
+    let mut b = TapeBuilder::new();
+    b.enable_inline_frame_depth();
+
+    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0);
+    assert_eq!(root, 0);
+    assert_eq!(b.columns().len(), 1);
+
+    // First attempt: open an inner compound, push some children,
+    // then roll back. Simulates an emitter retry-IIFE discarding a
+    // failed alt branch.
+    let attempt_off = b.begin_compound(TapeKind::Seq, 0, 1, 0);
+    assert_eq!(attempt_off, 1);
+    b.frame_depth_mut().push(2);
+    let _l0 = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
+    b.frame_depth_mut().push(2);
+    let _l1 = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
+    assert_eq!(b.columns().len(), 4);
+
+    b.rollback_to(attempt_off);
+    assert_eq!(
+        b.columns().len(),
+        attempt_off as usize,
+        "rollback_to discards every row at-or-after open_offset",
+    );
+    assert_eq!(b.columns().len(), 1);
+
+    // Second attempt: reuse the same offset for a different subtree.
+    let retry_off = b.begin_compound(TapeKind::Alt, 0, 1, 0);
+    assert_eq!(
+        retry_off, attempt_off,
+        "begin_compound reuses the rolled-back offset",
+    );
+    b.frame_depth_mut().push(2);
+    let _l2 = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
+    b.end_compound(retry_off, 1);
+    b.end_compound(root, 1);
+
+    // The retry produced a valid tape (3 rows: root, retry, leaf).
+    let tape = b.finish().unwrap();
+    assert_eq!(tape.len(), 3);
+    let cursor = TapeCursor::new(&tape, TapeOffset(root));
+    assert_eq!(cursor.child_count(), 1);
+    let inner = cursor.child(0).unwrap();
+    assert_eq!(inner.kind(), TapeKind::Alt);
+    assert_eq!(inner.child_count(), 1);
+}
+
+/// `rollback_to` is idempotent: calling with an offset beyond the
+/// current length is a no-op; calling twice with the same offset is
+/// a no-op on the second call.
+#[test]
+fn rollback_to_idempotent() {
+    let mut b = TapeBuilder::new();
+    b.enable_inline_frame_depth();
+    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0);
+    b.frame_depth_mut().push(1);
+    let _leaf = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
+    let len_before = b.columns().len();
+
+    // Rollback to a future offset is a no-op.
+    b.rollback_to(u32::MAX);
+    assert_eq!(b.columns().len(), len_before);
+
+    // Rollback to the current end is a no-op (no rows at or after
+    // `len()`).
+    b.rollback_to(len_before as u32);
+    assert_eq!(b.columns().len(), len_before);
+
+    // Rollback to `root + 1` discards the leaf only.
+    b.rollback_to(root + 1);
+    assert_eq!(b.columns().len(), 1);
+
+    // Second rollback to the same offset is a no-op.
+    b.rollback_to(root + 1);
+    assert_eq!(b.columns().len(), 1);
+}
+
+/// The legacy `mark_children` + `push_compound` path continues to
+/// work unchanged — post-order tapes, finaliser derives `sib_skip`
+/// via `derive_frame_depth` over the `child_off` graph.
+#[test]
+fn legacy_push_compound_path_still_closes_via_finaliser() {
     let mut b = TapeBuilder::new();
 
     let mark = b.mark_children();
@@ -152,69 +229,60 @@ fn push_compound_legacy_path_still_closes_via_finaliser() {
     let tape = b.finish().expect("finish() succeeds");
     assert_eq!(tape.len(), 3);
 
-    // Finaliser-derived sib_skips leave SIB_SKIP_STAMPED_BIT clear.
     let cols = tape.columns();
+    // Finaliser-derived sib_skips on the two children.
     assert_eq!(cols.sib_skip_at(0), 1);
     assert_eq!(cols.sib_skip_at(1), 0);
-    assert_eq!(cols.extra_at(0) & TapeRec::SIB_SKIP_STAMPED_BIT, 0);
-    assert_eq!(cols.extra_at(1) & TapeRec::SIB_SKIP_STAMPED_BIT, 0);
 
     // Cursor reads the legacy subtree identically to pre-W5.1.
     let cursor = TapeCursor::new(&tape, root);
     assert_eq!(cursor.child_count(), 2);
 }
 
-/// Two sibling open/close subtrees under one outer open/close:
-///
-/// - outer: open_compound ... close_compound
-///   - left: open_compound + leaf + close_compound
-///   - right: open_compound + leaf + close_compound
-///
-/// Verifies the stack tracks the innermost frame correctly across
-/// nested open/close pairs and the outer's sib_skips between left
-/// and right are stamped at write time.
+/// Two sibling begin/end subtrees under one outer begin/end: the
+/// outer's child count is 2 and each inner's child count is 1. The
+/// finaliser derives `sib_skip` across all three compound frames.
 #[test]
-fn sibling_open_close_subtrees_under_outer_open() {
+fn sibling_begin_end_subtrees_under_outer_begin() {
     let mut b = TapeBuilder::new();
+    b.enable_inline_frame_depth();
 
-    let outer = b.open_compound(TapeKind::Seq, 0, 0, 0);
-    assert_eq!(outer, TapeOffset(0));
+    let outer = b.begin_compound(TapeKind::Seq, 0, 0, 0);
+    assert_eq!(outer, 0);
 
-    let left = b.open_compound(TapeKind::Seq, 0, 0, 0);
-    assert_eq!(left, TapeOffset(1));
+    let left = b.begin_compound(TapeKind::Seq, 0, 1, 0);
+    assert_eq!(left, 1);
+    b.frame_depth_mut().push(2);
     let _la = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
-    b.close_compound(left, 1);
+    b.end_compound(left, 1);
 
-    let right = b.open_compound(TapeKind::Seq, 1, 0, 0);
-    assert_eq!(right, TapeOffset(3));
+    let right = b.begin_compound(TapeKind::Seq, 1, 1, 0);
+    assert_eq!(right, 3);
+    b.frame_depth_mut().push(2);
     let _ra = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
-    b.close_compound(right, 2);
+    b.end_compound(right, 2);
 
-    b.close_compound(outer, 2);
+    b.end_compound(outer, 2);
 
     let cols = b.columns();
 
-    // Outer's direct children: left (row 1) and right (row 3).
-    //   sib_skip[1] = 3 - 1 = 2 (stamped when right landed)
-    //   sib_skip[3] = 0 (last sibling; stamped by close_compound(outer))
-    assert_eq!(cols.sib_skip_at(1), 2);
-    assert_eq!(cols.sib_skip_at(3), 0);
-    assert_ne!(cols.extra_at(1) & TapeRec::SIB_SKIP_STAMPED_BIT, 0);
-    assert_ne!(cols.extra_at(3) & TapeRec::SIB_SKIP_STAMPED_BIT, 0);
-
-    // Each inner compound's sole leaf child: last sibling, stamped
-    // by the inner close_compound.
-    assert_eq!(cols.sib_skip_at(2), 0);
-    assert_ne!(cols.extra_at(2) & TapeRec::SIB_SKIP_STAMPED_BIT, 0);
-    assert_eq!(cols.sib_skip_at(4), 0);
-    assert_ne!(cols.extra_at(4) & TapeRec::SIB_SKIP_STAMPED_BIT, 0);
-
-    // Pre-order: each compound's child_off points at parent + 1.
-    assert_eq!(cols.child_off_at(outer.0), TapeOffset(1));
-    assert_eq!(cols.child_off_at(left.0), TapeOffset(2));
-    assert_eq!(cols.child_off_at(right.0), TapeOffset(4));
+    // Pre-order child_off: each compound points at parent + 1.
+    assert_eq!(cols.child_off_at(outer), TapeOffset(1));
+    assert_eq!(cols.child_off_at(left), TapeOffset(2));
+    assert_eq!(cols.child_off_at(right), TapeOffset(4));
 
     let tape = b.finish().expect("finish() succeeds");
-    let cursor = TapeCursor::new(&tape, outer);
+    let cols = tape.columns();
+
+    // Outer's direct children at depth 1: left (row 1), right (row 3).
+    //   sib_skip[1] = 3 - 1 = 2; sib_skip[3] = 0 (last sibling).
+    assert_eq!(cols.sib_skip_at(1), 2);
+    assert_eq!(cols.sib_skip_at(3), 0);
+
+    // Each inner's sole leaf at depth 2: last sibling → 0.
+    assert_eq!(cols.sib_skip_at(2), 0);
+    assert_eq!(cols.sib_skip_at(4), 0);
+
+    let cursor = TapeCursor::new(&tape, TapeOffset(outer));
     assert_eq!(cursor.child_count(), 2);
 }

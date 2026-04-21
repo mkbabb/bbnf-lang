@@ -1,7 +1,12 @@
-//! AY.W1.1 — Flat-AoS write API regression suite.
+//! AY.W1.1 + AY-II.W0.a — Flat-AoS write + rollback regression suite.
 //!
-//! Per AY.md prop 1: the seven-way SoA push pivot reverts to flat-AoS
-//! `Vec<TapeRec>` + parallel `sib_skip: Vec<u32>`. These tests assert:
+//! AY.W1.1 landed `Columns::push_compound_fused` / `push_leaf_fused`
+//! over the flat-AoS substrate (one `TapeRec` store + one `sib_skip`
+//! store per call). AY-II.W0.a added `Columns::rollback_to` — the
+//! canonical rollback primitive emitter retry-IIFE sites call in
+//! place of ad-hoc `columns_mut().truncate(save)` invocations — and
+//! restored `finaliser::finalise` as the sole writer of `sib_skip`.
+//! These tests assert:
 //!
 //! - `push_compound_fused` returns the row index it wrote at.
 //! - The structural row + parallel `sib_skip` stay in lockstep across
@@ -11,8 +16,13 @@
 //!   through to the flat record.
 //! - The grow path keeps the `records` and `sib_skip` columns
 //!   synchronised across many pushes.
+//! - `Columns::rollback_to` truncates both per-record columns in
+//!   lockstep and is idempotent on a no-op rewind.
+//! - The finaliser derives `sib_skip` unconditionally (no stamp-bit
+//!   skipping post-AY-II.W0.a) on tapes built purely through the
+//!   fused Columns primitives.
 
-use tape::{kind::TapeKind, tape::TapeOffset, Columns};
+use tape::{finaliser, kind::TapeKind, tape::TapeOffset, Columns};
 
 #[test]
 fn push_compound_fused_returns_row_index() {
@@ -42,7 +52,8 @@ fn push_compound_fused_columns_stay_in_lockstep() {
     assert_eq!(cols.span_lo_at(2), 10);
 
     // Provisional `span_hi == span_lo` per the W1.1 contract — the
-    // compound's frame-pop site overwrites this with the real end.
+    // compound's `end_compound` site overwrites this with the real
+    // end.
     assert_eq!(cols.span_hi_at(0), 0);
     assert_eq!(cols.span_hi_at(1), 5);
     assert_eq!(cols.span_hi_at(2), 10);
@@ -79,12 +90,7 @@ fn push_leaf_fused_writes_custom_flags() {
 }
 
 /// AY.W1.1 — the AoS substrate's `Vec<TapeRec>` + parallel `Vec<u32>`
-/// stay in lockstep across the grow boundary. Pre-AY this guarded a
-/// bug where `Vec<u8>::with_capacity(6)` and `Vec<u16>::with_capacity(6)`
-/// rounded up to different actual capacities; post-AY both `records`
-/// (one `Vec<TapeRec>`) and `sib_skip` (one `Vec<u32>`) grow under
-/// the same `Vec::push` policy and the per-element-type capacity skew
-/// is gone.
+/// stay in lockstep across the grow boundary.
 #[test]
 fn push_compound_fused_grows_with_min_cap_invariant() {
     let mut cols = Columns::with_capacity(3);
@@ -93,7 +99,6 @@ fn push_compound_fused_grows_with_min_cap_invariant() {
         assert_eq!(idx, i, "push_compound_fused index sequence");
     }
     assert_eq!(cols.len(), 1000);
-    // Spot-check first/middle/last entries.
     assert_eq!(cols.span_lo_at(0), 0);
     assert_eq!(cols.span_lo_at(500), 500);
     assert_eq!(cols.span_lo_at(999), 999);
@@ -145,10 +150,115 @@ fn fused_compound_and_leaf_interleave() {
 
     assert_eq!(cols.len(), 5);
 
-    // Spot-check the leaf with custom flags survived.
     assert_eq!(cols.flags_at(4), 7);
     assert_eq!(cols.extra_at(4), 0xCAFE);
     assert_eq!(cols.child_off_at(4), TapeOffset(42));
+}
+
+/// AY-II.W0.a — `Columns::rollback_to(open_offset)` truncates both
+/// per-record columns (`records` + `sib_skip`) in lockstep.
+#[test]
+fn rollback_to_truncates_per_record_columns_in_lockstep() {
+    let mut cols = Columns::new();
+    cols.push_compound_fused(TapeKind::Seq, 0);
+    cols.push_leaf_fused(TapeKind::Literal, 1, 0, 0, 1, TapeOffset::NONE);
+    cols.push_leaf_fused(TapeKind::Literal, 1, 0, 1, 2, TapeOffset::NONE);
+    cols.push_compound_fused(TapeKind::Alt, 2);
+    assert_eq!(cols.len(), 4);
+
+    cols.rollback_to(2);
+    assert_eq!(
+        cols.len(),
+        2,
+        "rollback_to discards every row at-or-after open_offset"
+    );
+    // Remaining rows untouched.
+    assert_eq!(cols.kind_at(0), TapeKind::Seq);
+    assert_eq!(cols.kind_at(1), TapeKind::Literal);
+}
+
+/// AY-II.W0.a — rollback is idempotent: rolling past the end, or
+/// rolling twice to the same offset, is a no-op on the second call.
+#[test]
+fn rollback_to_idempotent_at_columns_level() {
+    let mut cols = Columns::new();
+    cols.push_compound_fused(TapeKind::Seq, 0);
+    cols.push_leaf_fused(TapeKind::Literal, 0, 0, 0, 1, TapeOffset::NONE);
+
+    // Rollback beyond the end is a no-op.
+    cols.rollback_to(u32::MAX);
+    assert_eq!(cols.len(), 2);
+
+    // Rollback to the current length is a no-op.
+    cols.rollback_to(2);
+    assert_eq!(cols.len(), 2);
+
+    // Rollback to 1 discards the leaf.
+    cols.rollback_to(1);
+    assert_eq!(cols.len(), 1);
+
+    // Second rollback to 1 is a no-op.
+    cols.rollback_to(1);
+    assert_eq!(cols.len(), 1);
+}
+
+/// AY-II.W0.a — rollback invalidates the AoS sidecar so subsequent
+/// packed_cache reads re-transpose from the truncated primary.
+#[test]
+fn rollback_to_invalidates_packed_cache() {
+    let mut cols = Columns::new();
+    cols.push_compound_fused(TapeKind::Seq, 0);
+    cols.push_leaf_fused(TapeKind::Literal, 0, 0, 0, 1, TapeOffset::NONE);
+
+    // Populate the sidecar.
+    let _ = cols.packed_cache();
+    assert!(cols.packed_cache_populated());
+
+    // Rollback invalidates.
+    cols.rollback_to(1);
+    assert!(
+        !cols.packed_cache_populated(),
+        "rollback_to must invalidate the AoS sidecar"
+    );
+}
+
+/// AY-II.W0.a — the finaliser is the sole writer of `sib_skip`.
+/// Build a compound manually via the fused Columns primitives, hand
+/// a matching `frame_depth` stream to the finaliser, and verify the
+/// sibling-skip column is derived unconditionally (no stamp-bit
+/// short-circuit, no pre-stamped values).
+#[test]
+fn finaliser_derives_sib_skip_unconditionally() {
+    let mut cols = Columns::new();
+    // Layout: (root (a b c))
+    //   row 0 = root compound (depth 0)
+    //   row 1 = a leaf         (depth 1)
+    //   row 2 = b leaf         (depth 1)
+    //   row 3 = c leaf         (depth 1)
+    cols.push_compound_fused(TapeKind::Seq, 0);
+    cols.push_leaf_fused(TapeKind::Literal, 0, 0, 0, 1, TapeOffset::NONE);
+    cols.push_leaf_fused(TapeKind::Literal, 0, 0, 1, 2, TapeOffset::NONE);
+    cols.push_leaf_fused(TapeKind::Literal, 0, 0, 2, 3, TapeOffset::NONE);
+    // Simulate the end_compound back-patch on the root row.
+    cols.set_span_hi_at(0, 3);
+    cols.set_child_off_at(0, TapeOffset(1));
+    cols.or_extra_at(0, tape::TapeRec::HAS_CHILDREN_BIT);
+
+    // Every sib_skip slot is the default 0 pre-finalise.
+    for i in 0..cols.len() as u32 {
+        assert_eq!(cols.sib_skip_at(i), 0);
+    }
+
+    let frame_depth = vec![0u8, 1, 1, 1];
+    finaliser::finalise(&mut cols, &frame_depth);
+
+    // Finaliser-derived distances: row 1 → row 2 = 1; row 2 → row 3 =
+    // 1; row 3 is last sibling → 0. Root (row 0) has no outer frame
+    // at depth 0 so its sib_skip stays 0.
+    assert_eq!(cols.sib_skip_at(0), 0, "root has no outer frame");
+    assert_eq!(cols.sib_skip_at(1), 1);
+    assert_eq!(cols.sib_skip_at(2), 1);
+    assert_eq!(cols.sib_skip_at(3), 0, "c is last sibling");
 }
 
 /// `push_compound_fused`'s `idx` return matches `cols.len()` at call

@@ -43,15 +43,15 @@ bounded feature-off cost.
 
 ## Wave summary
 
-| Wave | Spec | Headline | Opens after |
-|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Provenance side metadata on the AY substrate | AY close |
-| **W1** | [waves/W1.md](waves/W1.md) | Decision log and substrate-identical replay | W0 |
-| **W2** | [waves/W2.md](waves/W2.md) | Snapshot and resume at stable shape boundaries | W1 |
-| **W3** | [waves/W3.md](waves/W3.md) | Edit-local incremental reparse and substrate splice | W2 |
-| **W4** | [waves/W4.md](waves/W4.md) | Recovery semantics and sync-point resume | W3 |
-| **W5** | [waves/W5.md](waves/W5.md) | Debug, inspect, and minimise tooling on the same surfaces | W4 |
-| **W6** | [waves/W6.md](waves/W6.md) | FINAL and bounded-cost closure | W5 |
+| Wave | Spec | Headline | Opens after | Status |
+|---|---|---|---|---|
+| **W0** | [waves/W0.md](waves/W0.md) | Provenance side metadata on the AY substrate | AY close | planned |
+| **W1** | [waves/W1.md](waves/W1.md) | Decision log and substrate-identical replay | W0 | planned |
+| **W2** | [waves/W2.md](waves/W2.md) | Snapshot and resume at stable shape boundaries | W1 | planned |
+| **W3** | [waves/W3.md](waves/W3.md) | Edit-local incremental reparse and substrate splice | W2 | planned |
+| **W4** | [waves/W4.md](waves/W4.md) | Recovery semantics and sync-point resume | W3 | planned |
+| **W5** | [waves/W5.md](waves/W5.md) | Debug, inspect, and minimise tooling on the same surfaces | W4 | planned |
+| **W6** | [waves/W6.md](waves/W6.md) | FINAL and bounded-cost closure | W5 | planned |
 
 ## AZ handoff contract
 

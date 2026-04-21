@@ -60,7 +60,7 @@ A tranche owns a directory `docs/tranches/{LETTER}/`:
 3. **Invariants** — numbered; cross-tranche preserved, tranche-
    specific added.
 4. **Wave schedule** — table: wave, agent count, workspace state
-   at close, bench gate.
+   at close, bench gate, and current status.
 5. **Phases** — per-wave detailed sub-phases. Sub-phase IDs
    `{LETTER}.W.N`. Concrete: file paths, type signatures,
    pseudocode where useful, hard gate phrasing.
@@ -102,6 +102,10 @@ noted", style notes.
   declares intentional unworkability for a specific window
   (delete-then-swap). The unworkability window carries a named
   restoration wave.
+- **Wave status updates at every boundary.** When a wave opens,
+  closes, blocks, or is superseded, update both `PROGRESS.md` and
+  the wave's `**Status**` line (plus the parent table's status
+  column) in the same change set.
 
 ### Agent briefing
 
@@ -364,6 +368,8 @@ The orchestrator:
   agent reports into plan adjustments, re-planning under
   contact.
 - **Updates `PROGRESS.md`** at every wave boundary.
+- **Updates wave-status surfaces** (`{LETTER}.md` summary table +
+  `waves/W<N>.md` status line) at the same boundary.
 - **Handles cross-crate work** (sibling-repo patches to
   `parse-that/`, `pprint/`) from main when worktree isolation
   prohibits sub-agent scope.

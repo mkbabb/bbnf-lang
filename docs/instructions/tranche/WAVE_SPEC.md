@@ -38,16 +38,22 @@ Rewrites G1-G4". Bad: "Ship thing-1 + thing-2 + thing-3".
 
 ### 2. Meta block
 
-Immediately after the header, exactly three lines:
+Immediately after the header, exactly four lines:
 
 ```
 **Opens after**: <prior wave label, or "tranche open">
 **Agents**: <count> <serial | parallel>
 **Hard gate**: <one-line summary>
+**Status**: <planned | in_progress | complete | complete_with_misses | blocked | superseded>
 ```
 
 The hard-gate summary is a one-line reduction of §6 Hard gate. If it
 cannot reduce to one line, the wave's scope is too broad — split it.
+The status line is the wave's compact state surface. It begins as
+`planned`, changes in place during execution, and must agree with the
+latest `PROGRESS.md` boundary entry. `PROGRESS.md` remains the
+canonical narrative record; the status line is the compact dispatch
+surface.
 
 ### 3. Scope
 
@@ -168,7 +174,7 @@ The tranche's parent `{LETTER}.md` contains, in order:
    added).
 3. Operational posture (process rules specific to this tranche).
 4. Wave summary table — one row per wave, with a link to the wave
-   spec at `waves/W<N>.md`.
+   spec at `waves/W<N>.md` and a status column.
 5. Handoff contract (conditions the next tranche verifies before
    opening).
 6. Defensible floor (minimal viable close per historical lever
@@ -183,5 +189,7 @@ All detail lives in wave specs.
 ## Canonical example
 
 `docs/tranches/AX/AX.md` (parent index) + `docs/tranches/AX/waves/W0a.md`
-through `W15.md` (18 wave specs) are the canonical implementation.
-Every section in every spec conforms to this document.
+through `W15.md` (18 wave specs) remain the canonical implementation
+for section ordering and wave decomposition. The per-wave `**Status**`
+line is a newer amendment; active tranches such as AY/AZ/BA/BB show the
+status-bearing form.

@@ -40,13 +40,13 @@ mechanisms that preserve the one-substrate model.
 
 ## Wave summary
 
-| Wave | Spec | Headline | Opens after |
-|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Shared-cost optimizer second pass | AY close |
-| **W1** | [waves/W1.md](waves/W1.md) | Cross-grammar hybrid expansion | W0 |
-| **W2** | [waves/W2.md](waves/W2.md) | Structural-side leverage at scale | W1 |
-| **W3** | [waves/W3.md](waves/W3.md) | Beyond-parity scale-out and optional specialization | W2 |
-| **W4** | [waves/W4.md](waves/W4.md) | FINAL and exceedance close | W3 |
+| Wave | Spec | Headline | Opens after | Status |
+|---|---|---|---|---|
+| **W0** | [waves/W0.md](waves/W0.md) | Shared-cost optimizer second pass | AY close | planned |
+| **W1** | [waves/W1.md](waves/W1.md) | Cross-grammar hybrid expansion | W0 | planned |
+| **W2** | [waves/W2.md](waves/W2.md) | Structural-side leverage at scale | W1 | planned |
+| **W3** | [waves/W3.md](waves/W3.md) | Beyond-parity scale-out and optional specialization | W2 | planned |
+| **W4** | [waves/W4.md](waves/W4.md) | FINAL and exceedance close | W3 | planned |
 
 ## BA handoff contract
 

@@ -41,13 +41,13 @@ intentional rather than accidental.
 
 ## Wave summary
 
-| Wave | Spec | Headline | Opens after |
-|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Public fast-path defaults and command-surface repair | tranche open |
-| **W1** | [waves/W1.md](waves/W1.md) | Profile split and prepared-binary discipline | W0 |
-| **W2** | [waves/W2.md](waves/W2.md) | Bench and test surface separation | W1 |
-| **W3** | [waves/W3.md](waves/W3.md) | Generated-code and monomorphization control | W2 |
-| **W4** | [waves/W4.md](waves/W4.md) | FINAL and measured iteration close | W3 |
+| Wave | Spec | Headline | Opens after | Status |
+|---|---|---|---|---|
+| **W0** | [waves/W0.md](waves/W0.md) | Public fast-path defaults and command-surface repair | tranche open | planned |
+| **W1** | [waves/W1.md](waves/W1.md) | Profile split and prepared-binary discipline | W0 | planned |
+| **W2** | [waves/W2.md](waves/W2.md) | Bench and test surface separation | W1 | planned |
+| **W3** | [waves/W3.md](waves/W3.md) | Generated-code and monomorphization control | W2 | planned |
+| **W4** | [waves/W4.md](waves/W4.md) | FINAL and measured iteration close | W3 | planned |
 
 ## BB handoff contract
 

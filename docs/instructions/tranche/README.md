@@ -14,7 +14,8 @@ Normative documents for tranche authoring and execution. Composes
 - [RESEARCH.md](RESEARCH.md) — Research wave protocol. Six-agent
   fan-out pattern for open-ended design spaces. Run before
   plan-authoring when the design space needs exploration.
-- [WAVE_SPEC.md](WAVE_SPEC.md) — Per-wave sub-document format.
+- [WAVE_SPEC.md](WAVE_SPEC.md) — Per-wave sub-document format,
+  including the required per-wave status line.
   Required when a tranche has ≥ 6 waves OR ≥ 4 parallel agents in any
   wave; then each wave carries its own `waves/W<N>.md` spec.
 - [AGENT_BRIEF_TEMPLATE.md](AGENT_BRIEF_TEMPLATE.md) — Sub-agent
@@ -38,14 +39,14 @@ Normative documents for tranche authoring and execution. Composes
 
 ```
 docs/tranches/{LETTER}/
-├── {LETTER}.md          # Plan; required. Written before execution.
+├── {LETTER}.md          # Plan; required. Written before execution; wave table carries status.
 ├── PROGRESS.md          # Dated execution log; updated per wave.
 ├── FINAL.md             # Closing document; required at tranche close.
 ├── research/            # Research-wave deliverables (conditional).
 │   └── NN-topic.md
 ├── audit/               # In-flight audits; retros.
 │   └── *-retro.md
-└── waves/               # Per-wave specs (conditional per WAVE_SPEC).
+└── waves/               # Per-wave specs (conditional per WAVE_SPEC); each carries a status line.
     └── W<N>.md
 ```
 

@@ -22877,12 +22877,19 @@ mod __bbnfbootstrap_emit_impl {
     impl ::bbnf::runtime::ValueRoot for BbnfBootstrap {
         type Value<'p> = BbnfBootstrapValue<'p>;
         #[inline]
-        fn view_to_value<'p>(view: Self::View<'p>) -> Self::Value<'p>
+        fn project_value_output<'p>(
+            _output: &::bbnf::runtime::ValueBuilderOutput<Self>,
+            _input: &'p str,
+        ) -> Self::Value<'p>
         where
             Self: 'p,
         {
-            let __node = BbnfBootstrapNodeView::from_cursor(view.cursor(), view.input());
-            materialize_value_BbnfBootstrap(__node)
+            // AY-II.W0 bootstrap stub — fresh regen overwrites with the
+            // emitter's per-grammar project_value_<grammar_name> body.
+            // Panics if reached; parse path does not invoke this.
+            unreachable!(
+                "AY-II.W0 bootstrap stub: BbnfBootstrap::project_value_output reached before regen"
+            )
         }
     }
     /// AY.W3b.1 — shared path walker. Descends from `view` per

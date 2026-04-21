@@ -1151,7 +1151,7 @@ impl RustEmitter {
                 // so Parsed::to_value() returns the already-constructed
                 // value without reparsing. W0.c owns the Parsed signature
                 // change; emitter threads the fused handle here.
-                let value = value_builder.finish();
+                let value = value_builder.finish(root_off.0);
                 ::core::result::Result::Ok(
                     ::bbnf::runtime::Parsed::new_fused(
                         tape, input, root_off, value,

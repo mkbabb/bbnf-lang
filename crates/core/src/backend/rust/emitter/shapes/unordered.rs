@@ -325,12 +325,11 @@ pub fn emit_parse_unordered(
             ::bbnf::runtime::tape::DtaError,
         > {
             let span_lo = *p as u32;
-            // Walker-parity: the `Repeat` DTA state pushes its
-            // compound-fused record BEFORE iterating, with
-            // `variant_idx` stamped from the caller's `Ref`. Replay
-            // that here via `mark_children` so the outer `push_compound`
-            // at close sees the full iteration run.
-            let outer_child = builder.mark_children();
+            // AY-II.W0.b — walker-parity post-order Repeat Rule
+            // compound via begin_compound/end_compound. Capture first-
+            // child index; iterate; allocate compound row post-children;
+            // override child_off to first-child.
+            let outer_child = builder.columns_mut().len() as u32;
             // The walker's Repeat entry doesn't skip leading ws on
             // its own — the Alt's ByteDispatch does. Mirror that: the
             // per-grammar value-position dispatcher does its own
@@ -359,15 +358,18 @@ pub fn emit_parse_unordered(
                 );
             }
             let span_hi = *p as u32;
-            let outer_off = builder.push_compound(
+            let outer_off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::Rule,
-                outer_child,
                 span_lo,
-                span_hi,
                 #variant_idx,
-                0,
+                0u16,
             );
-            ::core::result::Result::Ok(outer_off)
+            builder.end_compound(outer_off, span_hi);
+            builder.columns_mut().set_child_off_at(
+                outer_off,
+                ::bbnf::runtime::tape::TapeOffset(outer_child),
+            );
+            ::core::result::Result::Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
         }
     }
 }
@@ -414,18 +416,22 @@ fn emit_parse_unordered_fallback(
         > {
             let _ = state;
             let span_lo = *p as u32;
-            let outer_child = builder.mark_children();
+            // AY-II.W0.b — empty-compound fallback via begin/end.
+            let outer_child = builder.columns_mut().len() as u32;
             let span_hi = *p as u32;
             let _ = input;
-            let outer_off = builder.push_compound(
+            let outer_off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::Rule,
-                outer_child,
                 span_lo,
-                span_hi,
                 #variant_idx,
-                0,
+                0u16,
             );
-            ::core::result::Result::Ok(outer_off)
+            builder.end_compound(outer_off, span_hi);
+            builder.columns_mut().set_child_off_at(
+                outer_off,
+                ::bbnf::runtime::tape::TapeOffset(outer_child),
+            );
+            ::core::result::Result::Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
         }
     }
 }

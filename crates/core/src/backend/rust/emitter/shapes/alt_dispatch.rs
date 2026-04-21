@@ -307,18 +307,28 @@ pub fn emit_parse_alt_dispatch(
                     offset: *p as u32,
                 })?;
             let alt_lo = *p as u32;
-            let alt_child = builder.mark_children();
+            // AY-II.W0.b — alt compound is walker-parity POST-ORDER:
+            // branch records emit first, then the outer Rule row lands
+            // after them. Capture the first-child index before branch
+            // emission; allocate the compound row at post-branch
+            // position via begin_compound; close immediately; override
+            // child_off to name the first branch record.
+            let alt_child = builder.columns_mut().len() as u32;
+            let _ = alt_child;
             #dispatch_arms
             let alt_hi = *p as u32;
-            let off = builder.push_compound(
+            let off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::Rule,
-                alt_child,
                 alt_lo,
-                alt_hi,
                 #variant_idx,
-                0,
+                0u16,
             );
-            Ok(off)
+            builder.end_compound(off, alt_hi);
+            builder.columns_mut().set_child_off_at(
+                off,
+                ::bbnf::runtime::tape::TapeOffset(alt_child),
+            );
+            Ok(::bbnf::runtime::tape::TapeOffset(off))
         }
     }
 }
@@ -411,7 +421,11 @@ fn emit_dispatch_arms(
     // Default arm — try each fallback in order.
     quote! {
         let save_p = *p;
-        let save_child = builder.mark_children();
+        // AY-II.W0.b — structural-save index for the outer emission
+        // window; kept as a read-only columns.len() snapshot (not a
+        // checkpoint for rollback — the outer's own begin_compound
+        // will back-patch child_off once branch records land).
+        let save_child = builder.columns_mut().len() as u32;
         let _ = save_p;
         let _ = save_child;
         'try_branches: loop {
@@ -580,7 +594,7 @@ fn emit_branch_body(
                 quote! {
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.columns_mut().len();
+                        let attempt_len = builder.columns_mut().len() as u32;
                         let attempt: ::core::result::Result<(), ()> = (|| {
                             #body
                             Ok(())
@@ -589,7 +603,7 @@ fn emit_branch_body(
                             Ok(_) => break 'try_branches,
                             Err(_) => {
                                 *p = attempt_p;
-                                builder.columns_mut().truncate(attempt_len);
+                                builder.columns_mut().rollback_to(attempt_len);
                             }
                         }
                     }

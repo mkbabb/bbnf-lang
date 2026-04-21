@@ -305,7 +305,7 @@ pub fn emit_parse_keyword(
                                         {
                                             let __ref_save_p = *p;
                                             let __ref_save_cols =
-                                                builder.columns_mut().len();
+                                                builder.columns_mut().len() as u32;
                                             match (#ref_call) {
                                                 ::core::result::Result::Ok(__off) => {
                                                     return ::core::result::Result::Ok(__off);
@@ -313,7 +313,7 @@ pub fn emit_parse_keyword(
                                                 ::core::result::Result::Err(_) => {
                                                     *p = __ref_save_p;
                                                     builder.columns_mut()
-                                                        .truncate(__ref_save_cols);
+                                                        .rollback_to(__ref_save_cols);
                                                 }
                                             }
                                         }
@@ -399,7 +399,7 @@ pub fn emit_parse_keyword(
                                         {
                                             let span_lo = *p as u32;
                                             let seq_save_cols =
-                                                builder.columns_mut().len();
+                                                builder.columns_mut().len() as u32;
                                             let seq_attempt:
                                                 ::core::result::Result<(), ()> =
                                                 (|| {
@@ -409,7 +409,7 @@ pub fn emit_parse_keyword(
                                             if seq_attempt.is_err() {
                                                 *p = span_lo as usize;
                                                 builder.columns_mut()
-                                                    .truncate(seq_save_cols);
+                                                    .rollback_to(seq_save_cols);
                                                 return Err(
                                                     ::bbnf::runtime::tape::DtaError::Syntax {
                                                         offset: span_lo,
@@ -428,7 +428,7 @@ pub fn emit_parse_keyword(
                                             // emits one leaf per matched
                                             // literal.
                                             builder.columns_mut()
-                                                .truncate(seq_save_cols);
+                                                .rollback_to(seq_save_cols);
                                             let off = builder.push_leaf_with(
                                                 ::bbnf::runtime::tape::TapeKind::Span,
                                                 span_lo,

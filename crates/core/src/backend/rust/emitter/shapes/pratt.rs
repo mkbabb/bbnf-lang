@@ -223,18 +223,22 @@ pub fn emit_parse_pratt(
             // use as of AY.W5.b.
             let _ = #support_mod::skip_space(input, p, state);
             let outer_span_lo = *p as u32;
-            let outer_off = builder.open_compound(
+            // AY-II.W0.b — outer Pratt compound on begin_compound /
+            // end_compound (W0.a's unified API). Pre-order open at
+            // outer_span_lo; matching end_compound at span_hi
+            // back-patches span_hi + child_off + HAS_CHILDREN.
+            let outer_off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::Rule,
                 outer_span_lo,
                 #variant_idx,
-                0,
+                0u16,
             );
-            // Under `open_compound`, the first direct child lands at
-            // `outer_off.0 + 1` — the same cursor pre-order fast-path
+            // Under begin_compound, the first direct child lands at
+            // `outer_off + 1` — the same cursor pre-order fast-path
             // `first_child_root` recognises. Seed `this_operand_root`
             // at that index so the reducer's first reduce names the
             // correct LHS regardless of whether reductions ever fire.
-            let outer_child_mark_idx: u32 = outer_off.0.saturating_add(1);
+            let outer_child_mark_idx: u32 = outer_off.saturating_add(1);
 
             // ── Leftmost operand ────────────────────────────────────
             // The operand root is the first record the dispatcher
@@ -343,15 +347,28 @@ pub fn emit_parse_pratt(
                     let lhs_span_lo = top_op.lhs_span_lo;
                     let op_discriminant = top_op.op_discriminant;
                     op_stack_len -= 1;
-                    let compound_idx = builder.push_compound(
+                    // AY-II.W0.b — reducer inner compound on begin/end.
+                    // Post-order: its children already live in the tape
+                    // (LHS + op leaf + RHS at indices [lhs_idx..len]);
+                    // begin_compound allocates a new row at the post-
+                    // position; end_compound closes; set_child_off_at
+                    // retroactively points child_off at `lhs_idx` so the
+                    // cursor walk names LHS as first child. flags
+                    // carries op_discriminant so reducer-variant
+                    // projection distinguishes per-op.
+                    let reducer_span_hi = *p as u32;
+                    let compound_idx = builder.begin_compound(
                         ::bbnf::runtime::tape::TapeKind::Rule,
-                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
                         lhs_span_lo,
-                        *p as u32,
                         op_discriminant,
-                        0,
+                        0u16,
                     );
-                    this_operand_root = compound_idx.0;
+                    builder.end_compound(compound_idx, reducer_span_hi);
+                    builder.columns_mut().set_child_off_at(
+                        compound_idx,
+                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                    );
+                    this_operand_root = compound_idx;
                 }
 
                 // If no new op: outer compound closes.
@@ -520,16 +537,16 @@ pub fn emit_parse_pratt(
             // the override because `SIB_SKIP_STAMPED_BIT` is set on
             // the outer row's open, and Stage-C skips re-derivation.
             let outer_span_hi = *p as u32;
-            builder.close_compound(outer_off, outer_span_hi);
+            builder.end_compound(outer_off, outer_span_hi);
             // Walker-parity override: child_off ← final reducer.
             // When no reduction fired (single-operand Pratt), the
             // final reducer is the first operand's root, which
             // `this_operand_root` already tracks.
             builder.columns_mut().set_child_off_at(
-                outer_off.0,
+                outer_off,
                 ::bbnf::runtime::tape::TapeOffset(this_operand_root),
             );
-            Ok(outer_off)
+            Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
         }
     }
 }

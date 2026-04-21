@@ -129,20 +129,27 @@ pub fn emit_parse_flat(
             ::bbnf::runtime::tape::DtaError,
         > {
             let span_lo = *p as u32;
-            let outer_child = builder.mark_children();
+            // AY-II.W0.b — walker-parity POST-ORDER outer Seq compound.
+            // Capture first-child index pre-emission; allocate the
+            // compound row post-children via begin_compound; close
+            // immediately; override child_off to point at first-child.
+            let outer_child = builder.columns_mut().len() as u32;
 
             #body_emission
 
             let span_hi = *p as u32;
-            let outer_off = builder.push_compound(
+            let outer_off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::Seq,
-                outer_child,
                 span_lo,
-                span_hi,
                 #variant_idx,
-                0,
+                0u16,
             );
-            Ok(outer_off)
+            builder.end_compound(outer_off, span_hi);
+            builder.columns_mut().set_child_off_at(
+                outer_off,
+                ::bbnf::runtime::tape::TapeOffset(outer_child),
+            );
+            Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
         }
     }
 }
@@ -340,16 +347,19 @@ fn emit_tape_position_core(
             );
             quote! {
                 let seq_lo = *p as u32;
-                let seq_child = builder.mark_children();
+                let seq_child = builder.columns_mut().len() as u32;
                 #inner
                 let seq_hi = *p as u32;
-                let _ = builder.push_compound(
+                let __seq_off = builder.begin_compound(
                     ::bbnf::runtime::tape::TapeKind::Seq,
-                    seq_child,
                     seq_lo,
-                    seq_hi,
                     0,
-                    0,
+                    0u16,
+                );
+                builder.end_compound(__seq_off, seq_hi);
+                builder.columns_mut().set_child_off_at(
+                    __seq_off,
+                    ::bbnf::runtime::tape::TapeOffset(seq_child),
                 );
             }
         }
@@ -493,19 +503,19 @@ fn emit_tape_repeat(
     if hi == 1 && lo == 0 {
         // Optional. AX.W0a.2.h — wrap the inner in an attempt so
         // failure silently rolls back `*p` + tape columns instead
-        // of propagating to the enclosing shape fn. Prior emission
-        // bubbled any inner `Err` through, which breaks `?`-gated
-        // positions like `"|" ?` in BBNF's `alternation` iter
-        // (optional separator) — the failing `|` check aborted the
-        // whole rule. Matches walker's `lo==0` optional semantics.
+        // of propagating to the enclosing shape fn. Matches walker's
+        // `lo==0` optional semantics.
+        //
+        // AY-II.W0.b — truncate→rollback_to on iter failure; per-iter
+        // Seq and outer Repeat compounds use begin_compound/end_compound.
         let _ = lo_lit;
         quote! {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.mark_children();
+            let repeat_child = builder.columns_mut().len() as u32;
             let iter_save_p = *p;
-            let iter_save_cols = builder.columns_mut().len();
+            let iter_save_cols = builder.columns_mut().len() as u32;
             let iter_lo = *p as u32;
-            let iter_child = builder.mark_children();
+            let iter_child = builder.columns_mut().len() as u32;
             let opt_attempt: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> =
                 (|| {
                     #inner_emit
@@ -514,76 +524,80 @@ fn emit_tape_repeat(
             let matched = opt_attempt.is_ok();
             if !matched {
                 *p = iter_save_p;
-                builder.columns_mut().truncate(iter_save_cols);
+                builder.columns_mut().rollback_to(iter_save_cols);
             } else {
                 let iter_hi = *p as u32;
-                let _ = builder.push_compound(
+                let __iter_off = builder.begin_compound(
                     ::bbnf::runtime::tape::TapeKind::Seq,
-                    iter_child,
                     iter_lo,
-                    iter_hi,
                     0,
-                    0,
+                    0u16,
+                );
+                builder.end_compound(__iter_off, iter_hi);
+                builder.columns_mut().set_child_off_at(
+                    __iter_off,
+                    ::bbnf::runtime::tape::TapeOffset(iter_child),
                 );
             }
             let repeat_hi = *p as u32;
-            let _ = builder.push_compound(
-                // AX.W0a.2.j — use `TapeKind::Repeat` (not `Rule`)
-                // for the Repeat-frame wrapper so downstream IR-
-                // lowering's `iter_rep_children` peels it (the walker
-                // equivalent also types Repeat-frame Rule compounds
-                // identically under `frame_to_tape_kind` — but the
-                // lowering keys on TapeKind, not on variant_idx).
+            // AX.W0a.2.j — `TapeKind::Repeat` (not `Rule`) so
+            // downstream IR-lowering's `iter_rep_children` peels it.
+            let __repeat_off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::Repeat,
-                repeat_child,
                 repeat_lo,
-                repeat_hi,
                 0,
-                0,
+                0u16,
+            );
+            builder.end_compound(__repeat_off, repeat_hi);
+            builder.columns_mut().set_child_off_at(
+                __repeat_off,
+                ::bbnf::runtime::tape::TapeOffset(repeat_child),
             );
         }
     } else {
         // Generic repeat. Iterate greedily.
         //
-        // AX.W0a.2.g — column truncation on iter failure + zero-width
+        // AX.W0a.2.g — column rollback on iter failure + zero-width
         // break. Walker's `handle_repeat_failure_bounded` rolls back
         // `columns` to the iter's savepoint on Err or zero-width
-        // success so orphan leaves pushed inside the inner_emit don't
-        // leak into the surrounding tape. Without truncation, a
-        // zero-width regex match (e.g. `/[ \t]*/` at EOF) emits its
-        // Span leaf, the iter `*p == save_p` break fires, and the leaf
-        // remains on the tape outside any iter-Seq compound.
+        // success.
+        //
+        // AY-II.W0.b — truncate→rollback_to across the 2 rollback sites
+        // + per-iter Seq + outer Repeat compounds on begin/end_compound.
         quote! {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.mark_children();
+            let repeat_child = builder.columns_mut().len() as u32;
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
-                let save_cols = builder.columns_mut().len();
+                let save_cols = builder.columns_mut().len() as u32;
                 let iter_lo = *p as u32;
-                let iter_child = builder.mark_children();
+                let iter_child = builder.columns_mut().len() as u32;
                 let attempt = (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
                     #inner_emit
                     Ok(())
                 })();
                 if attempt.is_err() {
                     *p = save_p;
-                    builder.columns_mut().truncate(save_cols);
+                    builder.columns_mut().rollback_to(save_cols);
                     break;
                 }
                 // Protect against non-progressing iterations.
                 if *p == save_p {
-                    builder.columns_mut().truncate(save_cols);
+                    builder.columns_mut().rollback_to(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
-                let _ = builder.push_compound(
+                let __iter_off = builder.begin_compound(
                     ::bbnf::runtime::tape::TapeKind::Seq,
-                    iter_child,
                     iter_lo,
-                    iter_hi,
                     0,
-                    0,
+                    0u16,
+                );
+                builder.end_compound(__iter_off, iter_hi);
+                builder.columns_mut().set_child_off_at(
+                    __iter_off,
+                    ::bbnf::runtime::tape::TapeOffset(iter_child),
                 );
                 iter_count = iter_count.saturating_add(1);
             }
@@ -595,19 +609,16 @@ fn emit_tape_repeat(
                 });
             }
             let repeat_hi = *p as u32;
-            let _ = builder.push_compound(
-                // AX.W0a.2.j — use `TapeKind::Repeat` (not `Rule`)
-                // for the Repeat-frame wrapper so downstream IR-
-                // lowering's `iter_rep_children` peels it (the walker
-                // equivalent also types Repeat-frame Rule compounds
-                // identically under `frame_to_tape_kind` — but the
-                // lowering keys on TapeKind, not on variant_idx).
+            let __repeat_off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::Repeat,
-                repeat_child,
                 repeat_lo,
-                repeat_hi,
                 0,
-                0,
+                0u16,
+            );
+            builder.end_compound(__repeat_off, repeat_hi);
+            builder.columns_mut().set_child_off_at(
+                __repeat_off,
+                ::bbnf::runtime::tape::TapeOffset(repeat_child),
             );
         }
     }
@@ -1285,7 +1296,8 @@ fn emit_alt_typed_payload_tape(
                     offset: *p as u32,
                 })?;
             let alt_lo = *p as u32;
-            let alt_child = builder.mark_children();
+            // AY-II.W0.b — walker-parity post-order Alt compound.
+            let alt_child = builder.columns_mut().len() as u32;
             'try_branches: loop {
                 match first {
                     #(#byte_arms)*
@@ -1300,13 +1312,16 @@ fn emit_alt_typed_payload_tape(
                 );
             }
             let alt_hi = *p as u32;
-            let _ = builder.push_compound(
+            let __alt_off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::Alt,
-                alt_child,
                 alt_lo,
-                alt_hi,
                 0u8,
-                0u8,
+                0u16,
+            );
+            builder.end_compound(__alt_off, alt_hi);
+            builder.columns_mut().set_child_off_at(
+                __alt_off,
+                ::bbnf::runtime::tape::TapeOffset(alt_child),
             );
         }
     }

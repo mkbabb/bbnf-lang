@@ -321,7 +321,11 @@ fn emit_alt_tape(
                     offset: *p as u32,
                 })?;
             let alt_lo = *p as u32;
-            let alt_child = builder.mark_children();
+            // AY-II.W0.b — walker-parity post-order Alt compound. Capture
+            // first-child index before branches emit; allocate the
+            // compound row post-branches via begin_compound; close
+            // immediately; override child_off.
+            let alt_child = builder.columns_mut().len() as u32;
             'try_branches: loop {
                 match first {
                     #(#byte_arms)*
@@ -337,13 +341,16 @@ fn emit_alt_tape(
                 );
             }
             let alt_hi = *p as u32;
-            let _ = builder.push_compound(
+            let __alt_off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::Alt,
-                alt_child,
                 alt_lo,
-                alt_hi,
                 #variant_lit,
-                0,
+                0u16,
+            );
+            builder.end_compound(__alt_off, alt_hi);
+            builder.columns_mut().set_child_off_at(
+                __alt_off,
+                ::bbnf::runtime::tape::TapeOffset(alt_child),
             );
         }
     }
@@ -376,12 +383,12 @@ fn emit_alt_branch_body_tape(
             Some(call) => quote! {
                 {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len();
+                    let attempt_len = builder.columns_mut().len() as u32;
                     match #call {
                         Ok(_) => break 'try_branches,
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().truncate(attempt_len);
+                            builder.columns_mut().rollback_to(attempt_len);
                         }
                     }
                 }
@@ -464,7 +471,7 @@ fn emit_structural_branch_tape(
     quote! {
         {
             let attempt_p = *p;
-            let attempt_len = builder.columns_mut().len();
+            let attempt_len = builder.columns_mut().len() as u32;
             let attempt: ::core::result::Result<(), ()> = (|| {
                 #body
                 Ok(())
@@ -473,7 +480,7 @@ fn emit_structural_branch_tape(
                 Ok(_) => break 'try_branches,
                 Err(_) => {
                     *p = attempt_p;
-                    builder.columns_mut().truncate(attempt_len);
+                    builder.columns_mut().rollback_to(attempt_len);
                 }
             }
         }
@@ -612,14 +619,14 @@ fn emit_branch_position_core(
                     loop {
                         #bound_check
                         let iter_p = *p;
-                        let iter_len = builder.columns_mut().len();
+                        let iter_len = builder.columns_mut().len() as u32;
                         let iter_res: ::core::result::Result<(), ()> = (|| {
                             #inner_emit
                             Ok(())
                         })();
                         if iter_res.is_err() || *p == iter_p {
                             *p = iter_p;
-                            builder.columns_mut().truncate(iter_len);
+                            builder.columns_mut().rollback_to(iter_len);
                             break;
                         }
                         iter_count += 1;
@@ -1508,7 +1515,11 @@ fn emit_token_dispatch_tape(
     quote! {
         {
             let td_lo = *p as u32;
-            let td_child = builder.mark_children();
+            // AY-II.W0.b — walker-parity post-order TokenDispatch
+            // compound. Capture first-child index pre-emission;
+            // allocate the compound row post-children; override
+            // child_off to point back at first-child.
+            let td_child = builder.columns_mut().len() as u32;
             let token_lo = *p;
             #token_emit
             let token_span: &[u8] = &input[token_lo..*p];
@@ -1518,13 +1529,16 @@ fn emit_token_dispatch_tape(
                 #fallback_emit
             }
             let td_hi = *p as u32;
-            let _ = builder.push_compound(
+            let __td_off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::TokenDispatch,
-                td_child,
                 td_lo,
-                td_hi,
                 #variant_lit,
-                0,
+                0u16,
+            );
+            builder.end_compound(__td_off, td_hi);
+            builder.columns_mut().set_child_off_at(
+                __td_off,
+                ::bbnf::runtime::tape::TapeOffset(td_child),
             );
         }
     }

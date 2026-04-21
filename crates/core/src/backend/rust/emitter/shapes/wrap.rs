@@ -503,7 +503,7 @@ fn emit_alt_tape_dispatch(
     } else {
         quote! {
             let __wrap_enter_p = *p as u32;
-            let __wrap_enter_child = builder.mark_children();
+            let __wrap_enter_child = builder.columns_mut().len() as u32;
             let mut __wrap_chosen_meta: u8 = 0;
             #first_peek
             'try_branches: loop {
@@ -520,21 +520,33 @@ fn emit_alt_tape_dispatch(
                     },
                 );
             }
-            // AX.W0a.2.j — push the Wrap rule's parent compound so the
-            // downstream IR-lowering re-sees the `Alt(...)` structure on
-            // self-host cycle-N+1. `variant_idx = rule.id` drives
-            // `rule_kind()` to the Wrap rule's kind; `meta_idx = branch
-            // ordinal` lets sub-variant projection distinguish branches.
+            // AY-II.W0.b — unified compound emission via begin_compound /
+            // end_compound. The Wrap rule's compound is walker-parity
+            // post-order: it lands AFTER the chosen branch's records.
+            // Post-W0.a the outer Rule row is allocated at the current
+            // (post-branch) columns.len() via begin_compound; the
+            // matching end_compound back-patches span_hi + child_off
+            // + HAS_CHILDREN (child_off stamps to __wrap_enter_child,
+            // the first branch record). `flags` carries the chosen
+            // meta discriminant so sub-variant projection distinguishes
+            // branches. `frame_depth` = variant_idx as before.
             let __wrap_exit_p = *p as u32;
-            let __wrap_off = builder.push_compound(
+            let __wrap_off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::Rule,
-                __wrap_enter_child,
                 __wrap_enter_p,
-                __wrap_exit_p,
                 #rule_variant_idx,
-                __wrap_chosen_meta,
+                __wrap_chosen_meta as u16,
             );
-            Ok(__wrap_off)
+            builder.end_compound(__wrap_off, __wrap_exit_p);
+            // Walker-parity override: the compound's child_off points at
+            // the first branch record emitted (captured at enter via
+            // columns.len()). Post-close override preserves
+            // write-time stamping semantics (finaliser skips re-derivation).
+            builder.columns_mut().set_child_off_at(
+                __wrap_off,
+                ::bbnf::runtime::tape::TapeOffset(__wrap_enter_child),
+            );
+            Ok(::bbnf::runtime::tape::TapeOffset(__wrap_off))
         }
     }
 }
@@ -546,7 +558,10 @@ fn emit_wrap_linear_body_tape(call: &TokenStream, branch_ord: u8) -> TokenStream
     quote! {
         {
             let attempt_p = *p;
-            let attempt_len = builder.columns_mut().len();
+            // AY-II.W0.b — capture columns length as an explicit u32
+            // open_offset; rollback_to (W0.a) replaces truncate to
+            // signal checkpoint/restore intent to the fused pipeline.
+            let attempt_len = builder.columns_mut().len() as u32;
             match #call {
                 Ok(_) => {
                     __wrap_chosen_meta = #branch_ord;
@@ -554,7 +569,7 @@ fn emit_wrap_linear_body_tape(call: &TokenStream, branch_ord: u8) -> TokenStream
                 }
                 Err(_) => {
                     *p = attempt_p;
-                    builder.columns_mut().truncate(attempt_len);
+                    builder.columns_mut().rollback_to(attempt_len);
                 }
             }
         }

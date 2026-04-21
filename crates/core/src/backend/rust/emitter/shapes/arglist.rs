@@ -110,20 +110,24 @@ pub fn emit_parse_arglist(
             ::bbnf::runtime::tape::DtaError,
         > {
             let span_lo = *p as u32;
-            let outer_child = builder.mark_children();
+            // AY-II.W0.b — walker-parity post-order outer Rule compound.
+            let outer_child = builder.columns_mut().len() as u32;
 
             #body_emission
 
             let span_hi = *p as u32;
-            let outer_off = builder.push_compound(
+            let outer_off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::Rule,
-                outer_child,
                 span_lo,
-                span_hi,
                 #variant_idx,
-                0,
+                0u16,
             );
-            Ok(outer_off)
+            builder.end_compound(outer_off, span_hi);
+            builder.columns_mut().set_child_off_at(
+                outer_off,
+                ::bbnf::runtime::tape::TapeOffset(outer_child),
+            );
+            Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
         }
     }
 }
@@ -288,25 +292,32 @@ fn emit_tape_position_core(
             let lo_lit = *lo as usize;
             if *hi == 1 && *lo == 0 {
                 // Optional — attempt once, restore on failure.
+                // AY-II.W0.b — post-order iter Seq compound via
+                // begin/end; retry uses rollback_to (iter_save_cols).
                 quote! {
                     let save_p = *p;
+                    let iter_save_cols = builder.columns_mut().len() as u32;
                     let iter_lo = *p as u32;
-                    let iter_child = builder.mark_children();
+                    let iter_child = builder.columns_mut().len() as u32;
                     let attempt = (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
                         #inner_emit
                         Ok(())
                     })();
                     if attempt.is_err() {
                         *p = save_p;
+                        builder.columns_mut().rollback_to(iter_save_cols);
                     } else {
                         let iter_hi = *p as u32;
-                        let _ = builder.push_compound(
+                        let __iter_off = builder.begin_compound(
                             ::bbnf::runtime::tape::TapeKind::Seq,
-                            iter_child,
                             iter_lo,
-                            iter_hi,
                             0,
-                            0,
+                            0u16,
+                        );
+                        builder.end_compound(__iter_off, iter_hi);
+                        builder.columns_mut().set_child_off_at(
+                            __iter_off,
+                            ::bbnf::runtime::tape::TapeOffset(iter_child),
                         );
                     }
                 }
@@ -314,29 +325,37 @@ fn emit_tape_position_core(
                 // Generic repeat — iterate greedily, count iters.
                 quote! {
                     let repeat_lo = *p as u32;
-                    let repeat_child = builder.mark_children();
+                    let repeat_child = builder.columns_mut().len() as u32;
                     let mut iter_count: u32 = 0;
                     loop {
                         let save_p = *p;
+                        let save_cols = builder.columns_mut().len() as u32;
                         let iter_lo = *p as u32;
-                        let iter_child = builder.mark_children();
+                        let iter_child = builder.columns_mut().len() as u32;
                         let attempt = (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
                             #inner_emit
                             Ok(())
                         })();
                         if attempt.is_err() {
                             *p = save_p;
+                            builder.columns_mut().rollback_to(save_cols);
                             break;
                         }
-                        if *p == save_p { break; }
+                        if *p == save_p {
+                            builder.columns_mut().rollback_to(save_cols);
+                            break;
+                        }
                         let iter_hi = *p as u32;
-                        let _ = builder.push_compound(
+                        let __iter_off = builder.begin_compound(
                             ::bbnf::runtime::tape::TapeKind::Seq,
-                            iter_child,
                             iter_lo,
-                            iter_hi,
                             0,
-                            0,
+                            0u16,
+                        );
+                        builder.end_compound(__iter_off, iter_hi);
+                        builder.columns_mut().set_child_off_at(
+                            __iter_off,
+                            ::bbnf::runtime::tape::TapeOffset(iter_child),
                         );
                         iter_count = iter_count.saturating_add(1);
                     }
@@ -348,13 +367,16 @@ fn emit_tape_position_core(
                         });
                     }
                     let repeat_hi = *p as u32;
-                    let _ = builder.push_compound(
+                    let __repeat_off = builder.begin_compound(
                         ::bbnf::runtime::tape::TapeKind::Rule,
-                        repeat_child,
                         repeat_lo,
-                        repeat_hi,
                         0,
-                        0,
+                        0u16,
+                    );
+                    builder.end_compound(__repeat_off, repeat_hi);
+                    builder.columns_mut().set_child_off_at(
+                        __repeat_off,
+                        ::bbnf::runtime::tape::TapeOffset(repeat_child),
                     );
                 }
             }
@@ -372,16 +394,19 @@ fn emit_tape_position_core(
             }
             quote! {
                 let seq_lo = *p as u32;
-                let seq_child = builder.mark_children();
+                let seq_child = builder.columns_mut().len() as u32;
                 #(#out)*
                 let seq_hi = *p as u32;
-                let _ = builder.push_compound(
+                let __seq_off = builder.begin_compound(
                     ::bbnf::runtime::tape::TapeKind::Seq,
-                    seq_child,
                     seq_lo,
-                    seq_hi,
                     0,
-                    0,
+                    0u16,
+                );
+                builder.end_compound(__seq_off, seq_hi);
+                builder.columns_mut().set_child_off_at(
+                    __seq_off,
+                    ::bbnf::runtime::tape::TapeOffset(seq_child),
                 );
             }
         }

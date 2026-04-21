@@ -92,6 +92,26 @@ B0.W1 adds prepared-binary reuse so follow-on samply runs skip the
 rebuild; until then, prepare once per wave and consume the artefacts
 verbatim per §Prepare a wave.
 
+### Prepared binary reuse
+
+- `scripts/prebuild-benches.sh` now reuses cached binaries under
+  `target/profiling-prep/deps/` when fresh vs the bench source.
+- `scripts/prepare-profile-wave.sh` now reuses cached `cargo expand`
+  artefacts when fresh vs the bench source, every shape emitter under
+  `crates/core/src/backend/rust/emitter/shapes/`, and the regenerated
+  `crates/core/src/grammar/generated.rs`.
+- Stale detection: if you edit a bench source, shape emitter, or regen
+  `generated.rs`, the next prepare rebuilds that bench's artefacts;
+  unrelated benches stay cached.
+- Per-bench stdout reads `reused: <path>` / `rebuilt: <path>` for the
+  binary step and `expand: reused <path>` / `expand: regen <path>` for
+  the expansion step, so the orchestrator can see which artefacts were
+  cached without reopening build logs.
+- `target/release/deps/` and `target/bench/deps/` remain searched as
+  legacy fallbacks until older wave artefacts age out.
+- Invalidate manually if needed: `rm -rf .profiles/samply/prebuild/{binaries.tsv,wave.tsv,expand}`
+  and `rm target/profiling-prep/deps/<bench>-*`.
+
 ### W0 timing proof
 
 - Baseline (pre-W0, HEAD `9bff7e7d`): `docs/benchmarks/post-B0-W0-baseline.txt`.

@@ -143,3 +143,98 @@ pub fn is_dispatchable(patterns: &[PatternFirstBytes]) -> bool {
         && patterns.len() <= MAX_DISPATCHED
         && patterns.iter().all(|p| p.first_bytes.is_some())
 }
+
+// ── AY-II.W0.e — Per-rule alphabet/digraph classification ────────────
+//
+// Shared fact surface for the emitter's `STRUCTURAL_SCAN_POLICY` const
+// table. One classifier function per rule's FIRST set, intersected
+// with the grammar's mined structural alphabet + digraph first-byte
+// set. No new facts API — the function reads existing IR facts
+// (`IrRule::meta::first_set` / `GrammarProfile::structural_alphabet`
+// / `GrammarProfile::structural_digraph_mask`) and emits a
+// lightweight classification result the emitter lowers into the
+// per-grammar const.
+
+/// Per-rule intersection facts between the rule's FIRST set and the
+/// grammar's structural alphabet + digraph signature.
+///
+/// Populated by [`classify_rule_alphabet`] at emission time; lowered
+/// into a [`::tape::ScanPolicyEntry`] by the emitter's policy-table
+/// generator. The struct is pure `Copy` — no heap state, no CSP
+/// solve surface.
+#[derive(Debug, Clone, Copy)]
+pub struct RuleAlphabetFacts {
+    /// Count of bytes in the intersection of the rule's FIRST set
+    /// with the grammar's structural alphabet.
+    pub alphabet_intersection_count: u8,
+    /// `true` iff the grammar mines any digraph AND the rule's FIRST
+    /// set covers at least one digraph first-byte.
+    pub admits_digraph: bool,
+    /// `true` iff the rule's shape is a structural compound (Seq,
+    /// Alt, Repeat, Rule, TokenDispatch — the `has_children` shapes).
+    /// Drives whether `OBJECT_KEY_SEEK` + `SCAN_STRUCTURAL_BOUNDED`
+    /// are applicable at all (leaf rules carry no children to
+    /// scan).
+    pub is_compound: bool,
+}
+
+impl RuleAlphabetFacts {
+    /// Empty facts — no intersection, no digraph, not a compound.
+    pub const EMPTY: RuleAlphabetFacts = RuleAlphabetFacts {
+        alphabet_intersection_count: 0,
+        admits_digraph: false,
+        is_compound: false,
+    };
+}
+
+/// Classify a single rule against the grammar's mined alphabet +
+/// digraph facts.
+///
+/// Parameters:
+///
+/// - `rule_first_set`: the rule's FIRST-set bytes (`IrRule::meta::first_set`
+///   materialised as a byte slice the caller already collected — we
+///   take a slice rather than owning the import to keep the byte_class
+///   module free of IR / CSP dependencies);
+/// - `structural_alphabet`: the grammar's
+///   `GrammarProfile::structural_alphabet` bytes (sorted);
+/// - `structural_digraph_mask`: the grammar's 256-bit bitmap of
+///   digraph first-bytes (`GrammarProfile::structural_digraph_mask`);
+/// - `is_compound`: whether the rule is a children-bearing compound
+///   (Seq / Alt / Repeat / Rule / TokenDispatch).
+///
+/// Returns a [`RuleAlphabetFacts`] the emitter lowers into a
+/// [`::tape::ScanPolicyEntry`]. The function is pure — no hidden
+/// state, no allocation, admissible in const contexts if the IR ever
+/// moves in that direction.
+#[inline]
+pub fn classify_rule_alphabet(
+    rule_first_set: &[u8],
+    structural_alphabet: &[u8],
+    structural_digraph_mask: &[u64; 4],
+    is_compound: bool,
+) -> RuleAlphabetFacts {
+    let mut intersection: u8 = 0;
+    let mut admits_digraph = false;
+
+    for &b in rule_first_set {
+        // Alphabet membership — linear scan over the sorted alphabet
+        // (bounded ≤ 53 bytes on every shipped grammar, so the
+        // linear-vs-bitmap trade-off lands on linear here).
+        if structural_alphabet.contains(&b) {
+            intersection = intersection.saturating_add(1);
+        }
+        // Digraph first-byte probe — one indexed load + one mask.
+        let word = (b >> 6) as usize;
+        let bit = b & 0x3F;
+        if (structural_digraph_mask[word] >> bit) & 1 == 1 {
+            admits_digraph = true;
+        }
+    }
+
+    RuleAlphabetFacts {
+        alphabet_intersection_count: intersection,
+        admits_digraph,
+        is_compound,
+    }
+}

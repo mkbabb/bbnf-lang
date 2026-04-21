@@ -4,9 +4,9 @@ Dated execution log for tranche AY-II (pass II of AY; see
 `../AY-I/FINAL.md` for pass-I close and `audit/AUDIT-{A,B,C,D}-*.md`
 for the triumvirate that informs this pass).
 
-- `Status`: in_progress
-- `Current wave`: W0
-- `Next wave`: W1
+- `Status`: in_progress (W0 landed substrate + emitter + runtime; pending 4-agent audit for forward path)
+- `Current wave`: W0 (pre-close pause)
+- `Next wave`: deferred — awaiting audit triumvirate
 
 ---
 
@@ -44,6 +44,85 @@ Contract signatures fixed at dispatch so all five worktrees write
 against the same target API. Orchestrator-owned close ceremony (§W0.md
 Orchestrator close steps): cherry-pick → regen → fat-LTO 5-bench
 matrix → samply per grammar → bootstrap double-regen idempotency.
+
+## W0 cherry-pick ledger — 2026-04-21
+
+All 5 worktrees cherry-picked onto master. Commit ledger:
+
+- `a13840a0` + `b2ac3cf5` — W0.a tape substrate rollback + tests.
+- `61d0338c` + `487b17b7` — W0.e cursor primitives + `STRUCTURAL_SCAN_POLICY`.
+- `4f42f6bb` — W0.c `ValueBuilder<R>` + fused `Parsed::to_value` + `navigate_tape` retire.
+- `2ddb8c33` + `f2e458ec` + `2b24b0a4` + `1f97a8cc` — W0.b emitter shape migrations.
+- `db979564` + `58271da1` — W0.d projection-totality emission + wire-contract test.
+- `f372e7ef` — compose bridge: thread `root_off` into `ValueBuilder::finish`;
+  hand-patched BbnfBootstrap `ValueRoot` stub (regen replaces at close).
+
+### W0-fix composition repair
+
+Bootstrap cycle-1 produced a 32938-line generated.rs that compiled but
+whose NEW parse emitted tapes the walker couldn't navigate — `host.rs`
+panicked on `find_rhs_expression_descendant` on the next build because
+`begin_compound` was silently hard-coding `variant_idx = 0` for every
+compound (collapsing rule_kind() to variant-0) and walker-parity
+post-order triplets never stamped `HAS_CHILDREN_BIT`.
+
+Fix landed as:
+
+- `f8ac2cd7` — W0-fix tape: `begin_compound` re-admits
+  `variant_idx` + `meta_idx` (now uses `TapeRec::pack_kind_meta`);
+  adds `end_compound_post_order` that atomically stamps span_hi +
+  child_off + HAS_CHILDREN_BIT.
+- `c9142405` — W0-fix emitter: every shape callsite migrates to the
+  6-arg `begin_compound` signature; walker-parity compounds collapse
+  their open/close + `set_child_off_at` triplet into one
+  `end_compound_post_order` call.
+
+## Pre-close pause — 2026-04-21
+
+W0's core transposition landed (10 original commits + 2 fix commits);
+`cargo check --workspace` did not run to completion before the pause.
+Outstanding quality concerns before opening W1:
+
+1. **`f372e7ef` hand-patched `generated.rs`.** The compose-bridge
+   commit carries a hand-edit (stub `project_value_output` with
+   `unreachable!()`) as the substrate to compile the lib while W0.b
+   migrated the emitter shapes. SPEC §"Generated files are output of
+   fresh regen; never hand-patch" treats this as a violation — even
+   as the one-shot escape recipe, a commit carrying hand-edits
+   should not persist on master history. The correct regen-only
+   state must replace it.
+2. **Idempotency unverified.** Bootstrap cycle-1 completes but
+   cycle-2 has not been demonstrated byte-identical to cycle-1 since
+   W0-fix landed. Double-regen is a W0 close gate.
+3. **`W0.b` landed ValueBuilder allocation at parse entry but did
+   NOT thread `value_builder` through per-shape fn signatures.** The
+   fused pipeline's lockstep construction (W0.c §2, AY-II.md §1)
+   remains half-complete: compound emission still writes only to
+   the tape; value construction has not been wired into shape
+   emission. The `ValueBuilder::finish` call at parse-entry
+   produces an empty slab — `Parsed::to_value` is currently
+   unreachable without post-parse reconstruction.
+4. **W0.e `STRUCTURAL_SCAN_POLICY` emission has no consumer.** The
+   policy const is emitted per grammar but no `__path_walk` /
+   `Parsed::get` emission consumes it. This is the substrate-
+   without-consumer pattern AY-II invariant §7 rejects at wave
+   close.
+5. **W0.c + W0.d hit usage limits mid-run.** Their committed work is
+   architecturally sound but the test coverage they authored
+   (`projection_totality.rs`, parse-count invariant in
+   `value_api_apples_to_apples.rs`) has not been run against the
+   composed + regen'd substrate.
+
+These concerns are not individual bugs to patch — they are a
+coherence gap between W0's thesis and its landed state. Before W1
+opens, the 4-agent audit triumvirate investigates: (a) W0's
+architectural outcome against its plan-declared invariants; (b)
+the fused-pipeline completion path W0.b deferred; (c) W1-W5 plan
+validity against W0's actual landing; (d) predecessor + successor
+alignment (AY-I close, BA/BB/BC openers).
+
+No quick fixes. No workarounds. The audit frames the forward path;
+execution resumes after the user's disposition.
 
 ---
 

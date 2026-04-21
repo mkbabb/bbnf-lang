@@ -519,17 +519,23 @@ fn emit_hoisted_dfa_tables(
     Some((
         quote! {
             /// AY.W4.3 — hoisted DFA byte-class equivalence table.
-            #[allow(dead_code)]
+            /// Consumed by `emit_dfa_body_table_driven` emitted in
+            /// the same translation unit; AY-II.W0'.c retired the
+            /// `#[allow(dead_code)]` marker — the emission pairs the
+            /// tables with their consumer 1:1 at
+            /// `emit_regex_scan_adapter`'s `state_count >=
+            /// DFA_HOIST_MIN_STATES` branch.
             pub(crate) const #classes_ident: [u8; 256] = [#(#class_lits),*];
 
             /// AY.W4.3 — hoisted DFA flat transition table
             /// (state * num_classes + class -> target_state |
-            /// 0xFF=DEAD).
-            #[allow(dead_code)]
+            /// 0xFF=DEAD). Consumed via the same hoist-branch pairing
+            /// as the byte-class table above.
             pub(crate) const #trans_ident: [u8; #trans_len_lit] = [#(#trans_lits),*];
 
-            /// AY.W4.3 — hoisted DFA accept-state bitset.
-            #[allow(dead_code)]
+            /// AY.W4.3 — hoisted DFA accept-state bitset. Consumed
+            /// via the same hoist-branch pairing as the byte-class
+            /// table above.
             pub(crate) const #accept_ident: [u64; #accept_len_lit] = [#(#accept_lits),*];
         },
         num_cls,
@@ -607,12 +613,13 @@ pub fn emit_regex_scan_adapter(
     // previously owned the per-state pattern statics no longer runs.
     // The adapter now emits its own `static #pat_ident: &str = "...";`
     // declarations so the pointer-equality dispatch arms below resolve.
+    // AY-II.W0'.c retired `#[allow(dead_code)]` — each static pairs
+    // 1:1 with the dispatch arm emitted below.
     let pattern_statics: Vec<TokenStream> = states
         .iter()
         .map(|(_idx, pattern, pat_ident)| {
             let pat_lit = Literal::string(pattern);
             quote! {
-                #[allow(dead_code)]
                 static #pat_ident: &str = #pat_lit;
             }
         })

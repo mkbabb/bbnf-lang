@@ -33,7 +33,6 @@
 //! see the same shape the walker's Alt frame produces. The per-
 //! branch leaf / compound pushes land as children of that Rule.
 
-use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -696,42 +695,6 @@ fn emit_regex_pattern_attempt(
     }
 }
 
-/// Regex-branch attempt — canonical non-whitespace scan. Matches
-/// CSS's `/[^\s;!}]+/` catch-all and similar fallback patterns.
-/// Retained for fallback cases where no structural regex pattern is
-/// attached to a branch (shouldn't occur under AltDispatch admission,
-/// but kept as a defensive path).
-#[allow(dead_code)]
-fn emit_regex_attempt() -> TokenStream {
-    quote! {
-        {
-            let at = *p;
-            let mut q = at;
-            while q < input.len() {
-                let b = input[q];
-                if b == b' ' || b == b'\t' || b == b'\n' || b == b'\r'
-                    || b == b';' || b == b'}' || b == b'!'
-                    || b == b',' || b == b'{' || b == b')'
-                {
-                    break;
-                }
-                q += 1;
-            }
-            if q > at {
-                *p = q;
-                let _ = builder.push_leaf(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
-                    at as u32,
-                    q as u32,
-                    0,
-                    0,
-                );
-                break 'try_branches;
-            }
-        }
-    }
-}
-
 /// Seq-branch attempt — flatten literal/alt/regex positions into a
 /// byte-sequence match. Used for prefix-tree-factored keyword chains.
 fn emit_seq_attempt(seq: &IrNode, ir: &GrammarIR) -> TokenStream {
@@ -1095,6 +1058,3 @@ fn emit_seq_attempt_visitor(seq: &IrNode, ir: &GrammarIR) -> TokenStream {
     }
 }
 
-/// Static assertion to preserve the ShapeTag import.
-#[allow(dead_code)]
-const _: fn(ShapeTag) -> bool = ShapeTag::is_w4_classified;

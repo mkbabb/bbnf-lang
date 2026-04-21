@@ -131,7 +131,7 @@ pub fn emit_parse_string(
 /// keep the emitter token stream composition simple. Emit once per
 /// compilation; no-op if already emitted.
 pub fn emit_escape_helper(grammar_suffix: &str) -> TokenStream {
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let _ = grammar_suffix;
     quote! {
         /// AY.W4.1 — string escape-path decoder. Cold path; routes
         /// through `parse_that::parsers::scan::decode_json_string_to_arena`,
@@ -237,14 +237,6 @@ pub fn emit_escape_helper(grammar_suffix: &str) -> TokenStream {
                 }
             }
         }
-
-        // Suppress unused-warnings for the support module reference —
-        // the support module's helpers are consumed by the sibling
-        // shape fns.
-        #[allow(dead_code)]
-        const __SHAPE_ESCAPE_HELPER_MARKER: () = {
-            use #support_mod as _;
-        };
     }
 }
 
@@ -349,7 +341,6 @@ pub fn emit_parse_string_visitor(
 /// kernel performs SIMD `u8x16` scan + stripe-copy escape decoding;
 /// the previous body walked input scalar-byte-by-byte.
 pub fn emit_visitor_escape_helper(grammar_suffix: &str) -> TokenStream {
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let helper_ident =
         format_ident!("parse_string_visitor_escaped_{}", grammar_suffix);
     quote! {
@@ -434,12 +425,5 @@ pub fn emit_visitor_escape_helper(grammar_suffix: &str) -> TokenStream {
                 }),
             }
         }
-
-        // Suppress unused-warning for the support module reference —
-        // sibling visitor-path fns already consume it.
-        #[allow(dead_code)]
-        const __VISITOR_ESCAPE_HELPER_MARKER: () = {
-            use #support_mod as _;
-        };
     }
 }

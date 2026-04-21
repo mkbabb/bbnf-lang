@@ -223,14 +223,11 @@ pub(crate) enum ProjectionFieldKind {
     Scalar { ty: TypeDesc, offset: u8 },
     /// Child-cursor handle at the given position among the compound's
     /// direct children. The struct field is a `<Grammar>NodeView<'p>`;
-    /// the materialiser fetches `view.child(child_idx)`. `ty` carries
-    /// the grammar's declared compound type for downstream W2 typed-
-    /// variant emission; unused at W0.d emission time.
-    CursorChild {
-        child_idx: usize,
-        #[allow(dead_code)]
-        ty: TypeDesc,
-    },
+    /// the materialiser fetches `view.child(child_idx)`. AY-II.W0'.c
+    /// retires the dead `ty: TypeDesc` slot that W0.d staged for a
+    /// W2-era typed-variant consumer that never landed — the
+    /// composer re-adds it when the consumer lands.
+    CursorChild { child_idx: usize },
 }
 
 /// AY-II.W0.d — grammar-derived field layout for a projection struct.
@@ -425,7 +422,6 @@ fn plan_from_resolver_tuple(fields: &[TypeDesc]) -> ProjectionFieldPlan {
         } else {
             kinds.push(ProjectionFieldKind::CursorChild {
                 child_idx: child_cursor,
-                ty: ty.clone(),
             });
             child_cursor += 1;
             any_cursor = true;

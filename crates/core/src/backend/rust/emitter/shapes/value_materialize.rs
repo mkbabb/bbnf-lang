@@ -177,7 +177,7 @@ fn emit_projection_fn(
         quote! {
             let __tape = output.tape();
             let __tape_rec = __tape
-                .try_get(::bbnf::tape::TapeOffset(offset))?;
+                .try_get(::bbnf::runtime::tape::TapeOffset(offset))?;
             let __bytes = __tape.payload_bytes(__tape_rec, #total_bytes_lit)?;
         }
     };

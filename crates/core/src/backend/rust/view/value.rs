@@ -139,8 +139,15 @@ pub fn emit_value_surface(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
 
 /// A single variant entry in `<Grammar>Value`.
 struct VariantEntry {
-    /// Rule name (variant identifier in the enum).
+    /// Rule name — used as the variant identifier in the enum (may
+    /// be disambiguated with a `_N` suffix on collision).
     name: String,
+    /// Raw rule name from the grammar — matches what
+    /// `collect_projection_admissions` iterates on. Used to construct
+    /// the materializer fn ident (which is emitted by
+    /// `shapes/value_materialize.rs` using the raw name, not the
+    /// disambiguated variant name).
+    raw_name: String,
     /// Rule id — the discriminator index the view's `rule_kind()`
     /// dispatcher emits for this rule.
     rule_id: u32,
@@ -176,6 +183,7 @@ fn collect_variant_classes(
         let shape = classify_shape(rule, ir, &raw_name, admissions, grammar_prefix);
         out.push(VariantEntry {
             name,
+            raw_name,
             rule_id: rule.id,
             shape,
         });
@@ -496,10 +504,10 @@ fn emit_project_arm(
         VariantShape::Projection { .. } => {
             let materializer_fn = format_ident!(
                 "materialize_projection_{}_{}",
-                sanitise_ident(&v.name),
+                sanitise_ident(&v.raw_name),
                 grammar_name,
             );
-            let rule_name_lit = proc_macro2::Literal::string(&v.name);
+            let rule_name_lit = proc_macro2::Literal::string(&v.raw_name);
             quote! {
                 #rule_kind_ident::#kind_variant => {
                     let proj = #materializer_fn(output, input, offset)

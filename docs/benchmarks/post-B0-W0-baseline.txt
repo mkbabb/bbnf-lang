@@ -1,0 +1,72 @@
+# B0.W0 baseline wall-clock timings (pre-W0 repair)
+# HEAD: 9bff7e7d
+# Host: Darwin 25.4.0 arm64 (aarch64-apple-darwin)
+# Date: 2026-04-21T01:34Z
+# CARGO_BUILD_JOBS=4
+# Method: .bbnf-cache cleared before each run (/usr/bin/time -p). Cold =
+#   first run with empty profile target subdir; warm = second run with
+#   target artefacts persisted (no source edits between runs). Warm is
+#   the routine-iteration cost (per PROFILING.md §Public fast-path); cold
+#   is the worst-case from a nuked cache.
+
+## Results
+
+                                                      cold                warm
+cargo check --workspace                             145.36s (u185.40s)    7.16s (u1.28s)
+cargo check --profile ax-iter --workspace             2.79s* (u2.39s)    0.23s (u0.08s)
+scripts/test-tier.sh leaf                             0.45s  (FAIL)       n/a  (FAIL)
+cargo test --workspace --no-run                     126.10s (u448.86s)   14.40s (u46.39s)
+
+* ax-iter cold measured against a populated `target/ax-iter/` subdir
+  (~4.1 GB retained from earlier iteration). A truly empty ax-iter
+  profile target is not the baseline state AY iteration would encounter;
+  the number above is what routine `cargo check --profile ax-iter`
+  costs the first time in a fresh shell after master movement.
+
+## Notes
+
+- Pre-flight environmental condition: at HEAD 9bff7e7d the sibling
+  `../parse-that/` worktree carried uncommitted in-flight edits that
+  removed `egraph::SaturationCache` from public surface, making every
+  workspace `cargo check` fail in ~1.5s with `E0425` against
+  `bbnf-regex/src/info/mod.rs`. The measurements above were captured
+  with those edits stashed (`git stash` in parse-that) and restored
+  after the run. This is itself a baseline datum: the pre-B0 routine
+  loop is exposed to sibling-repo drift because every default cargo
+  command traverses the full patched graph.
+
+- `scripts/test-tier.sh leaf` fails in < 1s because the script still
+  names `-p bbnf-tape` after the crate rename to `tape` — the script
+  never compiles anything. The leaf tier has been structurally dead
+  since the rename landed; B0.W0 surfaces it via `make iter-test-leaf`,
+  which inherits the same script. Repair of the package-name list is
+  required for the `iter-test-leaf` alias to produce real numbers;
+  B0.W0.c will re-measure after the fix lands.
+
+- Warm `cargo check --workspace` (7.16s) reflects the full dev-profile
+  fingerprint walk and linker cost with no source edits. Warm
+  `cargo check --profile ax-iter --workspace` (0.23s) reflects the
+  same walk on ax-iter's stripped-debuginfo artefacts. The ~30x gap is
+  the routine-iteration lever B0.W0 promotes into the public command
+  surface.
+
+- `cargo test --workspace --no-run` cold = 126.10s is the compile-gate
+  baseline for the full workspace test suite under the default `dev`
+  profile. The warm incremental (14.40s) is the cost of re-link + test
+  binary linkage with no source edits, dominated by the N aggregate
+  test binaries the workspace produces.
+
+## Reference
+
+B0.W0.c re-measures the same four commands post-close against this
+baseline. Expected movements:
+
+- `cargo check --workspace` warm stays ≈ 7s (baseline, not touched by W0).
+- `make iter-check` → `cargo check --profile ax-iter --workspace` warm
+  ≈ 0.2–0.3s — the same ax-iter number, now exposed as the public
+  routine path.
+- `make iter-test-leaf` → `scripts/test-tier.sh leaf --profile ax-iter`
+  produces real pass/fail output once the script's package-name list
+  is repaired.
+- `cargo test --workspace --no-run` stays as the final-proof surface;
+  not a routine command post-W0.

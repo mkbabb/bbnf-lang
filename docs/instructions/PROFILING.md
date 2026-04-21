@@ -33,6 +33,65 @@ Set the shared target first:
 export CARGO_TARGET_DIR=/absolute/path/to/shared/profile-target
 ```
 
+## Public fast-path commands
+
+Routine iteration rides the `ax-iter` profile via public cargo aliases
+and Makefile targets; profiling stays on `dev` for DWARF symbols, and
+final-proof work uses `bench`. Three surfaces, three purposes — do not
+cross-wire them. See `docs/benchmarks/post-B0-W0-commands.txt` for the
+full alias/target manifest.
+
+### Routine — ax-iter profile
+
+The `ax-iter` profile inherits `dev` and strips debuginfo; link time
+roughly halves and peak RSS on aggregate test binaries drops ~3×. The
+public entrypoints:
+
+- `cargo iter-check` → `cargo check --profile ax-iter --workspace`.
+- `make iter-check` — routine compile-gate; same command, Makefile
+  wrapper.
+- `make iter-test-leaf` → `scripts/test-tier.sh leaf --profile ax-iter`
+  (pure-data + substrate crates; fastest correctness tier).
+- `make iter-test-grammar` → `scripts/test-tier.sh grammar --profile
+  ax-iter` (per-grammar tape-parity + shape emit).
+- `make iter-test-ws` → `scripts/test-tier.sh workspace --profile
+  ax-iter` (full workspace; use only when wider blast radius is
+  actually relevant — this is still a heavy surface).
+
+### Codegen inspection — cargo expand + cargo asm
+
+Expand and asm artefacts land under `target/expand/` and `target/asm/`
+respectively so the aggregate expansions do not spill into `/tmp`.
+Every AY.W5-W7 expand/asm gate resolves through these entrypoints:
+
+- `make expand-json`, `make expand-css`, `make expand-bbnf`,
+  `make expand-sheets` — write `target/expand/<bench>.rs`. AY.W5 hard
+  gate 1 cites `cargo expand -p bbnf --bench json_monolithic`;
+  `make expand-json` is the public name for that call.
+- `make asm-parse BENCH=<name> FN=<symbol>` — writes
+  `target/asm/<bench>-<fn>.s`. AY.W5 hard gate 3 (close-stamp asm
+  inspection) resolves through this target.
+
+### Bench surfaces
+
+Heavy; never in iteration loops. Benches are cold-per-parse by
+contract (`README.md` §Benchmarking) and carry their own sequencing
+rules:
+
+- `make bench-compile BENCH=<name>` — compile-gate the bench binary
+  without running it. Appropriate as a preflight before a wave's
+  samply prepare, not as an iteration command.
+- `make bench-run BENCH=<name>` — runs the bench. Gate artefact only;
+  clear `.bbnf-cache` first.
+
+### Profiling preparation
+
+`make profile-wave` wraps `scripts/prepare-profile-wave.sh` with the
+absolute `CARGO_TARGET_DIR` contract from §Shared-target discipline.
+B0.W1 adds prepared-binary reuse so follow-on samply runs skip the
+rebuild; until then, prepare once per wave and consume the artefacts
+verbatim per §Prepare a wave.
+
 ## Prepare a wave
 
 `scripts/prepare-profile-wave.sh` builds every bench binary once,

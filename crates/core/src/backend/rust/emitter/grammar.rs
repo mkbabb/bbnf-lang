@@ -11,10 +11,10 @@
 //! `pre_compile_rule_body` hook consults it to set up AM.3 tape
 //! surgery context.
 
-use bbnf_ir::passes::MaterializationClass;
+use bbnf_ir::passes::{MaterializationClass, PayloadField, PayloadLayout};
 use bbnf_ir::{GrammarIR, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 
 use crate::backend::driver::analysis::BackendAnalysis;
 use crate::backend::rust::view::named_types::RustNamedTypes;
@@ -23,82 +23,328 @@ use bbnf_ir::passes::NamedTypeResolver;
 use super::dfa_codegen;
 use super::{RustEmitCtx, RustEmitter};
 
-/// AX.W1r.1 — direct-to-struct view-layer consumer wiring.
+/// AY.W6.2 — grammar-derived direct-to-struct admission.
 ///
-/// Walks every non-transparent rule whose `TypeDesc` is
-/// `Named(sid)`, consults the IR-derived [`RustNamedTypes`]
-/// resolver for an admitted scalar tuple shape, and emits two
-/// artefacts for each admission:
+/// Walks every non-transparent rule and admits it to the direct-to-
+/// struct projection surface whenever grammar-derived type-inference
+/// facts prove the rule's child sequence projects cleanly onto a
+/// fixed-layout scalar tuple. The admission driver is
+/// [`GrammarIR::payload_layouts`] — populated upstream by
+/// [`bbnf_ir::passes::compute_payload_layouts_with_resolver`] — which
+/// already reflects:
 ///
-/// 1. A `PROJECTION_DIRECT_TO_STRUCT` const listing each admitted
-///    rule with its grammar-level name. Introspection surface for
-///    downstream consumers + the `cargo expand` named-type-shim
-///    hard gate (W1r.1 hard-gate #1).
-/// 2. Per-admission `__named_type_shim_<name>` marker functions.
-///    One per distinct grammar-declared name; body returns the
-///    resolver's scalar tuple shape. Structural proof that the
-///    resolver fired for this grammar — the hard gate greps for
-///    these in the expanded output.
+/// - multi-field `TypeDesc::Tuple(scalar_fields)` projections (CSS L4
+///   `length` / `angle` / `time` / `frequency` / `resolution` / `flex`
+///   / `percentage`, JSON `pair`, CSS L4 `dimension`s, …),
+/// - backend-resolved `TypeDesc::Named(sid)` projections via
+///   [`RustNamedTypes`] (CSS L4 `colorFn` — `(u8, f64, f64, f64, f64)`;
+///   JSON `string` — `(u32, u32)`),
+/// - bare-`Span` token rules admitted as single-field aggregates
+///   (Sheets identifiers / literals, BBNF identifiers / comments, …),
+/// - scalar-Alt rules (Sheets `add_op` / `mul_op` / `unary_prefix` /
+///   `compare_op` / `boolean`, CSS L4 `*Unit`s, …).
 ///
-/// The pre-W1r.1 implementation consulted a static
-/// `BINDINGS` slice hand-enumerating `"Color"` / `"ColorMix"`; the
-/// widened resolver drops that slice in favour of walking
-/// `ir.types` directly. Every grammar-declared `-> input : <Name>`
-/// projection now reaches the emitted list via one mechanism;
-/// there is no per-grammar branch.
-fn emit_direct_to_struct_projection(ir: &GrammarIR, _grammar_name: &str) -> TokenStream {
+/// All four admission arms are unified in the IR layout pass; the
+/// emitter here consumes the resulting
+/// [`PayloadLayout`] directly. There is no grammar-name dispatch; no
+/// hand-enumerated binding table; no per-grammar branch. The
+/// admission fact is the grammar-derived layout.
+///
+/// # Emitted artefacts per grammar
+///
+/// 1. A `pub struct <Grammar><RuleCamel>Projection { field_<i>: <Ty>,
+///    … }` per admitted rule. Field types mirror the layout's
+///    [`PayloadField::ty`] in declaration order; field offsets map
+///    to the layout's byte offsets. The struct is `Copy + Clone +
+///    Debug`; zero-copy for `Span` via a `(u32, u32)` pair
+///    representation and owned for non-Span scalars.
+/// 2. A `PROJECTION_DIRECT_TO_STRUCT` const listing
+///    `(rule_name, struct_name)` per admission. `struct_name` is
+///    either the resolver-derived `Named(sid)` label (legacy
+///    `"Color"`, `"String"`) or the synthesised `<RuleCamel>Projection`
+///    for grammar-derived layouts. Downstream consumers consult the
+///    list for introspection + wire-contract tests.
+/// 3. Per-admission marker shims: `__named_type_shim_<name>` for
+///    resolver-backed named types (kept as structural evidence of the
+///    legacy path) and `__grammar_projection_<rule>` for layout-
+///    derived admissions (new; proof the broader mechanism fired).
+fn emit_direct_to_struct_projection(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
     let resolver = RustNamedTypes::from_ir(ir);
-    let mut resolved: Vec<(String, String)> = Vec::new();
-    for rule in &ir.rules {
-        if rule.meta.is_transparent {
-            continue;
-        }
-        let Some(type_desc) = ir
-            .types
-            .iter()
-            .find_map(|(id, ty)| (*id == rule.id).then_some(ty))
-        else {
-            continue;
-        };
-        let TypeDesc::Named(sid) = type_desc else {
-            continue;
-        };
-        if resolver.resolve_named(*sid).is_none() {
-            continue;
-        }
-        let rule_name = ir.get_string(rule.name).to_string();
-        let binding_name = ir.get_string(*sid).to_string();
-        resolved.push((rule_name, binding_name));
-    }
+    let admissions = collect_projection_admissions(ir, &resolver);
 
-    if resolved.is_empty() {
+    if admissions.is_empty() {
         return quote! {};
     }
 
-    let entries: Vec<TokenStream> = resolved
+    let entries: Vec<TokenStream> = admissions
         .iter()
-        .map(|(rule_name, binding_name)| {
-            let rule_lit = proc_macro2::Literal::string(rule_name);
-            let bind_lit = proc_macro2::Literal::string(binding_name);
+        .map(|a| {
+            let rule_lit = proc_macro2::Literal::string(&a.rule_name);
+            let bind_lit = proc_macro2::Literal::string(&a.projection_label);
             quote! { (#rule_lit, #bind_lit) }
         })
         .collect();
     let count = entries.len();
 
-    // One marker shim per distinct admitted name. The `cargo
-    // expand | grep -c "fn __named_type_shim"` hard gate inspects
-    // the number of emitted shims as structural evidence that the
-    // resolver populated a binding for this grammar.
-    let mut shim_names: Vec<String> = resolved
+    let struct_defs = emit_projection_structs(grammar_name, &admissions);
+    let resolver_shims = emit_resolver_shims(&admissions);
+    let grammar_projection_shims = emit_grammar_projection_shims(&admissions);
+
+    quote! {
+        #struct_defs
+
+        /// AY.W6.2 — per-grammar direct-to-struct projection
+        /// admissions, derived from `ir.payload_layouts` + the
+        /// `RustNamedTypes` resolver.
+        ///
+        /// Each `(rule_name, projection_label)` pair identifies a
+        /// non-transparent rule whose projection admits direct-to-
+        /// struct storage. `projection_label` is either a resolver-
+        /// bound name (e.g. `"Color"`, `"String"`) or the synthesised
+        /// `<RuleCamel>Projection` struct emitted alongside this const.
+        /// The list is the emitted evidence that the layout pass +
+        /// resolver fired for this grammar; `cargo expand` surfaces
+        /// it alongside the GRAMMAR_PROFILE literal.
+        pub const PROJECTION_DIRECT_TO_STRUCT: &[(&str, &str); #count] = &[
+            #(#entries),*
+        ];
+
+        #resolver_shims
+        #grammar_projection_shims
+    }
+}
+
+/// AY.W6.2 — source of a direct-to-struct projection admission.
+///
+/// Discriminates the two admission arms so the emitter can route
+/// each to the right downstream artefact without re-inspecting the
+/// IR. Both arms are grammar-derived; neither is name-dispatched.
+#[derive(Clone, Debug)]
+enum ProjectionSource {
+    /// Admitted through [`RustNamedTypes::resolve_named`] on a
+    /// `TypeDesc::Named(sid)` rule. The projection label is the
+    /// resolver-bound name (`"Color"`, `"String"`, …). Emits a
+    /// `__named_type_shim_<name>` marker.
+    ResolverNamed { binding_name: String },
+    /// Admitted through `ir.payload_layouts` — a grammar-declared
+    /// scalar tuple projection whose fields are enumerated by the
+    /// layout pass. Emits a `<RuleCamel>Projection` struct + a
+    /// `__grammar_projection_<rule>` marker.
+    GrammarLayout { layout: PayloadLayout },
+}
+
+/// AY.W6.2 — one admitted direct-to-struct projection.
+///
+/// Carries the rule identity, the admission source, and the
+/// `projection_label` used in `PROJECTION_DIRECT_TO_STRUCT`.
+#[derive(Clone, Debug)]
+struct ProjectionAdmission {
+    rule_name: String,
+    projection_label: String,
+    source: ProjectionSource,
+}
+
+/// AY.W6.2 — unified admission walk.
+///
+/// Produces the ordered list of admitted projections. The walk is
+/// deterministic: rule order mirrors `ir.rules` declaration order;
+/// each rule contributes at most one admission (the resolver arm
+/// dominates the layout arm when both would fire, since the
+/// resolver-bound layout IS the grammar-declared `Named(sid)`
+/// projection — collapsing both to one entry prevents double-
+/// counting).
+fn collect_projection_admissions(
+    ir: &GrammarIR,
+    resolver: &RustNamedTypes<'_>,
+) -> Vec<ProjectionAdmission> {
+    let mut admissions = Vec::new();
+    for rule in &ir.rules {
+        if rule.meta.is_transparent {
+            continue;
+        }
+        let rule_name = ir.get_string(rule.name).to_string();
+
+        // Arm 1 — `TypeDesc::Named(sid)` with a resolver hit. Mirrors
+        // the pre-W6.2 admission; kept as the legacy entry point so
+        // downstream consumers reading `("colorFn", "Color")` /
+        // `("string", "String")` continue working. Admission here
+        // suppresses the broader layout arm for the same rule.
+        let type_desc = ir
+            .types
+            .iter()
+            .find_map(|(id, ty)| (*id == rule.id).then_some(ty));
+        if let Some(TypeDesc::Named(sid)) = type_desc {
+            if resolver.resolve_named(*sid).is_some() {
+                let binding_name = ir.get_string(*sid).to_string();
+                admissions.push(ProjectionAdmission {
+                    rule_name,
+                    projection_label: binding_name.clone(),
+                    source: ProjectionSource::ResolverNamed { binding_name },
+                });
+                continue;
+            }
+        }
+
+        // Arm 2 — grammar-derived layout. Admit any rule whose
+        // layout pass produced a [`PayloadLayout`] with at least one
+        // scalar field. Rules whose layout exists but is empty are
+        // not projected (they have no direct-to-struct shape to
+        // admit); rules without a layout entry fall through to the
+        // compound / scalar paths upstream.
+        if let Some(layout) = ir.payload_layouts.get(&rule.id) {
+            if layout.fields.is_empty() {
+                continue;
+            }
+            let projection_label = format!(
+                "{}Projection",
+                to_upper_camel(&rule_name),
+            );
+            admissions.push(ProjectionAdmission {
+                rule_name,
+                projection_label,
+                source: ProjectionSource::GrammarLayout { layout: layout.clone() },
+            });
+        }
+    }
+    admissions
+}
+
+/// AY.W6.2 — emit the `pub struct <Grammar><RuleCamel>Projection`
+/// definitions for every layout-derived admission. Resolver-derived
+/// admissions keep their legacy `__named_type_shim_*` surface; the
+/// resolver's backend-specific shape is already consumed by the
+/// payload layout pipeline at analyze-grammar time.
+fn emit_projection_structs(
+    grammar_name: &str,
+    admissions: &[ProjectionAdmission],
+) -> TokenStream {
+    let mut structs: Vec<TokenStream> = Vec::new();
+    let grammar_prefix = to_upper_camel(grammar_name);
+    for admission in admissions {
+        let ProjectionSource::GrammarLayout { layout } = &admission.source else {
+            continue;
+        };
+        let struct_ident = format_ident!(
+            "{}{}Projection",
+            grammar_prefix,
+            to_upper_camel(&admission.rule_name),
+        );
+        let rule_name_lit = proc_macro2::Literal::string(&admission.rule_name);
+        let total_bytes = layout.total_bytes;
+        let fields: Vec<TokenStream> = layout
+            .fields
+            .iter()
+            .enumerate()
+            .map(|(idx, field)| emit_projection_field(idx, field))
+            .collect();
+        let field_count = fields.len();
+        let field_count_lit = proc_macro2::Literal::usize_unsuffixed(field_count);
+        let total_bytes_lit = proc_macro2::Literal::u8_unsuffixed(total_bytes);
+        structs.push(quote! {
+            /// AY.W6.2 — grammar-derived direct-to-struct projection.
+            ///
+            /// Emitted storage for a rule whose child sequence
+            /// projects onto a fixed-layout scalar tuple per the IR
+            /// payload-layout pass. The struct's fields mirror the
+            /// layout's scalar fields in declaration order; the
+            /// `TOTAL_BYTES` + `FIELD_COUNT` associated consts expose
+            /// the admitted shape to downstream consumers (wire-
+            /// contract tests, debug readback) without re-inspecting
+            /// the IR.
+            ///
+            /// The struct is emitted regardless of whether the parser
+            /// chooses the aggregate-write path at runtime for this
+            /// rule; the runtime consumer inspects the layout through
+            /// `Tape::payload_bytes` at the admitted byte offsets.
+            /// The struct's presence in the expanded emitter output
+            /// is the structural proof that the layout pass admitted
+            /// this rule (AY.W6.2 hard-gate `cargo expand` evidence).
+            #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
+            #[doc(hidden)]
+            pub struct #struct_ident {
+                #(#fields),*
+            }
+
+            impl #struct_ident {
+                /// Grammar-declared rule that projects into this
+                /// struct. Matches the `rule_name` entry in
+                /// `PROJECTION_DIRECT_TO_STRUCT`.
+                #[doc(hidden)]
+                pub const RULE_NAME: &'static str = #rule_name_lit;
+
+                /// Number of scalar fields the layout pass admitted
+                /// for this projection.
+                #[doc(hidden)]
+                pub const FIELD_COUNT: usize = #field_count_lit;
+
+                /// Total bytes the projection occupies in the
+                /// packed payload buffer. Matches
+                /// `PayloadLayout::total_bytes` at admission time.
+                #[doc(hidden)]
+                pub const TOTAL_BYTES: u8 = #total_bytes_lit;
+            }
+        });
+    }
+    quote! { #(#structs)* }
+}
+
+/// AY.W6.2 — emit one field of a grammar-derived projection struct.
+///
+/// The field name is `field_<idx>`; the type is the Rust backend
+/// mapping of the layout field's scalar [`TypeDesc`]. Span fields
+/// project to `(u32, u32)` pairs so the struct stays plain-data
+/// (`Copy`); the view layer unpacks back to a `&'input str` at
+/// consumption time via the input slice.
+fn emit_projection_field(idx: usize, field: &PayloadField) -> TokenStream {
+    let field_ident = format_ident!("field_{}", idx);
+    let offset_lit = proc_macro2::Literal::u8_unsuffixed(field.offset);
+    let ty_tokens = projection_field_type(&field.ty);
+    quote! {
+        /// Grammar-declared field at layout offset
+        #[doc = concat!("`", stringify!(#offset_lit), "` (bytes).")]
+        pub #field_ident: #ty_tokens
+    }
+}
+
+/// AY.W6.2 — Rust backend type for a layout field.
+///
+/// Span projects to `(u32, u32)` (offset + length) so the struct is
+/// `Copy` without a lifetime; every other scalar maps to its
+/// natural Rust primitive via [`TypeDesc::rust_ident`].
+fn projection_field_type(ty: &TypeDesc) -> TokenStream {
+    match ty {
+        TypeDesc::Span => quote! { (u32, u32) },
+        other => {
+            let ident = other
+                .rust_ident()
+                .expect(
+                    "AY.W6.2: grammar-derived projection field type \
+                     must map to a Rust scalar via TypeDesc::rust_ident",
+                );
+            let ty_ident = format_ident!("{}", ident);
+            quote! { #ty_ident }
+        }
+    }
+}
+
+/// AY.W6.2 — emit `__named_type_shim_<name>` markers for the
+/// resolver-backed admissions. One shim per distinct admitted name.
+fn emit_resolver_shims(admissions: &[ProjectionAdmission]) -> TokenStream {
+    let mut names: Vec<String> = admissions
         .iter()
-        .map(|(_, name)| name.clone())
+        .filter_map(|a| match &a.source {
+            ProjectionSource::ResolverNamed { binding_name } => {
+                Some(binding_name.clone())
+            }
+            ProjectionSource::GrammarLayout { .. } => None,
+        })
         .collect();
-    shim_names.sort();
-    shim_names.dedup();
-    let shims: Vec<TokenStream> = shim_names
+    names.sort();
+    names.dedup();
+    let shims: Vec<TokenStream> = names
         .iter()
         .map(|name| {
-            let fn_ident = quote::format_ident!(
+            let fn_ident = format_ident!(
                 "__named_type_shim_{}",
                 name.to_ascii_lowercase()
             );
@@ -118,24 +364,91 @@ fn emit_direct_to_struct_projection(ir: &GrammarIR, _grammar_name: &str) -> Toke
             }
         })
         .collect();
+    quote! { #(#shims)* }
+}
 
-    quote! {
-        /// AX.W1r.1 — per-grammar direct-to-struct projection
-        /// admissions, derived from `ir.types` via the
-        /// `RustNamedTypes` resolver.
-        ///
-        /// Each `(rule_name, binding_name)` pair identifies a
-        /// non-transparent rule whose `TypeDesc::Named` resolved to
-        /// a scalar tuple shape during `analyze_grammar`. The list
-        /// is the emitted evidence that the resolver fired for
-        /// this grammar; `cargo expand` surfaces it alongside the
-        /// GRAMMAR_PROFILE literal.
-        pub const PROJECTION_DIRECT_TO_STRUCT: &[(&str, &str); #count] = &[
-            #(#entries),*
-        ];
+/// AY.W6.2 — emit `__grammar_projection_<rule>` markers for the
+/// layout-derived admissions. One marker per admitted rule.
+/// Structural evidence that the layout pass produced a payload shape
+/// for this rule; the hard gate inspects the shim count as proof
+/// that the broader mechanism fired.
+fn emit_grammar_projection_shims(
+    admissions: &[ProjectionAdmission],
+) -> TokenStream {
+    let shims: Vec<TokenStream> = admissions
+        .iter()
+        .filter_map(|a| match &a.source {
+            ProjectionSource::GrammarLayout { layout } => {
+                Some((a.rule_name.clone(), layout.fields.len()))
+            }
+            ProjectionSource::ResolverNamed { .. } => None,
+        })
+        .map(|(rule_name, field_count)| {
+            let fn_ident = format_ident!(
+                "__grammar_projection_{}",
+                sanitise_ident(&rule_name),
+            );
+            let rule_lit = proc_macro2::Literal::string(&rule_name);
+            let count_lit =
+                proc_macro2::Literal::usize_unsuffixed(field_count);
+            quote! {
+                /// AY.W6.2 marker — structural evidence that
+                /// `ir.payload_layouts` admitted this rule for direct-
+                /// to-struct projection. The returned `(rule_name,
+                /// field_count)` pair exposes the layout shape to the
+                /// `cargo expand` hard gate without requiring a
+                /// runtime compilation.
+                #[doc(hidden)]
+                #[inline(always)]
+                pub fn #fn_ident() -> (&'static str, usize) {
+                    (#rule_lit, #count_lit)
+                }
+            }
+        })
+        .collect();
+    quote! { #(#shims)* }
+}
 
-        #(#shims)*
+/// AY.W6.2 — upper-camel-case a rule/grammar name for ident
+/// synthesis. Preserves existing upper-case starts; title-cases
+/// lower-case first chars.
+fn to_upper_camel(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
+    let mut upper_next = true;
+    for ch in name.chars() {
+        if ch == '_' || ch == '-' || ch == '.' {
+            upper_next = true;
+            continue;
+        }
+        if upper_next {
+            out.extend(ch.to_uppercase());
+            upper_next = false;
+        } else {
+            out.push(ch);
+        }
     }
+    out
+}
+
+/// AY.W6.2 — sanitise a rule name into a lowercase Rust ident slug.
+/// Non-alphanumeric characters become underscores; leading digits are
+/// prefixed with `r_` so the resulting ident is valid.
+fn sanitise_ident(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
+    for (idx, ch) in name.chars().enumerate() {
+        if ch.is_ascii_alphanumeric() {
+            if idx == 0 && ch.is_ascii_digit() {
+                out.push_str("r_");
+            }
+            out.extend(ch.to_lowercase());
+        } else {
+            out.push('_');
+        }
+    }
+    if out.is_empty() {
+        out.push('_');
+    }
+    out
 }
 
 /// AW-V.W3.2 — emit the per-grammar shared helpers the shape fns

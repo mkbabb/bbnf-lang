@@ -1,4 +1,37 @@
-.PHONY: all build build-lsp build-lsp-debug build-ext build-wasm dev test test-rust test-ts \
+# ─── Surface groups (B0.W2.a) ──────────────────────────────────────────
+#
+# Public Makefile targets fall into three intentional groups. Routine
+# iteration never pays heavy-proof cost; heavy close gates never
+# masquerade as routine commands.
+#
+#   Routine (iteration) — fast, per-tick, under the `ax-iter` profile.
+#     • iter-check, iter-test-leaf, iter-test-grammar, iter-test-ws
+#     • ay-test-value-api, ay-test-wire-contract, ay-test-named-type
+#     • expand-{json,css,bbnf,sheets}, ay-expand-{json,named-type}
+#     (expand-* use dev-profile cargo expand; cheap.)
+#
+#   Profiling-prep — build once / samply many, under the
+#   `profiling-prep` profile. Requires CARGO_TARGET_DIR exported.
+#     • ay-prepare-profile-wave
+#     • ay-samply-json-twitter, ay-samply-json-twitter-lookup
+#     • profile-wave (shared wrapper)
+#
+#   Heavy (wave-close gates) — publish-grade numerics and full-workspace
+#   proof. Fat LTO / codegen-units=1 under the `bench` profile or
+#   `cargo nextest`/`cargo test --workspace` under a timeout wrapper.
+#   Not run on every tick; emitted when a wave closes.
+#     • test-close, test-heavy-rust, test-ci
+#     • ay-bench-close, bench-run, bench-compile
+#     • ay-asm-close-compound, asm-parse
+#
+# The routine and profiling-prep groups live in the "AY Iteration
+# Surface" section below; the heavy group lives under "Test" (the
+# workspace gate) and "AY W5-W7 Gate Commands" (the AY close matrix).
+#
+# ────────────────────────────────────────────────────────────────────────
+
+.PHONY: all build build-lsp build-lsp-debug build-ext build-wasm dev \
+       test-close test-heavy-rust test-ci bench \
        install package publish bump-patch bump-minor bump-major release clean clean-vsix watch \
        deploy \
        iter-check iter-test-leaf iter-test-grammar iter-test-ws \
@@ -39,9 +72,11 @@ dev: build-lsp-debug build-ext
 build-wasm:
 	cd wasm && wasm-pack build --target web --out-dir ../playground/src/wasm
 
-# ─── Test ───────────────────────────────────────────────────────────────
+# ─── Heavy — Workspace Test Gate ───────────────────────────────────────
 #
-# Tranche Y.-1.c — freezing guards.
+# Full-workspace correctness gate for wave-close proof. NOT for routine
+# iteration — routine callers belong on `iter-check` / `iter-test-leaf`
+# / `iter-test-grammar` under the `ax-iter` profile.
 #
 # Prefer cargo-nextest (`.config/nextest.toml` configures slow-timeout
 # / terminate-after / leak-timeout). Install with:
@@ -74,13 +109,15 @@ else
   TEST_RUNNER_CI := cargo test --workspace
 endif
 
-## Run all tests (full workspace; heavy by design — for routine
-## iteration call `iter-test-leaf` or `iter-test-grammar` instead,
-## which route through the `ax-iter` profile and per-grammar split).
-test: test-rust
+## Wave-close workspace correctness gate. Heavy — full workspace under
+## nextest (or `cargo test --workspace` under GNU `timeout` if nextest
+## is unavailable). Routine iteration uses `iter-test-*` instead.
+test-close: test-heavy-rust
 
-## Rust workspace tests (bbnf + lsp)
-test-rust:
+## Rust workspace tests under the nextest/timeout wrapper. Heavy by
+## design: never invoked by the routine iter-* surface. CI calls this
+## through `test-ci` (which picks nextest's ci profile when available).
+test-heavy-rust:
 ifndef HAS_NEXTEST
   ifndef HAS_TIMEOUT
     ifndef HAS_GTIMEOUT
@@ -91,7 +128,7 @@ endif
 	$(TEST_RUNNER)
 
 ## CI target — uses nextest's ci profile or falls back to the same
-## timeout wrapper as test-rust
+## timeout wrapper as test-heavy-rust.
 test-ci:
 	$(TEST_RUNNER_CI)
 

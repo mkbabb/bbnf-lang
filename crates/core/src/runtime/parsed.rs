@@ -12,18 +12,20 @@
 //! Callers hold `Parsed<'_, Grammar>` and call `.view()` to obtain
 //! a cursor-backed typed view bound to the borrow.
 //!
-//! # Tranche AY-II.W0.c — fused parse-value pipeline
+//! # Tranche AY-II.W0'.a — fused parse-value pipeline
 //!
-//! The default `parse()` entry writes the canonical tape substrate
-//! AND the grammar-emitted value substrate (via
-//! [`ValueBuilder<R>`](crate::runtime::ValueBuilder)) in a single
-//! walk. `Parsed<'p, R>` carries the [`ValueBuilderOutput<R>`] the
-//! fused pipeline produced; `Parsed::to_value()` becomes a thin
-//! projector over the already-constructed substrate — no second
-//! parse call, no visitor-driven reconstruction, no tape-walking
-//! materializer path. The tape remains available through `view()` /
-//! `get()` for the structural-cursor surface; the typed-value
-//! surface lives on the parallel substrate.
+//! The default `parse()` entry allocates a single
+//! [`FusedBuilder`](tape::FusedBuilder) that owns the canonical
+//! tape substrate AND the grammar-emitted value-frame arena. Every
+//! shape emitter's `begin_compound` / `end_compound` / `push_leaf_*`
+//! writes BOTH column families atomically. `Parsed<'p, R>` carries
+//! the resulting [`FusedOutput<R>`](tape::FusedOutput);
+//! `Parsed::to_value()` projects from the value column of that
+//! output — no second parse call, no visitor-driven reconstruction,
+//! no tape-walking materializer path. The tape column remains
+//! available through `view()` / `get()` for the structural-cursor
+//! surface; the typed-value surface lives on the paired value
+//! column inside the same `FusedOutput`.
 //!
 //! The `view()` / `get()` consumer paths retain their cursor-backed
 //! discipline: every structural accessor (`.kind()`, `.span()`,
@@ -38,9 +40,8 @@
 //! ```ignore
 //! pub fn parse(input: &str) -> Result<Parsed<'_, Json>, ParseErr> {
 //!     let mut state = ParserState::new(input);
-//!     let mut builder = TapeBuilder::with_capacity(input.len() / 4);
-//!     let mut value_builder = ValueBuilder::<Self>::new(input.len() / 8);
-//!     let root_off = Self::__value(&mut state, &mut builder, &mut value_builder)
+//!     let mut builder = FusedBuilder::with_capacity(input.len() / 4);
+//!     let root_off = Self::__value(&mut state, &mut builder)
 //!         .ok_or(ParseErr::Syntax { offset: state.offset as u32, rule: None })?;
 //!     // Skip trailing whitespace before EOF check.
 //!     while state.offset < input.len()
@@ -51,18 +52,16 @@
 //!     if state.offset < input.len() {
 //!         return Err(ParseErr::Syntax { offset: state.offset as u32, rule: None });
 //!     }
-//!     let tape = builder.finish().map_err(ParseErr::Tape)?;
-//!     let value_output = value_builder.finish(0);
-//!     Ok(Parsed::new_fused(tape, input, root_off, value_output))
+//!     let output = builder.finish_fused::<Self>(root_off.0).map_err(ParseErr::Tape)?;
+//!     Ok(Parsed::new_fused(output, input, root_off))
 //! }
 //! ```
 
 use std::marker::PhantomData;
 
-use tape::{Tape, TapeOffset};
+use tape::{FusedOutput, Tape, TapeOffset};
 
 use crate::runtime::path::Path;
-use crate::runtime::value_builder::ValueBuilderOutput;
 
 /// Binding between a grammar marker type and the root view it
 /// produces over a parsed tape.
@@ -99,32 +98,26 @@ pub trait Root {
 /// when [`Parsed::view`] is called; callers never instantiate the
 /// view directly.
 ///
-/// # Tranche AY-II.W0.c — fused-pipeline value substrate
+/// # Tranche AY-II.W0'.a — fused-pipeline output
 ///
-/// `Parsed` additionally carries a [`ValueBuilderOutput<R>`]
-/// populated during the single-pass fused parse. The value output is
-/// the sole source for `Parsed::to_value()` — no reparse, no tape
-/// walk, no visitor-driven second pass reaches the consumer surface.
-/// Substrate-only constructions (see [`Parsed::new`]) that never
-/// exercise `to_value()` carry [`ValueBuilderOutput::empty`]; the
+/// `Parsed` carries a [`FusedOutput<R>`] — tape + value substrate in
+/// one handle. `Parsed::to_value()` reads the value column off the
+/// fused output; `Parsed::view()` / `Parsed::get()` read the tape
+/// column. Substrate-only constructions (see [`Parsed::new`]) that
+/// never exercise `to_value()` carry [`FusedOutput::empty`]; the
 /// grammar-emitted projection expects a non-empty output on the
 /// `to_value()` path and that expectation is an IR invariant the
 /// emitter upholds by construction.
 pub struct Parsed<'p, R> {
-    /// The finished tape. Owned by the `Parsed` so view lifetimes
-    /// naturally bind to `&self`.
-    tape: Tape,
+    /// Fused parse output — tape + value substrates in one handle.
+    /// Owned by the `Parsed` so view lifetimes naturally bind to
+    /// `&self`.
+    output: FusedOutput<R>,
     /// Borrowed source input. Views carry a `&'p str` slice of this
     /// field and use it for every text-extraction accessor.
     input: &'p str,
-    /// Offset of the root record within `tape`.
+    /// Offset of the root record within the tape.
     root_offset: TapeOffset,
-    /// AY-II.W0.c — the fused-pipeline value substrate. Populated at
-    /// parse time in lockstep with the tape; consumed by
-    /// `to_value()` as a thin projection target. `ValueBuilderOutput`
-    /// owns its backing storage so `Parsed<'p, R>` remains lifetime-
-    /// parameterised solely by the input borrow.
-    value_builder_output: ValueBuilderOutput<R>,
     /// Phantom marker for the grammar's `Root` binding.
     _root_marker: PhantomData<R>,
 }
@@ -132,10 +125,10 @@ pub struct Parsed<'p, R> {
 impl<'p, R> ::core::fmt::Debug for Parsed<'p, R> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         f.debug_struct("Parsed")
-            .field("tape", &self.tape)
+            .field("tape", self.output.tape())
             .field("input_len", &self.input.len())
             .field("root_offset", &self.root_offset)
-            .field("value_frames", &self.value_builder_output.frame_count())
+            .field("value_frames", &self.output.frame_count())
             .finish()
     }
 }
@@ -148,45 +141,51 @@ impl<'p, R> Parsed<'p, R> {
     /// This form is reserved for tape-substrate tests and internal
     /// constructions that never reach `to_value()`. Grammar-emitted
     /// `parse()` entries use [`Parsed::new_fused`] instead so
-    /// `to_value()` has a populated [`ValueBuilderOutput`] to project
+    /// `to_value()` has a populated [`FusedOutput<R>`] to project
     /// over.
     #[inline]
     pub fn new(tape: Tape, input: &'p str, root_offset: TapeOffset) -> Self {
+        let output = FusedOutput::new(tape, tape::ValueFramesOutput::empty());
         Self {
-            tape,
+            output,
             input,
             root_offset,
-            value_builder_output: ValueBuilderOutput::empty(),
             _root_marker: PhantomData,
         }
     }
 
-    /// Construct a fused-pipeline `Parsed` — carries both the
-    /// canonical tape substrate AND the parallel value substrate the
-    /// grammar-emitted parse entry populated in lockstep. The
-    /// `to_value()` consumer projects over `value_builder_output`
-    /// alone; the tape remains the canonical structural substrate
-    /// for `view()` / `get()`.
+    /// Construct a fused-pipeline `Parsed` — carries the fused
+    /// (tape + value) output the grammar-emitted parse entry
+    /// populated in one walk. The `to_value()` consumer projects
+    /// over the value column of the fused output; the tape column
+    /// remains the canonical structural substrate for `view()` /
+    /// `get()`.
     #[inline]
     pub fn new_fused(
-        tape: Tape,
+        output: FusedOutput<R>,
         input: &'p str,
         root_offset: TapeOffset,
-        value_builder_output: ValueBuilderOutput<R>,
     ) -> Self {
         Self {
-            tape,
+            output,
             input,
             root_offset,
-            value_builder_output,
             _root_marker: PhantomData,
         }
     }
 
-    /// Borrow the underlying tape.
+    /// Borrow the underlying tape (the structural column of the
+    /// fused output).
     #[inline]
     pub fn tape(&self) -> &Tape {
-        &self.tape
+        self.output.tape()
+    }
+
+    /// Borrow the fused output directly. Consumers that need both
+    /// tape + value in one handle read through this accessor.
+    #[inline]
+    pub fn output(&self) -> &FusedOutput<R> {
+        &self.output
     }
 
     /// Borrow the source input string.
@@ -201,26 +200,33 @@ impl<'p, R> Parsed<'p, R> {
         self.root_offset
     }
 
-    /// Consume the `Parsed` and return ownership of the tape.
+    /// Consume the `Parsed` and return ownership of the tape column.
     #[inline]
     pub fn into_tape(self) -> Tape {
-        self.tape
+        self.output.into_tape()
     }
 
-    /// Borrow the fused value substrate. The projection emitter
-    /// reads this to construct the typed `<Grammar>Value` without
-    /// touching the tape.
+    /// Consume the `Parsed` and return ownership of the fused
+    /// output.
     #[inline]
-    pub fn value_builder_output(&self) -> &ValueBuilderOutput<R> {
-        &self.value_builder_output
+    pub fn into_output(self) -> FusedOutput<R> {
+        self.output
+    }
+
+    /// Borrow the fused value substrate's [`ValueFramesOutput<R>`]
+    /// directly. Pre-W0'.a alias — the projection emitter reads
+    /// through [`Self::output`] post-regen.
+    #[inline]
+    pub fn value_builder_output(&self) -> &tape::ValueFramesOutput<R> {
+        self.output.as_value_output()
     }
 
     /// Consume the `Parsed` and hand back the owned value output —
     /// used by consumers that need ownership of the projected
     /// `<Grammar>Value` without the rest of the `Parsed` surface.
     #[inline]
-    pub fn into_value_builder_output(self) -> ValueBuilderOutput<R> {
-        self.value_builder_output
+    pub fn into_value_builder_output(self) -> tape::ValueFramesOutput<R> {
+        self.output.into_value()
     }
 }
 
@@ -245,7 +251,7 @@ impl<'p, R: Root> Parsed<'p, R> {
     /// `view()` is the entry point into that surface.
     #[inline]
     pub fn view(&self) -> R::View<'_> {
-        R::make_view(&self.tape, self.input, self.root_offset)
+        R::make_view(self.output.tape(), self.input, self.root_offset)
     }
 }
 
@@ -279,15 +285,15 @@ pub trait ValueRoot: Root + Sized {
     where
         Self: 'p;
 
-    /// AY-II.W0.c — project the fused-pipeline value substrate
+    /// AY-II.W0'.a — project the fused-pipeline value substrate
     /// into the grammar's `Value<'p>`. Emitted per-grammar by the
     /// Rust backend's `view/value.rs::emit_value_root_impl`; reads
-    /// frames from [`ValueBuilderOutput`](crate::runtime::ValueBuilderOutput)
-    /// and constructs the typed enum without touching the tape.
+    /// frames from [`FusedOutput<R>`](tape::FusedOutput) and
+    /// constructs the typed enum without touching the tape column.
     ///
-    /// `output` is the value substrate `ValueBuilder<Self>`
-    /// produced at parse time (via
-    /// [`ValueBuilder::finish`](crate::runtime::ValueBuilder::finish));
+    /// `output` is the fused substrate `FusedBuilder` produced at
+    /// parse time (via
+    /// [`FusedBuilder::finish_fused`](tape::FusedBuilder::finish_fused));
     /// `input` is the borrowed source text the leaf accessors slice
     /// against.
     ///
@@ -349,7 +355,7 @@ impl<'p, R> Parsed<'p, R> {
     where
         R: ValueRoot,
     {
-        R::project_value_output(&self.value_builder_output, self.input)
+        R::project_value_output(&self.output, self.input)
     }
 
     /// Resolve a lazy path query against the parsed tree. Returns

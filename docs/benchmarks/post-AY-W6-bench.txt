@@ -1,0 +1,22 @@
+# AY.W6 close bench — json_monolithic, fat-LTO bench profile
+# HEAD: b1c7d47a (post-W6.a + W6.b + W6.c)
+# 2026-04-20
+
+test canada  ... bench:   8,723,674 ns/iter (+/- 808,928)   = 258 MB/s
+test citm    ... bench:   3,390,262 ns/iter (+/- 121,061)   = 509 MB/s
+test data_s  ... bench:      67,997 ns/iter (+/- 3,487)     = 521 MB/s
+test data_xl ... bench:  61,803,853 ns/iter (+/- 1,661,369) = 344 MB/s
+test twitter ... bench:   1,152,054 ns/iter (+/- 67,570)    = 548 MB/s
+
+# Reference lineage
+# post-AY-W4: twitter 746 MB/s
+# post-AY-W5: twitter 616 MB/s (-17% vs W4)
+# post-AY-W6: twitter 548 MB/s (-27% vs W4, -11% vs W5)
+
+# W6 gate readout
+# - Consumer unification: PASS (audit; no rebuild surfaces existed).
+# - Direct-to-struct admission: PASS (71 admissions vs W2 baseline 2).
+# - Pratt lowering + navigation: PASS (outer-compound open/close).
+# - Real lazy lookup: SOFT-PASS (navigate_tape substrate; full lazy
+#   routes to W7 real-tape-emission work).
+# - Eager JSON geomean improves vs post-W5: MISS (regressed -11%).

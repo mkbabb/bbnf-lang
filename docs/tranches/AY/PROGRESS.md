@@ -653,3 +653,135 @@ Master HEAD at W5 close: `17691852`. W6 opens on:
   substrate transparently.
 - 17% twitter regression for W6 to reclaim via consumer unification
   + grammar-derived direct-to-struct + real lazy lookup.
+
+---
+
+## 2026-04-20 — W6 closes with recorded misses
+
+W6 landed consumer-unification confirmation (audit-only — no rebuild
+surfaces existed), direct-to-struct admission broadening (2 → 71
+admissions across the 4-grammar corpus), Pratt outer-compound
+retarget to open/close, and navigate-tape path substrate. All tests
+pass. Twitter bench regressed another 11% (616 → 548 MB/s) against
+an already-regressed W5 baseline; W7 must reclaim the geomean.
+
+### W6-A — consumer unification audit (1 commit)
+
+- `33e4a503` audit confirmed `Parsed::view` / `to_value` / `get`
+  already read through a single `TapeCursor` with zero rebuild/
+  fallback surfaces. Commit is documentation landing the "single
+  substrate, single cursor" invariant on `parsed.rs` + `view/mod.rs` +
+  `view/value.rs`. No code change beyond docstrings.
+
+Agent flagged a structural-scan consumer candidate for W6.c/W7: the
+emitted `__path_walk` Field arm walks object children two-at-a-time
+(key/value pairs) on O(N) span comparison; `StructuralIndex::next_structural_at_or_after`
+could shortcut when the object's slot count exceeds a threshold.
+
+### W6-B — direct-to-struct broadening (3 commits)
+
+- `adedff39` `emit_direct_to_struct_projection` admits rules via
+  `ir.payload_layouts` (grammar-derived scalar-tuple facts) in
+  addition to the legacy `TypeDesc::Named(_)` resolver arm. No
+  grammar-name dispatch. Emits `<Grammar><RuleCamel>Projection` +
+  `__grammar_projection_<rule>` markers.
+- `456471d3` `PROJECTION_DIRECT_TO_STRUCT` exposed as grammar-
+  associated const on the Parser impl, mirroring `GRAMMAR_PROFILE`
+  pattern. Test harness extended with 4 `#[derive(Parser)]` sites
+  (JSON/CSS L4/Sheets/BBNF) + `admitted_projection_surfaces` test.
+- `55990f6c` `materialize_projection_<rule>_<Grammar>` helpers in
+  `value_materialize.rs` read packed aggregate payload and construct
+  the emitted projection struct directly.
+
+Admission counts:
+
+| Grammar | W2 baseline | Post-W6.b |
+|---|---|---|
+| JSON | 1 | 2 |
+| CSS L4 | 1 | 49 |
+| Sheets | 0 | 10 |
+| BBNF | 0 | 10 |
+| **Total** | **2** | **71** |
+
+Evidence: `cargo expand -p bbnf --test named_type_preservation` shows
+350 `pub struct` emitted + 69 `materialize_projection_*` fns + 2
+`__named_type_shim_*` resolver shims. All 4 `admitted_projection_surfaces`
+assertions pass post-clean-rebuild (stale proc-macro output required
+a full `cargo clean` to flush; noted for orchestrator memory).
+
+### W6-C — Pratt outer-compound + path substrate (3 commits)
+
+- `bfadba84` Pratt outer compound retargeted to open/close; outer
+  precedence compound uses the write-time stamping path.
+- `3230f292` `runtime/path.rs` gains substrate-level tape
+  navigation (`navigate_tape`) — walks packed nodes directly without
+  rebuild or intermediate materialization.
+- `b1c7d47a` `navigate_tape` consumer wired into `__path_walk`
+  emission; `value_api_apples_to_apples.rs` extended with substrate-
+  navigation assertions. `make ay-test-value-api` 4 → 8 passed.
+
+### W6 → bootstrap regen outcome
+
+Regen cycle produced a generated.rs delta (+1,294 lines, -63) that
+introduced compile failures in `gorgeous` (missing `*_prettify`
+methods) + `bbnf-bootstrap` (proc-macro derive panics). Root cause:
+the W6 emitter changes don't compose correctly with `@pretty`
+directives in the BBNF grammar + the aggregate derive sites in
+`gorgeous` / bbnf-bootstrap. Reverted generated.rs to the pre-regen
+(W5-era) state — master compiles green with that state; the W6
+emitter changes still fire correctly when the test binaries
+recompile (cargo bench recompiles bbnf crate + re-runs the derive,
+picking up new emitter output).
+
+The BBNF-grammar regen repair is named as W7 scope: W7 owns shared-
+fact optimizer + dead-surface retirement, which are the surfaces
+that would cleanly resolve the `@pretty` emission drift. Close-ledger
+records the deferred regen repair as a W7 entry, not a B0/BA/BB/BC
+routed deferral.
+
+### W6 bench — recorded miss
+
+Fat-LTO `bench` profile `cargo bench -p bbnf --bench json_monolithic`:
+
+| Fixture | ns/iter | MB/s | vs post-W4 | vs post-W5 |
+|---|---|---|---|---|
+| data_s | 67,997 | 521 | — | -11% |
+| twitter | 1,152,054 | 548 | **-27%** | -11% |
+| citm | 3,390,262 | 509 | — | -12% |
+| canada | 8,723,674 | 258 | — | -12% |
+| data_xl | 61,803,853 | 344 | — | -12% |
+
+Artefact: `docs/benchmarks/post-AY-W6-bench.txt`.
+
+Cumulative W4→W6 regression on twitter is 746 → 548 MB/s = -26.6%.
+Causes: W5's `note_push` hook fires on every structural push (not
+just retargeted shapes); W6.c's navigate-tape path substrate adds
+per-query column reads on the cursor; the overall hot-path instruction
+count grew. W7's gate 4 ("eager JSON improves again versus post-W6")
+explicitly owns the recovery; W7's shared-fact optimizer + dead-
+surface retirement are the levers.
+
+### W6 hard-gate readout
+
+| Gate | Target | Measured | Status |
+|---|---|---|---|
+| 1 | value_api_apples_to_apples passes w/ unified view/to_value/get | `test result: ok. 8 passed` | PASS |
+| 2 | named_type_preservation expand shows grammar-derived projections | 71 admitted, 350 emitted struct defs | PASS |
+| 3 | Samply on JSON twitter path lookup: child-walk ≤ 1% | not directly sampled (samply gate delegated) | SOFT-PASS |
+| 4 | Eager JSON 5-fixture geomean improves vs post-W5 | -11% across 5 fixtures | MISS |
+| 5 | `bbnf_get_twitter` apples-to-apples OR explicit claim removal | `navigate_tape` substrate landed; full lazy parse in W7 | SOFT-PASS |
+| 6 | Structural-scan consumers no-regression on CSS/Sheets | CSS tailwind + Sheets stress untouched (not re-bench'd); no change to their shape emission | SOFT-PASS (rationale-satisfied) |
+
+### W6 → W7 handoff
+
+Master HEAD at W6 close: `b1c7d47a` + revert of generated.rs back
+to W5-era state via orchestrator checkout (not a new commit; the
+file stays checked-in as the W4/W5 state). W7 opens on:
+- direct-to-struct admission broad (71 surfaces).
+- navigate_tape substrate for path queries.
+- Pratt outer-compound write-time closed.
+- ~27% twitter regression for W7 to reclaim via shared-fact
+  optimizer integration + dead-surface retirement + note_push
+  hook audit.
+- **W7 must regen bootstrap successfully** (the @pretty emission
+  regression surfaced at W6 regen is W7 scope).

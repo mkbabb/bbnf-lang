@@ -78,7 +78,7 @@ use parse_that::utils::get_cargo_root_path;
 // comment-aware `skip_space_slow` opens with a CTNS probe via
 // `ensure_structural_index`. Pre-W4.3 cached codegen references the
 // pre-probe ScanState and the inline-match-ladder DFA body shape.
-const BBNF_SCHEMA_VERSION: u64 = 15;
+const BBNF_SCHEMA_VERSION: u64 = 16;
 
 /// Recursively collect all grammar file contents for hashing.
 ///

@@ -16,10 +16,11 @@
 //! marker functions. Checking IR-only (via `CompileTarget::Vm`) would
 //! admit Named entries the Rust-target preparation later drops;
 //! checking emit-only would not surface which rule loses Named.
-//! This test checks both boundaries. Post-AY-II.W0.d the legacy
-//! resolver-shim marker (`__named_type_shim_<name>`) retires — every
-//! admission emits a runnable `materialize_projection_<rule>_<Grammar>`
-//! helper instead, verified by `tests/projection_totality.rs`.
+//! This test checks both boundaries. Post-AY-II.W0'.b every admission
+//! emits a runnable `materialize_projection_<rule>_<Grammar>` helper
+//! AND a fused-pipeline consumer call site inside
+//! `project_value_<Grammar>`; the structural + runtime wire-contract
+//! lives in `tests/projection_totality.rs`.
 //!
 //! ## AY.W6.b coverage — grammar-derived direct-to-struct admission
 //!
@@ -416,13 +417,18 @@ fn admitted_projection_surfaces() {
          got {css_l4_total}"
     );
 
-    // AY-II.W0.d totality invariant — per grammar:
+    // AY-II.W0'.b totality invariant — per grammar:
     // `PROJECTION_DIRECT_TO_STRUCT.len() ==
     //  PROJECTION_MATERIALIZERS.len() ==
     //  PROJECTION_CONSUMERS.len()`.
-    // The canonical gate lives in `tests/projection_totality.rs`;
-    // mirroring the assertion here keeps this test's name-type
-    // preservation story colocated with the admission-count story.
+    // The canonical gate (structural + runtime-call-count) lives in
+    // `tests/projection_totality.rs`; mirroring the structural
+    // assertion here keeps this test's name-type preservation story
+    // colocated with the admission-count story. Post-W0'.b every
+    // admission's consumer is a materializer-driven projection
+    // variant (not `Unknown` fallback); the consumer-side evidence
+    // is `PROJECTION_CONSUMERS[i]` naming the per-grammar enum
+    // variant that wraps the projection struct.
     for (label, admissions, materializers, consumers) in [
         (
             "JsonG",

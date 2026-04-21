@@ -1,71 +1,75 @@
-//! AY.W3b.1 — grammar-emitted `<Grammar>Value<'p>` enum via TypeDesc
-//! equivalence-class collapse.
+//! AY-II.W0'.b — projection-consumer wiring for the fused pipeline.
 //!
 //! Emits three artefacts per grammar:
 //!
-//! 1. `pub enum <Grammar>Value<'p>` — one variant per
-//!    TypeDesc-equivalence class covering the grammar's
-//!    non-transparent rules. Leaves carry typed scalar payloads,
-//!    Span rules carry `&'p str`, compound rules carry a
-//!    `Vec<<Grammar>Value<'p>>` of eagerly-materialised children,
-//!    and the fallback `Unknown` variant wraps the generic
-//!    `<Grammar>NodeView<'p>` for recovered / unclassified records.
+//! 1. `pub enum <Grammar>Value<'p>` — one variant per non-transparent
+//!    rule. Admitted rules (rules whose layout + resolver facts
+//!    produced a `PROJECTION_DIRECT_TO_STRUCT` entry per
+//!    [`collect_projection_admissions`]) carry the matching
+//!    `<Grammar><RuleCamel>Projection` struct directly; non-admitted
+//!    rules keep their shape-classified payload (Span → `&'p str`,
+//!    Scalar → primitive, Compound → `Vec<<Grammar>Value<'p>>`, Cursor
+//!    → `<Grammar>NodeView<'p>`). The `Unknown` catch-all wraps the
+//!    generic `<Grammar>NodeView<'p>` for unclassified / recovery
+//!    records whose `variant_idx` does not map to a known rule.
 //!
 //! 2. `impl ::bbnf::runtime::ValueRoot for <Grammar>` — the GAT
 //!    binding with `type Value<'p> = <Grammar>Value<'p>` + the
-//!    `project_value_output` entry-point (AY-II.W0.c) that reads
-//!    the fused-pipeline [`ValueBuilderOutput`] frame arena and
-//!    drives the grammar's per-shape `materialize_*_<Grammar>`
-//!    inline fns emitted in
-//!    `emitter/shapes/value_materialize.rs`.
+//!    `project_value_output` entry-point that consumes the
+//!    W0'.a-published [`FusedOutput`](::bbnf::runtime::FusedOutput)
+//!    slab and drives the grammar's per-admission
+//!    `materialize_projection_<rule>_<Grammar>(output, input, offset)`
+//!    helpers. Non-admitted rules fall through to the existing
+//!    shape-based projection.
 //!
 //! 3. `impl ::bbnf::runtime::PathQuery<T> for <Grammar>` for
 //!    `T ∈ { &str, f64, bool }` — linear-walk path queries against
-//!    the tape. The emitted impls are < 100 LOC each; the
-//!    binary-search packed-cache variant is a follow-on optimisation
-//!    — for now a cursor walk over the tape suffices for the hard-gate
-//!    sub-item "at least one PathQuery impl emits" and keeps the
-//!    emitted surface tractable.
+//!    the tape. The emitted walker is a zero-copy cursor descent.
 //!
-//! # Tranche AY-II.W0.c — fused-pipeline value surface
+//! # Tranche AY-II.W0'.b — admission-driven projection
 //!
-//! The `project_value_output` entry-point projects the
-//! already-constructed value substrate — no tape-walk, no second
-//! parse, no reconstruction pass. The `PathQuery<T>` walkers keep
-//! their cursor-backed structural discipline: every structural step
-//! lands on `TapeCursor::children()` / `TapeCursor::child(i)` and
-//! every scalar extraction lands on `tape.payload_*(rec)`. The two
-//! consumer paths read disjoint substrates (value output vs. tape)
-//! but both sit under the same fused single-pass parse.
-//!
-//! [`ValueBuilderOutput`]: crate::runtime::ValueBuilderOutput
-//!
-//! # TypeDesc-equivalence-class collapse
-//!
-//! The per-AY.md prop 3 thesis: rules with identical `TypeDesc`
-//! collapse into one variant. For the first cut we emit one variant
-//! per non-transparent rule (identity collapse); the
-//! [`collect_variant_classes`] helper is the single point where the
-//! class map is computed, so a future widening to
-//! `FxHashMap<TypeDesc, VariantIndex>` is a drop-in change without
-//! disturbing the consumers. The per-shape `materialize_*` fns
-//! dispatch on `rule_kind()` regardless of the collapse depth —
-//! multiple rule kinds mapping to the same variant simply call the
-//! same variant constructor.
+//! The `project_value_<grammar>` entry-point routes every admitted
+//! rule through its matching `materialize_projection_<rule>_<Grammar>`
+//! helper. The helper reads the value slab the fused builder populates
+//! in lockstep with the tape; its return value wraps into the variant
+//! with zero intermediate allocation. Non-admitted variants keep the
+//! shape-based path (scalar payload read / Span slice / recursive
+//! child walk) so that the emitter never emits a placeholder arm.
+//! The dispatch is grammar-derived: `collect_projection_admissions`
+//! determines which rules route through the materializer path; every
+//! other non-transparent rule falls through to the shape-based arm
+//! without a per-grammar branch in the emitter.
 
 use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::named_types::RustNamedTypes;
+use crate::backend::rust::emitter::grammar::{
+    collect_projection_admissions, ProjectionAdmission,
+};
+
 /// Shape the variant's payload takes in `<Grammar>Value`.
 ///
-/// Resolved from the rule's `TypeDesc` + its body shape. The
-/// compound rules fall into [`VariantShape::Compound`] regardless of
-/// whether their body is `Seq`, `Alt`, or `Repeat` — the per-shape
-/// `materialize_*` fns inspect the body shape when constructing the
-/// variant, this only governs the enum variant's declared type.
+/// Admitted rules carry their grammar-derived projection struct; every
+/// other non-transparent rule is classified from its `TypeDesc` + body
+/// shape into one of the leaf shapes. The classification is consumed
+/// by both the enum emission (variant signature) and the dispatch
+/// emission (project-arm body).
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum VariantShape {
+    /// Admitted rule — carries the generated projection struct. The
+    /// materializer is called via `materialize_projection_<rule>_<Grammar>`
+    /// at the dispatch site; this shape records the struct identity +
+    /// the lifetime-carrying indicator so both the enum and the
+    /// dispatcher agree on the payload type.
+    Projection {
+        /// `<Grammar><RuleCamel>Projection` identifier.
+        struct_ident: syn::Ident,
+        /// `true` when the projection struct carries a `'p` lifetime
+        /// parameter (rich admissions with cursor-child fields).
+        has_cursor_fields: bool,
+    },
     /// Borrowed source span — `&'p str`.
     Span,
     /// Typed scalar primitive — carries the TypeDesc so the emitter
@@ -73,12 +77,9 @@ enum VariantShape {
     Scalar(TypeDesc),
     /// Compound (Seq / Alt / Repeat) — carries a
     /// `Vec<<Grammar>Value<'p>>` of eagerly-materialised children.
-    /// The variant's semantic identity lives in the variant name
-    /// (rule-derived); the compound's structure is whatever the
-    /// materialize fn produced.
     Compound,
-    /// Fallback / unclassified — wraps the generic NodeView. Used
-    /// for recovered records and the mandatory `Unknown` catch-all.
+    /// Fallback / unclassified — wraps the generic NodeView. Used for
+    /// recovered records and the mandatory `Unknown` catch-all.
     Cursor,
 }
 
@@ -97,7 +98,16 @@ pub fn emit_value_surface(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
         return quote! {};
     }
 
-    let variants = collect_variant_classes(ir, &non_transparent);
+    let resolver = RustNamedTypes::from_ir(ir);
+    let admissions = collect_projection_admissions(ir, &resolver);
+    let grammar_prefix = to_upper_camel(grammar_name);
+
+    let variants = collect_variant_classes(
+        ir,
+        &non_transparent,
+        &admissions,
+        &grammar_prefix,
+    );
     let value_ident = format_ident!("{}Value", grammar_name);
     let grammar_ident = format_ident!("{}", grammar_name);
     let node_view_ident = format_ident!("{}NodeView", grammar_name);
@@ -107,7 +117,6 @@ pub fn emit_value_surface(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
     let value_root_impl = emit_value_root_impl(
         &grammar_ident,
         &value_ident,
-        &node_view_ident,
         &rule_kind_ident,
         &variants,
         grammar_name,
@@ -140,10 +149,16 @@ struct VariantEntry {
 }
 
 /// Walk the grammar's non-transparent rules and assign one variant
-/// per rule. This is the per-AY.md prop 3 collapse site — today we
-/// emit a 1:1 rule → variant mapping; the `FxHashMap<TypeDesc,
-/// VariantIndex>` widening lives here when it lands.
-fn collect_variant_classes(ir: &GrammarIR, rules: &[&IrRule]) -> Vec<VariantEntry> {
+/// per rule. Admitted rules (rule names appearing in `admissions`) get
+/// a [`VariantShape::Projection`] that carries the admission's
+/// synthesised struct identity; every other non-transparent rule is
+/// classified from its TypeDesc + body shape.
+fn collect_variant_classes(
+    ir: &GrammarIR,
+    rules: &[&IrRule],
+    admissions: &[ProjectionAdmission],
+    grammar_prefix: &str,
+) -> Vec<VariantEntry> {
     let mut out: Vec<VariantEntry> = Vec::with_capacity(rules.len());
     let mut seen_names: std::collections::HashSet<String> =
         std::collections::HashSet::with_capacity(rules.len());
@@ -151,14 +166,14 @@ fn collect_variant_classes(ir: &GrammarIR, rules: &[&IrRule]) -> Vec<VariantEntr
     for rule in rules {
         let raw_name = ir.get_string(rule.name).to_string();
         let mut name = raw_name.clone();
-        // Disambiguate collisions — rare, but defensive for
-        // generated sub-variant names colliding with rule names.
+        // Disambiguate collisions — rare, but defensive for generated
+        // sub-variant names colliding with rule names.
         let mut idx = 0;
         while !seen_names.insert(name.clone()) {
             idx += 1;
             name = format!("{}_{}", raw_name, idx);
         }
-        let shape = classify_shape(rule, ir);
+        let shape = classify_shape(rule, ir, &raw_name, admissions, grammar_prefix);
         out.push(VariantEntry {
             name,
             rule_id: rule.id,
@@ -169,23 +184,32 @@ fn collect_variant_classes(ir: &GrammarIR, rules: &[&IrRule]) -> Vec<VariantEntr
     out
 }
 
-/// Classify the variant's payload shape from the rule's TypeDesc +
-/// body. The priority order is:
+/// Classify the variant's payload shape.
 ///
-/// 1. Aggregate payload layout (multi-field scalar tuple) → Compound
-///    (materialize reads the tuple via the view's `.value()` accessor
-///    and wraps it in a child-count-1 compound).
+/// Priority order:
+///
+/// 1. Admission (rule appears in `admissions`) — [`VariantShape::Projection`]
+///    carrying the generated struct ident. Admissions are the
+///    IR-derived direct-to-struct surface; a rule appearing here
+///    routes through `materialize_projection_<rule>_<Grammar>` at
+///    dispatch time.
 /// 2. Scalar `TypeDesc::Span` → Span variant carrying `&'p str`.
 /// 3. Scalar payload `TypeDesc` (`F64`, `Bool`, `U32`, …) → Scalar
 ///    variant carrying the primitive.
 /// 4. `IrNode::Repeat` / `IrNode::Seq` / `IrNode::Alt` body → Compound.
 /// 5. Fallback → Cursor (wraps `NodeView`).
-fn classify_shape(rule: &IrRule, ir: &GrammarIR) -> VariantShape {
-    if ir.payload_layouts.contains_key(&rule.id) {
-        // Aggregate (tuple of scalars packed in the payload buffer)
-        // — Compound so the materialize fn can build a typed tuple
-        // via the existing `.value()` accessor on the per-rule view.
-        return VariantShape::Compound;
+fn classify_shape(
+    rule: &IrRule,
+    ir: &GrammarIR,
+    raw_name: &str,
+    admissions: &[ProjectionAdmission],
+    grammar_prefix: &str,
+) -> VariantShape {
+    if let Some(admission) = admissions.iter().find(|a| a.rule_name() == raw_name) {
+        return VariantShape::Projection {
+            struct_ident: admission.struct_ident(grammar_prefix),
+            has_cursor_fields: admission.plan().has_cursor_fields,
+        };
     }
 
     let type_desc = ir
@@ -221,17 +245,45 @@ fn peel_body(node: &IrNode) -> &IrNode {
     }
 }
 
+/// UpperCamel-case a grammar name so the projection struct ident
+/// (`<Grammar><RuleCamel>Projection`) can be reconstructed locally.
+/// Mirrors `emitter/grammar.rs::to_upper_camel` — duplicated here so
+/// `view/value.rs` stays self-contained.
+fn to_upper_camel(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
+    let mut upper_next = true;
+    for ch in name.chars() {
+        if ch == '_' || ch == '-' || ch == '.' {
+            upper_next = true;
+            continue;
+        }
+        if upper_next {
+            out.extend(ch.to_uppercase());
+            upper_next = false;
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+
 /// Emit the `pub enum <Grammar>Value<'p> { ... }` declaration.
 ///
 /// Payload shapes:
-/// - Span → `&'p str`
-/// - Scalar(td) → primitive (`f64`, `bool`, etc.)
-/// - Compound → `::std::vec::Vec<<Grammar>Value<'p>>`
-/// - Cursor → `<Grammar>NodeView<'p>`
+/// - Projection { struct_ident, has_cursor_fields } → `struct_ident` or
+///   `struct_ident<'p>` depending on whether the projection itself
+///   bears a lifetime.
+/// - Span → `&'p str`.
+/// - Scalar(td) → primitive (`f64`, `bool`, etc.).
+/// - Compound → `::std::vec::Vec<<Grammar>Value<'p>>`.
+/// - Cursor → `<Grammar>NodeView<'p>`.
 ///
-/// Every enum emits a `Unknown(NodeView)` catch-all so the
-/// `rule_kind() == Unknown` dispatch never panics on recovered /
-/// unclassified records.
+/// An `Unknown(NodeView)` catch-all survives unconditionally for
+/// unclassified / recovery records whose `variant_idx` falls outside
+/// the rule-id space. The emitter does not currently drop the catch-
+/// all even when every rule is admitted — a corrupt frame arena (the
+/// `variant_idx` byte) can still hit the `RuleKind::Unknown` arm at
+/// runtime.
 fn emit_enum_decl(
     value_ident: &syn::Ident,
     node_view_ident: &syn::Ident,
@@ -242,6 +294,16 @@ fn emit_enum_decl(
         .map(|v| {
             let id = format_ident!("{}", v.name);
             match &v.shape {
+                VariantShape::Projection {
+                    struct_ident,
+                    has_cursor_fields,
+                } => {
+                    if *has_cursor_fields {
+                        quote! { #id(#struct_ident<'p>) }
+                    } else {
+                        quote! { #id(#struct_ident) }
+                    }
+                }
                 VariantShape::Span => quote! { #id(&'p str) },
                 VariantShape::Scalar(td) => {
                     let ty = format_ident!(
@@ -261,11 +323,11 @@ fn emit_enum_decl(
         .collect();
 
     quote! {
-        /// AY.W3b.1 — grammar-emitted value enum. Eager materialisation
-        /// target for `Parsed::to_value()`. Variants enumerate
-        /// non-transparent rules (TypeDesc-equivalence-class collapse
-        /// applied per the emitter); compound variants carry
-        /// child values in declaration order.
+        /// AY-II.W0'.b — grammar-emitted value enum. Eager
+        /// materialisation target for `Parsed::to_value()`. Variants
+        /// enumerate non-transparent rules; admitted rules carry the
+        /// matching `<Grammar><RuleCamel>Projection` struct directly,
+        /// non-admitted rules carry their shape-classified payload.
         #[derive(Clone, Debug)]
         pub enum #value_ident<'p> {
             #(#variant_tokens,)*
@@ -277,49 +339,324 @@ fn emit_enum_decl(
     }
 }
 
-/// Emit `impl ::bbnf::runtime::ValueRoot for <Grammar>` — the GAT
-/// `type Value<'p> = <Grammar>Value<'p>` binding + the
-/// `project_value_output` entry point (AY-II.W0.c) that projects the
-/// fused-pipeline value substrate into the typed enum.
-///
-/// The emitted body delegates to `project_value_<Grammar>` — the
-/// root projector emitted alongside the per-shape materialisers in
-/// `emitter/shapes/value_materialize.rs`. It reads the root frame
-/// from [`ValueBuilderOutput`](crate::runtime::ValueBuilderOutput)
-/// and walks its child run, constructing each variant via the
-/// grammar's emitted projection logic. No tape walk, no cursor
-/// dispatch; the substrate the emitter writes at parse time is the
-/// direct source.
+/// Emit `impl ::bbnf::runtime::ValueRoot for <Grammar>` + the
+/// `project_value_<grammar>` fn + its supporting dispatch. The emitted
+/// fn routes every admitted rule through its grammar-derived
+/// materializer and falls through to shape-based arms for every other
+/// non-transparent rule. One code path per grammar; the emission is
+/// driven by `VariantEntry::shape` directly.
 fn emit_value_root_impl(
     grammar_ident: &syn::Ident,
     value_ident: &syn::Ident,
-    _node_view_ident: &syn::Ident,
-    _rule_kind_ident: &syn::Ident,
-    _variants: &[VariantEntry],
+    rule_kind_ident: &syn::Ident,
+    variants: &[VariantEntry],
     grammar_name: &str,
 ) -> TokenStream {
-    let root_project_fn =
-        format_ident!("project_value_{}", grammar_name);
+    let root_fn = format_ident!("project_value_{}", grammar_name);
+    let frame_fn = format_ident!("project_frame_{}", grammar_name);
+    let dispatch_fn = format_ident!("project_rule_kind_{}", grammar_name);
+
+    // Rule-id → RuleKind dispatch, scoped to this grammar. The
+    // `variant_idx & 0xFF` is the emitter's canonical low-byte slice
+    // (matches the view-layer `rule_kind()` dispatcher).
+    let dispatch_arms: Vec<TokenStream> = variants
+        .iter()
+        .map(|v| {
+            let kind_variant = format_ident!("{}", v.name);
+            let idx_lit = (v.rule_id & 0xFF) as u8;
+            quote! { #idx_lit => #rule_kind_ident::#kind_variant, }
+        })
+        .collect();
+
+    // Per-variant project arms. Admitted rules route through their
+    // materializer; non-admitted rules construct the variant inline
+    // from the frame + input.
+    let project_arms: Vec<TokenStream> = variants
+        .iter()
+        .map(|v| emit_project_arm(v, value_ident, rule_kind_ident, &frame_fn, grammar_name))
+        .collect();
 
     quote! {
+        /// AY-II.W0'.b — rule-id → RuleKind dispatch local to the
+        /// fused-pipeline projection path. Mirrors the view layer's
+        /// `rule_kind()` dispatch; scoped to the projection module so
+        /// the two consumer paths stay coupled only through the
+        /// `RuleKind` enum.
+        #[inline(always)]
+        fn #dispatch_fn(variant_idx: u8) -> #rule_kind_ident {
+            match variant_idx {
+                #(#dispatch_arms)*
+                _ => #rule_kind_ident::Unknown,
+            }
+        }
+
+        /// AY-II.W0'.b — per-frame projector. Reads one frame from the
+        /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+        /// value slab and constructs the matching `<Grammar>Value`
+        /// variant. Admitted rules tail-call their grammar-derived
+        /// materializer; non-admitted rules construct the variant
+        /// inline. Compound variants recurse through this same fn.
+        #[inline]
+        fn #frame_fn<'p>(
+            output: &::bbnf::runtime::FusedOutput,
+            input: &'p str,
+            offset: u32,
+        ) -> #value_ident<'p> {
+            let frame = match output.value_frame_at(offset) {
+                ::core::option::Option::Some(f) => f,
+                ::core::option::Option::None => {
+                    ::core::panic!(
+                        "AY-II.W0'.b: value frame offset {} out of range (frames: {})",
+                        offset,
+                        output.value_frames().len(),
+                    );
+                }
+            };
+            match #dispatch_fn(frame.variant_idx) {
+                #(#project_arms)*
+                _ => {
+                    let _ = frame;
+                    ::core::panic!(
+                        "AY-II.W0'.b: unclassified variant_idx {} on frame at offset {}",
+                        frame.variant_idx,
+                        offset,
+                    );
+                }
+            }
+        }
+
+        /// AY-II.W0'.b — fused-pipeline root projector. Reads the root
+        /// frame from the value slab and constructs the grammar's
+        /// `<Grammar>Value<'p>` in one pass. No tape walk, no reparse,
+        /// no visitor dispatch.
+        #[inline]
+        fn #root_fn<'p>(
+            output: &::bbnf::runtime::FusedOutput,
+            input: &'p str,
+        ) -> #value_ident<'p> {
+            let root_off = output.value_root_offset();
+            match output.value_frame_at(root_off) {
+                ::core::option::Option::Some(_) => {}
+                ::core::option::Option::None => {
+                    ::core::panic!(
+                        "AY-II.W0'.b: ValueBuilder root frame absent after parse \
+                         (root_offset = {}, frame count = {})",
+                        root_off,
+                        output.value_frames().len(),
+                    );
+                }
+            }
+            #frame_fn(output, input, root_off)
+        }
+
         impl ::bbnf::runtime::ValueRoot for #grammar_ident {
             type Value<'p> = #value_ident<'p>;
 
             #[inline]
             fn project_value_output<'p>(
-                output: &::bbnf::runtime::ValueBuilderOutput<Self>,
+                output: &::bbnf::runtime::FusedOutput,
                 input: &'p str,
             ) -> Self::Value<'p>
             where
                 Self: 'p,
             {
-                #root_project_fn(output, input)
+                #root_fn(output, input)
             }
         }
     }
 }
 
-/// Emit narrow `PathQuery<T>` impls for the common leaf types.
+/// Emit one per-variant projection arm for `project_frame_<Grammar>`.
+///
+/// Shape-specialised:
+/// - Projection → call the materializer + wrap in the variant. The
+///   materializer signature is
+///   `materialize_projection_<rule>_<Grammar>(output, input, offset)
+///    -> Option<Projection>`; `unwrap_or_else(panic)` the admitted
+///   case because the IR admission fact guarantees the rule projects
+///   cleanly.
+/// - Span → `&input[lo..hi]` wrapped in the Span variant.
+/// - Scalar(td) → decode the frame's payload tag into the typed
+///   primitive; fall back to span-text parse when no payload was
+///   recorded.
+/// - Compound → walk the frame's child run, project each child
+///   recursively, collect into a `Vec<<Grammar>Value>`.
+/// - Cursor → panics — the fused-pipeline projection does not
+///   reconstruct a NodeView from the slab today.
+fn emit_project_arm(
+    v: &VariantEntry,
+    value_ident: &syn::Ident,
+    rule_kind_ident: &syn::Ident,
+    frame_fn: &syn::Ident,
+    grammar_name: &str,
+) -> TokenStream {
+    let kind_variant = format_ident!("{}", v.name);
+    let value_variant = format_ident!("{}", v.name);
+    match &v.shape {
+        VariantShape::Projection { .. } => {
+            let materializer_fn = format_ident!(
+                "materialize_projection_{}_{}",
+                sanitise_ident(&v.name),
+                grammar_name,
+            );
+            let rule_name_lit = proc_macro2::Literal::string(&v.name);
+            quote! {
+                #rule_kind_ident::#kind_variant => {
+                    let proj = #materializer_fn(output, input, offset)
+                        .unwrap_or_else(|| {
+                            ::core::panic!(
+                                "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                                #rule_name_lit,
+                                offset,
+                            );
+                        });
+                    #value_ident::#value_variant(proj)
+                }
+            }
+        }
+        VariantShape::Span => quote! {
+            #rule_kind_ident::#kind_variant => {
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                #value_ident::#value_variant(span)
+            }
+        },
+        VariantShape::Scalar(td) => emit_scalar_project_arm(
+            rule_kind_ident,
+            &kind_variant,
+            value_ident,
+            &value_variant,
+            td,
+        ),
+        VariantShape::Compound => quote! {
+            #rule_kind_ident::#kind_variant => {
+                let mut children: ::std::vec::Vec<#value_ident<'p>> =
+                    ::std::vec::Vec::with_capacity(frame.child_count as usize);
+                for (child_off, _child_frame) in output.value_children(offset) {
+                    children.push(#frame_fn(output, input, child_off));
+                }
+                #value_ident::#value_variant(children)
+            }
+        },
+        VariantShape::Cursor => quote! {
+            #rule_kind_ident::#kind_variant => {
+                // Cursor variants wrap a structural NodeView; the
+                // fused-pipeline projection does not reconstruct a
+                // NodeView from the slab today. A grammar whose
+                // classification lands on Cursor is one the emitter
+                // has not yet produced a slab projection for; the
+                // projection panics rather than silently fall back
+                // to tape-walking.
+                let _ = frame;
+                ::core::panic!(
+                    "AY-II.W0'.b: Cursor-shape variant projection not yet \
+                     available; frame offset {}",
+                    offset,
+                );
+            }
+        },
+    }
+}
+
+/// Emit a Scalar variant projection arm — decodes the frame's payload
+/// tag into the typed primitive. Falls back to span-text parsing when
+/// no payload was recorded (leaves whose rule did not stage a typed
+/// payload at parse time).
+fn emit_scalar_project_arm(
+    rule_kind_ident: &syn::Ident,
+    kind_variant: &syn::Ident,
+    value_ident: &syn::Ident,
+    value_variant: &syn::Ident,
+    td: &TypeDesc,
+) -> TokenStream {
+    let fallback = scalar_fallback_from_span(td);
+    match td {
+        TypeDesc::F64 => quote! {
+            #rule_kind_ident::#kind_variant => {
+                let v: f64 = output.value_payload_for(frame)
+                    .and_then(|p| p.as_f64())
+                    .unwrap_or_else(|| { #fallback });
+                #value_ident::#value_variant(v)
+            }
+        },
+        TypeDesc::Bool => quote! {
+            #rule_kind_ident::#kind_variant => {
+                let v: bool = output.value_payload_for(frame)
+                    .and_then(|p| p.as_bool())
+                    .unwrap_or_else(|| { #fallback });
+                #value_ident::#value_variant(v)
+            }
+        },
+        TypeDesc::U32 => quote! {
+            #rule_kind_ident::#kind_variant => {
+                let v: u32 = output.value_payload_for(frame)
+                    .and_then(|p| p.as_u32())
+                    .unwrap_or_else(|| { #fallback });
+                #value_ident::#value_variant(v)
+            }
+        },
+        _ => {
+            let ident = td
+                .rust_ident()
+                .expect("scalar TypeDesc has rust_ident");
+            let ty_ident = format_ident!("{}", ident);
+            quote! {
+                #rule_kind_ident::#kind_variant => {
+                    let v: #ty_ident = output.value_payload_for(frame)
+                        .and_then(|p| p.as_u32())
+                        .map(|v| v as #ty_ident)
+                        .unwrap_or_else(|| { #fallback });
+                    #value_ident::#value_variant(v)
+                }
+            }
+        }
+    }
+}
+
+/// Scalar fallback — reads the source span and parses into the target
+/// primitive.
+fn scalar_fallback_from_span(td: &TypeDesc) -> TokenStream {
+    let slice = quote! {
+        (&input[frame.span_lo as usize..frame.span_hi as usize])
+    };
+    match td {
+        TypeDesc::Bool => quote! { #slice == "true" },
+        TypeDesc::U32 => quote! { #slice.parse::<u32>().unwrap_or(0u32) },
+        TypeDesc::F64 => quote! { #slice.parse::<f64>().unwrap_or(0.0) },
+        TypeDesc::I8 => quote! { #slice.parse::<i8>().unwrap_or(0) },
+        TypeDesc::U8 => quote! { #slice.parse::<u8>().unwrap_or(0) },
+        TypeDesc::I16 => quote! { #slice.parse::<i16>().unwrap_or(0) },
+        TypeDesc::U16 => quote! { #slice.parse::<u16>().unwrap_or(0) },
+        TypeDesc::I32 => quote! { #slice.parse::<i32>().unwrap_or(0) },
+        TypeDesc::I64 => quote! { #slice.parse::<i64>().unwrap_or(0) },
+        TypeDesc::U64 => quote! { #slice.parse::<u64>().unwrap_or(0) },
+        _ => quote! { ::core::default::Default::default() },
+    }
+}
+
+/// Mirror of the emitter's `sanitise_ident` helper — rule names with
+/// non-alphanumeric characters replace them with underscores; leading
+/// digits get an `r_` prefix. Kept local so `view/value.rs` stays
+/// self-contained.
+fn sanitise_ident(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
+    for (idx, ch) in name.chars().enumerate() {
+        if ch.is_ascii_alphanumeric() {
+            if idx == 0 && ch.is_ascii_digit() {
+                out.push_str("r_");
+            }
+            out.extend(ch.to_lowercase());
+        } else {
+            out.push('_');
+        }
+    }
+    if out.is_empty() {
+        out.push('_');
+    }
+    out
+}
+
 /// Returns one impl per T ∈ { &'static str, f64, bool } — each
 /// performs a cursor-walk over the tape, descending through
 /// `PathSegment::Field` / `PathSegment::Index` steps and extracting
@@ -687,37 +1024,75 @@ fn emit_path_query_impls(
     }
 }
 
-/// Convenience accessor for downstream emitters: the per-shape
-/// `materialize_*` fns need the grammar's variant map to choose
-/// the right constructor per `rule_kind()`. Exposed as a standalone
-/// function so the orchestrator can compute it once per grammar
-/// and hand it to both the value emitter and the materialise
-/// emitter.
+/// Convenience accessor for downstream emitters: returns the
+/// grammar's variant map so the materialise emitter can pick the
+/// right constructor per `rule_kind()`. Post-W0'.b the fused
+/// projection path lives entirely inside `emit_value_surface`; this
+/// accessor is retained for any remaining consumer that still
+/// inspects the variant classification surface (e.g. CSS-typed
+/// accessor emission + the admitted-projection structural gates).
+///
+/// The emitted struct ident on `VariantInfoShape::Projection` is a
+/// placeholder — the prefix-aware construction stays local to
+/// `emit_value_surface`; downstream consumers inspect only
+/// `has_cursor_fields`.
 pub fn variant_entries_for(ir: &GrammarIR) -> Vec<VariantInfo> {
     let non_transparent: Vec<&IrRule> = ir
         .rules
         .iter()
         .filter(|r| !r.meta.is_transparent)
         .collect();
-    collect_variant_classes(ir, &non_transparent)
-        .into_iter()
-        .map(|e| VariantInfo {
-            name: e.name,
-            rule_id: e.rule_id,
-            shape: match e.shape {
-                VariantShape::Span => VariantInfoShape::Span,
-                VariantShape::Scalar(td) => VariantInfoShape::Scalar(td),
-                VariantShape::Compound => VariantInfoShape::Compound,
-                VariantShape::Cursor => VariantInfoShape::Cursor,
-            },
-        })
-        .collect()
+    let resolver = RustNamedTypes::from_ir(ir);
+    let admissions = collect_projection_admissions(ir, &resolver);
+    let mut out: Vec<VariantInfo> = Vec::with_capacity(non_transparent.len());
+    let mut seen_names: std::collections::HashSet<String> =
+        std::collections::HashSet::with_capacity(non_transparent.len());
+    for rule in &non_transparent {
+        let raw_name = ir.get_string(rule.name).to_string();
+        let mut name = raw_name.clone();
+        let mut idx = 0;
+        while !seen_names.insert(name.clone()) {
+            idx += 1;
+            name = format!("{}_{}", raw_name, idx);
+        }
+        let shape = if let Some(admission) =
+            admissions.iter().find(|a| a.rule_name() == raw_name)
+        {
+            VariantInfoShape::Projection {
+                has_cursor_fields: admission.plan().has_cursor_fields,
+            }
+        } else {
+            let type_desc = ir
+                .types
+                .iter()
+                .find_map(|(id, ty)| (*id == rule.id).then_some(ty));
+            match type_desc {
+                Some(TypeDesc::Span) => VariantInfoShape::Span,
+                Some(td) if td.is_scalar_payload() && !matches!(td, TypeDesc::Span) => {
+                    VariantInfoShape::Scalar(td.clone())
+                }
+                _ => match peel_body(&rule.body) {
+                    IrNode::Seq(_) | IrNode::Alt(_, _) | IrNode::Repeat { .. } => {
+                        VariantInfoShape::Compound
+                    }
+                    IrNode::Literal(_) | IrNode::Regex(_) => VariantInfoShape::Span,
+                    _ => VariantInfoShape::Cursor,
+                },
+            }
+        };
+        out.push(VariantInfo {
+            name,
+            rule_id: rule.id,
+            shape,
+        });
+    }
+    out
 }
 
 /// Public mirror of [`VariantEntry`] for downstream emitters. The
-/// private form carries module-private `VariantShape`; the public
-/// form re-exports the same information so the materialise emitter
-/// can match on the shape without the private type leaking.
+/// private form carries module-private `VariantShape`; the public form
+/// re-exports the same information so the materialise emitter can
+/// match on the shape without the private type leaking.
 pub struct VariantInfo {
     pub name: String,
     pub rule_id: u32,
@@ -726,6 +1101,13 @@ pub struct VariantInfo {
 
 /// Public mirror of [`VariantShape`].
 pub enum VariantInfoShape {
+    /// Admission — the emitter routes through the matching
+    /// `materialize_projection_<rule>_<Grammar>` fn. `has_cursor_fields`
+    /// mirrors the admission's plan so the downstream emitter can
+    /// decide whether the projection struct carries a `'p` lifetime.
+    Projection {
+        has_cursor_fields: bool,
+    },
     Span,
     Scalar(TypeDesc),
     Compound,

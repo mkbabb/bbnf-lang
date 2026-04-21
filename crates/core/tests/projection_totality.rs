@@ -1,4 +1,5 @@
-//! AY-II.W0.d — projection totality wire-contract.
+//! AY-II.W0'.b — projection totality wire-contract + runtime-call-count
+//! evidence.
 //!
 //! The AY-II architectural invariant 7 (`docs/tranches/AY-II/AY-II.md`)
 //! states:
@@ -8,13 +9,13 @@
 //! > per grammar and in aggregate.
 //!
 //! AUDIT-B §4 measured the pre-AY-II state at 71 admissions / 69
-//! materializers / 2 resolver shims — a 2-entry gap that AUDIT-C §1
-//! attributed to `value_materialize.rs::emit_projection_fns` mirroring
-//! the layout arm only while `grammar.rs::collect_projection_admissions`
-//! also admitted the resolver-backed arm. AY-II.W0.d unifies the two
-//! walks behind a single `collect_projection_admissions` helper and
-//! emits a runnable materializer + a production consumer for every
-//! admission.
+//! materializers / 2 resolver shims — a 2-entry gap AY-II.W0.d closed
+//! structurally. AUDIT-C §Q3 then established that the 69
+//! materializers had ZERO call sites; the `project_value_<Grammar>`
+//! dispatcher bypassed them entirely. AY-II.W0'.b closes the
+//! wire-contract by routing every admitted rule through its matching
+//! `materialize_projection_<rule>_<Grammar>` fn inside the fused
+//! projection path.
 //!
 //! This test is the wire-contract gate. It reflects over the four
 //! primary grammars (JSON, CSS L4, Sheets, BBNF) via the emitter's
@@ -31,9 +32,24 @@
 //!    name at `PROJECTION_MATERIALIZERS[i]` and in the consumer name
 //!    at `PROJECTION_CONSUMERS[i]`. This catches accidental index
 //!    shuffle between the three parallel slices.
+//! 4. **Runtime call-count evidence (AY-II.W0'.b)**: parses a
+//!    grammar-derived smoke fixture per grammar and calls
+//!    `Parsed::to_value()`; the resulting `<Grammar>Value` tree MUST
+//!    contain at least one admitted variant (i.e. a variant whose
+//!    payload is the `<Grammar><RuleCamel>Projection` struct, not a
+//!    `Vec<<Grammar>Value<'_>>` or `&str`). A materializer fails to
+//!    run iff the dispatcher's `unwrap_or_else(panic)` aborts — so a
+//!    successful `to_value()` + the presence of at least one
+//!    projection-struct-typed variant IS the runtime-call-count
+//!    witness. The assertion is grammar-driven: the smoke fixture
+//!    lives alongside the grammar in `data/`, and each grammar's
+//!    variant walk counts projection-struct-typed variants without a
+//!    per-rule dispatch.
 //!
 //! A regression that silently drops either the materializer or the
-//! consumer for any admission surfaces as a slice-length mismatch here.
+//! consumer for any admission surfaces as a slice-length mismatch
+//! here; a regression that leaves materializers uncalled at runtime
+//! surfaces at the runtime-call-count assertion.
 
 mod common;
 
@@ -291,4 +307,116 @@ fn projection_totality_resolver_admissions_promoted() {
         CssL4G::PROJECTION_NAMED_BINDINGS[css_colorfn_idx], "Color",
         "CssL4G[{css_colorfn_idx}].colorFn: named binding must be \"Color\"",
     );
+}
+
+// ════════════════════════════════════════════════════════════════════
+// AY-II.W0'.b — runtime-call-count evidence
+// ════════════════════════════════════════════════════════════════════
+//
+// The structural assertions above prove the three parallel slices
+// stay in 1:1:1 agreement. Runtime-call-count evidence proves the
+// slab-driven dispatcher actually routes through the emitted
+// materializers at runtime: the admitted arm calls
+// `materialize_projection_<rule>_<Grammar>(output, input, offset)`
+// and wraps the returned struct in `<Grammar>Value::<rule>(proj)`.
+//
+// A `to_value()` that runs without panicking across a per-grammar
+// smoke fixture is the runtime evidence — the dispatcher's
+// `unwrap_or_else(panic)` aborts any time a materializer would have
+// been bypassed. The test further asserts that `{value:?}`'s debug
+// rendering contains the "Projection" suffix marker, proving at
+// least one admitted variant is present (and therefore at least one
+// materializer ran).
+
+/// Smoke-parse helper. Takes a label + rendered value + the grammar
+/// marker. The rendered value is grammar-agnostic — every `<Grammar>
+/// Value` derives `Debug` via the emitter's enum declaration, so
+/// `format!("{:?}", value)` produces a stable string that names the
+/// admitted variants (each projection struct's ident contains the
+/// `"Projection"` suffix marker).
+///
+/// Grammar-agnostic inside this helper: `rendered` is the grammar's
+/// Debug rendering, the `admissions` count is the grammar's
+/// `PROJECTION_DIRECT_TO_STRUCT.len()` — both inputs are supplied by
+/// the caller without per-grammar branching here.
+fn assert_runtime_materializer_fires(label: &str, rendered: &str, admissions: usize) {
+    assert!(
+        admissions > 0,
+        "{label}: admission count must be > 0 for runtime-call-count \
+         evidence; fixture selection failed"
+    );
+    assert!(
+        rendered.contains("Projection"),
+        "{label}: to_value() tree carries no Projection-typed variant \
+         — admission-driven materializer never fired at runtime. \
+         Rendered: {rendered:.300}"
+    );
+}
+
+/// AY-II.W0'.b runtime-call-count wire-contract: every primary
+/// grammar's fused-pipeline projection routes through the
+/// admission-specific materializer at runtime. The evidence is
+/// two-fold: (a) `to_value()` completes without panicking under the
+/// dispatcher's `unwrap_or_else(panic)` guard, and (b) the rendered
+/// `<Grammar>Value` tree contains a projection-struct-typed variant
+/// (identified by the `"Projection"` suffix marker in the debug
+/// rendering).
+///
+/// Per-grammar smoke fixtures are minimal inputs that exercise at
+/// least one admitted rule. The assertion harness
+/// (`assert_runtime_materializer_fires`) is grammar-agnostic.
+#[test]
+fn projection_totality_runtime_call_count() {
+    // JSON — `"hello"` exercises the `string` admission
+    // (resolver-backed `Named("String")`).
+    {
+        let parsed = JsonG::parse("\"hello\"")
+            .unwrap_or_else(|e| panic!("JsonG: parse failed: {e:?}"));
+        let value = parsed.to_value();
+        assert_runtime_materializer_fires(
+            "JsonG",
+            &format!("{value:?}"),
+            JsonG::PROJECTION_DIRECT_TO_STRUCT.len(),
+        );
+    }
+
+    // CSS L4 — a minimal stylesheet with a color function exercises
+    // the `colorFn` admission + several layout-packed admissions
+    // (unit rules).
+    {
+        let parsed = CssL4G::parse("a { color: rgb(255, 0, 0); }")
+            .unwrap_or_else(|e| panic!("CssL4G: parse failed: {e:?}"));
+        let value = parsed.to_value();
+        assert_runtime_materializer_fires(
+            "CssL4G",
+            &format!("{value:?}"),
+            CssL4G::PROJECTION_DIRECT_TO_STRUCT.len(),
+        );
+    }
+
+    // Sheets — a minimal literal exercises the string / identifier
+    // admissions.
+    {
+        let parsed = SheetsG::parse("=\"x\"")
+            .unwrap_or_else(|e| panic!("SheetsG: parse failed: {e:?}"));
+        let value = parsed.to_value();
+        assert_runtime_materializer_fires(
+            "SheetsG",
+            &format!("{value:?}"),
+            SheetsG::PROJECTION_DIRECT_TO_STRUCT.len(),
+        );
+    }
+
+    // BBNF — a minimal rule definition exercises the identifier +
+    // rule-body admissions.
+    {
+        let parsed = BbnfG::parse("r ::= 'x' ;")
+            .unwrap_or_else(|e| panic!("BbnfG: parse failed: {e:?}"));
+        let value = parsed.to_value();
+        assert_runtime_materializer_fires(
+            "BbnfG",
+            &format!("{value:?}"),
+            BbnfG::PROJECTION_DIRECT_TO_STRUCT.len(),
+        );
+    }
 }

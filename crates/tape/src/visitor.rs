@@ -43,7 +43,7 @@
 use crate::builder::{PayloadData, TapeBuilder};
 use crate::columns::Columns;
 use crate::kind::TapeKind;
-use crate::tape::{Tape, TapeOffset};
+use crate::tape::Tape;
 use crate::TapeBuildError;
 
 // ─────────────────────────────────────────────────────────────────────
@@ -218,9 +218,9 @@ pub trait PrattVisitor: GrammarVisitor {
 /// # Layout per shape
 ///
 /// - **Objects / Arrays** — compound records (`TapeKind::Rule`)
-///   bracketing the children run. `begin_*` marks the child-run
-///   position via [`TapeBuilder::mark_children`]; `end_*` closes with
-///   [`TapeBuilder::push_compound`] and the accumulated span.
+///   bracketing the children run. `begin_*` opens a pre-order
+///   compound via [`FusedBuilder::begin_compound`]; `end_*` closes
+///   with [`FusedBuilder::end_compound`] and the accumulated span.
 /// - **Keys** — span leaves (`TapeKind::Span`) carrying the decoded
 ///   bytes as an arena-framed `(len: u32 LE, bytes)` payload.
 /// - **Strings** — span leaves (`TapeKind::Span`) carrying arena-
@@ -252,10 +252,17 @@ pub struct TapeVisitor<'input> {
 /// In-progress compound frame — private to [`TapeVisitor`]; kept on
 /// the visitor rather than threaded through the parse function's
 /// generic bounds.
+///
+/// Tracks the tape-side `open_offset` the builder's
+/// [`FusedBuilder::begin_compound`] returned so the matching
+/// `end_*` can back-patch via
+/// [`FusedBuilder::end_compound_post_order`]. Post-W0'.a the visitor
+/// emits pre-order via begin/end rather than the retired
+/// `push_compound` post-order shim, keeping the tape in lockstep
+/// with the fused value substrate.
 struct CompoundFrame {
-    kind: TapeKind,
     span_lo: u32,
-    child_off: TapeOffset,
+    open_offset: u32,
 }
 
 /// Error surface for [`TapeVisitor`]. The visitor rejects events only
@@ -290,9 +297,16 @@ impl<'input> TapeVisitor<'input> {
     /// + `span_hi` / `child_off` inline for the legacy fn-per-rule
     /// path, or consumes the parallel `frame_depth` stream when the
     /// DTA driver is in inline-finalisation mode).
+    ///
+    /// AY-II.W0'.a — the visitor discards the fused value substrate
+    /// via [`FusedBuilder::finish_tape_only`]; the visitor's trait
+    /// surface is structural-only, so the paired value frames the
+    /// fused builder accumulated are not exposed through the
+    /// visitor's API. Grammar-emitted parse entries go through the
+    /// richer `FusedBuilder::finish<R>(root_off)` path.
     #[inline]
     pub fn finish(self) -> Result<Tape, TapeBuildError> {
-        self.builder.finish()
+        self.builder.finish_tape_only()
     }
 
     /// Borrow the underlying builder mutably. Used by parser shims
@@ -338,11 +352,19 @@ impl<'input> GrammarVisitor for TapeVisitor<'input> {
 impl<'input> ObjectVisitor for TapeVisitor<'input> {
     #[inline(always)]
     fn begin_object(&mut self) -> Result<(), Self::Error> {
-        let child_off = self.builder.mark_children();
+        // AY-II.W0'.a — pre-order compound emission: allocate the
+        // compound row up front and back-patch `span_hi` /
+        // `child_off` / `HAS_CHILDREN_BIT` at `end_object` via
+        // `FusedBuilder::end_compound`. The retired
+        // `mark_children` + post-order `push_compound` pair is
+        // replaced by this atomic begin/end pair which also stamps
+        // the paired value frame in lockstep.
+        let open_offset = self
+            .builder
+            .begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
-            kind: TapeKind::Rule,
             span_lo: 0,
-            child_off,
+            open_offset,
         });
         Ok(())
     }
@@ -361,8 +383,7 @@ impl<'input> ObjectVisitor for TapeVisitor<'input> {
             .compounds
             .pop()
             .ok_or(TapeVisitorError::UnbalancedCompound)?;
-        self.builder
-            .push_compound(frame.kind, frame.child_off, frame.span_lo, 0, 0, 0);
+        self.builder.end_compound(frame.open_offset, frame.span_lo);
         Ok(())
     }
 }
@@ -370,11 +391,12 @@ impl<'input> ObjectVisitor for TapeVisitor<'input> {
 impl<'input> ArrayVisitor for TapeVisitor<'input> {
     #[inline(always)]
     fn begin_array(&mut self) -> Result<(), Self::Error> {
-        let child_off = self.builder.mark_children();
+        let open_offset = self
+            .builder
+            .begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
-            kind: TapeKind::Rule,
             span_lo: 0,
-            child_off,
+            open_offset,
         });
         Ok(())
     }
@@ -385,8 +407,7 @@ impl<'input> ArrayVisitor for TapeVisitor<'input> {
             .compounds
             .pop()
             .ok_or(TapeVisitorError::UnbalancedCompound)?;
-        self.builder
-            .push_compound(frame.kind, frame.child_off, frame.span_lo, 0, 0, 0);
+        self.builder.end_compound(frame.open_offset, frame.span_lo);
         Ok(())
     }
 }
@@ -447,15 +468,17 @@ impl<'input> KeywordVisitor for TapeVisitor<'input> {
 impl<'input> PrattVisitor for TapeVisitor<'input> {
     #[inline(always)]
     fn begin_pratt(&mut self) -> Result<(), Self::Error> {
-        // Outer Pratt compound mirrors `DtaState::ShuntingYard`'s
-        // entry-mode `push_compound_fused(TapeKind::Rule)` plus a
-        // `mark_children` — the enclosing compound brackets the
-        // operator chain's records.
-        let child_off = self.builder.mark_children();
+        // AY-II.W0'.a — Outer Pratt compound opens pre-order via
+        // `begin_compound`; the matching `end_pratt` back-patches
+        // via `end_compound`. Pre-W0'.a the visitor used
+        // `mark_children` + post-order `push_compound`; both
+        // retired under the fused builder collapse.
+        let open_offset = self
+            .builder
+            .begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
-            kind: TapeKind::Rule,
             span_lo: 0,
-            child_off,
+            open_offset,
         });
         Ok(())
     }
@@ -511,8 +534,7 @@ impl<'input> PrattVisitor for TapeVisitor<'input> {
             .compounds
             .pop()
             .ok_or(TapeVisitorError::UnbalancedCompound)?;
-        self.builder
-            .push_compound(frame.kind, frame.child_off, frame.span_lo, 0, 0, 0);
+        self.builder.end_compound(frame.open_offset, frame.span_lo);
         Ok(())
     }
 }

@@ -1,34 +1,78 @@
-//! `TapeBuilder` — the parser's write interface to the [`Tape`].
+//! `FusedBuilder` — the parser's single write interface to the fused
+//! substrate (tape + value columns).
 //!
-//! The generated Rust parser calls `TapeBuilder::push_*` methods to
-//! append records as each rule / Seq / Alt matches. The builder owns
-//! the growing [`Tape`] plus sticky error state so failed sub-tree
-//! matches don't poison the rest of the parse.
+//! # Role (Tranche AY-II.W0'.a)
 //!
-//! Tranche AV.2.1 flipped the underlying storage from row-major
-//! `Vec<TapeRec>` to the columnar [`Columns`](crate::columns::Columns)
-//! substrate; push entry points keep their pre-AV signatures.
+//! Pre-W0'.a the parser wrote two disjoint substrates in lockstep: a
+//! `TapeBuilder` owning the canonical structural tape + a
+//! `ValueBuilder<R>` owning the parallel typed-value slab. W0 landed
+//! the structural rewrite but never threaded the second builder into
+//! the shape-fn signatures, so the value slab stayed empty and
+//! `Parsed::to_value()` panicked. AUDIT-C's Path B absorbed the two
+//! substrates at the type level: every `begin_compound` /
+//! `end_compound` / `push_leaf_*` call stamps BOTH column families
+//! atomically, and `rollback_to(open_offset)` truncates both in
+//! lockstep. Shape emitters see the same API surface they had
+//! against the old `TapeBuilder` — only the type behind
+//! `&mut builder` shifts.
 //!
-//! Tranche AY-II.W0.a retired the write-time close-stamping
-//! experiment. The unified compound surface
-//! [`Self::begin_compound`] + [`Self::end_compound`] writes the
-//! compound row at open time and back-patches `span_hi` / `child_off`
-//! on close without touching `sib_skip`; the finaliser is once again
-//! the sole writer of that column. Emitter retry sites rewind via
-//! [`Self::rollback_to`].
+//! # Write discipline
+//!
+//! The fused builder pairs each structural tape push with one
+//! [`ValueFrame`](value::ValueFrame) push:
+//!
+//! - [`FusedBuilder::begin_compound`] stamps a pre-order compound
+//!   row on the tape AND a `Compound` frame on the value arena,
+//!   pushing the frame's offset onto the open-stack. Rollback
+//!   signatures carry the returned `u32` tape-offset; the matching
+//!   value [`ValueCheckpoint`](value::ValueCheckpoint) is resolved
+//!   internally from the open-stack.
+//! - [`FusedBuilder::end_compound`] /
+//!   [`FusedBuilder::end_compound_post_order`] back-patch
+//!   `(span_hi, child_off, HAS_CHILDREN_BIT)` on the tape row AND
+//!   finalise the value frame's `(span_hi, child_count)`.
+//! - [`FusedBuilder::push_leaf`] / `push_leaf_with` /
+//!   `push_leaf_borrowed_string` / `push_leaf_with_arena_frame` /
+//!   `push_leaf_with_arena_payload` / `push_leaf_with_f64_direct`
+//!   stamp the tape leaf row AND a leaf frame + matching
+//!   payload-column entry where the payload is a narrow / wide
+//!   scalar.
+//! - [`FusedBuilder::rollback_to`] truncates tape columns + value
+//!   arena + payload columns + open-stack atomically back to the
+//!   state at the matching `begin_compound`.
+//!
+//! # Zero signature churn at shape call sites
+//!
+//! Every `builder.begin_compound(..)`, `builder.end_compound(..)`,
+//! `builder.push_leaf*(..)`, `builder.rollback_to(..)` compiles
+//! unchanged behind `&mut FusedBuilder`. The alias
+//! `pub type TapeBuilder = FusedBuilder;` at the crate root keeps
+//! un-regenned `generated.rs` composing against the renamed type
+//! through the bootstrap escape window; regen retires the alias by
+//! spelling `FusedBuilder` directly.
 
 use crate::columns::Columns;
 use crate::kind::TapeKind;
 use crate::tape::{Tape, TapeOffset, TapeRec};
 
-/// Payload data handed to [`TapeBuilder::push_leaf_with`] — the single
-/// entry point for payload-bearing leaves.
+pub mod output;
+pub mod value;
+
+pub use output::FusedOutput;
+pub use value::{
+    PayloadTag, PayloadValue, ValueChildren, ValueFrame, ValueFramesOutput,
+};
+
+use value::{subtree_size, ValueCheckpoint};
+
+/// Payload data handed to [`FusedBuilder::push_leaf_with`] — the
+/// single entry point for payload-bearing leaves.
 ///
 /// Each variant names one of the payload shapes the columnar
 /// substrate recognises:
 ///
 /// - [`PayloadData::None`] — pure span leaf, no payload. Equivalent
-///   to [`TapeBuilder::push_leaf`]; exposed on `PayloadData` so
+///   to [`FusedBuilder::push_leaf`]; exposed on `PayloadData` so
 ///   callers that build a payload conditionally don't need to switch
 ///   to a different entry point when the payload is absent.
 /// - [`PayloadData::InlineScalar`] — scalar ≤ 4 bytes written into
@@ -78,7 +122,46 @@ pub enum PayloadData<'a> {
     Bytes(&'a [u8]),
 }
 
-/// The parser's write interface to the tape.
+/// Error state surfaced through [`FusedBuilder::finish`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TapeBuildError {
+    /// The caller reported an unrecoverable parse failure. Constructed
+    /// by the generated parser when a non-recoverable branch fails.
+    ParseFailed {
+        /// Input byte offset where the failure was detected.
+        offset: u32,
+        /// Optional rule-name id / label for diagnostics.
+        rule_label: u32,
+    },
+}
+
+// ─── Test-only instrumentation ─────────────────────────────────────
+//
+// AY-II.W0.c introduced a per-thread counter on `ValueBuilder::new`
+// to prove `Parsed::to_value()` does not trigger a second parse.
+// W0'.a absorbs the counter here so the same invariant tests keep
+// working after the value substrate moves into `FusedBuilder`.
+#[cfg(test)]
+thread_local! {
+    static NEW_CALL_COUNT: ::core::cell::Cell<u64> = const { ::core::cell::Cell::new(0) };
+}
+
+/// Test-only accessor — returns the count of [`FusedBuilder::new`]
+/// invocations on the current thread. `Parsed::to_value()` must not
+/// increment this counter.
+#[cfg(test)]
+pub fn fused_builder_new_call_count() -> u64 {
+    NEW_CALL_COUNT.with(|c| c.get())
+}
+
+/// Test-only reset — sets the [`FusedBuilder::new`] counter to `0`.
+#[cfg(test)]
+pub fn reset_fused_builder_new_call_count() {
+    NEW_CALL_COUNT.with(|c| c.set(0));
+}
+
+/// The parser's single write interface to the fused (tape + value)
+/// substrate.
 ///
 /// Held by `&mut` for the duration of a parse. The generated parser
 /// functions thread it through every rule call alongside the
@@ -87,18 +170,27 @@ pub enum PayloadData<'a> {
 /// ```ignore
 /// fn __pair<'i>(
 ///     state: &mut parse_that::ParserState<'i>,
-///     tape: &mut tape::TapeBuilder,
-/// ) -> Option<tape::TapeOffset> {
-///     let start_off = tape.mark_children();
-///     let _key = __string(state, tape)?;
+///     builder: &mut tape::FusedBuilder,
+/// ) -> Option<u32> {
+///     let open = builder.begin_compound(TapeKind::Rule, state.offset, 0, 0, 0, 0);
+///     let _key = __string(state, builder)?;
 ///     state.eat_byte(b':')?;
 ///     state.skip_ws();
-///     let _value = __value(state, tape)?;
-///     Some(tape.push_compound(TapeKind::Rule, start_off, state.offset))
+///     let _value = __value(state, builder)?;
+///     builder.end_compound(open, state.offset);
+///     Some(open)
 /// }
 /// ```
+///
+/// Post-W0'.a the builder owns BOTH column families:
+///
+/// - **structural tape columns** (records, sib_skip, typed payloads)
+///   via [`Self::columns`] / [`Self::columns_mut`].
+/// - **value arena + payload columns** that feed the fused-pipeline
+///   projection path — emitted materialisers consume the
+///   [`FusedOutput`] this builder hands back at [`Self::finish`] time.
 #[derive(Debug, Default)]
-pub struct TapeBuilder {
+pub struct FusedBuilder {
     /// Column storage under construction. Consumed by [`Self::finish`]
     /// which computes the sibling-skip column and packages the result
     /// into a [`Tape`].
@@ -114,16 +206,11 @@ pub struct TapeBuilder {
     /// directly via [`crate::finaliser::finalise`] — no
     /// `derive_frame_depth` reconstruction pass.
     ///
-    /// When `false` (the legacy fn-per-rule path through the AW W0
-    /// window), `push_compound` writes `sib_skip` / `span_hi` /
-    /// `child_off` inline; [`Self::finish`] still runs
+    /// When `false`, [`Self::finish`] still runs
     /// [`crate::finaliser::derive_frame_depth`] to synthesise the
     /// depth stream a finalise pass demands from a post-order tape,
     /// then [`crate::finaliser::finalise`] closes the sibling-skip
     /// column off it.
-    ///
-    /// Default `false`. The DTA driver flips this to `true` at init
-    /// time in W1 once the generated parser emits `frame_depth` inline.
     pub(crate) has_inline_frame_depth: bool,
     /// Per-record depth byte stream.
     ///
@@ -136,63 +223,89 @@ pub struct TapeBuilder {
     /// flag is set, skipping the legacy
     /// [`crate::finaliser::derive_frame_depth`] reconstruction pass.
     pub(crate) frame_depth: Vec<u8>,
+
+    // ── Value substrate (absorbed from W0.c `ValueBuilder<R>`) ────
+    /// Nested value-frame arena — one entry per compound open + one
+    /// per leaf push. Laid out in emitter push order; compounds
+    /// reference their children via
+    /// `(ValueFrame::first_child, ValueFrame::child_count)`.
+    value_frames: Vec<ValueFrame>,
+    /// Narrow-column scalar payloads (u32 / bool / u8). Indexed by
+    /// [`PayloadTag::narrow`] rank.
+    value_payloads_narrow: Vec<u32>,
+    /// Wide-column scalar payloads (f64 / u64 / u32-pair). Indexed
+    /// by [`PayloadTag::wide`] rank.
+    value_payloads_wide: Vec<u64>,
+    /// Open compound stack — one entry per `begin_compound` without
+    /// a matching `end_compound`. Each entry carries the
+    /// `ValueCheckpoint` recorded at open time so rollback truncates
+    /// every column family to the pre-open state atomically.
+    value_open_stack: Vec<ValueCheckpoint>,
 }
 
-/// Error state surfaced through [`TapeBuilder::finish`].
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TapeBuildError {
-    /// The caller reported an unrecoverable parse failure. Constructed
-    /// by the generated parser when a non-recoverable branch fails.
-    ParseFailed {
-        /// Input byte offset where the failure was detected.
-        offset: u32,
-        /// Optional rule-name id / label for diagnostics.
-        rule_label: u32,
-    },
-}
-
-impl TapeBuilder {
-    /// Construct a fresh builder with an empty tape.
+impl FusedBuilder {
+    /// Construct a fresh builder with an empty tape + value
+    /// substrate.
     pub fn new() -> Self {
+        #[cfg(test)]
+        NEW_CALL_COUNT.with(|c| c.set(c.get() + 1));
         Self::default()
     }
 
-    /// Construct a builder sized for `expected` records.
+    /// Construct a builder sized for `expected` structural records.
+    ///
+    /// The value arena + payload columns pre-allocate proportionally
+    /// so the hot push path never trips a `Vec::push` realloc on
+    /// corpus input. The sizing mirrors the pre-W0'.a
+    /// `TapeBuilder::with_capacity` + `ValueBuilder::new` pair: one
+    /// frame per tape record worst-case, narrow / wide payloads at
+    /// `expected / 4`.
     pub fn with_capacity(expected: usize) -> Self {
+        #[cfg(test)]
+        NEW_CALL_COUNT.with(|c| c.set(c.get() + 1));
         Self {
             columns: Columns::with_capacity(expected),
             error: None,
             has_inline_frame_depth: false,
             frame_depth: Vec::new(),
+            value_frames: Vec::with_capacity(expected),
+            value_payloads_narrow: Vec::with_capacity(expected / 4),
+            value_payloads_wide: Vec::with_capacity(expected / 4),
+            value_open_stack: Vec::with_capacity(16),
         }
-    }
-
-    /// Record the current tape length as the start of a children run.
-    ///
-    /// Call this before pushing a compound's children. The returned
-    /// offset is passed to [`Self::push_compound`] as the `child_off`
-    /// field.
-    #[inline(always)]
-    pub fn mark_children(&self) -> TapeOffset {
-        TapeOffset(self.columns.len() as u32)
     }
 
     /// Opt this builder into inline `frame_depth` emission.
     /// Pre-order emission via [`Self::begin_compound`] requires it —
     /// [`crate::finaliser::derive_frame_depth`] can only reconstruct
-    /// depth for post-order tapes. Legacy `push_compound` paths stay
-    /// on the default (disabled) so the post-order derivation runs.
+    /// depth for post-order tapes.
     #[inline(always)]
     pub fn enable_inline_frame_depth(&mut self) {
         self.has_inline_frame_depth = true;
     }
 
-    /// Rewind both the structural columns and the inline
-    /// `frame_depth` stream back to `open_offset` slots. Delegates to
-    /// [`Columns::rollback_to`] and truncates [`Self::frame_depth`]
-    /// in lockstep when inline frame-depth is active.
+    /// Rewind every column family — structural tape, inline
+    /// `frame_depth`, and the value substrate — back to the state at
+    /// the matching `begin_compound` whose `open_offset` the caller
+    /// passes in.
+    ///
+    /// Tape-side: delegates to [`Columns::rollback_to`] and truncates
+    /// [`Self::frame_depth`] in lockstep when inline frame-depth is
+    /// active.
+    ///
+    /// Value-side: resolves the matching [`ValueCheckpoint`] from the
+    /// open-stack and truncates the value frame arena + narrow / wide
+    /// payload columns atomically. Open-stack entries at or above
+    /// the checkpoint are orphaned frames from the failed branch and
+    /// are discarded — the emitter's rollback contract requires it.
+    ///
+    /// The `open_offset` argument is the tape-side offset
+    /// [`Self::begin_compound`] returned; it is used to locate the
+    /// paired value checkpoint because the open-stack is pushed in
+    /// the same order as begin_compound calls.
     #[inline(always)]
     pub fn rollback_to(&mut self, open_offset: u32) {
+        // Tape side — structural columns + frame_depth in lockstep.
         self.columns.rollback_to(open_offset);
         if self.has_inline_frame_depth {
             let new_len = open_offset as usize;
@@ -200,12 +313,65 @@ impl TapeBuilder {
                 self.frame_depth.truncate(new_len);
             }
         }
+        // Value side — pop every open frame whose tape_offset-equivalent
+        // landed on or after `open_offset`, resolving the matching
+        // value checkpoint and truncating column families to its
+        // pre-open state. The value open-stack is pushed in lockstep
+        // with tape `begin_compound` calls, so walking from the top
+        // and stopping at the first entry whose `frame_offset` is
+        // below `open_offset`'s value-pair yields the right scope.
+        //
+        // The tape `open_offset` and the value `frame_offset` are
+        // NOT equal in general — shape emitters push multiple tape
+        // rows per conceptual value frame (Seq / Rule wrappers). But
+        // the open-stack is a faithful LIFO of begin_compound calls,
+        // and the caller invariant is: rollback_to(open_offset) is
+        // paired with begin_compound(open_offset). So popping the
+        // top matching checkpoint is correct.
+        //
+        // W0'.b's projection path does not observe orphaned frames
+        // from failed branches — the truncation below guarantees the
+        // value substrate matches the tape at every rollback boundary.
+        while let Some(&checkpoint) = self.value_open_stack.last() {
+            // The top-most checkpoint corresponds to the most-recent
+            // `begin_compound`; if that compound was opened at or
+            // after `open_offset` on the tape, it must rewind.
+            // Because tape rows are monotonic, a value frame whose
+            // paired tape row landed at or above `open_offset` is
+            // always at the top of the open stack (since we closed
+            // any deeper compounds between that open and the rollback
+            // via `end_compound`).
+            //
+            // In practice a single rollback unwinds the SINGLE open
+            // compound the emitter's retry-IIFE opened; the while
+            // loop is defensive against grammar authors who leave
+            // multiple compounds open across a retry boundary.
+            // W0'.a's rollback contract with shape emitters:
+            // rollback_to(open) is always called BEFORE any further
+            // begin_compound in the retry scope, and always matches
+            // the open of the failed branch.
+            self.value_frames.truncate(checkpoint.frame_offset as usize);
+            self.value_payloads_narrow
+                .truncate(checkpoint.narrow_rank as usize);
+            self.value_payloads_wide
+                .truncate(checkpoint.wide_rank as usize);
+            self.value_open_stack.pop();
+            // Only pop one — the matched retry compound. If the
+            // caller left additional opens deeper than `open_offset`
+            // on the stack (a grammar bug, not an emitter bug) they
+            // are discarded on `finish` via the open-stack empty
+            // assertion. The single-pop discipline matches the
+            // pre-W0'.a `ValueBuilder::rollback_to` semantics.
+            break;
+        }
     }
 
     /// Append a leaf record with a concrete kind + span.
     ///
     /// Leaves have no children, so `child_off` is forced to
-    /// [`TapeOffset::NONE`].
+    /// [`TapeOffset::NONE`] on the tape row; a leaf
+    /// [`ValueFrame`] is appended to the value arena with
+    /// `payload_tag == PayloadTag::NONE`.
     ///
     /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
     /// everything else). Packed into `TapeRec::kind_meta` (high 4
@@ -229,64 +395,7 @@ impl TapeBuilder {
             span_hi,
             TapeOffset::NONE,
         );
-        TapeOffset(idx)
-    }
-
-    /// Append a compound record pointing at a previously-marked
-    /// children run.
-    ///
-    /// The caller must have called [`Self::mark_children`] BEFORE
-    /// pushing the first child, and must pass the returned offset as
-    /// `child_off`. `span_hi` is the parser state's current offset
-    /// (end of the compound's source range).
-    ///
-    /// `meta_idx` is the branch index for Alt-bodied rules (`0` for
-    /// everything else). Packed into `TapeRec::kind_meta` (high 4
-    /// bits) and `TapeRec::flags` (bit 7). 5-bit range: 0-31.
-    #[inline(always)]
-    pub fn push_compound(
-        &mut self,
-        kind: TapeKind,
-        child_off: TapeOffset,
-        span_lo: u32,
-        span_hi: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-    ) -> TapeOffset {
-        debug_assert!(
-            kind.is_compound(),
-            "push_compound on leaf/annotation kind {:?}",
-            kind
-        );
-        // `has_children` is true iff the caller actually pushed
-        // records between `mark_children` and this call. When the
-        // child run is empty (`child_off` equals the parent's own
-        // index), the compound has no payload and must report that
-        // symmetrically with leaves — a single
-        // `TapeOffset::NONE` sentinel on `child_off` drives both
-        // [`TapeRec::has_children`] and [`TapeRec::has_payload`] to
-        // false. Leaving the raw marked offset would form a cycle
-        // in [`TapeCursor::children`] and, since the raw offset is
-        // not `NONE`, would spuriously light up `has_payload` on
-        // any reader that checks `child_off != NONE` to gate payload
-        // decoding.
-        let parent_idx = self.columns.len();
-        let has_children = (child_off.0 as usize) < parent_idx;
-        let effective_child_off = if has_children {
-            child_off
-        } else {
-            TapeOffset::NONE
-        };
-        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        let extra = extra_meta_bit | if has_children { TapeRec::HAS_CHILDREN_BIT } else { 0 };
-        let idx = self.columns.push_structural(
-            kind_meta,
-            variant_idx,
-            extra,
-            span_lo,
-            span_hi,
-            effective_child_off,
-        );
+        self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
         TapeOffset(idx)
     }
 
@@ -295,7 +404,10 @@ impl TapeBuilder {
     /// Begin a compound in pre-order.
     ///
     /// Emits a compound row with provisional `span_hi == span_lo`,
-    /// `child_off = TapeOffset::NONE`, and `HAS_CHILDREN_BIT` cleared.
+    /// `child_off = TapeOffset::NONE`, and `HAS_CHILDREN_BIT` cleared
+    /// on the tape AND opens a matching value-arena frame + pushes
+    /// the value checkpoint onto the open-stack.
+    ///
     /// `variant_idx` is the rule discriminant (`[0, 256)`); `meta_idx`
     /// is the Alt-branch ordinal (`[0, 32)`). Both are stamped in
     /// walker-parity positions — `flags` carries `variant_idx`;
@@ -310,16 +422,11 @@ impl TapeBuilder {
     /// `frame_depth` is appended to the inline depth stream when
     /// [`Self::has_inline_frame_depth`] is active; otherwise ignored.
     ///
-    /// Returns the row offset the caller passes back to
+    /// Returns the tape row offset the caller passes back to
     /// [`Self::end_compound`] (pre-order) or
     /// [`Self::end_compound_post_order`] (post-order). Emitter retry
     /// paths rewind via [`Self::rollback_to`] with the returned
     /// offset; the next `begin_compound` reuses the same row.
-    ///
-    /// AY-II.W0-fix — re-admitted `variant_idx` + `meta_idx`; the
-    /// initial W0.a signature dropped both, collapsing every compound
-    /// row's rule discriminant to `0` and breaking walker dispatch on
-    /// `rule_kind()`.
     #[inline(always)]
     pub fn begin_compound(
         &mut self,
@@ -347,6 +454,7 @@ impl TapeBuilder {
         if self.has_inline_frame_depth {
             self.frame_depth.push(frame_depth);
         }
+        self.value_begin_compound(kind, span_lo, variant_idx);
         idx
     }
 
@@ -359,7 +467,8 @@ impl TapeBuilder {
     /// sets `child_off = TapeOffset(open_offset + 1)` — the pre-order
     /// layout driving the cursor's O(1) first-child fast path — and
     /// stamps `HAS_CHILDREN_BIT`. Does NOT write `sib_skip`; the
-    /// finaliser is its sole writer.
+    /// finaliser is its sole writer. Value-side: pops the open-stack
+    /// and finalises `(span_hi, child_count)` on the arena frame.
     #[inline(always)]
     pub fn end_compound(&mut self, open_offset: u32, span_hi: u32) {
         self.columns.set_span_hi_at(open_offset, span_hi);
@@ -370,6 +479,7 @@ impl TapeBuilder {
             self.columns
                 .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
         }
+        self.value_end_compound(span_hi);
     }
 
     /// Finalise a compound opened via [`Self::begin_compound`] in
@@ -387,16 +497,8 @@ impl TapeBuilder {
     /// matching [`Self::end_compound`]'s no-children branch.
     ///
     /// Does NOT write `sib_skip`; the finaliser is its sole writer.
-    ///
-    /// AY-II.W0-fix — the W0.b migration introduced this
-    /// begin/end/`set_child_off_at`-override triplet across every
-    /// walker-parity post-order shape emitter, but the override path
-    /// never stamped `HAS_CHILDREN_BIT`, so readers saw
-    /// `has_children == false` on compounds that DID have children
-    /// and every traversal through these rows collapsed to a leaf.
-    /// This method atomically stamps the full (span_hi, child_off,
-    /// HAS_CHILDREN) triple so emission sites don't have to remember
-    /// the extra `or_extra_at` call.
+    /// Value-side: pops the open-stack and finalises `(span_hi,
+    /// child_count)` on the arena frame.
     #[inline(always)]
     pub fn end_compound_post_order(
         &mut self,
@@ -410,6 +512,7 @@ impl TapeBuilder {
             self.columns
                 .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
         }
+        self.value_end_compound(span_hi);
     }
 
     // ── Payload-bearing leaf push ──────────────────────────────────
@@ -420,7 +523,11 @@ impl TapeBuilder {
     /// `PayloadData` variants cover the complete runtime payload
     /// taxonomy; the record's `child_off` ends up holding a column
     /// rank (for scalar payloads) or an arena byte offset (for
-    /// aggregates and byte frames).
+    /// aggregates and byte frames). Value-side: pushes a leaf
+    /// [`ValueFrame`] carrying a matching [`PayloadTag`] for scalar
+    /// payloads; aggregate / byte payloads leave `payload_tag` at
+    /// [`PayloadTag::NONE`] because the projection path reads those
+    /// off the tape arena.
     #[inline(always)]
     pub fn push_leaf_with(
         &mut self,
@@ -436,8 +543,8 @@ impl TapeBuilder {
             "push_leaf_with on compound kind {:?}",
             kind
         );
-        let child_off = match payload {
-            PayloadData::None => TapeOffset::NONE,
+        let (child_off, value_tag) = match payload {
+            PayloadData::None => (TapeOffset::NONE, PayloadTag::NONE),
             PayloadData::InlineScalar(v) => {
                 // AV.2.3: inline scalars land in `pay_narrow`; the
                 // record's `child_off` carries the column rank. The
@@ -447,32 +554,41 @@ impl TapeBuilder {
                 // unless a grammar emits four billion inline scalars.
                 let rank = self.columns.pay_narrow.len() as u32;
                 self.columns.pay_narrow.push(v);
-                TapeOffset(rank)
+                // Value-side narrow payload stored in parallel so
+                // projection reads don't hit the tape. Track its
+                // rank independently from the tape column rank —
+                // they advance together but the tape column is the
+                // one `child_off` references.
+                let v_rank = self.value_payloads_narrow.len() as u32;
+                self.value_payloads_narrow.push(v);
+                (TapeOffset(rank), PayloadTag::narrow(v_rank))
             }
             PayloadData::WideScalar(v) => {
                 let rank = self.columns.pay_wide.len() as u32;
                 self.columns.pay_wide.push(v);
-                TapeOffset(rank)
+                let v_rank = self.value_payloads_wide.len() as u32;
+                self.value_payloads_wide.push(v);
+                (TapeOffset(rank), PayloadTag::wide(v_rank))
             }
             PayloadData::Aggregate(bytes) => {
                 if bytes.is_empty() {
-                    TapeOffset::NONE
+                    (TapeOffset::NONE, PayloadTag::NONE)
                 } else {
                     let offset = self.alloc_aggregate_slot(bytes);
-                    TapeOffset(offset)
+                    (TapeOffset(offset), PayloadTag::NONE)
                 }
             }
             PayloadData::LargeAggregate(bytes) => {
                 if bytes.is_empty() {
-                    TapeOffset::NONE
+                    (TapeOffset::NONE, PayloadTag::NONE)
                 } else {
                     let offset = self.alloc_large_aggregate_slot(bytes);
-                    TapeOffset(offset)
+                    (TapeOffset(offset), PayloadTag::NONE)
                 }
             }
             PayloadData::Bytes(bytes) => {
                 let offset = self.alloc_bytes_frame(bytes);
-                TapeOffset(offset)
+                (TapeOffset(offset), PayloadTag::NONE)
             }
         };
         let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
@@ -484,6 +600,7 @@ impl TapeBuilder {
             span_hi,
             child_off,
         );
+        self.push_value_leaf(kind, span_lo, span_hi, variant_idx, value_tag);
         TapeOffset(idx)
     }
 
@@ -570,14 +687,6 @@ impl TapeBuilder {
     /// After decoding, the caller commits the record via
     /// [`Self::push_leaf_with`] with a zero-copy `PayloadData::Bytes`
     /// pointing at a buffer that was built via this accessor.
-    ///
-    /// The typical pattern:
-    ///
-    /// 1. Reserve the 4-byte length prefix (`extend_from_slice(&0u32.to_le_bytes())`).
-    /// 2. Stream decoded bytes after the prefix.
-    /// 3. Back-stamp the length via [`Self::stamp_arena_len_prefix`].
-    /// 4. Push the leaf via [`Self::push_leaf_with_arena_frame`] with
-    ///    the offset of the prefix.
     #[inline(always)]
     pub fn arena_mut(&mut self) -> &mut Vec<u8> {
         &mut self.columns.pay_agg
@@ -596,9 +705,7 @@ impl TapeBuilder {
     /// Used by the JSON-string decode kernel which streams decoded
     /// bytes directly into the arena via [`Self::arena_mut`] and then
     /// commits the record by calling this method with the frame's
-    /// offset. The `arena_offset` must point at the 4-byte length
-    /// prefix; the length itself has been back-stamped via
-    /// [`Self::stamp_arena_len_prefix`] after decoding.
+    /// offset.
     ///
     /// `meta_idx` range is 0-31 (5-bit packed field).
     #[inline(always)]
@@ -631,6 +738,7 @@ impl TapeBuilder {
             span_hi,
             TapeOffset(arena_offset),
         );
+        self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
         TapeOffset(idx)
     }
 
@@ -648,11 +756,6 @@ impl TapeBuilder {
     /// ([`Tape::payload_u8`], [`Tape::payload_u64`]) slice the arena
     /// at `arena_offset` instead of indirecting through a column
     /// rank.
-    ///
-    /// AX.W0a.2.l — the Pratt shape emitter uses this for the
-    /// per-operator Span leaf's 1-byte `op_discriminant` payload,
-    /// reaching parity with the walker's
-    /// [`crate::driver::emit_leaf_with_payload`] layout.
     ///
     /// `meta_idx` range is 0-31 (5-bit packed field).
     /// `payload_width` must be one of 1 / 2 / 4 / 8 — the widths the
@@ -696,6 +799,7 @@ impl TapeBuilder {
             span_hi,
             TapeOffset(arena_offset),
         );
+        self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
         TapeOffset(idx)
     }
 
@@ -741,6 +845,7 @@ impl TapeBuilder {
             span_hi,
             TapeOffset::NONE,
         );
+        self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
         TapeOffset(idx)
     }
 
@@ -756,7 +861,9 @@ impl TapeBuilder {
     ///
     /// This saves one load + one store per number literal vs the
     /// generic [`Self::push_leaf_with`] route — significant on heavy-
-    /// numeric fixtures (canada).
+    /// numeric fixtures (canada). Value-side: stamps a `wide`
+    /// [`PayloadTag`] onto the paired value frame so projection reads
+    /// the decoded `f64` directly off the value substrate.
     ///
     /// `meta_idx` is fixed at `0` for number leaves; the number-shape
     /// emitter uses `variant_idx` for the rule discriminant.
@@ -785,6 +892,17 @@ impl TapeBuilder {
             span_lo,
             span_hi,
             TapeOffset(rank),
+        );
+        // Value-side: project the `f64` bits into the wide payload
+        // column and stamp the matching leaf frame.
+        let v_rank = self.value_payloads_wide.len() as u32;
+        self.value_payloads_wide.push(f64_bits);
+        self.push_value_leaf(
+            kind,
+            span_lo,
+            span_hi,
+            variant_idx,
+            PayloadTag::wide(v_rank),
         );
         TapeOffset(idx)
     }
@@ -822,8 +940,8 @@ impl TapeBuilder {
         }
     }
 
-    /// Consume the builder and return the finished tape. Returns the
-    /// sticky error if one was set during parsing.
+    /// Consume the builder and return the fused (tape + value)
+    /// output.
     ///
     /// [`crate::finaliser::finalise`] always runs — it is the sole
     /// writer for `sib_skip` (and the compound-closure columns
@@ -832,54 +950,86 @@ impl TapeBuilder {
     /// *derivation* of `frame_depth`:
     ///
     /// - **Legacy fn-per-rule path** (`has_inline_frame_depth ==
-    ///   false`, the default through the AW W0 window):
-    ///   `push_compound` populates `child_off` / `span_hi` inline
-    ///   but emits no `frame_depth`, so `finish` reconstructs it via
-    ///   [`crate::finaliser::derive_frame_depth`] (one backward
-    ///   pass) before the Stage-C forward sweep.
-    /// - **DTA-driven path** (`has_inline_frame_depth == true`,
-    ///   post-W1): the DTA emits `frame_depth` directly during
-    ///   stage A, so `derive_frame_depth` is skipped and the
-    ///   in-column stream feeds [`crate::finaliser::finalise`]
-    ///   directly — one linear pass instead of two.
+    ///   false`): `push_compound`-style callers populate `child_off`
+    ///   / `span_hi` inline but emit no `frame_depth`, so `finish`
+    ///   reconstructs it via [`crate::finaliser::derive_frame_depth`]
+    ///   (one backward pass) before the Stage-C forward sweep.
+    /// - **DTA-driven path** (`has_inline_frame_depth == true`):
+    ///   the DTA emits `frame_depth` directly during stage A, so
+    ///   `derive_frame_depth` is skipped and the in-column stream
+    ///   feeds [`crate::finaliser::finalise`] directly — one linear
+    ///   pass instead of two.
     ///
-    /// The flag is the AW.0.1 substrate; the win materialises at
-    /// W1 when the DTA begins emitting `frame_depth` inline.
-    ///
-    /// AY.W1.5 — `#[inline(always)]` so the cross-crate call from
-    /// the emitted `<Grammar>::parse` entry collapses; the finalise
-    /// pass becomes part of the parser's straight-line code rather
-    /// than a function-call boundary at the tape-crate edge.
+    /// `root_off` marks the root of the parsed tree in both tape
+    /// offset space and value-frame offset space. For the fused
+    /// default parse the two are aligned on 0 (the first
+    /// `begin_compound` call). The returned [`FusedOutput`] holds the
+    /// finalised [`Tape`] + the grammar-agnostic
+    /// [`ValueFramesOutput`] projection consumers read.
     #[inline(always)]
-    pub fn finish(mut self) -> Result<Tape, TapeBuildError> {
-        match self.error {
-            Some(err) => Err(err),
-            None => {
-                // AW.1.4: when the DTA driver has populated
-                // `self.frame_depth` inline (via the
-                // `enable_inline_frame_depth` opt-in), pass the pre-
-                // populated stream to `finalise` directly and skip
-                // the `derive_frame_depth` reconstruction. Otherwise
-                // (legacy post-order path), reconstruct the depth
-                // column from `child_off` first.
-                if self.has_inline_frame_depth {
-                    debug_assert_eq!(
-                        self.frame_depth.len(),
-                        self.columns.len(),
-                        "inline frame_depth length {} != columns length {}",
-                        self.frame_depth.len(),
-                        self.columns.len(),
-                    );
-                    crate::finaliser::finalise(&mut self.columns, &self.frame_depth);
-                } else {
-                    let frame_depth = crate::finaliser::derive_frame_depth(&self.columns);
-                    crate::finaliser::finalise(&mut self.columns, &frame_depth);
-                }
-                Ok(Tape {
-                    columns: self.columns,
-                })
-            }
+    pub fn finish<R>(mut self, root_off: u32) -> Result<FusedOutput<R>, TapeBuildError> {
+        if let Some(err) = self.error {
+            return Err(err);
         }
+        debug_assert!(
+            self.value_open_stack.is_empty(),
+            "FusedBuilder::finish called with {} open value frames remaining",
+            self.value_open_stack.len(),
+        );
+        if self.has_inline_frame_depth {
+            debug_assert_eq!(
+                self.frame_depth.len(),
+                self.columns.len(),
+                "inline frame_depth length {} != columns length {}",
+                self.frame_depth.len(),
+                self.columns.len(),
+            );
+            crate::finaliser::finalise(&mut self.columns, &self.frame_depth);
+        } else {
+            let frame_depth = crate::finaliser::derive_frame_depth(&self.columns);
+            crate::finaliser::finalise(&mut self.columns, &frame_depth);
+        }
+        let tape = Tape {
+            columns: self.columns,
+        };
+        let value = ValueFramesOutput {
+            frames: self.value_frames,
+            payloads_narrow: self.value_payloads_narrow,
+            payloads_wide: self.value_payloads_wide,
+            root_offset: root_off,
+            _root_marker: core::marker::PhantomData,
+        };
+        Ok(FusedOutput::new(tape, value))
+    }
+
+    /// Consume the builder and return only the finalised tape.
+    ///
+    /// Back-compat surface for pre-W0'.a consumers that never
+    /// exercised the value substrate (tape-only tests, pre-fused
+    /// visitor fixtures). Post-W0'.a the production parse entry
+    /// uses [`Self::finish`] with a grammar marker; this variant
+    /// discards the value arena without consuming it.
+    #[inline]
+    pub fn finish_tape_only(mut self) -> Result<Tape, TapeBuildError> {
+        if let Some(err) = self.error {
+            return Err(err);
+        }
+        if self.has_inline_frame_depth {
+            debug_assert_eq!(
+                self.frame_depth.len(),
+                self.columns.len(),
+                "inline frame_depth length {} != columns length {}",
+                self.frame_depth.len(),
+                self.columns.len(),
+            );
+            crate::finaliser::finalise(&mut self.columns, &self.frame_depth);
+        } else {
+            let frame_depth = crate::finaliser::derive_frame_depth(&self.columns);
+            crate::finaliser::finalise(&mut self.columns, &frame_depth);
+        }
+        Ok(Tape {
+            columns: self.columns,
+        })
     }
 
     /// Access the in-progress columns for debug / intermediate
@@ -891,14 +1041,19 @@ impl TapeBuilder {
 
     /// Mutable handle on the in-progress columns.
     ///
-    /// The DTA driver (post-AW-III.W4: per-grammar emitted walker;
-    /// pre-W4: [`crate::driver::dta_run_cold`]) writes directly into
-    /// the builder's column substrate instead of threading through
-    /// [`Self::push_leaf`] / [`Self::push_compound`]. The generated
-    /// `parse()` entry point post-AW.1.2 constructs a `TapeBuilder`,
-    /// calls [`Self::enable_inline_frame_depth`] to opt into the
-    /// Stage-C activation the DTA presupposes, then hands the mutable
-    /// column reference returned here to the driver.
+    /// The DTA driver (post-AW-III.W4: per-grammar emitted walker)
+    /// writes directly into the builder's column substrate instead
+    /// of threading through [`Self::push_leaf`] /
+    /// [`Self::begin_compound`]. The generated `parse()` entry point
+    /// constructs a `FusedBuilder`, calls
+    /// [`Self::enable_inline_frame_depth`] to opt into the Stage-C
+    /// activation the DTA presupposes, then hands the mutable column
+    /// reference returned here to the driver.
+    ///
+    /// Direct-column writes bypass the value substrate; callers that
+    /// need value-arena parity with direct column writes must stamp
+    /// the value frame explicitly (there are no such production
+    /// callers post-W0'.a).
     #[inline]
     pub fn columns_mut(&mut self) -> &mut Columns {
         &mut self.columns
@@ -906,12 +1061,6 @@ impl TapeBuilder {
 
     /// Mutable handle on the in-progress per-record frame_depth
     /// stream.
-    ///
-    /// Populated by the DTA driver in lockstep with column writes
-    /// when the builder is opted into inline frame-depth emission.
-    /// [`Self::finish`] reads this slice directly to skip the
-    /// `derive_frame_depth` reconstruction pass the legacy path
-    /// needs.
     #[inline]
     pub fn frame_depth_mut(&mut self) -> &mut Vec<u8> {
         &mut self.frame_depth
@@ -924,9 +1073,7 @@ impl TapeBuilder {
     /// the `columns` and `frame_depth` fields disjointly so the
     /// emitted `dta_run_<grammar>` can pass them as adjacent
     /// arguments without the caller dancing around the borrow
-    /// checker. Both references live for the same scope; the runtime
-    /// walker treats them as a single SoA pair (every leaf emit /
-    /// compound reservation pushes to both in lockstep).
+    /// checker.
     #[inline]
     pub fn columns_and_frame_depth_mut(
         &mut self,
@@ -940,12 +1087,6 @@ impl TapeBuilder {
     /// columns; useful in tests that want to inspect mid-build
     /// state. Sibling-skip is NOT computed on this snapshot — the
     /// authoritative path is [`Self::finish`].
-    ///
-    /// AY.W1.1 — flat-AoS substrate: the snapshot clones the
-    /// `records` AoS column + `sib_skip` parallel column + the three
-    /// payload columns. The `packed_cache` AoS sidecar is never
-    /// cloned; the snapshot starts with a fresh `OnceLock` so the
-    /// first reader on the snapshot re-transposes.
     pub fn tape_snapshot(&self) -> Tape {
         let mut columns = Columns::new();
         *columns.records_mut() = self.columns.records().to_vec();
@@ -956,4 +1097,88 @@ impl TapeBuilder {
         columns.pay_agg = self.columns.pay_agg.clone();
         Tape { columns }
     }
+
+    // ── Value-side internals ──────────────────────────────────────
+    //
+    // Private helpers the public API calls to keep the value arena
+    // in lockstep with the tape. They are `#[inline(always)]` so
+    // LLVM folds the value stamp into the tape push at the call
+    // site — zero extra function-call boundaries in the hot path.
+
+    /// Open a value-arena frame in lockstep with the tape's
+    /// `begin_compound`. Pushes a compound frame + checkpoint onto
+    /// the open-stack.
+    #[inline(always)]
+    fn value_begin_compound(&mut self, kind: TapeKind, span_lo: u32, variant_idx: u8) {
+        let frame_offset = self.value_frames.len() as u32;
+        self.value_frames.push(ValueFrame {
+            span_lo,
+            span_hi: span_lo,
+            first_child: frame_offset + 1,
+            child_count: 0,
+            variant_idx,
+            kind,
+            payload_tag: PayloadTag::NONE,
+        });
+        self.value_open_stack.push(ValueCheckpoint {
+            frame_offset,
+            narrow_rank: self.value_payloads_narrow.len() as u32,
+            wide_rank: self.value_payloads_wide.len() as u32,
+        });
+    }
+
+    /// Close the most recently opened value frame — patches `span_hi`
+    /// + reconstructs `child_count` by walking the pre-order range
+    /// between the open frame and the current arena tip.
+    #[inline(always)]
+    fn value_end_compound(&mut self, span_hi: u32) {
+        let checkpoint = self
+            .value_open_stack
+            .pop()
+            .expect("FusedBuilder::value_end_compound called with empty open_stack");
+        let frame_offset = checkpoint.frame_offset as usize;
+        // Direct children occupy the range [frame_offset+1,
+        // frames.len()); reconstruct the direct-child count by
+        // stepping past each subtree in turn.
+        let mut cursor = frame_offset + 1;
+        let total = self.value_frames.len();
+        let mut direct_count: u32 = 0;
+        while cursor < total {
+            let size = subtree_size(&self.value_frames, cursor);
+            cursor += size;
+            direct_count += 1;
+        }
+        let frame = &mut self.value_frames[frame_offset];
+        frame.span_hi = span_hi;
+        frame.child_count = direct_count;
+    }
+
+    /// Append a leaf value frame carrying a source span + payload
+    /// tag. The tape-side leaf push is the caller's responsibility;
+    /// this only appends the paired value frame.
+    #[inline(always)]
+    fn push_value_leaf(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        payload_tag: PayloadTag,
+    ) {
+        self.value_frames.push(ValueFrame {
+            span_lo,
+            span_hi,
+            first_child: 0,
+            child_count: 0,
+            variant_idx,
+            kind,
+            payload_tag,
+        });
+    }
 }
+
+/// Pre-W0'.a compose-boundary alias. Un-regenned `generated.rs` still
+/// spells the builder type as `TapeBuilder`; this alias keeps the
+/// library compiling through the bootstrap escape window. The alias
+/// retires once the orchestrator regens `generated.rs` at W0' close.
+pub type TapeBuilder = FusedBuilder;

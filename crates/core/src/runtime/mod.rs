@@ -120,18 +120,19 @@ pub mod value_builder {
     /// allocator disappears and the alias retires.
     pub type ValueBuilder<R> = _ValueBuilderShim<R>;
 
-    /// Test-only accessor — returns the count of [`FusedBuilder::new`]
-    /// invocations on the current thread. Matches the pre-W0'.a
+    /// Return the count of [`FusedBuilder::new`] invocations on the
+    /// current thread. Matches the pre-W0'.a
     /// `value_builder_new_call_count` surface so the
     /// `value_api_apples_to_apples` parse-count invariant keeps
     /// observing the same counter after the type-level collapse.
-    #[cfg(test)]
+    /// Always present (the tape counter is not `cfg(test)`-gated
+    /// because dependency-crate cfgs don't propagate to downstream
+    /// test compilations).
     pub fn value_builder_new_call_count() -> u64 {
         tape::builder::fused_builder_new_call_count()
     }
 
-    /// Test-only reset — sets the counter to `0`.
-    #[cfg(test)]
+    /// Reset the counter to `0`.
     pub fn reset_value_builder_new_call_count() {
         tape::builder::reset_fused_builder_new_call_count();
     }

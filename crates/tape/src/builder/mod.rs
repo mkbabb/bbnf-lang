@@ -135,27 +135,39 @@ pub enum TapeBuildError {
     },
 }
 
-// ─── Test-only instrumentation ─────────────────────────────────────
+// ─── Instrumentation counter — always present ─────────────────────
 //
 // AY-II.W0.c introduced a per-thread counter on `ValueBuilder::new`
 // to prove `Parsed::to_value()` does not trigger a second parse.
 // W0'.a absorbs the counter here so the same invariant tests keep
 // working after the value substrate moves into `FusedBuilder`.
-#[cfg(test)]
+//
+// Pre-W0'.a the counter was `#[cfg(test)]`-gated inside the `bbnf`
+// crate, which meant it was visible to `bbnf`'s test binaries. W0'.a
+// moves the counter into the `tape` crate where the allocator lives;
+// dependency-crate cfgs don't propagate to downstream `--cfg test`
+// compilations, so the counter is always present (a single
+// `Cell<u64>` per thread). The production cost is one thread-local
+// increment per `FusedBuilder::new` / `with_capacity` call —
+// negligible against the parse body.
 thread_local! {
     static NEW_CALL_COUNT: ::core::cell::Cell<u64> = const { ::core::cell::Cell::new(0) };
 }
 
-/// Test-only accessor — returns the count of [`FusedBuilder::new`]
-/// invocations on the current thread. `Parsed::to_value()` must not
-/// increment this counter.
-#[cfg(test)]
+/// Return the count of [`FusedBuilder::new`] /
+/// [`FusedBuilder::with_capacity`] invocations on the current
+/// thread.
+///
+/// `Parsed::to_value()` must not increment this counter — that is
+/// the invariant the `value_api_apples_to_apples` parse-count test
+/// asserts (via the pre-W0'.a
+/// `runtime::value_builder::value_builder_new_call_count` shim path
+/// that aliases to this accessor).
 pub fn fused_builder_new_call_count() -> u64 {
     NEW_CALL_COUNT.with(|c| c.get())
 }
 
-/// Test-only reset — sets the [`FusedBuilder::new`] counter to `0`.
-#[cfg(test)]
+/// Reset the [`FusedBuilder::new`] counter to `0`.
 pub fn reset_fused_builder_new_call_count() {
     NEW_CALL_COUNT.with(|c| c.set(0));
 }
@@ -247,7 +259,6 @@ impl FusedBuilder {
     /// Construct a fresh builder with an empty tape + value
     /// substrate.
     pub fn new() -> Self {
-        #[cfg(test)]
         NEW_CALL_COUNT.with(|c| c.set(c.get() + 1));
         Self::default()
     }
@@ -261,7 +272,6 @@ impl FusedBuilder {
     /// frame per tape record worst-case, narrow / wide payloads at
     /// `expected / 4`.
     pub fn with_capacity(expected: usize) -> Self {
-        #[cfg(test)]
         NEW_CALL_COUNT.with(|c| c.set(c.get() + 1));
         Self {
             columns: Columns::with_capacity(expected),

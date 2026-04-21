@@ -61,6 +61,12 @@ wave), **RETIRE** (obsoleted by fresh attribution), **AZ** (tooling —
 defer to AZ tranche), **POST-AZ** (genuine future work), **LANDED**
 (already shipped under different label).
 
+Legacy naming note: this audit predates the canonical successor order
+`AY → BA → BB → BC`. Read `AZ` as the old undifferentiated tooling
+bucket that later split into `BB` and `BC`, and read `POST-AZ` as
+later successor work that under the current plan usually routes to
+`BA`, sometimes to `BB` or `BC` by concern.
+
 | Wave | Scope (1-line) | Landed? | Fresh-relevance | Verdict |
 |------|----------------|---------|-----------------|---------|
 | **W2** (AX.md:64) | Parity harnesses CI-gated, 5 comparators, ≥200 fixtures (W2.md:1–19) | **Partial** — sonic-rs/lightningcss harnesses extended to canonical-form + scale+interop in W1r.2/3a (PROGRESS 519). simdjson OnDemand + serde_json + cssparser + CI-gating NOT landed. | High — W2's CI-gating is the correctness oracle for AY's substrate changes (A1 §6 unfair-lane caveat). simdjson OnDemand primer is pre-wired to AY.W3 eager lane (A5 §6) | **FOLD** into AY.W3 (eager-lane adds OnDemand as parity side) + **NEW-AY** micro-wave for cssparser token + CI-gate |

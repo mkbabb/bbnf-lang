@@ -482,7 +482,7 @@ would move it (the CSP is dropped right after, `_ = csp.propagate()`).
 
 --------------------------------------------------------------------------------
 
-## § 6. Analysis consolidation (AY → AZ seeds)
+## § 6. Analysis consolidation (AY → BA seeds)
 
 ### Memory note `analysis-consolidation` says
 
@@ -514,7 +514,7 @@ would move it (the CSP is dropped right after, `_ = csp.propagate()`).
      as AoS. A single `NodeAnalysis { ... }` with Option fields, indexed
      by NodeId, would collapse 11 HashMap allocations into one Vec.
 
-### LOC estimate for AZ consolidation
+### LOC estimate for BA consolidation
 
 | Target | LOC saved (approx) | Touchpoints |
 |--------|-------------------:|-------------|
@@ -526,7 +526,7 @@ would move it (the CSP is dropped right after, `_ = csp.propagate()`).
 
 **Total: ~1 450 LOC** of pure consolidation (no semantic change).
 
-### Three candidates for AZ consolidation
+### Three candidates for BA consolidation
 
 1. **Retire `classify_materialization::compute_eclass_facts`** — the e-graph
    analysis already computes the same bits. Plumb `egraph.class(id).data`
@@ -649,4 +649,4 @@ mechanically retirable** via consolidation with the e-graph substrate
 already present in the IR. The primary barriers are (a) the e-graph's
 output is discarded post-extraction rather than materialized onto the IR,
 and (b) the 11 per-NodeId sidecar HashMaps are an SoA expressing an AoS
-analysis row. Both can land in AZ.
+analysis row. Both can land in BA.

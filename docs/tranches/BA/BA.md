@@ -1,7 +1,8 @@
 # Tranche BA — Beyond Parity: Exceedance and Cross-Grammar Scale-Out
 
-BA begins after AY closes near parity. AY establishes the canonical
-runtime path; BA exploits it. This tranche is for exceedance: pushing
+BA begins immediately after AY closes near parity. AY establishes the
+canonical runtime path; BA exploits it first. This tranche is for
+exceedance: pushing
 past sonic-rs-class parity on selected JSON fixtures, broadening the
 same grammar-derived hybrid architecture across CSS, Sheets, and BBNF,
 and deploying larger-scale accelerants such as stronger global
@@ -14,7 +15,7 @@ mechanisms that preserve the one-substrate model.
    runtime contract landed in AY.
 2. **BA is where exceedance lives after parity.** Any attempt to beat
    peers materially beyond AY's declared close gates belongs here, not
-   in AZ and not as a hedge against unfinished AY parity work.
+   in BC and not as a hedge against unfinished AY parity work.
 3. **Generality is preserved.** Every exceedance mechanism remains
    grammar-derived and BBNF-led.
 4. **Same-path accelerants only.** BA may add stronger dispatch,
@@ -23,7 +24,7 @@ mechanisms that preserve the one-substrate model.
 ## Invariants
 
 1. No new runtime substrate.
-2. No replay/debug/tooling concern creep from AZ.
+2. No replay/debug/tooling concern creep from BC.
 3. No compile/build/tooling concern creep from BB.
 4. No grammar-name fast paths.
 5. Exceedance claims close on measured truth, not isolated probe wins.
@@ -31,14 +32,16 @@ mechanisms that preserve the one-substrate model.
 ## Operational posture
 
 1. BA only opens once AY has closed on the declared near-parity gates.
-2. Every accelerant proves consumer benefit on the canonical path.
-3. Cross-grammar expansion must show the same mechanism surviving on
+2. BA is the direct successor tranche after AY; tooling does not cut in
+   front of it.
+3. Every accelerant proves consumer benefit on the canonical path.
+4. Cross-grammar expansion must show the same mechanism surviving on
    more than one grammar family whenever the facts permit it.
-4. Optional specialization or scale-out stays opt-in unless the default
+5. Optional specialization or scale-out stays opt-in unless the default
    path proves it can absorb the cost cleanly.
-5. BA retirements are explicit: dead or weak accelerants are deleted,
+6. BA retirements are explicit: dead or weak accelerants are deleted,
    not left dormant.
-6. BA does not inherit unfinished AY parity debt. If AY still needs a
+7. BA does not inherit unfinished AY parity debt. If AY still needs a
    runtime change to hit its own close gates, AY is not closed.
 
 ## Wave summary

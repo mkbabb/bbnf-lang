@@ -54,6 +54,11 @@ A7 bucketed 14 AX waves:
 - **Defer AZ**: 1 (W13 CPU autotune + PMC).
 - **Defer post-AZ**: 4 (W5 ShapeRef consumer, W10-12 e-graph, W14 multi-visitor).
 
+Legacy naming note: this document predates the canonical reorder
+`AY → BA → BB → BC`. Read the old `AZ` tooling bucket through that
+later split: iteration/toolchain items map to `BB`, replay/debug items
+map to `BC`, and later performance work maps to `BA`.
+
 Retirement rationales (per A7):
 - W4 SIMD micro-kernels: JSON `__regex_scan_JsonParser` is ~0% self-time; scanner-amortising kernels can't reclaim sub-1% symbol.
 - W5 CSS SIMD cluster: bbnf already beats lightningcss 0.60×-0.81× at scale — optimizing what we already outpace violates AX invariant 6.

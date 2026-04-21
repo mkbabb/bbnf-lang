@@ -10,7 +10,8 @@ restoration-in-progress.
 
 This document covers seven sections: per-tranche lever inventory (§1),
 recurring anti-patterns (§2), approach categorisation (§3), AU
-root-cause (§4), scope-reveal pattern map (§5), AZ move candidates
+root-cause (§4), scope-reveal pattern map (§5), successor-tranche move
+candidates
 (§6), dev-expedite seeds (§7).
 
 All numbers cite either `docs/benchmarks/post-{LETTER}.json` or named
@@ -772,10 +773,10 @@ close. AM/AO/AP/AR/AS/AT all lack at least one of those artefacts.
 
 ---
 
-## 6. The optimisation trajectory — what should AZ do?
+## 6. The optimisation trajectory — what should BA do?
 
 Given 18 tranches of evidence, the single highest-ROI architectural
-change AZ should make:
+change BA should make:
 
 ### Candidate ranking
 
@@ -799,7 +800,7 @@ Evidence:
   space.
 - **The A7 audit verdict** (`docs/tranches/AX/audit/next-tranche/
   A7-ax-unfinished-absorption.md`) marks W10 (e-graph G1-G4 universal
-  rewrites) + W11 (G5-G9 per-shape rewrites) as **POST-AZ** "ledger-
+  rewrites) + W11 (G5-G9 per-shape rewrites) as **POST-BA** "ledger-
   only until a consumer cites measurable samply shift."
 
 The architectural transposition: replace the current pipeline's
@@ -813,7 +814,7 @@ than a new orthogonal sidecar.
 
 **Expected gain**: eliminates the substrate-without-consumer class
 structurally (you cannot mine data an extraction pass doesn't
-read). Cost: 2-3 tranches of substrate work; AZ scope.
+read). Cost: 2-3 tranches of substrate work; BA scope.
 
 **Evidence it's the right call**:
 - AV/AW-I/II/III/IV/V all landed substrate-without-consumer in the
@@ -835,7 +836,7 @@ collapses pre-emit on every Rust-target grammar; `prune_unreachable`
 is the empirically-identified culprit. **AY.W2 scopes this but
 hasn't landed at audit time**. 16B aggregate slot admits all
 scalar-struct Named types; larger (33B colour-function) need
-arena-backed widening AU.2.6 punted on. Post-AZ if AY.W2 lands.
+arena-backed widening AU.2.6 punted on. Post-BA if AY.W2 lands.
 
 **#3 — Tape substrate rethink: columnar SIMD reducer wiring**.
 
@@ -844,7 +845,7 @@ AW-IV.W5.1 closed the gate at 6.57× via 4-lane reordered unrolling
 (4 accumulators breaking strict-IEEE left-fold). **The emitter-
 side reordering pattern is the missing lever** (AU.7's load-bearing
 finding). AY.W1 restored flat AoS write path; AY.W8 adds
-document-parallel. AZ could restart the SoA pivot with an
+document-parallel. BA could restart the SoA pivot with an
 emitter-side reducer codegen (`Tape::reduce_column<C, R>` actually
 consumed per-grammar at emit time). Read-side cache only, write
 side stays AoS.
@@ -860,9 +861,9 @@ side stays AoS.
   subsume the view→value hop and potentially match sonic-rs's
   `Value::Number(f) IS the node` pattern. But AY.W3 already ships
   per-shape inline fn pattern via prototype; adding a second walker
-  is orthogonal substrate. Post-AZ.
+  is orthogonal substrate. Post-BA.
 
-**The recommended AZ charter**: unified cost-guided e-graph
+**The recommended BA charter**: unified cost-guided e-graph
 extraction as the single decision surface. Retires the substrate-
 without-consumer class of failure mode at root.
 
@@ -955,7 +956,7 @@ artefact-cited.
    orphans across .claude/worktrees/agent-\* + manually-named
    bbnf-wt-\* directories.
 
-### Top-3 dev-expedite seeds for AZ
+### Top-3 dev-expedite seeds for BB
 
 1. **CSS L4 bench cache ceiling**. AX.W1r.3a dropped 69% already;
    a further pass should target the remaining 1.81s / 636 MB RSS.
@@ -967,7 +968,7 @@ artefact-cited.
    eliminate the hand-patched-generated.rs chronic that survived
    11 tranches.
 3. **Shared scripts for `.profile-target`**. AU's samply trio is
-   the template; AY inherited it clean; AZ should cement it as a
+   the template; AY inherited it clean; BB should cement it as a
    workspace-level `xtask` or `cargo-profile` sub-command. Half the
    worktree orphan count trace to abandoned `.profile-target`
    divergences.
@@ -988,9 +989,9 @@ no silent deferrals. The AV→AW-V cascade is the anti-template:
 spec-driven plans, substrate-first cadence, bench at close, silent
 within-wave deferrals.
 
-AY is the correction-under-contact; AZ is the next test of whether
+AY is the correction-under-contact; BA is the next test of whether
 the arc has internalised the AU-era orchestration discipline at
-substrate-architecture scale. The top-ranked AZ move — unified
+substrate-architecture scale. The top-ranked BA move — unified
 e-graph extraction as single decision surface — is the transposition
 that retires the substrate-without-consumer class of failure at
 root. Two tranches of work; retires ~1,676 LOC of detector cruft;

@@ -120,7 +120,9 @@ All 6 fixes self-contained — no fix uncovered downstream regression.
 - `git worktree`: 50 → 13 (-37 orphans pruned: 23 manually-named
   bbnf-wt-* + 17 .claude/worktrees/agent-* + 2 /private/tmp + 4
   active-now W0 worktrees of which 3 already removed at agent close;
-  6 AZ-a* + 4 AY-a* preserved as planning references).
+  6 legacy `az-a*` planning refs retained at the time, now canonically
+  treated as BC-planning lineage, + 4 AY-a* preserved as planning
+  references).
 - `.profiles/` stale files (>5d): 21 removed; redundant `-az-a5`
   dirs (2): removed.
 - `.bbnf-cache`: single-copy under `target/` verified.

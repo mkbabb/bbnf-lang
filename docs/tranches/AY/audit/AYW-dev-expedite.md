@@ -93,7 +93,7 @@ Per phase, ROI-ordered.
 ### Regen
 
 - **Skip the idempotency second pass when `scripts/check-bootstrap-clean.sh` exits clean** — the CI script already does copy-then-regen-then-diff in a single pass. Promote its workflow to the orchestrator's standard: one regen, diff against committed, done. **est. –30-60 s per regen** (R3 §T2 documents this as already-landed-as-discipline).
-- **Surgical `BBNF_SCHEMA_VERSION` invalidation** — current hash input mixes the version const with every grammar file + every attribute. A version bump invalidates *everything*. Splitting the cache key into a (version, per-grammar-hash) pair would let a schema bump coexist with an unchanged grammar cache entry — *no cache loss on schema bumps that don't touch the grammar's emission surface*. Substantial rework; defer to AZ.
+- **Surgical `BBNF_SCHEMA_VERSION` invalidation** — current hash input mixes the version const with every grammar file + every attribute. A version bump invalidates *everything*. Splitting the cache key into a (version, per-grammar-hash) pair would let a schema bump coexist with an unchanged grammar cache entry — *no cache loss on schema bumps that don't touch the grammar's emission surface*. Substantial rework; defer to BB.
 
 ### Profile
 
@@ -163,6 +163,6 @@ Ordered by impact × simplicity:
 ### Secondary (nice-to-have; deferred ROI)
 
 - Reclassify `packed_cache_read_beats_soa_materialise` as `#[ignore]` bench.
-- Surgical `BBNF_SCHEMA_VERSION` cache-key split (AZ scope).
+- Surgical `BBNF_SCHEMA_VERSION` cache-key split (BB scope).
 - `cargo expand` content-hash cache (R3 §T5; deferred).
 - `lld` / `mold` installer block in `.cargo/config.toml` (already correct comment; just uncomment after install).

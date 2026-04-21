@@ -366,7 +366,7 @@ Per `docs/tranches/AY/AY.md` and `docs/tranches/AY/waves/W0.md`:
 | CSS L4 @import split + DFA hoist + shared PHF | A3 audit | W5 |
 | parse_that de-generic + ax-iter profile tuning | A3 audit | W6 |
 | Document-parallel fork (AX.W9 demoted) | AX.W9 plan absorb | W8 |
-| AX W2-W14 absorption per A7 (6 fold, 2 new, 3 RETIRE-as-obsolete, 1 defer AZ, 4 defer post-AZ) | AX Block B non-execution | distributed across AY waves |
+| AX W2-W14 absorption per A7 (6 fold, 2 new, 3 retire-as-obsolete, 1 legacy tooling deferral, 4 legacy later-successor deferrals) | AX Block B non-execution | distributed across AY waves |
 
 ## Block B non-execution rationale
 
@@ -431,10 +431,12 @@ mode.
 
 ## Successor chain
 
-AX → AY → AZ. AY is the BEAT-sonic tranche
-(`docs/tranches/AY/AY.md`). AZ carries replay/recovery/incremental
-tooling per AY's plan §Successor chain — the AZ.md plan document
-opens after AY closes.
+AX now hands off into the canonically ordered successor chain
+`AY → BA → BB → BC`. AY is the near-parity closure tranche
+(`docs/tranches/AY/AY.md`). BA is the direct post-AY performance
+successor, BB is the post-BA toolchain/compile-time discipline
+tranche, and BC carries replay/recovery/incremental/debug tooling on
+the BA-close substrate.
 
 The AY plan is authored at this document's commit window with
 nine waves, dependency chain W0 → W1 → {W2 ∥ W4} → W3 → W5 → W6

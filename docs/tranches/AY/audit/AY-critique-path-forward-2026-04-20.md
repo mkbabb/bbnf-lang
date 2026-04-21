@@ -2,7 +2,7 @@
 
 Date: 2026-04-20
 
-Scope: audit AY against AW/AX/AZ plans, AU archaeology, current code, current benches, current profiling/tooling instructions, and fresh non-legacy `cargo expand` inspection on JSON and CSS.
+Scope: audit AY against AW/AX/BC plans, AU archaeology, current code, current benches, current profiling/tooling instructions, and fresh non-legacy `cargo expand` inspection on JSON and CSS.
 
 This document is intentionally corrective. It does not propose quick fixes, bench cosmetology, or another substrate-first expansion. It states what is true in the repository now, why gains remain marginal, and what an idiomatic continuation should be.
 
@@ -35,11 +35,11 @@ What did not land is equally important:
 
 - AY did not beat sonic-rs.
 - AY did not close its own performance gates.
-- AY did not write AY FINAL, did not update AY PROGRESS beyond W1, and did not truthfully rebase AZ on the partially-landed AY substrate.
+- AY did not write AY FINAL, did not update AY PROGRESS beyond W1, and did not truthfully rebase its successor tooling tranche on the partially-landed AY substrate.
 - Several optimization surfaces are wired, but not globally coordinated.
 - The toolchain and edicts still default to expensive full-workspace behavior even though the docs describe a faster discipline.
 
-The repository is therefore in an “AY closeover” state, not an AY close state and not yet a clean AZ-open state.
+The repository is therefore in an “AY closeover” state, not an AY close state and not yet a clean BA-open state.
 
 One planning correction follows from that state:
 
@@ -208,8 +208,10 @@ Two further corrections are required:
 
 - crate names get no privilege: if `crates/tape` stops being the honest
   home of the canonical substrate, it should be absorbed or deleted;
-- structural scan should not persist as a niche sidecar: it must become
-  a real same-path global consumer surface or be deleted.
+- structural scan should become first-class on the canonical path: not a
+  niche sidecar, and not a blind eager whole-input tax. Its scan policy
+  must be deeply integrated into AY and close with explicit
+  non-regression proof.
 
 ## Proper path forward for AY
 
@@ -252,7 +254,8 @@ If that then beats sonic, good. It cannot remain a planning assumption.
 - update `docs/tranches/AY/PROGRESS.md` through W4,
 - record W5/W6/W8 disposition explicitly instead of letting them remain ghost requirements,
 - write AY FINAL against what actually landed,
-- rewrite AZ to open on AY-close, not AX-close.
+- rewrite the successor chain so BA opens directly on AY-close, BB
+  follows BA, and BC opens only after BB on the BA-close substrate.
 
 ## Architectural direction: one path, one canonical substrate
 
@@ -468,7 +471,8 @@ They may still matter, but they are orthogonal:
 - document-parallel work.
 
 Those are worthwhile once AY’s semantic and hot-path story is honest.
-They should not remain blockers for AY close or prerequisites for AZ.
+They should not remain blockers for AY close or prerequisites for BA,
+BB, or BC.
 
 ## Revised tranche sequence
 
@@ -476,9 +480,12 @@ The clean sequence is:
 
 1. AY closeover
 2. AY FINAL on truthful baselines
-3. AZ rebase to AY-close substrate
-4. AZ replay/recovery/incremental work
-5. only then broader compile-time/parallel extension work, unless a specific item is proven to shorten the AY closeover itself
+3. BA direct post-AY performance/exceedance work
+4. BB post-BA compile/build/bench discipline
+5. BC replay/recovery/incremental/debug work on the BA-close
+   substrate
+6. only then any broader extension work not already absorbed by those
+   three
 
 ## Immediate repo-level recommendations
 

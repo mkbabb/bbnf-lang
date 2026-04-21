@@ -238,7 +238,7 @@ lets the existing cost models plug in without modification.
 
 **Expected impact.** Correctness improvement when the rewrite
 set grows (the AW-IV.W5.3 null-calibration result is evidence
-the current rewrite set is sparse — adding rules is the AY/AZ
+the current rewrite set is sparse — adding rules is the AY/BA
 surface that unlocks this). Also gives the extractor a natural
 wire for sharing-aware cost models (`CostModel::cost` could
 receive a parent-multiplicity hint) without changing the
@@ -420,7 +420,7 @@ surface.
 
 **Scope.** ~400 LOC — a meaty refactor. Worth landing after the
 simpler candidates (§3.1, §3.3) prove the cost-model plumbing.
-Fits as a late-AZ or post-AZ landing rather than an AY wave.
+Fits as a late-BA or post-BA landing rather than an AY wave.
 
 ---
 
@@ -525,7 +525,7 @@ Option<NogoodStoreConfig>`.
 solver — the one production COP path. Lifts an on-shelf
 infrastructure to consumer.
 
-**Scope.** ~80 LOC (integration only, no new infrastructure). AZ
+**Scope.** ~80 LOC (integration only, no new infrastructure). BA
 or next CSP-adjacent tranche.
 
 ### R2 — Payload layout planner as CSP (candidate §3.1)
@@ -544,7 +544,7 @@ branch. Samply attribution is the verification gate. Secondary
 effect: provides a natural home for §3.5 (column allocation)
 when the two pieces merge.
 
-**Scope.** ~200 LOC. AZ or a follow-on tranche.
+**Scope.** ~200 LOC. BA or a follow-on tranche.
 
 ### R3 — Wire cost surface into `byte_class.rs` + extend coverage
 
@@ -564,7 +564,7 @@ as a follow-on; standalone benefit is an adjustable dispatch
 cap that benchmarking can tune per-grammar.
 
 **Scope.** ~50 LOC substrate wire + ~180 LOC if the partition
-CSP follows. AZ.
+CSP follows. BA.
 
 ### R4 — Extend `OptimizationMode` into the egraph scheduler
 
@@ -585,7 +585,7 @@ rewrite set grows to admit multiple canonical forms per class,
 extraction becomes a real COP rather than a degenerate greedy
 pick.
 
-**Scope.** ~300 LOC. Post-AZ — waits on a richer rewrite set.
+**Scope.** ~300 LOC. Post-BA — waits on a richer rewrite set.
 
 ### R5 — Install a `ValueOrdering` hook (LCV + per-caller value policies)
 
@@ -604,7 +604,7 @@ existing adjacency + `DomainCostEval` surfaces as inputs.
 non-singleton variables. Aligns with `pluggable-components`
 memory.
 
-**Scope.** ~120 LOC. AZ.
+**Scope.** ~120 LOC. BA.
 
 ---
 

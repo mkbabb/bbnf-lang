@@ -145,11 +145,11 @@ close on documented evidence (not BEAT-sonic declaration).
 
 | Wave | Scope | LOC Δ | Bench Δ |
 |---|---|---|---|
-| **WR1** | Retire 13 dead e-graph rules + handle.rs + phf.rs + fold structural_scan into AZ if no consumer lands | **−1,100** | neutral (dead code has no runtime) |
+| **WR1** | Retire 13 dead e-graph rules + handle.rs + phf.rs + fold structural_scan into BA if no consumer lands | **−1,100** | neutral (dead code has no runtime) |
 | **WR2** | ShapeLattice replacement of 13-way if-cascade; fuse `shape_dispatch` into `mine_recognizers`; retire 4× FIRST-set duplication; plumb EClassFacts from e-graph write-back | **−1,450** | +compile time |
 | **WR3** | Wire `CostWeights` at `byte_class.rs` + `payload/layout.rs`; NogoodStore→backtracker (−80 LOC delta after carve); Payload-layout CSP (admits CSS L4 Color at 16 B cap) | +100 net | +runtime (no more LargeAggregate branch for Color) |
 | **WR4** | `scripts/prepare-profile-wave.sh` landing; W6 parse_that de-generic (−37 s cold build); `codegen-units=256` on ax-iter; bench-subset.sh runner; bootstrap idempotency CI gate | infra | **−55 % cold build; −80 s bench iter** |
-| **WR5** | FINAL — bench matrix at retirement close, FINAL.md honest BEAT-sonic stance (not achieved single-tranche; substrate groundwork for AZ fused parse+value emission), AZ handoff contract | docs | — |
+| **WR5** | FINAL — bench matrix at retirement close, FINAL.md honest BEAT-sonic stance (not achieved single-tranche; substrate groundwork for BA fused parse+value emission), BA/BB/BC handoff contract | docs | — |
 
 Total: **−2,450 LOC deletion; −55 % dev cycle; no new features.**
 
@@ -167,12 +167,12 @@ remaining 4.27× multiplier to close the gap is not in one more wave —
 it is in a different emission shape: **fused parse+value single-pass**,
 modelled after sonic-rs's `Value::Number(f)` IS the node.
 
-That is an AZ theme. AY closes on substrate restoration + consumer
+That is a BA theme. AY closes on substrate restoration + consumer
 audit + retirement — **honest architectural progress**.
 
-## VII. Handoff to AZ
+## VII. Handoff to BA / BB / BC
 
-The revised AY delivers AZ a substrate consisting of:
+The revised AY delivers BA a substrate consisting of:
 
 - Flat AoS `Vec<TapeRec>` tape (W1)
 - Unified `CostWeights` + pluggable `CostModel<N>` (retained substrate,
@@ -184,14 +184,15 @@ The revised AY delivers AZ a substrate consisting of:
 - `pay_f64` direct-column (W4.2; substrate for SIMD reductions)
 - Retired ~2,450 LOC of dead substrate (WR1 + WR2)
 
-AZ's natural next-tranche work:
+BA's natural next-tranche work:
 
 1. **Fused parse+value emission** — single AST walk writes Value variants
    directly. This is the BEAT-sonic lever.
 2. **Columnar SIMD reducer write-side wiring** — AW-IV.W5.1's 6.57×
    canada is a microbench of the substrate bbnf-lang already has.
-3. **CSS L4 compile-time** — deferred from AY. `.bbnf-cache` surgical
-   invalidation instead of SCHEMA bump full invalidate.
+3. **CSS L4 compile-time** — routed to BB rather than the direct
+   performance tranche. `.bbnf-cache` surgical invalidation instead of
+   SCHEMA bump full invalidate.
 4. **Document-parallel fork** (from AY.W8, never dispatched) — ≥ 1 MB
    input multiplier.
 

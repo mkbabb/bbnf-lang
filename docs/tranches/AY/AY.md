@@ -4,8 +4,12 @@ AY is the parity tranche. It closes the post-AU architectural drift by
 making the grammar-derived parser write one canonical packed substrate
 directly, then driving the default eager JSON path to near sonic-rs
 parity on that substrate. AY does not mix in replay, recovery,
-incremental tooling, or broad build-iteration reform; those move to AZ
-and post-AY BB. The only sanctioned pre-AY support work is the narrow
+incremental tooling, or broad build-iteration reform; those move later
+to BB and BC. The direct successor after AY is BA; BB follows as the
+post-BA toolchain discipline tranche, and BC follows as the
+replay/recovery/incremental/debug tranche on the BA-close substrate.
+The only sanctioned pre-AY
+support work is the narrow
 `B0` runway annex that removes command/build/bench drag blocking
 `AY.W5`. AY does not open a second runtime path; it replaces the
 current generic tape-first hot contract with a single hybrid substrate
@@ -28,8 +32,10 @@ survive as fully general mechanisms.
    projection enrich but do not replace them with handwritten product
    parser logic.
 4. **Parity-critical work stays in AY.** Anything required to reach the
-   near-parity default eager JSON target belongs in AY. Anything else
-   routes to AZ, BA, or BB.
+   near-parity default eager JSON target belongs in AY. The direct
+   performance successor after AY is BA. Compile/build concerns route
+   later to BB; replay/recovery/incremental/debug concerns route after
+   that to BC.
 5. **Runtime truth closes the tranche.** AY closes on benches,
    profiles, `cargo expand`, `cargo asm`, and wire-contract tests, not
    on architectural intent.
@@ -51,6 +57,9 @@ survive as fully general mechanisms.
     deferred into BA, BB, or an annex.
 12. Crate/module names have no protection. If `crates/tape` no longer
     houses the canonical substrate honestly, it is renamed or deleted.
+13. Structural scan/index is first-class same-path infrastructure. It
+    must be deeply integrated into AY and close with non-regression
+    evidence; it cannot persist as an optional sidecar.
 
 ## Operational posture
 
@@ -64,11 +73,12 @@ survive as fully general mechanisms.
    CSS-only, or Sheets-only handwritten semantic paths.
 5. The only pre-AY support tranche is `B0`, and it may touch only the
    command/profile/bench runway required to execute `W5-W7` rapidly.
-6. Structural-side accelerants are judged on same-path global benefit.
-   If a structural index or scan does not become a real shared hot-path
-   consumer, it is deleted rather than preserved as substrate lore.
+6. Structural scan is first-class, but first-class does not mean an
+   unconditional eager whole-input tax. Its scan policy must be part of
+   the canonical path and must prove no regression on the declared
+   JSON/CSS/Sheets checkpoints.
 7. When a lever does not prove out, it is documented in AY and routed
-   cleanly to AZ/BA/BB at tranche close rather than left as a dead
+   cleanly to BA/BB/BC at tranche close rather than left as a dead
    surface.
 
 ## Wave summary
@@ -83,9 +93,9 @@ survive as fully general mechanisms.
 | **W5** | [waves/W5.md](waves/W5.md) | Canonical packed substrate contract and direct JSON write | W4 + B0 | Not started |
 | **W6** | [waves/W6.md](waves/W6.md) | Consumer unification, general direct-to-struct, and Pratt/operator lowering | W5 | Not started |
 | **W7** | [waves/W7.md](waves/W7.md) | Minimal globally informed optimizer integration | W6 | Not started |
-| **W8** | [waves/W8.md](waves/W8.md) | Near-parity close, FINAL, and AZ/BA/BB handoff | W7 | Not started |
+| **W8** | [waves/W8.md](waves/W8.md) | Near-parity close, FINAL, and BA/BC/BB handoff | W7 | Not started |
 
-## AY → AZ / BA / BB handoff contract
+## AY → BA / BC / BB handoff contract
 
 AY does not close until all of the following are true:
 
@@ -102,7 +112,10 @@ AY does not close until all of the following are true:
    geomean `<= 1.20`.
 6. CSS, Sheets, and BBNF preserve their current functional guarantees;
    AY does not buy parity by regressing grammar generality.
-7. B0 is closed and no parity-critical AY work remains parked in an
+7. Structural scan is integrated as a first-class same-path surface and
+   its admitted scan policy shows no declared regression on the close
+   matrix.
+8. B0 is closed and no parity-critical AY work remains parked in an
    annex or future tooling tranche.
 
 ## Defensible floor
@@ -126,7 +139,7 @@ Anything less is a tranche miss, not an acceptable floor.
 
 Decision at W8 close, not mid-wave:
 
-- How much provenance must stay in the substrate proper versus AZ side
+- How much provenance must stay in the substrate proper versus BC side
   metadata.
 - Whether any retained structural-side accelerator still fails the
   consumer-benefit threshold and should be deleted in BA.
@@ -139,5 +152,5 @@ Decision at W8 close, not mid-wave:
 
 When AY closes correctly, bbnf has one grammar-derived parser, one
 canonical packed substrate, one truthful hot eager JSON path in the
-sonic-rs class, and one substrate handoff that AZ, BA, and post-AY BB
+sonic-rs class, and one substrate handoff that BA, then BB, then BC
 can extend without reopening runtime duality or substrate drift.

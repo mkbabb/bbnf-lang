@@ -3,6 +3,6 @@
 Dated execution log for tranche BB.
 
 - `Status`: planned
-- `Opens after`: AY close
+- `Opens after`: BA close
 - `Current wave`: not started
 - `Next wave`: W0

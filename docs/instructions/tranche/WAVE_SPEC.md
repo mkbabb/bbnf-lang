@@ -191,5 +191,5 @@ All detail lives in wave specs.
 `docs/tranches/AX/AX.md` (parent index) + `docs/tranches/AX/waves/W0a.md`
 through `W15.md` (18 wave specs) remain the canonical implementation
 for section ordering and wave decomposition. The per-wave `**Status**`
-line is a newer amendment; active tranches such as AY/AZ/BA/BB show the
-status-bearing form.
+line is a newer amendment; active tranches such as B0/AY/BA/BB/BC show
+the status-bearing form.

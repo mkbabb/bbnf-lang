@@ -1,15 +1,16 @@
-# Tranche BB — Post-AY Toolchain and Compile-Time Discipline
+# Tranche BB — Post-BA Toolchain and Compile-Time Discipline
 
-BB is the post-AY engineering tranche. B0 extracted the narrow pre-AY
+BB is the post-BA engineering tranche. B0 extracted the narrow pre-AY
 runway required to execute `AY.W5-W7`; BB therefore no longer blocks
-parity work. Its job now is to reduce the repository's remaining
-compile-time, cache-key, generated-code, and workflow drag after AY
-closes, without mixing parser architecture back into AY, AZ, or BA.
+parity work. BA then takes the direct performance slot after AY. BB's
+job is to reduce the repository's remaining compile-time, cache-key,
+generated-code, and workflow drag after BA
+closes, without mixing parser architecture back into AY, BC, or BA.
 
 ## Architectural thesis
 
-1. **BB starts after AY closes.** It is no longer a precondition for
-   parity work.
+1. **BB starts after BA closes.** It is not a precondition for AY or
+   BA performance work.
 2. **BB shortens iteration without redefining runtime architecture.**
 3. **Workflow truth belongs in commands, profiles, and scripts, not
    just prose.**
@@ -47,7 +48,7 @@ closes, without mixing parser architecture back into AY, AZ, or BA.
 
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Generated-code and monomorphization control | AY close | planned |
+| **W0** | [waves/W0.md](waves/W0.md) | Generated-code and monomorphization control | BA close | planned |
 | **W1** | [waves/W1.md](waves/W1.md) | Cache-key, invalidation, and workspace partition discipline | W0 | planned |
 | **W2** | [waves/W2.md](waves/W2.md) | Command, CI, and automation consolidation | W1 | planned |
 | **W3** | [waves/W3.md](waves/W3.md) | Profiling fleet and measured compile/workflow proof | W2 | planned |
@@ -76,7 +77,7 @@ BB's defensible floor is:
 2. Tighter cache-key and workspace-partition discipline.
 3. A reusable profiling and proof fleet that does not depend on ad hoc
    command invention.
-4. Post-AY command/CI/workflow consolidation that preserves the
+4. Post-BA command/CI/workflow consolidation that preserves the
    intended heavy-proof separation.
 
 Anything less leaves the repository slower than its own edicts demand.
@@ -94,6 +95,7 @@ Decision at W4 close, not mid-wave:
 
 ## Indefatigability
 
-When BB closes correctly, post-AY performance work in AZ and BA no
+When BB closes correctly, later work in BC and any successor
+performance/tooling tranches no
 longer waits on avoidable compile, cache, command, or profiling drag;
 the command surface itself enforces the intended workflow.

@@ -124,6 +124,69 @@ alignment (AY-I close, BA/BB/BC openers).
 No quick fixes. No workarounds. The audit frames the forward path;
 execution resumes after the user's disposition.
 
+## Audit triumvirate — 2026-04-21
+
+Four parallel audit sub-agents delivered convergent findings:
+
+- `baeed709` — AUDIT-A plan coherence. Headline: Invariant §5
+  FAIL — `ValueBuilder` allocated but never threaded; slab
+  empty; `project_value_*` panics on non-empty parse.
+- `a809d12f` — AUDIT-B hitherto-expand. Confirmed AUDIT-A §5
+  load-bearing FAIL at shape-file granularity (zero
+  `value_builder.*` write calls from any shape's expand output);
+  BbnfBootstrap totality holds 15:15:15; JSON / CSS / Sheets
+  expand capture PARTIAL (incremental cache corruption from
+  earlier cutoff); sibling alignment ZERO contests.
+- `ad70effd` — AUDIT-C forward path. Prescribes Path B
+  (FusedBuilder) — type-level collapse of TapeBuilder +
+  ValueBuilder inside the tape crate; every shape's
+  `builder: &mut TapeBuilder<R>` becomes
+  `&mut FusedBuilder<R>`; atomic bi-column stamping; -485 / +280
+  LOC net; zero signature churn across 25 shape fns. W1-W5
+  specs hold unchanged; in-AY-II plan pivot (Absorb), not a new
+  letter. f372e7ef history retained (rebase would break audit
+  SHA citations).
+- `319c432a` — AUDIT-D predecessor/successor alignment.
+  Confirmed `Parsed::to_value()` panics. Confirmed CSS/Sheets
+  `columns.rs:409` panic class extinguished at source (15/15
+  retry sites use `rollback_to`; zero residuals). BA invariant
+  §7 currently FAILS; closes at W0' landing. Cross-tranche debt
+  ledger: 15 items, 11 to AY-II internally.
+
+## W0' dispatch plan — 2026-04-21
+
+User disposition: Path B, in-AY-II pivot, transient history,
+NO un-wired legacy cruft, NO dead IIFEs, NO workarounds. Plan
+audit of W1-W5 + BA/BB/BC surfaced 10 findings, now routed in
+AY-II.md §Plan-audit findings.
+
+`waves/W0p.md` authored with three-agent decomposition:
+
+- **W0'.a** — FusedBuilder collapse + tape legacy deletion
+  (`crates/tape/src/{builder,columns}.rs`,
+  `crates/core/src/runtime/{value_builder,mod,parsed}.rs`,
+  `crates/core/src/backend/rust/emitter/grammar.rs` parse entry).
+  Retires `TapeBuilder::push_compound` + `mark_children` public
+  API + entire `value_builder.rs` module + `parse_with_visitor`
+  emission path + dead IIFE wrappers.
+- **W0'.b** — Projection-consumer wiring + materializer slab
+  migration (`crates/core/src/backend/rust/view/value.rs`,
+  `emitter/shapes/value_materialize.rs`). Routes per-admission
+  arms through `materialize_projection_<rule>_<Grammar>` fns
+  (69 currently zero-call-site). Retires `<Grammar>Value::Unknown`
+  fallback where totality holds.
+- **W0'.c** — Scan-policy splice + emitter cleanup
+  (`emitter/shapes/dispatcher.rs`, `view/value.rs::emit_path_walk`).
+  Inlines `object_key_seek` / `bounded_lookahead` /
+  `scan_structural_bounded` at codegen per
+  `STRUCTURAL_SCAN_POLICY` flag. Retires W0-era `#[allow(dead_code)]`
+  additions (6 known).
+
+Each sub-agent's scope embeds explicit dead-code / dead-IIFE /
+un-wired-substrate hunts within its file bounds. No deferrals:
+every surface whose role ends in W0 retires at W0' in the same
+commit as its supersession.
+
 ---
 
 ## Scaffold landing

@@ -139,12 +139,90 @@ materializer counts in agreement).
 
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Fused substrate + emitter unification + runtime consolidation + projection totality + structural-scan integration (5 parallel sub-agents) | tranche open | in_progress (pre-close audit) |
-| **W1** | [waves/W1.md](waves/W1.md) | JSON — semantic parity + peer-referenced perf (sonic + simd-json); grammar-derived typed admission totality; samply-proven hot path | W0 | planned |
+| **W0** | [waves/W0.md](waves/W0.md) | Fused substrate + emitter unification + runtime consolidation + projection totality + structural-scan integration (5 parallel sub-agents) | tranche open | closed-partial (superseded by W0') |
+| **W0'** | [waves/W0p.md](waves/W0p.md) | FusedBuilder collapse + projection-consumer wiring + scan-policy splice + legacy-cruft deletion (3 parallel sub-agents) | W0 landing | planned |
+| **W1** | [waves/W1.md](waves/W1.md) | JSON — semantic parity + peer-referenced perf (sonic + simd-json); grammar-derived typed admission totality; samply-proven hot path | W0' | planned |
 | **W2** | [waves/W2.md](waves/W2.md) | CSS L4 — lightningcss total typed-semantic parity (Rule, Declaration, Value, Selector, MediaRule, Keyframes families); canonical-output byte parity; zero hardcoded bindings | W1 | planned |
 | **W3** | [waves/W3.md](waves/W3.md) | Google Sheets — grammar-derived typed formula/cell/range families; self-parity + formula_expr parity; samply-proven hot paths | W2 | planned |
 | **W4** | [waves/W4.md](waves/W4.md) | BBNF — self-hosting identity + grammar-meta typed surface; double-regen byte-identical; typed declared-type annotation coverage | W3 | planned |
 | **W5** | [waves/W5.md](waves/W5.md) | Cross-grammar close matrix + competitor benches aggregated + FINAL + successor handoff | W4 | planned |
+
+## Plan-audit findings (pre-W0' dispatch)
+
+Pre-W0'-dispatch read of the remaining wave specs + BA / BB / BC
+openers surfaced latent legacy / deferral markers whose resolution
+belongs in this tranche, not downstream. The findings:
+
+### Legacy references requiring update under W0'
+
+1. **`parse_with_visitor` opt-in bench entry** — W1/W4/W5 plans
+   permit it as a bench-only alternative entry point with the
+   constraint that it does not appear in `Parsed::to_value()`'s
+   call graph. Under W0' FusedBuilder, the fused parse IS the
+   visitor lane; the separate `parse_with_visitor_<Grammar>`
+   emission is redundant scaffolding. **Action**: W0'.a retires
+   the entry point + its `emit_parse_with_visitor` emitter path at
+   `crates/core/src/backend/rust/emitter/grammar.rs:1163-1334`.
+   Update W1 §6 + W4.e + W5 §15 accordingly at the same commit.
+2. **`<Grammar>Value::Unknown` fallback** — W1 §scope reference,
+   W3 §scope reference. Under W0'.b projection-consumer wiring
+   with totality holding per-grammar, the Unknown fallback has no
+   un-admitted rules to serve. **Action**: W0'.b retires per
+   grammar; where a grammar carries genuinely un-admitted rules
+   (known subset), the retention is justified in a per-grammar
+   exception ledger inside the W0' return report.
+3. **W4.d conditional `grammar_roundtrip.rs`** — W4's scope
+   authored the harness as "iff the fused-pipeline value-lane
+   diverges semantically from combinator-side prettify at W0
+   close". W0' resolves the precondition. **Action**: the
+   decision is made at W4 open based on observed FusedBuilder
+   behaviour; W4.d text updates at W0' close to remove the
+   conditional.
+4. **W4.e samply expectations** — currently reference
+   `ValueBuilder::push` or "W0.c's landed name". **Action**:
+   W4.e updates at W0' close to reference the concrete fused
+   symbol name (`FusedBuilder::push_leaf_*` / `begin_compound`).
+
+### Unnamed deferrals in AY-II plans
+
+5. **W3 `TODO AU.6.7` aggregate / variant-tagged forms** — W3's
+   grammar has `cell_ref`, `range_end`, and similar rules whose
+   declared canonical target is an aggregate tuple or tagged
+   union that the current `type_annotation` grammar cannot
+   express. The deferral ledger in W3.a is specified but the
+   destination tranche is not explicitly named in the wave text.
+   **Action**: W3 plan update names BA as the destination (BA
+   owns `type_annotation` grammar extensions per BA.md §Scope).
+
+### Scoped deferrals correctly routed (no action needed)
+
+6. **W2's `scale_interop_tailwind` calc-evaluator gap** →
+   destination BA (calc-evaluator workstream). W2 plan explicit
+   + BA plan inherits. Clean.
+7. **W2 OUT-OF-SCOPE rows** (`CounterStyleRule`, `ScopeRule`,
+   etc.) — zero matches in declared fixtures; admission via
+   `genericAtRule` fallback; typed parity in BA scope. Clean.
+
+### Downstream-tranche audit
+
+8. **BA inv 7** ("BA does not inherit unfinished AY parity debt")
+   currently FAILS under W0 landed state (`to_value()` panics).
+   **Action**: W0' close satisfies this invariant; BA open is
+   unblocked at W0' close.
+9. **BA/W3 file-bound** at `crates/jit/src/lib.rs` — file does
+   not exist (AUDIT-D Q5). Not AY-II's problem; flagged for BA
+   authorship correction before BA opens.
+10. **BB + BC** — both gate on BA close; no AY-II-specific
+    dependency beyond BA's opening. Clean.
+
+### `f372e7ef` history disposition
+
+Transient hand-patch at commit `f372e7ef` persists only at that
+commit; master HEAD's `generated.rs` has proper regen. Per AUDIT-C
+Q4 + AUDIT-D Q7, history retained (rebase would break predecessor
+audit SHA citations). Forward dispatches adopt cherry-pick-compose
+discipline so future waves do not re-introduce transient
+hand-patches.
 
 ## Defensible floor
 

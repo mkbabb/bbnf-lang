@@ -940,8 +940,8 @@ impl FusedBuilder {
         }
     }
 
-    /// Consume the builder and return the fused (tape + value)
-    /// output.
+    /// Consume the builder and return the finalised tape + the
+    /// fused value substrate as a [`FusedOutput<R>`].
     ///
     /// [`crate::finaliser::finalise`] always runs — it is the sole
     /// writer for `sib_skip` (and the compound-closure columns
@@ -950,10 +950,10 @@ impl FusedBuilder {
     /// *derivation* of `frame_depth`:
     ///
     /// - **Legacy fn-per-rule path** (`has_inline_frame_depth ==
-    ///   false`): `push_compound`-style callers populate `child_off`
-    ///   / `span_hi` inline but emit no `frame_depth`, so `finish`
-    ///   reconstructs it via [`crate::finaliser::derive_frame_depth`]
-    ///   (one backward pass) before the Stage-C forward sweep.
+    ///   false`): callers populate `child_off` / `span_hi` inline
+    ///   but emit no `frame_depth`, so `finish` reconstructs it via
+    ///   [`crate::finaliser::derive_frame_depth`] (one backward
+    ///   pass) before the Stage-C forward sweep.
     /// - **DTA-driven path** (`has_inline_frame_depth == true`):
     ///   the DTA emits `frame_depth` directly during stage A, so
     ///   `derive_frame_depth` is skipped and the in-column stream
@@ -963,11 +963,14 @@ impl FusedBuilder {
     /// `root_off` marks the root of the parsed tree in both tape
     /// offset space and value-frame offset space. For the fused
     /// default parse the two are aligned on 0 (the first
-    /// `begin_compound` call). The returned [`FusedOutput`] holds the
-    /// finalised [`Tape`] + the grammar-agnostic
-    /// [`ValueFramesOutput`] projection consumers read.
+    /// `begin_compound` call). The returned [`FusedOutput<R>`] holds
+    /// the finalised [`Tape`] + the grammar-agnostic
+    /// [`ValueFramesOutput<R>`] projection consumers read.
     #[inline(always)]
-    pub fn finish<R>(mut self, root_off: u32) -> Result<FusedOutput<R>, TapeBuildError> {
+    pub fn finish_fused<R>(
+        mut self,
+        root_off: u32,
+    ) -> Result<FusedOutput<R>, TapeBuildError> {
         if let Some(err) = self.error {
             return Err(err);
         }
@@ -976,19 +979,7 @@ impl FusedBuilder {
             "FusedBuilder::finish called with {} open value frames remaining",
             self.value_open_stack.len(),
         );
-        if self.has_inline_frame_depth {
-            debug_assert_eq!(
-                self.frame_depth.len(),
-                self.columns.len(),
-                "inline frame_depth length {} != columns length {}",
-                self.frame_depth.len(),
-                self.columns.len(),
-            );
-            crate::finaliser::finalise(&mut self.columns, &self.frame_depth);
-        } else {
-            let frame_depth = crate::finaliser::derive_frame_depth(&self.columns);
-            crate::finaliser::finalise(&mut self.columns, &frame_depth);
-        }
+        self.run_finaliser();
         let tape = Tape {
             columns: self.columns,
         };
@@ -1004,16 +995,37 @@ impl FusedBuilder {
 
     /// Consume the builder and return only the finalised tape.
     ///
-    /// Back-compat surface for pre-W0'.a consumers that never
-    /// exercised the value substrate (tape-only tests, pre-fused
-    /// visitor fixtures). Post-W0'.a the production parse entry
-    /// uses [`Self::finish`] with a grammar marker; this variant
-    /// discards the value arena without consuming it.
-    #[inline]
-    pub fn finish_tape_only(mut self) -> Result<Tape, TapeBuildError> {
+    /// Back-compat surface for consumers that never exercised the
+    /// value substrate (tape-only tests, pre-fused visitor
+    /// fixtures, un-regenned `generated.rs` whose parse entry
+    /// assembles a separate `ValueBuilder` output). Post-regen the
+    /// production parse entry uses [`Self::finish_fused`] with a
+    /// grammar marker; this variant discards the value arena
+    /// without consuming it.
+    #[inline(always)]
+    pub fn finish(mut self) -> Result<Tape, TapeBuildError> {
         if let Some(err) = self.error {
             return Err(err);
         }
+        self.run_finaliser();
+        Ok(Tape {
+            columns: self.columns,
+        })
+    }
+
+    /// Alias retained for the W0'.a→W0'.c migration window —
+    /// tape-only callers migrate to [`Self::finish`] directly once
+    /// every call site has converged on the new name.
+    #[inline]
+    pub fn finish_tape_only(self) -> Result<Tape, TapeBuildError> {
+        self.finish()
+    }
+
+    /// Shared finaliser step — runs the sibling-skip stamping pass
+    /// (reconstructing the depth stream from the post-order tape
+    /// when the DTA driver has not emitted it inline).
+    #[inline(always)]
+    fn run_finaliser(&mut self) {
         if self.has_inline_frame_depth {
             debug_assert_eq!(
                 self.frame_depth.len(),
@@ -1027,9 +1039,6 @@ impl FusedBuilder {
             let frame_depth = crate::finaliser::derive_frame_depth(&self.columns);
             crate::finaliser::finalise(&mut self.columns, &frame_depth);
         }
-        Ok(Tape {
-            columns: self.columns,
-        })
     }
 
     /// Access the in-progress columns for debug / intermediate

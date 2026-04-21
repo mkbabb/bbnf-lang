@@ -299,14 +299,14 @@ impl<'input> TapeVisitor<'input> {
     /// DTA driver is in inline-finalisation mode).
     ///
     /// AY-II.W0'.a — the visitor discards the fused value substrate
-    /// via [`FusedBuilder::finish_tape_only`]; the visitor's trait
+    /// via [`FusedBuilder::finish`] (tape-only). The visitor's trait
     /// surface is structural-only, so the paired value frames the
     /// fused builder accumulated are not exposed through the
     /// visitor's API. Grammar-emitted parse entries go through the
-    /// richer `FusedBuilder::finish<R>(root_off)` path.
+    /// richer `FusedBuilder::finish_fused<R>(root_off)` path.
     #[inline]
     pub fn finish(self) -> Result<Tape, TapeBuildError> {
-        self.builder.finish_tape_only()
+        self.builder.finish()
     }
 
     /// Borrow the underlying builder mutably. Used by parser shims

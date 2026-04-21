@@ -1,0 +1,48 @@
+# B0.W0 public fast-path command surface
+#
+# Canonical catalog of aliases + Makefile targets landed by B0.W0.a.
+# Aliases live in `.cargo/config.toml`; Makefile targets either invoke
+# the alias directly or route through `scripts/test-tier.sh` where shell
+# plumbing (pipes, redirects, conditional arg dispatch) is required.
+#
+# Heavy defaults (`cargo test --workspace`, `cargo bench ...`, release
+# builds) remain reachable via existing entrypoints; B0.W2 will separate
+# CI surfaces. B0.W0 only promotes the fast routine path.
+
+# ─── cargo aliases (.cargo/config.toml) ────────────────────────────────
+cargo iter-check           ->  cargo check --profile ax-iter --workspace
+cargo iter-test-leaf       ->  cargo test  --profile ax-iter -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser
+cargo iter-test-grammar    ->  cargo test  --profile ax-iter   (generic; pair with `-p <crate>` or `--test <name>`)
+cargo expand-json          ->  cargo expand -p bbnf --bench json_monolithic
+cargo expand-css           ->  cargo expand -p bbnf --bench css_l4
+cargo expand-bbnf          ->  cargo expand -p bbnf --bench bbnf_monolithic
+cargo expand-sheets        ->  cargo expand -p bbnf --bench google_sheets_monolithic
+cargo asm-parse            ->  cargo asm    -p bbnf --profile release   (callers append `--bench <name> <fn>`)
+
+# ─── Makefile targets ──────────────────────────────────────────────────
+# Routine (ax-iter profile, fast):
+make iter-check            ->  cargo iter-check
+make iter-test-leaf        ->  cargo iter-test-leaf           (script leaf arm stale; B0.W1 owns fix)
+make iter-test-grammar     ->  scripts/test-tier.sh grammar   --profile ax-iter
+make iter-test-ws          ->  scripts/test-tier.sh workspace --profile ax-iter
+
+# Structural (AY hard-gate evidence):
+make expand-json           ->  cargo expand-json    >  target/expand/json_monolithic.rs
+make expand-css            ->  cargo expand-css     >  target/expand/css_l4.rs
+make expand-bbnf           ->  cargo expand-bbnf    >  target/expand/bbnf_monolithic.rs
+make expand-sheets         ->  cargo expand-sheets  >  target/expand/google_sheets_monolithic.rs
+make asm-parse BENCH=<n> FN=<fn>  ->  cargo asm -p bbnf --profile release --bench <n> <fn>  >  target/asm/<n>-<fn>.s
+make bench-compile BENCH=<n>      ->  cargo bench -p bbnf --bench <n> --no-run --profile bench
+
+# Heavy (explicitly NOT default):
+make bench-run BENCH=<n>   ->  cargo bench -p bbnf --bench <n>
+make profile-wave          ->  scripts/prepare-profile-wave.sh    (requires CARGO_TARGET_DIR; script lands in B0.W1)
+
+# ─── AY hard-gate cross-reference ──────────────────────────────────────
+# AY.W5 gate 1 (expand JSON packed-node emission):   make expand-json
+# AY.W5 gate 3 (asm close-stamp):                    make asm-parse BENCH=json_monolithic FN=<close_fn>
+# AY.W5 gate 4 (value_api_apples_to_apples):         cargo iter-test-grammar -p bbnf --test value_api_apples_to_apples
+# AY.W6 gate 1 (value_api_apples_to_apples):         cargo iter-test-grammar -p bbnf --test value_api_apples_to_apples
+# AY.W6 gate 2 (expand named_type_preservation):     cargo expand -p bbnf --test named_type_preservation  (no alias; test target)
+# AY.W7 gate 1 (gate_predicate_wire_contract):       cargo iter-test-grammar -p bbnf --test gate_predicate_wire_contract
+# AY.W7 gate 2 (expand JSON shared-plan emission):   make expand-json

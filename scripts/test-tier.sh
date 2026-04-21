@@ -6,8 +6,8 @@
 # tier writes to `/tmp/test-tier-<tier>.txt`; callers grep the file.
 #
 # Tiers:
-#   leaf     — pure-data + substrate crates (bbnf-tape, bbnf-ir,
-#              egraph, csp-solver, bbnf-ser). ~1 min cold, ~15 s warm.
+#   leaf     — pure-data + substrate crates (tape, bbnf-ir, egraph,
+#              csp-solver, bbnf-ser). ~1 min cold, ~15 s warm.
 #              Appropriate while iterating on mining / IR passes that
 #              don't cross the emitter boundary.
 #   grammar  — per-grammar tape parity + per-grammar shape emit. One
@@ -43,18 +43,21 @@ case "$TIER" in
     leaf)
         # Leaf crates carry no derive-Parser sites; their rustc cost is
         # proportional to hand-written code only. Fastest tier.
-        cargo test -p bbnf-tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser \
+        # Workspace crate names (see Cargo.toml / crates/*/Cargo.toml):
+        # `tape`, `bbnf-ir`, `egraph`, `csp-solver`, `bbnf-ser`.
+        cargo test -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser \
             "$@" > "$OUT" 2>&1
         ;;
     grammar)
         # Each per-grammar test binary links exactly one derive-Parser
-        # expansion. Split established at AX.W0a.2.e (tape_parity) —
+        # expansion. Bin list audited against crates/core/tests/ — stale
+        # names (tape_parity_*, grammar_roundtrip) removed in B0.W2.a;
         # extend as further aggregates split.
         for bin in \
-            tape_parity_json tape_parity_css_l4 tape_parity_sheets \
-            tape_parity_bbnf tape_parity_ebnf tape_parity_bnf \
+            bbnf_parity bbnf_ast_parity bbnf_self_parity \
             json_parity css_l4_parity sheets_parity \
-            shape_dispatch_emission payload_layouts grammar_roundtrip
+            sheets_expr_parity sheets_self_parity \
+            shape_dispatch_emission payload_layouts
         do
             if [[ -f "$ROOT/crates/core/tests/$bin.rs" ]] \
                 || [[ -d "$ROOT/crates/core/tests/$bin" ]]; then

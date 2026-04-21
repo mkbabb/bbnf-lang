@@ -1,6 +1,9 @@
 .PHONY: all build build-lsp build-lsp-debug build-ext build-wasm dev test test-rust test-ts \
        install package publish bump-patch bump-minor bump-major release clean clean-vsix watch \
-       deploy
+       deploy \
+       iter-check iter-test-leaf iter-test-grammar iter-test-ws \
+       expand-json expand-css expand-bbnf expand-sheets \
+       asm-parse bench-compile bench-run profile-wave
 
 # ─── Build ──────────────────────────────────────────────────────────────
 
@@ -67,7 +70,9 @@ else
   TEST_RUNNER_CI := cargo test --workspace
 endif
 
-## Run all tests
+## Run all tests (full workspace; heavy by design — for routine
+## iteration call `iter-test-leaf` or `iter-test-grammar` instead,
+## which route through the `ax-iter` profile and per-grammar split).
 test: test-rust
 
 ## Rust workspace tests (bbnf + lsp)
@@ -89,6 +94,106 @@ test-ci:
 ## Run LSP benchmarks
 bench:
 	cargo test -p bbnf-lsp --test bench_lsp -- --nocapture
+
+# ─── AY Iteration Surface ──────────────────────────────────────────────
+#
+# B0.W0 public fast-path commands for tranche AY.W5-W7 executors.
+# Aliases live in `.cargo/config.toml`; these Makefile targets route
+# through them or through `scripts/test-tier.sh` where shell plumbing
+# is required (cargo aliases cannot pipe or redirect).
+#
+# Routine (ax-iter profile, fast): iter-check, iter-test-leaf,
+#   iter-test-grammar, iter-test-ws.
+# Structural (AY hard-gate evidence): expand-*, asm-parse, bench-compile.
+# Heavy (explicitly not default): bench-run, profile-wave.
+#
+# Canonical catalog: `docs/benchmarks/post-B0-W0-commands.txt`.
+
+## AY routine compile-gate — `cargo check --profile ax-iter --workspace`.
+iter-check:
+	cargo iter-check
+
+## Leaf-crate test tier under ax-iter (tape, bbnf-ir, egraph,
+## csp-solver, bbnf-ser). Fastest correctness surface — no
+## derive-Parser sites. Routes through the `iter-test-leaf` cargo
+## alias rather than `scripts/test-tier.sh leaf` because the script
+## still passes `-p bbnf-tape` (stale name; B0.W1 owns that fix).
+iter-test-leaf:
+	cargo iter-test-leaf
+
+## Per-grammar test tier under ax-iter. One derive-Parser site per
+## test binary (tape_parity_*, *_parity, grammar_roundtrip, etc.).
+iter-test-grammar:
+	scripts/test-tier.sh grammar --profile ax-iter
+
+## Full workspace test tier under ax-iter. Heavier than leaf/grammar
+## but still the fast profile — heavy final-proof runs use `test-rust`.
+iter-test-ws:
+	scripts/test-tier.sh workspace --profile ax-iter
+
+## `cargo expand` of the JSON monolithic bench → target/expand/json_monolithic.rs.
+## Evidence for AY.W5 hard gate 1, AY.W7 hard gate 2.
+expand-json:
+	mkdir -p target/expand
+	cargo expand-json > target/expand/json_monolithic.rs
+
+## `cargo expand` of the CSS L4 bench → target/expand/css_l4.rs.
+expand-css:
+	mkdir -p target/expand
+	cargo expand-css > target/expand/css_l4.rs
+
+## `cargo expand` of the BBNF self-parse bench → target/expand/bbnf_monolithic.rs.
+expand-bbnf:
+	mkdir -p target/expand
+	cargo expand-bbnf > target/expand/bbnf_monolithic.rs
+
+## `cargo expand` of the Google Sheets bench → target/expand/google_sheets_monolithic.rs.
+expand-sheets:
+	mkdir -p target/expand
+	cargo expand-sheets > target/expand/google_sheets_monolithic.rs
+
+## `cargo asm` of a bench function. Evidence for AY.W5 hard gate 3
+## (close-stamp verification). Usage:
+##   make asm-parse BENCH=json_monolithic FN=json::close_compound
+asm-parse:
+	@if [ -z "$(BENCH)" ] || [ -z "$(FN)" ]; then \
+		echo "usage: make asm-parse BENCH=<bench-name> FN=<symbol>" >&2; \
+		exit 2; \
+	fi
+	mkdir -p target/asm
+	cargo asm -p bbnf --profile release --bench $(BENCH) $(FN) > target/asm/$(BENCH)-$(subst ::,_,$(subst /,_,$(FN))).s
+
+## Compile-gate a bench binary without running it. Usage:
+##   make bench-compile BENCH=json_monolithic
+## Heavy: uses the bench profile (fat LTO, codegen-units=1).
+bench-compile:
+	@if [ -z "$(BENCH)" ]; then \
+		echo "usage: make bench-compile BENCH=<bench-name>" >&2; \
+		exit 2; \
+	fi
+	cargo bench -p bbnf --bench $(BENCH) --no-run --profile bench
+
+## Run a bench. HEAVY — not default. Usage:
+##   make bench-run BENCH=json_monolithic
+bench-run:
+	@if [ -z "$(BENCH)" ]; then \
+		echo "usage: make bench-run BENCH=<bench-name>" >&2; \
+		exit 2; \
+	fi
+	cargo bench -p bbnf --bench $(BENCH)
+
+## Samply profile-wave preparation. HEAVY — requires CARGO_TARGET_DIR
+## exported. Invokes `scripts/prepare-profile-wave.sh` when present.
+profile-wave:
+	@if [ -z "$(CARGO_TARGET_DIR)" ]; then \
+		echo "profile-wave requires CARGO_TARGET_DIR to be exported" >&2; \
+		exit 2; \
+	fi
+	@if [ ! -x scripts/prepare-profile-wave.sh ]; then \
+		echo "scripts/prepare-profile-wave.sh not present (B0.W1 lands the script)" >&2; \
+		exit 2; \
+	fi
+	scripts/prepare-profile-wave.sh
 
 # ─── Install / Package ─────────────────────────────────────────────────
 

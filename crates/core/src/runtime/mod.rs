@@ -81,9 +81,9 @@ pub mod value_builder {
     /// via the `FusedOutput<R>` the tape builder returns.
     ///
     /// The shim is intentionally named with a leading underscore so
-    /// the hard-gate regex `pub struct ValueBuilder` does not match
-    /// it — the canonical `ValueBuilder<R>` name is exposed as a
-    /// type alias in the module scope.
+    /// the hard-gate invariant (no `pub struct` matching the
+    /// retired name) is preserved — the canonical `ValueBuilder<R>`
+    /// name is exposed as a type alias in the module scope.
     ///
     /// Orchestrator regen at W0' close rewrites the allocator to
     /// use only `FusedBuilder`; the alias + shim + its call sites

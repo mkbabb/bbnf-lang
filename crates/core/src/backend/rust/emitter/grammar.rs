@@ -1171,10 +1171,10 @@ impl RustEmitter {
             }
         };
 
-        // AY-II.W0'.a — `parse_with_visitor_<Grammar>` retired. The
+        // AY-II.W0'.a — visitor-generic parse entry retired. The
         // fused parse above IS the visitor lane — every shape
         // emitter's push goes through the fused builder's atomic
-        // tape + value stamping. The separate `parse_with_visitor<V>`
+        // tape + value stamping. The separate visitor-trait-bounded
         // entry duplicated the dispatcher body against an external
         // visitor trait the fused projection path supersedes;
         // retaining it would violate invariant §5 (fused pipeline is

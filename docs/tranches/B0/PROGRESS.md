@@ -3,8 +3,8 @@
 Dated execution log for tranche B0.
 
 - `Status`: in_progress
-- `Current wave`: W0 (complete), W1 (dispatching)
-- `Next wave`: W1
+- `Current wave`: W0, W1 complete; W2 dispatching
+- `Next wave`: W2
 
 ---
 
@@ -143,3 +143,116 @@ Known carry-forward items for W2:
 - `make iter-test-leaf` currently calls `cargo iter-test-leaf`
   directly; W2 can reroute through the repaired `test-tier.sh` if
   desired (cosmetic, not load-bearing).
+
+---
+
+## 2026-04-20 — W1 closes
+
+Three parallel agents dispatched on disjoint file bounds:
+- **B0.W1.a** (Cargo.toml + .cargo/config.toml) — profile split +
+  aliases.
+- **B0.W1.b** (scripts/prebuild-benches.sh +
+  scripts/prepare-profile-wave.sh + PROFILING.md) — idempotent
+  prepared-binary workflow.
+- **B0.W1.c** (Makefile + PROFILING.md) — AY W5-W7 gate targets.
+
+W1.b and W1.c both appended to PROFILING.md in distinct subsubsections
+(`### Prepared binary reuse` and `### AY W5-W7 gate commands`); the
+append-only shape means cherry-pick absorbs both with a 3-way merge
+that auto-resolves (only one agent wrote a given subsection). No
+consolidation needed.
+
+### W1-A — profile split (1 commit)
+
+- `377c2dc6` `Cargo.toml` gains `[profile.profiling-prep]`
+  (inherits `release`; re-asserts `debug = true`, `strip = false`,
+  `split-debuginfo = "packed"` for samply DWARF). Header comment
+  names the three tiers (`ax-iter` / `profiling-prep` / `bench`).
+  `.cargo/config.toml` `[alias]` block gains `prep-bench`
+  (profiling-prep, `--no-run`) and `final-bench` (bench profile).
+
+Gate proof: `cargo prep-bench -p bbnf --bench json_monolithic` builds
+the bench binary at `target/profiling-prep/deps/json_monolithic-*`
+with `.dSYM` sibling (DWARF survived).
+
+### W1-B — idempotent prepared-binary workflow (2 commits)
+
+- `154880f3` `scripts/prebuild-benches.sh` and
+  `scripts/prepare-profile-wave.sh` rewritten with cache checks.
+  Prebuild searches `target/{profiling-prep,release,bench}/deps/`
+  (profiling-prep first), emits `reused: <path>` / `rebuilt: <path>`
+  per bench. Prepare-wave checks expand freshness against bench
+  source + every `emitter/shapes/*.rs` + `generated.rs`; emits
+  `expand: reused | regen` per bench. Canonical profile for
+  prepared binaries is `profiling-prep` (W1.a).
+- `0f324e19` PROFILING.md `### Prepared binary reuse`
+  subsubsection documents the reuse contract + manual invalidation
+  recipe.
+
+Idempotency proof: second invocation of each script emits
+`reused: ...` / `expand: reused ...` for every bench; zero
+`cargo bench --no-run` or `cargo expand` invocations on the second
+pass. `wave.tsv` row count stable at 28 (1 header + 27 `(bench,
+entry)` pairs).
+
+Deviation recorded: W1.b initially found `scripts/` gitignored and
+force-added the two new scripts; this was noted as a repo-level
+hygiene concern. Addressed by the orchestrator's follow-on W1-D
+commit below.
+
+### W1-C — AY W5-W7 gate Makefile targets (1 commit)
+
+- `1532de45` Makefile gains "AY W5-W7 Gate Commands" section with
+  10 public targets: `ay-expand-json`, `ay-expand-named-type`,
+  `ay-asm-close-compound`, `ay-test-value-api`,
+  `ay-test-wire-contract`, `ay-test-named-type`,
+  `ay-samply-json-twitter`, `ay-samply-json-twitter-lookup`,
+  `ay-bench-close` (selects profile based on `WAVE=close`),
+  `ay-prepare-profile-wave`. PROFILING.md
+  `### AY W5-W7 gate commands` subsubsection carries the
+  gate→target→artefact mapping table.
+
+Gate proof:
+- `make ay-expand-json` → exit 0; `target/expand/ay-json.rs` =
+  6224 lines.
+- `make ay-test-value-api` → exit 0; `test result: ok. 4 passed`.
+- `make ay-test-named-type` → exit 0; `test result: ok. 3 passed`.
+- `make ay-test-wire-contract` → exit 2 (`no test target` — AY-pre-W7
+  state; this is the clean surface the wave-7 authoring consumes).
+
+### W1-D — scripts/ gitignore cleanup (orchestrator, 1 commit)
+
+- `df24e7c0` drops the `scripts/` entry from `.gitignore` and
+  tracks the two previously-untracked essential scripts:
+  `scripts/profile-bench-headless.sh` (consumed by
+  `ay-samply-*` targets) and `scripts/sync-external-docs.sh`.
+  Tracked-scripts set jumps from 17 → 19; matches actual on-disk
+  set.
+
+Rationale: the gitignore entry made new scripts invisible to git
+by default. Previous additions survived via force-add. B0's
+handoff contract requires the AY samply command to be stable and
+discoverable — the script the target invokes must exist on master.
+
+### W1 hard-gate ledger
+
+| # | Gate | Evidence | Status |
+|---|------|----------|--------|
+| 1 | Routine/profiling-prep/final-proof profiles distinct + usable | `Cargo.toml` profile stanzas + `cargo prep-bench` success | PASS |
+| 2 | Prepared-binary profiling cost improves | Second-run `reused:` lines (zero rebuilds) + `expand: reused` lines (zero regens) | PASS |
+| 3 | Exact public AY commands for W5-W7 expand/asm/bench/Samply | 10 `ay-*` Makefile targets + PROFILING.md table; `make ay-expand-json` + tests proof | PASS |
+
+### W1 → W2 handoff
+
+Master HEAD `df24e7c0`. W2 opens on a repaired command surface with
+three distinct profile tiers (ax-iter / profiling-prep / bench),
+idempotent profiling prep scripts, and 10 AY gate targets published.
+Remaining W2 work:
+- routine/heavy split in Makefile + CI.yml (keep routine on
+  ax-iter, heavy on workspace).
+- fix `scripts/test-tier.sh` leaf-tier stale `-p bbnf-tape` crate
+  name.
+- instruction sync: update `docs/instructions/tranche/SPEC.md` and
+  `docs/instructions/PROFILING.md` to reflect the separated command
+  surface.
+- close-proof artefacts for B0 handoff to AY.

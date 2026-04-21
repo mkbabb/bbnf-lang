@@ -20,8 +20,6 @@ extension/server/
 # Playwright MCP
 .playwright-mcp/
 
-scripts/
-
 # Rust compiler ICE dumps
 rustc-ice-*.txt
 

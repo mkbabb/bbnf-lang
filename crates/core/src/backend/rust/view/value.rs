@@ -25,6 +25,21 @@
 //!    sub-item "at least one PathQuery impl emits" and keeps the
 //!    emitted surface tractable.
 //!
+//! # Tranche AY.W6.1 — substrate-direct read surface
+//!
+//! Both the `view_to_value` dispatcher and the `PathQuery<T>`
+//! walkers read the canonical packed substrate directly via the
+//! cursor exposed by `view.cursor()`. The only allocation on the
+//! consumer path is the terminal `Vec<<Grammar>Value<'p>>` attached
+//! to Compound variants — that Vec IS the user-facing eager-
+//! materialisation contract of `Parsed::to_value()`, not an
+//! intermediate rebuild, and `PathQuery::get()` never touches it.
+//! Every child step in both dispatch surfaces lands on
+//! `TapeCursor::children()` / `TapeCursor::child(i)` and every
+//! scalar extraction lands on `tape.payload_*(rec)`; there is no
+//! shadow traversal, no sidecar index, and no routing branch
+//! between substrate shapes.
+//!
 //! # TypeDesc-equivalence-class collapse
 //!
 //! The per-AY.md prop 3 thesis: rules with identical `TypeDesc`

@@ -9,6 +9,21 @@
 //! under AC.2 scalar projection runs at view-read time rather
 //! than at parse time.
 //!
+//! # Tranche AY.W6.1 — substrate-direct read surface
+//!
+//! Every emitted View accessor resolves to a column-indexed read
+//! through the wrapped `TapeCursor`. Universal accessors (`.kind()`,
+//! `.span()`, `.variant_idx()`, `.rule_kind()`, `.children()`,
+//! `.child(i)`) delegate to the cursor's inherent methods; the per-
+//! kind typed accessors in `seq.rs`, `alt.rs`, `repeat.rs`,
+//! `leaves.rs` each build a further View wrapper over
+//! `cursor.child(i)` or `cursor.children()` without constructing
+//! any tree, index, or Vec between the caller and the canonical
+//! packed substrate. The consumer path is: `Parsed::view()` →
+//! `Root::make_view` → `<Root>View::new(tape, input, root)` →
+//! `TapeCursor::new(tape, offset)`. No rebuild, no shadow surface,
+//! no routing branch.
+//!
 //! Universal accessors exposed on every generated view:
 //!
 //! - `.kind()` — the `TapeKind` discriminator of the record.

@@ -12,6 +12,21 @@
 //! Callers hold `Parsed<'_, Grammar>` and call `.view()` to obtain
 //! a cursor-backed typed view bound to the borrow.
 //!
+//! # Tranche AY.W6.1 — unified runtime consumers
+//!
+//! `view()`, `to_value()`, and `get()` all read the same canonical
+//! packed substrate through a single
+//! [`TapeCursor`](tape::TapeCursor); see each consumer's per-fn
+//! documentation for the specifics. No intermediate tree is rebuilt,
+//! no shadow cursor is maintained, and no routing `if` decides
+//! between cursor-backed and alternative code paths — the cursor is
+//! the single read surface over both write-time-stamped (AY.W5
+//! `open_compound` / `close_compound`) and finaliser-stamped
+//! emission modes. The `Vec<<Grammar>Value<'p>>` that `to_value()`
+//! returns inside compound variants is the user-facing materialised
+//! result, not an internal structural rebuild; `view()` and `get()`
+//! allocate nothing beyond the cursor wrapper itself.
+//!
 //! # Example (generated code shape)
 //!
 //! ```ignore
@@ -133,6 +148,20 @@ impl<'p, R: Root> Parsed<'p, R> {
     /// `self`. The view is constructed on each call from the stored
     /// `(tape, input, root_offset)` triple via the grammar's
     /// [`Root::make_view`] impl — constant-cost, no allocation.
+    ///
+    /// # Tranche AY.W6.1 — single substrate, single cursor
+    ///
+    /// `view()` wraps the root record in a
+    /// [`TapeCursor`](tape::TapeCursor) and hands it to the generated
+    /// view type (`<Grammar>View<'p> { cursor, input }`). Every
+    /// universal accessor (`.kind()`, `.span()`, `.children()`,
+    /// `.child(i)`, `.variant_idx()`) resolves to a column-indexed
+    /// read through that cursor; no intermediate tree, sidecar index,
+    /// or shadow surface sits between the caller and the canonical
+    /// packed substrate produced by `open_compound` / `close_compound`.
+    /// W5.c documented the cursor as the single read surface across
+    /// both write-time-stamped and finaliser-stamped emission modes —
+    /// `view()` is the entry point into that surface.
     #[inline]
     pub fn view(&self) -> R::View<'_> {
         R::make_view(&self.tape, self.input, self.root_offset)
@@ -192,6 +221,21 @@ impl<'p, R> Parsed<'p, R> {
     /// The returned value borrows from `self` — specifically from
     /// the tape and the input slice — for the duration of the
     /// re-borrow on `&self`.
+    ///
+    /// # Tranche AY.W6.1 — single substrate, single cursor
+    ///
+    /// `to_value()` reads the canonical packed substrate via the
+    /// same [`TapeCursor`](tape::TapeCursor) `view()` exposes. The
+    /// emitted `materialize_value_<Grammar>` root dispatches on the
+    /// cursor's `rule_kind()`, walks children through
+    /// [`TapeCursor::children`](tape::TapeCursor::children), and
+    /// reads scalar payloads through `tape.payload_*(rec)` — no
+    /// intermediate tree is rebuilt between the tape and the
+    /// returned `<Grammar>Value`. The `Vec<<Grammar>Value<'p>>`
+    /// carried inside `Compound` variants IS the user-facing
+    /// materialisation contract, not an internal rebuild: it is the
+    /// leaf of the eager materialiser, produced once per
+    /// `to_value()` call and handed directly to the caller.
     #[inline]
     pub fn to_value(&self) -> R::Value<'_>
     where
@@ -205,6 +249,21 @@ impl<'p, R> Parsed<'p, R> {
     ///
     /// Implemented per-grammar in AY.W3b for the common leaf types
     /// (`&str`, `f64`, `bool`, `<Grammar>Value<'p>`).
+    ///
+    /// # Tranche AY.W6.1 — single substrate, single cursor
+    ///
+    /// `get()` reads the canonical packed substrate directly. The
+    /// emitted `PathQuery<T>` impl constructs a
+    /// [`TapeCursor`](tape::TapeCursor)-backed generic `NodeView`
+    /// from `self.view()`, descends each [`PathSegment`](crate::runtime::PathSegment)
+    /// via
+    /// [`TapeCursor::children`](tape::TapeCursor::children) /
+    /// [`TapeCursor::child`](tape::TapeCursor::child), and extracts
+    /// the typed leaf at the hit via `tape.payload_*(rec)` — no
+    /// tree is materialised, no sidecar index is consulted, and no
+    /// Vec mirrors tape state. Every step is a column-indexed read
+    /// through the same cursor substrate `view()` and `to_value()`
+    /// consume.
     #[inline]
     pub fn get<T>(&self, path: Path<'_>) -> Option<T>
     where

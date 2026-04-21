@@ -1,106 +1,168 @@
-# Tranche AY-II — Architectural Consolidation + Near-Parity Close (Pass II)
+# Tranche AY-II — Fused Substrate + Full Grammar-Derived Semantic Parity (Pass II)
 
-AY-II executes the gestalt re-ordered remainder of AY's parity
-thesis. Pass I (`../AY-I/AY-I.md`, `../AY-I/FINAL.md`) landed the
-write-time substrate experiment, the direct-to-struct admission
-broadening, and the honest diagnostic record documenting why the
-experiment did not compose. The 4-agent audit triumvirate at
-`audit/AUDIT-{A,B,C,D}-*.md` converged on three architectural
-transpositions; AY-II lands all three atomically in W0 and closes
-on the near-parity gates in W1.
+AY-II executes the architectural close of AY. Pass I
+(`../AY-I/AY-I.md`, `../AY-I/FINAL.md`) proved the emitted visitor-
+lane shape reaches 0.99× sonic on eager JSON, mapped the
+`note_push` regression root cause, and broadened direct-to-struct
+admission to 71 grammar-derived projections. The 4-agent audit
+triumvirate at `audit/AUDIT-{A,B,C,D}-*.md` diagnosed the
+remainder. AY-II lands it on one path, grammar-derived, close-gated
+against real semantic peers — not internal ratios.
 
-Two waves. Three parallel sub-agents in W0 on disjoint file bounds.
-No recorded misses this pass — either the gates close or the pass
-re-plans under the §Diagnostic-loop relinquish protocol.
+Two waves. Five parallel sub-agents in W0 on disjoint file bounds.
+No recorded misses. Every AY-II close gate is a semantic or
+runtime fact verifiable against an external reference (sonic-rs,
+simd-json, lightningcss, cssparser) or a grammar-derived
+totality check (projection counts, consumer counts,
+materializer counts in agreement).
 
 ## Architectural thesis
 
-1. **ONE compound emission API.** `push_compound` retires. Every
-   shape emitter (including retry-IIFE sites: `wrap`, `keyword`,
-   `inline`, `alt_dispatch`, `flat`, `array` Shape-2, `pratt`
-   reducer) emits via `open_compound` + `close_compound`.
-2. **ONE stamping path.** `TapeBuilder::note_push` and
-   `TapeRec::SIB_SKIP_STAMPED_BIT` retire. Finaliser post-pass is
-   the sole `sib_skip` stamp source (pre-W5 / AU-era discipline,
-   strictly faster per AUDIT-C + AUDIT-D).
-3. **Rollback is a first-class primitive.** `Columns::rollback_to(open_offset)`
-   replaces every `columns_mut().truncate(save)` site. Single
-   source of liveness; emitter retry contracts are architecturally
-   coherent.
-4. **`Parsed::to_value()` routes through the visitor lane.** The
-   visitor-lane codegen already posts a 0.99× sonic geomean across
-   5 fixtures (AUDIT-D §2); default `to_value()` adopts that
-   emission discipline and retires the tape-reconstruction path.
-5. **`navigate_tape` retires.** Zero production consumers per
-   AUDIT-B; `__path_walk` simplifies to classic cursor descent.
-6. **No grammar-name dispatch.** Already invariant-holds per
-   AUDIT-C §6 (zero matches for `JsonParser|CssL4Parser|BbnfParser|
-   GoogleSheetsParser` in emitter/runtime/tape). AY-II preserves.
+1. **ONE parse pass.** The default parser writes the canonical
+   tape substrate AND constructs the `<Grammar>Value` semantic
+   surface in a single pass (fused pipeline). `Parsed::to_value()`
+   is a thin projector over the already-constructed value — it
+   does **not** reparse, does **not** drive a second visitor pass,
+   does **not** walk the tape to reconstruct children per compound.
+2. **ONE substrate.** The tape remains the canonical structural
+   substrate; the value surface is populated in lockstep through a
+   parallel `ValueBuilder<R>` that mirrors the compound open/close
+   frame stack.
+3. **ONE compound emission API.** `push_compound` retires. Every
+   shape emitter uses a unified open/close API against a
+   rollback-aware `Columns::rollback_to(open_offset)` primitive.
+4. **ONE stamping path.** `note_push` and `SIB_SKIP_STAMPED_BIT`
+   retire. `finaliser::finalise` is the sole `sib_skip` stamp
+   source (pre-W5 / AU-era discipline).
+5. **ALL semantic information is grammar-derived.** No hand-coded
+   grammar-name dispatch. No hardcoded type tables. No
+   hand-bound Rust struct shapes for grammar-declared typed surfaces.
+   Every `<Grammar>Value` variant, every projection struct, every
+   materializer path is emitted from CSP-inferred type facts +
+   egraph-derived projections + payload-layout analysis over the
+   IR. A grammar declaring `color = ... -> Color ;` produces a
+   fully-emitted `<Grammar>Color` struct + its materializer
+   without a single line of hand-written binding.
+6. **Structural scan is a universal substrate service.** The
+   `Columns` + `Cursor` API surface carries the scan primitive
+   unconditionally. Grammar-derived activation — the emitter
+   chooses per-grammar-per-rule whether to wire the scan path based
+   on CSP alphabet-density + digraph-signature facts. No
+   mandatory whole-input prepass. No hardcoded grammar
+   specialization.
+7. **Consumer totality.** Every emitted substrate surface
+   (`PROJECTION_DIRECT_TO_STRUCT` entry, `__grammar_projection_*`
+   marker, `materialize_projection_*` helper, `<Grammar>Value`
+   variant, structural-scan policy slot) has a production consumer.
+   An admitted surface without a runnable helper and a call site
+   fails the wave.
+8. **Peer-first close gates.** Close criteria are keyed to
+   external references, not internal ratios: sonic-rs + simd-json
+   for JSON eager + parse matrix; lightningcss + cssparser for CSS
+   typed semantic parity + canonical output; Sheets + BBNF own
+   their own declared gates. JSON-only close is a miscalibration.
+9. **BBNF, Sheets, CSS L4 are first-class peers to JSON.** Each
+   grammar is benched, profiled with samply, expanded via
+   `cargo expand`, and gate-verified at every wave boundary.
+   No grammar is a "tail fixture" checked only at tranche close.
 
 ## Invariants
 
-1. `push_compound` absent from `TapeBuilder`'s public API + every
-   `quote!` block in the emitter.
-2. `note_push` + `SIB_SKIP_STAMPED_BIT` absent from `tape.rs` +
-   `builder.rs` + `finaliser.rs`.
-3. `Columns::rollback_to(open_offset)` is the only retry-path
-   truncation surface; `columns_mut().truncate()` on raw lengths
-   disappears from the emitter.
-4. `Parsed::to_value()` is defined against the visitor-lane
-   emission; the tape-reconstruction path is retired.
-5. `navigate_tape` absent from `runtime/path.rs`; `__path_walk`
-   reads through `TapeCursor` directly.
-6. Close-matrix fat-LTO benches run clean across all five bench
-   binaries (`json_monolithic`, `css_l4`, `google_sheets_monolithic`,
-   `bbnf_monolithic`, `compile_pipeline`) — no panics, no skipped
-   fixtures.
-7. Near-parity gates on the default eager JSON path (the 5-fixture
-   geomean ≤ 1.20 × sonic; twitter ≤ 1.15 × sonic; canada / citm ≤
-   1.20 × sonic).
-8. Workspace green at every wave boundary.
-9. Bootstrap regen cycle-1 = cycle-2 byte-identical at close.
-10. No stubs, fallbacks, feature flags, shadow surfaces, or
-    `#[allow(...)]` masks added to hide pass-II work. Every
-    previously-MISS'd pass-I gate either closes or is retired with
-    rationale.
-11. Pass II lands no "recorded misses" — a wave that cannot close
-    triggers §Diagnostic-loop relinquish, not status drift.
+1. `Parsed::to_value()` contains no parse invocation, no
+   `parse_with_visitor` call, no tape-reconstruction fallback.
+   Evidence: `grep 'parse_with_visitor\|<.*Parser>::parse\b'
+   crates/core/src/runtime/parsed.rs` returns zero matches.
+2. `push_compound` absent from `TapeBuilder`'s public API and from
+   every `quote!` block in the emitter. Evidence: `cargo expand`
+   output shows zero `.push_compound(` calls.
+3. `note_push` + `SIB_SKIP_STAMPED_BIT` absent from `tape.rs`,
+   `builder.rs`, `finaliser.rs`. `nm` on bench binary confirms
+   `note_push` symbol absent.
+4. `Columns::rollback_to(open_offset)` is the only retry-path
+   truncation surface. `columns_mut().truncate()` on raw
+   lengths disappears from the emitter.
+5. The fused pipeline is real: `<Grammar>::parse` constructs both
+   tape and value in one walk; `Parsed::into_value()` / `to_value()`
+   returns the already-constructed value without a second
+   materialization pass.
+6. `navigate_tape` absent from `runtime/path.rs`; the capability
+   migrates to cursor API + emitted navigation primitives, not a
+   dead free function.
+7. Projection totality: `PROJECTION_DIRECT_TO_STRUCT.len() ==
+   count of materialize_projection_* fns == count of production
+   consumers` per grammar and in aggregate. Evidence: an assertion
+   test `crates/core/tests/projection_totality.rs`.
+8. Grammar-derived only: zero matches for
+   `JsonParser|CssL4Parser|BbnfParser|GoogleSheetsParser` as
+   dispatch predicates in emitter / runtime / tape source. No
+   hand-written Rust type aliased to a grammar-declared name. All
+   typed surfaces (including CSS `Color`, `Declaration`, `Value`,
+   `Selector` families) emitted from CSP + egraph facts.
+9. Typed CSS semantic parity vs lightningcss is a hard close gate
+   (not an internal named-type list). Test surfaces:
+   `crates/core/tests/lightningcss_parity.rs`,
+   `crates/core/tests/css_l4_canonical_parity.rs`,
+   `crates/core/tests/typed_accessor_surface.rs`.
+10. `make ay-bench-close WAVE=close` runs clean on the full 5-bench
+    fat-LTO matrix at every wave boundary (W0 close AND W1 close).
+    No grammar is a skipped fixture.
+11. Competitor benches published at W1 close:
+    `crates/core/benches/json/competitors.rs` vs sonic-rs +
+    simd-json; `crates/core/benches/css/competitors.rs` vs
+    lightningcss + cssparser.
+12. Workspace green at every commit. Bootstrap regen cycle-1 =
+    cycle-2 byte-identical at both wave closes.
+13. No recorded misses. A wave that cannot close triggers
+    §Diagnostic-loop relinquish, not status drift.
 
 ## Operational posture
 
-1. W0 dispatches 3 parallel sub-agents on disjoint file bounds per
-   AUDIT-C §1–4 decomposition. W0 close runs the full fat-LTO
-   bench matrix to surface any lingering CSS / Sheets panic before
-   W1.
-2. W1 captures the close evidence — full fat-LTO matrix, samply on
-   eager JSON twitter, close-stamp `cargo asm` where the emitter's
-   close point is canonically identifiable, apples-to-apples value
-   bench vs sonic-rs.
-3. Every wave close runs `make ay-bench-close WAVE=II` + the full
-   `make iter-test-{leaf,grammar,ws}` tier. Bench failure or panic
-   in any grammar is a wave-close blocker, not a recorded miss.
-4. Bootstrap regen runs at W0 close and at W1 close; both cycles
-   pass idempotency (cycle-1 = cycle-2 byte-identical).
-5. `cargo expand` output is primary evidence per the
+1. W0 dispatches 5 parallel sub-agents on disjoint file bounds
+   per the decomposition in `waves/W0.md`. Each sub-agent owns a
+   sub-gate verified by `cargo expand` inspection, a spot bench,
+   and (where runtime-observable) samply attribution.
+2. Fat-LTO bench matrix runs at W0 close AND W1 close — both are
+   full 5-bench matrices (json_monolithic, css_l4,
+   google_sheets_monolithic, bbnf_monolithic, compile_pipeline).
+3. Samply coverage at every wave boundary spans all four primary
+   grammars, not JSON alone: eager JSON twitter, CSS tailwind,
+   Sheets parse_stress, BBNF bbnf_self. Each capture under
+   `.profiles/samply/AY-II-<wave-label>/<grammar>/`.
+4. `cargo expand` output is primary evidence per the
    audit-expand-begotten-code edict
-   (`docs/instructions/README.md`).
+   (`docs/instructions/README.md`). Source-only gates
+   are not load-bearing.
+5. Bootstrap regen runs at W0 close and W1 close; both cycles
+   pass idempotency.
 
 ## Wave summary
 
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Architectural consolidation: substrate rollup + emitter unification + navigate_tape retirement + visitor-lane to_value | tranche open | planned |
-| **W1** | [waves/W1.md](waves/W1.md) | Close matrix + near-parity gates + FINAL + successor handoff | W0 | planned |
+| **W0** | [waves/W0.md](waves/W0.md) | Fused substrate + emitter unification + runtime consolidation + projection totality + structural-scan integration (5 parallel sub-agents) | tranche open | planned |
+| **W1** | [waves/W1.md](waves/W1.md) | Close matrix + competitor benches + typed CSS semantic parity + FINAL + successor handoff | W0 | planned |
 
 ## Defensible floor
 
 AY-II's defensible floor is not "architectural infrastructure
 partially landed." The minimum closeable outcome is:
 
-1. W0 lands the full architectural consolidation (three
-   transpositions per thesis §1–5) and the CSS / Sheets fat-LTO
-   panic is fixed transitively.
-2. W1 hits every near-parity gate in invariant #7 on fat-LTO.
+1. W0 lands every thesis invariant §1–9 end-to-end. The full
+   fat-LTO bench matrix runs clean at W0 close.
+2. W1 hits every peer-referenced close gate:
+   - `bbnf_value_twitter / sonic_value_twitter ≤ 1.15`
+   - `bbnf_value_canada / sonic_value_canada ≤ 1.20`
+   - `bbnf_value_citm / sonic_value_citm ≤ 1.20`
+   - 5-fixture value-lane geomean `≤ 1.20 × sonic`
+   - bbnf at or below sonic + simd-json on the JSON parse
+     competitor bench
+   - lightningcss typed-parity tests green
+     (`lightningcss_parity.rs` + `css_l4_canonical_parity.rs` +
+     `typed_accessor_surface.rs`)
+   - bbnf at or below lightningcss + cssparser on the CSS
+     competitor bench for declared fixtures
+   - BBNF + Sheets fat-LTO benches clean; their declared
+     self-parity suites green
 
 Anything less opens pass III, not a recorded miss.
 
@@ -108,25 +170,37 @@ Anything less opens pass III, not a recorded miss.
 
 AY-II does not close until:
 
-1. Every AY-I routed gate (per `../AY-I/FINAL.md` §Hard gates
-   status table) either closes or is retired with rationale.
-2. The default JSON parse routes through the visitor-lane
-   `to_value()`; the tape-reconstruction path is deleted.
-3. `cargo expand -p bbnf --bench json_monolithic` contains zero
-   `push_compound` calls and zero `note_push` references.
+1. Every AY-I routed gate in `../AY-I/FINAL.md` §Hard gates
+   status table closes OR is retired with grammar-derived
+   rationale recorded in AY-II/FINAL.md.
+2. The default parse path constructs both tape and value in one
+   walk; `Parsed::to_value()` does not reparse.
+3. `cargo expand -p bbnf --bench json_monolithic` + `--bench css_l4`
+   + `--bench google_sheets_monolithic` + `--bench bbnf_monolithic`
+   each contain zero `push_compound`, zero `note_push`, zero
+   `navigate_tape`, zero `parse_with_visitor` calls from the
+   `to_value` path.
 4. Fat-LTO `cargo bench` runs clean across all five bench
    binaries.
-5. Near-parity gates in invariant #7 hold on `post-AY-II-eager.json`.
-6. `docs/tranches/AY-II/FINAL.md` authored against the close
+5. Projection totality invariant §7 verified at W0 close AND W1
+   close.
+6. Typed CSS semantic parity suite green with no `#[ignore]`
+   added in AY-II.
+7. `docs/tranches/AY-II/FINAL.md` authored against the close
    artefacts.
-7. `docs/tranches/BA/BA.md`, `BB/BB.md`, `BC/BC.md` updated to
-   reference AY-II (not AY) as their predecessor close and
-   acknowledge the visitor-lane default.
+8. `docs/tranches/BA/BA.md`, `BB/BB.md`, `BC/BC.md` updated to
+   reference AY-II (not AY) as their predecessor close; BA's
+   beyond-parity thesis carries forward on the fused-substrate
+   truth AY-II lands.
 
 ## Indefatigability
 
 When AY-II closes correctly, bbnf has one parser, one substrate,
-one compound emission API, one stamping path, one rollback
-primitive, and a `Parsed::to_value()` that rides the already-
-gate-beating visitor-lane codegen. BA opens on a substrate that
-actually holds the invariants AY's original plan declared.
+one semantic-construction path, one compound emission API, one
+stamping path, one rollback primitive, one structural-scan
+capability (grammar-activated), and one typed-semantic surface
+that is grammar-derived for every grammar in the corpus. The
+close ledger is peer-referenced, not internally ratio'd. BA
+opens on a fused-pipeline substrate that holds the invariants
+AY's original plan declared and goes beyond them at the peer
+surface.

@@ -316,6 +316,57 @@ When execution reveals the plan's scope was under-estimated:
    (audit-driven replan kept under AR/) and AS (mid-stream re-
    plan of AR-audit leftovers) as the anti-examples.
 
+### Multi-pass tranche split (LETTER-I / LETTER-II / … / LETTER-N)
+
+When a tranche's scope reveal under contact produces a clean split
+— "here is what landed honestly; here is the gestalt re-ordered
+rest" — use a Roman-numeral-suffix pass rather than consuming the
+next letter. The first pass closes on what it landed (FINAL.md per
+its hard-gate readout, including recorded misses where honestly
+owned). The second pass opens as `{LETTER}-II` with its own plan,
+PROGRESS, waves, audit, and FINAL. Subsequent passes (III, IV, …)
+open on the same pattern; pass count is unbounded — the tranche
+continues as long as the architectural thesis holds and forward
+motion is demonstrable, and the numbering never caps.
+
+Directory layout:
+
+```
+docs/tranches/{LETTER}/        # pass I; renamed to {LETTER}-I
+                               # when pass II opens
+docs/tranches/{LETTER}-II/     # pass II
+docs/tranches/{LETTER}-III/    # pass III
+…
+docs/tranches/{LETTER}-N/      # unbounded successor passes
+```
+
+Letter advances to successor tranches (B0 → BA → BB …) only after
+every open pass of {LETTER} closes. A tranche with open pass
+{LETTER}-N blocks every successor's open gate.
+
+Split vs new letter — decision rule:
+
+- **Split**: the architectural thesis stays. Pass N completes or
+  refines scope within the same thesis and invariants.
+- **New letter**: the thesis changes. The new letter's plan would
+  contradict or supersede the prior letter's invariants.
+
+An audit triumvirate per §Diagnostic-loop relinquish decides which
+mode fits at the reveal.
+
+Audit artefacts that inform a successor pass live in the
+successor's `audit/` directory, not the predecessor's. Pre-existing
+in-flight audit docs (wave diagnostics authored during the pass
+they executed under) stay with their authoring pass. Cross-pass
+references cite the absolute audit path via
+`../{LETTER}-II/audit/*.md` to avoid directory-rename churn.
+
+A pass-II plan document is named `{LETTER}-II.md` (pass I's plan
+is renamed from `{LETTER}.md` to `{LETTER}-I.md` at the split).
+Subsequent passes follow the same suffix. Wave numbering restarts
+at W0 per pass; cross-pass wave references cite `{LETTER}-I.W5`
+explicitly when needed.
+
 ### Diagnostic-loop relinquish
 
 A sub-agent that finds itself in a multi-cycle diagnostic loop

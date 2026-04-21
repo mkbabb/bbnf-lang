@@ -1,8 +1,9 @@
 # Tranche BC — Replay, Recovery, Incremental, and Debug UX on the BA-Close Substrate
 
-BC is the post-BB tooling tranche over the BA-close substrate. AY
-establishes parity, BA executes the direct exceedance push, BB shortens
-the compile/workflow loop around that runtime, and BC then enriches the
+BC is the post-BB tooling tranche over the BA-close substrate. AY-II
+closes parity on the visitor-lane default substrate, BA executes the
+direct exceedance push, BB shortens the compile/workflow loop around
+that runtime, and BC then enriches the
 same one-path substrate with replay, recovery, incremental reparse, and
 debug UX without reopening architectural duality. BC therefore treats
 the BA-close substrate as fixed runtime truth and layers provenance,
@@ -13,13 +14,14 @@ with tightly bounded feature-off cost.
 
 1. **BC builds on BA-close; it does not replace it.** Replay,
    recovery, incremental, and debug are properties of the
-   AY-established, BA-refined substrate.
+   AY-II-established, BA-refined substrate.
 2. **Every BC feature stays one-path.** Metadata and logs may be added;
    alternate parsers and alternate runtime outputs may not.
-3. **Richer provenance belongs here.** AY and BA carry only the minimum
-   provenance needed not to block BC; BC owns the richer surfaces.
+3. **Richer provenance belongs here.** AY-II and BA carry only the
+   minimum provenance needed not to block BC; BC owns the richer
+   surfaces.
 4. **Feature-off cost stays bounded.** Tooling value must not come from
-   perturbing the default AY hot path.
+   perturbing the default AY-II hot path.
 
 ## Invariants
 

@@ -1,16 +1,17 @@
 # Tranche BB — Post-BA Toolchain and Compile-Time Discipline
 
 BB is the post-BA engineering tranche. B0 extracted the narrow pre-AY
-runway required to execute `AY.W5-W7`; BB therefore no longer blocks
-parity work. BA then takes the direct performance slot after AY. BB's
+runway required to execute `AY-I.W5-W7` (superseded by AY-II); BB
+therefore no longer blocks parity work. BA then takes the direct
+performance slot after AY-II. BB's
 job is to reduce the repository's remaining compile-time, cache-key,
 generated-code, and workflow drag after BA
 closes, without mixing parser architecture back into AY, BC, or BA.
 
 ## Architectural thesis
 
-1. **BB starts after BA closes.** It is not a precondition for AY or
-   BA performance work.
+1. **BB starts after BA closes.** It is not a precondition for AY-II
+   or BA performance work.
 2. **BB shortens iteration without redefining runtime architecture.**
 3. **Workflow truth belongs in commands, profiles, and scripts, not
    just prose.**
@@ -28,7 +29,8 @@ closes, without mixing parser architecture back into AY, BC, or BA.
 4. Profiling preparation is amortized and repeatable.
 5. Heavy test or bench suites are opt-in unless explicitly declared as
    routine defaults.
-6. Anything that directly blocked AY cadence belonged in B0, not here.
+6. Anything that directly blocked AY-I or AY-II cadence belonged in
+   B0, not here.
 
 ## Operational posture
 
@@ -66,8 +68,8 @@ BB does not close until all of the following are true:
    cold/warm timing and memory artefacts.
 4. Generated-code or monomorphization reductions do not silently hide
    parser regressions.
-5. BB does not smuggle any AY parity-critical runtime debt back into
-   tooling scope.
+5. BB does not smuggle any AY-II parity-critical runtime debt back
+   into tooling scope.
 
 ## Defensible floor
 

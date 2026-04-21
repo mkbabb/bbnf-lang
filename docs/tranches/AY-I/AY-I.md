@@ -1,4 +1,21 @@
-# Tranche AY — Canonical Packed Substrate and Near-Parity Closure
+# Tranche AY-I — Canonical Packed Substrate (Pass I)
+
+**Multi-pass note.** AY is a multi-pass tranche; this document is
+pass I. Pass I landed the write-time substrate experiment
+(`TapeBuilder::open_compound/close_compound`, `SIB_SKIP_STAMPED_BIT`,
+`note_push` hook), the JSON shape emitter retarget, the direct-to-struct
+admission broadening (71 grammar-derived projections across 4 grammars),
+the Pratt outer-compound probe, and `navigate_tape` substrate; but
+did not reach the near-parity gates. The 4-agent audit triumvirate
+under `../AY-II/audit/AUDIT-{A,B,C,D}-*.md` diagnosed the regression
+root causes, the architectural transpositions required, and the
+visitor-lane path to near parity. Pass II (`../AY-II/AY-II.md`)
+executes the gestalt re-ordered remainder. Pass I closes honestly on
+what it landed.
+
+The architectural thesis below is unchanged between passes — one
+parser, one substrate, grammar-derived, near sonic-rs parity. Only
+the wave schedule differs.
 
 AY is the parity tranche. It closes the post-AU architectural drift by
 making the grammar-derived parser write one canonical packed substrate
@@ -92,8 +109,8 @@ survive as fully general mechanisms.
 | **W4** | [waves/W4.md](waves/W4.md) | SIMD string/number and regex hot-path repairs | W3 | Complete with recorded misses |
 | **W5** | [waves/W5.md](waves/W5.md) | Canonical packed substrate contract and direct JSON write | W4 + B0 | Complete with recorded misses |
 | **W6** | [waves/W6.md](waves/W6.md) | Consumer unification, general direct-to-struct, and Pratt/operator lowering | W5 | Complete with recorded misses |
-| **W7** | [waves/W7.md](waves/W7.md) | Minimal globally informed optimizer integration | W6 | In progress |
-| **W8** | [waves/W8.md](waves/W8.md) | Near-parity close, FINAL, and BA/BC/BB handoff | W7 | Not started |
+| **W7** | [waves/W7.md](waves/W7.md) | Minimal globally informed optimizer integration | W6 | Superseded by AY-II |
+| **W8** | [waves/W8.md](waves/W8.md) | Near-parity close, FINAL, and BA/BC/BB handoff | W7 | Superseded by AY-II |
 
 ## AY → BA / BC / BB handoff contract
 

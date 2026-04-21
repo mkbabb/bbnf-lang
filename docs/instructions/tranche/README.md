@@ -42,17 +42,40 @@ Normative documents for tranche authoring and execution. Composes
 ## File-layout canon
 
 ```
-docs/tranches/{LETTER}/
-├── {LETTER}.md          # Plan; required. Written before execution; wave table carries status.
-├── PROGRESS.md          # Dated execution log; updated per wave.
-├── FINAL.md             # Closing document; required at tranche close.
-├── research/            # Research-wave deliverables (conditional).
+docs/tranches/{LETTER}/          # single-pass tranche
+├── {LETTER}.md                  # Plan; required. Written before execution; wave table carries status.
+├── PROGRESS.md                  # Dated execution log; updated per wave.
+├── FINAL.md                     # Closing document; required at tranche close.
+├── research/                    # Research-wave deliverables (conditional).
 │   └── NN-topic.md
-├── audit/               # In-flight audits; retros.
+├── audit/                       # In-flight audits; retros.
 │   └── *-retro.md
-└── waves/               # Per-wave specs (conditional per WAVE_SPEC); each carries a status line.
+└── waves/                       # Per-wave specs (conditional per WAVE_SPEC); each carries a status line.
     └── W<N>.md
 ```
 
+For multi-pass tranches per `SPEC.md` §Multi-pass tranche split, each
+pass lives in its own suffixed directory with the same internal
+structure:
+
+```
+docs/tranches/{LETTER}-I/        # pass I
+├── {LETTER}-I.md
+├── PROGRESS.md
+├── FINAL.md
+├── audit/
+└── waves/
+docs/tranches/{LETTER}-II/       # pass II
+├── {LETTER}-II.md
+├── PROGRESS.md
+├── FINAL.md
+├── audit/                       # audits informing pass II live here
+└── waves/
+docs/tranches/{LETTER}-III/      # pass III (unbounded successor passes)
+…
+```
+
 Benchmarks live at `docs/benchmarks/post-{LETTER}.json` (aggregate) +
-`post-{LETTER}-W<N>-{mid,close}.json` per wave.
+`post-{LETTER}-W<N>-{mid,close}.json` per wave; multi-pass variants
+use `post-{LETTER}-I.json`, `post-{LETTER}-II.json`, etc., so every
+pass carries its own close-matrix artefact.

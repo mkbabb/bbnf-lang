@@ -140,7 +140,11 @@ materializer counts in agreement).
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
 | **W0** | [waves/W0.md](waves/W0.md) | Fused substrate + emitter unification + runtime consolidation + projection totality + structural-scan integration (5 parallel sub-agents) | tranche open | planned |
-| **W1** | [waves/W1.md](waves/W1.md) | Close matrix + competitor benches + typed CSS semantic parity + FINAL + successor handoff | W0 | planned |
+| **W1** | [waves/W1.md](waves/W1.md) | JSON — semantic parity + peer-referenced perf (sonic + simd-json); grammar-derived typed admission totality; samply-proven hot path | W0 | planned |
+| **W2** | [waves/W2.md](waves/W2.md) | CSS L4 — lightningcss total typed-semantic parity (Rule, Declaration, Value, Selector, MediaRule, Keyframes families); canonical-output byte parity; zero hardcoded bindings | W1 | planned |
+| **W3** | [waves/W3.md](waves/W3.md) | Google Sheets — grammar-derived typed formula/cell/range families; self-parity + formula_expr parity; samply-proven hot paths | W2 | planned |
+| **W4** | [waves/W4.md](waves/W4.md) | BBNF — self-hosting identity + grammar-meta typed surface; double-regen byte-identical; typed declared-type annotation coverage | W3 | planned |
+| **W5** | [waves/W5.md](waves/W5.md) | Cross-grammar close matrix + competitor benches aggregated + FINAL + successor handoff | W4 | planned |
 
 ## Defensible floor
 

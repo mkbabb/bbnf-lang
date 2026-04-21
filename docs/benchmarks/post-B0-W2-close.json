@@ -1,0 +1,94 @@
+{
+  "tranche": "B0",
+  "wave": "W2",
+  "head": "c6b9fcc9",
+  "captured_utc": "2026-04-21T02:16:14Z",
+  "host": "Darwin 25.4.0 arm64",
+  "profile_tiers": {
+    "routine": {
+      "profile": "ax-iter",
+      "public": [
+        "cargo iter-check",
+        "make iter-check",
+        "make iter-test-leaf",
+        "make iter-test-grammar",
+        "make iter-test-ws"
+      ]
+    },
+    "profiling_prep": {
+      "profile": "profiling-prep",
+      "public": [
+        "cargo prep-bench",
+        "make ay-prepare-profile-wave",
+        "make ay-samply-json-twitter",
+        "make ay-samply-json-twitter-lookup"
+      ]
+    },
+    "final_proof": {
+      "profile": "bench",
+      "public": [
+        "cargo final-bench",
+        "make ay-bench-close WAVE=close",
+        "make test-close",
+        "make final-bench"
+      ]
+    }
+  },
+  "ay_gate_commands": [
+    {
+      "gate": "W5.1/W7.2 expand JSON",
+      "command": "make ay-expand-json",
+      "artefact": "target/expand/ay-json.rs"
+    },
+    {
+      "gate": "W6.2 expand named-type",
+      "command": "make ay-expand-named-type",
+      "artefact": "target/expand/ay-named-type.rs"
+    },
+    {
+      "gate": "W5.3 close-stamp asm",
+      "command": "make ay-asm-close-compound",
+      "artefact": "target/asm/ay-close-*.s"
+    },
+    {
+      "gate": "W5.1 value API test",
+      "command": "make ay-test-value-api",
+      "artefact": "cargo test exit status"
+    },
+    {
+      "gate": "W7.1 wire-contract test",
+      "command": "make ay-test-wire-contract",
+      "artefact": "cargo test exit status"
+    },
+    {
+      "gate": "W6.1 named-type test",
+      "command": "make ay-test-named-type",
+      "artefact": "cargo test exit status"
+    },
+    {
+      "gate": "W5.2 samply eager JSON twitter",
+      "command": "make ay-samply-json-twitter WAVE=W5",
+      "artefact": ".profiles/samply/AY-W5/json_twitter_eager/"
+    },
+    {
+      "gate": "W6.3 samply JSON path lookup",
+      "command": "make ay-samply-json-twitter-lookup WAVE=W6",
+      "artefact": ".profiles/samply/AY-W6/json_twitter_lookup/"
+    },
+    {
+      "gate": "W5.5/W6.4/W7.4 close-matrix bench",
+      "command": "make ay-bench-close WAVE=<label>",
+      "artefact": "docs/benchmarks/post-AY-<label>-*.txt"
+    },
+    {
+      "gate": "Samply prerequisite",
+      "command": "make ay-prepare-profile-wave",
+      "artefact": "$CARGO_TARGET_DIR/profiling-prep/deps/<bench>-*"
+    }
+  ],
+  "handoff": {
+    "to": "AY.W5",
+    "ready": true,
+    "notes": "B0 closes on the public command surface; AY.W5 opens without improvising."
+  }
+}

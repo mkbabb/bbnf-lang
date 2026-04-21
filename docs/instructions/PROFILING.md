@@ -159,6 +159,31 @@ sequentially against the same prebuilt binary without port collision.
 and `--profile bench` (fat LTO) when `WAVE=close` — use the latter for
 publish-grade close-matrix numbers.
 
+### W2 close proof
+
+B0 closes with the command surface split landed, the prepared-binary
+workflow idempotent, and the AY W5-W7 gate targets stable. Each B0
+close invariant resolves through a named public command on this
+surface; AY.W5 opens against the same entrypoints without improvising
+its own cargo invocations. The table below maps each invariant (from
+`docs/tranches/B0/B0.md` §Invariants and the B0 → AY handoff contract)
+to the public command that proves it and the artefact the command
+writes.
+
+| Close invariant | Public command | Artefact |
+|---|---|---|
+| Routine no longer defaults heavy | `make iter-check`, `make iter-test-leaf`, `make iter-test-grammar` | `docs/benchmarks/post-B0-W0-mid.json` |
+| Three distinct profile tiers usable | `cargo iter-check`, `cargo prep-bench`, `cargo final-bench` | `Cargo.toml` profile stanzas + `.cargo/config.toml` aliases |
+| Exact AY W5-W7 gate commands | `make ay-expand-json`, `make ay-expand-named-type`, `make ay-asm-close-compound`, `make ay-test-value-api`, `make ay-test-wire-contract`, `make ay-test-named-type` | `docs/instructions/PROFILING.md` §"AY W5-W7 gate commands" |
+| Prepared-binary reuse | `scripts/prebuild-benches.sh`, `scripts/prepare-profile-wave.sh` (second run `reused:` / `expand: reused`) | `docs/instructions/PROFILING.md` §"Prepared binary reuse" |
+| Samply gate entrypoints | `make ay-samply-json-twitter WAVE=W5`, `make ay-samply-json-twitter-lookup WAVE=W6`, `make ay-prepare-profile-wave` | `.profiles/samply/AY-<WAVE>/<scenario>/` |
+| Close-matrix bench entrypoint | `make ay-bench-close WAVE=close` | `docs/benchmarks/post-AY-close-{json,css,sheets,bbnf,compile}.txt` |
+| Routine/heavy CI separation | `.github/workflows/ci.yml` preflight (routine) + heavy close-gate steps | `.github/workflows/ci.yml` |
+| Close-proof artefacts exist | (this file) + `docs/benchmarks/post-B0-W0-mid.json` + `docs/benchmarks/post-B0-W2-close.json` | the files themselves |
+
+B0 closes when every row in this table resolves; the AY.W5 executor
+opens on this surface.
+
 ## Prepare a wave
 
 `scripts/prepare-profile-wave.sh` builds every bench binary once,

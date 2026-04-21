@@ -272,6 +272,28 @@ Bench-omission is the structural lesson of AV (V10 was the first
 bench; 2.5–4.5× regression across every entry invisible until
 close). Silent bench-omission is a violation.
 
+### Three-tier command surface
+
+Routine iteration, profiling preparation, and final-proof runs
+are intentionally separated command surfaces; see
+`../PROFILING.md` §"Public fast-path commands" for the canonical
+alias/target manifest. Routine correctness rides the `ax-iter`
+profile via `cargo iter-check` / `make iter-check` /
+`make iter-test-{leaf,grammar,ws}` plus the `ay-expand-*` and
+`ay-test-*` families — that is the surface plan authors and sub-
+agents call during iteration. Profiling preparation rides
+`cargo prep-bench` / `make ay-prepare-profile-wave` /
+`make ay-samply-*` against the `profiling-prep` profile, reusing
+the prebuilt binaries per §"Prepared binary reuse". Final-proof
+bench and close-gate test runs ride `cargo final-bench` /
+`make ay-bench-close WAVE=close` / `make test-close` /
+`make final-bench` — this is the heavy surface, reserved for
+wave-close evidence and closing-ceremony artefacts. Wave plans
+and gate phrasings name the tier explicitly; a gate that silently
+defaults routine work onto `cargo check --workspace`,
+`cargo test --workspace`, or `cargo bench` is a miscalibration
+against this three-tier discipline.
+
 ## Scope-reveal protocol
 
 When execution reveals the plan's scope was under-estimated:
@@ -430,6 +452,15 @@ tranche authoring:
   separate concerns.
 - **NO hard-gate-via-grep.** Runtime evidence required.
 - **NO ceremonial wave structure.** Declared waves execute.
+- **NO heavy-surface routine defaults.** Routine iteration runs
+  on `iter-check` / `iter-test-{leaf,grammar,ws}` / `ay-expand-*`
+  / `ay-test-*`; profiling prep on `profiling-prep` +
+  `ay-prepare-profile-wave` + `ay-samply-*`; heavy close-gate
+  proof on `ay-bench-close WAVE=close` / `test-close` /
+  `final-bench`. `cargo check --workspace`, `cargo test
+  --workspace`, and `cargo bench` are the heavy close-proof
+  surface, not the routine one; see §"Three-tier command
+  surface" under §Bench contract.
 - **Execute the plan.** Scope-reveal under contact is re-plan-
   with-more-agents, not escalation.
 - **Indefatigability.** Orchestrator does not relinquish control

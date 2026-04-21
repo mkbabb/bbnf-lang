@@ -2,9 +2,9 @@
 
 Dated execution log for tranche B0.
 
-- `Status`: in_progress
-- `Current wave`: W0, W1 complete; W2 dispatching
-- `Next wave`: W2
+- `Status`: complete
+- `Current wave`: none (tranche closed)
+- `Next wave`: AY.W5 (successor)
 
 ---
 
@@ -256,3 +256,85 @@ Remaining W2 work:
   `docs/instructions/PROFILING.md` to reflect the separated command
   surface.
 - close-proof artefacts for B0 handoff to AY.
+
+---
+
+## 2026-04-20 — W2 closes; B0 closes
+
+Two parallel agents dispatched on disjoint file bounds:
+- **B0.W2.a** (Makefile + `.github/workflows/ci.yml` +
+  `scripts/test-tier.sh`) — routine/heavy split; crate-name audit.
+- **B0.W2.b** (`docs/instructions/tranche/SPEC.md` +
+  `docs/instructions/PROFILING.md` + `docs/benchmarks/post-B0-W2-close.json`)
+  — instruction sync + close proof.
+
+### W2-A — routine/heavy split (3 commits)
+
+- `ac7bc754` `scripts/test-tier.sh` leaf-tier crate-name fix
+  (`-p bbnf-tape` → `-p tape`); grammar-tier bin list audit — six
+  stale names dropped (tape_parity_*, grammar_roundtrip), five
+  real binaries added (`bbnf_parity`, `bbnf_ast_parity`,
+  `bbnf_self_parity`, `sheets_expr_parity`, `sheets_self_parity`).
+- `1a191b1c` Makefile surface-group header block naming routine /
+  profiling-prep / heavy. `test:` target deleted (zero callers under
+  `.github/`, `scripts/`, `docs/`); `test-rust` renamed →
+  `test-heavy-rust`; new `test-close` wave-close gate; `.PHONY`
+  updated.
+- `ce943a63` → cherry-picked as `7b223cf6` `.github/workflows/ci.yml`
+  split into named "Preflight" (bootstrap-check + clippy +
+  iter-check with short timeouts) and "Heavy" (workspace tests +
+  sonic-rs + lightningcss parity) step groups.
+
+Gate proof:
+- `scripts/test-tier.sh leaf` exit 0; 34 `test result: ok` lines; 0
+  FAILED.
+- `make iter-test-leaf` exit 0; `cargo test -p tape -p bbnf-ir -p
+  egraph -p csp-solver -p bbnf-ser` resolves.
+- `make test-close` via `test-heavy-rust` links every workspace test
+  binary.
+- `.github/workflows/ci.yml` has `iter-check` at the preflight block
+  and `cargo test --workspace` at the heavy block.
+
+### W2-B — instruction sync + close proof (1 commit)
+
+- `512da89d` `docs/instructions/tranche/SPEC.md` gains `### Three-tier
+  command surface` subsection under §Bench contract and a new
+  Edicts bullet `NO heavy-surface routine defaults`. PROFILING.md
+  gains `### W2 close proof` subsubsection with the close-invariant
+  → public-command → artefact table.
+  `docs/benchmarks/post-B0-W2-close.json` records the three profile
+  tiers, 10 AY gate commands, and the handoff contract.
+
+Gate proof:
+- `grep -n 'iter-check\|ay-bench-close\|profiling-prep'
+  docs/instructions/tranche/SPEC.md` returns 6 matches (requirement:
+  ≥ 3).
+- `grep -c '^### W2 close proof$' docs/instructions/PROFILING.md`
+  returns 1.
+- `post-B0-W2-close.json` parses as valid JSON; 3 profile tiers + 10
+  AY gate rows + handoff block.
+
+### B0 close ceremony
+
+- `docs/tranches/B0/FINAL.md` composed (scope recap, invariants,
+  hard-gate tables, routed-forward debt, defensible floor).
+- `docs/benchmarks/post-B0.json` aggregate composed (rationale-
+  satisfied per SPEC §Closing ceremony item 2 — B0 owns no runtime
+  architecture so the full parse-bench matrix doesn't apply;
+  composite cites W0-mid + W2-close JSONs).
+- B0.md wave table: W0 / W1 / W2 all `complete`; tranche status line
+  set to closed.
+- All 5 B0 worktrees removed (W0.a/b/c + W1.a/b/c + W2.a/b).
+- `make iter-check` exit 0; `make ay-expand-json` writes 6224 lines;
+  `make iter-test-leaf` exit 0.
+
+### B0 hard-gate ledger
+
+All W0/W1/W2 gates closed per FINAL.md §Hard gates closed.
+
+### B0 → AY.W5 handoff
+
+Master HEAD at B0 close: `7b223cf6`. AY.W5's `Opens after` line
+declares `W4 close + B0 close`; both are now satisfied. Next master
+commit opens AY.W5's dispatch. No parity-critical AY work is parked
+in B0.

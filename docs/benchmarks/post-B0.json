@@ -1,0 +1,44 @@
+{
+  "tranche": "B0",
+  "kind": "prelude_annex",
+  "scope": "command_surface_and_profile_tiers",
+  "note": "B0 is a bounded prelude annex for AY; it owns no runtime architecture so the canonical parse-bench matrix does not apply. Close evidence is the wall-clock timing delta on the AY routine iteration surface plus the exact public command surface AY.W5-W7 now call.",
+  "head": "7b223cf6",
+  "captured_utc": "2026-04-21T02:23:00Z",
+  "close_artefacts": {
+    "W0_mid": "docs/benchmarks/post-B0-W0-mid.json",
+    "W0_baseline": "docs/benchmarks/post-B0-W0-baseline.txt",
+    "W0_commands": "docs/benchmarks/post-B0-W0-commands.txt",
+    "W2_close": "docs/benchmarks/post-B0-W2-close.json"
+  },
+  "headline_timing_deltas": {
+    "routine_compile_gate": {
+      "baseline_command": "cargo check --workspace",
+      "baseline_warm_s": 7.16,
+      "post_b0_command": "cargo iter-check",
+      "post_b0_warm_s": 0.16,
+      "speedup": 44.75
+    },
+    "leaf_tier_tests": {
+      "baseline_command": "scripts/test-tier.sh leaf",
+      "baseline_status": "FAIL (stale -p bbnf-tape crate name)",
+      "post_b0_command": "make iter-test-leaf",
+      "post_b0_warm_s": 1.05,
+      "restored": true
+    },
+    "workspace_test_compile_gate": {
+      "baseline_command": "cargo test --workspace --no-run",
+      "baseline_warm_s": 14.40,
+      "post_b0_warm_s": 0.76,
+      "speedup": 18.95
+    }
+  },
+  "profile_tiers_landed": {
+    "routine": { "profile": "ax-iter" },
+    "profiling_prep": { "profile": "profiling-prep" },
+    "final_proof": { "profile": "bench" }
+  },
+  "ay_w5_w7_gate_commands_count": 10,
+  "handoff_to": "AY.W5",
+  "handoff_ready": true
+}

@@ -1873,14 +1873,20 @@ pub fn emit_structural_scan_policy(
         /// One entry per non-transparent rule, derived at codegen from
         /// CSP-inferred FIRST-set facts intersected with the grammar's
         /// mined `structural_alphabet` + `structural_digraph_mask`.
-        /// Consumed at emission time by shape emitters that inline
+        /// Consumed at emission time by `emit_path_query_impls` in
+        /// `backend::rust::view::value`, which inlines the matching
+        /// cursor primitive in `__path_walk`'s per-`rule_kind()`
+        /// dispatch:
         /// [`::bbnf::runtime::tape::TapeCursor::object_key_seek`] /
         /// [`::bbnf::runtime::tape::TapeCursor::bounded_lookahead`] /
         /// [`::bbnf::runtime::tape::TapeCursor::scan_structural_bounded`]
         /// per the entry's `activation` bitmap.
         ///
         /// No runtime flag; no hand-routed grammar specialisation.
-        #[allow(dead_code)]
+        /// AY-II.W0'.c retires the `#[allow(dead_code)]` that
+        /// previously guarded this surface — the emitted grammar now
+        /// carries a same-translation-unit consumer through
+        /// `__path_walk`'s dispatch.
         pub const #policy_ident: &[::bbnf::runtime::tape::ScanPolicyEntry] = &[
             #(#entries),*
         ];

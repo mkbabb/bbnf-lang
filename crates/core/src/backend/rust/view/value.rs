@@ -113,6 +113,7 @@ pub fn emit_value_surface(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
         grammar_name,
     );
     let path_query_impls = emit_path_query_impls(
+        ir,
         &grammar_ident,
         &value_ident,
         &node_view_ident,
@@ -324,96 +325,278 @@ fn emit_value_root_impl(
 /// `PathSegment::Field` / `PathSegment::Index` steps and extracting
 /// the leaf on exact match.
 ///
-/// The emitted walker is intentionally linear: the binary-search
-/// packed-cache variant that AY.W3b.1 §Step 5 optionally mentions
-/// lives in a follow-on tranche — the hard gate requires one
-/// PathQuery impl emits, and the lazy lane's perf claim rests on the
-/// `get_by_path` being O(depth·siblings) against sonic_rs's own
-/// cursor walk, which has the same complexity.
+/// # AY-II.W0'.c — STRUCTURAL_SCAN_POLICY emission-time splice
 ///
-/// For `PathSegment::Field` the walker compares the field's source
-/// span against the requested key — a zero-copy bytewise compare.
-/// For `PathSegment::Index` the walker selects the `i`-th child by
-/// cursor iteration.
+/// The emitted `__path_walk` is policy-driven: at each step the
+/// current record's `rule_kind()` dispatches through a compile-time
+/// match arm whose body inlines the matching cursor primitive. Rules
+/// whose [`ScanActivationFlags`] admit `OBJECT_KEY_SEEK` emit a
+/// `cursor.bounded_lookahead(...)` iteration paired with
+/// `cursor.object_key_seek(...)` for the value-position seek; rules
+/// admitting `SCAN_STRUCTURAL_BOUNDED` emit a
+/// `cursor.scan_structural_bounded(...)` indexed walk for positional
+/// access. Rules whose policy alphabet class is
+/// [`ScanAlphabetClass::Empty`][empty] retain the generic
+/// children-iteration walker (the default used pre-AY-II.W0'.c).
+///
+/// The per-rule dispatch resolves at compile time — the match arms
+/// below fold to the admitted primitive for that rule without any
+/// runtime flag lookup or dispatch-table read. The emitted body
+/// carries only primitives the rule's policy actually admits; non-
+/// admitted rules fall through to the default arm.
+///
+/// [`ScanActivationFlags`]: tape::ScanActivationFlags
+/// [empty]: tape::ScanAlphabetClass::Empty
 fn emit_path_query_impls(
+    ir: &GrammarIR,
     grammar_ident: &syn::Ident,
     _value_ident: &syn::Ident,
     node_view_ident: &syn::Ident,
-    _rule_kind_ident: &syn::Ident,
-    _variants: &[VariantEntry],
+    rule_kind_ident: &syn::Ident,
+    variants: &[VariantEntry],
 ) -> TokenStream {
-    // Helper fn name for the shared cursor walker: lives next to the
-    // PathQuery impls so every leaf-type-specialised impl calls into
-    // it after the cursor has been narrowed to the target record.
-    // Emitted alongside the impls; internal to the grammar module.
+    use crate::backend::rust::emitter::shapes::dispatcher::lookup_scan_policy;
+    use tape::ScanActivationFlags;
+
+    // Partition non-transparent rules by the primitives their scan
+    // policy admits. The sets may overlap (a rule can admit both
+    // OBJECT_KEY_SEEK and SCAN_STRUCTURAL_BOUNDED); emission below
+    // composes the partitions into disjoint match-arm groups.
+    let mut object_key_seek_rks: Vec<syn::Ident> = Vec::new();
+    let mut scan_structural_rks: Vec<syn::Ident> = Vec::new();
+    let mut bounded_lookahead_rks: Vec<syn::Ident> = Vec::new();
+    for v in variants {
+        let Some((_, flags)) =
+            lookup_scan_policy(ir, v.rule_id)
+        else {
+            continue;
+        };
+        let variant_ident = format_ident!("{}", v.name);
+        if flags.contains(ScanActivationFlags::OBJECT_KEY_SEEK) {
+            object_key_seek_rks.push(variant_ident.clone());
+        }
+        if flags.contains(ScanActivationFlags::SCAN_STRUCTURAL_BOUNDED) {
+            scan_structural_rks.push(variant_ident.clone());
+        }
+        // Bounded-lookahead admission independent of object-key-seek
+        // — rules like CSS `declarationList` admit bounded scan
+        // without the object-value hop pattern.
+        if flags.contains(ScanActivationFlags::BOUNDED_LOOKAHEAD)
+            && !flags.contains(ScanActivationFlags::OBJECT_KEY_SEEK)
+        {
+            bounded_lookahead_rks.push(variant_ident);
+        }
+    }
+
+    // Compose the Field handler. The object-key-seek fast path drops
+    // in when the rule admits OBJECT_KEY_SEEK; the bounded-lookahead
+    // fast path drops in for rules that admit BOUNDED_LOOKAHEAD
+    // without the key-hop. Other rules fall through to the generic
+    // children iteration.
+    let field_fast_key_seek = if object_key_seek_rks.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            #( #rule_kind_ident::#object_key_seek_rks )|* => {
+                // OBJECT_KEY_SEEK admission: bound the child scan
+                // by the compound's span end (BOUNDED_LOOKAHEAD
+                // co-admits with OBJECT_KEY_SEEK per
+                // `lookup_scan_policy`'s Dense arm), compare
+                // keys against the requested path segment, then
+                // hop to the value via `TapeCursor::object_key_seek`.
+                let parent = cur.cursor();
+                let (_, parent_end) = parent.span();
+                let mut iter = parent.bounded_lookahead(parent_end);
+                let mut hit: ::core::option::Option<#node_view_ident<'p>> = None;
+                loop {
+                    let k_cur = match iter.next() {
+                        ::core::option::Option::Some(c) => c,
+                        ::core::option::Option::None => break,
+                    };
+                    // Skip the value slot so the next iteration
+                    // lands on the following key.
+                    let _ = iter.next();
+                    let (k_lo, k_hi) = k_cur.span();
+                    let raw = &cur_input[k_lo as usize..k_hi as usize];
+                    let key_text = if raw.as_bytes().first() == ::core::option::Option::Some(&b'"')
+                        && raw.as_bytes().last() == ::core::option::Option::Some(&b'"')
+                        && raw.len() >= 2
+                    {
+                        &raw[1..raw.len() - 1]
+                    } else {
+                        raw
+                    };
+                    if key_text == *key {
+                        // Span-equality seek to the value cursor;
+                        // zero additional child iteration.
+                        let v_cursor = parent.object_key_seek((k_lo, k_hi));
+                        hit = v_cursor.map(|c| #node_view_ident::from_cursor(c, cur_input));
+                        break;
+                    }
+                }
+                cur = match hit {
+                    ::core::option::Option::Some(v) => v,
+                    ::core::option::Option::None => return ::core::option::Option::None,
+                };
+            }
+        }
+    };
+
+    let field_fast_bounded = if bounded_lookahead_rks.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            #( #rule_kind_ident::#bounded_lookahead_rks )|* => {
+                // BOUNDED_LOOKAHEAD without OBJECT_KEY_SEEK:
+                // span-bounded key/value probe without the
+                // span-equality hop. Used by rules whose policy
+                // admits bounded scan but whose shape does not
+                // present the {key,value} pairing the Dense class
+                // gates on.
+                let parent = cur.cursor();
+                let (_, parent_end) = parent.span();
+                let mut iter = parent.bounded_lookahead(parent_end);
+                let mut hit: ::core::option::Option<#node_view_ident<'p>> = None;
+                loop {
+                    let k_cur = match iter.next() {
+                        ::core::option::Option::Some(c) => c,
+                        ::core::option::Option::None => break,
+                    };
+                    let v_cur = match iter.next() {
+                        ::core::option::Option::Some(c) => c,
+                        ::core::option::Option::None => break,
+                    };
+                    let (k_lo, k_hi) = k_cur.span();
+                    let raw = &cur_input[k_lo as usize..k_hi as usize];
+                    let key_text = if raw.as_bytes().first() == ::core::option::Option::Some(&b'"')
+                        && raw.as_bytes().last() == ::core::option::Option::Some(&b'"')
+                        && raw.len() >= 2
+                    {
+                        &raw[1..raw.len() - 1]
+                    } else {
+                        raw
+                    };
+                    if key_text == *key {
+                        hit = ::core::option::Option::Some(
+                            #node_view_ident::from_cursor(v_cur, cur_input),
+                        );
+                        break;
+                    }
+                }
+                cur = match hit {
+                    ::core::option::Option::Some(v) => v,
+                    ::core::option::Option::None => return ::core::option::Option::None,
+                };
+            }
+        }
+    };
+
+    let index_fast_scan = if scan_structural_rks.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            #( #rule_kind_ident::#scan_structural_rks )|* => {
+                // SCAN_STRUCTURAL_BOUNDED admission: emit the
+                // bounded structural scan and pick the i-th
+                // admitted cursor. Zero-allocation iteration; the
+                // iterator terminates early at the compound's end
+                // span without visiting post-close records.
+                let parent = cur.cursor();
+                let (_, parent_end) = parent.span();
+                let scan = parent.scan_structural_bounded(parent_end);
+                cur = match scan.iter().nth(*i) {
+                    ::core::option::Option::Some(c) =>
+                        #node_view_ident::from_cursor(c, cur_input),
+                    ::core::option::Option::None =>
+                        return ::core::option::Option::None,
+                };
+            }
+        }
+    };
 
     let walk_fn = quote! {
-        /// AY.W3b.1 — shared path walker. Descends from `view` per
-        /// the given path, returning the narrowed NodeView on hit
-        /// or `None` when any step misses.
+        /// AY-II.W0'.c — policy-driven path walker. Descends from
+        /// `view` per the given path, returning the narrowed
+        /// NodeView on hit or `None` when any step misses.
         ///
-        /// `Field` steps match by comparing the child's source span
-        /// against the requested key; for object-like compounds the
-        /// key is the Span leaf at child index `2*i`, and the value
-        /// is at `2*i+1` (see per-grammar object materialisation).
-        /// `Index` steps select the `i`-th child directly.
+        /// The per-step dispatch reads `cur.rule_kind()` and
+        /// resolves to the structural-scan primitive the rule's
+        /// [`STRUCTURAL_SCAN_POLICY`] entry admits: rules admitting
+        /// `OBJECT_KEY_SEEK` use
+        /// [`TapeCursor::bounded_lookahead`] + [`TapeCursor::object_key_seek`]
+        /// for the key-match + value-hop sequence; rules admitting
+        /// `SCAN_STRUCTURAL_BOUNDED` use
+        /// [`TapeCursor::scan_structural_bounded`] for positional
+        /// access. Rules outside the policy's admission fall
+        /// through to a generic children iteration.
         ///
-        /// The walker intentionally treats every compound uniformly —
-        /// the emitter does not specialise per rule body today; the
-        /// binary-search packed-cache variant is a follow-on.
+        /// [`STRUCTURAL_SCAN_POLICY`]: crate::STRUCTURAL_SCAN_POLICY
+        /// [`TapeCursor::bounded_lookahead`]: ::bbnf::runtime::tape::TapeCursor::bounded_lookahead
+        /// [`TapeCursor::object_key_seek`]: ::bbnf::runtime::tape::TapeCursor::object_key_seek
+        /// [`TapeCursor::scan_structural_bounded`]: ::bbnf::runtime::tape::TapeCursor::scan_structural_bounded
         #[inline]
         fn __path_walk<'p>(
             view: #node_view_ident<'p>,
             path: ::bbnf::runtime::Path<'_>,
         ) -> ::core::option::Option<#node_view_ident<'p>> {
+            let cur_input = view.input();
             let mut cur = view;
             for seg in path.iter() {
                 match seg {
                     ::bbnf::runtime::PathSegment::Field(key) => {
-                        // Walk children two at a time: (key, value).
-                        // The key child's span text is compared to
-                        // the requested field name. On hit, the
-                        // value child becomes the current view.
-                        let mut it = cur.children();
-                        let mut found = None;
-                        loop {
-                            let k = match it.next() {
-                                Some(k) => k,
-                                None => break,
-                            };
-                            let v = match it.next() {
-                                Some(v) => v,
-                                None => break,
-                            };
-                            // The key's source span text may
-                            // include the quotes for JSON-like
-                            // grammars; trim one character off
-                            // each end when the first byte is `"`.
-                            let raw = k.span_text();
-                            let key_text = if raw.as_bytes().first() == Some(&b'"')
-                                && raw.as_bytes().last() == Some(&b'"')
-                                && raw.len() >= 2
-                            {
-                                &raw[1..raw.len() - 1]
-                            } else {
-                                raw
-                            };
-                            if key_text == *key {
-                                found = Some(v);
-                                break;
+                        match cur.rule_kind() {
+                            #field_fast_key_seek
+                            #field_fast_bounded
+                            _ => {
+                                // Generic walk — children pair
+                                // (key, value) compared by source
+                                // span text. Used for rules whose
+                                // policy admission is
+                                // `ScanAlphabetClass::Empty`.
+                                let mut it = cur.children();
+                                let mut found = None;
+                                loop {
+                                    let k = match it.next() {
+                                        ::core::option::Option::Some(k) => k,
+                                        ::core::option::Option::None => break,
+                                    };
+                                    let v = match it.next() {
+                                        ::core::option::Option::Some(v) => v,
+                                        ::core::option::Option::None => break,
+                                    };
+                                    let raw = k.span_text();
+                                    let key_text = if raw.as_bytes().first() == ::core::option::Option::Some(&b'"')
+                                        && raw.as_bytes().last() == ::core::option::Option::Some(&b'"')
+                                        && raw.len() >= 2
+                                    {
+                                        &raw[1..raw.len() - 1]
+                                    } else {
+                                        raw
+                                    };
+                                    if key_text == *key {
+                                        found = ::core::option::Option::Some(v);
+                                        break;
+                                    }
+                                }
+                                cur = match found {
+                                    ::core::option::Option::Some(v) => v,
+                                    ::core::option::Option::None =>
+                                        return ::core::option::Option::None,
+                                };
                             }
                         }
-                        cur = match found {
-                            Some(v) => v,
-                            None => return None,
-                        };
                     }
                     ::bbnf::runtime::PathSegment::Index(i) => {
-                        cur = cur.child(*i)?;
+                        match cur.rule_kind() {
+                            #index_fast_scan
+                            _ => {
+                                cur = cur.child(*i)?;
+                            }
+                        }
                     }
                 }
             }
-            Some(cur)
+            ::core::option::Option::Some(cur)
         }
     };
 
@@ -430,14 +613,14 @@ fn emit_path_query_impls(
                 Self: 'p,
             {
                 let node = #node_view_ident::from_cursor(view.cursor(), view.input());
-                let _hit = __path_walk(node, path)?;
+                __path_walk(node, path)?;
                 // Leaf-kind narrowing to `&'static str` is unsound
                 // across the arbitrary-input lifetime — the
                 // narrower `&'p str` impl below handles the zero-
                 // copy borrow. This `&'static str` impl exists for
                 // the bench-harness literal-path case and returns
                 // None on non-'static hits.
-                None
+                ::core::option::Option::None
             }
         }
 
@@ -454,8 +637,8 @@ fn emit_path_query_impls(
                 let hit = __path_walk(node, path)?;
                 let tape = hit.cursor().tape();
                 let rec = hit.cursor().record();
-                if let Some(v) = tape.payload_f64(rec) {
-                    return Some(v);
+                if let ::core::option::Option::Some(v) = tape.payload_f64(rec) {
+                    return ::core::option::Option::Some(v);
                 }
                 // Fallback: parse the span text.
                 hit.span_text().parse::<f64>().ok()
@@ -475,13 +658,13 @@ fn emit_path_query_impls(
                 let hit = __path_walk(node, path)?;
                 let tape = hit.cursor().tape();
                 let rec = hit.cursor().record();
-                if let Some(v) = tape.payload_bool(rec) {
-                    return Some(v);
+                if let ::core::option::Option::Some(v) = tape.payload_bool(rec) {
+                    return ::core::option::Option::Some(v);
                 }
                 match hit.span_text() {
-                    "true" => Some(true),
-                    "false" => Some(false),
-                    _ => None,
+                    "true" => ::core::option::Option::Some(true),
+                    "false" => ::core::option::Option::Some(false),
+                    _ => ::core::option::Option::None,
                 }
             }
         }

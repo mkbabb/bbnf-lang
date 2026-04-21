@@ -4,9 +4,46 @@ Dated execution log for tranche AY-II (pass II of AY; see
 `../AY-I/FINAL.md` for pass-I close and `audit/AUDIT-{A,B,C,D}-*.md`
 for the triumvirate that informs this pass).
 
-- `Status`: planned
-- `Current wave`: not started
-- `Next wave`: W0
+- `Status`: in_progress
+- `Current wave`: W0
+- `Next wave`: W1
+
+---
+
+## W0 dispatch — 2026-04-21
+
+Five parallel sub-agents dispatched on disjoint file bounds per
+`waves/W0.md` §File bounds. Every brief carries the agreed contract
+signatures so each worktree writes against compile-incomplete
+reciprocal dependencies; orchestrator composes at cherry-pick.
+
+Dispatched:
+
+- **W0.a** — `/Users/mkbabb/Programming/bbnf-wt-ay-ii-w0a`: tape
+  substrate rollback + unified compound API (`Columns::rollback_to`,
+  `TapeBuilder::{begin,end}_compound`; retire `open_compound`,
+  `close_compound`, `note_push`, `SIB_SKIP_STAMPED_BIT`, `open_stack`,
+  `OpenFrame`; finaliser-only stamping).
+- **W0.b** — `/Users/mkbabb/Programming/bbnf-wt-ay-ii-w0b`: emitter
+  unification across `shapes/*.rs` — every `push_compound` +
+  `mark_children` + `columns_mut().truncate` migrates; every retry
+  site pairs tape rollback + value rollback.
+- **W0.c** — `/Users/mkbabb/Programming/bbnf-wt-ay-ii-w0c`: fused
+  pipeline (`ValueBuilder<R>`, `ValueCheckpoint`); `Parsed::to_value`
+  becomes a thin projector; `navigate_tape` retired from `runtime/path.rs`.
+- **W0.d** — `/Users/mkbabb/Programming/bbnf-wt-ay-ii-w0d`: projection
+  totality (`PROJECTION_DIRECT_TO_STRUCT.len() == materializer count ==
+  consumer count`); `__named_type_shim_*` retired; typed-CSS skeleton
+  in `ir/src/passes/payload/layout.rs`; `projection_totality.rs` test.
+- **W0.e** — `/Users/mkbabb/Programming/bbnf-wt-ay-ii-w0e`: promoted
+  structural-scan as cursor API (`object_key_seek`, `bounded_lookahead`,
+  `scan_structural_bounded`); per-grammar `STRUCTURAL_SCAN_POLICY`
+  const from CSP alphabet + digraph facts.
+
+Contract signatures fixed at dispatch so all five worktrees write
+against the same target API. Orchestrator-owned close ceremony (§W0.md
+Orchestrator close steps): cherry-pick → regen → fat-LTO 5-bench
+matrix → samply per grammar → bootstrap double-regen idempotency.
 
 ---
 

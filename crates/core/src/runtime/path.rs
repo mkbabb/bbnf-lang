@@ -224,11 +224,12 @@ pub fn navigate_tape<'p>(
     root: TapeOffset,
     path: Path<'_>,
 ) -> Option<TapeOffset> {
+    let bytes = input.as_bytes();
     let mut current = root;
     for seg in path.iter() {
         match seg {
             PathSegment::Index(i) => {
-                current = nth_child(tape, current, *i)?;
+                current = nth_child(tape, bytes, current, *i)?;
             }
             PathSegment::Field(key) => {
                 current = resolve_field(tape, input, current, key.as_bytes())?;
@@ -238,36 +239,166 @@ pub fn navigate_tape<'p>(
     Some(current)
 }
 
-/// Internal helper — resolve the `i`-th direct child of `parent`
-/// without going through a `TapeCursor` materialisation. Returns
-/// `None` when `parent` is a leaf or `i` is out of range.
+/// Internal helper — resolve the `i`-th positional child of
+/// `parent` in the presence of wrapping compounds (generated
+/// grammars typically produce multi-layer envelopes between a rule
+/// compound and its semantic children). Descends through
+/// single-child compounds AND single-content-child compounds
+/// (compounds whose non-delimiter children number exactly one) until
+/// it reaches a compound with multiple content children — that's the
+/// list container, and the `i`-th content child is returned.
 #[inline]
-fn nth_child(tape: &Tape, parent: TapeOffset, i: usize) -> Option<TapeOffset> {
-    let cursor = TapeCursor::new(tape, parent);
-    cursor.child(i).map(|c| c.offset())
+fn nth_child(tape: &Tape, bytes: &[u8], parent: TapeOffset, i: usize) -> Option<TapeOffset> {
+    let mut current = parent;
+    // Bound the descent. 12 levels covers deep JSON envelopes
+    // (outer-rule Seq → Next Seq → OW Seq → Repeat Rule → per-iter
+    // Seq) plus nested array wrappers; the loop breaks as soon as a
+    // multi-content-child frame is found.
+    for _depth in 0..12 {
+        let cursor = TapeCursor::new(tape, current);
+        let child_count = cursor.child_count();
+        if child_count == 0 {
+            break;
+        }
+        // Count + collect content children (filter out structural
+        // delimiters + empty wrappers + separator-iter Seqs).
+        let mut content: [u32; 64] = [0u32; 64];
+        let mut n_content: usize = 0;
+        for child in cursor.children() {
+            if is_content_child_bytes(tape, bytes, child.offset()) {
+                if n_content < content.len() {
+                    content[n_content] = child.offset().0;
+                }
+                n_content += 1;
+            }
+        }
+        if n_content == 0 {
+            break;
+        }
+        if n_content == 1 {
+            // Single content child — descend into it and retry.
+            current = TapeOffset(content[0]);
+            continue;
+        }
+        // Multi-content-child frame — this is the list container.
+        if i >= n_content || i >= content.len() {
+            return None;
+        }
+        // Return the i-th content child, peeling remaining
+        // single-content wrappers around it until we reach a
+        // node that can't be peeled further.
+        let mut target = TapeOffset(content[i]);
+        for _ in 0..6 {
+            let tc = TapeCursor::new(tape, target);
+            let cc = tc.child_count();
+            if cc == 0 {
+                break;
+            }
+            if cc == 1 {
+                if let Some(only) = tc.children().next() {
+                    // Peel only when the only child is a content-
+                    // bearing record (not a single-byte structural).
+                    if is_content_child_bytes(tape, bytes, only.offset()) {
+                        target = only.offset();
+                        continue;
+                    }
+                }
+            }
+            // Multi-child target — check if it carries a single
+            // content child (separator siblings).
+            let mut sc = None;
+            let mut sc_count = 0;
+            for c in tc.children() {
+                if is_content_child_bytes(tape, bytes, c.offset()) {
+                    sc_count += 1;
+                    if sc_count == 1 {
+                        sc = Some(c.offset());
+                    } else {
+                        break;
+                    }
+                }
+            }
+            if sc_count == 1 {
+                if let Some(only_content) = sc {
+                    target = only_content;
+                    continue;
+                }
+            }
+            break;
+        }
+        return Some(target);
+    }
+    None
 }
 
-/// Internal helper — resolve a `Field(key)` step against the direct
-/// children of `parent`, walking the tape-level substrate.
+/// Classify a record as "content" (carries a semantic value) vs
+/// "structural" (delimiter / empty wrapper / separator iter).
 ///
-/// Handles both canonical object layouts:
+/// Rules:
+/// - Empty-span records are structural.
+/// - Single-byte leaves (`{`, `}`, `[`, `]`, `:`, `,`) are structural.
+/// - Compounds whose FIRST significant direct leaf is a SEPARATOR
+///   byte (`,` or `:`) are separator-iter wrappers (`comma_iter =
+///   OW(",")`); they are structural.
+/// - Every other compound (including array/object outer wrappers
+///   whose first leaf is an OPENER byte `{` / `[`) is content.
+#[inline]
+fn is_content_child_bytes(tape: &Tape, bytes: &[u8], off: TapeOffset) -> bool {
+    let columns = tape.columns();
+    let (lo, hi) = columns.span_at(off.0);
+    if hi <= lo {
+        return false;
+    }
+    if !columns.has_children_at(off.0) {
+        return hi > lo + 1;
+    }
+    // Compound — probe its first direct leaf. If that leaf is a
+    // single-byte SEPARATOR (`,` or `:`), the compound is a
+    // separator-iter wrapper.
+    let mut probe = off;
+    for _ in 0..4 {
+        let cursor = TapeCursor::new(tape, probe);
+        let Some(first) = cursor.children().next() else {
+            break;
+        };
+        let first_off = first.offset();
+        let (flo, fhi) = columns.span_at(first_off.0);
+        if !columns.has_children_at(first_off.0) {
+            if fhi == flo + 1 {
+                let byte = bytes.get(flo as usize).copied();
+                return !matches!(byte, Some(b',') | Some(b':'));
+            }
+            return true;
+        }
+        probe = first_off;
+    }
+    true
+}
+
+/// Internal helper — resolve a `Field(key)` step against the
+/// subtree rooted at `parent`, walking the tape-level substrate.
 ///
-/// 1. **Flat `(key, value, key, value, ...)`** — the first direct
-///    child's `has_children` bit is false (it IS the key leaf). The
-///    walker iterates pairs via `sib_skip` and compares each key
-///    leaf's span text against the requested field name.
+/// The generated grammar lowers object-like structure through
+/// multiple layers of wrapping compounds (outer rule Seq → Next Seq
+/// → OW Seq → Repeat Rule → per-iter Seq → pair Seq → key / value
+/// children). The walker performs a pre-order DFS over the parent's
+/// subtree looking for any leaf whose (quote-trimmed) span text
+/// equals the requested key. On match, the walker continues the
+/// pre-order traversal past the key's parent compound and returns
+/// the next non-structural leaf — the value — as a [`TapeOffset`].
 ///
-/// 2. **Pair-wrapped `(pair, pair, pair, ...)`** where each `pair`
-///    is a compound whose direct children are `(key, value)` — the
-///    first direct child has `has_children` set. The walker steps
-///    into each pair compound, reads its first child as the key
-///    leaf, compares, and returns the second child on match.
+/// The walk is bounded by the parent's span — every candidate node
+/// has its span inside the parent's `[span_lo, span_hi)` range.
+/// `sib_skip` steps navigate children in source order; descent into
+/// compound children uses the column-indexed `sib_skip`/`child_off`
+/// layer directly.
 ///
-/// JSON-like grammars uniformly lower to layout 2 (the emitted
-/// object shape wraps every (key, value) in a `pair` Seq compound).
-/// CSS/Sheets/BBNF grammars that express key lookup differently
-/// participate via layout 1. The decision is read from the first
-/// child's tape metadata — no grammar-name dispatch.
+/// No grammar-name dispatch; every decision is read from each node's
+/// tape metadata (`has_children`, `kind`, `span_lo`, `span_hi`).
+/// Object layouts differ across grammars — JSON pair-wrapped,
+/// flat key/value alternation, CSS declaration blocks — but every
+/// layout drops a key leaf with the field's source text somewhere
+/// in the subtree; the DFS finds it uniformly.
 #[inline]
 fn resolve_field<'p>(
     tape: &'p Tape,
@@ -275,35 +406,149 @@ fn resolve_field<'p>(
     parent: TapeOffset,
     key_bytes: &[u8],
 ) -> Option<TapeOffset> {
-    let parent_cursor = TapeCursor::new(tape, parent);
-    let mut iter = parent_cursor.children();
-    let first = iter.next()?;
-    // Peek the first direct child's shape. Re-construct the iterator
-    // over the full child run because `ChildIter::next` consumed it.
-    let use_pair_layout = first.tape().columns().has_children_at(first.offset().0)
-        && first.kind().is_compound();
+    // DFS state — a stack of (offset, visited-children-flag). Pre-order
+    // visit: read the leaf/compound at the top; if compound and not yet
+    // visited, push its first child. Otherwise pop and continue with the
+    // next sibling.
+    //
+    // The walker returns on the first key-leaf hit whose trimmed span
+    // text equals `key_bytes`. After the key hits, the walker keeps
+    // popping up to the smallest ancestor whose NEXT sibling is a
+    // non-structural leaf — that sibling is the value and is returned.
+    let bytes = input.as_bytes();
 
-    let mut iter = parent_cursor.children();
-    while let Some(child) = iter.next() {
-        if use_pair_layout {
-            // Pair compound — step into its children to extract key+value.
-            let pair_cursor = TapeCursor::new(tape, child.offset());
-            let mut pair_children = pair_cursor.children();
-            let Some(key_node) = pair_children.next() else {
-                continue;
-            };
-            if key_matches(tape, input, key_node.offset(), key_bytes) {
-                return pair_children.next().map(|v| v.offset());
+    // Locate the key leaf via DFS in the parent's subtree.
+    let key_off = find_leaf_matching_key(
+        tape, input, parent, key_bytes,
+    )?;
+    // The value is the next non-structural leaf after `key_off` in the
+    // parent's subtree pre-order. In every object layout the key is
+    // immediately followed by either:
+    //   - a structural `:` literal, then the value compound/leaf
+    //   - or directly the value compound/leaf
+    // Walk forward past any structural single-byte literal siblings,
+    // then return the next node.
+    find_value_after_key(tape, bytes, parent, key_off)
+}
+
+/// Pre-order DFS over the subtree rooted at `root`, searching for the
+/// first leaf whose (quote-trimmed) span-text equals `key_bytes`.
+/// Returns that leaf's [`TapeOffset`] or `None` when no leaf matches.
+#[inline]
+fn find_leaf_matching_key(
+    tape: &Tape,
+    input: &str,
+    root: TapeOffset,
+    key_bytes: &[u8],
+) -> Option<TapeOffset> {
+    let columns = tape.columns();
+    let (root_lo, root_hi) = columns.span_at(root.0);
+    // Depth-first via an explicit stack (LIFO of TapeCursor's child
+    // iterators). Capacity 16 covers the typical 4-6-deep JSON
+    // wrapping; larger depths fall back to heap allocation
+    // transparently via `Vec::push`.
+    let mut stack: Vec<tape::ChildIter<'_>> = Vec::with_capacity(16);
+    stack.push(TapeCursor::new(tape, root).children());
+
+    while let Some(top) = stack.last_mut() {
+        let next = top.next();
+        match next {
+            None => {
+                stack.pop();
             }
-        } else {
-            // Flat layout — this child IS the key; the next one is the value.
-            let Some(value_node) = iter.next() else {
-                return None;
-            };
-            if key_matches(tape, input, child.offset(), key_bytes) {
-                return Some(value_node.offset());
+            Some(child) => {
+                let off = child.offset();
+                // Bound check — stay inside parent's span.
+                let (lo, hi) = columns.span_at(off.0);
+                if lo < root_lo || hi > root_hi {
+                    continue;
+                }
+                if columns.has_children_at(off.0) {
+                    // Compound — descend.
+                    stack.push(child.children());
+                } else {
+                    // Leaf — try key match.
+                    if key_matches(tape, input, off, key_bytes) {
+                        return Some(off);
+                    }
+                }
             }
         }
+    }
+    None
+}
+
+/// Locate the value record that follows a matched key leaf. Walks
+/// forward from `key_off` in pre-order, skipping single-byte
+/// structural literals (`{`, `}`, `[`, `]`, `:`, `,`) and any
+/// compound whose span starts with a structural byte (it wraps the
+/// delimiter + value; the value lives strictly inside it).
+///
+/// Returns the first "content" record — a leaf with non-structural
+/// first byte, or a compound that starts with content.
+///
+/// The walk stays inside `parent`'s span.
+#[inline]
+fn find_value_after_key(
+    tape: &Tape,
+    bytes: &[u8],
+    parent: TapeOffset,
+    key_off: TapeOffset,
+) -> Option<TapeOffset> {
+    let columns = tape.columns();
+    let (parent_lo, parent_hi) = columns.span_at(parent.0);
+    let key_end = columns.span_at(key_off.0).1;
+    let n = columns.len() as u32;
+    let mut i = key_off.0 + 1;
+    while i < n {
+        let (lo, hi) = columns.span_at(i);
+        if lo > parent_hi {
+            break;
+        }
+        if lo < parent_lo {
+            i += 1;
+            continue;
+        }
+        if lo < key_end {
+            i += 1;
+            continue;
+        }
+        // Skip single-byte structural literals.
+        let first_byte = bytes.get(lo as usize).copied();
+        let is_struct_byte = hi == lo + 1
+            && matches!(
+                first_byte,
+                Some(b'{')
+                    | Some(b'}')
+                    | Some(b'[')
+                    | Some(b']')
+                    | Some(b':')
+                    | Some(b',')
+            );
+        if is_struct_byte {
+            i += 1;
+            continue;
+        }
+        // Skip empty-span wrapping compounds.
+        if hi == lo {
+            i += 1;
+            continue;
+        }
+        // Skip a compound whose span starts with a structural byte
+        // (`:`, `,`, etc.) — such a compound wraps a delimiter +
+        // value; the value record we want is strictly inside it
+        // (emitted at a later offset). The next iteration will
+        // reach it.
+        if columns.has_children_at(i) {
+            if matches!(
+                first_byte,
+                Some(b':') | Some(b',') | Some(b'{') | Some(b'[')
+            ) {
+                i += 1;
+                continue;
+            }
+        }
+        return Some(TapeOffset(i));
     }
     None
 }

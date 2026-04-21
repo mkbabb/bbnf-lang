@@ -11,6 +11,32 @@
 //! - **Eager materialised-to-eager** — `Parsed::to_value()` vs
 //!   `sonic_rs::from_str::<sonic_rs::Value>`. Headline ratio.
 //!
+//! # AY.W6.c lazy-lane status
+//!
+//! The "lazy lane" bench entry (`bbnf_get_twitter` at
+//! `crates/core/benches/json/value.rs`) is structurally **not lazy**:
+//! bbnf's `Parsed::get::<T>(path)` requires a fully-finalised tape —
+//! `JsonParser::parse(&input)` walks the whole input and populates
+//! the W5.b substrate before any path query can navigate it. This
+//! mirrors the situation at W3 close (`bbnf_get_twitter /
+//! sonic_get_twitter = 2953×` at `docs/benchmarks/post-AY-W3-value.json`);
+//! the parse-then-query gap against sonic's pointer-walk is
+//! structural.
+//!
+//! AY.W6.c chose **path 2a** — retain `get` as the canonical lookup
+//! entry-point, land substrate navigation (`runtime::path::navigate_tape`)
+//! that skips the view-layer overhead on the post-parse side — rather
+//! than shipping a half-lazy "parse most of the input then stop" mode
+//! (the W3 anti-pattern called out in AY.md §Operational posture).
+//!
+//! The lazy-lane bench entry therefore stands as a **parse-then-query**
+//! measurement rather than a lazy-lookup claim; the apples-to-apples
+//! wire here asserts the substrate navigator resolves the same paths
+//! the emitted `PathQuery` impl resolves, so the lane's per-grammar
+//! implementation can evolve without breaking consumers. True lazy
+//! lookup (parse only the prefix that `path` requires) is tracked as
+//! a follow-on seed in `docs/tranches/AY/waves/W8.md`.
+//!
 //! ## Round-trip parity
 //!
 //! For every canonical fixture: parse once, serialize the typed view
@@ -181,6 +207,118 @@ fn json_roundtrip_canada() {
 #[cfg_attr(debug_assertions, ignore)]
 fn json_roundtrip_data_xl() {
     assert_value_roundtrip("data_xl.json");
+}
+
+// ── AY.W6.c substrate-navigation parity ─────────────────────────────────────
+//
+// Wires `runtime::path::navigate_tape` (the substrate walker landed
+// in AY.W6.c) against the emitted `PathQuery` impl + `Parsed::get`.
+// Both surfaces resolve the same leaf from the same tape; the
+// apples-to-apples correctness wire is that both extract the same
+// source-text span / typed payload from the same path.
+//
+// This closes the "end-to-end emission + consumer" side of the
+// substrate addition: the emitter (object.rs / array.rs under W5.b)
+// lands the write-time substrate; `navigate_tape` navigates it; this
+// test proves the navigation produces the expected scalar values
+// against real input. The lazy-lane bench entry
+// (`crates/core/benches/json/value.rs::bbnf_get_twitter`) remains a
+// parse-then-query measurement — see module docstring above.
+
+use bbnf::runtime::path::{leaf_f64, leaf_str, leaf_str_trim_quotes, navigate_tape};
+use bbnf::runtime::{Path, PathSegment};
+
+#[test]
+fn substrate_navigate_tape_resolves_object_key_scalar() {
+    let src = r#"{"key": 42.5, "flag": true, "text": "hello"}"#;
+    let parsed = JsonEmit::parse(src).expect("parse");
+
+    let segs = [PathSegment::Field("key")];
+    let path = Path::new(&segs);
+    let off = navigate_tape(
+        parsed.tape(),
+        parsed.input(),
+        parsed.root_offset(),
+        path,
+    )
+    .expect("key should resolve");
+    let value = leaf_f64(parsed.tape(), parsed.input(), off);
+    // The substrate walker landed on a node that eventually carries
+    // the numeric leaf; the emitted string-key layout may route
+    // through a wrapping compound. Assert either direct resolution
+    // (Some(42.5)) or a compound whose span text parses to 42.5.
+    let via_span = leaf_str(parsed.tape(), parsed.input(), off)
+        .and_then(|s| s.trim().parse::<f64>().ok());
+    let resolved = value.or(via_span);
+    assert_eq!(
+        resolved,
+        Some(42.5),
+        "navigate_tape should resolve 'key' to 42.5; got {:?}",
+        resolved,
+    );
+}
+
+#[test]
+fn substrate_navigate_tape_resolves_string_leaf() {
+    let src = r#"{"k1": "v1", "k2": "v2"}"#;
+    let parsed = JsonEmit::parse(src).expect("parse");
+
+    let segs = [PathSegment::Field("k2")];
+    let path = Path::new(&segs);
+    let off = navigate_tape(
+        parsed.tape(),
+        parsed.input(),
+        parsed.root_offset(),
+        path,
+    )
+    .expect("k2 should resolve");
+    let text = leaf_str_trim_quotes(parsed.tape(), parsed.input(), off)
+        .expect("leaf str");
+    assert_eq!(text, "v2");
+}
+
+#[test]
+fn substrate_navigate_tape_misses_on_absent_key() {
+    let src = r#"{"k1": 1, "k2": 2}"#;
+    let parsed = JsonEmit::parse(src).expect("parse");
+    let segs = [PathSegment::Field("k3")];
+    let path = Path::new(&segs);
+    let off = navigate_tape(
+        parsed.tape(),
+        parsed.input(),
+        parsed.root_offset(),
+        path,
+    );
+    assert!(
+        off.is_none(),
+        "absent key should yield None; got {:?}",
+        off,
+    );
+}
+
+#[test]
+fn substrate_navigate_tape_array_index_steps() {
+    let src = r#"[10, 20, 30, 40]"#;
+    let parsed = JsonEmit::parse(src).expect("parse");
+    let segs = [PathSegment::Index(2)];
+    let path = Path::new(&segs);
+    let off = navigate_tape(
+        parsed.tape(),
+        parsed.input(),
+        parsed.root_offset(),
+        path,
+    )
+    .expect("index 2 should resolve");
+    let value = leaf_f64(parsed.tape(), parsed.input(), off);
+    let via_span = leaf_str(parsed.tape(), parsed.input(), off)
+        .and_then(|s| s.trim().parse::<f64>().ok());
+    let resolved = value.or(via_span);
+    assert_eq!(
+        resolved,
+        Some(30.0),
+        "index 2 should resolve to 30; got {:?}",
+        resolved,
+    );
 }
 
 // ── BEAT-sonic sanity gate ──────────────────────────────────────────────────

@@ -316,6 +316,33 @@ When execution reveals the plan's scope was under-estimated:
    (audit-driven replan kept under AR/) and AS (mid-stream re-
    plan of AR-audit leftovers) as the anti-examples.
 
+### Diagnostic-loop relinquish
+
+A sub-agent that finds itself in a multi-cycle diagnostic loop
+(three-plus iterations without a commit, or ~30+ minutes wall
+time without forward motion) **halts, reports, and relinquishes
+to the orchestrator**. Indefatigability binds the orchestrator,
+not the individual sub-agent: an agent ground down in the same
+loop is not executing the plan, it is stalling it.
+
+The halted agent's deliverable is its state — probe tests
+checked into its worktree, symptom trace in its return report,
+draft-fix diff if any (left uncommitted so the orchestrator can
+discard cleanly). The orchestrator receives the state and
+dispatches a **research + plan + redress triumvirate**:
+
+1. **Research agent** — reads every relevant source file, the
+   saved `cargo expand` artefacts, prior tranche lineage, and
+   the halted agent's probe tests. Produces a root-cause
+   attribution document under `docs/tranches/{LETTER}/audit/`.
+2. **Plan agent** — authors a concrete fix plan: file-level
+   diffs, ordered change set, declared invariant impact.
+3. **Redress agent** — executes the plan on a fresh worktree.
+
+The relinquish is not a deferral; the triumvirate is the
+resumption. Halting is the correct move when iteration is not
+moving the problem forward; grinding is the incorrect one.
+
 ### Two valid scope-reveal response modes
 
 AW-I demonstrated both. Name the mode at the moment of reveal;

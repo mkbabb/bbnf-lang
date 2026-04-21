@@ -87,6 +87,36 @@ architectural changes to any of them are first-class work items, not
   Escalate only for hard environmental blockers — compiler bug,
   authorization boundary, irrecoverable state. Scope-reveal is
   not an escalation condition.
+- **Relinquish when stuck in diagnostic loops.** A sub-agent that
+  is deep in multi-cycle diagnostic probing — three-plus iterations
+  without a commit, or wall-clock over ~30 minutes without forward
+  motion — stops, reports the current state with every diagnostic
+  artefact (probe tests, symptom notes, draft-fix diff if any),
+  and relinquishes to the orchestrator. Indefatigability binds the
+  orchestrator, not the individual sub-agent; a sub-agent ground
+  to a halt in the same loop is not making progress, just burning
+  wall time. The orchestrator then dispatches a
+  **research + plan + redress triumvirate**: one agent to deeply
+  research the blocker (read every relevant source file, saved
+  artefact, prior tranche lineage, and the expanded proc-macro
+  output via `cargo expand`), one to author the concrete fix plan
+  (file-level diffs, ordered change set, root-cause attribution),
+  one to execute the redress. The halted agent's probe tests are
+  the triumvirate's starting point, not wasted work. A partial
+  commit pattern that fails to close is itself a blocker — commit
+  diagnostic probes separately from attempted fixes so the
+  orchestrator can cherry-pick or discard independently.
+- **Audits analyze the expand-begotten code, not just sources.**
+  Any audit of emitter behaviour — correctness, regression
+  diagnosis, feature activation claims — inspects the `cargo
+  expand` output as its primary artefact, not the emitter source
+  alone. Emitter source intentions and expanded reality routinely
+  diverge (dead branches, conditional silence, macro-hygiene
+  drift); only the expanded code reaches the compiler and the
+  bench binary. Audit reports cite specific line ranges in the
+  saved expand artefact (`target/expand/<bench>.rs` or
+  `target/expand/<test>.rs`) as primary evidence; source citations
+  are secondary context.
 - **Substrate-with-consumer is one unit of work.** A wave that
   lands an emitter pass, an IR field, a const slot, or a runtime
   variant *without verifying its output is consumed in the hot

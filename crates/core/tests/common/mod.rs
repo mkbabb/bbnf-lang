@@ -6,3 +6,6 @@ pub mod json_normalize;
 
 #[allow(dead_code)]
 pub mod css_normalize;
+
+#[allow(dead_code)]
+pub mod css_types;

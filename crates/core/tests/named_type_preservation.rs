@@ -12,11 +12,14 @@
 //! The assertion is at emit-side — `compile_paths_request` with
 //! `CompileTarget::Rust` exposes the exact `ir.types` array the
 //! `emit_direct_to_struct_projection` emitter walks when building the
-//! `PROJECTION_DIRECT_TO_STRUCT` const + `__named_type_shim_<name>`
-//! marker functions. Checking IR-only (via `CompileTarget::Vm`)
-//! would admit Named entries the Rust-target preparation later drops;
+//! `PROJECTION_DIRECT_TO_STRUCT` const + `__grammar_projection_<rule>`
+//! marker functions. Checking IR-only (via `CompileTarget::Vm`) would
+//! admit Named entries the Rust-target preparation later drops;
 //! checking emit-only would not surface which rule loses Named.
-//! This test checks both boundaries.
+//! This test checks both boundaries. Post-AY-II.W0.d the legacy
+//! resolver-shim marker (`__named_type_shim_<name>`) retires — every
+//! admission emits a runnable `materialize_projection_<rule>_<Grammar>`
+//! helper instead, verified by `tests/projection_totality.rs`.
 //!
 //! ## AY.W6.b coverage — grammar-derived direct-to-struct admission
 //!
@@ -382,7 +385,7 @@ fn admitted_projection_surfaces() {
 
     let total = json_total + css_l4_total + sheets_total + bbnf_total;
     eprintln!(
-        "AY.W6.b admission surface: JSON={json_total} CSS_L4={css_l4_total} \
+        "AY-II.W0.d admission surface: JSON={json_total} CSS_L4={css_l4_total} \
          Sheets={sheets_total} BBNF={bbnf_total} → total={total}"
     );
 
@@ -412,4 +415,55 @@ fn admitted_projection_surfaces() {
          surfaces (unit + prop-group rules from the layout pass); \
          got {css_l4_total}"
     );
+
+    // AY-II.W0.d totality invariant — per grammar:
+    // `PROJECTION_DIRECT_TO_STRUCT.len() ==
+    //  PROJECTION_MATERIALIZERS.len() ==
+    //  PROJECTION_CONSUMERS.len()`.
+    // The canonical gate lives in `tests/projection_totality.rs`;
+    // mirroring the assertion here keeps this test's name-type
+    // preservation story colocated with the admission-count story.
+    for (label, admissions, materializers, consumers) in [
+        (
+            "JsonG",
+            JsonG::PROJECTION_DIRECT_TO_STRUCT,
+            JsonG::PROJECTION_MATERIALIZERS,
+            JsonG::PROJECTION_CONSUMERS,
+        ),
+        (
+            "CssL4G",
+            CssL4G::PROJECTION_DIRECT_TO_STRUCT,
+            CssL4G::PROJECTION_MATERIALIZERS,
+            CssL4G::PROJECTION_CONSUMERS,
+        ),
+        (
+            "SheetsG",
+            SheetsG::PROJECTION_DIRECT_TO_STRUCT,
+            SheetsG::PROJECTION_MATERIALIZERS,
+            SheetsG::PROJECTION_CONSUMERS,
+        ),
+        (
+            "BbnfG",
+            BbnfG::PROJECTION_DIRECT_TO_STRUCT,
+            BbnfG::PROJECTION_MATERIALIZERS,
+            BbnfG::PROJECTION_CONSUMERS,
+        ),
+    ] {
+        assert_eq!(
+            admissions.len(),
+            materializers.len(),
+            "{label}: AY-II invariant 7 — admission count ({}) must equal \
+             materializer count ({})",
+            admissions.len(),
+            materializers.len(),
+        );
+        assert_eq!(
+            admissions.len(),
+            consumers.len(),
+            "{label}: AY-II invariant 7 — admission count ({}) must equal \
+             consumer count ({})",
+            admissions.len(),
+            consumers.len(),
+        );
+    }
 }

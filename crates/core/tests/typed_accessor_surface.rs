@@ -662,3 +662,59 @@ fn rule_kind_enum_dispatch_nonempty() {
         "JSON {{\"a\":1}} must expose sub-cursors via .children()"
     );
 }
+
+// ───────────────────────────────────────────────────────────────────
+// AY-II.W0.d — projection-surface totality, per-grammar.
+// Retires the legacy gate of "at least four admissions" in favour of
+// the 1:1:1 per-grammar invariant (admission : materialiser :
+// consumer). The canonical gate lives in `projection_totality.rs`;
+// mirroring the per-grammar count check here keeps the typed-
+// accessor audit's coverage view aligned with the W0.d closure.
+// ───────────────────────────────────────────────────────────────────
+
+#[test]
+fn ay_ii_projection_totality_per_grammar() {
+    for (label, admissions, materializers, consumers) in [
+        (
+            "JsonG",
+            JsonG::PROJECTION_DIRECT_TO_STRUCT,
+            JsonG::PROJECTION_MATERIALIZERS,
+            JsonG::PROJECTION_CONSUMERS,
+        ),
+        (
+            "CssL4G",
+            CssL4G::PROJECTION_DIRECT_TO_STRUCT,
+            CssL4G::PROJECTION_MATERIALIZERS,
+            CssL4G::PROJECTION_CONSUMERS,
+        ),
+        (
+            "SheetsG",
+            SheetsG::PROJECTION_DIRECT_TO_STRUCT,
+            SheetsG::PROJECTION_MATERIALIZERS,
+            SheetsG::PROJECTION_CONSUMERS,
+        ),
+        (
+            "BbnfG",
+            BbnfG::PROJECTION_DIRECT_TO_STRUCT,
+            BbnfG::PROJECTION_MATERIALIZERS,
+            BbnfG::PROJECTION_CONSUMERS,
+        ),
+    ] {
+        assert_eq!(
+            admissions.len(),
+            materializers.len(),
+            "{label}: AY-II invariant 7 — admission count ({}) must equal \
+             materializer count ({})",
+            admissions.len(),
+            materializers.len(),
+        );
+        assert_eq!(
+            admissions.len(),
+            consumers.len(),
+            "{label}: AY-II invariant 7 — admission count ({}) must equal \
+             consumer count ({})",
+            admissions.len(),
+            consumers.len(),
+        );
+    }
+}

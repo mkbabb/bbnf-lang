@@ -297,14 +297,23 @@ c { background-color: rgb(100, 200, 50); }
 
     // bbnf's colour-aggregate wiring is gated on the colour-function
     // emitter path (AW.0.5 + W3.5a). Until that fires, bbnf reports
-    // zero `LargeAggregate` records. Document the pre-wiring state
-    // so the test stays green as the wiring lands — the field-for-
-    // field assertion runs only when bbnf actually surfaces the
-    // payload.
+    // zero `LargeAggregate` records. The field-for-field assertion
+    // runs only when bbnf actually surfaces the payload.
+    //
+    // AY-II.W0.d status: the `colorFn` rule admits to
+    // `PROJECTION_DIRECT_TO_STRUCT` as a rich cursor-backed projection
+    // (tuple shape contains `BoxedEnum` for nested `colorValue` refs,
+    // which the byte-packed aggregate path cannot carry). The
+    // `LargeAggregate` emit lane that this field-for-field comparator
+    // inspects still pending — its activation is W2's typed-CSS
+    // landing gate (`docs/tranches/AY-II/waves/W2.md` §colour projection).
+    // Leaving the early-return in place here so the test stays green
+    // through W1 close; W2 replaces this block with a direct
+    // assertion against the emitter's fused-pipeline colour output.
     if bbnf_colors.is_empty() {
         eprintln!(
             "color_channel_parity_rgb_family: bbnf_colors empty — \
-             colorFunction aggregate wiring not yet active. \
+             colorFunction aggregate wiring pending W2 (typed-CSS). \
              lightningcss admitted 3 RGBA colours; bbnf admitted 0 \
              LargeAggregate records."
         );

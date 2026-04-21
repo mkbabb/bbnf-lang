@@ -176,6 +176,29 @@ impl TapeRec {
     /// this bit selects the dense `pay_f64` column.
     pub const PAYLOAD_F64_DIRECT_BIT: u16 = 0x0010;
 
+    /// AY.W5.1 — bit in [`TapeRec::extra`] marking a record whose
+    /// [`crate::Columns::sib_skip`] slot has been stamped at write
+    /// time by [`crate::TapeBuilder::close_compound`].
+    ///
+    /// The write-time close-stamping path tracks each open compound's
+    /// direct children via an [`crate::TapeBuilder`]-owned open-frame
+    /// stack; every time a new direct child arrives the previous
+    /// child's `sib_skip` is stamped and this bit is set. At close
+    /// time the last direct child's `sib_skip` stays at `0` (the
+    /// "last sibling" marker) and the bit is stamped so the
+    /// stage-C finaliser knows the slot is already authoritative.
+    ///
+    /// [`crate::finaliser::finalise`] reads this bit on every record
+    /// during its step-3 sibling-skip stamping pass: when the bit is
+    /// set, the previously-live default ("overwrite `sib_skip[prev]`
+    /// with `i - prev`") is skipped, because the parser-side
+    /// close-stamp carries the authoritative distance already.
+    /// Records NOT covered by the open/close API (legacy `push_leaf`
+    /// / `push_compound` paths) keep the bit clear and finaliser
+    /// stamps them as before; the two paths coexist without
+    /// interference on a single tape.
+    pub const SIB_SKIP_STAMPED_BIT: u16 = 0x0020;
+
     /// Pack a [`TapeKind`] and `meta_idx` into the `kind_meta` byte
     /// and an `extra` companion bit. Returns
     /// `(kind_meta, extra_meta_bit)` where `extra_meta_bit` is
@@ -275,6 +298,17 @@ impl TapeRec {
     #[inline]
     pub fn payload_f64_direct(&self) -> bool {
         (self.extra & Self::PAYLOAD_F64_DIRECT_BIT) != 0
+    }
+
+    /// AY.W5.1 — true iff this record's [`crate::Columns::sib_skip`]
+    /// slot was stamped at write time by
+    /// [`crate::TapeBuilder::close_compound`]. Mirrors the
+    /// [`Self::SIB_SKIP_STAMPED_BIT`] gate used by
+    /// [`crate::finaliser::finalise`] to skip re-derivation of
+    /// already-authoritative slots.
+    #[inline]
+    pub fn sib_skip_stamped(&self) -> bool {
+        (self.extra & Self::SIB_SKIP_STAMPED_BIT) != 0
     }
 
     // ── ShapeRef accessors (AV.5.1) ──────────────────────────────

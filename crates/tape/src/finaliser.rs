@@ -22,6 +22,19 @@
 //! passes with a single linear scan whose work scales with `O(N)`
 //! across the whole tape — every record is visited exactly once.
 //!
+//! # AY.W5.1 — write-time close-stamping coexistence
+//!
+//! Stage-C is now a fallback rather than the sole writer. When a
+//! record's
+//! [`TapeRec::SIB_SKIP_STAMPED_BIT`](crate::tape::TapeRec::SIB_SKIP_STAMPED_BIT)
+//! is set, its `sib_skip` slot was stamped by
+//! [`TapeBuilder::close_compound`](crate::TapeBuilder::close_compound)
+//! at write time and the stage-C sibling-skip derivation skips it
+//! (the pre-stamped value is authoritative). Records the parser left
+//! unstamped keep the bit clear; stage-C stamps them exactly as before.
+//! Mixed tapes — some records close-stamped, others not — are handled
+//! in one forward pass.
+//!
 //! # Algorithm
 //!
 //! Every record's `frame_depth` byte places it at a known nesting
@@ -109,7 +122,7 @@
 //! [`GrammarProfile::parallel_break_even_bytes`](crate::GrammarProfile).
 
 use crate::columns::Columns;
-use crate::tape::TapeOffset;
+use crate::tape::{TapeOffset, TapeRec};
 
 /// Maximum frame depth supported by the AV.3 DTA driver.
 ///
@@ -276,8 +289,18 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
 
         // ── Step 3: stamp sib_skip on the previous same-depth record
         //    in the current frame ────────────────────────────────────
+        //
+        // AY.W5.1 — skip records whose
+        // [`TapeRec::SIB_SKIP_STAMPED_BIT`] is set: those were stamped
+        // at write-time by
+        // [`TapeBuilder::close_compound`](crate::TapeBuilder::close_compound)
+        // and carry an authoritative distance already. Records the
+        // parser left unstamped keep the bit clear and get stamped
+        // here exactly as pre-W5.1.
         if let Some(prev) = prev_at_depth[d] {
-            columns.set_sib_skip_at(prev, i_u32 - prev);
+            if (columns.extra_at(prev) & TapeRec::SIB_SKIP_STAMPED_BIT) == 0 {
+                columns.set_sib_skip_at(prev, i_u32 - prev);
+            }
         }
 
         // ── Step 4: update tracking for THIS record at depth d ────

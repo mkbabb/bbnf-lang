@@ -362,11 +362,13 @@ pub fn emit_parse_unordered(
                 ::bbnf::runtime::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,
+                0u8,
+                0u8,
                 0u16,
             );
-            builder.end_compound(outer_off, span_hi);
-            builder.columns_mut().set_child_off_at(
+            builder.end_compound_post_order(
                 outer_off,
+                span_hi,
                 ::bbnf::runtime::tape::TapeOffset(outer_child),
             );
             ::core::result::Result::Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
@@ -424,11 +426,13 @@ fn emit_parse_unordered_fallback(
                 ::bbnf::runtime::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,
+                0u8,
+                0u8,
                 0u16,
             );
-            builder.end_compound(outer_off, span_hi);
-            builder.columns_mut().set_child_off_at(
+            builder.end_compound_post_order(
                 outer_off,
+                span_hi,
                 ::bbnf::runtime::tape::TapeOffset(outer_child),
             );
             ::core::result::Result::Ok(::bbnf::runtime::tape::TapeOffset(outer_off))

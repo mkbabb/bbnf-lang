@@ -122,6 +122,8 @@ pub fn emit_parse_object(
                 ::bbnf::runtime::tape::TapeKind::Seq,
                 span_lo,
                 #variant_idx,
+                0u8,
+                0u8,
                 0u16,
             );
 
@@ -131,6 +133,8 @@ pub fn emit_parse_object(
                 ::bbnf::runtime::tape::TapeKind::Seq,
                 lbrace_open,
                 0,
+                0u8,
+                0u8,
                 0u16,
             );
 
@@ -154,6 +158,8 @@ pub fn emit_parse_object(
                 ::bbnf::runtime::tape::TapeKind::Seq,
                 opt_ws_open,
                 0,
+                0u8,
+                0u8,
                 0u16,
             );
 
@@ -163,6 +169,8 @@ pub fn emit_parse_object(
                 ::bbnf::runtime::tape::TapeKind::Rule,
                 repeat_open,
                 0,
+                0u8,
+                0u8,
                 0u16,
             );
 
@@ -209,6 +217,8 @@ pub fn emit_parse_object(
                     ::bbnf::runtime::tape::TapeKind::Seq,
                     iter_open,
                     0,
+                    0u8,
+                    0u8,
                     0u16,
                 );
 
@@ -219,6 +229,8 @@ pub fn emit_parse_object(
                     ::bbnf::runtime::tape::TapeKind::Seq,
                     pair_open,
                     #pair_variant,
+                    0u8,
+                    0u8,
                     0u16,
                 );
 
@@ -241,6 +253,8 @@ pub fn emit_parse_object(
                     ::bbnf::runtime::tape::TapeKind::Seq,
                     colon_next_open,
                     0,
+                    0u8,
+                    0u8,
                     0u16,
                 );
 
@@ -252,6 +266,8 @@ pub fn emit_parse_object(
                     ::bbnf::runtime::tape::TapeKind::Seq,
                     opt_colon_open,
                     0,
+                    0u8,
+                    0u8,
                     0u16,
                 );
                 // Leading WsTrim inside colon's OW Seq.
@@ -302,6 +318,8 @@ pub fn emit_parse_object(
                     ::bbnf::runtime::tape::TapeKind::Rule,
                     comma_repeat_open,
                     0,
+                    0u8,
+                    0u8,
                     0u16,
                 );
 
@@ -314,6 +332,8 @@ pub fn emit_parse_object(
                         ::bbnf::runtime::tape::TapeKind::Seq,
                         comma_iter_open,
                         0,
+                        0u8,
+                        0u8,
                         0u16,
                     );
                     let comma_lo = *p as u32;

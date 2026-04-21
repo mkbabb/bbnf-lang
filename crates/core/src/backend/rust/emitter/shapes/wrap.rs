@@ -535,15 +535,21 @@ fn emit_alt_tape_dispatch(
                 ::bbnf::runtime::tape::TapeKind::Rule,
                 __wrap_enter_p,
                 #rule_variant_idx,
-                __wrap_chosen_meta as u16,
+                __wrap_chosen_meta,
+                0u8,
+                0u16,
             );
-            builder.end_compound(__wrap_off, __wrap_exit_p);
-            // Walker-parity override: the compound's child_off points at
-            // the first branch record emitted (captured at enter via
-            // columns.len()). Post-close override preserves
-            // write-time stamping semantics (finaliser skips re-derivation).
-            builder.columns_mut().set_child_off_at(
+            // AY-II.W0-fix — end_compound_post_order stamps span_hi +
+            // child_off (backward to first branch record) + HAS_CHILDREN
+            // atomically. Pre-fix the manual end_compound +
+            // set_child_off_at pair never set HAS_CHILDREN_BIT for the
+            // post-order layout (end_compound's heuristic requires
+            // open_offset + 1 < cols.len(), false for post-order), so
+            // readers saw has_children == false on a compound that DID
+            // have children.
+            builder.end_compound_post_order(
                 __wrap_off,
+                __wrap_exit_p,
                 ::bbnf::runtime::tape::TapeOffset(__wrap_enter_child),
             );
             Ok(::bbnf::runtime::tape::TapeOffset(__wrap_off))

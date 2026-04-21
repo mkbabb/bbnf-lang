@@ -120,11 +120,13 @@ pub fn emit_parse_arglist(
                 ::bbnf::runtime::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,
+                0u8,
+                0u8,
                 0u16,
             );
-            builder.end_compound(outer_off, span_hi);
-            builder.columns_mut().set_child_off_at(
+            builder.end_compound_post_order(
                 outer_off,
+                span_hi,
                 ::bbnf::runtime::tape::TapeOffset(outer_child),
             );
             Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
@@ -312,11 +314,13 @@ fn emit_tape_position_core(
                             ::bbnf::runtime::tape::TapeKind::Seq,
                             iter_lo,
                             0,
+                            0u8,
+                            0u8,
                             0u16,
                         );
-                        builder.end_compound(__iter_off, iter_hi);
-                        builder.columns_mut().set_child_off_at(
+                        builder.end_compound_post_order(
                             __iter_off,
+                            iter_hi,
                             ::bbnf::runtime::tape::TapeOffset(iter_child),
                         );
                     }
@@ -350,11 +354,13 @@ fn emit_tape_position_core(
                             ::bbnf::runtime::tape::TapeKind::Seq,
                             iter_lo,
                             0,
+                            0u8,
+                            0u8,
                             0u16,
                         );
-                        builder.end_compound(__iter_off, iter_hi);
-                        builder.columns_mut().set_child_off_at(
+                        builder.end_compound_post_order(
                             __iter_off,
+                            iter_hi,
                             ::bbnf::runtime::tape::TapeOffset(iter_child),
                         );
                         iter_count = iter_count.saturating_add(1);
@@ -371,11 +377,13 @@ fn emit_tape_position_core(
                         ::bbnf::runtime::tape::TapeKind::Rule,
                         repeat_lo,
                         0,
+                        0u8,
+                        0u8,
                         0u16,
                     );
-                    builder.end_compound(__repeat_off, repeat_hi);
-                    builder.columns_mut().set_child_off_at(
+                    builder.end_compound_post_order(
                         __repeat_off,
+                        repeat_hi,
                         ::bbnf::runtime::tape::TapeOffset(repeat_child),
                     );
                 }
@@ -401,11 +409,13 @@ fn emit_tape_position_core(
                     ::bbnf::runtime::tape::TapeKind::Seq,
                     seq_lo,
                     0,
+                    0u8,
+                    0u8,
                     0u16,
                 );
-                builder.end_compound(__seq_off, seq_hi);
-                builder.columns_mut().set_child_off_at(
+                builder.end_compound_post_order(
                     __seq_off,
+                    seq_hi,
                     ::bbnf::runtime::tape::TapeOffset(seq_child),
                 );
             }

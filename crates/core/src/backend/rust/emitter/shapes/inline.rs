@@ -345,11 +345,13 @@ fn emit_alt_tape(
                 ::bbnf::runtime::tape::TapeKind::Alt,
                 alt_lo,
                 #variant_lit,
+                0u8,
+                0u8,
                 0u16,
             );
-            builder.end_compound(__alt_off, alt_hi);
-            builder.columns_mut().set_child_off_at(
+            builder.end_compound_post_order(
                 __alt_off,
+                alt_hi,
                 ::bbnf::runtime::tape::TapeOffset(alt_child),
             );
         }
@@ -1533,11 +1535,13 @@ fn emit_token_dispatch_tape(
                 ::bbnf::runtime::tape::TapeKind::TokenDispatch,
                 td_lo,
                 #variant_lit,
+                0u8,
+                0u8,
                 0u16,
             );
-            builder.end_compound(__td_off, td_hi);
-            builder.columns_mut().set_child_off_at(
+            builder.end_compound_post_order(
                 __td_off,
+                td_hi,
                 ::bbnf::runtime::tape::TapeOffset(td_child),
             );
         }

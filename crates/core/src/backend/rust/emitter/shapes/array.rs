@@ -202,6 +202,8 @@ fn emit_parse_array_wrapped(
                 ::bbnf::runtime::tape::TapeKind::Seq,
                 span_lo,
                 #variant_idx,
+                0u8,
+                0u8,
                 0u16,
             );
 
@@ -211,6 +213,8 @@ fn emit_parse_array_wrapped(
                 ::bbnf::runtime::tape::TapeKind::Seq,
                 lbracket_open,
                 0,
+                0u8,
+                0u8,
                 0u16,
             );
 
@@ -237,6 +241,8 @@ fn emit_parse_array_wrapped(
                 ::bbnf::runtime::tape::TapeKind::Seq,
                 opt_ws_open,
                 0,
+                0u8,
+                0u8,
                 0u16,
             );
 
@@ -249,6 +255,8 @@ fn emit_parse_array_wrapped(
                 ::bbnf::runtime::tape::TapeKind::Rule,
                 repeat_open,
                 0,
+                0u8,
+                0u8,
                 0u16,
             );
 
@@ -304,6 +312,8 @@ fn emit_parse_array_wrapped(
                     ::bbnf::runtime::tape::TapeKind::Seq,
                     iter_open,
                     0,
+                    0u8,
+                    0u8,
                     0u16,
                 );
 
@@ -321,6 +331,8 @@ fn emit_parse_array_wrapped(
                     ::bbnf::runtime::tape::TapeKind::Rule,
                     comma_repeat_open,
                     0,
+                    0u8,
+                    0u8,
                     0u16,
                 );
 
@@ -341,6 +353,8 @@ fn emit_parse_array_wrapped(
                         ::bbnf::runtime::tape::TapeKind::Seq,
                         comma_iter_open,
                         0,
+                        0u8,
+                        0u8,
                         0u16,
                     );
                     let comma_lo = *p as u32;
@@ -585,6 +599,8 @@ fn emit_parse_array_list(
                 ::bbnf::runtime::tape::TapeKind::Seq,
                 iter_open,
                 0,
+                0u8,
+                0u8,
                 0u16,
             );
 
@@ -663,6 +679,8 @@ fn emit_parse_array_list(
                     ::bbnf::runtime::tape::TapeKind::Rule,
                     repeat_open,
                     0,
+                    0u8,
+                    0u8,
                     0u16,
                 );
 
@@ -744,6 +762,8 @@ fn emit_parse_array_list(
                 let repeat_off = builder.begin_compound(
                     ::bbnf::runtime::tape::TapeKind::Rule,
                     repeat_open,
+                    0u8,
+                    0u8,
                     0u8,
                     0u16,
                 );

@@ -231,6 +231,8 @@ pub fn emit_parse_pratt(
                 ::bbnf::runtime::tape::TapeKind::Rule,
                 outer_span_lo,
                 #variant_idx,
+                0u8,
+                0u8,
                 0u16,
             );
             // Under begin_compound, the first direct child lands at
@@ -361,11 +363,13 @@ pub fn emit_parse_pratt(
                         ::bbnf::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
+                        0u8,
+                        0u8,
                         0u16,
                     );
-                    builder.end_compound(compound_idx, reducer_span_hi);
-                    builder.columns_mut().set_child_off_at(
+                    builder.end_compound_post_order(
                         compound_idx,
+                        reducer_span_hi,
                         ::bbnf::runtime::tape::TapeOffset(lhs_idx),
                     );
                     this_operand_root = compound_idx;

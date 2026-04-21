@@ -321,11 +321,13 @@ pub fn emit_parse_alt_dispatch(
                 ::bbnf::runtime::tape::TapeKind::Rule,
                 alt_lo,
                 #variant_idx,
+                0u8,
+                0u8,
                 0u16,
             );
-            builder.end_compound(off, alt_hi);
-            builder.columns_mut().set_child_off_at(
+            builder.end_compound_post_order(
                 off,
+                alt_hi,
                 ::bbnf::runtime::tape::TapeOffset(alt_child),
             );
             Ok(::bbnf::runtime::tape::TapeOffset(off))

@@ -858,6 +858,18 @@ impl RustEmitter {
                     ::bbnf::runtime::tape::TapeBuilder::with_capacity(
                         GRAMMAR_PROFILE.capacity_for(input.len()),
                     );
+                // AY-II.W0.b — fused pipeline allocation. W0.c publishes
+                // the ValueBuilder type at
+                // crates/core/src/runtime/value_builder.rs. The parse
+                // entry constructs tape + value surface in a single
+                // walk; every shape emitter's compound/leaf push writes
+                // to both builders in lockstep. Dispatcher invocation
+                // threads value_builder alongside builder so per-Ref
+                // calls propagate both surfaces.
+                let mut value_builder =
+                    ::bbnf::runtime::value_builder::ValueBuilder::<Self>::new(
+                        GRAMMAR_PROFILE.capacity_for(input.len()),
+                    );
                 let root_off = {
                     let mut pos: usize = 0;
                     let off = #dispatcher(
@@ -901,8 +913,17 @@ impl RustEmitter {
                 let tape = builder
                     .finish()
                     .map_err(::bbnf::runtime::ParseErr::Tape)?;
+                // AY-II.W0.b — value_builder.finish() projects the
+                // constructed <Grammar>Value surface into a slab-backed
+                // handle; Parsed::new_fused carries both tape + value
+                // so Parsed::to_value() returns the already-constructed
+                // value without reparsing. W0.c owns the Parsed signature
+                // change; emitter threads the fused handle here.
+                let value = value_builder.finish();
                 ::core::result::Result::Ok(
-                    ::bbnf::runtime::Parsed::new(tape, input, root_off),
+                    ::bbnf::runtime::Parsed::new_fused(
+                        tape, input, root_off, value,
+                    ),
                 )
             }
         };

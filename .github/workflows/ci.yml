@@ -8,7 +8,7 @@ on:
 
 jobs:
   rust:
-    name: Rust — cargo test + clippy
+    name: Rust — preflight + workspace close
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,13 +18,31 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install cargo-expand
         run: cargo install cargo-expand --locked
-      - name: Bootstrap regen clean
+
+      # ── Preflight (routine surface) ────────────────────────────────
+      # Fast checks that close on the ax-iter profile. Bootstrap regen
+      # clean, clippy, and compile-gate under the routine profile.
+      # Short timeout — this block is the iteration loop, not the
+      # close gate.
+      - name: Preflight — bootstrap regen clean
+        timeout-minutes: 5
         run: bash scripts/check-bootstrap-clean.sh
-      - run: cargo clippy --all-targets -- -D warnings
-      - run: cargo test --workspace
-      - name: Sonic-rs JSON parity
+      - name: Preflight — clippy
+        timeout-minutes: 10
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Preflight — iter-check (ax-iter compile-gate)
+        timeout-minutes: 5
+        run: cargo iter-check
+
+      # ── Heavy (wave-close gates) ───────────────────────────────────
+      # Full-workspace correctness + parity proofs. These are the
+      # close gates; they pay the full release-profile cost and are
+      # explicitly separated from the routine preflight block above.
+      - name: Heavy — workspace tests
+        run: cargo test --workspace
+      - name: Heavy — sonic-rs JSON parity
         run: cargo test -p bbnf --test sonic_rs_parity --release
-      - name: Lightningcss CSS parity
+      - name: Heavy — lightningcss CSS parity
         run: cargo test -p bbnf --test lightningcss_parity --release
 
   extension:

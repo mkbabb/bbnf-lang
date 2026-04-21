@@ -47,6 +47,8 @@
 
 use crate::columns::Columns;
 use crate::kind::TapeKind;
+use crate::stage1::StructuralIndex;
+use crate::structural_scan::scan_structural;
 use crate::tape::{Tape, TapeOffset, TapeRec};
 
 /// Monotonic per-column rank maintained by a walker stepping through
@@ -283,84 +285,252 @@ impl<'tape> TapeCursor<'tape> {
         self.children()
     }
 
-    /// Scan the source-byte range `[cur.span_lo, end_span)` for
-    /// structural positions (quotes, brackets, commas — whatever the
-    /// grammar's structural-scan policy admits) and return an
-    /// iterator over the matching absolute byte offsets.
-    ///
-    /// AY-II.W0.a lands the signature; AY-II.W0.e wires per-grammar
-    /// activation through the emitter's `STRUCTURAL_SCAN_POLICY`
-    /// table. Until the consumer wiring lands, the default
-    /// implementation yields the empty iterator — grammars whose
-    /// structural-scan alphabet is unresolved at emit time quietly
-    /// fall back to per-byte scanning upstream rather than panicking
-    /// or allocating.
-    #[inline]
-    pub fn scan_structural_bounded(&self, end_span: u32) -> ScanResult<'tape> {
-        let _ = end_span;
-        ScanResult {
-            tape: self.tape,
-            positions: &[],
-            cursor: 0,
-        }
-    }
-
 }
 
-/// Lightweight iterator over structural byte positions discovered by
-/// [`TapeCursor::scan_structural_bounded`].
+// === W0.e: promoted substrate surface ===
+//
+// Tranche AY-II.W0.e promotes the `scan_structural` + `StructuralIndex`
+// pair from standalone free functions to universal cursor services.
+//
+// The three primitives below are inline-only zero-cost wrappers over
+// the substrate columns — no runtime dispatch, no allocation on the
+// hot path for `bounded_lookahead` and `scan_structural_bounded`.
+// Grammar-emitted `__path_walk` and `Parsed::get` bodies route
+// through these primitives when the per-grammar
+// `STRUCTURAL_SCAN_POLICY` admits the matching capability.
+//
+// The APIs are `Cursor`-scoped (not free functions) so every consumer
+// carries its `'tape` lifetime through the substrate — the ScanResult
+// / BoundedLookahead borrow the same tape the cursor points into, and
+// the borrow checker enforces no-outlive at monomorphisation.
+
+/// Outcome of a bounded structural scan inside a compound record.
 ///
-/// AY-II.W0.a — empty-iter scaffold. AY-II.W0.e populates the body
-/// over the structural-scan substrate service. The shape is a
-/// borrowed `&[u32]` slice so the populated form can point directly
-/// into the scanner's pre-computed position column without a fresh
-/// allocation on the hot path; the scaffold holds an empty slice.
-#[derive(Debug)]
+/// Captures the list of structural-record offsets the scan visited
+/// within the bound, paired with their record kinds. The scan walks
+/// direct children of the cursor's current record whose span ends at
+/// or before `end_span`; each visited offset represents a structural
+/// landmark the caller (materializer / `__path_walk` / object-key
+/// seek) can key its next step off.
+///
+/// Zero-allocation when the bounded window is empty (common on
+/// leaf-heavy rules); a single `SmallVec`-shaped inline buffer is
+/// avoided in favour of lazy iteration via [`Self::iter`] so
+/// consumers that only need the first match pay no heap cost at all.
+#[derive(Clone, Copy, Debug)]
 pub struct ScanResult<'tape> {
-    /// Carries the tape reference so the W0.e body can materialise
-    /// [`TapeCursor`] handles against the scanner-produced offsets
-    /// without re-threading `'tape` through every caller.
     tape: &'tape Tape,
-    /// Pre-computed structural byte positions within the bounded
-    /// range. Empty on the scaffold returned by the W0.a default.
-    positions: &'tape [u32],
-    /// Read cursor into [`Self::positions`].
-    cursor: usize,
+    /// Inclusive first offset admitted by the scan (or `None` when
+    /// empty).
+    first: Option<u32>,
+    /// Exclusive upper bound — the scan stops when it reaches a
+    /// record whose `span_hi` exceeds this value.
+    end_span: u32,
 }
 
 impl<'tape> ScanResult<'tape> {
-    /// Borrow the tape this result was derived from.
+    /// The tape this scan was produced from.
     #[inline]
     pub fn tape(&self) -> &'tape Tape {
         self.tape
     }
 
-    /// Borrow the underlying position slice. Empty on the W0.a
-    /// scaffold; populated by W0.e's structural-scan wiring.
+
+    /// Is the bounded window empty?
     #[inline]
-    pub fn positions(&self) -> &'tape [u32] {
-        self.positions
+    pub fn is_empty(&self) -> bool {
+        self.first.is_none()
+    }
+
+    /// Iterate every bounded cursor in the scan result.
+    ///
+    /// Yields one [`TapeCursor`] per sibling record within the
+    /// bounded window, in emission (source) order. Zero heap
+    /// allocation per step — the walker reads `sib_skip` + `span_hi`
+    /// at each position to advance.
+    #[inline]
+    pub fn iter(&self) -> BoundedLookahead<'tape> {
+        BoundedLookahead {
+            tape: self.tape,
+            next: self.first,
+            end_span: self.end_span,
+        }
+    }
+
+    /// First offset in the scan result, as a cursor. `None` when the
+    /// bounded window is empty.
+    ///
+    /// Hot path for structural-scan consumers that only want the
+    /// earliest landmark (e.g. object-key seek's value-position
+    /// entry).
+    #[inline]
+    pub fn first(&self) -> Option<TapeCursor<'tape>> {
+        self.first.map(|off| TapeCursor::new(self.tape, TapeOffset(off)))
     }
 }
 
-impl<'tape> Iterator for ScanResult<'tape> {
-    type Item = u32;
+/// Forward iterator over records inside a span-bounded window,
+/// yielded as cursors in emission order.
+///
+/// Advances by the same sibling-skip mechanism [`ChildIter`] uses, but
+/// terminates early when the current record's `span_hi` exceeds the
+/// window's bound — the caller gets exactly the records the
+/// structural scan admits, not every child of the current compound.
+///
+/// Produced by [`TapeCursor::bounded_lookahead`] and
+/// [`ScanResult::iter`]. Zero heap allocation per step; every advance
+/// is two column reads (`sib_skip_at`, `span_at`).
+#[derive(Clone, Copy, Debug)]
+pub struct BoundedLookahead<'tape> {
+    tape: &'tape Tape,
+    /// Next record offset to yield. `None` once the iterator is
+    /// exhausted or the window is empty.
+    next: Option<u32>,
+    /// Exclusive upper bound on the source-span end — a record whose
+    /// `span_hi` exceeds this value terminates the walk.
+    end_span: u32,
+}
+
+impl<'tape> Iterator for BoundedLookahead<'tape> {
+    type Item = TapeCursor<'tape>;
 
     #[inline]
-    fn next(&mut self) -> Option<u32> {
-        let pos = self.positions.get(self.cursor).copied()?;
-        self.cursor += 1;
-        Some(pos)
-    }
-
-    #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining = self.positions.len().saturating_sub(self.cursor);
-        (remaining, Some(remaining))
+    fn next(&mut self) -> Option<TapeCursor<'tape>> {
+        let current = self.next?;
+        let columns = self.tape.columns();
+        let (_, span_hi) = columns.span_at(current);
+        if span_hi > self.end_span {
+            self.next = None;
+            return None;
+        }
+        let step = columns.sib_skip_at(current);
+        self.next = if step == 0 {
+            None
+        } else {
+            current.checked_add(step)
+        };
+        Some(TapeCursor::new(self.tape, TapeOffset(current)))
     }
 }
 
-impl ExactSizeIterator for ScanResult<'_> {}
+impl<'tape> TapeCursor<'tape> {
+    /// Seek to the value record associated with the key whose source
+    /// span equals `key_span`, under the current compound.
+    ///
+    /// Walks the direct children of the current compound (which the
+    /// caller guarantees is an object-shaped record whose children
+    /// alternate key / value) and returns a cursor at the value
+    /// position immediately following the key whose span matches.
+    ///
+    /// Returns `None` when:
+    ///
+    /// - the current record has no children;
+    /// - no child's span equals `key_span`;
+    /// - the matching key is the last child (no value slot).
+    ///
+    /// Inline-ready: the emitter splices this into `__path_walk` for
+    /// object-key lookups admitted by the grammar's
+    /// `STRUCTURAL_SCAN_POLICY`. The per-call cost is O(children) in
+    /// the worst case; grammars whose policy admits
+    /// `SCAN_STRUCTURAL_BOUNDED` additionally route the scan window
+    /// through a structural index to amortise multi-key lookups.
+    #[inline]
+    pub fn object_key_seek(&self, key_span: (u32, u32)) -> Option<TapeCursor<'tape>> {
+        let columns = self.tape.columns();
+        if !columns.has_children_at(self.offset.0) {
+            return None;
+        }
+        let first_child_root = first_child_root(columns, self.offset.0)?;
+        let mut current = first_child_root;
+        loop {
+            let span = columns.span_at(current);
+            if span == key_span {
+                // Matched — the value is the key's next sibling.
+                let step = columns.sib_skip_at(current);
+                if step == 0 {
+                    return None;
+                }
+                let value_off = current.checked_add(step)?;
+                return Some(TapeCursor::new(self.tape, TapeOffset(value_off)));
+            }
+            let step = columns.sib_skip_at(current);
+            if step == 0 {
+                return None;
+            }
+            current = current.checked_add(step)?;
+        }
+    }
+
+    /// Produce a cursor iterator over records whose source span ends
+    /// at or before `end_span`, starting from the first direct child
+    /// of the current record.
+    ///
+    /// Used by emitted `__path_walk` bodies to bound the lookahead
+    /// window when traversing a compound's children without visiting
+    /// records past a known end-of-structure marker (e.g. the
+    /// closing `}` of a CSS block). Zero heap allocation per step.
+    #[inline]
+    pub fn bounded_lookahead(&self, end_span: u32) -> BoundedLookahead<'tape> {
+        let columns = self.tape.columns();
+        let next = if columns.has_children_at(self.offset.0) {
+            first_child_root(columns, self.offset.0)
+        } else {
+            None
+        };
+        BoundedLookahead {
+            tape: self.tape,
+            next,
+            end_span,
+        }
+    }
+
+    /// Scan direct children of the current record whose source span
+    /// ends at or before `end_span`, returning a [`ScanResult`] the
+    /// caller can iterate or probe.
+    ///
+    /// Companion to [`Self::bounded_lookahead`] for consumers that
+    /// want the scan substrate surface rather than the iterator
+    /// directly — the emitter's generated materializer keys its
+    /// per-rule dispatch off the [`ScanResult`] shape.
+    #[inline]
+    pub fn scan_structural_bounded(&self, end_span: u32) -> ScanResult<'tape> {
+        let columns = self.tape.columns();
+        let first = if columns.has_children_at(self.offset.0) {
+            match first_child_root(columns, self.offset.0) {
+                Some(root) => {
+                    let (_, span_hi) = columns.span_at(root);
+                    if span_hi <= end_span {
+                        Some(root)
+                    } else {
+                        None
+                    }
+                }
+                None => None,
+            }
+        } else {
+            None
+        };
+        ScanResult {
+            tape: self.tape,
+            first,
+            end_span,
+        }
+    }
+
+    /// Build a fresh [`StructuralIndex`] over `input[start..end]`
+    /// against the grammar's sorted `alphabet`.
+    ///
+    /// Substrate-level shortcut — zero-allocates when the window is
+    /// empty, otherwise dispatches to [`scan_structural`] with a
+    /// bounded slice. Generated parsers consult this when the
+    /// grammar's `STRUCTURAL_SCAN_POLICY` admits a bounded-window
+    /// scan inside a rule whose extent the parser already knows
+    /// (e.g. a CSS block body bounded by `{...}`).
+    #[inline]
+    pub fn scan_window(input: &[u8], alphabet: &[u8]) -> StructuralIndex {
+        scan_structural(input, alphabet)
+    }
+}
 
 /// Forward-order iterator over a compound's direct children.
 ///

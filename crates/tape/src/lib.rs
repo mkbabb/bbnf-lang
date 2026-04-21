@@ -67,7 +67,7 @@ pub use columns::{
     ColumnTag, Columns, Count, MaxF64, MinF64, PayAggU8, PayNarrowU32, PayWideF64, PayWideU64,
     Reducer, SumF64, SumU32, SumU64,
 };
-pub use cursor::{ChildIter, ColumnRank, ScanResult, TapeCursor};
+pub use cursor::{BoundedLookahead, ChildIter, ColumnRank, ScanResult, TapeCursor};
 pub use dedup::{columns_range_eq, push_compound_referring, BloomDedup, N_WORDS};
 // AX.W0b.A — tape-emission helper re-exports. Post-W0b the walker
 // interpreter retires; shape emitters are the sole consumers of
@@ -81,7 +81,9 @@ pub use dta::{DtaAssociativity, DtaPrecedenceEntry, DtaRuleId, DtaStateId};
 pub use finaliser::{derive_frame_depth, finalise, STACK_DEPTH_HINT};
 pub use kind::TapeKind;
 pub use packed::PackedRecord;
-pub use profile::{GrammarProfile, RuleId};
+pub use profile::{
+    GrammarProfile, RuleId, ScanActivationFlags, ScanAlphabetClass, ScanPolicyEntry,
+};
 pub use psi::{PayloadJob, PayloadKind, PayloadStream};
 pub use stage1::StructuralIndex;
 pub use structural_scan::{next_structural_at_or_after, scan_structural};

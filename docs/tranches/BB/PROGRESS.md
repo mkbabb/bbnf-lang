@@ -2,4 +2,7 @@
 
 Dated execution log for tranche BB.
 
-Execution begins when the tranche opens.
+- `Status`: planned
+- `Opens after`: AY close
+- `Current wave`: not started
+- `Next wave`: W0

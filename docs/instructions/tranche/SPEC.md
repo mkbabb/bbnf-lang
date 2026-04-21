@@ -12,6 +12,28 @@ Grounded in the 12-tranche retrospective corpus at
 + `SYNTHESIS.md`. Every rule below has an anti-pattern it
 corrects.
 
+## Prelude annexes
+
+A tranche may be preceded by a **narrow execution-runway annex**
+when, and only when, that annex shortens the blocked tranche's
+execution loop directly.
+
+Rules:
+
+1. A prelude annex owns **no parity-critical runtime architecture**.
+2. A prelude annex exists only to remove command-surface, build,
+   bench, or profiling drag that would otherwise obstruct the named
+   tranche's next wave.
+3. A prelude annex must be **bounded**: normally 2-3 waves, no
+   successor debt tree of its own.
+4. The blocked tranche must name the annex explicitly in its wave
+   schedule (`opens after B0 close`, etc.).
+5. A prelude annex is not a refuge for hard work. If an item is
+   required to hit the blocked tranche's close gates, it stays in that
+   tranche.
+6. If the annex's scope grows enough to compete with the blocked
+   tranche, the plan is wrong and must be rewritten.
+
 ## Document set
 
 A tranche owns a directory `docs/tranches/{LETTER}/`:
@@ -48,6 +70,9 @@ A tranche owns a directory `docs/tranches/{LETTER}/`:
    5+ predecessors (per `SYNTHESIS.md`'s ledger) either land as
    named phases or formally retire with rationale — no sixth-
    tranche drift.
+4. **Decide whether a prelude annex is warranted.** Default answer:
+   no. Use one only when measured build/bench/profiling drag would
+   otherwise block the next named wave of the tranche being authored.
 
 ## Plan structure
 
@@ -98,6 +123,8 @@ noted", style notes.
 ### Sequencing
 
 - Waves sequence by dependency, not letter order.
+- Prelude annexes, when used, close before the blocked tranche's named
+  wave opens. They do not run in parallel with that wave.
 - **Workspace green at every wave boundary**, unless the plan
   declares intentional unworkability for a specific window
   (delete-then-swap). The unworkability window carries a named

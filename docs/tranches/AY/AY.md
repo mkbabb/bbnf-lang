@@ -4,12 +4,14 @@ AY is the parity tranche. It closes the post-AU architectural drift by
 making the grammar-derived parser write one canonical packed substrate
 directly, then driving the default eager JSON path to near sonic-rs
 parity on that substrate. AY does not mix in replay, recovery,
-incremental tooling, or build-iteration reform; those move to AZ and
-BB. AY does not open a second runtime path; it replaces the current
-generic tape-first hot contract with a single hybrid substrate informed
-by sonic-rs-class direct construction, simdjson-class structural
-leverage, and the bbnf research corpus where those ideas survive as
-fully general mechanisms.
+incremental tooling, or broad build-iteration reform; those move to AZ
+and post-AY BB. The only sanctioned pre-AY support work is the narrow
+`B0` runway annex that removes command/build/bench drag blocking
+`AY.W5`. AY does not open a second runtime path; it replaces the
+current generic tape-first hot contract with a single hybrid substrate
+informed by sonic-rs-class direct construction, simdjson-class
+structural leverage, and the bbnf research corpus where those ideas
+survive as fully general mechanisms.
 
 ## Architectural thesis
 
@@ -45,6 +47,8 @@ fully general mechanisms.
 9. Near parity is the floor, not a stretch-only aspiration.
 10. Compile/build/tooling work stays out unless load-bearing for AY
     parity closure.
+11. Any runtime work required to hit `W8` stays in AY; it does not get
+    deferred into BA, BB, or an annex.
 
 ## Operational posture
 
@@ -56,7 +60,9 @@ fully general mechanisms.
    evidence for activation claims; grep-only gates do not close waves.
 4. Grammar-derived generality is enforced at plan time: no JSON-only,
    CSS-only, or Sheets-only handwritten semantic paths.
-5. When a lever does not prove out, it is documented in AY and routed
+5. The only pre-AY support tranche is `B0`, and it may touch only the
+   command/profile/bench runway required to execute `W5-W7` rapidly.
+6. When a lever does not prove out, it is documented in AY and routed
    cleanly to AZ/BA/BB at tranche close rather than left as a dead
    surface.
 
@@ -69,7 +75,7 @@ fully general mechanisms.
 | **W2** | [waves/W2.md](waves/W2.md) | Named preservation, wrap-compound elision, canonicalisation | W1 | Complete with recorded misses |
 | **W3** | [waves/W3.md](waves/W3.md) | Grammar-derived value surface and first-class value benchmarks | W2 | Complete with recorded misses |
 | **W4** | [waves/W4.md](waves/W4.md) | SIMD string/number and regex hot-path repairs | W3 | Complete with recorded misses |
-| **W5** | [waves/W5.md](waves/W5.md) | Canonical packed substrate contract and direct JSON write | W4 | Not started |
+| **W5** | [waves/W5.md](waves/W5.md) | Canonical packed substrate contract and direct JSON write | W4 + B0 | Not started |
 | **W6** | [waves/W6.md](waves/W6.md) | Consumer unification, general direct-to-struct, and Pratt/operator lowering | W5 | Not started |
 | **W7** | [waves/W7.md](waves/W7.md) | Minimal globally informed optimizer integration | W6 | Not started |
 | **W8** | [waves/W8.md](waves/W8.md) | Near-parity close, FINAL, and AZ/BA/BB handoff | W7 | Not started |
@@ -91,6 +97,8 @@ AY does not close until all of the following are true:
    geomean `<= 1.20`.
 6. CSS, Sheets, and BBNF preserve their current functional guarantees;
    AY does not buy parity by regressing grammar generality.
+7. B0 is closed and no parity-critical AY work remains parked in an
+   annex or future tooling tranche.
 
 ## Defensible floor
 
@@ -126,5 +134,5 @@ Decision at W8 close, not mid-wave:
 
 When AY closes correctly, bbnf has one grammar-derived parser, one
 canonical packed substrate, one truthful hot eager JSON path in the
-sonic-rs class, and one substrate handoff that AZ, BA, and BB can
-extend without reopening runtime duality or substrate drift.
+sonic-rs class, and one substrate handoff that AZ, BA, and post-AY BB
+can extend without reopening runtime duality or substrate drift.

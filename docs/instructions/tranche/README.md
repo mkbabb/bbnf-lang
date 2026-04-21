@@ -21,6 +21,8 @@ Normative documents for tranche authoring and execution. Composes
 - [AGENT_BRIEF_TEMPLATE.md](AGENT_BRIEF_TEMPLATE.md) — Sub-agent
   prompt boilerplate. Orchestrator substitutes bracketed fields per
   wave; each per-wave dispatch shrinks by ~50% vs re-derived prose.
+  `SPEC.md` also permits a narrow prelude annex when build/bench drag
+  would otherwise block the tranche's next real wave.
 
 ## Invocation order
 
@@ -30,6 +32,8 @@ Normative documents for tranche authoring and execution. Composes
    agents per `RESEARCH.md` when the design space is open-ended.
    Artefacts land in `docs/tranches/{LETTER}/research/`.
 3. **Author plan**. Write `{LETTER}.md` per `SPEC.md` §Plan structure.
+   If a bounded prelude annex is truly necessary, author it first and
+   make the blocked tranche name it explicitly.
 4. **Per-wave specs** (conditional). If the tranche scope triggers
    `WAVE_SPEC.md` §"When required": author `waves/W<N>.md` per wave
    before dispatching any agent into that wave.

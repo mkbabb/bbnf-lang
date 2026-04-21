@@ -41,6 +41,12 @@ What did not land is equally important:
 
 The repository is therefore in an “AY closeover” state, not an AY close state and not yet a clean AZ-open state.
 
+One planning correction follows from that state:
+
+- do not execute full BB before AY,
+- do extract a narrow pre-AY runway annex that fixes command/build/bench drag blocking `W5-W7`,
+- do keep every parity-critical runtime change inside AY itself.
+
 ## What AU got right, and what post-AU got wrong
 
 AU was the local maximum because it optimized the parser that actually executed.
@@ -189,6 +195,14 @@ Today:
 - some perf loops still live under `tests/`, so correctness workflows compile performance payloads.
 
 This is why agent cycles are too long: the repository asks for scoped work in prose but exposes wide work in commands.
+
+The corrective action is not “run BB first.”
+
+The corrective action is:
+
+- carve a small pre-AY runway annex for command/profile/bench reform,
+- close that annex quickly,
+- then execute `AY.W5-W8` without allowing runtime work to drift back out into tooling tranches.
 
 ## Proper path forward for AY
 

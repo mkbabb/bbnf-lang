@@ -1,21 +1,22 @@
-# Tranche BB — Build, Bench, Profiling, and Compile-Time Discipline
+# Tranche BB — Post-AY Toolchain and Compile-Time Discipline
 
-BB is the orthogonal engineering tranche. Its job is to make the
-repository's default build, bench, and profiling workflows match the
-repo's performance-development edicts without mixing parser-architecture
-work back into AY, AZ, or BA. BB shortens iteration time, reduces
-profiling friction, and makes heavy benches and generated-code costs
-intentional rather than accidental.
+BB is the post-AY engineering tranche. B0 extracted the narrow pre-AY
+runway required to execute `AY.W5-W7`; BB therefore no longer blocks
+parity work. Its job now is to reduce the repository's remaining
+compile-time, cache-key, generated-code, and workflow drag after AY
+closes, without mixing parser architecture back into AY, AZ, or BA.
 
 ## Architectural thesis
 
-1. **BB shortens iteration without redefining runtime architecture.**
-2. **Workflow truth belongs in commands, profiles, and scripts, not
+1. **BB starts after AY closes.** It is no longer a precondition for
+   parity work.
+2. **BB shortens iteration without redefining runtime architecture.**
+3. **Workflow truth belongs in commands, profiles, and scripts, not
    just prose.**
-3. **Bench and profiling surfaces should be tiered.** Everyday
+4. **Bench and profiling surfaces should be tiered.** Everyday
    iteration, profiling preparation, and final proof should not all pay
    the same cost.
-4. **Compile-time structure is a first-class concern.** Generated code,
+5. **Compile-time structure is a first-class concern.** Generated code,
    monomorphization, and workspace defaults are allowed to change here.
 
 ## Invariants
@@ -26,6 +27,7 @@ intentional rather than accidental.
 4. Profiling preparation is amortized and repeatable.
 5. Heavy test or bench suites are opt-in unless explicitly declared as
    routine defaults.
+6. Anything that directly blocked AY cadence belonged in B0, not here.
 
 ## Operational posture
 
@@ -38,15 +40,17 @@ intentional rather than accidental.
    time and memory impact.
 5. BB does not claim success on "fewer steps"; it claims success on
    lower wall-clock and RSS costs.
+6. BB does not reopen tranche-boundary hedging. If a runtime change is
+   required to hit a parser-performance gate, it does not belong here.
 
 ## Wave summary
 
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Public fast-path defaults and command-surface repair | tranche open | planned |
-| **W1** | [waves/W1.md](waves/W1.md) | Profile split and prepared-binary discipline | W0 | planned |
-| **W2** | [waves/W2.md](waves/W2.md) | Bench and test surface separation | W1 | planned |
-| **W3** | [waves/W3.md](waves/W3.md) | Generated-code and monomorphization control | W2 | planned |
+| **W0** | [waves/W0.md](waves/W0.md) | Generated-code and monomorphization control | AY close | planned |
+| **W1** | [waves/W1.md](waves/W1.md) | Cache-key, invalidation, and workspace partition discipline | W0 | planned |
+| **W2** | [waves/W2.md](waves/W2.md) | Command, CI, and automation consolidation | W1 | planned |
+| **W3** | [waves/W3.md](waves/W3.md) | Profiling fleet and measured compile/workflow proof | W2 | planned |
 | **W4** | [waves/W4.md](waves/W4.md) | FINAL and measured iteration close | W3 | planned |
 
 ## BB handoff contract
@@ -61,16 +65,19 @@ BB does not close until all of the following are true:
    cold/warm timing and memory artefacts.
 4. Generated-code or monomorphization reductions do not silently hide
    parser regressions.
+5. BB does not smuggle any AY parity-critical runtime debt back into
+   tooling scope.
 
 ## Defensible floor
 
 BB's defensible floor is:
 
-1. Public fast-path defaults that match the intended development loop.
-2. Separated routine, profiling, and final-proof profiles.
-3. Bench/test separation that removes accidental heavy costs from
-   default correctness runs.
-4. A measurable reduction in cold and warm iteration time.
+1. Measurable reduction in cold and warm compile/iteration time.
+2. Tighter cache-key and workspace-partition discipline.
+3. A reusable profiling and proof fleet that does not depend on ad hoc
+   command invention.
+4. Post-AY command/CI/workflow consolidation that preserves the
+   intended heavy-proof separation.
 
 Anything less leaves the repository slower than its own edicts demand.
 
@@ -87,6 +94,6 @@ Decision at W4 close, not mid-wave:
 
 ## Indefatigability
 
-When BB closes correctly, performance work in AY, AZ, and BA no longer
-waits on avoidable build, bench, or profiling drag; the command surface
-itself enforces the intended workflow.
+When BB closes correctly, post-AY performance work in AZ and BA no
+longer waits on avoidable compile, cache, command, or profiling drag;
+the command surface itself enforces the intended workflow.

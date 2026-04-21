@@ -105,6 +105,40 @@ verbatim per §Prepare a wave.
 - Routine iteration routes via the `iter-*` targets; keep
   `cargo test --workspace` and `cargo bench` for wave-close gates only.
 
+### AY W5-W7 gate commands
+
+`AY.W5-W7` hard gates resolve through public `make ay-*` entrypoints in
+the Makefile's `AY W5-W7 Gate Commands` section. These are stable
+surfaces — AY executors call them verbatim; they do not re-derive the
+underlying `cargo expand`, `cargo asm`, `cargo test`, `cargo bench`, or
+`scripts/profile-bench-headless.sh` invocations from the wave spec.
+Samply targets require `CARGO_TARGET_DIR` exported and a prepared
+profile wave; bench targets are cold-per-parse sequential by contract
+(`README.md` §Benchmarking). Prebuilt bench binaries land under
+`$(CARGO_TARGET_DIR)/profiling-prep/deps/<bench>-*` via
+`make ay-prepare-profile-wave`, and the samply targets reuse them
+without rebuilding — see §Prepared binary reuse.
+
+| AY hard gate | Makefile target | Artefact |
+|---|---|---|
+| W5.1 / W7.2 expand JSON | `make ay-expand-json` | `target/expand/ay-json.rs` |
+| W6.2 expand named-type | `make ay-expand-named-type` | `target/expand/ay-named-type.rs` |
+| W5.3 close-stamp asm | `make ay-asm-close-compound FN=<sym>` | `target/asm/ay-close-<sym>.s` |
+| W5.1 value API test | `make ay-test-value-api` | `cargo test` exit status |
+| W7.1 wire-contract test | `make ay-test-wire-contract` | `cargo test` exit status |
+| W6.1 named-type test | `make ay-test-named-type` | `cargo test` exit status |
+| W5.2 samply eager JSON twitter | `make ay-samply-json-twitter WAVE=W5` | `.profiles/samply/AY-W5/json_twitter_eager/` |
+| W6.3 samply JSON path lookup | `make ay-samply-json-twitter-lookup WAVE=W6` | `.profiles/samply/AY-W6/json_twitter_lookup/` |
+| W5.5 / W6.4 / W7.4 close-matrix bench | `make ay-bench-close WAVE=<label>` | `docs/benchmarks/post-AY-<label>-{json,css,sheets,bbnf,compile}.txt` → aggregate `post-AY-<label>-mid.json` |
+| Samply prerequisite | `make ay-prepare-profile-wave` | `$(CARGO_TARGET_DIR)/profiling-prep/deps/<bench>-*` (reused by all samply gates) |
+
+Samply ports 3130/3131 route to `ay-samply-json-twitter`; 3132/3133
+route to `ay-samply-json-twitter-lookup` so the two gates can run
+sequentially against the same prebuilt binary without port collision.
+`ay-bench-close` selects `--profile profiling-prep` for mid-wave runs
+and `--profile bench` (fat LTO) when `WAVE=close` — use the latter for
+publish-grade close-matrix numbers.
+
 ## Prepare a wave
 
 `scripts/prepare-profile-wave.sh` builds every bench binary once,

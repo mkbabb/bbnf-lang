@@ -362,6 +362,11 @@ fn emit_path_query_impls(
     // policy admits. The sets may overlap (a rule can admit both
     // OBJECT_KEY_SEEK and SCAN_STRUCTURAL_BOUNDED); emission below
     // composes the partitions into disjoint match-arm groups.
+    //
+    // Variant idents route through the grammar's `<Grammar>RuleKind`
+    // enum (raw rule names, not the `<Grammar>Value` disambiguated
+    // form) per `view::mod::rule_kind_variants` — the dispatch is on
+    // `cur.rule_kind()`, which yields a `<Grammar>RuleKind` value.
     let mut object_key_seek_rks: Vec<syn::Ident> = Vec::new();
     let mut scan_structural_rks: Vec<syn::Ident> = Vec::new();
     let mut bounded_lookahead_rks: Vec<syn::Ident> = Vec::new();
@@ -371,7 +376,13 @@ fn emit_path_query_impls(
         else {
             continue;
         };
-        let variant_ident = format_ident!("{}", v.name);
+        let rule = ir
+            .rules
+            .iter()
+            .find(|r| r.id == v.rule_id)
+            .expect("variant rule_id matches an IR rule");
+        let raw_name = ir.get_string(rule.name);
+        let variant_ident = format_ident!("{}", raw_name);
         if flags.contains(ScanActivationFlags::OBJECT_KEY_SEEK) {
             object_key_seek_rks.push(variant_ident.clone());
         }

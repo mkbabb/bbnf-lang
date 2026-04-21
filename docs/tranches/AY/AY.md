@@ -62,17 +62,17 @@ fully general mechanisms.
 
 ## Wave summary
 
-| Wave | Spec | Headline | Opens after |
-|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Legacy prune, stale test retirement, AX FINAL, inherited-state cleanup | tranche open |
-| **W1** | [waves/W1.md](waves/W1.md) | Canonical write-path repair, finalise fusion, structural activation, Pratt normalization | W0 |
-| **W2** | [waves/W2.md](waves/W2.md) | Named preservation, wrap-compound elision, canonicalisation | W1 |
-| **W3** | [waves/W3.md](waves/W3.md) | Grammar-derived value surface and first-class value benchmarks | W2 |
-| **W4** | [waves/W4.md](waves/W4.md) | SIMD string/number and regex hot-path repairs | W3 |
-| **W5** | [waves/W5.md](waves/W5.md) | Canonical packed substrate contract and direct JSON write | W4 |
-| **W6** | [waves/W6.md](waves/W6.md) | Consumer unification, general direct-to-struct, and Pratt/operator lowering | W5 |
-| **W7** | [waves/W7.md](waves/W7.md) | Minimal globally informed optimizer integration | W6 |
-| **W8** | [waves/W8.md](waves/W8.md) | Near-parity close, FINAL, and AZ/BA/BB handoff | W7 |
+| Wave | Spec | Headline | Opens after | Status |
+|---|---|---|---|---|
+| **W0** | [waves/W0.md](waves/W0.md) | Legacy prune, stale test retirement, AX FINAL, inherited-state cleanup | tranche open | Complete |
+| **W1** | [waves/W1.md](waves/W1.md) | Canonical write-path repair, finalise fusion, structural activation, Pratt normalization | W0 | Complete |
+| **W2** | [waves/W2.md](waves/W2.md) | Named preservation, wrap-compound elision, canonicalisation | W1 | Complete with recorded misses |
+| **W3** | [waves/W3.md](waves/W3.md) | Grammar-derived value surface and first-class value benchmarks | W2 | Complete with recorded misses |
+| **W4** | [waves/W4.md](waves/W4.md) | SIMD string/number and regex hot-path repairs | W3 | Complete with recorded misses |
+| **W5** | [waves/W5.md](waves/W5.md) | Canonical packed substrate contract and direct JSON write | W4 | Not started |
+| **W6** | [waves/W6.md](waves/W6.md) | Consumer unification, general direct-to-struct, and Pratt/operator lowering | W5 | Not started |
+| **W7** | [waves/W7.md](waves/W7.md) | Minimal globally informed optimizer integration | W6 | Not started |
+| **W8** | [waves/W8.md](waves/W8.md) | Near-parity close, FINAL, and AZ/BA/BB handoff | W7 | Not started |
 
 ## AY → AZ / BA / BB handoff contract
 

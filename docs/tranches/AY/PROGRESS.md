@@ -258,6 +258,201 @@ whitespace runs are 1-3 bytes).
 retained as substrate for AY.W4's regex-scan specialisation
 (CTNS-style consumers will deliver material savings; per W4 spec
 §AY.W4.3). Substrate-with-consumer cycle binds at tranche close
+
+---
+
+## 2026-04-20 — W2 closes
+
+**Wave status**: complete with recorded misses. W2 landed the named-
+preservation fixes, G1-G4 canonicalisation work, wrap-compound elision
+consumer, EBNF Minus-in-Keyword-Seq codegen reactivation, and the wire-
+contract surface, but it did not meet the original direct-to-struct or
+record-count magnitude gates.
+
+### W2 landed work
+
+- `0c9879a1` AY.W2.1 probe — named collapse decomposes into grammar-
+  source causes instead of a single extractor defect.
+- `14f3a147` + `930bab0b` AY.W2.2 grammar/IR fixes — precedence-wrap
+  repair for `colorFn` / `colorMix` plus defensive Named-preserving
+  guards in IR metadata/span handling.
+- `6717e3cc` + `fcb9606c` + `c04fd913` AY.W2.6b — position-level Minus /
+  Negate / Alt / TokenDispatch emission restored inside the inline
+  branch-position path; deferred EBNF tests re-activated.
+- `1e550044`, `e189ebaf`, `a5d581ab` AY.W2.3 — G1-G4 universal rewrites.
+- `7d2d6885`, `6324f717`, `38e3e749` AY.W2.6 — wrap-compound elision
+  consumer, wire-contract bench, and regen.
+- `9384b2b9` AY.W2.7 — `named_type_preservation.rs` wire-contract test.
+
+### W2 evidence and deltas
+
+- `docs/benchmarks/post-AY-W2-egraph-spot.txt` is the surviving W2
+  bench artefact.
+- JSON twitter parse throughput improved from 688 MB/s at W1-fix to
+  743 MB/s at the W2 egraph spot (+8.0%).
+- JSON record count dropped from 158,638 to 144,725 records
+  (-8.77%), proving the wrap-elision consumer fired, but missing the
+  much larger original projection.
+- EBNF deferred tests from W0 were re-activated and green.
+
+### W2 misses and shifted debt
+
+- `PROJECTION_DIRECT_TO_STRUCT` did not reach the original ≥4-entry
+  expectation; named-preservation fixes landed, but broader admission
+  remains incomplete.
+- The record-count reduction was real but far below the original W2
+  projection; W3/W5 remain responsible for the deeper substrate/value
+  collapse.
+- The broader G5-G9 / detector-retirement agenda did not land as a
+  production-shaping reality in W2; dead or weak optimizer surfaces
+  remain and are now explicitly owned by AY.W7.
+
+### W2 hard-gate readout
+
+| Gate area | Evidence | Status |
+|---|---|---|
+| Named-preservation and EBNF reactivation | `9384b2b9`, `fcb9606c`, `c04fd913` | PASS |
+| Wrap-compound consumer activation | `docs/benchmarks/post-AY-W2-egraph-spot.txt` | PASS |
+| Direct-to-struct admission magnitude | same | MISS |
+| Record-count reduction magnitude | same | MISS |
+
+### W2 → W3 handoff
+
+W3 opens on a cleaner grammar-derived semantic surface: named
+preservation is materially better, EBNF is unstubbed for the deferred
+cases, and wrap-elision is real enough to support grammar-derived value
+emission. The remaining direct-to-struct and optimizer debt stays live
+and is no longer implicit.
+
+---
+
+## 2026-04-20 — W3 closes
+
+**Wave status**: complete with recorded misses. W3 landed the value
+surface, the path/query runtime substrate, the per-shape inline
+materializers, the apples-to-apples correctness harness, and the 12-
+entry value bench matrix. It did not come close to the original
+BEAT-sonic gate.
+
+### W3 landed work
+
+- `82a8f819` + `7fa931d1` AY.W3a — `handle.rs`, `path.rs`, and
+  `Parsed::to_value()` / `Parsed::get()` runtime surfaces.
+- `7e4c0e6a`, `fc9fdf61`, `c94254db`, `b827369d` AY.W3b — grammar-
+  emitted `<Grammar>Value`, `ValueRoot` / `PathQuery`, per-shape inline
+  materializers, and regen.
+- `a3dc78a7` + `040a7830` + `a91633e3` AY.W3c — value bench lanes,
+  `value_api_apples_to_apples.rs`, and the bench matrix artefact.
+
+### W3 evidence and deltas
+
+- `docs/benchmarks/post-AY-W3-value.json` is the canonical W3 artefact.
+- Eight grammars emitted `Value` surfaces and 48 `materialize_*`
+  functions.
+- The 12-entry bench matrix landed: 2 lazy entries and 10 eager
+  entries.
+- Correctness surface landed: round-trip parity and via-Value checks
+  exist and run.
+
+### W3 misses and shifted debt
+
+- Eager JSON remained far from sonic-rs:
+  `bbnf_value_twitter / sonic_value_twitter = 3.633x`,
+  `citm = 4.128x`,
+  `canada = 4.342x`,
+  `data_s = 3.469x`,
+  `data_xl = 3.286x`.
+- The lazy lane is not a true lazy parse; `post-AY-W3-value.json`
+  records `bbnf_get_twitter / sonic_get_twitter = 2953.12x` because
+  bbnf still parses the full tape.
+- W3 therefore closes as a measurement-and-surface wave, not as a
+  parity wave. The remaining gap is now explicitly owned by W5-W7.
+
+### W3 hard-gate readout
+
+| Gate area | Evidence | Status |
+|---|---|---|
+| Value surface emitted and type-checking | `82a8f819`, `7fa931d1`, `b827369d` | PASS |
+| 12-entry value bench matrix | `docs/benchmarks/post-AY-W3-value.json` | PASS |
+| Correctness / round-trip surface | `040a7830` | PASS |
+| Original BEAT-sonic eager gate | `docs/benchmarks/post-AY-W3-value.json` | MISS |
+
+### W3 → W4 handoff
+
+W4 opens with the real problem made explicit: bbnf can now express and
+measure the eager/lazy consumer surfaces, but the hot path is still far
+too reconstruction-heavy and tape-first. W4's string/number/runtime
+levers therefore target real measured gaps, not hypothetical ones.
+
+---
+
+## 2026-04-20 — W4 closes
+
+**Wave status**: complete with recorded misses. W4 landed the SIMD
+string fast path, the `pay_f64` numeric substrate, and the regex-scan
+specialisation scaffolds. W4 improved JSON parse throughput further,
+but the original regex self-time gates and the expected canada numeric
+gain did not materialize.
+
+### W4 landed work
+
+- `cd8bdc8a` + `561bea1b` AY.W4.1 — inline SIMD unescape at the
+  string parse site and the twitter spot-bench artefact.
+- `7e1732d0`, `b199afea`, `05617765`, `4ca520d2` AY.W4.2 — `pay_f64`
+  substrate, direct number emission path, regen, and canada spot bench.
+- `3ab49fab`, `108c573a`, `e2aea138`, `525fc157`, `c143ca0d`,
+  `ae49494d`, `93a74c4d` AY.W4.3 — regex specialisation scaffolds,
+  structural-scan consumer wiring, regen, tuning, and spot-bench
+  attribution.
+- `1ade186f` — W4 close bench, bytes/cyc ledger, and saved Samply
+  references.
+
+### W4 evidence and deltas
+
+- `docs/benchmarks/post-AY-W4-close.json` is the canonical W4 close
+  matrix.
+- `docs/benchmarks/post-AY-W4-simd-spot.txt` records twitter improving
+  from 638 MB/s to 676 MB/s on same-machine cold-cache comparison
+  (+5.95%) for the SIMD string fast path.
+- `docs/benchmarks/post-AY-W4-close.json` records twitter at 746 MB/s
+  overall, up from 688 MB/s at W1-fix and 743 MB/s at the W2 spot.
+- `docs/benchmarks/post-AY-W4-eisel-spot.txt` records the `pay_f64`
+  substrate as bench-neutral rather than the hoped-for +15% canada win.
+- `docs/benchmarks/post-AY-W4-bytes-cyc.txt` records twitter at
+  0.233 bytes/cycle, still only ~29% of the sonic-rs twitter
+  reference.
+
+### W4 misses and shifted debt
+
+- The original regex self-time gates missed badly:
+  `__regex_scan_CssL4Parser` on tailwind measured 29.18% self-time
+  against a 12% target; Sheets parse_stress stayed effectively flat.
+- CSS tailwind throughput was flat-to-slightly-down versus W1.
+- The numeric direct-to-column substrate landed, but the expected canada
+  gain was not real on same-machine A/B measurement.
+- W4 therefore closes as partial runtime improvement plus scaffold
+  landing, with the remaining globally informed cleanup and dead-surface
+  retirement explicitly shifted into W7 rather than left as narrative
+  debt.
+
+### W4 hard-gate readout
+
+| Gate area | Evidence | Status |
+|---|---|---|
+| SIMD unescape win | `docs/benchmarks/post-AY-W4-simd-spot.txt` | PASS |
+| `pay_f64` substrate landing | `docs/benchmarks/post-AY-W4-eisel-spot.txt` | PASS |
+| canada gain magnitude | `docs/benchmarks/post-AY-W4-eisel-spot.txt` | MISS |
+| regex self-time gates | `docs/benchmarks/post-AY-W4-close.json`, `docs/benchmarks/post-AY-W4-regex-spot.txt`, `docs/benchmarks/post-AY-W4-bytes-cyc.txt` | MISS |
+| 19-entry close matrix saved | `docs/benchmarks/post-AY-W4-close.json` | PASS |
+
+### W4 → W5 handoff
+
+The tranche is now exactly where the rewritten AY plan says it is:
+W0-W4 are behind us, but they did not close the parity gap. They
+recovered the parse path materially and exposed the remaining eager-path
+losses honestly. W5 is next, and it is the architectural wave:
+canonical packed substrate, direct JSON write, and write-time close
+stamping.
 per SPEC §Transitional fallback during elimination waves; W4
 absorbs the consumer landing.
 

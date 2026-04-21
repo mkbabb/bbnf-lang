@@ -11,7 +11,7 @@
 //! sub-dir (separate emission channel).
 
 pub mod dfa_codegen;
-mod grammar;
+pub(crate) mod grammar;
 pub mod keyword_dispatch;
 pub mod precedence;
 mod prettify;

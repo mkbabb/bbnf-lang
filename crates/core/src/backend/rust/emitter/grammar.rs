@@ -11,7 +11,7 @@
 //! `pre_compile_rule_body` hook consults it to set up AM.3 tape
 //! surgery context.
 
-use bbnf_ir::passes::{MaterializationClass, PayloadField, PayloadLayout};
+use bbnf_ir::passes::{MaterializationClass, PayloadLayout};
 use bbnf_ir::{GrammarIR, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -60,102 +60,260 @@ use super::{RustEmitCtx, RustEmitter};
 ///    representation and owned for non-Span scalars.
 /// 2. A `PROJECTION_DIRECT_TO_STRUCT` const listing
 ///    `(rule_name, struct_name)` per admission. `struct_name` is
-///    either the resolver-derived `Named(sid)` label (legacy
-///    `"Color"`, `"String"`) or the synthesised `<RuleCamel>Projection`
-///    for grammar-derived layouts. Downstream consumers consult the
-///    list for introspection + wire-contract tests.
-/// 3. Per-admission marker shims: `__named_type_shim_<name>` for
-///    resolver-backed named types (kept as structural evidence of the
-///    legacy path) and `__grammar_projection_<rule>` for layout-
-///    derived admissions (new; proof the broader mechanism fired).
+///    always the synthesised `<Grammar><RuleCamel>Projection` struct
+///    emitted alongside this const; the grammar-declared `-> Name`
+///    binding rides on the parallel `PROJECTION_NAMED_BINDINGS` slice
+///    and on the struct's `NAMED_BINDING` associated const. Downstream
+///    consumers consult the list for introspection + wire-contract
+///    tests.
+/// 3. Per-admission marker functions: `__grammar_projection_<rule>()`
+///    returning the `(rule_name, field_count, named_binding)` triple.
+///    One marker per admission; the legacy resolver-shim surface
+///    retired at AY-II.W0.d (every admission now emits a runnable
+///    materialiser, not just a marker).
 fn emit_direct_to_struct_projection(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
     let resolver = RustNamedTypes::from_ir(ir);
     let admissions = collect_projection_admissions(ir, &resolver);
+    let grammar_prefix = to_upper_camel(grammar_name);
 
+    // `PROJECTION_DIRECT_TO_STRUCT` entries. Post-AY-II.W0.d the
+    // projection label ALWAYS names the synthesised struct
+    // `<Grammar><RuleCamel>Projection` — no resolver-bound name dispatch.
+    // Downstream consumers introspect via the rule-name key; the grammar-
+    // declared `-> Name` binding (when present) rides on
+    // `PROJECTION_NAMED_BINDINGS` below.
     let entries: Vec<TokenStream> = admissions
         .iter()
         .map(|a| {
             let rule_lit = proc_macro2::Literal::string(&a.rule_name);
-            let bind_lit = proc_macro2::Literal::string(&a.projection_label);
+            let struct_ident = a.struct_ident(&grammar_prefix);
+            let struct_name = struct_ident.to_string();
+            let bind_lit = proc_macro2::Literal::string(&struct_name);
             quote! { (#rule_lit, #bind_lit) }
         })
         .collect();
     let count = entries.len();
 
+    // AY-II.W0.d — parallel metadata slice: grammar-declared `-> Name`
+    // bindings, indexed in lockstep with `PROJECTION_DIRECT_TO_STRUCT`.
+    // An entry of `""` signals "no named binding" (the admission came
+    // from the pure scalar-tuple / KV-pair / bare-Span / scalar-Alt arm);
+    // an entry like `"Color"` records that the grammar author spelt
+    // `-> Color`. Readable by the typed-accessor surface tests + any
+    // downstream consumer wanting the semantic-type hint.
+    let named_binding_entries: Vec<TokenStream> = admissions
+        .iter()
+        .map(|a| {
+            let bind_lit = proc_macro2::Literal::string(
+                a.named_binding.as_deref().unwrap_or(""),
+            );
+            quote! { #bind_lit }
+        })
+        .collect();
+
+    // AY-II.W0.d — parallel slice: materialiser function names,
+    // indexed in lockstep with `PROJECTION_DIRECT_TO_STRUCT`. Canonical
+    // evidence that every admission has a matching
+    // `materialize_projection_<rule>_<Grammar>` fn emitted by
+    // `shapes/value_materialize.rs`. The test surface asserts
+    // `PROJECTION_DIRECT_TO_STRUCT.len() == PROJECTION_MATERIALIZERS.len()`
+    // per grammar; a regression that drops the materialiser for any
+    // admission surfaces as a length mismatch.
+    let materializer_entries: Vec<TokenStream> = admissions
+        .iter()
+        .map(|a| {
+            let fn_name = format!(
+                "materialize_projection_{}_{}",
+                sanitise_ident(&a.rule_name),
+                grammar_name,
+            );
+            let fn_lit = proc_macro2::Literal::string(&fn_name);
+            quote! { #fn_lit }
+        })
+        .collect();
+
+    // AY-II.W0.d — parallel slice: consumer surface names. Every
+    // admitted rule participates in the grammar's `<Grammar>Value`
+    // enum via a variant whose name matches the rule name (per
+    // `view/value.rs::collect_variant_classes`). The slice records
+    // the fully-qualified consumer `<Grammar>Value::<RuleName>`
+    // identifier — the wire-contract totality test reflects on both
+    // the const length AND the matching `<Grammar>Value` variant
+    // existence, catching both "admission without consumer" and
+    // "consumer without admission" regressions.
+    let consumer_entries: Vec<TokenStream> = admissions
+        .iter()
+        .map(|a| {
+            let consumer_name = format!("{}Value::{}", grammar_name, a.rule_name);
+            let consumer_lit = proc_macro2::Literal::string(&consumer_name);
+            quote! { #consumer_lit }
+        })
+        .collect();
+
     let struct_defs = emit_projection_structs(grammar_name, &admissions);
-    let resolver_shims = emit_resolver_shims(&admissions);
-    let grammar_projection_shims = emit_grammar_projection_shims(&admissions);
+    let projection_markers = emit_grammar_projection_markers(&admissions);
 
     // `PROJECTION_DIRECT_TO_STRUCT` emits unconditionally — every grammar
     // carries the const (length 0 when no rule admitted), so downstream
     // consumers (wire-contract tests, `<Grammar>::PROJECTION_DIRECT_TO_STRUCT`
     // associated-const aliasing) never hit a "missing item" resolution
-    // error. The per-admission struct / shim streams are inherently
+    // error. The per-admission struct / marker streams are inherently
     // empty when admissions is empty; they emit nothing.
     quote! {
         #struct_defs
 
-        /// AY.W6.2 — per-grammar direct-to-struct projection
+        /// AY-II.W0.d — per-grammar direct-to-struct projection
         /// admissions, derived from `ir.payload_layouts` + the
         /// `RustNamedTypes` resolver.
         ///
-        /// Each `(rule_name, projection_label)` pair identifies a
+        /// Each `(rule_name, struct_name)` pair identifies a
         /// non-transparent rule whose projection admits direct-to-
-        /// struct storage. `projection_label` is either a resolver-
-        /// bound name (e.g. `"Color"`, `"String"`) or the synthesised
-        /// `<RuleCamel>Projection` struct emitted alongside this const.
-        /// The list is the emitted evidence that the layout pass +
-        /// resolver fired for this grammar; `cargo expand` surfaces
-        /// it alongside the GRAMMAR_PROFILE literal.
+        /// struct storage. `struct_name` is ALWAYS the synthesised
+        /// `<Grammar><RuleCamel>Projection` struct emitted alongside
+        /// this const — no resolver-bound name dispatch.
         pub const PROJECTION_DIRECT_TO_STRUCT: &[(&str, &str); #count] = &[
             #(#entries),*
         ];
 
-        #resolver_shims
-        #grammar_projection_shims
+        /// AY-II.W0.d — grammar-declared `-> Name` bindings, indexed in
+        /// lockstep with `PROJECTION_DIRECT_TO_STRUCT`. Empty string for
+        /// admissions that did not spell a named type.
+        #[doc(hidden)]
+        pub const PROJECTION_NAMED_BINDINGS: &[&str; #count] = &[
+            #(#named_binding_entries),*
+        ];
+
+        /// AY-II.W0.d — canonical evidence that every admission has a
+        /// matching `materialize_projection_<rule>_<Grammar>` fn.
+        /// Indexed in lockstep with `PROJECTION_DIRECT_TO_STRUCT`; the
+        /// wire-contract totality test asserts both slices share the
+        /// same length per grammar.
+        #[doc(hidden)]
+        pub const PROJECTION_MATERIALIZERS: &[&str; #count] = &[
+            #(#materializer_entries),*
+        ];
+
+        /// AY-II.W0.d — canonical evidence that every admission has a
+        /// matching `<Grammar>Value::<RuleName>` enum variant
+        /// (production consumer). Indexed in lockstep with
+        /// `PROJECTION_DIRECT_TO_STRUCT`.
+        #[doc(hidden)]
+        pub const PROJECTION_CONSUMERS: &[&str; #count] = &[
+            #(#consumer_entries),*
+        ];
+
+        #projection_markers
     }
 }
 
-/// AY.W6.2 — source of a direct-to-struct projection admission.
+/// AY-II.W0.d — grammar-derived field kind for a projection struct.
 ///
-/// Discriminates the two admission arms so the emitter can route
-/// each to the right downstream artefact without re-inspecting the
-/// IR. Both arms are grammar-derived; neither is name-dispatched.
+/// The scalar-only aggregate admission (packed in
+/// `PayloadData::Aggregate` / `LargeAggregate`) mandates every field be
+/// `is_scalar_payload()`. Richer admissions — backend-resolver-named
+/// rules like CSS L4 `colorFn` whose resolver shape contains `BoxedEnum`
+/// or nested `Tuple` fields — fall outside the packed buffer's
+/// invariant; they project a child-cursor handle per non-scalar field
+/// instead. The emitter routes by field kind; the projection struct's
+/// field types mirror the kind directly.
 #[derive(Clone, Debug)]
-enum ProjectionSource {
-    /// Admitted through [`RustNamedTypes::resolve_named`] on a
-    /// `TypeDesc::Named(sid)` rule. The projection label is the
-    /// resolver-bound name (`"Color"`, `"String"`, …). Emits a
-    /// `__named_type_shim_<name>` marker.
-    ResolverNamed { binding_name: String },
-    /// Admitted through `ir.payload_layouts` — a grammar-declared
-    /// scalar tuple projection whose fields are enumerated by the
-    /// layout pass. Emits a `<RuleCamel>Projection` struct + a
-    /// `__grammar_projection_<rule>` marker.
-    GrammarLayout { layout: PayloadLayout },
+pub(crate) enum ProjectionFieldKind {
+    /// Packed scalar field at a byte offset within
+    /// `PayloadData::Aggregate`. Type is any `is_scalar_payload()`.
+    Scalar { ty: TypeDesc, offset: u8 },
+    /// Child-cursor handle at the given position among the compound's
+    /// direct children. The struct field is a `<Grammar>NodeView<'p>`;
+    /// the materialiser fetches `view.child(child_idx)`. `ty` carries
+    /// the grammar's declared compound type for downstream W2 typed-
+    /// variant emission; unused at W0.d emission time.
+    CursorChild {
+        child_idx: usize,
+        #[allow(dead_code)]
+        ty: TypeDesc,
+    },
 }
 
-/// AY.W6.2 — one admitted direct-to-struct projection.
+/// AY-II.W0.d — grammar-derived field layout for a projection struct.
 ///
-/// Carries the rule identity, the admission source, and the
-/// `projection_label` used in `PROJECTION_DIRECT_TO_STRUCT`.
+/// A [`PayloadLayout`]-backed admission surfaces as a sequence of
+/// [`ProjectionFieldKind::Scalar`] fields mirroring the layout's
+/// packed buffer; a resolver-named admission without a scalar-only
+/// layout surfaces as a mix of `Scalar` (for `is_scalar_payload()`
+/// fields) and `CursorChild` (for compound fields).
 #[derive(Clone, Debug)]
-struct ProjectionAdmission {
+pub(crate) struct ProjectionFieldPlan {
+    pub(crate) fields: Vec<ProjectionFieldKind>,
+    /// Total bytes occupied by the packed portion of the payload.
+    /// `0` when every field is a `CursorChild` (no aggregate buffer).
+    pub(crate) packed_bytes: u8,
+    /// True when at least one field is a `CursorChild` — the
+    /// projection struct gains a `'p` lifetime parameter and the
+    /// materialiser walks `view.child(i)` per child slot.
+    pub(crate) has_cursor_fields: bool,
+}
+
+/// AY-II.W0.d — one admitted direct-to-struct projection.
+///
+/// Every admission carries a grammar-derived [`ProjectionFieldPlan`]
+/// whose fields are emitted 1:1 into the synthesised
+/// `<Grammar><RuleCamel>Projection` struct, the matching
+/// `materialize_projection_<rule>_<Grammar>` fn, and the
+/// `PROJECTION_DIRECT_TO_STRUCT` entry. The `named_binding` slot
+/// carries the grammar-declared `-> Name` label (`"Color"`, `"String"`,
+/// …) when a `TypeDesc::Named(sid)` drove the admission; it is
+/// metadata only, never a dispatch predicate.
+#[derive(Clone, Debug)]
+pub(crate) struct ProjectionAdmission {
+    /// Grammar rule name (matches `ir.get_string(rule.name)`).
     rule_name: String,
-    projection_label: String,
-    source: ProjectionSource,
+    /// Grammar-declared type binding for a `-> Name` annotation;
+    /// `None` when the admission came from the plain layout arm.
+    named_binding: Option<String>,
+    /// Field plan — scalar offsets for packed-buffer fields, child
+    /// indices for cursor-backed fields.
+    plan: ProjectionFieldPlan,
 }
 
-/// AY.W6.2 — unified admission walk.
+impl ProjectionAdmission {
+    /// Borrow the rule name.
+    pub(crate) fn rule_name(&self) -> &str {
+        &self.rule_name
+    }
+
+    /// Borrow the field plan.
+    pub(crate) fn plan(&self) -> &ProjectionFieldPlan {
+        &self.plan
+    }
+
+    /// Grammar-declared `-> Name` binding or empty string.
+    pub(crate) fn named_binding_str(&self) -> &str {
+        self.named_binding.as_deref().unwrap_or("")
+    }
+
+    /// Synthesised projection struct name — `<Grammar><RuleCamel>Projection`.
+    pub(crate) fn struct_ident(&self, grammar_prefix: &str) -> syn::Ident {
+        format_ident!(
+            "{}{}Projection",
+            grammar_prefix,
+            to_upper_camel(&self.rule_name),
+        )
+    }
+}
+
+/// AY-II.W0.d — unified admission walk.
 ///
 /// Produces the ordered list of admitted projections. The walk is
 /// deterministic: rule order mirrors `ir.rules` declaration order;
-/// each rule contributes at most one admission (the resolver arm
-/// dominates the layout arm when both would fire, since the
-/// resolver-bound layout IS the grammar-declared `Named(sid)`
-/// projection — collapsing both to one entry prevents double-
-/// counting).
-fn collect_projection_admissions(
+/// each rule contributes at most one admission. A rule admits when
+/// either (a) `ir.payload_layouts` carries a non-empty
+/// [`PayloadLayout`] for it (scalar packed admission), or (b) the
+/// rule's type is `TypeDesc::Named(sid)` and the backend resolver
+/// returns a tuple shape (rich resolver-backed admission — the layout
+/// pass may have declined because of non-scalar fields, but the
+/// resolver still knows the declared shape). Scalar fields in the
+/// rich admission get a packed offset assignment; non-scalar fields
+/// become `CursorChild` handles in body-declaration order.
+pub(crate) fn collect_projection_admissions(
     ir: &GrammarIR,
     resolver: &RustNamedTypes<'_>,
 ) -> Vec<ProjectionAdmission> {
@@ -166,122 +324,222 @@ fn collect_projection_admissions(
         }
         let rule_name = ir.get_string(rule.name).to_string();
 
-        // Arm 1 — `TypeDesc::Named(sid)` with a resolver hit. Mirrors
-        // the pre-W6.2 admission; kept as the legacy entry point so
-        // downstream consumers reading `("colorFn", "Color")` /
-        // `("string", "String")` continue working. Admission here
-        // suppresses the broader layout arm for the same rule.
         let type_desc = ir
             .types
             .iter()
             .find_map(|(id, ty)| (*id == rule.id).then_some(ty));
-        if let Some(TypeDesc::Named(sid)) = type_desc {
-            if resolver.resolve_named(*sid).is_some() {
-                let binding_name = ir.get_string(*sid).to_string();
+
+        // Admission arm 1 — scalar-only packed buffer via the layout
+        // pass. Every field is `is_scalar_payload()`; the materialiser
+        // reads `payload_bytes` at the admitted offsets.
+        if let Some(layout) = ir.payload_layouts.get(&rule.id) {
+            if !layout.fields.is_empty() {
+                let plan = plan_from_payload_layout(layout);
+                let named_binding = type_desc
+                    .and_then(|td| match td {
+                        TypeDesc::Named(sid)
+                            if resolver.resolve_named(*sid).is_some() =>
+                        {
+                            Some(ir.get_string(*sid).to_string())
+                        }
+                        _ => None,
+                    });
                 admissions.push(ProjectionAdmission {
                     rule_name,
-                    projection_label: binding_name.clone(),
-                    source: ProjectionSource::ResolverNamed { binding_name },
+                    named_binding,
+                    plan,
                 });
                 continue;
             }
         }
 
-        // Arm 2 — grammar-derived layout. Admit any rule whose
-        // layout pass produced a [`PayloadLayout`] with at least one
-        // scalar field. Rules whose layout exists but is empty are
-        // not projected (they have no direct-to-struct shape to
-        // admit); rules without a layout entry fall through to the
-        // compound / scalar paths upstream.
-        if let Some(layout) = ir.payload_layouts.get(&rule.id) {
-            if layout.fields.is_empty() {
-                continue;
+        // Admission arm 2 — resolver-backed rich projection. The
+        // layout pass declined (non-scalar fields present in the
+        // resolver's tuple shape), but the backend resolver still
+        // knows the grammar-declared field sequence. Emit the
+        // projection with scalar fields packed and non-scalar fields
+        // as cursor handles, so the totality invariant holds across
+        // every grammar-declared `-> Name` admission. This is the
+        // AY-II.W0.d closure of AUDIT-B §4's 2-shim gap:
+        // post-W0.d every admission emits one struct + one
+        // materialiser + one consumer.
+        if let Some(TypeDesc::Named(sid)) = type_desc {
+            if let Some(TypeDesc::Tuple(fields)) = resolver.resolve_named(*sid) {
+                if !fields.is_empty() {
+                    let plan = plan_from_resolver_tuple(&fields);
+                    let binding_name = ir.get_string(*sid).to_string();
+                    admissions.push(ProjectionAdmission {
+                        rule_name,
+                        named_binding: Some(binding_name),
+                        plan,
+                    });
+                    continue;
+                }
             }
-            let projection_label = format!(
-                "{}Projection",
-                to_upper_camel(&rule_name),
-            );
-            admissions.push(ProjectionAdmission {
-                rule_name,
-                projection_label,
-                source: ProjectionSource::GrammarLayout { layout: layout.clone() },
-            });
         }
     }
     admissions
 }
 
-/// AY.W6.2 — emit the `pub struct <Grammar><RuleCamel>Projection`
-/// definitions for every layout-derived admission. Resolver-derived
-/// admissions keep their legacy `__named_type_shim_*` surface; the
-/// resolver's backend-specific shape is already consumed by the
-/// payload layout pipeline at analyze-grammar time.
+/// AY-II.W0.d — synthesise a [`ProjectionFieldPlan`] from a scalar-only
+/// [`PayloadLayout`]. Every field is `Scalar` with its layout offset.
+fn plan_from_payload_layout(layout: &PayloadLayout) -> ProjectionFieldPlan {
+    let fields = layout
+        .fields
+        .iter()
+        .map(|f| ProjectionFieldKind::Scalar {
+            ty: f.ty.clone(),
+            offset: f.offset,
+        })
+        .collect();
+    ProjectionFieldPlan {
+        fields,
+        packed_bytes: layout.total_bytes,
+        has_cursor_fields: false,
+    }
+}
+
+/// AY-II.W0.d — synthesise a [`ProjectionFieldPlan`] from a
+/// resolver-provided tuple shape. Scalar fields pack into the
+/// aggregate buffer using the same natural-alignment walk
+/// [`bbnf_ir::passes::plan_layout_with_cap`] uses; non-scalar fields
+/// project to [`ProjectionFieldKind::CursorChild`] handles in
+/// declaration order. The emitted materialiser reads scalars from
+/// the packed buffer when one is present and walks the compound's
+/// direct children to populate cursor fields.
+fn plan_from_resolver_tuple(fields: &[TypeDesc]) -> ProjectionFieldPlan {
+    let mut kinds = Vec::with_capacity(fields.len());
+    let mut packed: u8 = 0;
+    let mut child_cursor: usize = 0;
+    let mut any_cursor = false;
+    for ty in fields {
+        if ty.is_scalar_payload() {
+            let size = ty.payload_size_bytes().unwrap_or(0);
+            let align = ty.payload_align_bytes().unwrap_or(1).max(1);
+            let offset = (packed + align - 1) & !(align - 1);
+            kinds.push(ProjectionFieldKind::Scalar {
+                ty: ty.clone(),
+                offset,
+            });
+            packed = offset.saturating_add(size);
+        } else {
+            kinds.push(ProjectionFieldKind::CursorChild {
+                child_idx: child_cursor,
+                ty: ty.clone(),
+            });
+            child_cursor += 1;
+            any_cursor = true;
+        }
+    }
+    ProjectionFieldPlan {
+        fields: kinds,
+        packed_bytes: packed,
+        has_cursor_fields: any_cursor,
+    }
+}
+
+/// AY-II.W0.d — emit the `pub struct <Grammar><RuleCamel>Projection`
+/// definitions for every admission. Post-W0.d a struct is emitted
+/// uniformly for every rule in `collect_projection_admissions`: both
+/// scalar-packed layout admissions and resolver-backed rich admissions
+/// emit through this one path. Rich admissions (cursor-child fields
+/// present) gain a `'p` lifetime parameter and lose the `Copy` marker;
+/// packed admissions stay plain-data.
 fn emit_projection_structs(
     grammar_name: &str,
     admissions: &[ProjectionAdmission],
 ) -> TokenStream {
     let mut structs: Vec<TokenStream> = Vec::new();
     let grammar_prefix = to_upper_camel(grammar_name);
+    let grammar_node_view = format_ident!("{}NodeView", grammar_name);
     for admission in admissions {
-        let ProjectionSource::GrammarLayout { layout } = &admission.source else {
-            continue;
-        };
-        let struct_ident = format_ident!(
-            "{}{}Projection",
-            grammar_prefix,
-            to_upper_camel(&admission.rule_name),
-        );
+        let struct_ident = admission.struct_ident(&grammar_prefix);
         let rule_name_lit = proc_macro2::Literal::string(&admission.rule_name);
-        let total_bytes = layout.total_bytes;
-        let fields: Vec<TokenStream> = layout
+        let named_binding_lit = proc_macro2::Literal::string(
+            admission.named_binding_str(),
+        );
+        let plan = admission.plan();
+        let total_bytes_lit = proc_macro2::Literal::u8_unsuffixed(plan.packed_bytes);
+        let field_count_lit = proc_macro2::Literal::usize_unsuffixed(plan.fields.len());
+        let fields: Vec<TokenStream> = plan
             .fields
             .iter()
             .enumerate()
-            .map(|(idx, field)| emit_projection_field(idx, field))
+            .map(|(idx, kind)| emit_projection_field(idx, kind, &grammar_node_view))
             .collect();
-        let field_count = fields.len();
-        let field_count_lit = proc_macro2::Literal::usize_unsuffixed(field_count);
-        let total_bytes_lit = proc_macro2::Literal::u8_unsuffixed(total_bytes);
+
+        // Rich projections with cursor children carry a lifetime;
+        // Copy cannot coexist with `NodeView<'p>` field types, so the
+        // derive list splits by kind. Packed-only admissions retain
+        // the legacy `Copy + Clone + Debug` triple.
+        let (decl_generics, impl_generics, derive_attrs) = if plan.has_cursor_fields {
+            (
+                quote! { <'p> },
+                quote! { <'p> },
+                quote! {
+                    #[derive(::core::clone::Clone, ::core::fmt::Debug)]
+                },
+            )
+        } else {
+            (
+                quote! {},
+                quote! {},
+                quote! {
+                    #[derive(
+                        ::core::marker::Copy,
+                        ::core::clone::Clone,
+                        ::core::fmt::Debug,
+                    )]
+                },
+            )
+        };
+        let impl_target = if plan.has_cursor_fields {
+            quote! { #struct_ident<'p> }
+        } else {
+            quote! { #struct_ident }
+        };
+
         structs.push(quote! {
-            /// AY.W6.2 — grammar-derived direct-to-struct projection.
+            /// AY-II.W0.d — grammar-derived direct-to-struct projection.
             ///
-            /// Emitted storage for a rule whose child sequence
-            /// projects onto a fixed-layout scalar tuple per the IR
-            /// payload-layout pass. The struct's fields mirror the
-            /// layout's scalar fields in declaration order; the
-            /// `TOTAL_BYTES` + `FIELD_COUNT` associated consts expose
-            /// the admitted shape to downstream consumers (wire-
-            /// contract tests, debug readback) without re-inspecting
-            /// the IR.
+            /// Emitted storage for a rule whose child sequence projects
+            /// onto a fixed-layout tuple. Packed admissions read every
+            /// field from `Tape::payload_bytes` at scalar offsets; rich
+            /// (resolver-backed) admissions mix scalar payload reads with
+            /// per-child cursor handles — the materialiser walks
+            /// `view.child(i)` at the admitted `CHILD_INDICES` to
+            /// populate cursor fields.
             ///
-            /// The struct is emitted regardless of whether the parser
-            /// chooses the aggregate-write path at runtime for this
-            /// rule; the runtime consumer inspects the layout through
-            /// `Tape::payload_bytes` at the admitted byte offsets.
-            /// The struct's presence in the expanded emitter output
-            /// is the structural proof that the layout pass admitted
-            /// this rule (AY.W6.2 hard-gate `cargo expand` evidence).
-            #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
+            /// `NAMED_BINDING` is `""` when the admission came from a
+            /// pure layout arm; non-empty when the grammar author spelt
+            /// a `-> Name` annotation. Consumers that want a semantic-
+            /// type hint (e.g. CSS `"Color"`) read this const.
+            #derive_attrs
             #[doc(hidden)]
-            pub struct #struct_ident {
+            pub struct #struct_ident #decl_generics {
                 #(#fields),*
             }
 
-            impl #struct_ident {
+            impl #impl_generics #impl_target {
                 /// Grammar-declared rule that projects into this
                 /// struct. Matches the `rule_name` entry in
                 /// `PROJECTION_DIRECT_TO_STRUCT`.
                 #[doc(hidden)]
                 pub const RULE_NAME: &'static str = #rule_name_lit;
 
-                /// Number of scalar fields the layout pass admitted
-                /// for this projection.
+                /// Grammar-declared `-> Name` binding; empty string
+                /// when the admission came from a pure layout arm.
+                #[doc(hidden)]
+                pub const NAMED_BINDING: &'static str = #named_binding_lit;
+
+                /// Number of fields (scalar + cursor) the layout pass
+                /// admitted for this projection.
                 #[doc(hidden)]
                 pub const FIELD_COUNT: usize = #field_count_lit;
 
-                /// Total bytes the projection occupies in the
-                /// packed payload buffer. Matches
-                /// `PayloadLayout::total_bytes` at admission time.
+                /// Total bytes the projection's packed portion occupies
+                /// in the aggregate payload buffer; `0` when every
+                /// field is a cursor handle.
                 #[doc(hidden)]
                 pub const TOTAL_BYTES: u8 = #total_bytes_lit;
             }
@@ -290,21 +548,36 @@ fn emit_projection_structs(
     quote! { #(#structs)* }
 }
 
-/// AY.W6.2 — emit one field of a grammar-derived projection struct.
+/// AY-II.W0.d — emit one field of a grammar-derived projection struct.
 ///
-/// The field name is `field_<idx>`; the type is the Rust backend
-/// mapping of the layout field's scalar [`TypeDesc`]. Span fields
-/// project to `(u32, u32)` pairs so the struct stays plain-data
-/// (`Copy`); the view layer unpacks back to a `&'input str` at
-/// consumption time via the input slice.
-fn emit_projection_field(idx: usize, field: &PayloadField) -> TokenStream {
+/// Scalar kinds map to their Rust primitive (`Span` projects to a
+/// `(u32, u32)` pair so packed-only structs stay `Copy`). Cursor kinds
+/// map to the grammar's `<Grammar>NodeView<'p>` handle, opting the
+/// containing struct out of `Copy` in exchange for full child access.
+fn emit_projection_field(
+    idx: usize,
+    kind: &ProjectionFieldKind,
+    node_view_ident: &syn::Ident,
+) -> TokenStream {
     let field_ident = format_ident!("field_{}", idx);
-    let offset_lit = proc_macro2::Literal::u8_unsuffixed(field.offset);
-    let ty_tokens = projection_field_type(&field.ty);
-    quote! {
-        /// Grammar-declared field at layout offset
-        #[doc = concat!("`", stringify!(#offset_lit), "` (bytes).")]
-        pub #field_ident: #ty_tokens
+    match kind {
+        ProjectionFieldKind::Scalar { ty, offset } => {
+            let offset_lit = proc_macro2::Literal::u8_unsuffixed(*offset);
+            let ty_tokens = projection_field_type(ty);
+            quote! {
+                /// Grammar-declared scalar field at packed-buffer offset
+                #[doc = concat!("`", stringify!(#offset_lit), "` (bytes).")]
+                pub #field_ident: #ty_tokens
+            }
+        }
+        ProjectionFieldKind::CursorChild { child_idx, .. } => {
+            let child_idx_lit = proc_macro2::Literal::usize_unsuffixed(*child_idx);
+            quote! {
+                /// Grammar-declared compound child at cursor position
+                #[doc = concat!("`", stringify!(#child_idx_lit), "` (child index).")]
+                pub #field_ident: #node_view_ident<'p>
+            }
+        }
     }
 }
 
@@ -329,86 +602,45 @@ fn projection_field_type(ty: &TypeDesc) -> TokenStream {
     }
 }
 
-/// AY.W6.2 — emit `__named_type_shim_<name>` markers for the
-/// resolver-backed admissions. One shim per distinct admitted name.
-fn emit_resolver_shims(admissions: &[ProjectionAdmission]) -> TokenStream {
-    let mut names: Vec<String> = admissions
-        .iter()
-        .filter_map(|a| match &a.source {
-            ProjectionSource::ResolverNamed { binding_name } => {
-                Some(binding_name.clone())
-            }
-            ProjectionSource::GrammarLayout { .. } => None,
-        })
-        .collect();
-    names.sort();
-    names.dedup();
-    let shims: Vec<TokenStream> = names
-        .iter()
-        .map(|name| {
-            let fn_ident = format_ident!(
-                "__named_type_shim_{}",
-                name.to_ascii_lowercase()
-            );
-            let name_lit = proc_macro2::Literal::string(name);
-            quote! {
-                /// AX.W1r.1 marker — structural evidence that
-                /// `RustNamedTypes::resolve_named` admitted this
-                /// grammar-declared named type. One shim is emitted
-                /// per distinct admitted name; the body is
-                /// compile-time constant and the function is never
-                /// called.
-                #[doc(hidden)]
-                #[inline(always)]
-                pub fn #fn_ident() -> &'static str {
-                    #name_lit
-                }
-            }
-        })
-        .collect();
-    quote! { #(#shims)* }
-}
-
-/// AY.W6.2 — emit `__grammar_projection_<rule>` markers for the
-/// layout-derived admissions. One marker per admitted rule.
-/// Structural evidence that the layout pass produced a payload shape
-/// for this rule; the hard gate inspects the shim count as proof
-/// that the broader mechanism fired.
-fn emit_grammar_projection_shims(
+/// AY-II.W0.d — emit `__grammar_projection_<rule>` markers for every
+/// admitted rule. One marker per admission — the resolver-backed arm
+/// (Named + resolver hit) and the pure layout arm share identical
+/// marker shape. The returned `(rule_name, field_count,
+/// named_binding)` triple lets the `cargo expand` hard gate verify
+/// admission without re-inspecting the IR.
+fn emit_grammar_projection_markers(
     admissions: &[ProjectionAdmission],
 ) -> TokenStream {
-    let shims: Vec<TokenStream> = admissions
+    let markers: Vec<TokenStream> = admissions
         .iter()
-        .filter_map(|a| match &a.source {
-            ProjectionSource::GrammarLayout { layout } => {
-                Some((a.rule_name.clone(), layout.fields.len()))
-            }
-            ProjectionSource::ResolverNamed { .. } => None,
-        })
-        .map(|(rule_name, field_count)| {
+        .map(|a| {
             let fn_ident = format_ident!(
                 "__grammar_projection_{}",
-                sanitise_ident(&rule_name),
+                sanitise_ident(&a.rule_name),
             );
-            let rule_lit = proc_macro2::Literal::string(&rule_name);
-            let count_lit =
-                proc_macro2::Literal::usize_unsuffixed(field_count);
+            let rule_lit = proc_macro2::Literal::string(&a.rule_name);
+            let count_lit = proc_macro2::Literal::usize_unsuffixed(
+                a.plan.fields.len(),
+            );
+            let binding_lit = proc_macro2::Literal::string(
+                a.named_binding_str(),
+            );
             quote! {
-                /// AY.W6.2 marker — structural evidence that
-                /// `ir.payload_layouts` admitted this rule for direct-
-                /// to-struct projection. The returned `(rule_name,
-                /// field_count)` pair exposes the layout shape to the
-                /// `cargo expand` hard gate without requiring a
-                /// runtime compilation.
+                /// AY-II.W0.d marker — structural evidence that the
+                /// layout pass + resolver admitted this rule for
+                /// direct-to-struct projection. The returned
+                /// `(rule_name, field_count, named_binding)` triple
+                /// exposes the admitted shape to the `cargo expand`
+                /// hard gate without requiring a runtime compilation.
                 #[doc(hidden)]
                 #[inline(always)]
-                pub fn #fn_ident() -> (&'static str, usize) {
-                    (#rule_lit, #count_lit)
+                pub fn #fn_ident() -> (&'static str, usize, &'static str) {
+                    (#rule_lit, #count_lit, #binding_lit)
                 }
             }
         })
         .collect();
-    quote! { #(#shims)* }
+    quote! { #(#markers)* }
 }
 
 /// AY.W6.2 — upper-camel-case a rule/grammar name for ident
@@ -1054,6 +1286,31 @@ impl RustEmitter {
                 /// disambiguate.
                 pub const PROJECTION_DIRECT_TO_STRUCT: &'static [(&'static str, &'static str)] =
                     PROJECTION_DIRECT_TO_STRUCT;
+
+                /// AY-II.W0.d — grammar-declared `-> Name` bindings
+                /// per admission. Indexed in lockstep with
+                /// `PROJECTION_DIRECT_TO_STRUCT`; empty string when
+                /// the admission came from a pure layout arm.
+                #[doc(hidden)]
+                pub const PROJECTION_NAMED_BINDINGS: &'static [&'static str] =
+                    PROJECTION_NAMED_BINDINGS;
+
+                /// AY-II.W0.d — materialiser function names per
+                /// admission. Canonical wire-contract evidence that
+                /// every `PROJECTION_DIRECT_TO_STRUCT` entry has a
+                /// matching `materialize_projection_<rule>_<Grammar>`
+                /// fn in the emitter output.
+                #[doc(hidden)]
+                pub const PROJECTION_MATERIALIZERS: &'static [&'static str] =
+                    PROJECTION_MATERIALIZERS;
+
+                /// AY-II.W0.d — production consumer names per
+                /// admission. Each entry identifies the
+                /// `<Grammar>Value::<RuleName>` variant that consumes
+                /// the admitted rule at runtime.
+                #[doc(hidden)]
+                pub const PROJECTION_CONSUMERS: &'static [&'static str] =
+                    PROJECTION_CONSUMERS;
 
                 /// Parse an input string and return a zero-copy
                 /// `Parsed<'_, Self>` that borrows the input directly.

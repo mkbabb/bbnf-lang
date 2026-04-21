@@ -32,27 +32,18 @@
 //! monotonically without re-reading `child_off` — this is the path
 //! V2.5's reordered-unrolling codegen compiles into.
 //!
-//! # Tranche AY.W5 — write-time close-stamped substrate
+//! # Tranche AY-II.W0.a — single-stamping finaliser path
 //!
-//! Emitters that drive the tape via
-//! [`TapeBuilder::open_compound`](crate::TapeBuilder::open_compound) /
-//! [`TapeBuilder::close_compound`](crate::TapeBuilder::close_compound)
-//! stamp `sib_skip`, `child_off`, `span_hi`, and `HAS_CHILDREN_BIT`
-//! inline at parse time; the finaliser passes those records through
-//! untouched (gated by
-//! [`TapeRec::SIB_SKIP_STAMPED_BIT`](crate::tape::TapeRec::SIB_SKIP_STAMPED_BIT)).
-//! The cursor is a single read surface across both emission modes —
-//! the `sib_skip` column carries an authoritative inter-sibling
-//! distance (or `0` for the last sibling) regardless of which path
-//! wrote it, so the forward walk keyed off `sib_skip_at` needs no
-//! branch on the stamp bit. Likewise `child_off` at a write-time-
-//! closed compound points directly at the first direct child's root
-//! (`parent + 1`), hitting [`first_child_root`]'s pre-order O(1)
-//! fast path; legacy `push_compound` tapes keep the post-order
-//! fallback. The stamp bit is observational — readers that want to
-//! discriminate write-time-closed records from finaliser-closed
-//! ones inspect it via [`TapeRec::sib_skip_stamped`](crate::tape::TapeRec::sib_skip_stamped),
-//! but the canonical structural read path ignores it.
+//! Compounds emitted via
+//! [`TapeBuilder::begin_compound`](crate::TapeBuilder::begin_compound)
+//! / [`TapeBuilder::end_compound`](crate::TapeBuilder::end_compound)
+//! point at the first direct child's root via
+//! `child_off == parent + 1` (pre-order layout), hitting
+//! [`first_child_root`]'s O(1) fast path. The `sib_skip` column is
+//! written exclusively by [`crate::finaliser::finalise`] after the
+//! parse completes; the cursor's forward walk reads it without a
+//! branch on any stamp bit. Legacy `push_compound` tapes are the
+//! post-order fallback and continue through the same primitive.
 
 use crate::columns::Columns;
 use crate::kind::TapeKind;
@@ -292,7 +283,84 @@ impl<'tape> TapeCursor<'tape> {
         self.children()
     }
 
+    /// Scan the source-byte range `[cur.span_lo, end_span)` for
+    /// structural positions (quotes, brackets, commas — whatever the
+    /// grammar's structural-scan policy admits) and return an
+    /// iterator over the matching absolute byte offsets.
+    ///
+    /// AY-II.W0.a lands the signature; AY-II.W0.e wires per-grammar
+    /// activation through the emitter's `STRUCTURAL_SCAN_POLICY`
+    /// table. Until the consumer wiring lands, the default
+    /// implementation yields the empty iterator — grammars whose
+    /// structural-scan alphabet is unresolved at emit time quietly
+    /// fall back to per-byte scanning upstream rather than panicking
+    /// or allocating.
+    #[inline]
+    pub fn scan_structural_bounded(&self, end_span: u32) -> ScanResult<'tape> {
+        let _ = end_span;
+        ScanResult {
+            tape: self.tape,
+            positions: &[],
+            cursor: 0,
+        }
+    }
+
 }
+
+/// Lightweight iterator over structural byte positions discovered by
+/// [`TapeCursor::scan_structural_bounded`].
+///
+/// AY-II.W0.a — empty-iter scaffold. AY-II.W0.e populates the body
+/// over the structural-scan substrate service. The shape is a
+/// borrowed `&[u32]` slice so the populated form can point directly
+/// into the scanner's pre-computed position column without a fresh
+/// allocation on the hot path; the scaffold holds an empty slice.
+#[derive(Debug)]
+pub struct ScanResult<'tape> {
+    /// Carries the tape reference so the W0.e body can materialise
+    /// [`TapeCursor`] handles against the scanner-produced offsets
+    /// without re-threading `'tape` through every caller.
+    tape: &'tape Tape,
+    /// Pre-computed structural byte positions within the bounded
+    /// range. Empty on the scaffold returned by the W0.a default.
+    positions: &'tape [u32],
+    /// Read cursor into [`Self::positions`].
+    cursor: usize,
+}
+
+impl<'tape> ScanResult<'tape> {
+    /// Borrow the tape this result was derived from.
+    #[inline]
+    pub fn tape(&self) -> &'tape Tape {
+        self.tape
+    }
+
+    /// Borrow the underlying position slice. Empty on the W0.a
+    /// scaffold; populated by W0.e's structural-scan wiring.
+    #[inline]
+    pub fn positions(&self) -> &'tape [u32] {
+        self.positions
+    }
+}
+
+impl<'tape> Iterator for ScanResult<'tape> {
+    type Item = u32;
+
+    #[inline]
+    fn next(&mut self) -> Option<u32> {
+        let pos = self.positions.get(self.cursor).copied()?;
+        self.cursor += 1;
+        Some(pos)
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.positions.len().saturating_sub(self.cursor);
+        (remaining, Some(remaining))
+    }
+}
+
+impl ExactSizeIterator for ScanResult<'_> {}
 
 /// Forward-order iterator over a compound's direct children.
 ///

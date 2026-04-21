@@ -13,6 +13,17 @@
 //! generated code's push sites are untouched; internally, each push
 //! writes into the structural + payload columns instead of allocating
 //! a 16-byte `TapeRec`.
+//!
+//! Tranche AY-II.W0.a retired the per-push open-frame stack experiment
+//! (W5-era `open_compound` / `close_compound` / `note_push` /
+//! `SIB_SKIP_STAMPED_BIT`). The unified compound emission API —
+//! [`Self::begin_compound`] + [`Self::end_compound`] — writes the
+//! compound row at open time with provisional `span_hi` / `child_off`,
+//! and back-patches both on close without touching `sib_skip`. The
+//! finaliser is once again the sole writer of the sibling-skip column.
+//! Emitter retry paths roll the row-count back via
+//! [`Columns::rollback_to`] instead of ad-hoc `columns_mut().truncate`
+//! calls.
 
 use crate::columns::Columns;
 use crate::kind::TapeKind;
@@ -133,47 +144,6 @@ pub struct TapeBuilder {
     /// flag is set, skipping the legacy
     /// [`crate::finaliser::derive_frame_depth`] reconstruction pass.
     pub(crate) frame_depth: Vec<u8>,
-
-    /// AY.W5.1 — open-frame stack for write-time close stamping.
-    ///
-    /// Maintained by [`Self::open_compound`] / [`Self::close_compound`]
-    /// plus the per-push `note_push` hook. Each frame tracks one
-    /// still-open compound's direct-child window: the compound's own
-    /// tape offset, the first direct child's offset (`u32::MAX` until
-    /// the first child lands), and the last direct child's offset
-    /// (`u32::MAX` until the first child lands).
-    ///
-    /// The stack is only populated on grammars that use the open/close
-    /// API; grammars that exclusively use
-    /// [`Self::push_compound`](Self::push_compound) never grow the
-    /// stack and the push-hook short-circuits in one predicted branch.
-    pub(crate) open_stack: Vec<OpenFrame>,
-}
-
-/// AY.W5.1 — one still-open compound tracked by
-/// [`TapeBuilder::open_stack`].
-///
-/// A frame is pushed by [`TapeBuilder::open_compound`] and popped by
-/// [`TapeBuilder::close_compound`]. Between open and close, every
-/// push that lands into [`TapeBuilder`] updates the innermost frame
-/// via the `note_push` hook so the first-child pointer + every direct
-/// child's sib-skip slot can be stamped inline.
-///
-/// `first_child` and `last_child` are `u32::MAX` until the first
-/// direct child lands; the sentinel is chosen to make the
-/// first-push path branch-free (`frame.first_child = frame.first_child
-/// .min(new_idx)` would write the minimum, but the guard path makes
-/// the invariant explicit for the reader).
-#[derive(Clone, Copy, Debug)]
-pub struct OpenFrame {
-    /// Tape offset of the compound this frame represents.
-    compound_offset: u32,
-    /// Tape offset of the first direct child, or `u32::MAX` when no
-    /// child has landed yet.
-    first_child: u32,
-    /// Tape offset of the last direct child so far, or `u32::MAX`
-    /// when no child has landed yet.
-    last_child: u32,
 }
 
 /// Error state surfaced through [`TapeBuilder::finish`].
@@ -202,7 +172,6 @@ impl TapeBuilder {
             error: None,
             has_inline_frame_depth: false,
             frame_depth: Vec::new(),
-            open_stack: Vec::new(),
         }
     }
 
@@ -216,34 +185,22 @@ impl TapeBuilder {
         TapeOffset(self.columns.len() as u32)
     }
 
-    /// AY.W5.1 — update the innermost open frame (if any) with a new
-    /// direct child at `new_idx`.
+    /// Rewind both the structural columns and the inline
+    /// `frame_depth` stream back to `open_offset` slots.
     ///
-    /// Called by every structural push path (leaf / compound open /
-    /// payload-bearing leaf) immediately after the new row lands in
-    /// the columns. When the open stack is empty, this is a single
-    /// predicted-not-taken branch with no further work — grammars
-    /// that never use [`Self::open_compound`] pay no runtime cost.
-    ///
-    /// When the stack is non-empty, the innermost frame's
-    /// `last_child` gets its `sib_skip` stamped to `new_idx -
-    /// last_child` and its
-    /// [`TapeRec::SIB_SKIP_STAMPED_BIT`](crate::tape::TapeRec::SIB_SKIP_STAMPED_BIT)
-    /// is set (so the finaliser skips re-derivation). The first-child
-    /// pointer is captured on the frame's first hit, and
-    /// `last_child` advances to `new_idx` on every hit.
+    /// Delegates to [`Columns::rollback_to`] for the per-record
+    /// structural columns and truncates [`Self::frame_depth`] in
+    /// lockstep when inline frame-depth is active. Emitter retry-IIFE
+    /// sites call this to restore the full builder checkpoint in one
+    /// step.
     #[inline(always)]
-    fn note_push(&mut self, new_idx: u32) {
-        if let Some(frame) = self.open_stack.last_mut() {
-            if frame.last_child != u32::MAX {
-                let prev = frame.last_child;
-                self.columns.set_sib_skip_at(prev, new_idx - prev);
-                self.columns
-                    .or_extra_at(prev, TapeRec::SIB_SKIP_STAMPED_BIT);
-            } else {
-                frame.first_child = new_idx;
+    pub fn rollback_to(&mut self, open_offset: u32) {
+        self.columns.rollback_to(open_offset);
+        if self.has_inline_frame_depth {
+            let new_len = open_offset as usize;
+            if new_len < self.frame_depth.len() {
+                self.frame_depth.truncate(new_len);
             }
-            frame.last_child = new_idx;
         }
     }
 
@@ -274,7 +231,6 @@ impl TapeBuilder {
             span_hi,
             TapeOffset::NONE,
         );
-        self.note_push(idx);
         TapeOffset(idx)
     }
 
@@ -333,161 +289,67 @@ impl TapeBuilder {
             span_hi,
             effective_child_off,
         );
-        self.note_push(idx);
         TapeOffset(idx)
     }
 
-    // ── AY.W5.1 write-time close stamping (open/close pair) ────────
+    // ── AY-II.W0.a unified compound emission API ───────────────────
 
-    /// AY.W5.1 — open a compound in pre-order and push its row to the
-    /// open-frame stack.
+    /// Begin a compound in pre-order.
     ///
-    /// Emits a compound record with provisional `span_hi == span_lo`
-    /// and `child_off = NONE`, sets its Alt/meta packing per
-    /// [`TapeRec::pack_kind_meta`], and pushes an
-    /// [`OpenFrame`] onto [`Self::open_stack`]. Every subsequent
-    /// structural push (leaf or nested compound) updates the
-    /// innermost frame through the `note_push` hook so the first
-    /// direct-child pointer is captured and each direct child's
-    /// `sib_skip` is stamped inline.
-    ///
-    /// Pairs with [`Self::close_compound`], which pops the frame and
-    /// back-patches `span_hi` + `child_off` + `HAS_CHILDREN_BIT` on
-    /// the returned offset. The cursor's pre-order fast path
-    /// ([`TapeCursor::child`](crate::TapeCursor::child)) recognises
-    /// `child_off == parent + 1` and resolves first-child in O(1).
-    ///
-    /// # Contract
-    ///
-    /// - Callers pair every `open_compound` with exactly one
-    ///   [`Self::close_compound`] on the returned offset; unclosed
-    ///   frames leave the compound's `span_hi` / `child_off` at
-    ///   their provisional values and the finaliser stamps them via
-    ///   its child-frame re-derivation (step 1 of the stage-C scan).
-    ///   Closing out-of-order triggers a debug assertion.
-    /// - Compounds opened via this API are write-time closed; their
-    ///   direct children carry [`TapeRec::SIB_SKIP_STAMPED_BIT`] set,
-    ///   so the stage-C finaliser skips re-derivation of those
-    ///   sibling-skip slots.
-    /// - Emitters that never call [`Self::open_compound`] stay on
-    ///   the legacy [`Self::push_compound`] / [`Self::mark_children`]
-    ///   path entirely; the finaliser derives their sib-skip column
-    ///   exactly as pre-W5.1 and the open-frame stack remains empty.
-    /// - Within a single subtree, mix at your peril: a
-    ///   `push_compound` invocation whose children were pushed inside
-    ///   an outer open_compound window would cause those children to
-    ///   be misattributed as the outer compound's direct children by
-    ///   the push-time stamp logic. Emitters targeting the write-time
-    ///   close-stamping path commit to it for the whole subtree
-    ///   (compounds via open/close; leaves via the existing
-    ///   `push_leaf*` helpers, which participate in the frame
-    ///   tracking automatically).
-    ///
-    /// `meta_idx` range is 0-31 (5-bit packed field).
+    /// Emits a compound row with provisional `span_hi == span_lo`,
+    /// `child_off = TapeOffset::NONE`, and `HAS_CHILDREN_BIT` cleared.
+    /// Returns the row offset the caller passes back to
+    /// [`Self::end_compound`] on close. `flags` is written verbatim
+    /// into the structural `extra` word; `frame_depth` is appended to
+    /// the inline depth stream when [`Self::has_inline_frame_depth`]
+    /// is active. Emitter retry paths rewind via
+    /// [`Self::rollback_to`] with the returned offset; the next
+    /// `begin_compound` reuses the same row.
     #[inline(always)]
-    pub fn open_compound(
+    pub fn begin_compound(
         &mut self,
         kind: TapeKind,
         span_lo: u32,
-        variant_idx: u8,
-        meta_idx: u8,
-    ) -> TapeOffset {
+        frame_depth: u8,
+        flags: u16,
+    ) -> u32 {
         debug_assert!(
             kind.is_compound(),
-            "open_compound on leaf/annotation kind {:?}",
+            "begin_compound on leaf/annotation kind {:?}",
             kind
         );
-        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
-        // Provisional: `span_hi = span_lo` (back-patched at close),
-        // `child_off = NONE` (back-patched at close when children
-        // land), `has_children` clear (set at close when the frame's
-        // `first_child` is populated).
+        let kind_meta = (kind as u8) & 0x0F;
         let idx = self.columns.push_structural(
             kind_meta,
-            variant_idx,
-            extra_meta_bit,
+            0,
+            flags,
             span_lo,
             span_lo,
             TapeOffset::NONE,
         );
-        // note_push before stacking so the OUTER open frame (if any)
-        // records this newly-opened compound as one of its direct
-        // children; the just-pushed compound's own frame carries
-        // first/last `u32::MAX` until one of its OWN children lands.
-        self.note_push(idx);
-        self.open_stack.push(OpenFrame {
-            compound_offset: idx,
-            first_child: u32::MAX,
-            last_child: u32::MAX,
-        });
-        TapeOffset(idx)
+        if self.has_inline_frame_depth {
+            self.frame_depth.push(frame_depth);
+        }
+        idx
     }
 
-    /// AY.W5.1 — close an open compound with the observed `span_hi`,
-    /// back-patching its `child_off` + `has_children` metadata and
-    /// marking its last direct child as the end-of-frame sibling.
+    /// Finalise a compound opened via [`Self::begin_compound`].
     ///
-    /// Pops the innermost frame on [`Self::open_stack`] (debug-asserts
-    /// that it matches `compound_offset` — mismatched open/close pairs
-    /// are a codegen bug). Stamps:
-    ///
-    /// 1. `span_hi[compound_offset]` = the supplied `span_hi`.
-    /// 2. `child_off[compound_offset]` = `first_child` from the frame
-    ///    (or `TapeOffset::NONE` when the compound ran childless).
-    /// 3. `HAS_CHILDREN_BIT` on `extra[compound_offset]` when any
-    ///    direct child landed.
-    /// 4. The last direct child's `sib_skip` stays at its default `0`
-    ///    (the "last sibling" marker); this method sets the child's
-    ///    [`TapeRec::SIB_SKIP_STAMPED_BIT`] so the finaliser doesn't
-    ///    try to re-derive it.
-    ///
-    /// Every direct child except the last had its `sib_skip` stamped
-    /// by `note_push` at the moment its successor sibling was pushed;
-    /// step 4 completes the run by sealing the final sibling as
-    /// authoritative-zero.
-    ///
-    /// No action on the compound's own `sib_skip` — if the compound
-    /// has an OUTER parent still on the stack, that outer frame's
-    /// next `note_push` (when the next sibling arrives) stamps the
-    /// compound's sib_skip distance; if the compound is itself the
-    /// last sibling of its outer frame, the outer frame's eventual
-    /// close will mark this compound's sib_skip as authoritative-zero
-    /// through the same step-4 path.
-    ///
-    /// # Panics
-    ///
-    /// Debug builds panic when the stack is empty or when the top
-    /// frame's `compound_offset` doesn't match. Release builds skip
-    /// the check (codegen guarantees pairing).
+    /// Back-patches `span_hi` on the row at `open_offset`. When
+    /// `open_offset + 1 < columns.len()` (at least one child landed),
+    /// sets `child_off = TapeOffset(open_offset + 1)` — the pre-order
+    /// layout driving the cursor's O(1) first-child fast path — and
+    /// stamps `HAS_CHILDREN_BIT`. Does NOT write `sib_skip`; the
+    /// finaliser is its sole writer.
     #[inline(always)]
-    pub fn close_compound(&mut self, compound_offset: TapeOffset, span_hi: u32) {
-        let frame = self.open_stack.pop().unwrap_or_else(|| {
-            panic!(
-                "close_compound({:?}) on empty open_stack",
-                compound_offset,
-            )
-        });
-        debug_assert_eq!(
-            frame.compound_offset, compound_offset.0,
-            "close_compound({:?}) mismatches top frame {:?}",
-            compound_offset, frame.compound_offset,
-        );
-        // Step 1 — back-patch span_hi on the parent compound.
-        self.columns.set_span_hi_at(frame.compound_offset, span_hi);
-        // Steps 2-4 — children-dependent stamps. Only fire when at
-        // least one direct child landed.
-        if frame.first_child != u32::MAX {
-            self.columns.set_child_off_at(
-                frame.compound_offset,
-                TapeOffset(frame.first_child),
-            );
+    pub fn end_compound(&mut self, open_offset: u32, span_hi: u32) {
+        self.columns.set_span_hi_at(open_offset, span_hi);
+        let first_child = open_offset + 1;
+        if (first_child as usize) < self.columns.len() {
             self.columns
-                .or_extra_at(frame.compound_offset, TapeRec::HAS_CHILDREN_BIT);
-            // Step 4 — the last direct child's sib_skip stays at the
-            // default 0 (last-sibling marker); mark it as authoritative
-            // so the finaliser skips step-3 re-derivation.
+                .set_child_off_at(open_offset, TapeOffset(first_child));
             self.columns
-                .or_extra_at(frame.last_child, TapeRec::SIB_SKIP_STAMPED_BIT);
+                .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
         }
     }
 
@@ -563,7 +425,6 @@ impl TapeBuilder {
             span_hi,
             child_off,
         );
-        self.note_push(idx);
         TapeOffset(idx)
     }
 
@@ -711,7 +572,6 @@ impl TapeBuilder {
             span_hi,
             TapeOffset(arena_offset),
         );
-        self.note_push(idx);
         TapeOffset(idx)
     }
 
@@ -777,7 +637,6 @@ impl TapeBuilder {
             span_hi,
             TapeOffset(arena_offset),
         );
-        self.note_push(idx);
         TapeOffset(idx)
     }
 
@@ -823,7 +682,6 @@ impl TapeBuilder {
             span_hi,
             TapeOffset::NONE,
         );
-        self.note_push(idx);
         TapeOffset(idx)
     }
 
@@ -869,7 +727,6 @@ impl TapeBuilder {
             span_hi,
             TapeOffset(rank),
         );
-        self.note_push(idx);
         TapeOffset(idx)
     }
 

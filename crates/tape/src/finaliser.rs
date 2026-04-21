@@ -22,18 +22,16 @@
 //! passes with a single linear scan whose work scales with `O(N)`
 //! across the whole tape — every record is visited exactly once.
 //!
-//! # AY.W5.1 — write-time close-stamping coexistence
+//! # AY-II.W0.a — finaliser-as-sole-writer restoration
 //!
-//! Stage-C is now a fallback rather than the sole writer. When a
-//! record's
-//! [`TapeRec::SIB_SKIP_STAMPED_BIT`](crate::tape::TapeRec::SIB_SKIP_STAMPED_BIT)
-//! is set, its `sib_skip` slot was stamped by
-//! [`TapeBuilder::close_compound`](crate::TapeBuilder::close_compound)
-//! at write time and the stage-C sibling-skip derivation skips it
-//! (the pre-stamped value is authoritative). Records the parser left
-//! unstamped keep the bit clear; stage-C stamps them exactly as before.
-//! Mixed tapes — some records close-stamped, others not — are handled
-//! in one forward pass.
+//! Tranche AY.W5.1 had experimented with write-time stamping of
+//! `sib_skip` via an open-frame stack on the builder, gated by
+//! `TapeRec::SIB_SKIP_STAMPED_BIT`. AY-II.W0.a retired that path
+//! wholesale — the per-push `note_push` hook paid two column writes
+//! on every direct child on every JSON / CSS / Sheets / BBNF parse
+//! (-27% twitter regression AY.W4 → AY.W6). Post-AY-II the finaliser
+//! is once again the sole writer of `sib_skip`, deriving every row
+//! unconditionally from the forward scan below.
 //!
 //! # Algorithm
 //!
@@ -122,7 +120,7 @@
 //! [`GrammarProfile::parallel_break_even_bytes`](crate::GrammarProfile).
 
 use crate::columns::Columns;
-use crate::tape::{TapeOffset, TapeRec};
+use crate::tape::TapeOffset;
 
 /// Maximum frame depth supported by the AV.3 DTA driver.
 ///
@@ -290,17 +288,12 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
         // ── Step 3: stamp sib_skip on the previous same-depth record
         //    in the current frame ────────────────────────────────────
         //
-        // AY.W5.1 — skip records whose
-        // [`TapeRec::SIB_SKIP_STAMPED_BIT`] is set: those were stamped
-        // at write-time by
-        // [`TapeBuilder::close_compound`](crate::TapeBuilder::close_compound)
-        // and carry an authoritative distance already. Records the
-        // parser left unstamped keep the bit clear and get stamped
-        // here exactly as pre-W5.1.
+        // AY-II.W0.a — unconditional derivation. The write-time
+        // stamping path (SIB_SKIP_STAMPED_BIT + `TapeBuilder::
+        // close_compound`) retired; the finaliser is again the sole
+        // writer of `sib_skip`.
         if let Some(prev) = prev_at_depth[d] {
-            if (columns.extra_at(prev) & TapeRec::SIB_SKIP_STAMPED_BIT) == 0 {
-                columns.set_sib_skip_at(prev, i_u32 - prev);
-            }
+            columns.set_sib_skip_at(prev, i_u32 - prev);
         }
 
         // ── Step 4: update tracking for THIS record at depth d ────

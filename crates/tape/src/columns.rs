@@ -198,6 +198,41 @@ impl Columns {
         self.invalidate_packed();
     }
 
+    /// Rewind the columnar substrate back to `open_offset` structural
+    /// slots.
+    ///
+    /// This is the canonical rollback primitive emitters call when an
+    /// emitter retry-IIFE discards everything pushed after a
+    /// [`TapeBuilder::begin_compound`](crate::TapeBuilder::begin_compound)
+    /// open point. AY-II.W0.a introduced it in place of the ad-hoc
+    /// `columns_mut().truncate(save)` incantation that every retry
+    /// site had evolved into — that primitive only touched `records`
+    /// + `sib_skip` and left the AoS sidecar stale; this one owns
+    /// rewinding every per-record column in lockstep.
+    ///
+    /// Idempotent: calling with `open_offset >= len()` is a no-op
+    /// (nothing to rewind). Callers never pass a value that would
+    /// extend the columns.
+    ///
+    /// Typed-payload columns (`pay_narrow`, `pay_wide`, `pay_f64`,
+    /// `pay_agg`) are NOT rewound — the compound row itself never
+    /// wrote into them, so they already match the state the caller
+    /// observed at `begin_compound` time. Leaf-payload writes that
+    /// landed after the open point are discarded along with their
+    /// structural rows and the payload columns accumulate dead
+    /// entries in those slots; that budget is the same one the
+    /// pre-AY-II `columns_mut().truncate` convention accepted.
+    #[inline]
+    pub fn rollback_to(&mut self, open_offset: u32) {
+        let new_len = open_offset as usize;
+        if new_len >= self.records.len() {
+            return;
+        }
+        self.records.truncate(new_len);
+        self.sib_skip.truncate(new_len);
+        self.invalidate_packed();
+    }
+
     // ── AX.W1.D — AoS sidecar (`packed_cache`) readers/invalidators ──
 
     /// Get (populating on first call) the AoS sidecar view.

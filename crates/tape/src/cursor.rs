@@ -31,6 +31,28 @@
 //! paths that walk in push order can increment rank counters
 //! monotonically without re-reading `child_off` — this is the path
 //! V2.5's reordered-unrolling codegen compiles into.
+//!
+//! # Tranche AY.W5 — write-time close-stamped substrate
+//!
+//! Emitters that drive the tape via
+//! [`TapeBuilder::open_compound`](crate::TapeBuilder::open_compound) /
+//! [`TapeBuilder::close_compound`](crate::TapeBuilder::close_compound)
+//! stamp `sib_skip`, `child_off`, `span_hi`, and `HAS_CHILDREN_BIT`
+//! inline at parse time; the finaliser passes those records through
+//! untouched (gated by
+//! [`TapeRec::SIB_SKIP_STAMPED_BIT`](crate::tape::TapeRec::SIB_SKIP_STAMPED_BIT)).
+//! The cursor is a single read surface across both emission modes —
+//! the `sib_skip` column carries an authoritative inter-sibling
+//! distance (or `0` for the last sibling) regardless of which path
+//! wrote it, so the forward walk keyed off `sib_skip_at` needs no
+//! branch on the stamp bit. Likewise `child_off` at a write-time-
+//! closed compound points directly at the first direct child's root
+//! (`parent + 1`), hitting [`first_child_root`]'s pre-order O(1)
+//! fast path; legacy `push_compound` tapes keep the post-order
+//! fallback. The stamp bit is observational — readers that want to
+//! discriminate write-time-closed records from finaliser-closed
+//! ones inspect it via [`TapeRec::sib_skip_stamped`](crate::tape::TapeRec::sib_skip_stamped),
+//! but the canonical structural read path ignores it.
 
 use crate::columns::Columns;
 use crate::kind::TapeKind;

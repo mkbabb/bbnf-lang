@@ -38,8 +38,25 @@
 //! `#[inline(always)]` on every per-shape fn, the root body
 //! collapses into one flat function at the caller's site — the
 //! same layout `json-prototype::parse_value` produces.
+//!
+//! # AY.W6.2 — grammar-derived direct-to-struct projection path
+//!
+//! In addition to the five-shape materialisers, every rule admitted
+//! to the direct-to-struct surface by the layout pass
+//! (`ir.payload_layouts` populated) emits a per-rule
+//! `materialize_projection_<rule>_<Grammar>` helper that reads the
+//! packed aggregate payload directly and constructs the matching
+//! `<Grammar><RuleCamel>Projection` struct. The helper bypasses the
+//! `Vec<<Grammar>Value>` intermediate — consumers that know the
+//! admitted shape route straight through it without the Compound-
+//! variant walker. The helper's presence in the expanded emitter
+//! output is structural evidence the admission fact reaches the
+//! materialiser crate (`cargo expand -p bbnf --test
+//! named_type_preservation` surfaces one helper per admitted
+//! rule).
 
-use bbnf_ir::{GrammarIR, TypeDesc};
+use bbnf_ir::passes::{NamedTypeResolver, PayloadField, PayloadLayout};
+use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -72,6 +89,14 @@ pub fn emit_materialize_fns(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
         grammar_name,
     );
 
+    // AY.W6.2 — per-rule direct-to-struct projection helpers.
+    // Consumes `ir.payload_layouts` directly: every admitted rule
+    // produces one `materialize_projection_<rule>_<Grammar>` helper
+    // that reads the packed aggregate payload and constructs the
+    // `<Grammar><RuleCamel>Projection` struct emitted by
+    // `emitter/grammar.rs::emit_direct_to_struct_projection`.
+    let projection_fns = emit_projection_fns(ir, &node_view_ident, grammar_name);
+
     quote! {
         #object_fn
         #array_fn
@@ -79,6 +104,7 @@ pub fn emit_materialize_fns(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
         #number_fn
         #literal_fn
         #root_fn
+        #projection_fns
     }
 }
 
@@ -328,6 +354,321 @@ fn emit_scalar_arm(
             }
         }
     }
+}
+
+/// AY.W6.2 — emit per-rule direct-to-struct projection helpers.
+///
+/// Walks every admitted rule in `ir.payload_layouts` and produces one
+/// `materialize_projection_<rule>_<Grammar>` helper per admission. The
+/// helper:
+///
+/// 1. Reads the packed aggregate payload bytes via the tape's
+///    `payload_bytes` accessor (one slice of `layout.total_bytes`).
+/// 2. Decodes each scalar field from its admitted offset + type.
+/// 3. Constructs the `<Grammar><RuleCamel>Projection` struct emitted
+///    by `emitter/grammar.rs::emit_direct_to_struct_projection`.
+///
+/// The helper returns `Option<_>` — `None` when the aggregate buffer
+/// is shorter than the admitted layout (a corrupted tape) or when the
+/// record carries no payload (non-aggregate path). Consumers that
+/// know the admitted shape call this helper directly; consumers that
+/// do not continue through the `Vec<<Grammar>Value>` compound path
+/// emitted by [`emit_object_fn`] / [`emit_array_fn`].
+///
+/// Iteration order mirrors `ir.rules` declaration order; deterministic
+/// emission is what keeps the `cargo expand` output stable across
+/// rebuilds.
+fn emit_projection_fns(
+    ir: &GrammarIR,
+    node_view_ident: &syn::Ident,
+    grammar_name: &str,
+) -> TokenStream {
+    let grammar_prefix = to_upper_camel(grammar_name);
+    // Mirror the GrammarLayout arm of
+    // `emitter/grammar.rs::collect_projection_admissions` so every
+    // helper emitted here references a struct that
+    // `emit_projection_structs` also emitted. The two arms are
+    // mutually exclusive: a resolver-backed `Named(sid)` admission
+    // takes the legacy `__named_type_shim_<name>` path — no synthesised
+    // projection struct — while a layout-derived admission emits the
+    // `<Grammar><RuleCamel>Projection` struct + marker + helper. Both
+    // emitters consult the same `ir.payload_layouts` +
+    // `RustNamedTypes` facts; the local re-implementation keeps the
+    // value-materialise emitter free of cross-emitter coupling while
+    // preserving the single admission source.
+    let resolver = crate::backend::rust::view::named_types::RustNamedTypes::from_ir(ir);
+    let mut fns: Vec<TokenStream> = Vec::new();
+    for rule in &ir.rules {
+        if rule.meta.is_transparent {
+            continue;
+        }
+        // Resolver-backed arm dominates: if the rule's type is a
+        // named projection the resolver knows about, skip — the
+        // layout for this rule is represented by the resolver's
+        // tuple shape, not by a synthesised projection struct.
+        let type_desc = ir
+            .types
+            .iter()
+            .find_map(|(id, ty)| (*id == rule.id).then_some(ty));
+        if let Some(TypeDesc::Named(sid)) = type_desc {
+            if resolver.resolve_named(*sid).is_some() {
+                continue;
+            }
+        }
+        let Some(layout) = ir.payload_layouts.get(&rule.id) else {
+            continue;
+        };
+        if layout.fields.is_empty() {
+            continue;
+        }
+        let rule_name = ir.get_string(rule.name).to_string();
+        fns.push(emit_projection_fn(
+            rule.id,
+            &rule_name,
+            layout,
+            node_view_ident,
+            grammar_name,
+            &grammar_prefix,
+        ));
+    }
+    quote! { #(#fns)* }
+}
+
+/// AY.W6.2 — emit a single direct-to-struct projection helper.
+///
+/// The emitted `#[inline]` fn consumes a `<Grammar>NodeView` and
+/// returns `Option<<Grammar><RuleCamel>Projection>`; the body reads
+/// `view.cursor().tape().payload_bytes(rec, TOTAL_BYTES)` and decodes
+/// each admitted field. For `Span` fields the helper packs
+/// `(lo, hi)` as `(u32, u32)` — the struct's field representation;
+/// the input slice is not touched at projection time, so the
+/// projection stays plain-data (`Copy`).
+fn emit_projection_fn(
+    _rule_id: RuleId,
+    rule_name: &str,
+    layout: &PayloadLayout,
+    node_view_ident: &syn::Ident,
+    grammar_name: &str,
+    grammar_prefix: &str,
+) -> TokenStream {
+    let fn_ident = format_ident!(
+        "materialize_projection_{}_{}",
+        sanitise_ident(rule_name),
+        grammar_name,
+    );
+    let struct_ident = format_ident!(
+        "{}{}Projection",
+        grammar_prefix,
+        to_upper_camel(rule_name),
+    );
+    let total_bytes = layout.total_bytes as usize;
+    let total_bytes_lit = proc_macro2::Literal::usize_unsuffixed(total_bytes);
+    let field_inits: Vec<TokenStream> = layout
+        .fields
+        .iter()
+        .enumerate()
+        .map(|(idx, field)| emit_projection_field_read(idx, field))
+        .collect();
+    let field_names: Vec<_> = (0..layout.fields.len())
+        .map(|idx| format_ident!("field_{}", idx))
+        .collect();
+    quote! {
+        /// AY.W6.2 — grammar-derived direct-to-struct projection
+        /// helper. Reads the packed aggregate payload for the
+        /// admitted rule and constructs the matching projection
+        /// struct; returns `None` when the tape's aggregate buffer is
+        /// too short or the record carries no payload.
+        ///
+        /// Consumers that know the admitted shape call this helper
+        /// directly, bypassing the `Vec<<Grammar>Value>` compound
+        /// path. The helper is `#[inline]` so LLVM collapses it into
+        /// the caller at monomorphisation time.
+        #[inline]
+        #[doc(hidden)]
+        pub fn #fn_ident<'p>(view: #node_view_ident<'p>) -> ::core::option::Option<#struct_ident> {
+            let tape = view.cursor().tape();
+            let rec = view.cursor().record();
+            let __bytes = tape.payload_bytes(rec, #total_bytes_lit)?;
+            #(#field_inits)*
+            ::core::option::Option::Some(#struct_ident {
+                #(#field_names),*
+            })
+        }
+    }
+}
+
+/// AY.W6.2 — emit one field-decode block for a projection helper.
+///
+/// Reads `<field_size>` bytes from the packed aggregate at the
+/// admitted offset and converts to the field's Rust type. Span
+/// fields decode the `(u32 lo, u32 hi)` pair; other scalars decode
+/// via little-endian `from_le_bytes` matching the emission side's
+/// `to_le_bytes` write.
+fn emit_projection_field_read(idx: usize, field: &PayloadField) -> TokenStream {
+    let offset = field.offset as usize;
+    let offset_lit = proc_macro2::Literal::usize_unsuffixed(offset);
+    let field_ident = format_ident!("field_{}", idx);
+    match &field.ty {
+        TypeDesc::Span => {
+            let lo_end = offset + 4;
+            let hi_end = offset + 8;
+            let lo_end_lit = proc_macro2::Literal::usize_unsuffixed(lo_end);
+            let hi_end_lit = proc_macro2::Literal::usize_unsuffixed(hi_end);
+            quote! {
+                let #field_ident: (u32, u32) = {
+                    let __lo = u32::from_le_bytes(
+                        <[u8; 4]>::try_from(&__bytes[#offset_lit..#lo_end_lit]).ok()?,
+                    );
+                    let __hi = u32::from_le_bytes(
+                        <[u8; 4]>::try_from(&__bytes[#lo_end_lit..#hi_end_lit]).ok()?,
+                    );
+                    (__lo, __hi)
+                };
+            }
+        }
+        TypeDesc::Bool => {
+            let end_lit =
+                proc_macro2::Literal::usize_unsuffixed(offset + 1);
+            quote! {
+                let #field_ident: bool = {
+                    let __b = *__bytes.get(#offset_lit)?;
+                    let _ = #end_lit;
+                    __b != 0
+                };
+            }
+        }
+        TypeDesc::I8 | TypeDesc::U8 => {
+            let ty_tokens = projection_field_primitive(&field.ty);
+            let end_lit =
+                proc_macro2::Literal::usize_unsuffixed(offset + 1);
+            quote! {
+                let #field_ident: #ty_tokens = {
+                    let __b = *__bytes.get(#offset_lit)?;
+                    let _ = #end_lit;
+                    __b as #ty_tokens
+                };
+            }
+        }
+        TypeDesc::I16 | TypeDesc::U16 => {
+            let ty_tokens = projection_field_primitive(&field.ty);
+            let end_lit =
+                proc_macro2::Literal::usize_unsuffixed(offset + 2);
+            quote! {
+                let #field_ident: #ty_tokens = {
+                    let __arr = <[u8; 2]>::try_from(
+                        &__bytes[#offset_lit..#end_lit],
+                    ).ok()?;
+                    #ty_tokens::from_le_bytes(__arr)
+                };
+            }
+        }
+        TypeDesc::I32 | TypeDesc::U32 => {
+            let ty_tokens = projection_field_primitive(&field.ty);
+            let end_lit =
+                proc_macro2::Literal::usize_unsuffixed(offset + 4);
+            quote! {
+                let #field_ident: #ty_tokens = {
+                    let __arr = <[u8; 4]>::try_from(
+                        &__bytes[#offset_lit..#end_lit],
+                    ).ok()?;
+                    #ty_tokens::from_le_bytes(__arr)
+                };
+            }
+        }
+        TypeDesc::I64 | TypeDesc::U64 => {
+            let ty_tokens = projection_field_primitive(&field.ty);
+            let end_lit =
+                proc_macro2::Literal::usize_unsuffixed(offset + 8);
+            quote! {
+                let #field_ident: #ty_tokens = {
+                    let __arr = <[u8; 8]>::try_from(
+                        &__bytes[#offset_lit..#end_lit],
+                    ).ok()?;
+                    #ty_tokens::from_le_bytes(__arr)
+                };
+            }
+        }
+        TypeDesc::F64 => {
+            let end_lit =
+                proc_macro2::Literal::usize_unsuffixed(offset + 8);
+            quote! {
+                let #field_ident: f64 = {
+                    let __arr = <[u8; 8]>::try_from(
+                        &__bytes[#offset_lit..#end_lit],
+                    ).ok()?;
+                    f64::from_le_bytes(__arr)
+                };
+            }
+        }
+        other => {
+            // `PayloadField::ty` is `is_scalar_payload` by layout-pass
+            // invariant (crates/ir/src/passes/payload/layout.rs); any
+            // non-scalar here is an IR invariant violation.
+            panic!(
+                "AY.W6.2: payload-layout field must be a scalar payload; \
+                 found {other:?} at offset {offset}",
+            );
+        }
+    }
+}
+
+/// Map a scalar `TypeDesc` to its primitive Rust type identifier for
+/// field-read codegen. Span is handled separately in
+/// [`emit_projection_field_read`] as a `(u32, u32)` pair.
+fn projection_field_primitive(ty: &TypeDesc) -> TokenStream {
+    let ident = ty
+        .rust_ident()
+        .expect(
+            "AY.W6.2: projection field primitive type must map via \
+             TypeDesc::rust_ident",
+        );
+    let ty_ident = format_ident!("{}", ident);
+    quote! { #ty_ident }
+}
+
+/// AY.W6.2 — upper-camel-case a name. Mirrors the helper in
+/// `emitter/grammar.rs`; duplicated locally so this emitter stays
+/// self-contained without importing the sibling module's private
+/// helpers.
+fn to_upper_camel(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
+    let mut upper_next = true;
+    for ch in name.chars() {
+        if ch == '_' || ch == '-' || ch == '.' {
+            upper_next = true;
+            continue;
+        }
+        if upper_next {
+            out.extend(ch.to_uppercase());
+            upper_next = false;
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+
+/// AY.W6.2 — sanitise a rule name into a lowercase Rust ident slug.
+/// Mirrors the helper in `emitter/grammar.rs` so the emitted
+/// `materialize_projection_<rule>_<Grammar>` ident matches the
+/// `__grammar_projection_<rule>` marker naming from the sibling
+/// emitter.
+fn sanitise_ident(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
+    for (idx, ch) in name.chars().enumerate() {
+        if ch.is_ascii_alphanumeric() {
+            if idx == 0 && ch.is_ascii_digit() {
+                out.push_str("r_");
+            }
+            out.extend(ch.to_lowercase());
+        } else {
+            out.push('_');
+        }
+    }
+    if out.is_empty() {
+        out.push('_');
+    }
+    out
 }
 
 /// Span-text parse fallback for scalars without a payload slot.

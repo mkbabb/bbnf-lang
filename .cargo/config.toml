@@ -40,3 +40,48 @@ csp-solver = { path = "crates/csp-solver" }
 # e-graph resolves against the same path-patched crate bbnf-ir uses.
 egraph = { path = "crates/egraph" }
 egraph-derive = { path = "crates/egraph-derive" }
+
+# ─── AY Iteration Surface (B0.W0.a) ─────────────────────────────────────
+#
+# Public fast-path aliases that route routine AY work through the
+# `ax-iter` profile (no DWARF, stripped debuginfo, incremental on).
+# Heavy defaults (release/bench/workspace tests) are NOT shadowed here;
+# those remain reachable via the existing `cargo test --workspace`,
+# `cargo bench ...`, etc. surfaces.
+#
+# Canonical catalog: `docs/benchmarks/post-B0-W0-commands.txt`.
+#
+# Aliases with the `iter-` prefix default to `--profile ax-iter` and
+# are the commands AY.W5-W7 executors call directly. Aliases without
+# the prefix are structural surfaces (expand, asm) that AY hard gates
+# cite by name.
+[alias]
+# Fast workspace type-check (AY.W5-W7 routine compile-gate).
+iter-check = "check --profile ax-iter --workspace"
+
+# Leaf-crate test tier under ax-iter (no derive-Parser sites; fastest
+# correctness tier). Crate names match the workspace's actual package
+# names: `tape`, not `bbnf-tape` — `scripts/test-tier.sh leaf` still
+# passes `-p bbnf-tape` verbatim and is stale (B0.W1 owns that fix).
+# This alias is the working leaf tier in the meantime.
+iter-test-leaf = "test --profile ax-iter -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser"
+
+# Grammar-tier passthrough: generic `test --profile ax-iter`, intended
+# to be paired with `--test <name>` or `-p <crate>` at call sites —
+# e.g. `cargo iter-test-grammar -p bbnf --test value_api_apples_to_apples`.
+# The Makefile `iter-test-grammar` target routes through
+# `scripts/test-tier.sh grammar --profile ax-iter` for the full
+# per-grammar sweep.
+iter-test-grammar = "test --profile ax-iter"
+
+# `cargo expand` entrypoints for AY.W5-W7 hard gates 1-3 (W5, W6, W7).
+# Each expands a bench target; callers redirect into a file.
+expand-json = "expand -p bbnf --bench json_monolithic"
+expand-css = "expand -p bbnf --bench css_l4"
+expand-bbnf = "expand -p bbnf --bench bbnf_monolithic"
+expand-sheets = "expand -p bbnf --bench google_sheets_monolithic"
+
+# `cargo asm` entrypoint for AY.W5 hard gate 3 (close-stamp
+# verification). Callers append `--bench <name> <fn>`, e.g.
+# `cargo asm-parse --bench json_monolithic json::close_compound`.
+asm-parse = "asm -p bbnf --profile release"

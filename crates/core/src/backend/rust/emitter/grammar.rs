@@ -1062,8 +1062,20 @@ impl RustEmitter {
         // on JSON twitter) is gone from the hot path entirely.
         let _ = rule_functions;
 
-        // AX.W0b — parse() routes through the shape dispatcher
-        // uniformly; the walker fallback retired with W0b.A.
+        // AY-II.W0'.a — parse() routes through the shape dispatcher
+        // against a single `FusedBuilder` that owns both the tape
+        // column family and the paired value-frame arena. The pre-
+        // W0'.a dual allocator (TapeBuilder + ValueBuilder::<Self>)
+        // retired alongside the standalone `ValueBuilder<R>` type:
+        // every shape emitter's `begin_compound` / `end_compound` /
+        // `push_leaf_*` call now stamps BOTH column families
+        // atomically inside the fused builder, and
+        // `builder.finish_fused::<Self>(root_off.0)` hands back one
+        // `FusedOutput<Self>` holding the finalised `Tape` + the
+        // grammar-bound `ValueFramesOutput<Self>`. `Parsed::new_fused`
+        // consumes the fused output directly — no second finish call,
+        // no separate value allocation.
+        let _ = visitor_dispatcher_ident;
         let parse_body = {
             let dispatcher = shape_dispatcher_ident
                 .as_ref()
@@ -1086,20 +1098,14 @@ impl RustEmitter {
                 // capacity falls back to the per-grammar density
                 // estimate via `GRAMMAR_PROFILE.capacity_for`.
                 let mut state = #support_mod_ident::ScanState::new();
+                // AY-II.W0'.a — single fused builder allocation. The
+                // builder owns both the tape column family and the
+                // paired value-frame arena; every `begin_compound` /
+                // `end_compound` / `push_leaf_*` writes to both in
+                // lockstep, and `finish_fused::<Self>(root)` returns a
+                // single `FusedOutput<Self>` holding tape + value.
                 let mut builder =
-                    ::bbnf::runtime::tape::TapeBuilder::with_capacity(
-                        GRAMMAR_PROFILE.capacity_for(input.len()),
-                    );
-                // AY-II.W0.b — fused pipeline allocation. W0.c publishes
-                // the ValueBuilder type at
-                // crates/core/src/runtime/value_builder.rs. The parse
-                // entry constructs tape + value surface in a single
-                // walk; every shape emitter's compound/leaf push writes
-                // to both builders in lockstep. Dispatcher invocation
-                // threads value_builder alongside builder so per-Ref
-                // calls propagate both surfaces.
-                let mut value_builder =
-                    ::bbnf::runtime::value_builder::ValueBuilder::<Self>::new(
+                    ::bbnf::runtime::tape::FusedBuilder::with_capacity(
                         GRAMMAR_PROFILE.capacity_for(input.len()),
                     );
                 let root_off = {
@@ -1142,90 +1148,35 @@ impl RustEmitter {
                     }
                     off
                 };
-                let tape = builder
-                    .finish()
+                // AY-II.W0'.a — `finish_fused` consumes the fused
+                // builder and returns a `FusedOutput<Self>` holding
+                // both the finalised tape substrate and the paired
+                // value-frame arena. `Parsed::new_fused` stores that
+                // handle directly; `to_value()` projects from the
+                // value column without touching the tape.
+                let output = builder
+                    .finish_fused::<Self>(root_off.0)
                     .map_err(::bbnf::runtime::ParseErr::Tape)?;
-                // AY-II.W0.b — value_builder.finish() projects the
-                // constructed <Grammar>Value surface into a slab-backed
-                // handle; Parsed::new_fused carries both tape + value
-                // so Parsed::to_value() returns the already-constructed
-                // value without reparsing. W0.c owns the Parsed signature
-                // change; emitter threads the fused handle here.
-                let value = value_builder.finish(root_off.0);
                 ::core::result::Result::Ok(
                     ::bbnf::runtime::Parsed::new_fused(
-                        tape, input, root_off, value,
+                        output, input, root_off,
                     ),
                 )
             }
         };
 
-        // AW-V.W3-bench-fix — `parse_with_visitor::<V>` method body.
-        // When the grammar has full shape coverage, expose a
-        // visitor-generic parse entry that bypasses the tape entirely.
-        // The visitor is monomorphised at the call site; per-shape
-        // bodies inline into one tight dispatcher, matching the
-        // prototype's perf shape.
-        //
-        // AX.W0b — visitor emission stays gated on W4-absence; grammars
-        // carrying W4 rules skip visitor emission (visitor activation
-        // for W4 grammars is a future tranche deliverable). The
-        // shape-dispatch gate retired alongside the walker per W0b.
-        let parse_with_visitor_body = if !super::shapes::has_w4_classified(ir) {
-            let visitor_dispatcher = visitor_dispatcher_ident
-                .as_ref()
-                .expect("use_shape_dispatch gated on root_rule_name");
-            let support_mod_ident = quote::format_ident!(
-                "__shape_support_{}",
-                super::shapes::sanitise_grammar(ident.to_string().as_str()),
-            );
-            Some(quote! {
-                /// AW-V.W3-bench-fix — visitor-generic parse entry.
-                ///
-                /// Bypasses the tape entirely; `V` is monomorphised at
-                /// the call site so the per-shape parse bodies inline
-                /// into one tight dispatcher. Matches the shape of
-                /// `json_prototype::parse_json::<V>`.
-                ///
-                /// `V` must implement every per-shape visitor sub-trait
-                /// the grammar drives (`ObjectVisitor`, `ArrayVisitor`,
-                /// `StringVisitor`, `NumberVisitor`, `KeywordVisitor`)
-                /// so each method invocation resolves statically at
-                /// monomorphisation time. See `tape::visitor` for
-                /// the trait hierarchy and the shipped `TapeVisitor` /
-                /// `ValueVisitor` implementations.
-                pub fn parse_with_visitor<V>(
-                    input: &str,
-                    visitor: &mut V,
-                ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
-                where
-                    V: ::bbnf::runtime::tape::ObjectVisitor
-                        + ::bbnf::runtime::tape::ArrayVisitor
-                        + ::bbnf::runtime::tape::StringVisitor
-                        + ::bbnf::runtime::tape::NumberVisitor
-                        + ::bbnf::runtime::tape::KeywordVisitor,
-                {
-                    let bytes = input.as_bytes();
-                    let mut pos: usize = 0;
-                    // AY.W1-fix — `ScanState::new()` carries only the
-                    // whitespace bitmap cache. AY.W1.3's eager
-                    // structural-scan call retired (see
-                    // AYW1-twitter-regression-diag).
-                    let mut state = #support_mod_ident::ScanState::new();
-                    #visitor_dispatcher(bytes, &mut pos, &mut state, visitor)?;
-                    // Trailing whitespace tolerant.
-                    let _ = #support_mod_ident::skip_space(bytes, &mut pos, &mut state);
-                    if pos != input.len() {
-                        return Err(::bbnf::runtime::ParseErr::Syntax {
-                            offset: pos as u32, rule: None,
-                        });
-                    }
-                    Ok(())
-                }
-            })
-        } else {
-            None
-        };
+        // AY-II.W0'.a — `parse_with_visitor_<Grammar>` retired. The
+        // fused parse above IS the visitor lane — every shape
+        // emitter's push goes through the fused builder's atomic
+        // tape + value stamping. The separate `parse_with_visitor<V>`
+        // entry duplicated the dispatcher body against an external
+        // visitor trait the fused projection path supersedes;
+        // retaining it would violate invariant §5 (fused pipeline is
+        // real) and invariant §7 (consumer totality — every surface
+        // has a production consumer). The visitor trait hierarchy
+        // remains in `tape::visitor` for test fixtures that exercise
+        // the trait API directly; `TapeVisitor` now emits via the
+        // fused builder, so those consumers are not orphaned.
 
         quote! {
             use ::parse_that::*;
@@ -1315,13 +1266,19 @@ impl RustEmitter {
                 /// Parse an input string and return a zero-copy
                 /// `Parsed<'_, Self>` that borrows the input directly.
                 ///
-                /// AX.W0b: `parse()` routes through the shape
-                /// dispatcher. The hot path here:
+                /// AY-II.W0'.a: `parse()` routes through the shape
+                /// dispatcher against a single `FusedBuilder`. The
+                /// hot path here:
                 ///
-                /// 1. Allocate a sized `TapeBuilder`.
-                /// 2. Call the shape dispatcher, which decomposes into
-                ///    per-shape bodies inlined at the call site.
-                /// 3. Finalise via `TapeBuilder::finish`.
+                /// 1. Allocate a sized `FusedBuilder` — owns both
+                ///    tape + value-frame substrates in one handle.
+                /// 2. Call the shape dispatcher, which decomposes
+                ///    into per-shape bodies inlined at the call
+                ///    site. Every compound / leaf push stamps both
+                ///    column families atomically.
+                /// 3. Finalise via `FusedBuilder::finish_fused::<Self>`
+                ///    — returns `FusedOutput<Self>` holding tape +
+                ///    value, handed to `Parsed::new_fused` directly.
                 pub fn parse(
                     input: &str,
                 ) -> ::core::result::Result<
@@ -1330,8 +1287,6 @@ impl RustEmitter {
                 > {
                     #parse_body
                 }
-
-                #parse_with_visitor_body
             }
         }
     }

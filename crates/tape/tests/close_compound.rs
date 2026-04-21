@@ -1,18 +1,33 @@
-//! AY-II.W0.a — `TapeBuilder::begin_compound` / `end_compound` contract.
+//! AY-II.W0.a/W0-fix — `TapeBuilder::begin_compound` / `end_compound`
+//! / `end_compound_post_order` contract.
 //!
-//! 1. `begin_compound` emits a compound row with provisional
-//!    `span_hi == span_lo`, `child_off = NONE`, and the
-//!    `HAS_CHILDREN_BIT` cleared. No sibling-skip column write.
-//! 2. `end_compound` back-patches `span_hi` unconditionally; when at
-//!    least one child landed (`open_offset + 1 < columns.len()`) it
-//!    also stamps `child_off = open_offset + 1` (pre-order fast path)
-//!    and `HAS_CHILDREN_BIT`. Still no sibling-skip write.
-//! 3. `TapeBuilder::rollback_to(open_offset)` discards every row
+//! 1. `begin_compound(kind, span_lo, variant_idx, meta_idx,
+//!    frame_depth, extra_flags)` emits a compound row with
+//!    provisional `span_hi == span_lo`, `child_off = NONE`, and the
+//!    `HAS_CHILDREN_BIT` cleared. `variant_idx` lands in the `flags`
+//!    byte (rule discriminant, 8-bit); `meta_idx` splits across the
+//!    high 4 bits of `kind_meta` and the `extra` `META_IDX_HI_BIT`.
+//!    No sibling-skip column write.
+//! 2. `end_compound` (pre-order) back-patches `span_hi`
+//!    unconditionally; when at least one child landed
+//!    (`open_offset + 1 < columns.len()`) it also stamps
+//!    `child_off = open_offset + 1` (pre-order fast path) and
+//!    `HAS_CHILDREN_BIT`. Still no sibling-skip write.
+//! 3. `end_compound_post_order(open_offset, span_hi, first_child)`
+//!    back-patches `span_hi`; when `first_child.0 < open_offset`
+//!    (children actually landed before the compound row) writes
+//!    `child_off = first_child` backward and stamps
+//!    `HAS_CHILDREN_BIT`; otherwise leaves both cleared. Used by
+//!    walker-parity shape emitters whose compound row lands AFTER
+//!    the children subtree.
+//! 4. `TapeBuilder::rollback_to(open_offset)` discards every row
 //!    pushed at or after `open_offset` and a subsequent
 //!    `begin_compound` reuses that offset cleanly.
-//! 4. The finaliser derives `sib_skip` unconditionally on a
-//!    pre-order tape whose inline `frame_depth` stream is populated
-//!    in lockstep with the columns.
+//! 5. The finaliser derives `sib_skip` unconditionally on every
+//!    tape whose inline `frame_depth` stream is populated in
+//!    lockstep with the columns (or, for legacy post-order callers
+//!    relying on `derive_frame_depth`, stamps `sib_skip` by walking
+//!    the `child_off` graph).
 
 use tape::{Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset};
 
@@ -29,10 +44,13 @@ fn nested_begin_end_produces_pre_order_tape() {
     let mut b = TapeBuilder::new();
     b.enable_inline_frame_depth();
 
-    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0);
+    // New 6-arg signature: (kind, span_lo, variant_idx, meta_idx,
+    // frame_depth, extra_flags). Tests use 0 for variant/meta/extra_flags
+    // and populate frame_depth inline as before.
+    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
     assert_eq!(root, 0);
 
-    let inner = b.begin_compound(TapeKind::Seq, 0, 1, 0);
+    let inner = b.begin_compound(TapeKind::Seq, 0, 0, 0, 1, 0);
     assert_eq!(inner, 1);
 
     // Leaf pushes don't auto-stamp depth; callers that use the
@@ -111,6 +129,109 @@ fn nested_begin_end_produces_pre_order_tape() {
     assert_eq!(c_cursor.span(), (2, 3));
 }
 
+/// AY-II.W0-fix — post-order compound emission via
+/// `end_compound_post_order`.
+///
+/// The Flat/Wrap/Inline/Pratt/ArgList/Unordered/AltDispatch shape
+/// emitters emit their outer compound POST children (walker-tape
+/// parity — the compound row lands AFTER its children in emission
+/// order, with `child_off` pointing backward to the first child's
+/// root).
+///
+/// Pre-W0-fix the emission triplet was `begin_compound(row lands
+/// after children)` + `end_compound` + `set_child_off_at` (manual
+/// backward override). `end_compound`'s child-detection heuristic
+/// (`open_offset + 1 < columns.len()`) is false for post-order
+/// emission, so `HAS_CHILDREN_BIT` stayed cleared and readers saw
+/// `has_children == false` on a compound with children — every
+/// traversal collapsed to a leaf.
+///
+/// Post-W0-fix, `end_compound_post_order(open_off, span_hi,
+/// first_child)` atomically stamps span_hi + child_off (backward) +
+/// `HAS_CHILDREN_BIT` in one call. The override path is retired.
+#[test]
+fn end_compound_post_order_stamps_backward_child_off_and_has_children() {
+    let mut b = TapeBuilder::new();
+    // Post-order emission does not opt into inline frame-depth
+    // (the shape emitters don't call `enable_inline_frame_depth`),
+    // so `finish()` reconstructs frame_depth via `derive_frame_depth`
+    // from the `child_off` graph.
+
+    // Simulate Flat emission: capture first-child index PRE children,
+    // emit children (each child uses its own begin/end in pre-order),
+    // THEN open the compound row and close via end_compound_post_order.
+    let outer_child = b.columns().len() as u32; // == 0
+
+    // Child 1: `push_compound` (legacy post-order leaf-walker style).
+    let inner_mark = b.mark_children();
+    let _a = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
+    let _inner = b.push_compound(TapeKind::Seq, inner_mark, 0, 1, 1, 0);
+
+    // Child 2: a leaf.
+    let _c = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
+
+    // Post-order outer compound: allocated AFTER children at current
+    // columns.len(). begin + end_compound_post_order mirrors the
+    // emitter pattern.
+    let span_lo = 0;
+    let span_hi = 2;
+    let outer_off = b.begin_compound(TapeKind::Seq, span_lo, 7, 3, 0, 0);
+    assert_eq!(
+        outer_off, 3,
+        "post-order begin_compound lands after children at cols.len()"
+    );
+    b.end_compound_post_order(outer_off, span_hi, TapeOffset(outer_child));
+
+    let cols = b.columns();
+    assert_eq!(cols.child_off_at(outer_off), TapeOffset(outer_child));
+    assert!(
+        cols.has_children_at(outer_off),
+        "post-order compound must advertise HAS_CHILDREN so readers walk the backward child chain; got child_off = {:?} but has_children = false",
+        cols.child_off_at(outer_off),
+    );
+    assert_eq!(cols.span_hi_at(outer_off), span_hi);
+    // variant_idx and meta_idx propagate to walker-parity positions.
+    assert_eq!(
+        cols.materialize(outer_off).variant_idx(),
+        7,
+        "variant_idx must land in flags byte for rule_kind() dispatch"
+    );
+    assert_eq!(cols.materialize(outer_off).meta_idx(), 3);
+
+    let tape = b.finish().expect("finish() succeeds");
+    // Cursor walks the post-order tape and surfaces inner + leaf
+    // as direct children.
+    let cursor = TapeCursor::new(&tape, TapeOffset(outer_off));
+    assert_eq!(
+        cursor.child_count(),
+        2,
+        "post-order cursor walk must yield 2 children; got {}",
+        cursor.child_count(),
+    );
+}
+
+/// `end_compound_post_order` with `first_child == open_offset` (no
+/// children landed before the begin row) keeps `child_off` at NONE
+/// and `HAS_CHILDREN_BIT` clear.
+#[test]
+fn end_compound_post_order_empty_frame() {
+    let mut b = TapeBuilder::new();
+
+    // No children pushed before begin; first_child captures cols.len()
+    // which equals the open offset.
+    let first_child = b.columns().len() as u32;
+    let outer_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    assert_eq!(first_child, outer_off);
+    b.end_compound_post_order(outer_off, 0, TapeOffset(first_child));
+
+    let cols = b.columns();
+    assert_eq!(cols.child_off_at(outer_off), TapeOffset::NONE);
+    assert!(!cols.has_children_at(outer_off));
+
+    let tape = b.finish().unwrap();
+    assert_eq!(tape.len(), 1);
+}
+
 /// A compound that closes with zero children keeps `child_off` at
 /// `NONE` and `HAS_CHILDREN_BIT` clear. `end_compound` back-patches
 /// `span_hi` regardless.
@@ -118,7 +239,7 @@ fn nested_begin_end_produces_pre_order_tape() {
 fn end_compound_without_children() {
     let mut b = TapeBuilder::new();
     b.enable_inline_frame_depth();
-    let root = b.begin_compound(TapeKind::Seq, 5, 0, 0);
+    let root = b.begin_compound(TapeKind::Seq, 5, 0, 0, 0, 0);
     b.end_compound(root, 5);
 
     let cols = b.columns();
@@ -140,14 +261,14 @@ fn rollback_to_unwinds_begin_compound_cleanly() {
     let mut b = TapeBuilder::new();
     b.enable_inline_frame_depth();
 
-    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0);
+    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
     assert_eq!(root, 0);
     assert_eq!(b.columns().len(), 1);
 
     // First attempt: open an inner compound, push some children,
     // then roll back. Simulates an emitter retry-IIFE discarding a
     // failed alt branch.
-    let attempt_off = b.begin_compound(TapeKind::Seq, 0, 1, 0);
+    let attempt_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 1, 0);
     assert_eq!(attempt_off, 1);
     b.frame_depth_mut().push(2);
     let _l0 = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
@@ -164,7 +285,7 @@ fn rollback_to_unwinds_begin_compound_cleanly() {
     assert_eq!(b.columns().len(), 1);
 
     // Second attempt: reuse the same offset for a different subtree.
-    let retry_off = b.begin_compound(TapeKind::Alt, 0, 1, 0);
+    let retry_off = b.begin_compound(TapeKind::Alt, 0, 0, 0, 1, 0);
     assert_eq!(
         retry_off, attempt_off,
         "begin_compound reuses the rolled-back offset",
@@ -191,7 +312,7 @@ fn rollback_to_unwinds_begin_compound_cleanly() {
 fn rollback_to_idempotent() {
     let mut b = TapeBuilder::new();
     b.enable_inline_frame_depth();
-    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0);
+    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
     b.frame_depth_mut().push(1);
     let _leaf = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     let len_before = b.columns().len();
@@ -247,16 +368,16 @@ fn sibling_begin_end_subtrees_under_outer_begin() {
     let mut b = TapeBuilder::new();
     b.enable_inline_frame_depth();
 
-    let outer = b.begin_compound(TapeKind::Seq, 0, 0, 0);
+    let outer = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
     assert_eq!(outer, 0);
 
-    let left = b.begin_compound(TapeKind::Seq, 0, 1, 0);
+    let left = b.begin_compound(TapeKind::Seq, 0, 0, 0, 1, 0);
     assert_eq!(left, 1);
     b.frame_depth_mut().push(2);
     let _la = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     b.end_compound(left, 1);
 
-    let right = b.begin_compound(TapeKind::Seq, 1, 1, 0);
+    let right = b.begin_compound(TapeKind::Seq, 1, 0, 0, 1, 0);
     assert_eq!(right, 3);
     b.frame_depth_mut().push(2);
     let _ra = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);

@@ -296,31 +296,50 @@ impl TapeBuilder {
     ///
     /// Emits a compound row with provisional `span_hi == span_lo`,
     /// `child_off = TapeOffset::NONE`, and `HAS_CHILDREN_BIT` cleared.
+    /// `variant_idx` is the rule discriminant (`[0, 256)`); `meta_idx`
+    /// is the Alt-branch ordinal (`[0, 32)`). Both are stamped in
+    /// walker-parity positions — `flags` carries `variant_idx`;
+    /// `kind_meta` low 4 bits carry `kind`, high 4 bits carry
+    /// `meta_idx[0..4]`, with `meta_idx[4]` lifted into `extra` via
+    /// [`TapeRec::META_IDX_HI_BIT`]. The `extra_flags` argument
+    /// carries any additional bits the caller wants stamped
+    /// alongside the kind/meta pair (e.g. `STRING_BORROW_BIT` — the
+    /// `HAS_CHILDREN_BIT` is owned by [`Self::end_compound`] /
+    /// [`Self::end_compound_post_order`]).
+    ///
+    /// `frame_depth` is appended to the inline depth stream when
+    /// [`Self::has_inline_frame_depth`] is active; otherwise ignored.
+    ///
     /// Returns the row offset the caller passes back to
-    /// [`Self::end_compound`] on close. `flags` is written verbatim
-    /// into the structural `extra` word; `frame_depth` is appended to
-    /// the inline depth stream when [`Self::has_inline_frame_depth`]
-    /// is active. Emitter retry paths rewind via
-    /// [`Self::rollback_to`] with the returned offset; the next
-    /// `begin_compound` reuses the same row.
+    /// [`Self::end_compound`] (pre-order) or
+    /// [`Self::end_compound_post_order`] (post-order). Emitter retry
+    /// paths rewind via [`Self::rollback_to`] with the returned
+    /// offset; the next `begin_compound` reuses the same row.
+    ///
+    /// AY-II.W0-fix — re-admitted `variant_idx` + `meta_idx`; the
+    /// initial W0.a signature dropped both, collapsing every compound
+    /// row's rule discriminant to `0` and breaking walker dispatch on
+    /// `rule_kind()`.
     #[inline(always)]
     pub fn begin_compound(
         &mut self,
         kind: TapeKind,
         span_lo: u32,
+        variant_idx: u8,
+        meta_idx: u8,
         frame_depth: u8,
-        flags: u16,
+        extra_flags: u16,
     ) -> u32 {
         debug_assert!(
             kind.is_compound(),
             "begin_compound on leaf/annotation kind {:?}",
             kind
         );
-        let kind_meta = (kind as u8) & 0x0F;
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
         let idx = self.columns.push_structural(
             kind_meta,
-            0,
-            flags,
+            variant_idx,
+            extra_flags | extra_meta_bit,
             span_lo,
             span_lo,
             TapeOffset::NONE,
@@ -331,7 +350,9 @@ impl TapeBuilder {
         idx
     }
 
-    /// Finalise a compound opened via [`Self::begin_compound`].
+    /// Finalise a compound opened via [`Self::begin_compound`] in
+    /// pre-order — the caller emitted the compound row BEFORE its
+    /// children, so the first child's root sits at `open_offset + 1`.
     ///
     /// Back-patches `span_hi` on the row at `open_offset`. When
     /// `open_offset + 1 < columns.len()` (at least one child landed),
@@ -346,6 +367,46 @@ impl TapeBuilder {
         if (first_child as usize) < self.columns.len() {
             self.columns
                 .set_child_off_at(open_offset, TapeOffset(first_child));
+            self.columns
+                .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
+        }
+    }
+
+    /// Finalise a compound opened via [`Self::begin_compound`] in
+    /// post-order — the compound row was allocated AFTER its
+    /// children, so `open_offset` is the LAST record and the first
+    /// child's root is `first_child` (captured at children-enter via
+    /// `columns_mut().len() as u32`).
+    ///
+    /// Back-patches `span_hi`; writes `child_off = first_child` and
+    /// stamps `HAS_CHILDREN_BIT` when `first_child.0 < open_offset`
+    /// (children exist). When the child frame is empty
+    /// (`first_child.0 == open_offset` — no records landed between
+    /// the children-enter capture and the `begin_compound` call),
+    /// leaves `child_off` at `NONE` and `HAS_CHILDREN_BIT` cleared,
+    /// matching [`Self::end_compound`]'s no-children branch.
+    ///
+    /// Does NOT write `sib_skip`; the finaliser is its sole writer.
+    ///
+    /// AY-II.W0-fix — the W0.b migration introduced this
+    /// begin/end/`set_child_off_at`-override triplet across every
+    /// walker-parity post-order shape emitter, but the override path
+    /// never stamped `HAS_CHILDREN_BIT`, so readers saw
+    /// `has_children == false` on compounds that DID have children
+    /// and every traversal through these rows collapsed to a leaf.
+    /// This method atomically stamps the full (span_hi, child_off,
+    /// HAS_CHILDREN) triple so emission sites don't have to remember
+    /// the extra `or_extra_at` call.
+    #[inline(always)]
+    pub fn end_compound_post_order(
+        &mut self,
+        open_offset: u32,
+        span_hi: u32,
+        first_child: TapeOffset,
+    ) {
+        self.columns.set_span_hi_at(open_offset, span_hi);
+        if !first_child.is_none() && first_child.0 < open_offset {
+            self.columns.set_child_off_at(open_offset, first_child);
             self.columns
                 .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
         }

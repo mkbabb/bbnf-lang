@@ -160,8 +160,51 @@ impl<'p, R> Parsed<'p, R> {
     /// over the value column of the fused output; the tape column
     /// remains the canonical structural substrate for `view()` /
     /// `get()`.
+    ///
+    /// Post-W0'.a the grammar-emitted parse entry hands a
+    /// `FusedOutput<R>` directly. Pre-regen `generated.rs` still
+    /// calls the 4-arg legacy shape `new_fused(tape, input,
+    /// root_offset, value_builder_output)`; the `tape` arg and the
+    /// `value_builder_output` arg reassemble into a `FusedOutput<R>`
+    /// at this level so the bootstrap escape window compiles
+    /// without emitter regen. Orchestrator regen collapses to the
+    /// 3-arg entry via [`Self::new_fused_output`].
     #[inline]
     pub fn new_fused(
+        tape: Tape,
+        input: &'p str,
+        root_offset: TapeOffset,
+        value_builder_output: FusedOutput<R>,
+    ) -> Self {
+        // Pre-regen bootstrap escape: the shim `ValueBuilder::finish`
+        // returns an empty output — the fused value substrate lives
+        // inside `tape` when it came out of `FusedBuilder::finish`,
+        // not in `value_builder_output`. We can't recover the fused
+        // value column from the bare `Tape` post-finish, so the
+        // emitter change in the same commit retires the dual
+        // allocator + the 4-arg call shape.
+        //
+        // Post-regen this entry point receives the bare `tape` + an
+        // empty `value_builder_output` because the bona-fide fused
+        // output moves through `new_fused_output`. This signature
+        // survives as the pre-regen compose-boundary only.
+        let (_, empty_value) = value_builder_output.into_parts();
+        let output = FusedOutput::new(tape, empty_value);
+        Self {
+            output,
+            input,
+            root_offset,
+            _root_marker: PhantomData,
+        }
+    }
+
+    /// Construct a fused-pipeline `Parsed` from a pre-assembled
+    /// [`FusedOutput<R>`]. Post-W0'.a + post-regen the grammar
+    /// emitter calls this 3-arg entry point directly; the 4-arg
+    /// [`Self::new_fused`] remains as the pre-regen bootstrap
+    /// escape.
+    #[inline]
+    pub fn new_fused_output(
         output: FusedOutput<R>,
         input: &'p str,
         root_offset: TapeOffset,

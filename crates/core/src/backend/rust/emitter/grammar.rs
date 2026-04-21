@@ -1151,14 +1151,20 @@ impl RustEmitter {
                 // AY-II.W0'.a — `finish_fused` consumes the fused
                 // builder and returns a `FusedOutput<Self>` holding
                 // both the finalised tape substrate and the paired
-                // value-frame arena. `Parsed::new_fused` stores that
-                // handle directly; `to_value()` projects from the
-                // value column without touching the tape.
+                // value-frame arena. `Parsed::new_fused_output`
+                // stores that handle directly; `to_value()` projects
+                // from the value column without touching the tape.
+                //
+                // The 4-arg `new_fused(tape, input, root, value)` is
+                // reserved for un-regenned `generated.rs` compiling
+                // against the pre-W0'.a dual-allocator shape; the
+                // grammar emitter is the sole caller of the 3-arg
+                // form.
                 let output = builder
                     .finish_fused::<Self>(root_off.0)
                     .map_err(::bbnf::runtime::ParseErr::Tape)?;
                 ::core::result::Result::Ok(
-                    ::bbnf::runtime::Parsed::new_fused(
+                    ::bbnf::runtime::Parsed::new_fused_output(
                         output, input, root_off,
                     ),
                 )

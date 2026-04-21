@@ -92,6 +92,19 @@ B0.W1 adds prepared-binary reuse so follow-on samply runs skip the
 rebuild; until then, prepare once per wave and consume the artefacts
 verbatim per §Prepare a wave.
 
+### W0 timing proof
+
+- Baseline (pre-W0, HEAD `9bff7e7d`): `docs/benchmarks/post-B0-W0-baseline.txt`.
+- Post-W0 (HEAD `b8dac71e`): `docs/benchmarks/post-B0-W0-mid.json`.
+- Headline: `cargo iter-check` warm (0.16s) is ~45× faster than baseline
+  `cargo check --workspace` warm (7.16s); the ~30× gap the baseline
+  flagged is now the public routine path.
+- `make iter-test-leaf` warm 1.05s produces real pass/fail output;
+  baseline `scripts/test-tier.sh leaf` failed in 0.45s against the
+  stale `-p bbnf-tape` crate name (W0.a renamed to `-p tape`).
+- Routine iteration routes via the `iter-*` targets; keep
+  `cargo test --workspace` and `cargo bench` for wave-close gates only.
+
 ## Prepare a wave
 
 `scripts/prepare-profile-wave.sh` builds every bench binary once,

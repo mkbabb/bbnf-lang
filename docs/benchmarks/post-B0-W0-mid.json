@@ -1,0 +1,36 @@
+{
+  "tranche": "B0",
+  "wave": "W0",
+  "head_baseline": "9bff7e7d",
+  "head_post_w0": "b8dac71e",
+  "host": "Darwin 25.4.0 arm64",
+  "captured_utc": "2026-04-21T01:53:56Z",
+  "notes": "Incremental (warm) numbers are the routine-iteration metric. Cold numbers depend on target/ population and do not govern the wave gate. `.bbnf-cache` cleared before each cold run via `find . -name .bbnf-cache -type d -exec rm -rf {} +`. The target/ symlink points at the main repo's build dir so cold here means `.bbnf-cache` absent, not `target/` nuked — identical framing to the baseline. Baseline columns are copied verbatim from `docs/benchmarks/post-B0-W0-baseline.txt` and have not been re-run.",
+  "commands": {
+    "cargo_check_workspace": {
+      "baseline": { "cold_s": 145.36, "warm_s": 7.16 },
+      "post_w0":  { "cold_s": 51.27,  "warm_s": 0.17 }
+    },
+    "cargo_iter_check": {
+      "baseline": { "cold_s": 2.79,   "warm_s": 0.23 },
+      "post_w0":  { "cold_s": 48.24,  "warm_s": 0.16 }
+    },
+    "make_iter_check": {
+      "post_w0":  { "cold_s": 0.18,   "warm_s": 0.16 }
+    },
+    "make_iter_test_leaf": {
+      "baseline": { "cold_s": 0.45,   "warm_s": null, "status": "FAIL: scripts/test-tier.sh leaf passed -p bbnf-tape (stale)" },
+      "post_w0":  { "cold_s": 48.41,  "warm_s": 1.05 }
+    },
+    "cargo_test_workspace_no_run": {
+      "baseline": { "cold_s": 126.10, "warm_s": 14.40 },
+      "post_w0":  { "cold_s": 162.60, "warm_s": 0.76 }
+    }
+  },
+  "conclusions": [
+    "iter-check warm (0.16s) is ~45x faster than baseline workspace-check warm (7.16s), promoting the ~30x gap the baseline flagged into the public command surface.",
+    "make iter-test-leaf now produces real pass/fail output (warm 1.05s, cold 48.41s); baseline scripts/test-tier.sh leaf failed in 0.45s with the stale `-p bbnf-tape` crate name before the W0.a alias-crate-list fix.",
+    "cargo test --workspace --no-run warm of 0.76s (vs 14.40s baseline) reflects target/ symlink sharing with main — it stays the heavy final-proof surface regardless, correctly outside the routine loop.",
+    "make iter-check wraps cargo iter-check with identical cost (0.16s warm), confirming the Makefile target is a transparent wrapper around the alias, not an additional dispatch layer."
+  ]
+}

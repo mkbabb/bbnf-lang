@@ -1,14 +1,13 @@
 //! Pratt-shape emitter — `parse_pratt_<grammar>_<rule>`.
 //!
-//! # Role — AW-V.W4.1
+//! # Role — AW-V.W4.1 (substrate) / AY.W6.c (write-time retarget)
 //!
 //! Emits per-grammar Pratt-shape parse functions for operator-chain
-//! head rules. The emitted body mirrors the walker's existing
-//! `DtaState::ShuntingYard` arm at
-//! `tape::driver.rs` — operand dispatch, then a loop that
-//! consults [`PRECEDENCE_LUT`](
-//! crate::backend::rust::emitter::precedence) to pack / pop / reduce
-//! operators until EOF-operator or lower precedence is reached.
+//! head rules. The emitted body is driven entirely by grammar-derived
+//! facts: the per-rule `PRECEDENCE_LUT_<rule>` table and the sparse
+//! `PRECEDENCE_ENTRIES_<rule>` slice are mined from the grammar's
+//! declared operator precedence + associativity at codegen time; no
+//! grammar-name dispatch survives in the runtime body.
 //!
 //! Unlike the walker's indirected `dispatch_one` arm, the emitted
 //! code is a monolithic inline body:
@@ -19,27 +18,39 @@
 //! - Operator reduction uses the per-grammar `PRECEDENCE_LUT` const
 //!   the [`crate::backend::rust::emitter::precedence`] emitter
 //!   already lowers.
-//! - Compound emission uses [`TapeBuilder::push_compound`] for the
-//!   outer Pratt compound and raw column writes for the reducer
-//!   inner compounds — mirroring the walker's `emit_reducer_compound`
-//!   byte layout so downstream tape consumers see identical records.
+//! - The outer Pratt compound now opens pre-order via
+//!   [`TapeBuilder::open_compound`] and closes via
+//!   [`TapeBuilder::close_compound`] (AY.W5.b substrate), so its
+//!   direct children (operands, op-leaf Spans, reducer compounds)
+//!   land with write-time `sib_skip` stamping. After `close_compound`
+//!   the outer row's `child_off` is overridden to point at the final
+//!   reducer root via [`Columns::set_child_off_at`] — preserving the
+//!   walker's ShuntingYard invariant (outer compound's `child_off`
+//!   names the reduced operator-tree root) while participating in
+//!   the W5.b write-time close-stamp contract.
+//! - Reducer inner compounds remain `push_compound` post-order: a
+//!   reducer is synthesised at reduce time, AFTER its lhs + op-leaf +
+//!   rhs have already been pushed, with its `child_off` pointing at
+//!   the lhs row. The reducer shape is inherently post-order; open/
+//!   close does not fit.
 //!
 //! # Tape shape (for `a + b * c`)
 //!
 //! ```text
-//! [ 0] Rule    (Pratt outer)         span=0..N  child=1  has_children=true
+//! [ 0] Rule    (Pratt outer)         span=0..N  child=<final-reducer-idx>
 //! [ 1] ...operand 'a' records...
-//! [ 2] Span    variant=0 payload='+' span=p..p+1
-//! [ 3] ...operand 'b' records...
-//! [ 4] Span    variant=0 payload='*' span=q..q+1
-//! [ 5] ...operand 'c' records...
-//! [ 6] Rule    (reducer b*c)         child=pointer-to-'b'  variant='*'_disc
-//! [ 7] Rule    (reducer a+(b*c))     child=pointer-to-'a'  variant='+'_disc
+//! [ N] Span    variant=0 payload='+' span=p..p+1
+//! [N+1] ...operand 'b' records...
+//! [ M] Span    variant=0 payload='*' span=q..q+1
+//! [M+1] ...operand 'c' records...
+//! [ K] Rule    (reducer b*c)         child=pointer-to-'b'  variant='*'_disc
+//! [K+1] Rule    (reducer a+(b*c))    child=pointer-to-'a'  variant='+'_disc
 //! ```
 //!
-//! After reduction the outer Rule compound's `child_off` is patched
-//! to point at record `[7]` (the root reducer) — the same layout the
-//! walker's `advance_or_pop_with` ShuntingYard arm produces.
+//! The outer compound lands at the TOP of the run (pre-order) with
+//! `open_compound`; its `child_off` is overridden post-close to name
+//! record `[K+1]` — the final reducer. Intermediate rows (operands,
+//! op leaves, reducers) carry W5.b `SIB_SKIP_STAMPED_BIT` stamping.
 
 use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
@@ -196,18 +207,41 @@ pub fn emit_parse_pratt(
                 lhs_span_lo: u32,
             }
 
-            // ── Outer Pratt compound ────────────────────────────────
+            // ── Outer Pratt compound (AY.W6.c write-time open) ───
+            //
+            // AY.W6.c — retargeted from `mark_children` +
+            // post-order `push_compound` onto the W5.b write-time
+            // substrate. `open_compound` reserves the outer Rule row
+            // in place with a provisional `span_hi = span_lo`; the
+            // matching `close_compound` at the end back-patches the
+            // real `span_hi`, stamps `HAS_CHILDREN_BIT`, and seals
+            // the final direct child's `sib_skip` as authoritative-
+            // zero. The frame's `note_push` hook then fires on every
+            // operand / op-leaf / reducer push below, stamping
+            // `SIB_SKIP_STAMPED_BIT` on each direct child's
+            // predecessor — the same substrate object/array shapes
+            // use as of AY.W5.b.
             let _ = #support_mod::skip_space(input, p, state);
             let outer_span_lo = *p as u32;
-            let outer_child_mark = builder.mark_children();
-            let outer_child_mark_idx: u32 = outer_child_mark.0;
+            let outer_off = builder.open_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                outer_span_lo,
+                #variant_idx,
+                0,
+            );
+            // Under `open_compound`, the first direct child lands at
+            // `outer_off.0 + 1` — the same cursor pre-order fast-path
+            // `first_child_root` recognises. Seed `this_operand_root`
+            // at that index so the reducer's first reduce names the
+            // correct LHS regardless of whether reductions ever fire.
+            let outer_child_mark_idx: u32 = outer_off.0.saturating_add(1);
 
             // ── Leftmost operand ────────────────────────────────────
             // The operand root is the first record the dispatcher
             // emits; track it so the reducer's first reduce points
-            // back at the correct LHS. Initial value = child_mark
-            // (= index of the first child after the outer compound's
-            // reserved slot — the operand's root record lands here).
+            // back at the correct LHS. Initial value = first-child
+            // index of the outer compound — the operand's root record
+            // lands here.
             let mut this_operand_root: u32 = outer_child_mark_idx;
             // AW-V.W5.2 — per-Ref operand call.
             #operand_call
@@ -474,17 +508,26 @@ pub fn emit_parse_pratt(
                 this_operand_root = _op_rec.0 + 1;
             }
 
-            // ── Close outer compound ────────────────────────────────
-            // Patch the outer Rule compound's `child_off` to point at
-            // the final reduced operand root; stamp span_hi + close.
+            // ── Close outer compound (AY.W6.c) ───────────────────
+            // `close_compound` back-patches `span_hi`, sets
+            // `HAS_CHILDREN_BIT`, and stamps the frame's recorded
+            // first-child index onto the outer row's `child_off`.
+            // For walker-parity, the outer Pratt compound's
+            // `child_off` must name the FINAL REDUCER (the root of
+            // the reduced operator tree), not the lexical first
+            // child (first operand). Override via
+            // `set_child_off_at` after close: the finaliser honours
+            // the override because `SIB_SKIP_STAMPED_BIT` is set on
+            // the outer row's open, and Stage-C skips re-derivation.
             let outer_span_hi = *p as u32;
-            let outer_off = builder.push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+            builder.close_compound(outer_off, outer_span_hi);
+            // Walker-parity override: child_off ← final reducer.
+            // When no reduction fired (single-operand Pratt), the
+            // final reducer is the first operand's root, which
+            // `this_operand_root` already tracks.
+            builder.columns_mut().set_child_off_at(
+                outer_off.0,
                 ::bbnf::runtime::tape::TapeOffset(this_operand_root),
-                outer_span_lo,
-                outer_span_hi,
-                #variant_idx,
-                0,
             );
             Ok(outer_off)
         }

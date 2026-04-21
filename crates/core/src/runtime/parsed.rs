@@ -12,20 +12,26 @@
 //! Callers hold `Parsed<'_, Grammar>` and call `.view()` to obtain
 //! a cursor-backed typed view bound to the borrow.
 //!
-//! # Tranche AY.W6.1 — unified runtime consumers
+//! # Tranche AY-II.W0.c — fused parse-value pipeline
 //!
-//! `view()`, `to_value()`, and `get()` all read the same canonical
-//! packed substrate through a single
-//! [`TapeCursor`](tape::TapeCursor); see each consumer's per-fn
-//! documentation for the specifics. No intermediate tree is rebuilt,
-//! no shadow cursor is maintained, and no routing `if` decides
-//! between cursor-backed and alternative code paths — the cursor is
-//! the single read surface over both write-time-stamped (AY.W5
-//! `open_compound` / `close_compound`) and finaliser-stamped
-//! emission modes. The `Vec<<Grammar>Value<'p>>` that `to_value()`
-//! returns inside compound variants is the user-facing materialised
-//! result, not an internal structural rebuild; `view()` and `get()`
-//! allocate nothing beyond the cursor wrapper itself.
+//! The default `parse()` entry writes the canonical tape substrate
+//! AND the grammar-emitted value substrate (via
+//! [`ValueBuilder<R>`](crate::runtime::ValueBuilder)) in a single
+//! walk. `Parsed<'p, R>` carries the [`ValueBuilderOutput<R>`] the
+//! fused pipeline produced; `Parsed::to_value()` becomes a thin
+//! projector over the already-constructed substrate — no second
+//! parse call, no visitor-driven reconstruction, no tape-walking
+//! materializer path. The tape remains available through `view()` /
+//! `get()` for the structural-cursor surface; the typed-value
+//! surface lives on the parallel substrate.
+//!
+//! The `view()` / `get()` consumer paths retain their cursor-backed
+//! discipline: every structural accessor (`.kind()`, `.span()`,
+//! `.children()`, `.child(i)`, `.variant_idx()`) resolves to a
+//! column-indexed read through a [`TapeCursor`](tape::TapeCursor)
+//! constructed on demand. No intermediate tree is rebuilt, no shadow
+//! cursor is maintained, and no routing branch picks between cursor-
+//! backed and alternative read paths for the structural view.
 //!
 //! # Example (generated code shape)
 //!
@@ -33,7 +39,8 @@
 //! pub fn parse(input: &str) -> Result<Parsed<'_, Json>, ParseErr> {
 //!     let mut state = ParserState::new(input);
 //!     let mut builder = TapeBuilder::with_capacity(input.len() / 4);
-//!     let root_off = Self::__value(&mut state, &mut builder)
+//!     let mut value_builder = ValueBuilder::<Self>::new(input.len() / 8);
+//!     let root_off = Self::__value(&mut state, &mut builder, &mut value_builder)
 //!         .ok_or(ParseErr::Syntax { offset: state.offset as u32, rule: None })?;
 //!     // Skip trailing whitespace before EOF check.
 //!     while state.offset < input.len()
@@ -45,7 +52,8 @@
 //!         return Err(ParseErr::Syntax { offset: state.offset as u32, rule: None });
 //!     }
 //!     let tape = builder.finish().map_err(ParseErr::Tape)?;
-//!     Ok(Parsed::new(tape, input, root_off))
+//!     let value_output = value_builder.finish(0);
+//!     Ok(Parsed::new_fused(tape, input, root_off, value_output))
 //! }
 //! ```
 
@@ -54,6 +62,7 @@ use std::marker::PhantomData;
 use tape::{Tape, TapeOffset};
 
 use crate::runtime::path::Path;
+use crate::runtime::value_builder::ValueBuilderOutput;
 
 /// Binding between a grammar marker type and the root view it
 /// produces over a parsed tape.
@@ -89,7 +98,18 @@ pub trait Root {
 /// actual root view type is resolved through `R`'s [`Root`] impl
 /// when [`Parsed::view`] is called; callers never instantiate the
 /// view directly.
-#[derive(Debug)]
+///
+/// # Tranche AY-II.W0.c — fused-pipeline value substrate
+///
+/// `Parsed` additionally carries a [`ValueBuilderOutput<R>`]
+/// populated during the single-pass fused parse. The value output is
+/// the sole source for `Parsed::to_value()` — no reparse, no tape
+/// walk, no visitor-driven second pass reaches the consumer surface.
+/// Substrate-only constructions (see [`Parsed::new`]) that never
+/// exercise `to_value()` carry [`ValueBuilderOutput::empty`]; the
+/// grammar-emitted projection expects a non-empty output on the
+/// `to_value()` path and that expectation is an IR invariant the
+/// emitter upholds by construction.
 pub struct Parsed<'p, R> {
     /// The finished tape. Owned by the `Parsed` so view lifetimes
     /// naturally bind to `&self`.
@@ -99,21 +119,66 @@ pub struct Parsed<'p, R> {
     input: &'p str,
     /// Offset of the root record within `tape`.
     root_offset: TapeOffset,
+    /// AY-II.W0.c — the fused-pipeline value substrate. Populated at
+    /// parse time in lockstep with the tape; consumed by
+    /// `to_value()` as a thin projection target. `ValueBuilderOutput`
+    /// owns its backing storage so `Parsed<'p, R>` remains lifetime-
+    /// parameterised solely by the input borrow.
+    value_builder_output: ValueBuilderOutput<R>,
     /// Phantom marker for the grammar's `Root` binding.
     _root_marker: PhantomData<R>,
 }
 
+impl<'p, R> ::core::fmt::Debug for Parsed<'p, R> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("Parsed")
+            .field("tape", &self.tape)
+            .field("input_len", &self.input.len())
+            .field("root_offset", &self.root_offset)
+            .field("value_frames", &self.value_builder_output.frame_count())
+            .finish()
+    }
+}
+
 impl<'p, R> Parsed<'p, R> {
-    /// Construct a new `Parsed` from a finished tape, a borrowed
-    /// input string, and the root record's offset within it.
-    /// Called by generated `parse` functions at the end of a
-    /// successful parse.
+    /// Construct a new substrate-only `Parsed` from a finished tape,
+    /// a borrowed input string, and the root record's offset within
+    /// it.
+    ///
+    /// This form is reserved for tape-substrate tests and internal
+    /// constructions that never reach `to_value()`. Grammar-emitted
+    /// `parse()` entries use [`Parsed::new_fused`] instead so
+    /// `to_value()` has a populated [`ValueBuilderOutput`] to project
+    /// over.
     #[inline]
     pub fn new(tape: Tape, input: &'p str, root_offset: TapeOffset) -> Self {
         Self {
             tape,
             input,
             root_offset,
+            value_builder_output: ValueBuilderOutput::empty(),
+            _root_marker: PhantomData,
+        }
+    }
+
+    /// Construct a fused-pipeline `Parsed` — carries both the
+    /// canonical tape substrate AND the parallel value substrate the
+    /// grammar-emitted parse entry populated in lockstep. The
+    /// `to_value()` consumer projects over `value_builder_output`
+    /// alone; the tape remains the canonical structural substrate
+    /// for `view()` / `get()`.
+    #[inline]
+    pub fn new_fused(
+        tape: Tape,
+        input: &'p str,
+        root_offset: TapeOffset,
+        value_builder_output: ValueBuilderOutput<R>,
+    ) -> Self {
+        Self {
+            tape,
+            input,
+            root_offset,
+            value_builder_output,
             _root_marker: PhantomData,
         }
     }
@@ -140,6 +205,22 @@ impl<'p, R> Parsed<'p, R> {
     #[inline]
     pub fn into_tape(self) -> Tape {
         self.tape
+    }
+
+    /// Borrow the fused value substrate. The projection emitter
+    /// reads this to construct the typed `<Grammar>Value` without
+    /// touching the tape.
+    #[inline]
+    pub fn value_builder_output(&self) -> &ValueBuilderOutput<R> {
+        &self.value_builder_output
+    }
+
+    /// Consume the `Parsed` and hand back the owned value output —
+    /// used by consumers that need ownership of the projected
+    /// `<Grammar>Value` without the rest of the `Parsed` surface.
+    #[inline]
+    pub fn into_value_builder_output(self) -> ValueBuilderOutput<R> {
+        self.value_builder_output
     }
 }
 
@@ -171,16 +252,26 @@ impl<'p, R: Root> Parsed<'p, R> {
 /// Grammars that can materialise their full parsed tree into an
 /// eager `<Grammar>Value` enum.
 ///
-/// AY.W3a substrate; the emitted impl lands in AY.W3b. The contract:
-/// `Value<'p>` borrows from the tape / input for lifetime `'p`, and
-/// `view_to_value` is the pure transformation `View<'p> ->
-/// Value<'p>` — no new allocation beyond the Value enum itself.
+/// AY.W3a substrate; AY-II.W0.c lands the fused-pipeline reading
+/// discipline: `Value<'p>` borrows from the input for lifetime `'p`
+/// and is reconstructed via [`project_value_output`] from the
+/// [`ValueBuilderOutput<Self>`](crate::runtime::ValueBuilderOutput)
+/// that the fused parse entry populated alongside the tape. The
+/// projection does not walk the tape; it reads frames from the
+/// value substrate directly.
 ///
 /// A10 §d correction: `ValueRoot` is supplied directly on the
 /// grammar marker; there is no user-facing `ToValue` trait bound
 /// layered on top. Callers reach `to_value` exclusively through
 /// [`Parsed::to_value`].
-pub trait ValueRoot: Root {
+///
+/// The `Sized` supertrait is implied: grammar markers are ZSTs
+/// by derive convention, and
+/// [`ValueBuilderOutput`](crate::runtime::ValueBuilderOutput) holds
+/// a phantom `R` that requires `R: Sized`.
+///
+/// [`project_value_output`]: ValueRoot::project_value_output
+pub trait ValueRoot: Root + Sized {
     /// The grammar's root value type, parameterised by the lifetime
     /// of the borrow on the owning [`Parsed`]. Mirrors the shape of
     /// [`Root::View`] — same lifetime, same `Self: 'p` bound.
@@ -188,11 +279,30 @@ pub trait ValueRoot: Root {
     where
         Self: 'p;
 
-    /// Eagerly materialise a root view into the grammar's value
-    /// enum. Emitted per-grammar by AY.W3b; dispatches through the
-    /// per-shape inline fns (`materialize_object_*`, etc.) to match
-    /// the json-prototype speed ceiling.
-    fn view_to_value<'p>(view: Self::View<'p>) -> Self::Value<'p>
+    /// AY-II.W0.c — project the fused-pipeline value substrate
+    /// into the grammar's `Value<'p>`. Emitted per-grammar by the
+    /// Rust backend's `view/value.rs::emit_value_root_impl`; reads
+    /// frames from [`ValueBuilderOutput`](crate::runtime::ValueBuilderOutput)
+    /// and constructs the typed enum without touching the tape.
+    ///
+    /// `output` is the value substrate `ValueBuilder<Self>`
+    /// produced at parse time (via
+    /// [`ValueBuilder::finish`](crate::runtime::ValueBuilder::finish));
+    /// `input` is the borrowed source text the leaf accessors slice
+    /// against.
+    ///
+    /// The default emitter-provided body descends the frame arena
+    /// from the root offset and builds each `<Grammar>Value`
+    /// variant via the grammar's declared field order + CSP-inferred
+    /// field types. The emitter projects leaves directly from
+    /// [`PayloadTag`](crate::runtime::PayloadTag) /
+    /// [`PayloadValue`](crate::runtime::PayloadValue) where those
+    /// are populated and falls back to source-span decoding
+    /// otherwise.
+    fn project_value_output<'p>(
+        output: &crate::runtime::ValueBuilderOutput<Self>,
+        input: &'p str,
+    ) -> Self::Value<'p>
     where
         Self: 'p;
 }
@@ -214,34 +324,32 @@ pub trait PathQuery<T>: Root {
 }
 
 impl<'p, R> Parsed<'p, R> {
-    /// Eagerly materialise the parsed tree into the grammar's
-    /// `<Grammar>Value` enum. Implemented per-grammar in AY.W3b;
-    /// dispatches through `ValueRoot::view_to_value`.
+    /// Project the fused-pipeline value substrate into the grammar's
+    /// `<Grammar>Value` enum.
+    ///
+    /// # Tranche AY-II.W0.c — fused pipeline, thin projector
+    ///
+    /// `to_value()` is a thin projection over the
+    /// [`ValueBuilderOutput<R>`](crate::runtime::ValueBuilderOutput)
+    /// populated during the single-pass fused parse. The body
+    /// forwards to the grammar-emitted
+    /// [`ValueRoot::project_value_output`] which reads frames +
+    /// payload columns from the value substrate and constructs the
+    /// typed enum in one pass. No second parse call. No visitor
+    /// reconstruction. No tape-walking materializer path. The tape
+    /// remains available through [`Parsed::view`] / [`Parsed::get`]
+    /// for the structural-cursor surface; the typed-value surface
+    /// lives on the parallel substrate exclusively.
     ///
     /// The returned value borrows from `self` — specifically from
-    /// the tape and the input slice — for the duration of the
-    /// re-borrow on `&self`.
-    ///
-    /// # Tranche AY.W6.1 — single substrate, single cursor
-    ///
-    /// `to_value()` reads the canonical packed substrate via the
-    /// same [`TapeCursor`](tape::TapeCursor) `view()` exposes. The
-    /// emitted `materialize_value_<Grammar>` root dispatches on the
-    /// cursor's `rule_kind()`, walks children through
-    /// [`TapeCursor::children`](tape::TapeCursor::children), and
-    /// reads scalar payloads through `tape.payload_*(rec)` — no
-    /// intermediate tree is rebuilt between the tape and the
-    /// returned `<Grammar>Value`. The `Vec<<Grammar>Value<'p>>`
-    /// carried inside `Compound` variants IS the user-facing
-    /// materialisation contract, not an internal rebuild: it is the
-    /// leaf of the eager materialiser, produced once per
-    /// `to_value()` call and handed directly to the caller.
+    /// the input slice — for the duration of the re-borrow on
+    /// `&self`.
     #[inline]
     pub fn to_value(&self) -> R::Value<'_>
     where
         R: ValueRoot,
     {
-        R::view_to_value(self.view())
+        R::project_value_output(&self.value_builder_output, self.input)
     }
 
     /// Resolve a lazy path query against the parsed tree. Returns

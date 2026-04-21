@@ -89,13 +89,39 @@ pub fn emit_materialize_fns(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
         grammar_name,
     );
 
+    // === W0.c: fused pipeline read-side ===
+    //
+    // AY-II.W0.c — emit the fused-pipeline read-side projection entry
+    // `project_value_<Grammar>`. Consumes a `ValueBuilderOutput<R>`
+    // (the parallel substrate populated at parse time) and projects
+    // the root frame into the grammar's `<Grammar>Value` enum via
+    // the rule-id dispatch table. No tape access — the typed value
+    // is reconstructed solely from the value substrate's frames +
+    // payload columns + the caller's input slice.
+    let grammar_ident = format_ident!("{}", grammar_name);
+    let project_fn = emit_project_value_fn(
+        &value_ident,
+        &rule_kind_ident,
+        &grammar_ident,
+        &variants,
+        grammar_name,
+    );
+    // === end W0.c fused pipeline read-side ===
+
+    // === W0.d: projection totality emission ===
+    //
     // AY.W6.2 — per-rule direct-to-struct projection helpers.
     // Consumes `ir.payload_layouts` directly: every admitted rule
     // produces one `materialize_projection_<rule>_<Grammar>` helper
     // that reads the packed aggregate payload and constructs the
     // `<Grammar><RuleCamel>Projection` struct emitted by
-    // `emitter/grammar.rs::emit_direct_to_struct_projection`.
+    // `emitter/grammar.rs::emit_direct_to_struct_projection`. W0.d
+    // extends this to include resolver-backed admissions so the
+    // totality invariant (`PROJECTION_DIRECT_TO_STRUCT.len() ==
+    // count(materialize_projection_* fns) == count(consumer call
+    // sites)`) holds per grammar.
     let projection_fns = emit_projection_fns(ir, &node_view_ident, grammar_name);
+    // === end W0.d projection totality emission ===
 
     quote! {
         #object_fn
@@ -104,9 +130,315 @@ pub fn emit_materialize_fns(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
         #number_fn
         #literal_fn
         #root_fn
+        #project_fn
         #projection_fns
     }
 }
+
+// ════════════════════════════════════════════════════════════════════
+// === W0.c: fused pipeline read-side ===
+// ════════════════════════════════════════════════════════════════════
+
+/// AY-II.W0.c — emit `project_value_<Grammar>`.
+///
+/// Read-side companion of
+/// [`ValueBuilder::finish`](crate::runtime::ValueBuilder::finish) +
+/// [`Parsed::new_fused`](crate::runtime::Parsed::new_fused). The
+/// emitted fn consumes a
+/// [`ValueBuilderOutput`](crate::runtime::ValueBuilderOutput) and
+/// an `&'p str` input slice, projects the root frame into the
+/// grammar's `<Grammar>Value<'p>` enum, and returns without
+/// touching the tape.
+///
+/// Emission shape:
+///
+/// 1. `project_frame_<Grammar>(output, input, offset) ->
+///    <Grammar>Value<'p>` — recursive per-frame projector that
+///    dispatches on the frame's `variant_idx` and constructs the
+///    matching variant. Compound variants recurse into their child
+///    frames through this same fn.
+/// 2. `project_value_<Grammar>(output, input) ->
+///    <Grammar>Value<'p>` — root entry; resolves the root frame
+///    offset and tail-calls `project_frame_<Grammar>`.
+///
+/// Both fns are `#[inline]`; LLVM collapses the recursion at
+/// monomorphisation when the projection tree is non-recursive
+/// (scalar + Span variants).
+fn emit_project_value_fn(
+    value_ident: &syn::Ident,
+    rule_kind_ident: &syn::Ident,
+    grammar_ident: &syn::Ident,
+    variants: &[VariantInfo],
+    grammar_name: &str,
+) -> TokenStream {
+    let root_fn = format_ident!("project_value_{}", grammar_name);
+    let frame_fn = format_ident!("project_frame_{}", grammar_name);
+    let dispatch_fn = format_ident!("project_rule_kind_{}", grammar_name);
+
+    // Rule-id → RuleKind dispatch, scoped to this grammar.
+    let dispatch_arms: Vec<TokenStream> = variants
+        .iter()
+        .map(|v| {
+            let kind_variant = format_ident!("{}", v.name);
+            let idx_lit = (v.rule_id & 0xFF) as u8;
+            quote! { #idx_lit => #rule_kind_ident::#kind_variant, }
+        })
+        .collect();
+
+    // Per-variant projection arms for `project_frame_<Grammar>`.
+    let project_arms: Vec<TokenStream> = variants
+        .iter()
+        .map(|v| emit_project_arm(v, value_ident, rule_kind_ident, &frame_fn))
+        .collect();
+
+    quote! {
+        /// AY-II.W0.c — rule-id → RuleKind dispatch local to the
+        /// fused-pipeline projection path. Mirrors the view layer's
+        /// `rule_kind()` dispatch; scoped to the projection module
+        /// to keep the two consumer paths coupled only through the
+        /// `RuleKind` enum itself.
+        #[inline(always)]
+        fn #dispatch_fn(variant_idx: u8) -> #rule_kind_ident {
+            match variant_idx {
+                #(#dispatch_arms)*
+                _ => #rule_kind_ident::Unknown,
+            }
+        }
+
+        /// AY-II.W0.c — per-frame projector. Reads one frame from
+        /// the value substrate and constructs the matching
+        /// `<Grammar>Value` variant. Compound variants recurse into
+        /// their child frames through this same fn. `#[inline]` so
+        /// LLVM can fold the dispatch into the caller when the
+        /// frame tree is bounded.
+        #[inline]
+        fn #frame_fn<'p>(
+            output: &::bbnf::runtime::ValueBuilderOutput<#grammar_ident>,
+            input: &'p str,
+            offset: u32,
+        ) -> #value_ident<'p> {
+            let frame = match output.frame(offset) {
+                ::core::option::Option::Some(f) => f,
+                ::core::option::Option::None => {
+                    // Substrate-inconsistency (offset out of range)
+                    // — the fused-pipeline write side writes in
+                    // push order, so every offset the emitter
+                    // hands the projector is valid by
+                    // construction; an out-of-range offset is an
+                    // IR-invariant violation.
+                    ::core::panic!(
+                        "AY-II.W0.c: frame offset {} out of range (frames: {})",
+                        offset,
+                        output.frame_count(),
+                    );
+                }
+            };
+            match #dispatch_fn(frame.variant_idx) {
+                #(#project_arms)*
+                _ => {
+                    // Recovery / unclassified records + sub-variant
+                    // discriminators. AY-II.W0.c reserves these
+                    // cases for a future recovery-aware projection
+                    // landing. A frame whose rule-kind lands in
+                    // Unknown (or in a sub-variant the main rule
+                    // dispatch does not classify) is an IR-invariant
+                    // violation for the fused-pipeline projection;
+                    // panic rather than silently fall back to
+                    // tape-walking.
+                    let _ = frame;
+                    ::core::panic!(
+                        "AY-II.W0.c: unclassified variant_idx {} on frame at offset {}; \
+                         fused-pipeline projection requires classified records",
+                        frame.variant_idx,
+                        offset,
+                    );
+                }
+            }
+        }
+
+        /// AY-II.W0.c — fused-pipeline root projector. Reads the
+        /// root frame from the value substrate and constructs the
+        /// grammar's `<Grammar>Value<'p>` in one pass. No tape
+        /// access, no reparse, no visitor dispatch.
+        #[inline]
+        fn #root_fn<'p>(
+            output: &::bbnf::runtime::ValueBuilderOutput<#grammar_ident>,
+            input: &'p str,
+        ) -> #value_ident<'p> {
+            if output.is_empty() {
+                // Empty value substrate — only reachable via a
+                // substrate-only `Parsed::new` that bypassed the
+                // fused pipeline. AY-II.W0.c treats this as an IR
+                // invariant violation: the fused parse entry
+                // always populates the substrate. No silent
+                // fallback to tape-walking.
+                ::core::panic!(
+                    "AY-II.W0.c: Parsed::to_value() called on an empty value substrate; \
+                     fused parse entry was not invoked. See \
+                     docs/tranches/AY-II/waves/W0.md §W0.c."
+                );
+            }
+            #frame_fn(output, input, output.root_offset())
+        }
+    }
+}
+
+/// Emit one per-variant projection arm for `project_frame_<Grammar>`.
+///
+/// Shape-specialised:
+/// - Span → `&input[lo..hi]` wrapped in the Span variant.
+/// - Scalar(td) → decode the frame's payload tag into the typed
+///   primitive; fall back to span-text parse when no payload was
+///   recorded at parse time.
+/// - Compound → walk the frame's child run, project each child
+///   recursively via `project_frame_<Grammar>`, collect into a
+///   `Vec<<Grammar>Value>`.
+/// - Cursor → W0.c defers cursor-wrapping variants to the
+///   recovery-projection follow-on; the arm panics on hit to
+///   preserve the "no fallback" contract.
+fn emit_project_arm(
+    v: &VariantInfo,
+    value_ident: &syn::Ident,
+    rule_kind_ident: &syn::Ident,
+    frame_fn: &syn::Ident,
+) -> TokenStream {
+    let kind_variant = format_ident!("{}", v.name);
+    let value_variant = format_ident!("{}", v.name);
+    match &v.shape {
+        VariantInfoShape::Span => quote! {
+            #rule_kind_ident::#kind_variant => {
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                #value_ident::#value_variant(span)
+            }
+        },
+        VariantInfoShape::Scalar(td) => emit_scalar_project_arm(
+            rule_kind_ident,
+            &kind_variant,
+            value_ident,
+            &value_variant,
+            td,
+        ),
+        VariantInfoShape::Compound => quote! {
+            #rule_kind_ident::#kind_variant => {
+                // Compound variant — walk the frame's child run and
+                // recurse via `project_frame_<Grammar>`. Child
+                // offsets come from the value substrate's frame
+                // arena; each child is projected in push order
+                // (matches the emitter's declared field order at
+                // parse time).
+                let mut children: ::std::vec::Vec<#value_ident<'p>> =
+                    ::std::vec::Vec::with_capacity(frame.child_count as usize);
+                for (child_off, _child_frame) in output.children(offset) {
+                    children.push(#frame_fn(output, input, child_off));
+                }
+                #value_ident::#value_variant(children)
+            }
+        },
+        VariantInfoShape::Cursor => quote! {
+            #rule_kind_ident::#kind_variant => {
+                // Cursor variants wrap `<Grammar>NodeView` — those
+                // are tape-backed and therefore outside the fused-
+                // pipeline projection's contract. A grammar whose
+                // classified rule lands on the Cursor shape is
+                // one the emitter has not yet produced a value-
+                // substrate projection for; the projection panics
+                // rather than silently fall back to tape-walking.
+                ::core::panic!(
+                    "AY-II.W0.c: Cursor-shape variant projection not yet available; \
+                     frame offset {}",
+                    offset,
+                );
+            }
+        },
+    }
+}
+
+/// Emit a Scalar variant projection arm — decodes the frame's
+/// payload tag into the typed primitive. Falls back to span-text
+/// parsing when no payload was recorded (leaves whose rule did not
+/// stage a typed payload at parse time).
+fn emit_scalar_project_arm(
+    rule_kind_ident: &syn::Ident,
+    kind_variant: &syn::Ident,
+    value_ident: &syn::Ident,
+    value_variant: &syn::Ident,
+    td: &TypeDesc,
+) -> TokenStream {
+    let fallback = scalar_fallback_from_span(td);
+    match td {
+        TypeDesc::F64 => quote! {
+            #rule_kind_ident::#kind_variant => {
+                let v: f64 = output.payload_for(frame)
+                    .and_then(|p| p.as_f64())
+                    .unwrap_or_else(|| { #fallback });
+                #value_ident::#value_variant(v)
+            }
+        },
+        TypeDesc::Bool => quote! {
+            #rule_kind_ident::#kind_variant => {
+                let v: bool = output.payload_for(frame)
+                    .and_then(|p| p.as_bool())
+                    .unwrap_or_else(|| { #fallback });
+                #value_ident::#value_variant(v)
+            }
+        },
+        TypeDesc::U32 => quote! {
+            #rule_kind_ident::#kind_variant => {
+                let v: u32 = output.payload_for(frame)
+                    .and_then(|p| p.as_u32())
+                    .unwrap_or_else(|| { #fallback });
+                #value_ident::#value_variant(v)
+            }
+        },
+        _ => {
+            let ident = td
+                .rust_ident()
+                .expect("scalar TypeDesc has rust_ident");
+            let ty_ident = format_ident!("{}", ident);
+            quote! {
+                #rule_kind_ident::#kind_variant => {
+                    let v: #ty_ident = output.payload_for(frame)
+                        .and_then(|p| p.as_u32())
+                        .map(|v| v as #ty_ident)
+                        .unwrap_or_else(|| { #fallback });
+                    #value_ident::#value_variant(v)
+                }
+            }
+        }
+    }
+}
+
+/// Scalar fallback — reads the source span and parses into the
+/// target primitive. Mirrors [`scalar_fallback`] but binds against
+/// the projection context (`input` + `frame`) rather than the
+/// view's `span_text()`.
+///
+/// The `&input[..]` slice is parenthesised to bind `&` to the full
+/// slice expression before the `.parse()` method resolves — without
+/// the parens the `&` captures the entire `Result` and yields a
+/// `&i64` / `&f64` mismatch.
+fn scalar_fallback_from_span(td: &TypeDesc) -> TokenStream {
+    let slice = quote! {
+        (&input[frame.span_lo as usize..frame.span_hi as usize])
+    };
+    match td {
+        TypeDesc::Bool => quote! { #slice == "true" },
+        TypeDesc::U32 => quote! { #slice.parse::<u32>().unwrap_or(0u32) },
+        TypeDesc::F64 => quote! { #slice.parse::<f64>().unwrap_or(0.0) },
+        TypeDesc::I8 => quote! { #slice.parse::<i8>().unwrap_or(0) },
+        TypeDesc::U8 => quote! { #slice.parse::<u8>().unwrap_or(0) },
+        TypeDesc::I16 => quote! { #slice.parse::<i16>().unwrap_or(0) },
+        TypeDesc::U16 => quote! { #slice.parse::<u16>().unwrap_or(0) },
+        TypeDesc::I32 => quote! { #slice.parse::<i32>().unwrap_or(0) },
+        TypeDesc::I64 => quote! { #slice.parse::<i64>().unwrap_or(0) },
+        TypeDesc::U64 => quote! { #slice.parse::<u64>().unwrap_or(0) },
+        _ => quote! { ::core::default::Default::default() },
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// === end W0.c fused pipeline read-side ===
+// ════════════════════════════════════════════════════════════════════
 
 /// Object shape — interleaved (key, value) children. Walks the
 /// compound's direct children and drives each through the root

@@ -21,11 +21,15 @@ pub mod error;
 pub mod handle;
 pub mod parsed;
 pub mod path;
+pub mod value_builder;
 
 pub use error::ParseErr;
 pub use handle::{CompoundHandle, StringHandle};
 pub use parsed::{Parsed, PathQuery, Root, ValueRoot};
 pub use path::{IntoPathSegment, Path, PathSegment};
+pub use value_builder::{
+    PayloadTag, PayloadValue, ValueBuilder, ValueBuilderOutput, ValueCheckpoint, ValueFrame,
+};
 
 /// Re-export the full `tape` public surface from `bbnf::runtime`.
 ///

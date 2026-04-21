@@ -13,9 +13,11 @@
 //!
 //! 2. `impl ::bbnf::runtime::ValueRoot for <Grammar>` — the GAT
 //!    binding with `type Value<'p> = <Grammar>Value<'p>` + the
-//!    `view_to_value` entry-point that dispatches through the
-//!    grammar's per-shape `materialize_*_<Grammar>` inline fns
-//!    emitted in `emitter/shapes/value_materialize.rs`.
+//!    `project_value_output` entry-point (AY-II.W0.c) that reads
+//!    the fused-pipeline [`ValueBuilderOutput`] frame arena and
+//!    drives the grammar's per-shape `materialize_*_<Grammar>`
+//!    inline fns emitted in
+//!    `emitter/shapes/value_materialize.rs`.
 //!
 //! 3. `impl ::bbnf::runtime::PathQuery<T> for <Grammar>` for
 //!    `T ∈ { &str, f64, bool }` — linear-walk path queries against
@@ -25,20 +27,18 @@
 //!    sub-item "at least one PathQuery impl emits" and keeps the
 //!    emitted surface tractable.
 //!
-//! # Tranche AY.W6.1 — substrate-direct read surface
+//! # Tranche AY-II.W0.c — fused-pipeline value surface
 //!
-//! Both the `view_to_value` dispatcher and the `PathQuery<T>`
-//! walkers read the canonical packed substrate directly via the
-//! cursor exposed by `view.cursor()`. The only allocation on the
-//! consumer path is the terminal `Vec<<Grammar>Value<'p>>` attached
-//! to Compound variants — that Vec IS the user-facing eager-
-//! materialisation contract of `Parsed::to_value()`, not an
-//! intermediate rebuild, and `PathQuery::get()` never touches it.
-//! Every child step in both dispatch surfaces lands on
-//! `TapeCursor::children()` / `TapeCursor::child(i)` and every
-//! scalar extraction lands on `tape.payload_*(rec)`; there is no
-//! shadow traversal, no sidecar index, and no routing branch
-//! between substrate shapes.
+//! The `project_value_output` entry-point projects the
+//! already-constructed value substrate — no tape-walk, no second
+//! parse, no reconstruction pass. The `PathQuery<T>` walkers keep
+//! their cursor-backed structural discipline: every structural step
+//! lands on `TapeCursor::children()` / `TapeCursor::child(i)` and
+//! every scalar extraction lands on `tape.payload_*(rec)`. The two
+//! consumer paths read disjoint substrates (value output vs. tape)
+//! but both sit under the same fused single-pass parse.
+//!
+//! [`ValueBuilderOutput`]: crate::runtime::ValueBuilderOutput
 //!
 //! # TypeDesc-equivalence-class collapse
 //!
@@ -278,44 +278,41 @@ fn emit_enum_decl(
 
 /// Emit `impl ::bbnf::runtime::ValueRoot for <Grammar>` — the GAT
 /// `type Value<'p> = <Grammar>Value<'p>` binding + the
-/// `view_to_value` entry point that dispatches through the grammar's
-/// per-shape `materialize_*_<Grammar>` inline fns.
+/// `project_value_output` entry point (AY-II.W0.c) that projects the
+/// fused-pipeline value substrate into the typed enum.
 ///
-/// The emitted body delegates to `materialize_value_<Grammar>` —
-/// the root materialiser. It dispatches on `rule_kind()` and
-/// tail-calls the per-shape fns to build the variant.
+/// The emitted body delegates to `project_value_<Grammar>` — the
+/// root projector emitted alongside the per-shape materialisers in
+/// `emitter/shapes/value_materialize.rs`. It reads the root frame
+/// from [`ValueBuilderOutput`](crate::runtime::ValueBuilderOutput)
+/// and walks its child run, constructing each variant via the
+/// grammar's emitted projection logic. No tape walk, no cursor
+/// dispatch; the substrate the emitter writes at parse time is the
+/// direct source.
 fn emit_value_root_impl(
     grammar_ident: &syn::Ident,
     value_ident: &syn::Ident,
-    node_view_ident: &syn::Ident,
+    _node_view_ident: &syn::Ident,
     _rule_kind_ident: &syn::Ident,
     _variants: &[VariantEntry],
     grammar_name: &str,
 ) -> TokenStream {
-    let root_materialize_fn =
-        format_ident!("materialize_value_{}", grammar_name);
-
-    // Root view type is always the grammar's View<'p> per the
-    // existing `impl Root` binding — we don't need to name it; the
-    // `Self::View<'p>` GAT resolves to it.
-    //
-    // The root view is convertible to a NodeView via `.cursor()` +
-    // `NodeView::from_cursor(cursor, input)`. We bounce through
-    // NodeView so the materialiser can dispatch uniformly on
-    // `rule_kind()` regardless of which specific per-rule view the
-    // caller started from.
+    let root_project_fn =
+        format_ident!("project_value_{}", grammar_name);
 
     quote! {
         impl ::bbnf::runtime::ValueRoot for #grammar_ident {
             type Value<'p> = #value_ident<'p>;
 
             #[inline]
-            fn view_to_value<'p>(view: Self::View<'p>) -> Self::Value<'p>
+            fn project_value_output<'p>(
+                output: &::bbnf::runtime::ValueBuilderOutput<Self>,
+                input: &'p str,
+            ) -> Self::Value<'p>
             where
                 Self: 'p,
             {
-                let __node = #node_view_ident::from_cursor(view.cursor(), view.input());
-                #root_materialize_fn(__node)
+                #root_project_fn(output, input)
             }
         }
     }

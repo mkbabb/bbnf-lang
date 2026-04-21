@@ -1,4 +1,5 @@
-//! AY.W2.7 — Named-type preservation wire-contract test.
+//! AY.W2.7 + AY.W6.b — Named-type preservation + grammar-derived
+//! direct-to-struct admission wire-contract test.
 //!
 //! Per `docs/tranches/AY/waves/W2.md` §AY.W2.7 + AY invariant 23:
 //! every grammar-declared `-> input : <Name>` annotation (non-scalar,
@@ -16,6 +17,22 @@
 //! would admit Named entries the Rust-target preparation later drops;
 //! checking emit-only would not surface which rule loses Named.
 //! This test checks both boundaries.
+//!
+//! ## AY.W6.b coverage — grammar-derived direct-to-struct admission
+//!
+//! Tranche AY.W6.b broadened the emitter's direct-to-struct admission
+//! to consume `ir.payload_layouts` as a grammar-derived fact, not
+//! just `TypeDesc::Named(sid)`. The admitted surface is now a per-
+//! grammar `pub struct <Grammar><RuleCamel>Projection` emitted
+//! alongside the legacy `PROJECTION_DIRECT_TO_STRUCT` const entries.
+//!
+//! The `admitted_projection_surfaces` test below asserts at least
+//! four admitted direct-to-struct surfaces across the corpus via
+//! `#[derive(Parser)]` + the emitted `PROJECTION_DIRECT_TO_STRUCT`
+//! const — which is the same `cargo expand` surface the AY.W6.2
+//! hard gate inspects. Surface-by-surface the derives below prove
+//! that grammar-layout admissions emit concrete structs without
+//! name dispatch.
 //!
 //! ## Coverage
 //!
@@ -43,14 +60,104 @@
 //! `Span`) are NOT Named: `Span` is a scalar name resolved via
 //! `TypeDesc::from_scalar_name` into `TypeDesc::Span` directly, so
 //! they never appear as `TypeDesc::Named(_)`. They're out of scope
-//! for this invariant.
+//! for this invariant — but the broader AY.W6.b admission does
+//! surface these Span-annotated rules as grammar-layout projections,
+//! so they count towards the `admitted_projection_surfaces` gate.
 
 use std::path::PathBuf;
 
 use bbnf::pipeline::{
     compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
 };
+use bbnf_derive::Parser;
 use bbnf_ir::{GrammarIR, TypeDesc};
+
+// ───────────────────────────────────────────────────────────────────
+// AY.W6.b — `#[derive(Parser)]` sites so `cargo expand -p bbnf --test
+// named_type_preservation` surfaces the admitted direct-to-struct
+// artefacts. Each derive instantiates the full emitter pipeline; the
+// resulting `PROJECTION_DIRECT_TO_STRUCT` const + per-grammar
+// `<Grammar><RuleCamel>Projection` structs are the structural
+// evidence the wave's hard gate inspects.
+// ───────────────────────────────────────────────────────────────────
+
+/// Host shims required by the CSS L4 grammar's `-> parse_hex_color(...)`
+/// mapping. Duplicated from `typed_accessor_surface.rs` so this test
+/// compiles hermetically.
+#[allow(dead_code)]
+mod css_types {
+    pub fn parse_hex_color(s: &str) -> u32 {
+        let hex = s.as_bytes();
+        match hex.len() {
+            3 => {
+                let r = hex_digit(hex[0]);
+                let g = hex_digit(hex[1]);
+                let b = hex_digit(hex[2]);
+                ((r << 4 | r) << 24) | ((g << 4 | g) << 16) | ((b << 4 | b) << 8) | 0xFF
+            }
+            4 => {
+                let r = hex_digit(hex[0]);
+                let g = hex_digit(hex[1]);
+                let b = hex_digit(hex[2]);
+                let a = hex_digit(hex[3]);
+                ((r << 4 | r) << 24) | ((g << 4 | g) << 16) | ((b << 4 | b) << 8) | (a << 4 | a)
+            }
+            6 => {
+                let r = hex_byte(hex[0], hex[1]);
+                let g = hex_byte(hex[2], hex[3]);
+                let b = hex_byte(hex[4], hex[5]);
+                (r << 24) | (g << 16) | (b << 8) | 0xFF
+            }
+            8 => {
+                let r = hex_byte(hex[0], hex[1]);
+                let g = hex_byte(hex[2], hex[3]);
+                let b = hex_byte(hex[4], hex[5]);
+                let a = hex_byte(hex[6], hex[7]);
+                (r << 24) | (g << 16) | (b << 8) | a
+            }
+            _ => 0,
+        }
+    }
+
+    #[inline(always)]
+    fn hex_digit(b: u8) -> u32 {
+        match b {
+            b'0'..=b'9' => (b - b'0') as u32,
+            b'a'..=b'f' => (b - b'a' + 10) as u32,
+            b'A'..=b'F' => (b - b'A' + 10) as u32,
+            _ => 0,
+        }
+    }
+
+    #[inline(always)]
+    fn hex_byte(hi: u8, lo: u8) -> u32 {
+        (hex_digit(hi) << 4) | hex_digit(lo)
+    }
+}
+
+/// JSON grammar — admits the resolver-backed `("string", "String")`
+/// entry plus one or more grammar-layout projections (e.g. `bool`).
+#[derive(Parser)]
+#[parser(path = "../../grammar/json/json.bbnf")]
+struct JsonG;
+
+/// CSS L4 — the richest grammar. Admits `colorFn` as resolver-backed
+/// `Color` plus a large suite of grammar-layout projections
+/// (`length`, `angle`, `time`, unit rules, prop groups, …).
+#[derive(Parser)]
+#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
+struct CssL4G;
+
+/// Sheets — admits grammar-layout projections only (no Named
+/// annotations survive per the W2 coverage note).
+#[derive(Parser)]
+#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", skip_recover)]
+struct SheetsG;
+
+/// BBNF — self-hosted; admits grammar-layout projections only.
+#[derive(Parser)]
+#[parser(path = "../../grammar/bbnf/bbnf.bbnf")]
+struct BbnfG;
 
 /// Compile `grammar_paths` through the Rust backend preparation pass
 /// (which runs `analyze_grammar → project_types` per
@@ -239,5 +346,70 @@ fn no_spurious_named_entries() {
         bbnf.is_empty(),
         "BBNF must have zero Named entries (no `-> : <Name>` \
          annotations in the grammar); got {bbnf:?}"
+    );
+}
+
+/// AY.W6.b — grammar-derived direct-to-struct admission surface.
+///
+/// The wave broadened `emit_direct_to_struct_projection` from the
+/// narrow `TypeDesc::Named(sid)` admission arm to the full
+/// `ir.payload_layouts` surface, so every non-transparent rule whose
+/// child sequence projects onto a fixed-layout scalar tuple admits
+/// direct-to-struct storage. This test asserts the admitted count
+/// across the four `#[derive(Parser)]` grammars above crosses the
+/// AY.W6.b floor of four admissions — the wave's deliverable vs
+/// AY.W2's miss.
+///
+/// The assertion reads the derive-emitted `PROJECTION_DIRECT_TO_STRUCT`
+/// const directly via the proc-macro-produced module namespace. Each
+/// grammar's const is a `&[(&str, &str); N]` of admitted projections.
+/// Cross-grammar admissions count additively; `N` per grammar is the
+/// per-grammar admission count (CSS L4 alone clears the floor with
+/// its unit + prop-group rules, but the test asserts the aggregate
+/// so partial regressions in any grammar surface at this gate).
+#[test]
+fn admitted_projection_surfaces() {
+    // Per-grammar admission counts read via the grammar's associated
+    // constant. Each `<Grammar>::PROJECTION_DIRECT_TO_STRUCT` alias
+    // resolves to the per-grammar emitted slice; the alias is a
+    // namespace-safe way to disambiguate across four grammars coexisting
+    // in one test binary (the module-scope `pub use __<grammar>::*;`
+    // glob would otherwise collide on the unqualified name).
+    let json_total = JsonG::PROJECTION_DIRECT_TO_STRUCT.len();
+    let css_l4_total = CssL4G::PROJECTION_DIRECT_TO_STRUCT.len();
+    let sheets_total = SheetsG::PROJECTION_DIRECT_TO_STRUCT.len();
+    let bbnf_total = BbnfG::PROJECTION_DIRECT_TO_STRUCT.len();
+
+    let total = json_total + css_l4_total + sheets_total + bbnf_total;
+    eprintln!(
+        "AY.W6.b admission surface: JSON={json_total} CSS_L4={css_l4_total} \
+         Sheets={sheets_total} BBNF={bbnf_total} → total={total}"
+    );
+
+    // AY.W6.b floor: at least four admitted direct-to-struct surfaces
+    // across the corpus. The pre-W6.b baseline was two (CSS L4 `colorFn`
+    // + JSON `string`), both resolver-backed `Named(_)` admissions.
+    // Grammar-layout admissions add every rule whose scalar-tuple
+    // projection succeeded; a regression that silently drops the
+    // layout-driven arm fails this gate even if the resolver-backed
+    // arm still fires.
+    assert!(
+        total >= 4,
+        "AY.W6.b: admitted direct-to-struct surfaces must be >= 4 \
+         (wave-declared floor); got total={total} \
+         (JSON={json_total}, CSS_L4={css_l4_total}, \
+         Sheets={sheets_total}, BBNF={bbnf_total})"
+    );
+
+    // AY.W6.b structural assertion: CSS L4 must admit at least four
+    // direct-to-struct surfaces on its own. Its unit + prop-group +
+    // keyword rules are the richest grammar-layout source in the corpus,
+    // so a regression that drops the layout-driven arm surfaces here
+    // even before the aggregate floor fires.
+    assert!(
+        css_l4_total >= 4,
+        "AY.W6.b: CSS L4 must admit at least four direct-to-struct \
+         surfaces (unit + prop-group rules from the layout pass); \
+         got {css_l4_total}"
     );
 }

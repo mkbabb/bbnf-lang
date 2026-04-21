@@ -72,10 +72,6 @@ fn emit_direct_to_struct_projection(ir: &GrammarIR, grammar_name: &str) -> Token
     let resolver = RustNamedTypes::from_ir(ir);
     let admissions = collect_projection_admissions(ir, &resolver);
 
-    if admissions.is_empty() {
-        return quote! {};
-    }
-
     let entries: Vec<TokenStream> = admissions
         .iter()
         .map(|a| {
@@ -90,6 +86,12 @@ fn emit_direct_to_struct_projection(ir: &GrammarIR, grammar_name: &str) -> Token
     let resolver_shims = emit_resolver_shims(&admissions);
     let grammar_projection_shims = emit_grammar_projection_shims(&admissions);
 
+    // `PROJECTION_DIRECT_TO_STRUCT` emits unconditionally — every grammar
+    // carries the const (length 0 when no rule admitted), so downstream
+    // consumers (wire-contract tests, `<Grammar>::PROJECTION_DIRECT_TO_STRUCT`
+    // associated-const aliasing) never hit a "missing item" resolution
+    // error. The per-admission struct / shim streams are inherently
+    // empty when admissions is empty; they emit nothing.
     quote! {
         #struct_defs
 
@@ -1020,6 +1022,17 @@ impl RustEmitter {
                 /// collide on the unqualified `GRAMMAR_PROFILE` name.
                 pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile =
                     GRAMMAR_PROFILE;
+
+                /// AY.W6.2 — associated-constant accessor for the
+                /// grammar's direct-to-struct projection admission
+                /// list. Alias of the module-scope
+                /// `PROJECTION_DIRECT_TO_STRUCT` slice; downstream
+                /// consumers that coexist with multiple grammars in
+                /// one test binary read via
+                /// `<Grammar>::PROJECTION_DIRECT_TO_STRUCT` to
+                /// disambiguate.
+                pub const PROJECTION_DIRECT_TO_STRUCT: &'static [(&'static str, &'static str)] =
+                    PROJECTION_DIRECT_TO_STRUCT;
 
                 /// Parse an input string and return a zero-copy
                 /// `Parsed<'_, Self>` that borrows the input directly.

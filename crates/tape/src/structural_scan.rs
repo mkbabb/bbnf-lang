@@ -1,11 +1,37 @@
-//! `structural_scan` — pre-pass byte-class index for the parser entry.
+//! `structural_scan` — byte-class index for grammar-derived parsers.
 //!
-//! AY.W1.3 — activates the long-orphaned [`GrammarProfile::structural_alphabet`]
-//! field. The mining pass [`compute_structural_alphabet`] has shipped
-//! since W0b without a runtime consumer; W1.3 closes the
-//! substrate-with-consumer cycle (invariant 22) by emitting a
-//! `scan_structural` call at every `<Parser>::parse` entry that
-//! materialises a [`StructuralIndex`] over the input bytes.
+//! AY.W1.3 landed the scanner substrate; AY.W1-fix retired the eager
+//! parse-entry scan after samply showed it dominated twitter self-time
+//! at 50.88% (input-length-dominated O(N) overhead with no consumer
+//! payoff). AY.W5.1 canonicalises the scan as **on-demand parser
+//! support**: generated parsers call [`scan_structural`] exactly when
+//! the expected payoff exceeds the scan cost — e.g. bounded lookahead
+//! inside an object-key parse, a regex-scan adapter that bounds its
+//! search window, a dispatch arm that queries the next structural
+//! byte to choose a branch.
+//!
+//! # Consumption pattern
+//!
+//! 1. The mining pass
+//!    [`compute_structural_alphabet`](bbnf_ir::passes::sets::structural_alphabet::compute_structural_alphabet)
+//!    emits the grammar's structural-byte set as
+//!    [`GrammarProfile::structural_alphabet`].
+//! 2. The generated parser decides *per rule* whether the scan
+//!    payoff is worth the amortised input-length cost. Default policy
+//!    post-W1-fix: no eager whole-input scan; a rule that benefits
+//!    (bounded regex lookahead, structural-byte dispatch) builds a
+//!    windowed scan via [`scan_structural`] against its own
+//!    `(input, alphabet)` pair, or queries a previously-built index
+//!    via [`StructuralIndex::next_structural_at_or_after`].
+//! 3. The result is a [`StructuralIndex`] — two parallel columns
+//!    (`positions: Vec<u32>`, `kinds: Vec<u8>`) — that the caller
+//!    consults with binary-searched range queries.
+//!
+//! A parser that never consumes the scan pays zero cost; a parser
+//! that does consume it owns its own scan-vs-direct-scan decision,
+//! preserving the AY invariant 13 "first-class same-path
+//! infrastructure" posture without reviving the eager-tax anti-
+//! pattern W1-fix diagnosed.
 //!
 //! # Mechanism
 //!
@@ -18,22 +44,26 @@
 //! produces a [`StructuralIndex`] holding `(position, kind)` pairs for
 //! every match.
 //!
-//! The result is stored on the per-grammar `ScanState` so per-rule
-//! parse fns can query it via offset-bounded lookups
-//! ([`next_structural_at_or_after`] does the binary search).
+//! The inherent accessors on [`StructuralIndex`]
+//! ([`StructuralIndex::next_structural_at_or_after`],
+//! [`StructuralIndex::next_structural_slot_at_or_after`]) are the
+//! canonical query surface for in-parser consumers; the
+//! [`next_structural_at_or_after`] free function stays as a shorthand
+//! for call sites that already carry the index by reference.
 //!
 //! # Architectural fit
 //!
-//! Pre-W1.3, the [`StructuralIndex`] type lived in [`crate::stage1`]
-//! as the wire contract between the unrelated DTA-driver-era SIMD
-//! scanner and the cursor consumer; that consumer has retired with
-//! the DTA prune (W0). W1.3 re-purposes the type as the substrate for
-//! the per-grammar scan: same column shape (`positions: Vec<u32>` +
-//! `kinds: Vec<u8>`), new producer ([`scan_structural`]), new
-//! consumer (per-grammar `ScanState::structural_index`).
+//! The [`StructuralIndex`] type lives in [`crate::stage1`] as the
+//! parallel-column output shape; [`scan_structural`] is the canonical
+//! producer; the inherent query methods are the canonical
+//! consumer-side surface. AY.W1-fix retired the eager parse-entry
+//! producer call so the scan lives as an opt-in tool rather than an
+//! unconditional whole-input tax.
 //!
 //! [`GrammarProfile::structural_alphabet`]: crate::profile::GrammarProfile::structural_alphabet
 //! [`compute_structural_alphabet`]: bbnf_ir::passes::sets::structural_alphabet::compute_structural_alphabet
+//! [`StructuralIndex::next_structural_at_or_after`]: crate::stage1::StructuralIndex::next_structural_at_or_after
+//! [`StructuralIndex::next_structural_slot_at_or_after`]: crate::stage1::StructuralIndex::next_structural_slot_at_or_after
 
 use crate::stage1::StructuralIndex;
 

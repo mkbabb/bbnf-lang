@@ -103,4 +103,48 @@ impl StructuralIndex {
         self.positions.clear();
         self.kinds.clear();
     }
+
+    /// AY.W5.1 — return the smallest `positions[i]` that is `≥ from`,
+    /// or `None` when every position is below `from`.
+    ///
+    /// Binary-searched over the `positions` column; the column is
+    /// strictly monotone by construction. The canonical in-parser
+    /// query surface for consumers that want the NEXT structural
+    /// position at or after an input cursor.
+    ///
+    /// See
+    /// [`crate::structural_scan::next_structural_at_or_after`] for
+    /// the equivalent free-function form retained as a call-site
+    /// shorthand.
+    #[inline]
+    pub fn next_structural_at_or_after(&self, from: u32) -> Option<u32> {
+        match self.positions.binary_search(&from) {
+            Ok(idx) => Some(self.positions[idx]),
+            Err(idx) => self.positions.get(idx).copied(),
+        }
+    }
+
+    /// AY.W5.1 — return the smallest SLOT `i` such that
+    /// `positions[i] >= from`, or `None` when every position is
+    /// below `from`.
+    ///
+    /// Companion to
+    /// [`Self::next_structural_at_or_after`] for consumers that want
+    /// to track the slot index (rather than the position value) —
+    /// e.g. a dispatch loop that reads `kinds[slot]` alongside
+    /// `positions[slot]` in lockstep. Same binary search; returns
+    /// the index instead of the position.
+    #[inline]
+    pub fn next_structural_slot_at_or_after(&self, from: u32) -> Option<usize> {
+        match self.positions.binary_search(&from) {
+            Ok(idx) => Some(idx),
+            Err(idx) => {
+                if idx < self.positions.len() {
+                    Some(idx)
+                } else {
+                    None
+                }
+            }
+        }
+    }
 }

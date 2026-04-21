@@ -62,7 +62,7 @@ pub mod structural_scan;
 pub mod tape;
 pub mod visitor;
 
-pub use builder::{PayloadData, TapeBuildError, TapeBuilder};
+pub use builder::{OpenFrame, PayloadData, TapeBuildError, TapeBuilder};
 pub use columns::{
     ColumnTag, Columns, Count, MaxF64, MinF64, PayAggU8, PayNarrowU32, PayWideF64, PayWideU64,
     Reducer, SumF64, SumU32, SumU64,

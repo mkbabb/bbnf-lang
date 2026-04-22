@@ -15,7 +15,22 @@ name = "gorgeous"
 path = "src/lib.rs"
 
 [features]
-default = []
+# Default builds ONLY the feature-independent surface (PrinterConfig,
+# the builtin/jit glue, and the vm module when `vm` is enabled). Every
+# grammar derive site is opt-in so a downstream consumer pays only for
+# the grammars it imports.
+default = ["bbnf-grammar", "json-grammar", "css-grammar", "ebnf-grammar", "bnf-grammar", "sheets-grammar"]
+# Per-grammar gates — each turns on exactly ONE `#[derive(Parser)]`
+# invocation inside gorgeous's lib (see Change 2 for the module
+# `#[cfg(feature = …)]` splice). `bin-full` is the aggregate feature
+# the `gorg` binary needs; it re-enables every grammar.
+bbnf-grammar = []
+json-grammar = []
+css-grammar = []
+ebnf-grammar = []
+bnf-grammar = []
+sheets-grammar = []
+bin-full = ["bbnf-grammar", "json-grammar", "css-grammar", "ebnf-grammar", "bnf-grammar", "sheets-grammar"]
 vm = ["dep:bbnf-ir"]
 
 [dependencies]

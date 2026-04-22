@@ -56,8 +56,26 @@ egraph-derive = { path = "crates/egraph-derive" }
 # the prefix are structural surfaces (expand, asm) that AY hard gates
 # cite by name.
 [alias]
-# Fast workspace type-check (AY.W5-W7 routine compile-gate).
-iter-check = "check --profile ax-iter --workspace"
+# Fast workspace type-check — EXCLUDES `gorgeous` and `bbnf-bootstrap`
+# because each carries ≥1 `#[derive(Parser)]` site that triggers the
+# full bbnf-derive proc-macro pipeline (emit ~30 k-line TokenStream
+# per site, serialised inside a single rustc). `gorgeous` aggregates
+# 6 sites (9+ min cold single-rustc); `bbnf-bootstrap` carries the
+# 133-LOC self-host grammar (≥ 3-5 min cold per site).
+#
+# Routine iteration (AY.W5-W7 compile-gate + hot edit loop) pays
+# neither: both crates live on the heavier `final-proof` /
+# `close-ceremony` surface, not iter. Validate the heavy sites with
+# `cargo check -p gorgeous` / `cargo check -p bbnf-bootstrap` or
+# `scripts/bootstrap-bbnf.sh` explicitly when intent is regen or
+# prettify-gate.
+iter-check = "check --profile ax-iter --workspace --exclude gorgeous --exclude bbnf-bootstrap --exclude bbnf-analysis --exclude bbnf-lsp"
+
+# Full-workspace compile-gate — routes to the heavy surface when a
+# caller explicitly asks for every member (regen preparation,
+# close-ceremony lint, workspace-level CI proof). Not part of the
+# routine loop.
+iter-check-full = "check --profile ax-iter --workspace"
 
 # Leaf-crate test tier under ax-iter (no derive-Parser sites; fastest
 # correctness tier). Crate names match the workspace's actual package

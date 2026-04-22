@@ -47,12 +47,14 @@ fn push_compound_with_children() {
     let mut b = TapeBuilder::new();
 
     // Mark children start for a rule with two leaf children.
-    let children_start = b.mark_children();
+    let children_start = TapeOffset(b.columns().len() as u32);
     let _c1 = b.push_leaf(TapeKind::Span, 0, 3, 0, 0);
     let _c2 = b.push_leaf(TapeKind::Literal, 3, 6, 1, 0);
 
     // Now push the compound header that points at the run.
-    let compound = b.push_compound(TapeKind::Seq, children_start, 0, 6, 0, 0);
+    let compound_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    b.end_compound_post_order(compound_off, 6, children_start);
+    let compound = TapeOffset(compound_off);
     assert_eq!(compound, TapeOffset(2));
 
     let tape = b.finish().unwrap();
@@ -81,11 +83,13 @@ fn cursor_accesses_record_fields() {
 #[test]
 fn cursor_walks_children() {
     let mut b = TapeBuilder::new();
-    let children_start = b.mark_children();
+    let children_start = TapeOffset(b.columns().len() as u32);
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     b.push_leaf(TapeKind::Span, 1, 2, 0, 0);
     b.push_leaf(TapeKind::Span, 2, 3, 0, 0);
-    let compound = b.push_compound(TapeKind::Seq, children_start, 0, 3, 0, 0);
+    let compound_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    b.end_compound_post_order(compound_off, 3, children_start);
+    let compound = TapeOffset(compound_off);
 
     // Post-order legacy-API tape — `finish()` derives frame_depth
     // from the `child_off` column and sweeps it through `finalise`
@@ -155,9 +159,11 @@ fn flags_encode_variant_and_has_children() {
     // non-empty. `push_compound` clears `has_children` for empty
     // runs (fixes the parent-as-own-child cycle in `TapeCursor`).
     let mut b2 = TapeBuilder::new();
-    let compound_children = b2.mark_children();
+    let compound_children = TapeOffset(b2.columns().len() as u32);
     let _inner_leaf_off = b2.push_leaf(TapeKind::Literal, 0, 4, 7, 0);
-    let compound_off = b2.push_compound(TapeKind::Rule, compound_children, 0, 4, 2, 0);
+    let compound_open = b2.begin_compound(TapeKind::Rule, 0, 2, 0, 0, 0);
+    b2.end_compound_post_order(compound_open, 4, compound_children);
+    let compound_off = TapeOffset(compound_open);
 
     let tape = b.finish().unwrap();
     let leaf = tape.get(leaf_off);
@@ -179,8 +185,10 @@ fn empty_compound_clears_has_children() {
     // parent and recurses forever.
     let mut b = TapeBuilder::new();
     let leaf_off = b.push_leaf(TapeKind::Literal, 0, 4, 7, 0);
-    let compound_children = b.mark_children();
-    let compound_off = b.push_compound(TapeKind::Rule, compound_children, 0, 4, 2, 0);
+    let compound_children = TapeOffset(b.columns().len() as u32);
+    let compound_open = b.begin_compound(TapeKind::Rule, 0, 2, 0, 0, 0);
+    b.end_compound_post_order(compound_open, 4, compound_children);
+    let compound_off = TapeOffset(compound_open);
     let tape = b.finish().unwrap();
     let _ = tape.get(leaf_off);
     let compound = tape.get(compound_off);
@@ -202,8 +210,10 @@ fn empty_compound_stamps_child_off_none() {
     // (yet-unwritten) slot — exactly the same slot the compound will
     // occupy.
     let _ = b.push_leaf(TapeKind::Literal, 0, 4, 0, 0);
-    let marked = b.mark_children();
-    let compound_off = b.push_compound(TapeKind::Rule, marked, 4, 4, 0, 0);
+    let marked = TapeOffset(b.columns().len() as u32);
+    let compound_open = b.begin_compound(TapeKind::Rule, 4, 0, 0, 0, 0);
+    b.end_compound_post_order(compound_open, 4, marked);
+    let compound_off = TapeOffset(compound_open);
     let tape = b.finish().unwrap();
 
     let rec = tape.get(compound_off);
@@ -224,10 +234,12 @@ fn nonempty_compound_preserves_child_off() {
     // Complement to the NONE-stamping test: a compound with at least
     // one child keeps the caller-supplied `child_off` verbatim.
     let mut b = TapeBuilder::new();
-    let marked = b.mark_children();
+    let marked = TapeOffset(b.columns().len() as u32);
     b.push_leaf(TapeKind::Literal, 0, 4, 0, 0);
     b.push_leaf(TapeKind::Literal, 4, 8, 0, 0);
-    let compound_off = b.push_compound(TapeKind::Seq, marked, 0, 8, 0, 0);
+    let compound_open = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    b.end_compound_post_order(compound_open, 8, marked);
+    let compound_off = TapeOffset(compound_open);
     let tape = b.finish().unwrap();
 
     let rec = tape.get(compound_off);
@@ -708,9 +720,11 @@ fn meta_idx_round_trip_leaf() {
 #[test]
 fn meta_idx_round_trip_compound() {
     let mut b = TapeBuilder::new();
-    let children_start = b.mark_children();
+    let children_start = TapeOffset(b.columns().len() as u32);
     b.push_leaf(TapeKind::Span, 0, 3, 0, 7);
-    let compound = b.push_compound(TapeKind::Rule, children_start, 0, 3, 4, 27); // CSS L4 max
+    let compound_open = b.begin_compound(TapeKind::Rule, 0, 4, 27, 0, 0); // CSS L4 max meta_idx
+    b.end_compound_post_order(compound_open, 3, children_start);
+    let compound = TapeOffset(compound_open);
     let tape = b.finish().unwrap();
 
     let cursor = TapeCursor::new(&tape, compound);
@@ -789,9 +803,11 @@ fn meta_idx_15_16_boundary() {
 #[test]
 fn meta_idx_and_has_children_coexist() {
     let mut b = TapeBuilder::new();
-    let children_start = b.mark_children();
+    let children_start = TapeOffset(b.columns().len() as u32);
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
-    let compound = b.push_compound(TapeKind::Rule, children_start, 0, 1, 5, 20);
+    let compound_open = b.begin_compound(TapeKind::Rule, 0, 5, 20, 0, 0);
+    b.end_compound_post_order(compound_open, 1, children_start);
+    let compound = TapeOffset(compound_open);
     let tape = b.finish().unwrap();
 
     let rec = tape.get(compound);
@@ -1021,15 +1037,19 @@ fn sibling_skip_walks_direct_children_forward() {
     // a
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     // (b c)
-    let bc_children = b.mark_children();
+    let bc_children = TapeOffset(b.columns().len() as u32);
     b.push_leaf(TapeKind::Span, 1, 2, 1, 0);
     b.push_leaf(TapeKind::Span, 2, 3, 2, 0);
-    let _bc = b.push_compound(TapeKind::Seq, bc_children, 1, 3, 0, 0);
+    let bc_open = b.begin_compound(TapeKind::Seq, 1, 0, 0, 0, 0);
+    b.end_compound_post_order(bc_open, 3, bc_children);
+    let _bc = TapeOffset(bc_open);
     // d
     b.push_leaf(TapeKind::Span, 3, 4, 3, 0);
     // outer compound (children at 0, 3, 4)
     let outer_children = TapeOffset(0);
-    let outer = b.push_compound(TapeKind::Rule, outer_children, 0, 4, 0, 0);
+    let outer_open = b.begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
+    b.end_compound_post_order(outer_open, 4, outer_children);
+    let outer = TapeOffset(outer_open);
     // Post-order legacy tape — `finish()` derives frame_depth from
     // `child_off` and closes `sib_skip` via `finalise`.
     let tape = b.finish().unwrap();
@@ -1067,14 +1087,18 @@ fn sibling_skip_nested_compound() {
     // z
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     // (x y)
-    let xy_children = b.mark_children();
+    let xy_children = TapeOffset(b.columns().len() as u32);
     b.push_leaf(TapeKind::Span, 1, 2, 1, 0);
     b.push_leaf(TapeKind::Span, 2, 3, 2, 0);
-    let xy = b.push_compound(TapeKind::Seq, xy_children, 1, 3, 0, 0);
+    let xy_open = b.begin_compound(TapeKind::Seq, 1, 0, 0, 0, 0);
+    b.end_compound_post_order(xy_open, 3, xy_children);
+    let xy = TapeOffset(xy_open);
     // w
     b.push_leaf(TapeKind::Span, 3, 4, 3, 0);
     let outer_children = TapeOffset(0);
-    let _outer = b.push_compound(TapeKind::Rule, outer_children, 0, 4, 0, 0);
+    let outer_open = b.begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
+    b.end_compound_post_order(outer_open, 4, outer_children);
+    let _outer = TapeOffset(outer_open);
     // Post-order legacy tape — `finish()` closes `sib_skip` via the
     // derived-depth Stage-C pass.
     let tape = b.finish().unwrap();
@@ -1097,8 +1121,10 @@ fn empty_compound_sibling_skip_is_zero() {
     // An empty compound's `sib_skip` stays at the default `0`
     // because there are no direct children to enumerate.
     let mut b = TapeBuilder::new();
-    let marked = b.mark_children();
-    let empty = b.push_compound(TapeKind::Rule, marked, 0, 0, 0, 0);
+    let marked = TapeOffset(b.columns().len() as u32);
+    let empty_open = b.begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
+    b.end_compound_post_order(empty_open, 0, marked);
+    let empty = TapeOffset(empty_open);
     let tape = b.finish().unwrap();
     assert_eq!(tape.columns().sib_skip_at(empty.0), 0);
     assert_eq!(TapeCursor::new(&tape, empty).child_count(), 0);

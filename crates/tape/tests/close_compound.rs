@@ -163,9 +163,11 @@ fn end_compound_post_order_stamps_backward_child_off_and_has_children() {
     let outer_child = b.columns().len() as u32; // == 0
 
     // Child 1: `push_compound` (legacy post-order leaf-walker style).
-    let inner_mark = b.mark_children();
+    let inner_mark = TapeOffset(b.columns().len() as u32);
     let _a = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
-    let _inner = b.push_compound(TapeKind::Seq, inner_mark, 0, 1, 1, 0);
+    let inner_open = b.begin_compound(TapeKind::Seq, 0, 1, 0, 0, 0);
+    b.end_compound_post_order(inner_open, 1, inner_mark);
+    let _inner = TapeOffset(inner_open);
 
     // Child 2: a leaf.
     let _c = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
@@ -342,10 +344,12 @@ fn rollback_to_idempotent() {
 fn legacy_push_compound_path_still_closes_via_finaliser() {
     let mut b = TapeBuilder::new();
 
-    let mark = b.mark_children();
+    let mark = TapeOffset(b.columns().len() as u32);
     let _a = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     let _bl = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
-    let root = b.push_compound(TapeKind::Seq, mark, 0, 2, 0, 0);
+    let root_open = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    b.end_compound_post_order(root_open, 2, mark);
+    let root = TapeOffset(root_open);
 
     let tape = b.finish().expect("finish() succeeds");
     assert_eq!(tape.len(), 3);

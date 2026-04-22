@@ -358,9 +358,8 @@ pub struct TapeVisitor<'input> {
 }
 
 struct CompoundFrame {
-    kind: TapeKind,
     span_lo: u32,
-    child_off: tape::TapeOffset,
+    open_offset: u32,
 }
 
 /// [`TapeVisitor`] error surface — visitor never rejects events.
@@ -415,11 +414,10 @@ impl<'input> JsonVisitor for TapeVisitor<'input> {
 
     #[inline(always)]
     fn begin_object(&mut self) -> Result<(), Self::Error> {
-        let child_off = self.builder.mark_children();
+        let open_offset = self.builder.begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
-            kind: TapeKind::Rule,
             span_lo: 0,
-            child_off,
+            open_offset,
         });
         Ok(())
     }
@@ -445,24 +443,16 @@ impl<'input> JsonVisitor for TapeVisitor<'input> {
     #[inline(always)]
     fn end_object(&mut self) -> Result<(), Self::Error> {
         let frame = self.compounds.pop().ok_or(TapeVisitorError)?;
-        self.builder.push_compound(
-            frame.kind,
-            frame.child_off,
-            frame.span_lo,
-            0,
-            0,
-            0,
-        );
+        self.builder.end_compound(frame.open_offset, frame.span_lo);
         Ok(())
     }
 
     #[inline(always)]
     fn begin_array(&mut self) -> Result<(), Self::Error> {
-        let child_off = self.builder.mark_children();
+        let open_offset = self.builder.begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
-            kind: TapeKind::Rule,
             span_lo: 0,
-            child_off,
+            open_offset,
         });
         Ok(())
     }
@@ -470,14 +460,7 @@ impl<'input> JsonVisitor for TapeVisitor<'input> {
     #[inline(always)]
     fn end_array(&mut self) -> Result<(), Self::Error> {
         let frame = self.compounds.pop().ok_or(TapeVisitorError)?;
-        self.builder.push_compound(
-            frame.kind,
-            frame.child_off,
-            frame.span_lo,
-            0,
-            0,
-            0,
-        );
+        self.builder.end_compound(frame.open_offset, frame.span_lo);
         Ok(())
     }
 

@@ -39,44 +39,48 @@ unblock AY-II.W0' close.
 
 ## W0 dispatch decomposition
 
-Use up to 3 parallel agents on disjoint file bounds:
+Use 3 parallel agents on disjoint file bounds. The cold-path +
+cache-honesty items from meta-audit-04 fold into the three sub-agents
+below per existing file ownership — no separate fourth sub-agent.
 
-- **W0.a — Routine surface truth**
+- **W0.a — Routine surface truth + cache-alias separation**
   Files: `.cargo/config.toml`, `Makefile`, `scripts/test-tier.sh`,
   `docs/instructions/PROFILING.md`.
   Job: align the documented routine surface with the live aliases and
-  test tiers; delete stale comments and stale command claims.
+  test tiers; delete stale comments and stale command claims; downgrade
+  `iter-check-full` from routine-alias wording to close-ceremony
+  wording; add an `iter-check-lsp` alias validating the currently
+  `--exclude`d crates; add a new `make ay-prime` target that seeds
+  `target/.bbnf-cache/` from a single cold run of
+  `cargo check -p bbnf-bootstrap --lib` (+ optionally
+  `-p gorgeous --lib`). `.cargo/config.toml` carries a comment-block
+  naming the three-alias cost model (routine / lsp-validate /
+  close-gate).
 
-- **W0.b — Profiling/regen/expand truth**
+- **W0.b — Bootstrap/profiling/expand truth + cache preservation**
   Files: `scripts/bootstrap-bbnf.sh`,
   `scripts/prepare-profile-wave.sh`,
   `scripts/profile-bench-headless.sh`,
   `docs/instructions/PROFILING.md`.
   Job: make the bootstrap/profile/expand guidance truthful, measured,
-  and symbol-resolution-correct.
+  and symbol-resolution-correct. Stop `scripts/bootstrap-bbnf.sh`
+  from unconditionally `rm -rf target/.bbnf-cache/` (the content-keyed
+  cache at `crates/derive/src/lib.rs:300-358` is the source of truth;
+  the nuke defeats it). Record cycle-1 and cycle-2 wall-clock rows in
+  `docs/benchmarks/post-B1-W0-proof.txt` (keys `bootstrap-cycle-1`,
+  `bootstrap-cycle-2`, `ay-prime-fresh`).
 
-- **W0.c — Proof-surface hardening**
+- **W0.c — Proof-surface hardening + iter-check-full measurement**
   Files: `Makefile`, `.github/workflows/ci.yml` (only if needed),
-  `docs/instructions/PROFILING.md`, `docs/tranches/B1/PROGRESS.md`.
-  Job: ensure `ay-bench-close`, `iter-check-full`, and CI/default proof
-  surfaces match the intended workflow and are recorded honestly.
-
-- **W0.d — Cold-path truth + cache honesty**
-  Files: `scripts/bootstrap-bbnf.sh`, `Makefile` (new `ay-prime`
-  target + `iter-check-full` ceiling), `.cargo/config.toml`
-  (downgrade `iter-check-full` from routine-alias wording to
-  close-ceremony wording, and add an `iter-check-lsp` alias for the
-  excluded crates).
-  Job: stop `scripts/bootstrap-bbnf.sh` from nuking
-  `target/.bbnf-cache/`; add `make ay-prime` seeding the cache from
-  a single cold run of `cargo check -p bbnf-bootstrap --lib` (+
-  optionally `-p gorgeous --lib`); measure and record
-  `iter-check-full` cold wall explicitly.
-  Deliverable: three artefact rows in
-  `docs/benchmarks/post-B1-W0-proof.txt` (`bootstrap-cycle-2`,
-  `ay-prime-fresh`, `iter-check-full-cold`); comment-block in
-  `.cargo/config.toml` that cites the three-alias cost model
-  (routine / lsp-validate / close-gate).
+  `docs/instructions/PROFILING.md`, `docs/tranches/B1/PROGRESS.md`,
+  `docs/benchmarks/post-B1-W0-proof.txt`.
+  Job: ensure `ay-bench-close`, `iter-check-full`, and CI/default
+  proof surfaces match the intended workflow and are recorded
+  honestly. Measure `cargo iter-check-full` cold wall on a fresh
+  `rm -rf target/ax-iter/incremental` and commit the number as the
+  `iter-check-full-cold` row in
+  `docs/benchmarks/post-B1-W0-proof.txt`. The recorded number IS the
+  ceiling; any regression beyond it re-opens B1.W0.c.
 
 ## W1 dispatch decomposition
 

@@ -331,3 +331,28 @@ After all 3 sub-agents cherry-pick:
   simplicity + performance are mandatory.
 - One codegen path. One builder type. One projection path. One
   navigation path.
+
+## d-lineage amendment (2026-04-22 retro-doc)
+
+W0'.a / W0'.b / W0'.c (the original three-agent decomposition
+above) returned at PAUSE SNAPSHOT. Six follow-on d-sub-phases
+landed between 2026-04-21 and 2026-04-22 while W0' was
+open. They are recorded here so the wave spec matches the
+PROGRESS log.
+
+| Sub-phase | Commit | Scope | Invariant discharged |
+|---|---|---|---|
+| d1 | `60f92743` | Test migration from `push_compound`/`mark_children` to FusedBuilder (tape tests, tape_walker_allocs, json-prototype visitor) | §15 public-API retirement evidence |
+| d2 | (skipped; `4f4c9ec9` draft fix subsumed by d3) | — | — |
+| d3 | `f768f50d` | O(1) `direct_child_count` in `value_end_compound`; replaces Θ(N²) recursive `subtree_size` path | W0p regen close precondition |
+| d4 | `5c737bd1` | Gate gorgeous `#[derive(Parser)]` sites behind per-grammar cargo features | dev-loop infra; routes to B1 |
+| d5 | `f5cdcd52` | Drop gorgeous as mandatory `bbnf` dev-dep | dev-loop infra; routes to B1 |
+| d6 | `2e5e3ff5` | Narrow `crates/derive/build.rs` fingerprint scan to codegen-relevant subtrees | dev-loop infra; routes to B1 |
+| d7 | `700501f5` | `.cargo/config.toml` `iter-check` alias excludes gorgeous + bbnf-bootstrap + bbnf-analysis + bbnf-lsp; `iter-check-full` retains `--workspace` for CI | dev-loop infra; routes to B1 |
+
+d4-d7 touch `.cargo/config.toml` + `Cargo.toml` files — the
+W0 `Do NOT touch` list in `waves/W0.md:75-81` declares those
+out-of-bounds. The pivot is recorded here; the formal
+re-audit of d4-d7 is B1.W0's scope
+(`docs/tranches/B1/waves/W0.md`). W0' does not close on the
+correctness of d4-d7; B1 does.

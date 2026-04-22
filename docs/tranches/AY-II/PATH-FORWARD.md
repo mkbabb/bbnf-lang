@@ -56,8 +56,12 @@ After B1 closes, finish W0' in one uninterrupted sequence:
 5. Run the fat-LTO 5-bench matrix.
 6. Capture samply on the four primary grammars.
 7. Run `nm` on the bench binaries.
-8. Update `PROGRESS.md`, `AY-II.md`, and `waves/W0p.md` to mark W0'
-   closed.
+8. Verify `<Grammar>Value::Unknown` retirement per grammar per
+   `AY-II.md` §Plan-audit findings bullet 2; record the
+   per-grammar exception ledger (`W0p-PAUSE-SNAPSHOT.md:87-89`
+   marked this unresolved at pause).
+9. Update `PROGRESS.md`, `AY-II.md`, and `waves/W0p.md` to mark
+   W0' closed.
 
 The W0' close gate remains the one declared in
 [W0p.md](/Users/mkbabb/Programming/bbnf-lang/docs/tranches/AY-II/waves/W0p.md).
@@ -77,11 +81,17 @@ these waves.
 
 ## Immediate cleanup targets already identified
 
-These are not optional polish items; they are W0' close work:
+These are not optional polish items; they are W0' close work.
+Canonical list; if in doubt against `W0p-PAUSE-SNAPSHOT.md`
+§Transient compose-escape aliases, the SNAPSHOT is the
+source of truth for alias-kind enumeration.
 
 - `crates/tape/src/builder/mod.rs` — retire `pub type TapeBuilder = FusedBuilder;`
 - `crates/core/src/runtime/mod.rs` — retire `ValueBuilderOutput` alias
   and the `value_builder` shim module
+- `crates/core/src/runtime/mod.rs` — retire `_ValueBuilderShim` /
+  `ValueBuilder<R>` ZST once the counter imports in
+  `value_api_apples_to_apples.rs` migrate to the fused surface
 - `crates/core/src/runtime/parsed.rs` — retire the 4-arg `new_fused`
   bridge once regen no longer emits it
 - `crates/core/tests/value_api_apples_to_apples.rs` — move the builder

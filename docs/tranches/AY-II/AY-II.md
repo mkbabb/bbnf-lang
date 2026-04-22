@@ -139,10 +139,14 @@ materializer counts in agreement).
 
 ## Wave summary
 
+W0' and W1-W5 all gate on B1 (prelude annex) close. See
+`PATH-FORWARD.md` for program order:
+B1 close → AY-II.W0' close → AY-II.W1-W5 sequential.
+
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
 | **W0** | [waves/W0.md](waves/W0.md) | Fused substrate + emitter unification + runtime consolidation + projection totality + structural-scan integration (5 parallel sub-agents) | tranche open | superseded — partial landing retained; W0' owns close |
-| **W0'** | [waves/W0p.md](waves/W0p.md) | FusedBuilder collapse + projection-consumer wiring + scan-policy splice + legacy-cruft deletion (3 parallel sub-agents) | W0 partial landing | in_progress — runtime/source work landed; blocked on B1 close and W0' close ceremony |
+| **W0'** | [waves/W0p.md](waves/W0p.md) | FusedBuilder collapse + projection-consumer wiring + scan-policy splice + legacy-cruft deletion (3 parallel sub-agents + d-lineage dev-infra follow-ons) | W0 partial landing | in_progress — W0'.a/b/c source landed; d1 test migration + d3 regen-O(1) fix + d4-d7 infra scope reroutes to B1; blocked on B1 close then W0' close ceremony |
 | **W1** | [waves/W1.md](waves/W1.md) | JSON — semantic parity + peer-referenced perf (sonic + simd-json); grammar-derived typed admission totality; samply-proven hot path | W0' close | planned |
 | **W2** | [waves/W2.md](waves/W2.md) | CSS L4 — lightningcss total typed-semantic parity (Rule, Declaration, Value, Selector, MediaRule, Keyframes families); canonical-output byte parity; zero hardcoded bindings | W1 | planned |
 | **W3** | [waves/W3.md](waves/W3.md) | Google Sheets — grammar-derived typed formula/cell/range families; self-parity + formula_expr parity; samply-proven hot paths | W2 | planned |
@@ -184,6 +188,8 @@ belongs in this tranche, not downstream. The findings:
    `ValueBuilder::push` or "W0.c's landed name". **Action**:
    W4.e updates at W0' close to reference the concrete fused
    symbol name (`FusedBuilder::push_leaf_*` / `begin_compound`).
+   **Status**: landed preemptively at `waves/W4.md:20,136,161`
+   during the AY-II/B1 redress pass.
 
 ### Unnamed deferrals in AY-II plans
 
@@ -196,6 +202,16 @@ belongs in this tranche, not downstream. The findings:
    **Action**: W3 plan update names BA as the destination (BA
    owns `type_annotation` grammar extensions per BA.md §Scope).
 
+### AUDIT-D 15-item debt ledger mirror
+
+`audit/AY-II-AUDIT-D-predecessor-successor.md` enumerates 15
+cross-tranche debt items (11 AY-II internal, 4 external).
+Source is authoritative; this is the enumeration mirror for
+status-scanning purposes. Transcribe on next editorial pass;
+currently the count is tracked but individual items are not
+surfaced outside the audit doc. See U2 / DC1 in
+`docs/tranches/meta-audit/03-tranche-drift.md`.
+
 ### Scoped deferrals correctly routed (no action needed)
 
 6. **W2's `scale_interop_tailwind` calc-evaluator gap** →
@@ -204,6 +220,21 @@ belongs in this tranche, not downstream. The findings:
 7. **W2 OUT-OF-SCOPE rows** (`CounterStyleRule`, `ScopeRule`,
    etc.) — zero matches in declared fixtures; admission via
    `genericAtRule` fallback; typed parity in BA scope. Clean.
+
+### d-lineage scope-creep rationalisation
+
+W0'.d4-d7 landed edits to `.cargo/config.toml` + proc-macro
+dev-deps (`PROGRESS.md:287-310`). W0 §File bounds declared
+`.cargo/config.toml` and `scripts/*` out-of-bounds
+(`waves/W0.md:75-81`). The pivot was documented in
+`audit/W0p-infra-root-cause.md` +
+`audit/W0p-infra-fix-plan.md` +
+`audit/W0-iter-surface-verification.md`, and the tranche
+response was to promote B1 from scaffold to authoritative
+prelude annex. Per SPEC §new-tranche-new-doc, a mid-tranche
+scope pivot opens a new letter — B1 is that letter. W0'
+does not re-audit d4-d7 at close; B1.W0 owns the re-audit
+(`docs/tranches/B1/waves/W0.md`).
 
 ### Downstream-tranche audit
 

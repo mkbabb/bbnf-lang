@@ -58,7 +58,7 @@ After B1 closes, finish W0' in one uninterrupted sequence:
 7. Run `nm` on the bench binaries.
 8. Verify `<Grammar>Value::Unknown` retirement per grammar per
    `AY-II.md` §Plan-audit findings bullet 2; record the
-   per-grammar exception ledger (`W0p-PAUSE-SNAPSHOT.md:87-89`
+   per-grammar exception ledger (`audit/W0p-PAUSE-SNAPSHOT.md:87-89`
    marked this unresolved at pause).
 9. Update `PROGRESS.md`, `AY-II.md`, and `waves/W0p.md` to mark
    W0' closed.
@@ -82,7 +82,7 @@ these waves.
 ## Immediate cleanup targets already identified
 
 These are not optional polish items; they are W0' close work.
-Canonical list; if in doubt against `W0p-PAUSE-SNAPSHOT.md`
+Canonical list; if in doubt against `audit/W0p-PAUSE-SNAPSHOT.md`
 §Transient compose-escape aliases, the SNAPSHOT is the
 source of truth for alias-kind enumeration.
 

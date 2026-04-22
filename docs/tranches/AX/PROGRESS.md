@@ -189,7 +189,7 @@ fresh-context restart. All four produced artefacts under
   fallback clause added, parallel-probe guidance, memory discipline,
   worktree `target/` symlink documented, pre-regen vs post-regen
   evidence distinction. Two proposals deferred:
-  `AGENT_BRIEF_TEMPLATE.md` + walker-parity-oracle edict.
+  `AGENT_DISPATCH_TEMPLATE.md` + walker-parity-oracle edict.
 - R3 (`62d40d90`) — infra speedups. `[profile.ax-iter]` in workspace
   `Cargo.toml` (–3×RSS on aggregate binaries); `test-tier.sh` /
   `worktree-status.sh` / `kill-all-rust.sh` scripts;

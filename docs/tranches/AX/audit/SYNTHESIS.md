@@ -199,7 +199,7 @@ Seven surgical edits to `README.md` and `SPEC.md`:
    distinction; gate authors state explicitly.
 
 Landed in this session:
-- `docs/instructions/tranche/AGENT_BRIEF_TEMPLATE.md` — reusable
+- `docs/instructions/tranche/AGENT_DISPATCH_TEMPLATE.md` — reusable
   sub-agent prompt template; cuts per-dispatch prose ~50%.
 - Walker-parity-as-snapshot-oracle edict — lives as AX.md
   invariant 20 (R4 P7); no separate `ORACLE.md` needed.

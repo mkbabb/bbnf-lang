@@ -367,7 +367,7 @@ Aggregate test binaries linking ≥ 4 derive-Parser sites hit LLVM
 codegen super-linearity — AX.W0a.2.d observed a single rustc peaking
 at 26 GB RSS on a 5-derive-site `tape_parity` binary. Split into
 per-grammar test binaries (AX commit `61053374` template) and export
-`CARGO_BUILD_JOBS=4` in sub-agent briefings to cap parallel rustc
+`CARGO_BUILD_JOBS=4` in sub-agent dispatches to cap parallel rustc
 processes. Per-grammar binaries compile in ~11-14 s at ~3 GB RSS.
 
 ## Cache clearing

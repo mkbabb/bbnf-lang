@@ -9,11 +9,13 @@ triumvirate at `audit/AUDIT-{A,B,C,D}-*.md` diagnosed the
 remainder. AY-II lands it on one path, grammar-derived, close-gated
 against real semantic peers — not internal ratios.
 
-Two waves. Five parallel sub-agents in W0 on disjoint file bounds.
-No recorded misses. Every AY-II close gate is a semantic or
-runtime fact verifiable against an external reference (sonic-rs,
-simd-json, lightningcss, cssparser) or a grammar-derived
-totality check (projection counts, consumer counts,
+AY-II now executes as W0 (partial) → W0' → W1 → W2 → W3 → W4 → W5.
+W0' source landings are in; B1 closes first as the bounded prelude
+annex over the proof surface; AY-II resumes immediately afterward on
+the refreshed command/bootstrap/expand/profile/bench surface. Every
+AY-II close gate is a semantic or runtime fact verifiable against an
+external reference (sonic-rs, simd-json, lightningcss, cssparser) or a
+grammar-derived totality check (projection counts, consumer counts,
 materializer counts in agreement).
 
 ## Architectural thesis
@@ -25,9 +27,9 @@ materializer counts in agreement).
    does **not** reparse, does **not** drive a second visitor pass,
    does **not** walk the tape to reconstruct children per compound.
 2. **ONE substrate.** The tape remains the canonical structural
-   substrate; the value surface is populated in lockstep through a
-   parallel `ValueBuilder<R>` that mirrors the compound open/close
-   frame stack.
+   substrate; the value surface is populated in lockstep through the
+   fused builder/value-column path, not a second parser or a post-parse
+   tape walk.
 3. **ONE compound emission API.** `push_compound` retires. Every
    shape emitter uses a unified open/close API against a
    rollback-aware `Columns::rollback_to(open_offset)` primitive.
@@ -104,7 +106,7 @@ materializer counts in agreement).
    `crates/core/tests/css_l4_canonical_parity.rs`,
    `crates/core/tests/typed_accessor_surface.rs`.
 10. `make ay-bench-close WAVE=close` runs clean on the full 5-bench
-    fat-LTO matrix at every wave boundary (W0 close AND W1 close).
+    fat-LTO matrix at every wave boundary (W0' close AND W1 close).
     No grammar is a skipped fixture.
 11. Competitor benches published at W1 close:
     `crates/core/benches/json/competitors.rs` vs sonic-rs +
@@ -117,11 +119,11 @@ materializer counts in agreement).
 
 ## Operational posture
 
-1. W0 dispatches 5 parallel sub-agents on disjoint file bounds
-   per the decomposition in `waves/W0.md`. Each sub-agent owns a
-   sub-gate verified by `cargo expand` inspection, a spot bench,
-   and (where runtime-observable) samply attribution.
-2. Fat-LTO bench matrix runs at W0 close AND W1 close — both are
+1. W0 is retained as the partial landing record in `waves/W0.md`;
+   it is not an active dispatch surface. Active execution resumes at
+   W0' close on the B1-refreshed proof surface, then proceeds
+   sequentially through W1-W5.
+2. Fat-LTO bench matrix runs at W0' close AND W1 close — both are
    full 5-bench matrices (json_monolithic, css_l4,
    google_sheets_monolithic, bbnf_monolithic, compile_pipeline).
 3. Samply coverage at every wave boundary spans all four primary
@@ -132,16 +134,16 @@ materializer counts in agreement).
    audit-expand-begotten-code edict
    (`docs/instructions/README.md`). Source-only gates
    are not load-bearing.
-5. Bootstrap regen runs at W0 close and W1 close; both cycles
+5. Bootstrap regen runs at W0' close and W4 close; both cycles
    pass idempotency.
 
 ## Wave summary
 
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Fused substrate + emitter unification + runtime consolidation + projection totality + structural-scan integration (5 parallel sub-agents) | tranche open | closed-partial (superseded by W0') |
-| **W0'** | [waves/W0p.md](waves/W0p.md) | FusedBuilder collapse + projection-consumer wiring + scan-policy splice + legacy-cruft deletion (3 parallel sub-agents) | W0 landing | in_progress — substrate landed; blocked on dev-loop infrastructure stall; build-infra triumvirate open |
-| **W1** | [waves/W1.md](waves/W1.md) | JSON — semantic parity + peer-referenced perf (sonic + simd-json); grammar-derived typed admission totality; samply-proven hot path | W0' | planned |
+| **W0** | [waves/W0.md](waves/W0.md) | Fused substrate + emitter unification + runtime consolidation + projection totality + structural-scan integration (5 parallel sub-agents) | tranche open | superseded — partial landing retained; W0' owns close |
+| **W0'** | [waves/W0p.md](waves/W0p.md) | FusedBuilder collapse + projection-consumer wiring + scan-policy splice + legacy-cruft deletion (3 parallel sub-agents) | W0 partial landing | in_progress — runtime/source work landed; blocked on B1 close and W0' close ceremony |
+| **W1** | [waves/W1.md](waves/W1.md) | JSON — semantic parity + peer-referenced perf (sonic + simd-json); grammar-derived typed admission totality; samply-proven hot path | W0' close | planned |
 | **W2** | [waves/W2.md](waves/W2.md) | CSS L4 — lightningcss total typed-semantic parity (Rule, Declaration, Value, Selector, MediaRule, Keyframes families); canonical-output byte parity; zero hardcoded bindings | W1 | planned |
 | **W3** | [waves/W3.md](waves/W3.md) | Google Sheets — grammar-derived typed formula/cell/range families; self-parity + formula_expr parity; samply-proven hot paths | W2 | planned |
 | **W4** | [waves/W4.md](waves/W4.md) | BBNF — self-hosting identity + grammar-meta typed surface; double-regen byte-identical; typed declared-type annotation coverage | W3 | planned |
@@ -229,8 +231,8 @@ hand-patches.
 AY-II's defensible floor is not "architectural infrastructure
 partially landed." The minimum closeable outcome is:
 
-1. W0 lands every thesis invariant §1–9 end-to-end. The full
-   fat-LTO bench matrix runs clean at W0 close.
+1. W0' closes every thesis invariant §1–9 end-to-end. The full
+   fat-LTO bench matrix runs clean at W0' close.
 2. W1 hits every peer-referenced close gate:
    - `bbnf_value_twitter / sonic_value_twitter ≤ 1.15`
    - `bbnf_value_canada / sonic_value_canada ≤ 1.20`
@@ -264,7 +266,7 @@ AY-II does not close until:
    `to_value` path.
 4. Fat-LTO `cargo bench` runs clean across all five bench
    binaries.
-5. Projection totality invariant §7 verified at W0 close AND W1
+5. Projection totality invariant §7 verified at W0' close AND W1
    close.
 6. Typed CSS semantic parity suite green with no `#[ignore]`
    added in AY-II.

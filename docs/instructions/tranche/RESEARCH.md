@@ -119,7 +119,7 @@ stance on which belong in the current tranche versus a follow-on.
 
 ---
 
-## Sub-agent brief template
+## Sub-agent dispatch template
 
 Each sub-agent receives a self-contained prompt. This is the
 template; fill in the bracketed fields per angle.

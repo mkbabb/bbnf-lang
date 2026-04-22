@@ -47,7 +47,8 @@ The `ax-iter` profile inherits `dev` and strips debuginfo; link time
 roughly halves and peak RSS on aggregate test binaries drops ~3×. The
 public entrypoints:
 
-- `cargo iter-check` → `cargo check --profile ax-iter --workspace`.
+- `cargo iter-check` → `cargo check --profile ax-iter --workspace`
+  with the heavy proc-macro crates excluded per `.cargo/config.toml`.
 - `make iter-check` — routine compile-gate; same command, Makefile
   wrapper.
 - `make iter-test-leaf` → `scripts/test-tier.sh leaf --profile ax-iter`
@@ -120,8 +121,8 @@ verbatim per §Prepare a wave.
   `cargo check --workspace` warm (7.16s); the ~30× gap the baseline
   flagged is now the public routine path.
 - `make iter-test-leaf` warm 1.05s produces real pass/fail output;
-  baseline `scripts/test-tier.sh leaf` failed in 0.45s against the
-  stale `-p bbnf-tape` crate name (W0.a renamed to `-p tape`).
+  the stale `-p bbnf-tape` crate-name issue is retired and the leaf
+  surface now routes through the live `tape` package name.
 - Routine iteration routes via the `iter-*` targets; keep
   `cargo test --workspace` and `cargo bench` for wave-close gates only.
 

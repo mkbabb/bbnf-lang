@@ -79,9 +79,8 @@ iter-check-full = "check --profile ax-iter --workspace"
 
 # Leaf-crate test tier under ax-iter (no derive-Parser sites; fastest
 # correctness tier). Crate names match the workspace's actual package
-# names: `tape`, not `bbnf-tape` — `scripts/test-tier.sh leaf` still
-# passes `-p bbnf-tape` verbatim and is stale (B0.W1 owns that fix).
-# This alias is the working leaf tier in the meantime.
+# names: `tape`, not `bbnf-tape`; the leaf-tier script and this alias
+# now agree on the live package names.
 iter-test-leaf = "test --profile ax-iter -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser"
 
 # Grammar-tier passthrough: generic `test --profile ax-iter`, intended

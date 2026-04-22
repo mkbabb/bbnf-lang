@@ -18,8 +18,8 @@ Normative documents for tranche authoring and execution. Composes
   including the required per-wave status line.
   Required when a tranche has ≥ 6 waves OR ≥ 4 parallel agents in any
   wave; then each wave carries its own `waves/W<N>.md` spec.
-- [AGENT_BRIEF_TEMPLATE.md](AGENT_BRIEF_TEMPLATE.md) — Sub-agent
-  prompt boilerplate. Orchestrator substitutes bracketed fields per
+- [AGENT_DISPATCH_TEMPLATE.md](AGENT_DISPATCH_TEMPLATE.md) — Sub-agent
+  dispatch boilerplate. Orchestrator substitutes bracketed fields per
   wave; each per-wave dispatch shrinks by ~50% vs re-derived prose.
   `SPEC.md` also permits a narrow prelude annex when build/bench drag
   would otherwise block the tranche's next real wave.

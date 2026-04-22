@@ -150,15 +150,15 @@ bench:
 #
 # Canonical catalog: `docs/benchmarks/post-B0-W0-commands.txt`.
 
-## AY routine compile-gate — `cargo check --profile ax-iter --workspace`.
+## AY routine compile-gate — `cargo iter-check` (ax-iter workspace check
+## with the heavy proc-macro crates excluded per `.cargo/config.toml`).
 iter-check:
 	cargo iter-check
 
 ## Leaf-crate test tier under ax-iter (tape, bbnf-ir, egraph,
 ## csp-solver, bbnf-ser). Fastest correctness surface — no
 ## derive-Parser sites. Routes through the `iter-test-leaf` cargo
-## alias rather than `scripts/test-tier.sh leaf` because the script
-## still passes `-p bbnf-tape` (stale name; B0.W1 owns that fix).
+## alias; the script and alias now agree on the live leaf-crate list.
 iter-test-leaf:
 	cargo iter-test-leaf
 

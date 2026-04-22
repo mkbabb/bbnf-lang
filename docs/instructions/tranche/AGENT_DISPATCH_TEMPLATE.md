@@ -1,4 +1,4 @@
-# Agent Brief Template
+# Agent Dispatch Template
 
 Reusable template for orchestrator-dispatched sub-agent prompts.
 Substitute `{BRACKETED}` fields per wave; everything else carries

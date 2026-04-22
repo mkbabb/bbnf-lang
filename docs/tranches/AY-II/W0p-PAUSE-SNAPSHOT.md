@@ -5,6 +5,9 @@ returned clean and the third was interrupted at a stable commit
 boundary. This document captures the exact state so resumption is
 deterministic.
 
+This is a historical snapshot, not an active dispatch surface. The
+live execution order is B1 close -> AY-II.W0' close -> AY-II W1-W5.
+
 ## Master HEAD
 
 `60968449` — `docs(ay-ii): update W1-W5 sub-wave docs per plan-audit findings`.

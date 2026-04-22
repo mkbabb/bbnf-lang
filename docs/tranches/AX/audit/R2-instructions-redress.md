@@ -132,7 +132,7 @@ W0a sub-agent prompts repeated ~800 words of: worktree path,
 list, hard gate, return format, non-negotiables echo. Seven
 dispatches = ~5,600 words.
 
-**Redress.** New `docs/instructions/tranche/AGENT_BRIEF_TEMPLATE.md`
+**Redress.** New `docs/instructions/tranche/AGENT_DISPATCH_TEMPLATE.md`
 — boilerplate in template, per-wave prompts shrink to substitutions.
 Target 50% reduction. **Deferred — size > 20-line surgical threshold.**
 
@@ -168,7 +168,7 @@ All edits < 20 lines; each cites specific W0a sub-wave friction.
 
 ## Proposals deferred to restart
 
-- **P1 — `AGENT_BRIEF_TEMPLATE.md`**. ~60-line template file;
+- **P1 — `AGENT_DISPATCH_TEMPLATE.md`**. ~60-line template file;
   halves per-dispatch prose. Orchestrator authors in restart.
 - **P2 — Walker-parity oracle edict**. Either new `docs/instructions/
   tranche/ORACLE.md` or AX invariant 20. Architectural framing

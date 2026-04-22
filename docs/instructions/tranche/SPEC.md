@@ -552,7 +552,7 @@ tranche authoring:
 - [ ] Research artefacts landed for wave N's consumers.
 - [ ] Master clean (`git status --short` empty).
 - [ ] Worktrees pre-created for wave N's sub-agents.
-- [ ] Sub-agent prompts drafted as self-contained briefings.
+- [ ] Sub-agent prompts drafted as self-contained dispatches.
 - [ ] Hard gates for wave N phrased as runtime-verifiable
   assertions.
 - [ ] Bench contract for wave N declared (per-wave / aggregated /

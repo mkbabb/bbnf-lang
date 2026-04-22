@@ -4,9 +4,29 @@ Dated execution log for tranche AY-II (pass II of AY; see
 `../AY-I/FINAL.md` for pass-I close and `audit/AUDIT-{A,B,C,D}-*.md`
 for the triumvirate that informs this pass).
 
-- `Status`: in_progress (W0 landed substrate + emitter + runtime; pending 4-agent audit for forward path)
-- `Current wave`: W0 (pre-close pause)
-- `Next wave`: deferred — awaiting audit triumvirate
+- `Status`: blocked on B1 prelude annex; W0' source landings are in,
+  W0' close ceremony remains open
+- `Current wave`: W0' (blocked)
+- `Next wave`: B1.W0, then AY-II.W0' close ceremony
+
+---
+
+## 2026-04-22 — Documentation redress: B1 first, then AY-II
+
+The tranche-ordering and status surface were tightened after the
+AY-II/B1 audit pass:
+
+- B1 is now the authoritative prelude annex, not a parallel sidecar.
+- AY-II.W0' remains open; its code landed, but regen/expand/bench/samply
+  close proof is still outstanding.
+- Active AY-II planning docs were scrubbed so W1-W5 no longer assume the
+  old W0.c / standalone-ValueBuilder wording in places where W0' has
+  already transposed the architecture.
+- `PATH-FORWARD.md` now states the actual program order:
+  **B1 close → AY-II.W0' close → AY-II W1-W5**.
+
+No runtime state changed in this redress entry; this is status and plan
+normalization only.
 
 ---
 
@@ -307,13 +327,12 @@ first principles."
 
 Forward doc: `PATH-FORWARD.md` (sibling to this file).
 
-Unblocked once d7 lands:
-1. Retire W0'.a transient compose-escape aliases (task #16).
-2. Bootstrap regen + double-regen idempotency under d3 + d7.
-3. W0' close ceremony (fat-LTO bench matrix + samply + nm, task #18).
+Blocked until B1 closes. Once B1 is done:
+1. Bootstrap regen + double-regen idempotency.
+2. Retire W0'.a transient compose-escape aliases.
+3. W0' close ceremony (fat-LTO bench matrix + samply + nm).
 4. W0' close PROGRESS entry + `waves/W0p.md` status → closed.
-
-Then W1-W5 execute per `AY-II.md` wave table.
+5. W1-W5 dispatch sequentially.
 
 ---
 
@@ -370,7 +389,7 @@ scaffold is rewritten accordingly:
 - **Projection totality as hard invariant.** Corrected:
   `crates/core/tests/projection_totality.rs` asserts
   `PROJECTION_DIRECT_TO_STRUCT.len() == materializer count ==
-  consumer count` per grammar. W0 close + W1 close both verify.
+  consumer count` per grammar. W0' close + W1 close both verify.
 - **BBNF + Sheets + CSS L4 first-class peers to JSON.**
   Corrected: every wave boundary runs the full 5-bench fat-LTO
   matrix; samply per primary grammar (not JSON alone).

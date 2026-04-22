@@ -41,6 +41,20 @@ final-proof work uses `bench`. Three surfaces, three purposes — do not
 cross-wire them. See `docs/benchmarks/post-B0-W0-commands.txt` for the
 full alias/target manifest.
 
+### Parallel probe discipline
+
+Parallel per-crate `cargo check` / `cargo test` probes by sibling agents
+require a distinct `CARGO_TARGET_DIR` per agent (e.g.
+`CARGO_TARGET_DIR=/abs/per-agent-target/`). Cargo's `target/.cargo-lock`
+serialises concurrent invocations against the same target directory
+with indeterminate ordering; sibling agents sharing one target via
+symlink MUST NOT run cargo concurrently against it. The
+`scripts/prepare-profile-wave.sh` script already enforces an absolute
+`CARGO_TARGET_DIR` (line 68); the prose here is the user-facing
+restatement. Benches, samply preparation, and build-cache-sensitive
+workflows observe non-deterministic artefacts under shared-target
+contention — always serialise or partition.
+
 ### Routine — ax-iter profile
 
 The `ax-iter` profile inherits `dev` and strips debuginfo; link time

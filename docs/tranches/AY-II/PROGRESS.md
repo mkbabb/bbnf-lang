@@ -187,6 +187,71 @@ un-wired-substrate hunts within its file bounds. No deferrals:
 every surface whose role ends in W0 retires at W0' in the same
 commit as its supersession.
 
+## W0' execution — 2026-04-21 → 2026-04-22
+
+### Cherry-pick sequence (master `60f92743`)
+
+All 12 W0' sub-agent commits + 1 d1 test migration landed:
+
+- W0'.a 7 commits (`bd563c1d`…`1bfcf359`) — FusedBuilder collapse, `finish_fused` rename, ValueBuilder retire, parse_with_visitor retire, 4-arg `new_fused` shim, counter ungate, doc scrub.
+- W0'.c 3 commits (`30aa83aa`, `0993cc89`, `bc8fa8b2`) — scan-policy splice, 8-site `#[allow(dead_code)]` retire, raw-name arm routing.
+- W0'.b 2 commits (`550dac11`, `b1bb4579`) — projection-consumer wiring through `materialize_projection_*`, raw-name materializer lookup.
+  - `view/value.rs` 4-region merge conflict resolved by splicing W0'.b's `emit_value_surface` top half + W0'.c's `emit_path_query_impls` bottom half.
+- W0'.d1 1 commit (`60f92743`) — out-of-bounds test migration from `push_compound`/`mark_children` to FusedBuilder API: `json-prototype/src/visitor.rs`, `tape/tests/{tape_basic,close_compound}.rs`, `core/tests/tape_walker_allocs.rs`.
+
+### Regen stall + diagnostic triumvirate — 2026-04-22
+
+`scripts/bootstrap-bbnf.sh` ran 12–15 min wall-clock without completion
+across two attempts at master `60f92743`. Per SPEC §Diagnostic-loop
+relinquish, halted and dispatched research + plan + redress:
+
+- `5cb76753` — research attribution at `audit/W0p-regen-root-cause.md`.
+  Diagnosis: `value_end_compound` called recursive `subtree_size` on
+  every compound close, turning each close into Θ(N) and the whole
+  parse into Θ(N²). Introduced at W0'.a `bd563c1d`.
+- `9a718199` — plan at `audit/W0p-regen-fix-plan.md`. O(1) in-stack
+  `direct_child_count` on `ValueCheckpoint`, incremented by every
+  direct-child push + decremented on rollback. Preserves every W0p.md
+  §14–19 invariant; `subtree_size` retained for the projection-time
+  `ValueChildren::next` iterator.
+- `f768f50d` — redress executed. Tape tests 100/100 green post-fix
+  (`cargo test -p tape --tests`), 55 tests in `tape_basic` alone pass in
+  <1s with artefact parity (`frame.child_count`, `HAS_CHILDREN_BIT`,
+  `child_off`, `span_hi` byte-identical).
+
+### Unresolved: broader dev-loop infrastructure stall — 2026-04-22
+
+Regen still stalls at 15+ min post-`f768f50d`. Observable dev-loop
+symptoms across the day:
+- `cargo check --profile ax-iter -p bbnf --lib` — 2s (fine).
+- `cargo check --profile ax-iter -p bbnf --tests` — blocked 8+ min on
+  gorgeous transitive build (gorgeous has 5× `#[derive(Parser)]` sites
+  across ebnf/bbnf/json/google_sheets/jit).
+- `cargo expand -p bbnf-bootstrap --lib` — 15+ min, same profile as the
+  W0'.d3 stall (pre and post fix).
+- `cargo check --profile ax-iter --workspace` — 10+ min.
+
+The d3 fix was necessary (value-side O(N²) was real) but not sufficient.
+A second hot path of equal or greater cost survives. Per user directive
+"These processes are taking far too long. Totally unacceptable," the
+build-infrastructure triumvirate opens at this boundary (per
+`docs/instructions/memory/feedback_build_infra_first.md` — build/test
+infra lands FIRST in any tranche where dev iteration time is a
+bottleneck; never deferred). Hard time caps applied:
+- Research: 20 min wall-clock cap.
+- Plan: 15 min wall-clock cap.
+- Redress: 30 min wall-clock cap.
+
+Target gates (per user expectations):
+- `cargo check -p <crate> --lib` ≤ 10s cold.
+- Single-test-binary rebuild ≤ 60s cold.
+- `scripts/bootstrap-bbnf.sh` ≤ 3 min cold.
+- No compile invokes a full `#[derive(Parser)]` re-expansion when the
+  grammar file has not changed.
+
+W0'.d3 commit (`f768f50d`) stays landed — its correctness is independent
+of and complementary to whatever the infra triumvirate surfaces.
+
 ---
 
 ## Scaffold landing

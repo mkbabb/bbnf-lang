@@ -376,104 +376,6 @@ fn pipeline_google_sheets_formula() {
         fc_off
     );
 
-    #[cfg(feature = "gorgeous")]
-    {
-        let value = result.value.as_ref().unwrap();
-        let printer = &gorgeous::PrinterConfig {
-            max_width: 80,
-            indent: 2,
-            use_tabs: false,
-        };
-        let formatted = gorgeous::vm::format_value(&ir, value, input, printer);
-        assert!(formatted.is_some(), "formatting should produce output");
-        let formatted = formatted.unwrap();
-        eprintln!("Formatted output:\n{}", formatted);
-        assert!(
-            formatted.contains("LET"),
-            "formatted output should contain LET"
-        );
-        assert!(
-            formatted.contains('\n'),
-            "formatted output should contain line breaks"
-        );
-
-        // Pathological formula: deeply nested LET + IF + LAMBDA
-        let pathological = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results"))"#;
-        let mut interp = Interpreter::new(&program, pathological);
-        let result = interp.run();
-        assert!(
-            result.success,
-            "pathological formula failed at offset={}",
-            result.offset
-        );
-        assert_eq!(
-            result.offset as usize,
-            pathological.len(),
-            "should consume all input"
-        );
-        let value = result.value.as_ref().unwrap();
-        let formatted = gorgeous::vm::format_value(
-            &ir,
-            value,
-            pathological,
-            &gorgeous::PrinterConfig {
-                max_width: 80,
-                indent: 2,
-                use_tabs: false,
-            },
-        );
-        let formatted = formatted.unwrap();
-        eprintln!("Pathological:\n{}", formatted);
-        assert!(
-            formatted.contains('\n'),
-            "pathological should have line breaks"
-        );
-        assert!(
-            formatted.lines().count() >= 5,
-            "pathological should have 5+ lines"
-        );
-
-        // Test with trailing space before final paren
-        let with_space = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results") )"#;
-        let mut interp = Interpreter::new(&program, with_space);
-        let result = interp.run();
-        eprintln!(
-            "with_space: success={} offset={} len={} remaining='{}'",
-            result.success,
-            result.offset,
-            with_space.len(),
-            &with_space[result.offset as usize..]
-        );
-        assert!(
-            result.success,
-            "with_space formula failed at offset={}",
-            result.offset
-        );
-        assert_eq!(
-            result.offset as usize,
-            with_space.len(),
-            "should consume all input"
-        );
-        let value = result.value.as_ref().unwrap();
-        let formatted_space = gorgeous::vm::format_value(
-            &ir,
-            value,
-            with_space,
-            &gorgeous::PrinterConfig {
-                max_width: 80,
-                indent: 2,
-                use_tabs: false,
-            },
-        );
-        let formatted_space = formatted_space.unwrap();
-        eprintln!("With space formatted:\n{}", formatted_space);
-        // Both should produce identical formatted output (whitespace is insignificant)
-        eprintln!("Without space formatted:\n{}", formatted);
-        assert_eq!(
-            formatted_space, formatted,
-            "trailing space should not change formatting"
-        );
-    }
 }
 
 #[test]
@@ -607,30 +509,6 @@ fn pipeline_google_sheets_multiline_let() {
         input.len(),
         "should consume all input"
     );
-
-    // Format via VM (requires gorgeous dev-dependency)
-    #[cfg(feature = "gorgeous")]
-    {
-        let value = result.value.as_ref().unwrap();
-        let formatted = gorgeous::vm::format_value(
-            &ir,
-            value,
-            input,
-            &gorgeous::PrinterConfig {
-                max_width: 80,
-                indent: 2,
-                use_tabs: false,
-            },
-        );
-        let formatted = formatted.unwrap();
-        eprintln!("VM formatted:\n{}", formatted);
-
-        // Each let_binding (name, value) should stay on one line when it fits
-        assert!(
-            formatted.contains("scale, DURATION"),
-            "name-value pair should stay on one line"
-        );
-    }
 
     // Same formula without leading =
     let no_eq = &input[1..];

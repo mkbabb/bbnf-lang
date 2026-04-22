@@ -38,7 +38,6 @@ prettyplease = "0.2"
 bbnf_derive = { version = "0.2", path = "../derive" }
 json-prototype = { path = "../json-prototype" }
 pprint = "0.3"
-gorgeous = { version = "0.1", features = ["vm"] }
 parse_that = "0.4"
 bencher = "0.1"
 mimalloc = "0.1"

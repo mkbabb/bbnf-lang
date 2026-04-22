@@ -63,7 +63,7 @@ pub use value::{
     PayloadTag, PayloadValue, ValueChildren, ValueFrame, ValueFramesOutput,
 };
 
-use value::{subtree_size, ValueCheckpoint};
+use value::ValueCheckpoint;
 
 /// Payload data handed to [`FusedBuilder::push_leaf_with`] — the
 /// single entry point for payload-bearing leaves.
@@ -366,6 +366,17 @@ impl FusedBuilder {
             self.value_payloads_wide
                 .truncate(checkpoint.wide_rank as usize);
             self.value_open_stack.pop();
+            // After popping the failed compound, undo the parent-
+            // counter bump that `value_begin_compound` applied when
+            // the failed compound opened. The retry-IIFE will
+            // re-open a fresh compound (which bumps the parent
+            // again), so symmetric decrement here keeps
+            // `direct_child_count` equal to the number of
+            // SURVIVED direct children at close time.
+            if let Some(parent) = self.value_open_stack.last_mut() {
+                parent.direct_child_count =
+                    parent.direct_child_count.saturating_sub(1);
+            }
             // Only pop one — the matched retry compound. If the
             // caller left additional opens deeper than `open_offset`
             // on the stack (a grammar bug, not an emitter bug) they
@@ -1126,9 +1137,18 @@ impl FusedBuilder {
 
     /// Open a value-arena frame in lockstep with the tape's
     /// `begin_compound`. Pushes a compound frame + checkpoint onto
-    /// the open-stack.
+    /// the open-stack and bumps the parent checkpoint's
+    /// `direct_child_count` (this nested compound is a direct child
+    /// of whatever was on top at entry).
     #[inline(always)]
     fn value_begin_compound(&mut self, kind: TapeKind, span_lo: u32, variant_idx: u8) {
+        // Nested-compound push: bump the PARENT checkpoint's direct-
+        // child counter BEFORE pushing this compound's own checkpoint.
+        // After the push, this compound becomes top-of-stack; its
+        // counter starts at 0 and is incremented by its own children.
+        if let Some(parent) = self.value_open_stack.last_mut() {
+            parent.direct_child_count += 1;
+        }
         let frame_offset = self.value_frames.len() as u32;
         self.value_frames.push(ValueFrame {
             span_lo,
@@ -1143,38 +1163,31 @@ impl FusedBuilder {
             frame_offset,
             narrow_rank: self.value_payloads_narrow.len() as u32,
             wide_rank: self.value_payloads_wide.len() as u32,
+            direct_child_count: 0,
         });
     }
 
     /// Close the most recently opened value frame — patches `span_hi`
-    /// + reconstructs `child_count` by walking the pre-order range
-    /// between the open frame and the current arena tip.
+    /// and reads `direct_child_count` straight off the popped
+    /// checkpoint. O(1) per call. See
+    /// `docs/tranches/AY-II/audit/W0p-regen-root-cause.md` for the
+    /// O(N^2) walk this replaces.
     #[inline(always)]
     fn value_end_compound(&mut self, span_hi: u32) {
         let checkpoint = self
             .value_open_stack
             .pop()
             .expect("FusedBuilder::value_end_compound called with empty open_stack");
-        let frame_offset = checkpoint.frame_offset as usize;
-        // Direct children occupy the range [frame_offset+1,
-        // frames.len()); reconstruct the direct-child count by
-        // stepping past each subtree in turn.
-        let mut cursor = frame_offset + 1;
-        let total = self.value_frames.len();
-        let mut direct_count: u32 = 0;
-        while cursor < total {
-            let size = subtree_size(&self.value_frames, cursor);
-            cursor += size;
-            direct_count += 1;
-        }
-        let frame = &mut self.value_frames[frame_offset];
+        let frame = &mut self.value_frames[checkpoint.frame_offset as usize];
         frame.span_hi = span_hi;
-        frame.child_count = direct_count;
+        frame.child_count = checkpoint.direct_child_count;
     }
 
     /// Append a leaf value frame carrying a source span + payload
     /// tag. The tape-side leaf push is the caller's responsibility;
-    /// this only appends the paired value frame.
+    /// this only appends the paired value frame. If an open compound
+    /// is on the stack, bumps its `direct_child_count` — a leaf push
+    /// is always a direct child of the enclosing compound.
     #[inline(always)]
     fn push_value_leaf(
         &mut self,
@@ -1184,6 +1197,9 @@ impl FusedBuilder {
         variant_idx: u8,
         payload_tag: PayloadTag,
     ) {
+        if let Some(parent) = self.value_open_stack.last_mut() {
+            parent.direct_child_count += 1;
+        }
         self.value_frames.push(ValueFrame {
             span_lo,
             span_hi,

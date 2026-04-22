@@ -135,6 +135,20 @@ impl PayloadTag {
 /// surfaces a single `u32` tape-offset to the emitter; the value
 /// substrate maintains this richer checkpoint internally alongside
 /// each open frame.
+///
+/// # Direct-child counter (AY-II.W0'.d3)
+///
+/// `direct_child_count` is the in-stack tally the builder increments
+/// on every frame push that lands as a direct child of this open
+/// compound — every `push_value_leaf` call while this checkpoint is
+/// the top-of-stack, and every nested `value_begin_compound` call
+/// whose parent checkpoint is this one (incremented on the parent's
+/// counter, second-from-top after the new checkpoint pushes). At
+/// `value_end_compound` time the counter is read directly into
+/// `ValueFrame::child_count`, replacing the O(subtree_size) walk
+/// landed in W0'.a. See
+/// `docs/tranches/AY-II/audit/W0p-regen-root-cause.md` for the
+/// attribution.
 #[derive(Clone, Copy, Debug)]
 pub(super) struct ValueCheckpoint {
     /// Arena frame offset at open time. `frames.len()` snaps back to
@@ -145,6 +159,14 @@ pub(super) struct ValueCheckpoint {
     pub(super) narrow_rank: u32,
     /// Wide payload column rank at open time.
     pub(super) wide_rank: u32,
+    /// Count of direct children pushed under this checkpoint since
+    /// `value_begin_compound`. Incremented by every `push_value_leaf`
+    /// whose parent is this checkpoint (top-of-stack) and by every
+    /// nested `value_begin_compound` (increment on the parent, i.e.
+    /// second-from-top after the nested push). Consumed by
+    /// `value_end_compound` into `ValueFrame::child_count` — O(1)
+    /// replacement for the pre-W0'.d3 `subtree_size` walk.
+    pub(super) direct_child_count: u32,
 }
 
 /// The finished value substrate handed off to

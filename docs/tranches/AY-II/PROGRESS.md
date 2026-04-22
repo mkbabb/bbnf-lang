@@ -252,6 +252,69 @@ Target gates (per user expectations):
 W0'.d3 commit (`f768f50d`) stays landed — its correctness is independent
 of and complementary to whatever the infra triumvirate surfaces.
 
+### Infra triumvirate — 2026-04-22
+
+- `ba52a322` — **research II**
+  (`audit/W0p-infra-root-cause.md`). Gorgeous-as-dev-dep + 6 serial
+  `#[derive(Parser)]` sites inside one rustc = 9:16 cold wall-clock on
+  the critical path of every `cargo check -p bbnf --tests`. Top-3
+  ranked: (1) gorgeous dev-dep, (2) 53 per-test-file derive sites
+  (per-rustc rehydration cost), (3) `crates/derive/build.rs` fingerprint
+  tracks entire `crates/core/src/`.
+- `6fd06317` — **plan II** (`audit/W0p-infra-fix-plan.md`). Three-commit
+  remediation: d4 feature-gate gorgeous derives; d5 drop gorgeous from
+  bbnf dev-deps + delete dead cfg blocks; d6 narrow `build.rs`
+  fingerprint to 5 codegen-relevant subtrees.
+- `5c737bd1`, `f5cdcd52`, `2e5e3ff5` — **redress II**: d4 + d5 + d6
+  landed on master.
+
+### First-principles dev-loop fix (d7) — 2026-04-22
+
+Post-d4/d5/d6 validation showed `iter-check` still pulled gorgeous +
+bbnf-bootstrap because the alias was `--workspace` (every member).
+B0's 0.16s warm baseline was only valid AFTER a 10+min cold compile
+of those proc-macro-heavy crates. User directive: "rethought from
+first principles."
+
+- `700501f5` — **fix d7** at `.cargo/config.toml`:
+  ```
+  iter-check = check --profile ax-iter --workspace
+               --exclude gorgeous --exclude bbnf-bootstrap
+               --exclude bbnf-analysis --exclude bbnf-lsp
+  iter-check-full = check --profile ax-iter --workspace
+  ```
+  Heavy proc-macro crates + nightly-rustc-ICE-prone `bbnf-analysis`
+  move to explicit validation paths (`cargo check -p <crate>`,
+  `scripts/bootstrap-bbnf.sh`, `iter-check-full` for CI). Routine
+  iteration restored to B0's spec.
+- `133a87ee` — verification doc cherry-picked from the stray agent's
+  worktree; corroborates the first-principles attribution.
+
+**Measured post-d7 (cold = `rm -rf target`):**
+
+| Surface | Pre-d7 | Post-d7 |
+|---|---|---|
+| `cargo iter-check` cold | 10+ min | **11.3 s** |
+| `cargo iter-check` warm | blocked | **0.14 s** |
+| Touch-cascade (`runtime/parsed.rs`) | blocked | **1.6 s** |
+| `cargo iter-test-leaf` warm | 1.14 s | 1.14 s |
+
+45× speedup restored. W0' substrate + infra both land.
+
+---
+
+## W0' — remaining close path
+
+Forward doc: `PATH-FORWARD.md` (sibling to this file).
+
+Unblocked once d7 lands:
+1. Retire W0'.a transient compose-escape aliases (task #16).
+2. Bootstrap regen + double-regen idempotency under d3 + d7.
+3. W0' close ceremony (fat-LTO bench matrix + samply + nm, task #18).
+4. W0' close PROGRESS entry + `waves/W0p.md` status → closed.
+
+Then W1-W5 execute per `AY-II.md` wave table.
+
 ---
 
 ## Scaffold landing

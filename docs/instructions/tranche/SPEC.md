@@ -150,6 +150,19 @@ named as owner of the regen. Orchestrator owns the regen window.
 
 ### Commit discipline
 
+Commit cadence has two surfaces: sub-agent cadence inside worktrees,
+and orchestrator cadence onto master. They run at different
+rhythms.
+
+- **Sub-agents commit frequently** inside their worktrees at every
+  natural milestone (phase sub-item, artefact landing, invariant
+  restoration), per `README.md` §Code discipline.
+- **Orchestrator commits to master at wave boundaries**, via cherry-
+  pick-then-dispatch. Master clean before every wave dispatch is the
+  hard invariant; orchestrator commits *during* a wave (on master)
+  break that invariant and are forbidden outside the named
+  consolidation-commit template.
+
 - Sub-agents commit inside worktrees at every natural milestone.
 - Orchestrator cherry-picks accepted commits onto master.
 - **Master clean before every wave dispatch.** Cherry-pick-then-
@@ -164,6 +177,20 @@ named as owner of the regen. Orchestrator owns the regen window.
   master with attribution to each agent's worktree. AW-I.W4β's
   `47496993` is the template. Don't discover this at integration
   time — name the consolidator in the wave's plan entry.
+
+**Cherry-pick conflict resolution.** When a wave's cherry-pick
+sequence hits a 3-way merge conflict on a file *not* pre-declared as
+an N-agent-shared-file consolidation target, the orchestrator (a)
+stops cherry-picking, (b) resets master to the last successful pick,
+(c) inspects the conflicting hunks directly, (d) either rewrites the
+conflicting agent's change as a fresh orchestrator-authored commit
+citing the agent's worktree, OR re-dispatches the agent on a fresh
+worktree seeded at current master HEAD. Option (a)/(b)/(c)/(d) is
+faster for a single small conflict; redispatch is preferred when the
+conflict signals the agent's change was against stale code. The
+cherry-pick `--strategy recursive -X theirs` form is forbidden for
+conflict resolution — it silently discards orchestrator-merged
+content.
 
 ## Phase structure
 
@@ -394,6 +421,18 @@ The relinquish is not a deferral; the triumvirate is the
 resumption. Halting is the correct move when iteration is not
 moving the problem forward; grinding is the incorrect one.
 
+**Per-role wall-time caps.** Research agents: 20 min hard cap —
+read-only work; longer windows signal over-scoped reads, not deeper
+analysis. Plan agents: 15 min hard cap — plan-authoring is dense and
+focused; longer signals the redress should split into sub-waves
+instead. Redress agents: 30 min hard cap — concrete edits and
+verification. At cap, the agent writes its deliverable with whatever
+it has, commits probe artefacts separately from attempted fixes per
+the partial-commit rule, and returns. The orchestrator's own
+escalation threshold is ~60 min without a cherry-pick landing onto
+master; at that threshold the orchestrator reports to the user
+rather than dispatching another round.
+
 ### Two valid scope-reveal response modes
 
 AW-I demonstrated both. Name the mode at the moment of reveal;
@@ -450,14 +489,19 @@ three parallel agents could have diagnosed in one.
 ### Transitional fallback during elimination waves
 
 An in-transit fallback path whose elimination is the tranche's
-principal work is work-in-progress, not a workaround. The
-one-codegen-path invariant binds at tranche close, not at every
-wave close. AX.W0a kept walker fallback green across seven sub-
-waves precisely to eliminate it in the eighth. A wave may revert
-an admission-widening commit to preserve master-green while the
-follow-on wave lands the consumer-side fix; the revert is
+principal work is a declared delete-then-swap window (per §Wave
+stipulation, "Workspace green at every wave boundary" exception).
+The one-codegen-path invariant binds at tranche close, not at every
+wave close, precisely *because* the plan's escape clause names the
+transitional path and the wave that eliminates it. AX.W0a kept
+walker fallback green across seven sub-waves to eliminate it in the
+eighth; the eighth wave is the named restoration wave. A wave may
+revert an admission-widening commit to preserve master-green while
+the follow-on wave lands the consumer-side fix; the revert is
 Absorb-mode, not deferral, when the follow-on wave is named in
-PROGRESS.md at revert time.
+PROGRESS.md at revert time. The workspace-green-at-every-wave
+invariant and the tranche-close-one-path invariant are not in
+conflict — the plan's escape clause reconciles them.
 
 ## Closing ceremony
 
@@ -535,10 +579,18 @@ tranche authoring:
   / `ay-test-*`; profiling prep on `profiling-prep` +
   `ay-prepare-profile-wave` + `ay-samply-*`; heavy close-gate
   proof on `ay-bench-close WAVE=close` / `test-close` /
-  `final-bench`. `cargo check --workspace`, `cargo test
-  --workspace`, and `cargo bench` are the heavy close-proof
-  surface, not the routine one; see §"Three-tier command
-  surface" under §Bench contract.
+  `final-bench`. The following commands are the heavy close-proof
+  surface and MUST NOT appear in iteration loops:
+    - `cargo check --workspace` (any profile)
+    - `cargo check -p bbnf --tests` (any profile — links the full
+      aggregate derive-Parser surface at ~26 GB peak RSS; see
+      `README.md` §"Memory discipline for aggregate test binaries")
+    - `cargo test --workspace`
+    - `cargo bench`
+  Every iteration-loop `cargo check` / `cargo test` invocation
+  carries `--profile ax-iter` explicitly; bare `cargo check
+  -p <crate> --tests` (no profile) is heavy-surface by default.
+  See §"Three-tier command surface" under §Bench contract.
 - **Execute the plan.** Scope-reveal under contact is re-plan-
   with-more-agents, not escalation.
 - **Indefatigability.** Orchestrator does not relinquish control

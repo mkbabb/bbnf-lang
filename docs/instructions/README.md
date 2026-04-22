@@ -311,15 +311,20 @@ A tranche is **not complete** until:
    - Future work and refinement areas, framed as seeds for the next
      tranche's planning.
 2. **`docs/benchmarks/post-{LETTER}.json` exists** covering the
-   full parse-bench matrix:
+   full close matrix (five benches; same as `make ay-bench-close
+   WAVE=close` in `docs/instructions/PROFILING.md` §"AY W5-W7 gate
+   commands"):
    - `json_monolithic` × {data, twitter, citm, canada, data_xl}
    - `css_l4` × {normalize, bootstrap, tailwind}
    - `google_sheets_monolithic` × {parse_simple, parse_nested, parse_stress}
    - `bbnf_monolithic` × {json, ebnf, css_pretty, google_sheets, bbnf_self, css_l4_grammar}
+   - `compile_pipeline` × tranche-selected entries
 
    The VM, WASM, TS, and competitors benches are **not** included.
-   Numbers come from a fresh cold bench run on master after all
-   tranche commits have landed.
+   `json_value` is included when the tranche touches the Value
+   API surface. Numbers come from a fresh cold bench run on master
+   after all tranche commits have landed, via `make ay-bench-close
+   WAVE=close` (fat LTO).
 3. **All tests pass** — `cargo test --workspace` exits zero, with
    no `#[ignore]` added in the tranche, no workarounds, no
    temporary skips.
@@ -349,17 +354,64 @@ Applies to `cargo test`, `cargo bench`, `cargo expand`, `cargo
 build`, `cargo check --workspace`, `samply record`, and any
 command taking > 30 seconds.
 
-**Never read large output files line-by-line.** `cargo expand`
-output routinely exceeds 100K lines. Use targeted `grep -n`,
-`awk`, `sed` to extract the slice you need. Know the file size
-before reading.
+**Never read large files line-by-line.** Any file over ~2 K lines
+— `cargo expand` output, `generated.rs`, monolithic audit docs,
+session transcripts (`.jsonl`), long PROGRESS files, bench logs —
+is read via `grep -n`, `awk`, `sed` with explicit line ranges, not
+whole-file `Read`. Know the file size via `wc -l` before the first
+access; if > 2 K lines, every subsequent access uses targeted
+extraction. This rule covers both generated artefacts and source
+files; `generated.rs` (emitter output, typically > 30 K lines) is
+file-first like any other large artefact.
 
 ```bash
+wc -l crates/core/src/grammar/generated.rs
 grep -n 'fn __declaration' /tmp/expand-css.txt
 awk 'NR>=5000 && NR<=5100' /tmp/expand-css.txt
 awk '/fn __declaration/,/^        fn __/' /tmp/expand-css.txt > /tmp/decl.txt
 wc -l /tmp/decl.txt
 ```
+
+## Sub-agent progress monitoring
+
+The harness delivers background-process completion events to the
+orchestrator automatically. Explicit polling of sub-agent or
+background-command progress is forbidden:
+
+- No `ps aux | grep rustc`, `ps aux | grep cargo`, or equivalent
+  process-level probes.
+- No repeated `tail -f` or re-read cycles on a log file a background
+  command is writing.
+- No `sleep`-then-check loops.
+
+Background commands dispatched with `run_in_background:true`
+deliver completion notifications as tool-call results; the Monitor
+tool streams stdout-line events for long-running tasks that need
+intermediate signal. If a sub-agent's worktree state must be
+inspected mid-dispatch, use a one-shot
+`scripts/worktree-status.sh <worktree>` invocation; this reads
+`git status` and recent commits in one call, not a poll loop.
+
+Polling burns context and produces no actionable state the harness
+does not already surface. The orchestrator's time is spent on
+cherry-pick, verification, and re-planning — not on monitoring.
+
+## Concurrent cargo invocations — one per target
+
+At most one `cargo` invocation is in flight per `CARGO_TARGET_DIR`
+at any instant. `target/.cargo-lock` silently serialises concurrent
+invocations with indeterminate ordering; benches, samply prepare,
+and build-cache-sensitive workflows observe non-deterministic
+artefacts under the contention.
+
+- Parallel sub-agents share one target via symlink per §Worktree
+  isolation — these sub-agents do not run cargo concurrently
+  against that shared target. Orchestrator sequences them.
+- Parallel sub-agents that each need a concurrent cargo invocation
+  operate in distinct `CARGO_TARGET_DIR`s (per-worktree target, no
+  symlink) and accept the rebuild cost.
+- Orchestrator never spawns its own concurrent cargo invocations
+  against the main target while a wave's agents are active.
 
 ## Memory discipline for aggregate test binaries
 

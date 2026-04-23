@@ -33,13 +33,20 @@ bbnf-derive's cached TokenStreams.
 [build]
 rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
 
+# macOS arm64: default to system ld64 via clang. lld is opt-in;
+# developers who want it must `brew install lld` (separate from llvm)
+# and uncomment the block below, adjusting the path from
+# `brew --prefix lld` on their host.
 [target.aarch64-apple-darwin]
-linker    = "clang"
-rustflags = [
-    "-C", "link-arg=-fuse-ld=/opt/homebrew/opt/llvm/bin/ld.lld",
-    "-Zthreads=8",
-    "-Zshare-generics=y",
-]
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+
+# [target.aarch64-apple-darwin]
+# linker    = "clang"
+# rustflags = [
+#     "-C", "link-arg=-fuse-ld=/opt/homebrew/opt/lld/bin/ld.lld",
+#     "-Zthreads=8",
+#     "-Zshare-generics=y",
+# ]
 
 [profile.ax-iter]
 inherits      = "dev"

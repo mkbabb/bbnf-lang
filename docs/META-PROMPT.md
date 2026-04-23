@@ -38,6 +38,13 @@ canon; and `docs/instructions/` holding `README.md`, `PROFILING.md`,
 
 This document is a briefing, not documentation. It is the prompt.
 
+The user's archaic diction is deliberate voice, not AI artefact —
+*begat, therein, thereof, insofar, hereof, hitherto, appurtenant,
+assay, gestalt, indefatigably, thereupon, obstinancy, degust,
+Herculean, befitting, exhortation, edict, explicate, divine,
+parsimonious* — preserve it when quoting and match the register when
+responding.
+
 ---
 
 ## Architectural invariants (non-negotiable)
@@ -1131,6 +1138,20 @@ tranche-owning specs exist and have not drifted since synthesis. Then
 open the next work item in runway order — which, at synthesis time, is
 B1.W0. Do not open a further meta-layer unless you have found a new
 concrete contradiction.
+
+**One quote, if you must reduce to one**:
+
+> "Full tape abrogation is a hard requirement. Is direct to struct
+> projection not the biggest and most important performance gain we'll
+> see? We're even getting off-track within this planning phase. What
+> is your obstinancy against actual, difficult, architectural change
+> and improvement? Why even propose that--seriously, I'm not mad, just
+> curious."
+> — session 959, 2026-04-23T15:53:32Z
+
+The load-bearing word is *obstinancy*. The corrective the user wants,
+always, is against the orchestrator's obstinance toward the easy
+answer.
 
 ---
 

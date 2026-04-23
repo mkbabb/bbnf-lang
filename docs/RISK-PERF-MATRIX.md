@@ -234,8 +234,9 @@ Each split tranche individually would carry P(declared) ~ 0.55 and
 P(floor) ~ 0.85; the joint for the two would be ~ 0.30 declared
 and ~ 0.72 floor — substantially better than AZ's 0.09 / 0.38 as
 currently scoped. Whether this split is worth the tranche-letter
-cost is the plan's single biggest open question beyond the nine
-in `docs/tranches/open-questions/`.
+cost is the plan's single biggest unresolved strategic question;
+everything else that surfaced during the audit is resolved and
+recorded in `GESTALT.md §10 — Decision record`.
 
 ---
 

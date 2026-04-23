@@ -1081,103 +1081,111 @@ heuristic thresholds over actual configurable values. The gorgeous-
 mirror retirement does not relax this; `crates/gorgeous` carries
 the same discipline, just at workspace-authoritative location.
 
-## 10. Open questions — resolved
+## 10. Decision record — the ten questions that gated the plan
 
-Nine questions surfaced during the audit, eight substantive plus
-one that resolved by direct action (gorgeous-mirror retirement
-executed, sibling moved to Trash on 2026-04-23). Every decision
-and its resolution mechanism lives in a per-question doc under
-`docs/tranches/open-questions/`; this section is the roll-up.
+Every architecture decision the audit surfaced is now expressed in
+the tranche doc that owns its implementation. This section is the
+canonical short-form record; the rationale, trade-offs, and
+follow-up gates live in the named tranche doc for each decision.
 
-**Q0 — tape abrogation sequencing** (see `00-tape-abrogation-shape-c.md`).
-Shape C: AY-II closes as scoped on the tape substrate; **AZ** (new)
-absorbs direct-to-struct activation + full tape dissolution; **BA**
-(was BB) operates on the grammar-derived struct tree; **BB** (was
-BC) runs e-graph rule inference. BC letter retired. Rationale: the
-tape is a stepping-stone, and dissolving it is the architectural
-recovery rather than a downstream optimisation. Shape A (tape
-persists) and Shape B (AY-II triples in scope) were rejected.
+**The tape is a stepping stone and dissolves entirely.** Shape C:
+AY-II closes as scoped on the tape substrate; **AZ** (new) absorbs
+direct-to-struct activation + full tape dissolution; **BA** (was
+BB) operates on the grammar-derived struct tree; **BB** (was BC)
+runs e-graph rule inference. BC letter retired. Shape A (tape
+persists alongside struct) and Shape B (AY-II triples in scope)
+were rejected. — `docs/tranches/AZ/AZ.md`.
 
-**Q1 — parent-pointer form on the struct tree** (see
-`01-backward-pointer-form.md`). Sidecar posture: a parallel index
-alongside the struct, not embedded in every node. Zero bloat when
-unused, one extra indirection on ascent. Translated from the
-pre-audit tape-backward-pointer framing; final sidecar-versus-
-embedded-versus-hybrid decision deferred to BA.W0 micro-bench,
-with the discipline that whichever form wins becomes the one
-pattern every grammar's struct follows.
+**Parent-pointer on the struct tree is a sidecar.** A parallel
+index alongside the struct, not embedded in every node — zero
+bloat when unused, one extra indirection on ascent. Final
+sidecar-versus-embedded-versus-hybrid decision is settled by
+BA.W0 micro-bench on citm / tailwind / sheets fixtures. The
+`AscentStrategy` trait is the reversal seam. — `docs/tranches/BA/BA.md`.
 
-**Q2 — StructRegistry partial-close** (see
-`02-structregistry-partial-close.md`). Hard fail and block. The
-IR audit pass must return pass per production grammar at AZ.W1
-close; any fail blocks AZ.W2 and all subsequent tranches. No
-partial-registry opening.
+**StructRegistry closes hard or the tranche does not close.**
+Per-grammar IR audit pass must return pass at AZ.W1; any fail
+blocks AZ.W2 and every subsequent tranche. Partial registry is
+not permitted to open BA. — `docs/tranches/AZ/AZ.md`.
 
-**Q3 — VM oracle versus e-graph equivalence** (see
-`03-vm-oracle-vs-egraph.md`). Both. E-graph first as the fast-path
-equivalence check under the current rewrite set; VM second as the
-non-circular ground-truth tie-break on residue. Accepted VM-proved
-rules extend the e-graph. Residue is < 10 % of enumeration; VM
-workload is comfortable at current ~1800-LOC surface.
+**VM and e-graph cooperate; neither replaces the other.** E-graph
+first as the fast-path equivalence check under the current
+rewrite set; VM second as the non-circular ground-truth tie-break
+on residue. Accepted VM-proved rules extend the e-graph so the
+residue shrinks monotonically. VM workload is < 10 % of enumeration
+— comfortable at the current ~1800-LOC surface. —
+`docs/tranches/BB/BB.md`.
 
-**Q4 — rule storage, ranking, review** (see
-`04-rule-storage-ranker-review.md`). Grammar-specific rules
-colocate with their grammar under `grammar/<name>/rewrites/*.ron`;
-fleet-wide rules live in a `crates/ir/src/rewrites/` module, not
-`crates/core`. Automatic ranker scores candidates on match
-frequency × cost delta × generality × similarity to ground-truth
-× novelty × tree size. Tiered review: Class-1 auto-accept,
-Class-2 fast-track, Class-3 full human review. First-run review
-is bounded by the Tranche H ground-truth set, a one-time effort.
+**Rules live outside core.** Grammar-specific rules colocate with
+their grammar at `grammar/<name>/rewrites/*.ron`; fleet-wide rules
+live in a `crates/ir/src/rewrites/` module within the existing
+`bbnf-ir` crate — not a standalone crate, which was rejected
+because rewrite rules are IR-specific and do not merit an
+independent boundary. Automatic ranker scores candidates on match
+frequency × cost delta × generality × similarity to ground truth
+× novelty × tree size. Tiered review: Class-1 auto-accept with
+audit log, Class-2 fast-track, Class-3 full human review. First-
+run review is bounded by the Tranche H ground-truth set — a
+one-time effort. — `docs/tranches/BB/BB.md`.
 
-**Q5 — cross-worktree pin drift** (see
-`05-cross-worktree-pin-drift.md`). CI guardrail. A shared workflow
-reads `rust-toolchain.toml` from bbnf-lang, parse-that, pprint;
-any divergence fails every PR in all three repos. Lands in B1.W2.c.
+**Cross-worktree pin drift is CI-guarded.** A shared GitHub
+Actions workflow reads `rust-toolchain.toml` from bbnf-lang,
+parse-that, and pprint; any divergence fails every PR in all
+three repos. Landing wave: B1.W2.c. — `docs/tranches/B1/B1.md`.
 
-**Q6 — nextest × `-Zthreads` collision** (see
-`06-test-threads-zthreads-collision.md`). `test-threads = 2` on
-the `ax-iter` nextest profile; `test-threads = 8` on `close`.
-Wave-close sanity check: iter-test < 30 s wall-clock on the
-8-core reference.
+**Nextest parallelism respects rustc parallelism.**
+`test-threads = 2` on the `ax-iter` nextest profile;
+`test-threads = 8` on `close`. Wave-close sanity check:
+`cargo iter-test` completes in < 30 s wall-clock on the 8-core
+reference box. — `docs/tranches/B1/B1.md`.
 
-**Q7 — derive-cache invalidation key** (see
-`07-derive-cache-invalidation-key.md`). Composite key
-`(grammar-sha256, bbnf-derive-crate-version, rustc-version-sha)`.
-Chronic-pain discipline: robustness test suite under
+**Derive-cache invalidation uses a composite key and a
+chronic-pain test suite.** Key: `(grammar-sha256,
+bbnf-derive-crate-version, rustc-version-sha)`. Test suite at
 `crates/derive/tests/cache_invalidation/` exercises each factor
-independently plus combinations; cache hit < 50 ms with key
-derivation memoised per process; 2 GB LRU eviction; every miss
-logs its reason; one-time migration from `target/.bbnf-cache/`
-to `$XDG_CACHE_HOME/bbnf-derive/`. Lives in AZ.W0 under the
-Shape-C re-sequence (was BA.W0 pre-audit).
+independently plus all combinations. Cache hit budget < 50 ms
+with key derivation memoised per process. Size cap 2 GB with
+atime LRU eviction. Every miss logs its reason — no silent
+misses. One-time migration from `target/.bbnf-cache/` to
+`$XDG_CACHE_HOME/bbnf-derive/`. Lives in AZ.W0. —
+`docs/tranches/AZ/AZ.md`.
 
-**Q8 — gorgeous-mirror retirement** (see
-`08-gorgeous-mirror-retirement.md`). Executed. The sibling
-`/Users/mkbabb/Programming/gorgeous` was moved to
-`~/.Trash/gorgeous-retired-2026-04-23` on master commit during
-the audit-close pivot. Its 2 benches migrate inward to
-`crates/gorgeous/benches/` in a Phase-B follow-up. Question
-resolved by direct action; no further tranche work.
+**The gorgeous sibling is retired.** Executed during the audit:
+`/Users/mkbabb/Programming/gorgeous` moved to
+`~/.Trash/gorgeous-retired-2026-04-23`. Its 2 benches migrate
+inward to `crates/gorgeous/benches/` in a Phase-B follow-up.
+Workspace `crates/gorgeous/` is the only canonical gorgeous;
+every path patch in the fleet resolves to it.
 
-**Q9 — classifier collision under direct-to-struct activation**
-(see `09-classifier-collision-frontload.md`). Front-load the
-research in AZ.W0 (`docs/tranches/AZ/CLASSIFIER-UNIFICATION.md`);
-do not defer to a reactive sub-wave. The reactive shape was
-rejected as recipe-for-disaster during the audit. If AZ.W0's
-research shows classifier unification is deeper than AZ can
-carry, that is a re-plan trigger at AZ opening, not mid-AZ.
+**Classifier unification is front-loaded.** The classifier-
+collision study runs in AZ.W0 before any payload activation;
+the research artefact at `docs/tranches/AZ/CLASSIFIER-UNIFICATION.md`
+either produces a unified classifier or declares unification
+intractable, which is a re-plan trigger at AZ opening rather than
+a mid-AZ sub-wave. The reactive-sub-wave shape was rejected as
+recipe-for-disaster. — `docs/tranches/AZ/AZ.md`.
 
-The nine questions span AZ's internal choices, BA's dependency
-on AZ's choices, BB's oracle and storage architecture, and four
-cross-tranche infrastructure questions. Each has an explicit
-if-answered-X-then-plan-changes-to-Y trigger. The pattern is
+Every decision has an if-answered-X-then-plan-changes-to-Y
+trigger expressed in the owning tranche doc. The pattern is
 `feedback_execute-planned-architecture` applied to planning: the
 plan carries its own unworkabilities, and every decision point
-has a declared reversal path. None are left ambiguous. The
-open-questions directory carries the resolution record with
-follow-up gates; every resolved question becomes a live invariant
-until a replacement gate decommissions it.
+has a declared reversal path. Decisions that require measurement
+to refine (parent-pointer form, tranche H rediscovery threshold,
+VM oracle throughput) carry an explicit wave-level micro-bench
+gate; decisions that are settled by direct rule (cache key,
+pin-drift CI, test-thread count) are guarded by a standing test
+or CI check.
+
+The ten decisions span AZ's internal choices, BA's dependency on
+AZ's choices, BB's oracle and storage architecture, and the
+cross-tranche infrastructure guardrails. Each resolved decision
+becomes a live invariant inside the owning tranche doc — the
+tranche cannot close with its corresponding invariant unmet, and
+a replacement gate may only decommission the invariant when the
+new one is declared in the same commit. The decision record above
+is a snapshot of the invariant surface at the time of writing;
+every subsequent tranche FINAL.md records which invariants the
+tranche satisfied and which it carried forward.
 
 ## 11. Appendix — branch index
 

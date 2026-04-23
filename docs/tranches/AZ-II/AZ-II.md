@@ -166,11 +166,12 @@ AZ-II baseline.
 
 Landed artefacts:
 
-- `docs/tranches/AZ-II/BOOTSTRAP-CUTOVER.md` — research note that
-  specifies Stage A / Stage B mechanics, the byte-equal
-  reproducibility harness, the drift-source enumeration (AST
-  ordering, trivia handling, numeric formatting), and the
-  `bbnf-tape-mini` escape design.
+- `docs/tranches/AZ-II/BOOTSTRAP-CUTOVER.md` — research note
+  (forthcoming, W0 deliverable) that specifies Stage A / Stage B
+  mechanics, the byte-equal reproducibility harness, and the
+  drift-source enumeration (AST ordering, trivia handling, numeric
+  formatting). Drift mitigation lands in the cutover design, not
+  in a pre-declared partial-closure floor.
 - Classifier extension for BBNF's patterns: applying AZ-I.W0's
   disposition (unified surface or locked split) to the BBNF
   grammar's regex-HIR + structural-alphabet references. Lands as
@@ -277,24 +278,18 @@ regression of ≤ 10% on BBNF self-parse relative to AU baseline is
 acceptable and does not trigger reversal. A regression > 10%
 triggers substrate reversal.
 
-**Byte-equal failure → `bbnf-tape-mini` escape.** If Stage B
-byte-equals fails on W2 close, AZ-II invokes the escape clause:
-
-1. The W2 substrate reverts — BBNF returns to tape-writing for the
-   bootstrap.
-2. `crates/tape/` shrinks to `bbnf-tape-mini` — the minimum set of
-   tape-crate modules that the BBNF bootstrap still requires. The
-   structural-scan path, the DTA interpreter, the PSI cursor, and
-   the deduplicator can likely be pruned; `TapeRec`, `TapeBuilder`,
-   `TapeCursor`, and `Columns` are the retention candidates.
-3. The tape-deletion gate is deferred to a targeted follow-on
-   tranche (likely `AZ-III` or a rolled-in BA.W0 sub-task).
-4. AZ-II closes as partial: three data grammars on struct,
-   BBNF on `bbnf-tape-mini`, full tape deletion deferred.
-
-This is an escape of last resort, not a planned outcome; AZ-II's
-success case is full tape dissolution with byte-equal
-reproducibility.
+**Byte-equal failure → re-plan trigger.** If Stage B byte-equals
+fails on W2 close, AZ-II does not partial-close. The wave reverts
+its substrate and AZ-II re-plans from the observed drift sources.
+Full tape abrogation is binding repo policy; there is no planned
+"shrunken-tape" floor. If drift proves intractable under a genuine
+attempt, the failure is recorded as evidence, a re-plan brief is
+authored against that evidence, and the next attempt opens against
+the refined cutover design rather than against a pre-declared
+partial-closure state. `feedback_no-workarounds-arch` applies: a
+shrunken-tape-retained-for-BBNF floor would be exactly the
+two-decision-surface pathology `feedback_no-orthogonal-codepaths`
+prohibits, and the discipline refuses it even under W2 pressure.
 
 ## Risk register
 

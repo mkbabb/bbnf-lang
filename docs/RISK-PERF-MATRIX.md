@@ -143,27 +143,27 @@ activation work.
 |---|---|---:|---:|---|
 | W0 | BBNF bootstrap cutover design + classifier extension for BBNF-specific patterns | 0.70 | 0.90 | Drift sources (AST ordering, trivia, numeric formatting) surface at design time but no mitigation lands; W1 opens with known drift |
 | W1 | Stage A — tape-based compiler builds struct-based BBNF parser candidate; byte-compare against pre-AZ-II | 0.55 | 0.78 | Stage A candidate is structurally correct but not byte-equal due to unforeseen emission ordering |
-| W2 | Stage B — W1 candidate rebuilds itself; byte-equal vs Stage A | 0.50 | 0.72 | Byte-equal reproducibility is the hardest single check in the entire runway; triggers `bbnf-tape-mini` escape if missed |
+| W2 | Stage B — W1 candidate rebuilds itself; byte-equal vs Stage A | 0.50 | 0.72 | Byte-equal reproducibility is the hardest single check in the entire runway; failure triggers wave revert and AZ-II re-plan against captured drift evidence (no partial-closure floor is declared) |
 | W3 FINAL | `crates/tape/` deletion + view codegen rewrite + parity harness recoding + 17-entry parity | 0.88 | 0.94 | Mechanical given W2 passes; `cargo build --no-default-features` without `crates/tape/` is the close gate |
-| **AZ-II tranche close** | **All four waves** | **0.17** | **0.45** | Compound. Declared outcome: `crates/tape/` deleted wholesale. Last-resort floor (invoked only on intractable W2 byte-equal failure): `bbnf-tape-mini` retained for BBNF bootstrap with tape-deletion routed to a follow-on micro-tranche; this is the escape valve, not a planning alternative. |
+| **AZ-II tranche close** | **All four waves** | **0.17** | **0.45** | Compound. Declared and only acceptable close: `crates/tape/` deleted wholesale. No partial-closure floor is pre-declared; W2 byte-equal failure triggers wave revert and re-plan against captured drift evidence until full dissolution holds. |
 
 The split across the BBNF-cutover boundary materially changes the
 cascade arithmetic (see §Cascade below). The single highest-impact
 risk — Stage A/B byte-equal reproducibility — is now contained
 inside AZ-II rather than folded into a monolithic AZ; failure in
-AZ-II triggers the `bbnf-tape-mini` escape without contaminating
-the data-grammar activation in AZ-I, and every prior tranche that
-attempted a mid-pipeline cutover (AK-tape-substrate, AV-columnar,
-AY-I-column-revert) is a cautionary precedent that informs AZ-II's
-explicit drift-source enumeration in W0.
+AZ-II reverts AZ-II's own substrate without contaminating the
+data-grammar activation AZ-I already landed, and every prior
+tranche that attempted a mid-pipeline cutover (AK-tape-substrate,
+AV-columnar, AY-I-column-revert) is a cautionary precedent that
+informs AZ-II's explicit drift-source enumeration in W0. Full
+dissolution remains the only acceptable AZ-II close; re-plan
+cycles may be required until byte-equal holds.
 
 ## BA — lazy typed pointer-path queries over struct tree
 
-Opens on AZ-II close with `crates/tape/` fully dissolved. If
-AZ-II invokes its last-resort `bbnf-tape-mini` escape, BA still
-opens — the BBNF parser's residual `bbnf-tape-mini` consumer does
-not affect BA's substrate, which is the grammar-derived struct
-tree for every grammar.
+Opens on AZ-II close with `crates/tape/` fully dissolved. No
+partial-substrate opening is accepted — BA requires the full
+struct-tree surface that AZ-II's close guarantees.
 
 | Wave | Scope | P(declared) | P(floor) | Dominant risk |
 |---|---|---:|---:|---|
@@ -262,9 +262,9 @@ At the floor level, the runway delivers:
 - Direct-to-struct on JSON + Sheets with CSS partial; tape retained
   for CSS + BBNF (AZ-I floor).
 - BBNF on direct-to-struct with `crates/tape/` deleted wholesale
-  (AZ-II declared). Last-resort floor: `bbnf-tape-mini` retained
-  for BBNF bootstrap only, invoked *only* when byte-equal
-  reproducibility proves intractable after genuine attempt.
+  (AZ-II declared, and the only acceptable close). Byte-equal
+  reproducibility failures route to wave revert and re-plan, not
+  to a partial-closure state.
 - Rust-only pointer queries on JSON + CSS with zero-alloc traversal;
   TS + Python bindings stretch (BA floor).
 - JSON enumeration + Class-1 auto-accept + partial Tranche H
@@ -291,11 +291,11 @@ lives in a single-substrate world. Halting after AZ-I leaves
 `crates/tape/` alive for one grammar, which is exactly the
 "two-decision-surfaces" pathology `feedback_no-orthogonal-codepaths`
 prohibits. The split improves reversal surface and mid-runway
-checkpointing, it does not create a legitimate halt point. The
-`bbnf-tape-mini` escape defined in `AZ-II/AZ-II.md` is an
-escape-of-last-resort invoked only when W2 byte-equal
-reproducibility proves intractable after genuine attempt — it is
-not a planning alternative.
+checkpointing, it does not create a legitimate halt point. Full
+tape abrogation is binding repo policy. AZ-II does not declare a
+partial-closure floor; W2 byte-equal failure triggers wave revert
+and re-plan against captured drift evidence, repeated as many
+times as required until the dissolution holds.
 
 ---
 
@@ -381,10 +381,11 @@ Four levers dominate the cascade probability:
    carry wave. Cascade drops by ~ 10 %.
 
 3. **BBNF bootstrap byte-equal reproducibility** (AZ-II.W2 gate).
-   Failure here is the single highest-impact lever — triggers the
-   "bbnf-tape-mini" escape, keeping the tape alive in reduced
-   form for BBNF only. Cascade drops by ~ 25 % but defensible
-   floor is preserved.
+   Failure here is the single highest-impact lever — triggers
+   wave revert and AZ-II re-plan against captured drift evidence,
+   repeated as many cycles as required. Cascade drops by ~ 25 %
+   per additional re-plan cycle; the close gate (full dissolution)
+   does not move.
 
 4. **Tranche H rediscovery threshold** (BB.W0 gate; ≥ 80 % of
    hand-coded rules re-derived). If the enumerator produces

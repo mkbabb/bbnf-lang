@@ -591,13 +591,15 @@ plus `cargo build -p bbnf --no-default-features` succeeds
 without requiring `crates/tape/`, the mechanical proof that the
 crate is gone.
 
-AZ-II's defensible floor: if W2 byte-equal reproducibility fails,
-AZ-II closes with partial tape dissolution — `bbnf-tape-mini`
-(a shrunken tape crate consumed only by BBNF) retained, with
-tape-deletion-for-BBNF routed to a targeted follow-on tranche.
-Drift sources (AST ordering, comment/trivia handling, numeric
-formatting) are each addressed structurally in W0's cutover design
-before W1 opens; unresolvable drift triggers the escape.
+AZ-II declares no partial-closure floor. Full tape abrogation is
+binding repo policy; if W2 byte-equal reproducibility fails, the
+wave reverts its substrate and AZ-II re-plans against the captured
+drift evidence. Drift sources (AST ordering, comment/trivia
+handling, numeric formatting) are addressed structurally in W0's
+cutover design before W1 opens; unresolvable drift triggers a
+revert-and-re-plan cycle rather than a softer outcome. Re-plan
+cycles may repeat until dissolution holds; the close gate does
+not move.
 
 Both AZ-I and AZ-II share reversal criteria: wave-local 20% miss
 reverts own substrate; parity-recovery precedence reverts any
@@ -618,9 +620,8 @@ checkpointing at AZ-I close. AZ-II is required, not optional:
 full tape abrogation is the architectural goal, because leaving
 `crates/tape/` alive for even one grammar reintroduces the
 orthogonal-codepath pathology `feedback_no-orthogonal-codepaths`
-prohibits. The `bbnf-tape-mini` escape is a last-resort valve
-invoked only when W2 byte-equal reproducibility proves
-intractable after genuine attempt — not a planning alternative.
+prohibits. No partial-closure floor is declared for AZ-II; W2
+failure triggers revert-and-re-plan until full dissolution holds.
 
 ### BA — lazy typed pointer-path queries over the struct tree
 

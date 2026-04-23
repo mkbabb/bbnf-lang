@@ -6,8 +6,9 @@ alongside `AZ-I.md`; the file holds technique detail that would
 otherwise bloat the plan.
 
 AZ-II's BBNF-specific research (bootstrap cutover, byte-equal
-reproducibility, tape-deletion risk, `bbnf-tape-mini` escape) lives
-in `docs/tranches/AZ-II/RESEARCH.md`.
+reproducibility, tape-deletion risk, drift-source mitigations, and
+the re-plan discipline when byte-equal fails) lives in
+`docs/tranches/AZ-II/RESEARCH.md`.
 
 ## 1. Why dissolve the tape on the data grammars
 

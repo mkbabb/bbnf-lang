@@ -2,7 +2,7 @@
 
 External grounding and design detail specific to AZ-II's scope:
 BBNF self-hosting bootstrap cutover, byte-equal reproducibility
-harness, tape deletion risk analysis, and the `bbnf-tape-mini`
+harness, tape deletion risk analysis, and the re-plan discipline
 escape design.
 
 Consumed alongside `AZ-II.md` and the forthcoming
@@ -192,61 +192,33 @@ numeric leaf, so exact-byte recovery is available if the display
 form drifts. Stage A and Stage B both render from the source span,
 not from a parsed-then-formatted numeric.
 
-## 4. `bbnf-tape-mini` escape design
+## 4. W2 byte-equal failure — re-plan discipline
 
-If W2 byte-equal fails on W2 close, AZ-II invokes the escape
-clause: the tape crate shrinks to `bbnf-tape-mini` rather than
-being deleted outright, and full tape deletion is deferred to a
-follow-on tranche.
+Full tape abrogation is binding repo policy. No partial-closure
+"shrunken-tape" floor is declared for AZ-II. Retaining a
+tape-bearing substrate for BBNF alongside struct-only data grammars
+is exactly the two-decision-surface pathology
+`feedback_no-orthogonal-codepaths` prohibits, and the discipline
+refuses it even under W2 pressure.
 
-### Retention candidates
+If Stage B byte-equal fails on W2 close, AZ-II treats the failure
+as a re-plan trigger rather than invoking a pre-declared escape:
 
-The minimum surface `bbnf-derive` requires from the tape crate, if
-the BBNF bootstrap remains on tape:
+1. The W2 substrate reverts.
+2. The specific drift source is captured: fixture, drift class
+   (AST ordering / trivia / numeric / other), minimised reproducer.
+3. A re-plan brief lands against that evidence, folding the
+   observed drift sources back into `BOOTSTRAP-CUTOVER.md` with
+   concrete mitigations.
+4. W1 re-opens against the refined cutover design; full tape
+   abrogation remains the close gate.
 
-- `TapeRec` — the 16-byte record struct.
-- `TapeBuilder` — the builder surface the emitter writes into.
-- `TapeCursor` — the reader surface the IR loader walks.
-- `Columns` — the side-channel trivia storage.
-- A minimal `Visitor` trait implementation for IR lowering.
-
-### Pruning candidates
-
-The tape-crate modules that have no BBNF-bootstrap consumer and
-can be removed:
-
-- `structural_scan/` — SIMD-scan path for bulk JSON input; BBNF's
-  grammar files are small enough that the scan's amortisation does
-  not help.
-- `dta/` — the DTA interpreter, scoped to JSON/Sheets emission.
-- `psi/` — the PSI cursor, scoped to materialised views.
-- `dedup/` — the deduplicator, scoped to JSON's key dedup.
-- `finaliser/` — the finaliser pass, scoped to data-grammar
-  closure.
-- `driver/`, `profile/`, `packed/` — infrastructure for modes not
-  used in the BBNF bootstrap.
-- `decoders/`, `kind/` — typed-payload decoding scoped to data
-  grammars.
-
-Expected shrink: from ~17 modules to ~4-5. The retained crate is
-named `crates/bbnf-tape-mini/` (sibling to `crates/tape/`; the
-rename happens at W3 escape-path close) and is a direct dependency
-of `crates/bbnf_derive/` only.
-
-### Follow-on tranche
-
-Full tape deletion (including `bbnf-tape-mini`) routes to `AZ-III`
-(or is absorbed into BA.W0 as a sub-task if the volume is small).
-The follow-on tranche owns the targeted BBNF cutover once the
-drift source is resolved — typically this means resolving the
-specific byte-equal failure identified in W2.
-
-The escape design is preservation of forward progress: AZ-II still
-ships three-data-grammar direct-to-struct (via the AZ-I inheritance)
-+ partial BBNF migration (the classifier work + `project_types`
-closure on BBNF lands even in the escape path) + a shrunken tape
-crate. The escape is not a full rollback of AZ-II's scope; only
-the W2/W3 steps that depended on byte-equal are deferred.
+The re-plan path may require multiple W1/W2 cycles before
+byte-equal holds. Each cycle sharpens the cutover design; the
+close gate does not move. `feedback_execute-planned-architecture`
+binds: the planned architecture is full tape dissolution, and
+execution continues against that target rather than retreating to
+a softer outcome.
 
 ## 5. Tape deletion risk analysis
 
@@ -288,9 +260,9 @@ import (via IDE auto-import or a revert). Mitigation: the W3
 post-commit CI check `rg 'use bbnf_tape' crates/ --type rust`
 returns zero matches; any non-zero result fails the build.
 
-## 6. External reference — yyjson, sonic-rs, and the `bbnf-tape-mini` precedent
+## 6. External reference — yyjson, sonic-rs, and the tape-dissolution precedent
 
-The shrink pattern AZ-II's escape invokes has precedent. simdjson
+The tape-dissolution AZ-II closes on has precedent. simdjson
 shipped a tape API for ~3 years before introducing ondemand; the
 tape remained supported but was no longer the primary surface.
 simdjson-rs and sonic-rs inherited the tape indirectly through
@@ -302,12 +274,11 @@ author explicitly cites cache-locality and ILP as the reasons
 simdjson's tape underperforms on modern hardware. yyjson's direct
 tree allocation is what AZ-II's struct path converges to for BBNF.
 
-The `bbnf-tape-mini` escape, if invoked, is a precedent-aligned
-retention pattern: the tape crate shrinks to its minimum irreducible
-surface for a single-consumer bootstrap, rather than being retained
-in full for speculative future use. If the escape is invoked, its
-subsequent deletion in the follow-on tranche follows simdjson's
-pattern of "tape shrinks, then tape disappears" over two releases.
+bbnf-lang's dissolution goes further than simdjson-rs and sonic-rs
+in one respect: those libraries retain an ondemand reader whose
+internals still resemble a streaming tape. AZ-II dissolves the
+substrate entirely for every grammar, with no residual tape-shaped
+intermediate. The closing invariant is "struct, not tape-shaped."
 
 ## 7. Parity harness recode (W3 scope)
 

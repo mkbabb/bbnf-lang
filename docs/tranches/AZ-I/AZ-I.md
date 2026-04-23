@@ -368,7 +368,9 @@ grammar slice.
    unresolved question driving a reactive W3' sub-wave mid-tranche.
 
 BBNF-specific cutover questions (bootstrap reproducibility, tape
-deletion, `bbnf-tape-mini` escape) route to AZ-II.
+deletion, drift-source mitigations in BOOTSTRAP-CUTOVER.md) route
+to AZ-II. No partial-closure floor is pre-declared for AZ-II; full
+tape abrogation is the close gate on that tranche as well.
 
 ## Defensible floor
 
@@ -415,7 +417,7 @@ At AZ-I close, AZ-II opens on the following guaranteed state:
    `Visitor`, `Finaliser`, `DTA`, `PSI`, `Stage1`, `StructuralScan`,
    `Packed`, `Decoder`, `Dedup`, `Kind`, `Driver`, `Profile`) are
    all present and link. The crate is not shrunk in AZ-I; AZ-II
-   owns the deletion or the shrunk `bbnf-tape-mini` escape.
+   owns the full deletion.
 4. **BBNF grammar unchanged.** `grammar/bbnf/bbnf.bbnf` is not
    edited in AZ-I. `crates/bbnf_derive/` generates a tape-writing
    parser as before. The BBNF bootstrap test suite is green on the

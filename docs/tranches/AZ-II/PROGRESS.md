@@ -42,11 +42,14 @@ Cutover design: `docs/tranches/AZ-II/BOOTSTRAP-CUTOVER.md` (lands W0).
 
 ## Escape clause
 
-Byte-equal failure at W2 close → `bbnf-tape-mini` escape: BBNF
-bootstrap retains a shrunken tape (~4-5 modules instead of ~17);
-full tape deletion deferred to follow-on tranche; remaining AZ-II
-work (three-data-grammar path already landed via AZ-I; partial BBNF
-migration; classifier extension) is retained.
+Byte-equal failure at W2 close is a re-plan trigger, not a
+partial-close. Full tape abrogation is binding repo policy; there
+is no pre-declared "shrunken-tape" floor. On W2 failure, the wave
+reverts its substrate, records drift evidence, and authors a
+re-plan brief against that evidence. `feedback_no-workarounds-arch`
+and `feedback_no-orthogonal-codepaths` forbid retaining a
+tape-bearing substrate for BBNF alongside struct-only data
+grammars, even under W2 pressure.
 
 ## Wave status
 

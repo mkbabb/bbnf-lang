@@ -259,7 +259,10 @@ an AZ-carry wave and BA re-plans the schedule.
 
 The `path!` surface is the user's sole ergonomic entry point. The
 architecture is a three-frontend, shared-IR, shared-executor
-design:
+design. The shared core is `crates/core/src/path/`; each host
+binding is a thin adaptor compiling against that same core.
+
+### Frontend surfaces
 
 - **Rust proc-macro** (`crates/derive/src/path_macro.rs`): expands
   `path!("$.users[0].name", Users)` at compile time to a typed
@@ -267,82 +270,133 @@ design:
   `bbnf-regex` parser, resolves against the compile-time
   `StructRegistry` from the derive input, and emits a
   `TypedPath<Users, StrSlice>` literal plus a call site against
-  `NodeView::project<TypedPath>`.
+  `NodeView::project<TypedPath>`. A malformed path fails the
+  surrounding `cargo build` with a `proc_macro2::Span`-anchored
+  diagnostic pointing at the offending segment token.
 - **TypeScript template-literal tag** (`crates/bbnf-path-ts/`):
-  a thin WASM crate exposes the same path IR + type checker via
-  `wasm-bindgen`. The TS frontend is `` path`$.users[0].name` ``
-  with the tag invoking the WASM-exported `compile_path` at load
-  time (build-time for bundlers that constant-fold) and producing
-  a typed accessor closure over the shared struct-tree view.
+  a `cdylib` WASM sub-crate exposes `compile_path(path, grammar)`
+  and `execute_path(typed_path, node_view)` via `wasm-bindgen`.
+  The TS frontend is `` path`$.users[0].name` `` with the tag
+  invoking the WASM-exported validator at load time (build-time
+  under bundlers with constant folding — Vite, esbuild, SWC) and
+  producing a typed accessor closure over the shared struct-tree
+  view. A malformed path throws a `PathError` carrying identical
+  diagnostic fields to the Rust frontend.
 - **Python callable** (`crates/bbnf-path-py/`): PyO3 binding
-  exposing `path("$.users[0].name")` returning a typed path
-  object. Runtime-typed in Python per the language's idioms, but
-  the underlying validation and execution are the same Rust path
-  IR.
+  exposing `path("$.users[0].name", grammar=Users)` returning a
+  typed path object. Runtime-typed in Python per the language's
+  idioms, but the underlying validation and execution dispatch
+  through the same Rust path IR. A malformed path raises
+  `bbnf_path.PathError` carrying identical diagnostic fields.
 
-All three frontends are thin adaptors. The path IR, type checker,
-and executor live in `crates/core/src/path/` and are compiled
-once. Signature isomorphism per `feedback_isomorphic-api`: same
-argument shape (path string, optional target type), same return
-shape (typed accessor over `NodeView`), same error taxonomy
-(grammar-aware compile error vs. language-native equivalent).
+### Shared core
+
+| Module | Responsibility |
+|---|---|
+| `crates/core/src/path/ir.rs` | `Path`, `PathSegment`, `TypedPath<G, T>` — the IR shared across all three frontends |
+| `crates/core/src/path/type_check.rs` | Single type-checker entry point; consumes `StructRegistry` |
+| `crates/core/src/path/executor.rs` | Single traversal executor over the struct tree |
+| `crates/core/src/path/ascent.rs` | `AscentStrategy` trait + picked default (hybrid sidecar per W0) |
+| `crates/core/src/path/error.rs` | `PathError` with segment + struct + alternatives fields; rendered identically across frontends |
+
+### Isomorphism contract
+
+Signature isomorphism per `feedback_isomorphic-api` is enforced at
+the signatures-test level. For every public call:
+
+- Argument shape: (path string, optional grammar/target type).
+- Return shape: typed accessor over `NodeView`, or a typed
+  result in the Python case.
+- Error taxonomy: `PathError { segment, struct_name, alternatives,
+  reason }` — identical field set across Rust / TS / Python,
+  rendered in each host's native error surface.
+
 `feedback_wasm-subcrate-pattern` places the WASM binding as a
 workspace sub-crate under `crates/bbnf-path-ts/`, isomorphic to
-the Python binding location.
+the Python binding location at `crates/bbnf-path-py/`. Neither
+binding imports the other; both import the shared core.
 
 ## Critical files
 
-| File | Role |
-|---|---|
-| `crates/core/src/path/ir.rs` | Path IR — `Path`, `PathSegment`, `TypedPath` |
-| `crates/core/src/path/type_check.rs` | Type checker consuming `StructRegistry` |
-| `crates/core/src/path/executor.rs` | Lazy traversal engine over struct tree |
-| `crates/core/src/path/ascent.rs` | Parent-pointer strategy (hybrid sidecar per W0 pick) |
-| `crates/ir/src/passes/path_check.rs` | IR pass validating all compile-time paths against the grammar |
-| `crates/derive/src/path_macro.rs` | Rust `path!` proc-macro |
-| `crates/bbnf-path-ts/` | WASM sub-crate: TS template-literal tag frontend |
-| `crates/bbnf-path-py/` | PyO3 sub-crate: Python callable frontend |
-| `benches/path_extract.rs` | Per-grammar lazy-path micro-bench |
-| `tests/path_parity.rs` | Parity harness vs. sonic-rs / simdjson / cssparser / lightningcss |
-| `tests/path_isomorphic.rs` | Round-trip across Rust / TS / Python bindings |
+| File | Role | Wave |
+|---|---|---|
+| `crates/core/src/path/ir.rs` | Path IR — `Path`, `PathSegment`, `TypedPath<G, T>` | W0 |
+| `crates/core/src/path/type_check.rs` | Type checker consuming `StructRegistry` | W0 |
+| `crates/core/src/path/ascent.rs` | Parent-pointer strategy (`AscentStrategy` trait + three impls; default picked per W0 micro-bench) | W0 |
+| `crates/core/src/path/error.rs` | `PathError` with segment / struct / alternatives / reason — rendered identically across frontends | W0 |
+| `crates/ir/src/passes/path_check.rs` | IR pass validating all compile-time paths against the grammar | W0 |
+| `crates/core/src/path/executor.rs` | Lazy traversal executor over the struct tree | W1 |
+| `crates/core/src/path/view.rs` | `NodeView<'p, T>` — borrowed cursor state | W1 |
+| `crates/derive/src/path_macro.rs` | Rust `path!` proc-macro | W1 |
+| `benches/path_extract.rs` | Per-grammar lazy-path micro-bench | W1 |
+| `tests/path_parity.rs` | Parity harness vs. sonic-rs / simdjson / cssparser / lightningcss | W1 |
+| `crates/bbnf-path-ts/` | WASM sub-crate: TS template-literal tag frontend | W2 |
+| `crates/bbnf-path-py/` | PyO3 sub-crate: Python callable frontend | W2 |
+| `tests/path_isomorphic.rs` | Round-trip across Rust / TS / Python bindings | W2 |
+| `docs/tranches/BA/FINAL.md` | BA close summary + handoff contract to BB | W3 |
 
 ## Risk register
 
 1. **Path explosion under nested pattern matching.** Wildcard (`[*]`)
    segments across deep CSS / tailwind structs can expand to large
-   typed path sets at compile time. Mitigation: path-fusion rewrites
-   in the egraph; wildcard depth cap in the type checker with a
-   grammar-aware diagnostic.
+   typed path sets at compile time; a naive type checker visits
+   every resolved variant. Mitigation: path-fusion rewrites in the
+   egraph unify shared prefixes; wildcard depth cap in the type
+   checker with a grammar-aware diagnostic that names the offending
+   depth; the W0 bench includes a wildcard-heavy tailwind path to
+   expose explosion before it reaches W1.
 2. **Macro hygiene across three host languages.** Rust proc-macro
    hygiene diverges from TS template-tag identifier resolution and
-   from Python's runtime-only binding. Mitigation: shared
-   compile-time validator in WASM; each frontend is a thin adaptor
-   that cannot reintroduce unhygienic substitution.
+   from Python's runtime-only binding. A path-string literal that
+   contains identifier-like fragments could resolve differently in
+   each host. Mitigation: path parsing happens entirely inside the
+   shared WASM validator; each frontend is a thin adaptor that
+   passes the raw string to that validator and cannot reintroduce
+   host-specific substitution. The signatures test in W2 asserts
+   equivalent resolution across frontends on an adversarial fixture.
 3. **Partial `StructRegistry` coverage edge cases.** A Named rule
    present in grammar but absent from registry breaks path
    resolution silently if not caught. Mitigation: `path_check.rs`
    IR pass holds hard coverage; missing entries fail the build at
-   AZ close — not here.
+   AZ close, not at BA compile time. BA treats a missing registry
+   entry as a hard-fail, never a fallback. `feedback_no-workarounds`
+   in force.
 4. **Parent-pointer strategy reversal mid-tranche.** W0's micro-bench
    pick may prove wrong under a broader W1 workload. Mitigation:
    the parent-pointer module (`ascent.rs`) is strategy-pluggable
-   per `feedback_pluggable-components`; a reversal swaps the
-   strategy without disturbing the executor.
+   per `feedback_pluggable-components`; the `AscentStrategy` trait
+   is the reversal seam. A W1-triggered reversal swaps the
+   implementation without disturbing the executor or any frontend;
+   the reversal commit records the W1 measurement that forced it.
+5. **Host-binding build drift.** The WASM and PyO3 sub-crates can
+   drift out of sync with the core IR if their test harnesses are
+   run only at W2 close. Mitigation: `tests/path_isomorphic.rs`
+   runs on every wave boundary from W1 onward (smoke) with full
+   enforcement at W2; signature drift is caught the commit it
+   lands.
 
 ## Defensible floor
 
 Minimum BA delivers, even if stretch scope slips:
 
 1. Path typechecking at compile time for JSON and CSS L4 in Rust
-   only.
+   only. Every Named rule in those two grammars has a compilable
+   `path!` accessor.
 2. Lazy traversal engine with zero heap allocations on those two
-   grammars.
-3. ≥ 20% win over sonic-rs on 3-field citm.json extraction.
-4. No regression on the AZ-close 17-entry AU-baseline matrix.
+   grammars (dhat-verified).
+3. ≥ 20% win over sonic-rs on 3-field citm.json extraction;
+   parity or better on 30-field.
+4. Grammar-aware compile-time diagnostics on malformed paths:
+   offending segment + struct + valid alternatives.
+5. No regression on the AZ-close 17-entry AU-baseline matrix.
 
-Sheets / BBNF grammar support and TS / Python binding isomorphism
-are stretch. The floor is the useful-in-Rust promise; the stretch
-is the full isomorphic surface.
+Sheets and BBNF grammar support are stretch. TS and Python
+binding isomorphism are stretch. The floor is the useful-in-Rust
+promise across two production grammars; the stretch is the full
+isomorphic surface across four grammars and three host languages.
+BA does not ship floor-only as a rename of the full tranche — a
+floor-only close is an explicit reversal, not a ledger-ended
+partial success.
 
 ## External SOTA grounding
 

@@ -383,3 +383,141 @@ AZ. The current tape crate contains `lib.rs`, `builder/`, `columns`,
 `visitor` modules; every one of those symbols leaves the tree at W5.
 That scale of deletion is the surface on which AZ's simplification
 shows up.
+
+## Open questions absorbed
+
+The following open questions have dispositions at AZ open; W0
+research finalises any that remain operational.
+
+1. **Q1 — backward-pointer form.** The prior answer under a tape-
+   retention assumption was "sidecar column, measured at W3". Under
+   tape abrogation this dissolves: there is no tape column to widen
+   or sidecar. Struct-tree navigation uses parent pointers
+   (`&'arena Parent`) or root-traversal, and the decision between
+   the two is a BA-opens problem, not AZ's. AZ.W0 records the
+   dissolution and flags BA as the owner. The research note
+   `RESEARCH.md` §3 sketches the parent-pointer-vs-root-traversal
+   tradeoff to hand off to BA cleanly.
+2. **Q2 — `StructRegistry` partial-close semantics.** Hard-fail-
+   and-block. A grammar whose `project_types` does not close
+   produces a build-stop diagnostic naming the unclosed rule and
+   type edge. No "empty registry is acceptable" fallback. AZ.W1
+   owns enforcement.
+3. **Q7 — derive-cache key.** Composite fingerprint
+   `(grammar-sha, derive-version, rustc-sha, codegen-flags)` with a
+   test suite under `crates/derive/tests/cache_invalidation/`
+   validating every component. Lift target
+   `$XDG_CACHE_HOME/bbnf-derive/`. AZ.W0 owns.
+4. **Q9 — classifier collision.** Front-loaded research in AZ.W0;
+   `CLASSIFIER-UNIFICATION.md` either specifies a unified decision
+   surface across regex-HIR, structural-alphabet, and payload-kind
+   classifiers, or declares unification intractable and locks the
+   existing three-classifier split. Either outcome is acceptable;
+   the unacceptable outcome is an unresolved question driving a
+   reactive W3' or W4' sub-wave mid-tranche.
+
+No other open questions bear on AZ. Questions that concern BA's
+pointer-query design (laziness, skip masks, path compilation) or
+BB's egraph rule inference (cost models, rewrite confluence) are
+out of scope and surface in those tranches.
+
+## BBNF self-hosting
+
+BBNF's grammar describes BBNF itself; `project_types` applied to
+`grammars/bbnf/bbnf.bbnf` therefore produces a struct graph whose
+shape is the BBNF AST. The derived root type is `BbnfAst`, with
+fields drawn from the grammar's top-level productions:
+
+- `imports: Vec<Import>` — from the `import` production.
+- `directives: Vec<Directive>` — from the `directive` production.
+- `rules: Vec<Rule>` — from the `rule` production.
+- `comments: Vec<Comment>` — from the `comment` production.
+
+Each field's element type is itself a derived struct. `Rule`
+decomposes into `name: Ident`, `params: Vec<Param>`, `return_type:
+Option<TypeExpr>`, `body: Expr`. `Expr` is a derived enum with a
+variant per alternation in the grammar's `expr` production. The
+derivation is mechanical: `project_types` produces the graph; the
+emitter materialises a Rust type per registered `StructLayout`.
+
+The circular-bootstrap concern is load-bearing. BBNF's parser is
+produced by bbnf-derive, which is itself built by expanding BBNF's
+grammar. Pre-AZ the bootstrap walks a tape during grammar reads;
+post-AZ it must walk a derived struct. The cutover is the W4 work.
+
+Cutover mechanism:
+
+1. **Two-stage bootstrap.** Pre-W4 compiler (tape-based) builds
+   the W4 compiler (struct-based). The W4 compiler then rebuilds
+   itself from its own source using only the struct path.
+2. **Byte-equal reproducibility check.** The self-build output
+   (tape-less compiler built by tape-less compiler) must be byte-
+   equal to the previous self-build output (tape-less compiler built
+   by tape-based compiler) on every grammar in the corpus. This is
+   the W4 close gate.
+3. **Tape path remains present until W4 close, then is pulled.**
+   The W4 opening state has both paths wired; the W4 closing state
+   has only the struct path wired in BBNF's own bootstrap. W5 then
+   deletes the tape crate proper.
+4. **No special case in `project_types`.** The pass treats
+   BBNF's grammar exactly like any other. The only BBNF-specific
+   work is the bootstrap harness that verifies reproducibility.
+
+An escape hatch for W4: if byte-equal reproducibility fails
+non-trivially (e.g., the struct path introduces a deterministic but
+different AST ordering), W4 reverts the BBNF migration and AZ
+closes with tape retained for BBNF specifically — the defensible
+floor (§Defensible floor) covers this case.
+
+## Cross-tranche contract
+
+AZ closes after AY-II. AZ's close gate is a hard prerequisite for
+BA open.
+
+**AZ → BA.** BA operates on the struct tree that AZ produces.
+Pointer queries, the subject of BA, are defined on struct paths, not
+tape offsets. BA's design (laziness, path compilation, skip masks) is
+independent of whether AZ's struct tree is populated eagerly or
+lazily — AZ populates eagerly; BA introduces laziness on the
+already-activated substrate. The parent-pointer question that AZ
+defers lands in BA's scope, specifically BA.W0.
+
+**AZ → BB.** BB (egraph rewrite rule inference) does not depend on
+AZ's struct shape specifically. BB depends on the IR being stable,
+and AZ does not rewire IR — `project_types` closes tighter and
+`StructRegistry` populates, but the IR's edge structure and pass
+ordering do not change. BB opens on AZ close regardless of BA's
+progress.
+
+**AZ does not open on AY-II.1 or earlier partial states.** AY-II
+must close fully before AZ opens; any AY-II reversal pushes AZ's
+open date. This is the explicit cross-tranche interlock that
+prevents Era V's substrate-stacking failure mode.
+
+## Defensible floor
+
+Non-negotiable at AZ close:
+
+1. **JSON twitter ≥ 1967 MB/s on the struct-only path.** First-
+   order recovery gate.
+2. **CSS bootstrap ≥ 600 MB/s on the struct-only path.**
+3. **`StructRegistry` non-empty for every Named rule in at least
+   three of four production grammars** (JSON, CSS L4, Sheets).
+4. **IR audit pass reports 100% `->` coverage for at least three
+   of four grammars.**
+5. **`crates/tape/` deleted for at least three of four grammars'
+   worth of parse paths.**
+
+Partial-close escape clause: if classifier unification (W0) is
+declared intractable AND BBNF self-hosting (W4) fails byte-equal
+reproducibility, AZ may close with "direct-to-struct on JSON, CSS
+L4, Sheets; tape retained for BBNF only". The tape crate in that
+scenario shrinks to the BBNF-bootstrap path only — `bbnf-tape-mini`
+rather than full `bbnf-tape` — and tape deletion is deferred to a
+targeted follow-on tranche. This is the escape hatch of last
+resort, not a planned outcome; AZ's success case is full tape
+dissolution including BBNF.
+
+Anything less than the partial-close floor is Era V recurring:
+substrate without activation, consumer without substrate, or tape-
+and-struct side-by-side. The plan does not accept that outcome.

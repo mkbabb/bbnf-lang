@@ -359,7 +359,11 @@ Risk: low (well-exercised flag).
 **T2.3. cranelift codegen-backend for dev + ax-iter profiles.**
 ~30% codegen-phase reduction, translating to ~5-15% total dev-build
 reduction. Distributed in nightly; `rustup component add
-rustc-codegen-cranelift-preview --toolchain nightly`. Cost: 2
+rustc-codegen-cranelift --toolchain nightly-2026-04-11` (on-host
+probe against the pinned toolchain lists the component as
+`rustc-codegen-cranelift-aarch64-apple-darwin` — rustup accepts
+the bare prefix for add; older nightlies used a `-preview` suffix,
+dropped on this pin). Cost: 2
 lines in `rust-toolchain.toml` + 2 in `.cargo/config.toml`. Risk:
 low-moderate — cranelift cannot link static libraries of some C deps;
 bbnf has no C deps besides `mimalloc` (pure Rust). Mark
@@ -612,9 +616,12 @@ recovered across the team.
 ### Rank 2 — Pin nightly in `rust-toolchain.toml` (ADD)
 
 **Scope**: new file `rust-toolchain.toml` pinning
-`channel = "nightly-2026-04-05"` (the version the 93 ICEs share) with
-components `rustc, cargo, rust-src, rustc-codegen-cranelift-preview,
-rust-analyzer`. Add B1 invariant §13: *"nightly channel pinned in
+`channel = "nightly-2026-04-11"` (past the ICE SHA
+`9602bda1d 2026-04-05`; on-host probe resolves the pinned channel to
+`rustc 1.96.0-nightly (02c7f9bec 2026-04-10)`) with components
+`rustc, cargo, rust-src, rustc-codegen-cranelift, rust-analyzer`
+(the `-preview` suffix that older nightlies used has been dropped
+on this pin). Add B1 invariant §13: *"nightly channel pinned in
 `rust-toolchain.toml`; upgrades land behind a dedicated commit with an
 ICE-regression probe."*
 **Cost**: 1 file, 3-5 lines.
@@ -655,7 +662,9 @@ evaluation).
 ### Rank 5 — Adopt cranelift codegen-backend for dev + ax-iter (ADD)
 
 **Scope**: `rust-toolchain.toml` adds
-`rustc-codegen-cranelift-preview` component. `.cargo/config.toml`
+`rustc-codegen-cranelift` component (name verified against the
+pinned nightly's `rustup component list`; the `-preview` suffix
+used in earlier nightlies is absent on this pin). `.cargo/config.toml`
 `[profile.dev]` and `[profile.ax-iter]` gain
 `codegen-backend = "cranelift"`. `[profile.bench]`, `[profile.release]`
 **explicitly** keep LLVM.

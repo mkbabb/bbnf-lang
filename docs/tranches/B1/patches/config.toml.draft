@@ -132,23 +132,38 @@ rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
 
 # ── Target-specific overrides ───────────────────────────────────────────────
 
-# macOS arm64: prefer LLVM lld for the ~10-20% rebuild-wall win measured by
-# the workspace. Fallback: comment out the link-arg line and Apple ld64 will
-# be used (no other change needed).
+# macOS arm64: default to Apple ld64 (the system linker). Opt-in lld
+# is available for the ~10-20% rebuild-wall win, but only when the
+# `lld` Homebrew formula is installed separately (Homebrew's `llvm`
+# package does NOT ship ld.lld — it ships lldb only; verify with
+# `ls /opt/homebrew/opt/llvm/bin/ | grep -i lld` on a host with only
+# `llvm` installed).
 #
-# Prerequisite: `brew install llvm` (places `ld.lld` at the path below).
-# PROFILING.md §Dev-host setup lists this install.
+# To opt into lld on macOS arm64:
+#   1. `brew install lld` (separate formula; not a sub-product of llvm).
+#      Places ld.lld at /opt/homebrew/opt/lld/bin/ld.lld on Apple Silicon.
+#   2. Verify: `ls /opt/homebrew/opt/lld/bin/ld.lld` returns the binary.
+#   3. Uncomment the `[target.aarch64-apple-darwin]` block below.
+#   4. Adjust the link-arg path if your brew prefix differs (check with
+#      `brew --prefix lld`).
 #
-# `wild` (davidlattimore/wild) is Linux-only as of v0.8.0 (January 2026);
-# `mold` 2.0+ requires a commercial license on macOS. `lld` is the only
-# free + available fast linker for macOS arm64.
+# `wild` (davidlattimore/wild) was Linux-only as of v0.8.0 (January 2026);
+# check wild's release notes for current macOS status before using.
+# `mold` 2.0+ requires a commercial license on macOS, so is not free.
+#
+# Default: system ld64 via clang. No extra install required.
 [target.aarch64-apple-darwin]
-linker    = "clang"
-rustflags = [
-    "-C", "link-arg=-fuse-ld=/opt/homebrew/opt/llvm/bin/ld.lld",
-    "-Zthreads=8",
-    "-Zshare-generics=y",
-]
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+
+# Opt-in lld (requires `brew install lld`). Uncomment after
+# verifying the path exists on your host.
+# [target.aarch64-apple-darwin]
+# linker    = "clang"
+# rustflags = [
+#     "-C", "link-arg=-fuse-ld=/opt/homebrew/opt/lld/bin/ld.lld",
+#     "-Zthreads=8",
+#     "-Zshare-generics=y",
+# ]
 
 # Dev-only codegen backend: cranelift. Applied via per-profile override so
 # release/bench stay on LLVM (required for "beat lightningcss" measurement).

@@ -8,12 +8,14 @@
 # between 2026-04-15 and 2026-04-22, every one panicking at
 # `rustc_middle/src/query/on_disk_cache.rs:663: cannot decode AttrId`.
 #
-# Pin target: `nightly-2026-04-11` — six days later than the ICE-observed
-# `1.96.0-nightly (9602bda1d 2026-04-05)`. The interval lands past the
-# rust-lang/rust commit window that includes the latest on_disk_cache.rs
-# AttrId-encoding patches (rust-lang/rust#92485-lineage) while remaining
-# close enough to the measurement baseline that cold-wall numbers in
-# `docs/benchmarks/post-AY-*-json.txt` stay reconstructable from master.
+# Pin target: `nightly-2026-04-11`. On-host probe at audit close:
+# `rustup run nightly-2026-04-11 rustc --version` resolves to
+# `rustc 1.96.0-nightly (02c7f9bec 2026-04-10)`. The resolved rustc
+# commit is past the ICE-observed `9602bda1d 2026-04-05`; the
+# incremental-cache-decoder panic at `on_disk_cache.rs:663:
+# cannot decode AttrId` is therefore expected to not reproduce on
+# this pin. Final confirmation requires a `cargo iter-check-full`
+# cold-wall under the pin; land that run before merging B1.W0.
 #
 # Upgrade procedure (cadence: every 4-6 weeks, or on demand):
 #   1. `rustup install nightly-YYYY-MM-DD`.

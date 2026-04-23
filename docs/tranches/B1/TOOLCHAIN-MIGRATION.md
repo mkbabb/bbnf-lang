@@ -61,7 +61,11 @@ GNU-timeout fallback ladder; B1 upgrades to required.
 the ambient `1.96.0-nightly (9602bda1d 2026-04-05)` the developer's rustup
 happened to land on. Pinning makes ICE reproduction deterministic and
 bisectable.
-**Pin**: `nightly-2026-04-11` (6 days past the ICE baseline).
+**Pin**: `nightly-2026-04-11`. Verified on-host: resolves to
+`rustc 1.96.0-nightly (02c7f9bec 2026-04-10)`, past the ICE SHA
+`9602bda1d 2026-04-05`. Final ICE-clearance confirmation requires
+a `cargo iter-check-full` cold-wall under the pin, which is W0's
+close gate.
 **Patch**: `patches/rust-toolchain.toml.draft`.
 
 ### 1.5 Parallel rustc front-end: **`-Zthreads=8`**
@@ -263,8 +267,15 @@ validation artefact.
 ### Step 12 — Documentation pass (PROFILING.md)
 
 - **Action**: add §ICE recovery (`make clean-incr`), §Dev-host setup
-  (`rustup component add rustc-codegen-cranelift`, `brew install llvm`,
-  `cargo install cargo-nextest --locked`). Document the bench-alias surface.
+  (`rustup component add rustc-codegen-cranelift --toolchain
+  nightly-2026-04-11` — component name verified against
+  `rustup component list --toolchain nightly-2026-04-11`, which
+  lists it as `rustc-codegen-cranelift-aarch64-apple-darwin`; the
+  bare `rustc-codegen-cranelift` form is what users pass to
+  `rustup component add`); `brew install lld` (separate formula;
+  Homebrew's `llvm` package ships lldb only, not ld.lld; verify
+  with `ls /opt/homebrew/opt/lld/bin/ld.lld`); `cargo install
+  cargo-nextest --locked`. Document the bench-alias surface.
 - **Validation**: doc renders; `rg` over the repo confirms every cargo
   alias appears once in PROFILING.md.
 - **Cost**: 1 hour.
@@ -330,9 +341,12 @@ Two risks carry real probability of firing during B1 execution.
 ### 5.1 Cranelift on pinned nightly breaks
 
 **Probability**: medium. Cranelift's support matrix drifts across nightlies;
-the pinned `nightly-2026-04-11` is 6 days past the ICE baseline and may
-land on a commit where `rustc-codegen-cranelift-preview` regresses on macOS
-arm64 (e.g. linker symbol resolution or debuginfo format mismatch).
+the pinned `nightly-2026-04-11` is past the ICE SHA and may land on a
+commit where `rustc-codegen-cranelift` (verified component name on this
+pin via `rustup component list --toolchain nightly-2026-04-11`) regresses
+on macOS arm64 (e.g. linker symbol resolution or debuginfo format
+mismatch). On the audit host the component is available but not yet
+installed; B1.W0 installs it explicitly as part of the verification step.
 
 **Mitigation**: the `codegen-backend = "cranelift"` line in
 `config.toml.draft` is **commented out by default**. Enable only after
@@ -344,22 +358,29 @@ next pin bump. Fallback is transparent (LLVM); no dev-loop breakage.
 on both macOS arm64 and Linux x86_64. If either fails with cranelift
 enabled, revert to LLVM for that profile.
 
-### 5.2 `lld` path missing on macOS (ld64 fallback)
+### 5.2 `lld` on macOS (opt-in, not default)
 
-**Probability**: medium-high. The `.cargo/config.toml [target.aarch64-
-apple-darwin]` block hard-codes `/opt/homebrew/opt/llvm/bin/ld.lld`. If a
-developer's `brew install llvm` either was never run, was installed under a
-non-default prefix, or was uninstalled, every build fails at link time
-with a confusing error ("linker not found").
+**Resolution**: on-host probe during the meta-audit redress showed
+that Homebrew's `llvm` package does not ship `ld.lld` — it ships
+lldb only. `brew install lld` is a **separate formula**, not a
+sub-product of llvm, and the expected path is
+`/opt/homebrew/opt/lld/bin/ld.lld` on Apple Silicon. The earlier
+`.cargo/config.toml` draft hard-coded `/opt/homebrew/opt/llvm/bin/ld.lld`
+which does not exist on any host with only `llvm` installed.
 
-**Mitigation**: `patches/config.toml.draft` documents the prerequisite
-inline and PROFILING.md §Dev-host setup names `brew install llvm` as the
-install. If the error class proves painful, add a
-`scripts/check-dev-host.sh` preflight that verifies the linker exists and
-emits a clear error if not.
+**Current posture**: `patches/config.toml.draft` now defaults macOS
+arm64 to the system `ld64` linker (no opt-in required) and provides
+a commented `lld` block with the correct `brew install lld` prefix
+for developers who explicitly want the linker-wall win. PROFILING.md
+§Dev-host setup should name `brew install lld` (not `llvm`) as the
+opt-in prerequisite, and should document the verification probe
+(`ls /opt/homebrew/opt/lld/bin/ld.lld`). No scripts/check-dev-host.sh
+is needed because the default path does not require lld.
 
-**Detection**: first developer who runs `cargo iter-check` without the
-install will surface the error within minutes of landing.
+**Residual risk**: developers who opted in to lld before the
+config change and left `/opt/homebrew/opt/llvm/bin/ld.lld` cached
+in their personal `.cargo/config.toml` will need to update the
+path. PROFILING.md should call this out.
 
 **Fallback**: commenting the `rustflags = ["-C", "link-arg=-fuse-ld=..."]`
 line in `.cargo/config.toml` reverts to Apple `ld64`. 10-20% rebuild-wall

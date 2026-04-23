@@ -12,7 +12,7 @@ automatic ranker scores every surviving candidate; a tiered review
 pipeline auto-accepts the trivial class, fast-tracks the structural
 class, and reserves full human review for the novel class only.
 Rules live outside `crates/core`: fleet-wide rules in a new
-`crates/ir-rewrites/` general-infra crate, grammar-specific rules
+`crates/ir/src/rewrites/` module, grammar-specific rules
 colocated with each grammar under `grammar/<name>/rewrites/*.ron`
 via a standardised schema the `bbnf_derive` build step compiles
 into that grammar's cost-config.
@@ -36,7 +36,7 @@ into that grammar's cost-config.
    was produced by enumeration, survived oracle validation, and
    cleared the ranker tiering.
 4. **Storage is extensible and out-of-core.** Fleet-wide rules
-   live in `crates/ir-rewrites/`; grammar-specific rules colocate
+   live in `crates/ir/src/rewrites/`; grammar-specific rules colocate
    with their grammar directory. `crates/core` never accumulates a
    hand-curated rule list. Adding a grammar does not require
    editing core.
@@ -120,9 +120,9 @@ surface that compiled at HEAD through the rename.
 
 Rules do not live in `crates/core`. Two layers:
 
-### Fleet-wide rules — `crates/ir-rewrites/`
+### Fleet-wide rules — `crates/ir/src/rewrites/`
 
-A new general-infra crate per `feedback_general-infra-crates` and
+A IR-crate module per `feedback_general-infra-crates` and
 `feedback_no-core-dumping`. Contains:
 
 - `src/lib.rs` — `Rule` schema, `RuleSet` registry, provenance
@@ -162,7 +162,7 @@ At build time the `bbnf_derive` macro scans `grammar/<name>/
 rewrites/` for every grammar it processes, parses each rule file
 against the schema, and compiles matching rules into that grammar's
 `cost_config`. Fleet-wide rules are statically linked from
-`crates/ir-rewrites/`. Grammar authors add rules by dropping files
+`crates/ir/src/rewrites/`. Grammar authors add rules by dropping files
 in — no core edit, no derive edit.
 
 ### Why RON rather than `.rs`
@@ -243,7 +243,7 @@ incremental and small.
 ### Review surface — where rules are saved and how humans process them
 
 - **Saved**: per the storage architecture above — fleet-wide
-  inferred rules land in `crates/ir-rewrites/src/inferred/*.ron`;
+  inferred rules land in `crates/ir/src/rewrites/inferred/*.ron`;
   grammar-specific inferred rules land in
   `grammar/<name>/rewrites/*.ron`.
 - **Machine output per run**: one Markdown report per enumeration
@@ -317,7 +317,7 @@ or after BA.
 
 **Storage gates:**
 
-- `crates/ir-rewrites/` compiles standalone; schema validator
+- `crates/ir/src/rewrites/` compiles standalone; schema validator
   rejects malformed RON with file/line diagnostics.
 - `bbnf_derive` discovers and compiles `grammar/<name>/rewrites/
   *.ron` for every grammar without per-grammar edits.
@@ -329,7 +329,7 @@ commit. Each wave spec is ≤ 150 LOC.
 
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Enumerator + VM oracle + ranker + `crates/ir-rewrites/` scaffold; Tranche H soundness rediscovery | AZ + AY-II close | planned |
+| **W0** | [waves/W0.md](waves/W0.md) | Enumerator + VM oracle + ranker + `crates/ir/src/rewrites/` scaffold; Tranche H soundness rediscovery | AZ + AY-II close | planned |
 | **W1** | [waves/W1.md](waves/W1.md) | First enumeration run — JSON + Sheets, curated Class-1/2 batch | W0 | planned |
 | **W2** | [waves/W2.md](waves/W2.md) | Wide alphabet — CSS L4 + BBNF self-hosting | W1 | planned |
 | **W3** | [waves/W3.md](waves/W3.md) | Grammar-specific rule discovery + per-grammar `rewrites/*.ron` authoring | W2 | planned |
@@ -372,12 +372,12 @@ Inheriting AZ's discipline:
 | `crates/egraph/src/ruler/enumerate.rs` | create | Ruler-style CVC enumerator |
 | `crates/egraph/src/ruler/oracle.rs` | create | VM oracle wrapper with per-candidate budget |
 | `crates/egraph/src/ruler/residue.rs` | create | E-graph-first check; routes residue to oracle |
-| `crates/ir-rewrites/` | create (new crate) | Fleet-wide rule registry, schema, ranker, tiering |
-| `crates/ir-rewrites/src/lib.rs` | create | `Rule`, `RuleSet`, provenance types |
-| `crates/ir-rewrites/src/rank.rs` | create | Automatic ranker |
-| `crates/ir-rewrites/src/tiering.rs` | create | Class-1/2/3 classifier |
-| `crates/ir-rewrites/src/schema.rs` | create | RON rule-file schema + validator |
-| `crates/ir-rewrites/src/base/*.ron` | create | Base fleet-wide rule files |
+| `crates/ir/src/rewrites/` | create (new crate) | Fleet-wide rule registry, schema, ranker, tiering |
+| `crates/ir/src/rewrites/lib.rs` | create | `Rule`, `RuleSet`, provenance types |
+| `crates/ir/src/rewrites/rank.rs` | create | Automatic ranker |
+| `crates/ir/src/rewrites/tiering.rs` | create | Class-1/2/3 classifier |
+| `crates/ir/src/rewrites/schema.rs` | create | RON rule-file schema + validator |
+| `crates/ir/src/rewrites/base/*.ron` | create | Base fleet-wide rule files |
 | `grammar/<name>/rewrites/*.ron` | create per grammar | Grammar-specific rule files |
 | `crates/bbnf_derive/src/rewrites.rs` | create | Build-time scan + compile of rule files into cost-config |
 | `docs/rules/` | create | Per-rule docs, run reports, audit log |
@@ -389,7 +389,7 @@ Minimum BB delivers:
 1. Working Ruler-style enumerator + e-graph residue split + VM
    oracle wrapper.
 2. Automatic ranker with Class-1/2/3 tiering functional.
-3. `crates/ir-rewrites/` crate published with base rules and schema
+3. `crates/ir/src/rewrites/` crate landed with base rules and schema
    validated.
 4. JSON grammar: ≥ 5 accepted rules, auto-accept on Class 1, review
    on Class 2 + 3, measurable codegen shrink ≥ 10 LOC on JSON.
@@ -422,7 +422,7 @@ but shipped in W2–W3 under normal execution.
 When BB closes correctly, bbnf's optimiser discovers rules as
 first-class output; the e-graph is the fast-path proof substrate
 and the VM is the bounded ground-truth oracle on residue; rules
-live outside core, fleet-wide in `crates/ir-rewrites/` and
+live outside core, fleet-wide in `crates/ir/src/rewrites/` and
 per-grammar in `grammar/<name>/rewrites/`; an automatic ranker
 plus tiered review keeps human attention on novel rules only; the
 DTA/PSI era's surviving VM interpreter finds permanent purpose as

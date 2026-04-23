@@ -3,7 +3,7 @@
 **Status**: resolved
 **Owner tranche**: BB
 **Decision date**: 2026-04-23
-**Affects**: BB, every grammar directory, new `crates/ir-rewrites/`
+**Affects**: BB, every grammar directory, new `crates/ir/src/rewrites/`
 
 ## Context
 
@@ -33,7 +33,11 @@ large candidate set; without a bound, review blocks the tranche.
 
 - **Storage**: grammar-specific rules live with the grammar
   (`grammar/<name>/rewrites/*.ron`). Fleet-wide rules live in a new
-  crate `crates/ir-rewrites/`. Rules are never added to `crates/core`.
+  `crates/ir/src/rewrites/` module within the existing `bbnf-ir`
+  crate. Rules are never added to `crates/core`. A standalone
+  `ir-rewrites` crate was rejected — rules operate on IR shapes and
+  are not general-purpose; they do not need an independent crate
+  boundary.
 - **Ranker**: mandatory, automatic. Score is the product of match
   frequency, cost delta, generality, similarity to ground truth,
   novelty, and tree size.
@@ -46,11 +50,17 @@ large candidate set; without a bound, review blocks the tranche.
 
 ## Reasoning
 
-Separating storage by scope matches the cross-crate isomorphism
-pattern: new grammars ship rules without editing any shared crate, and
-fleet-wide rules have exactly one home. Colocating everything in core
-was rejected because it would make core a god crate and make grammar
-authors fork core to experiment.
+Separating storage by scope is the extensibility contract: new
+grammars ship rules without editing any shared crate. Fleet-wide
+rules have exactly one home. Colocating everything in `crates/core`
+was rejected because it would make core a god crate and force
+grammar authors to fork core to experiment. A standalone
+`crates/ir-rewrites/` crate was also rejected: rule schema, ranker,
+and tiering are IR-shape-specific and belong to the IR substrate;
+isolating them as a separate crate adds a boundary without a
+corresponding ownership split. `feedback_general-infra-crates`
+applies to constructs that are genuinely general-purpose (e-graph,
+cost models) — rewrite rules over `IrNode` are not.
 
 Mandatory ranking is justified by the residue analysis in Q3: even a
 10% VM residue across a multi-grammar run is thousands of rules. An
@@ -77,9 +87,9 @@ every round and scales worse.
 
 ## Resolution mechanism
 
-1. BB creates `crates/ir-rewrites/` with the fleet-wide registry API.
+1. BB creates `crates/ir/src/rewrites/` with the fleet-wide registry API.
 2. BB adds `rewrites/` subdirectory per existing grammar.
-3. Ranker implemented in `crates/ir-rewrites/src/rank.rs`. Scoring
+3. Ranker implemented in `crates/ir/src/rewrites/rank.rs`. Scoring
    factors are pluggable (see `feedback_pluggable_components.md`).
 4. Review-tier classifier implemented in the same crate. Tier
    boundaries are configurable constants, reviewed quarterly.
@@ -96,7 +106,7 @@ found.
 
 ## References
 
-- `crates/ir-rewrites/` (new, authored in BB)
+- `crates/ir/src/rewrites/` (new, authored in BB)
 - `grammar/<name>/rewrites/` (new, authored per grammar)
 - Feedback: `feedback_pluggable_components.md`,
   `feedback_general_infra_crates.md`, `feedback_no_god_modules.md`

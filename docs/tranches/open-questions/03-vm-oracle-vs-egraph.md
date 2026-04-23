@@ -78,5 +78,5 @@ e-graph-extension loop and blocks close.
 
 ## References
 
-- `crates/ir-rewrites/` (see Q4)
+- `crates/ir/src/rewrites/` (see Q4)
 - Feedback: `feedback_changed_flag_convergence.md`, `feedback_pluggable_components.md`

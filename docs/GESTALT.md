@@ -46,7 +46,7 @@ isomorphic Rust / TS / Python `path!` macro; two weeks), **BB**
 (e-graph rule inference with e-graph-first equivalence filtering
 and the VM interpreter at `crates/ir/src/vm/` serving as the
 ground-truth oracle on residue; grammar-colocated rule storage in
-`crates/ir-rewrites/` + `grammar/<name>/rewrites/`; automatic
+`crates/ir/src/rewrites/` + `grammar/<name>/rewrites/`; automatic
 ranker + tiered review; two to three weeks). The sequence is
 strict: B1 precedes AY-II.W0'; AY-II precedes AZ; AZ precedes BA;
 BA precedes BB. The tranche letters BA, BB, BC renamed during the
@@ -645,7 +645,7 @@ that Era V's AX.W0b deliberately left at HEAD.
 
 Rule storage is grammar-colocated and extensible per the audit's
 Q4 resolution. Fleet-wide rules (associativity, commutativity,
-absorption) live in a new general-infra crate `crates/ir-rewrites/`
+absorption) live in a `crates/ir/src/rewrites/` module within the existing IR crate
 rather than `crates/core` (`feedback_general-infra-crates`;
 `feedback_no-core-dumping`). Grammar-specific rules colocate with
 the grammar under `grammar/<name>/rewrites/*.ron` in a
@@ -656,7 +656,7 @@ schema declares name, LHS pattern, RHS pattern, cost delta,
 provenance (hand-coded or BB-inferred), and discovery metadata.
 
 Curation is automatic-ranked and tiered. The ranker lives at
-`crates/ir-rewrites/src/rank.rs` and scores every candidate on
+`crates/ir/src/rewrites/rank.rs` and scores every candidate on
 match frequency, cost delta, generality (grammars matched),
 similarity to Tranche H hand-coded rules, novelty, and LHS
 tree size. Tiered review: Class-1 trivial (algebraic identities
@@ -1123,7 +1123,7 @@ workload is comfortable at current ~1800-LOC surface.
 **Q4 — rule storage, ranking, review** (see
 `04-rule-storage-ranker-review.md`). Grammar-specific rules
 colocate with their grammar under `grammar/<name>/rewrites/*.ron`;
-fleet-wide rules live in a new `crates/ir-rewrites/` crate, not
+fleet-wide rules live in a `crates/ir/src/rewrites/` module, not
 `crates/core`. Automatic ranker scores candidates on match
 frequency × cost delta × generality × similarity to ground-truth
 × novelty × tree size. Tiered review: Class-1 auto-accept,

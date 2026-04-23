@@ -87,6 +87,23 @@ exist at HEAD; the earlier AX.W1.A/B experiments that produced them
 landed and reverted at −6,128 LOC on 2026-04-20 under
 `feedback_grammar-authoritative-status`.
 
+The phrase "grammar-derived" does real work. It is not decoration.
+A typical parser-generator treats the grammar as input to code
+generation and the generated code as the authoritative artefact;
+bbnf-lang treats the grammar as the authoritative artefact and the
+generated code as its projection. The distinction matters at every
+subsequent decision point. When the CSS L4 grammar declares
+`length -> Length`, the emitter has no latitude to project `length`
+as anything but a typed `Length`; if the lightningcss `Length` and
+the bbnf-derived `Length` disagree in shape, the grammar is edited
+to match, not the emitter. When a payload cannot be derived from
+`->`, the grammar is extended (e.g., hybrid-grammar-host's Phase 3
+adds host-function annotations for context-dependent semantics);
+the emitter does not compensate for missing grammar information.
+The discipline is what makes `feedback_no-backward-compat` viable:
+all dev products migrate fully, because the grammar mediates change
+and the emitter is a pure projection.
+
 Four invariants bind the substrate.
 
 **Typed materialisation.** `BA.md` states the consequence: every
@@ -172,6 +189,17 @@ re-use the same CSP solver that bbnf-lang uses for cost modelling,
 because the solver is not coupled to bbnf-lang's use.
 
 ## 3. The six eras — one diagram, one paragraph
+
+Six eras, each with its own architectural thesis, each inheriting
+the substrate the prior era produced. The commit-count-per-era
+ratio sharpens as the project matures: Era II at ~14 commits per
+day, Era III at ~11, Era IV at ~31 (tranche discipline begins
+compounding output), Era V at ~114 (substrate explosion under
+activation anxiety), Era VI at ~43 (pause-and-verify protocol
+slows output deliberately). Era V's 114-per-day commit rate is a
+symptom visible in retrospect; at the time, the rate read as
+progress against a plan. The archaeology's value is exactly this —
+the rate differential that flags plan-drift earlier in future eras.
 
 ```
  Era I  ── LSP/TextMate prelude ──────────────────── 2023-03-03 → 2023-03-06 (25c, 4d; 3-yr hiatus)
@@ -405,7 +433,20 @@ to `nightly-2026-04-11` across bbnf-lang, `../parse-that`,
 `../pprint` — eliminating the 93-ICE cluster at
 `compiler/rustc_middle/src/query/on_disk_cache.rs:663:9` that the
 meta-audit traced to an ambient `1.96.0-nightly (9602bda1d 2026-04-05)`
-cache-staleness bug (not a bbnf bug). W0 also rewrites `.cargo/config.toml`,
+cache-staleness bug (not a bbnf bug). The ICE investigation in
+`TOOLCHAIN-SOTA.md` found that every sampled ICE file (10 of 10
+random) terminated in `#0 [analysis] running analysis passes on
+crate bbnf_analysis`, with the immediate frames pointing at
+`OnDiskCache::load_side_effect`, `DepGraphData::try_mark_previous_green`,
+and `ensure_can_skip_execution` — a cache-decoder panic when the
+rustc incremental cache encounters an `AttrId` it cannot decode.
+The pin freezes rustc at a known-good date; the `cargo clean` plus
+`rm -rf target/ax-iter/incremental` sequence that B1.W0 runs at the
+start clears any corrupt cache entries from the ambient-nightly
+period. Without the pin, sibling repos can drift to a rustc that
+reintroduces the bug; B1.W2.c adds a CI job that diffs the pin
+across bbnf-lang, parse-that, and pprint so that any drift is a
+build failure. W0 also rewrites `.cargo/config.toml`,
 `.config/nextest.toml`, and `Makefile`. W1 ships the exemplar divan
 port (`crates/core/benches/compile_pipeline.rs`), the 18 remaining
 bench ports, removes the `bencher = "0.1"` dev-dep outright, and
@@ -562,6 +603,25 @@ rule-inference viable at all. `feedback_abrogate-before-patch`
 applies: BC does not re-open the DTA walker; BC uses what remains.
 Agent-slot count: four waves.
 
+The three durable surfaces BC uses are stated explicitly in `BC.md`.
+First, the VM as equivalence oracle: two `IrNode` candidates run
+through the VM against a fixture corpus, tape outputs compared byte-
+for-byte. Second, the VM as cost-model reference: the VM's opcode
+count per rule is a proxy for the cost the AOT path would pay if
+inlined; BC uses this for cost-model calibration of CSP variables.
+Third, the VM as regression oracle: after a rule inference lands a
+transformation, the VM runs pre-rule and post-rule forms on the
+same fixtures to verify semantic identity. None of these require
+the full DTA walker substrate; each uses only the VM's token-
+dispatch opcode machinery that AX.W0b deliberately left at HEAD.
+The Tranche H factor / merge_regex_alts / inline_acyclic rewrites
+that were hand-coded become the validation reference: BC's first
+rule-inference pass must rediscover them (with possibly different
+surface presentations but semantically equivalent `IrNode`
+transformations) before BC declares the mechanism sound. The
+existing hand-coded rules are the ground truth that BC's
+enumeration is calibrated against.
+
 ## 6. The SOTA union — grammar-derived everything
 
 The fleet is a compositional SOTA of parser literature pieces,
@@ -636,6 +696,24 @@ combinators — each contributes a specific capability; each is
 wired into bbnf through the grammar's `->` annotations, not through
 a per-feature side channel. The IR is what makes the composition
 coherent.
+
+The grammar-derived mediation is what makes the composition
+defensible at scale. A JSON-only speed-up that ships a JSON-specific
+codepath is rejected at plan time (`feedback_preserve-rich-ast`:
+never flatten typed grammar rules for speed; rich AST parity with
+lightningcss is non-negotiable). A per-grammar parser hand-tuned to
+beat a specific fixture is rejected at plan time. Every technique
+bbnf adopts from the literature is applied at grammar abstraction
+level, with the grammar's `->` annotations carrying the type
+information that the technique expects. When BA activates scalar
+payload directly to struct, it does so for *every* grammar with a
+scalar `->` annotation, not for JSON's `value -> f64` alone. When
+BB compiles pointer paths, the `path!` macro works for *any*
+grammar, not for JSON's well-known structure alone. When BC infers
+rewrite rules, it infers over `IrNode` — the grammar-agnostic IR —
+producing rules that apply to any grammar by construction. This is
+the composition principle: *the grammar is the only distinguishing
+input, and everything downstream is uniform across grammars*.
 
 ## 7. The fleet — cross-repo shape
 
@@ -894,6 +972,45 @@ These two bind BA's substrate: the emitter has one codepath, not
 two, and the StructRegistry is the single decision surface for
 payload shape.
 
+**No orthogonal codepaths.** `feedback_no-orthogonal-codepaths`:
+arena allocation is a singular collection strategy; no conditional
+Vec-vs-scratch branching. This is the enforcement mechanism for the
+"one codegen path" principle at the allocator level. The Tranche Y
+column-split was orthogonal to the base `Vec<TapeRec>`; AY-I.W1's
+column revert is the enforcement of the principle against a
+substrate that had drifted from it.
+
+**Clean regen discipline.** `feedback_clean-regen-discipline`:
+generated files are always the output of fresh regen; never hand-
+patch. B0 cycle-1 = cycle-2 byte-identical bootstrap verified the
+discipline empirically; any future divergence is a regression signal.
+
+**Document alongside code.** `feedback_doc-alongside-code`: always
+update SPEC.md and design docs alongside architectural changes. The
+tranche documentation pattern itself — plan + progress + FINAL +
+audit, all inside `docs/tranches/<X>/` — is the visible form of the
+discipline.
+
+**No metalanguage docs.** `feedback_no-metalanguage-docs`: docs must
+never reference plans, commits, conversation history; standalone
+prose only. This document honours the rule for its own subject
+matter; the "commit X pivoted Y" references are operational
+pointers, not meta-narration. Every tranche FINAL.md is a standalone
+reading of what the tranche produced, not a transcription of the
+plan's expectations.
+
+**Inspect generated output.** `feedback_inspect-generated-output`:
+always inspect expanded/compiled output when working on codegen;
+use `cargo expand` + `cargo asm`. The `.cargo/config.toml` aliases
+`expand-*` and `asm-parse` expose this as a first-class workflow
+surface; B1.W0 keeps these aliases alive through the rewrite.
+
+**Aesthetics critical.** `feedback_aesthetics-critical`: formatting
+aesthetics are the purpose of gorgeous / pprint; never use
+heuristic thresholds over actual configurable values. The gorgeous-
+mirror retirement does not relax this; `crates/gorgeous` carries
+the same discipline, just at workspace-authoritative location.
+
 ## 10. Open questions that gate the plan
 
 Four BA/BB/BC questions remain open at gestalt time, plus three
@@ -1009,6 +1126,31 @@ Key file pointers for readers diving deeper:
 - Parity harnesses: `tests/*_parity.rs` (sonic-rs, lightningcss, simdjson OnDemand, serde_json, cssparser)
 - Feedback memory corpus: `~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/memory/MEMORY.md`
 
+### Cross-reference: six-era inflection commits
+
+The three reversals the archaeology names as health signals, plus
+the three forward inflection commits, all live on unpushed master.
+Each is reproducible from the tree:
+
+| Phase | Commit | Meaning |
+|---|---|---|
+| Era III arrival of CSP scheduling | `a5991bac` (Tranche K) | CSP-scheduled e-graph execution; cost-model spine for later decisions |
+| Era IV tape-first substrate | `85478284` (AE.0/.1) | Tape-first shape-agnostic walking; every later tranche inherits |
+| Era IV decision-surface collapse | `2f7c1bd4` (AQ.5) | Structural dispatch deleted; `no-orthogonal-codepaths` enforced |
+| Era IV baseline | `5281ec23` (AU FINAL) | First `FINAL.md`; 17-entry baseline matrix; convention set |
+| Era V peak-and-lose | `c1e86ab3` (AW-V.W3) | JSON shape-emitter thesis demonstrated once, lost by W6 |
+| Era V reckoning | `4177a18c` (AX plan) | RD Reckoning; 21 invariants; interpreter deletion queued |
+| Era V close (reversal 1) | `a206b962` (AX.W0b.A) | DTA walker deleted; ~78K LOC reclaimed |
+| Era VI column revert (reversal 2) | AY-I.W1 | Seven structural Vecs → single `Vec<TapeRec>` + `sib_skip` |
+| Era VI hand-coded revert (reversal 3) | `3429aaba` (W1r.0) | `bbnf::json::Value` / `css::StyleSheet` deleted; −6,128 LOC |
+| Era VI infra pivot | B1 plan at `7f3394bc` | Dev-loop truth before runtime; AY-II paused |
+| Era VI future (BA) | BA plan at `e9dd4c3c` | Twitter 1967 MB/s gate in W1; direct-to-struct activation |
+
+The six arrows — CSP → tape-first → decision-collapse → baseline →
+peak-and-lose → reckoning → reversal → column-revert → infra-pivot
+→ activation — are the project's architectural spine. Every later
+tranche cites at least one of them.
+
 ---
 
 The thesis the reader walks away with: *bbnf-lang is grammar-
@@ -1020,3 +1162,26 @@ opens; BA must close with StructRegistry at 100% and twitter at
 The question a future maintainer reaches for this document to
 answer: *why this sequence, and what would cause us to reverse it?*
 Section 4 answers the first; Section 10 answers the second.
+
+A closing note on what this document deliberately does not claim.
+It does not claim the plan is correct; it claims the plan is the
+one the fleet has converged on after eleven worktree branches of
+independent audit. It does not claim BA's twitter gate will land;
+it claims the gate is declared, the substrate path is measurement-
+first, and the reversal criteria are codified. It does not claim
+the VM oracle will scale; it flags the question under §10 and
+specifies the BC.W0 micro-bench that will resolve it. The project
+has twice in six months shipped substrate that failed to activate,
+and twice responded with decisive reversal rather than patch.
+Reversal is the mechanism of correctness; the plan budgets for it;
+the reader should expect it. What the plan does not budget for is
+continuing to execute on substrate that has not demonstrated its
+runtime consumer — AX invariant 13 is the codification, and every
+tranche in the runway cites it. The runway's end state is a
+grammar that produces, for any language, a direct-to-struct tape-
+first runtime parser that beats lightningcss, sonic-rs, and
+simdjson OnDemand at their own games — parity first, exceedance
+second, every `->` reaching the tape, one substrate, one
+measurement surface, no orthogonal codepaths. That is the target;
+the sequence above is the only one the fleet has found that
+reaches it.

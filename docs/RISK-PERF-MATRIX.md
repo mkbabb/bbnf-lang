@@ -145,7 +145,7 @@ activation work.
 | W1 | Stage A — tape-based compiler builds struct-based BBNF parser candidate; byte-compare against pre-AZ-II | 0.55 | 0.78 | Stage A candidate is structurally correct but not byte-equal due to unforeseen emission ordering |
 | W2 | Stage B — W1 candidate rebuilds itself; byte-equal vs Stage A | 0.50 | 0.72 | Byte-equal reproducibility is the hardest single check in the entire runway; triggers `bbnf-tape-mini` escape if missed |
 | W3 FINAL | `crates/tape/` deletion + view codegen rewrite + parity harness recoding + 17-entry parity | 0.88 | 0.94 | Mechanical given W2 passes; `cargo build --no-default-features` without `crates/tape/` is the close gate |
-| **AZ-II tranche close** | **All four waves** | **0.17** | **0.45** | Compound. Defensible floor: `bbnf-tape-mini` retained for BBNF, tape dissolved for the other three grammars, tape-deletion-for-BBNF routed to a follow-on micro-tranche. |
+| **AZ-II tranche close** | **All four waves** | **0.17** | **0.45** | Compound. Declared outcome: `crates/tape/` deleted wholesale. Last-resort floor (invoked only on intractable W2 byte-equal failure): `bbnf-tape-mini` retained for BBNF bootstrap with tape-deletion routed to a follow-on micro-tranche; this is the escape valve, not a planning alternative. |
 
 The split across the BBNF-cutover boundary materially changes the
 cascade arithmetic (see §Cascade below). The single highest-impact
@@ -159,9 +159,11 @@ explicit drift-source enumeration in W0.
 
 ## BA — lazy typed pointer-path queries over struct tree
 
-Opens on AZ-II close. Four waves. Conditional on AZ-II landing at
-least at defensible floor (tape dissolved fleet-wide, or
-`bbnf-tape-mini` escape with three data grammars on direct-to-struct).
+Opens on AZ-II close with `crates/tape/` fully dissolved. If
+AZ-II invokes its last-resort `bbnf-tape-mini` escape, BA still
+opens — the BBNF parser's residual `bbnf-tape-mini` consumer does
+not affect BA's substrate, which is the grammar-derived struct
+tree for every grammar.
 
 | Wave | Scope | P(declared) | P(floor) | Dominant risk |
 |---|---|---:|---:|---|
@@ -259,9 +261,10 @@ At the floor level, the runway delivers:
 - JSON + Sheets at AU-baseline parity, CSS partial (AY-II floor).
 - Direct-to-struct on JSON + Sheets with CSS partial; tape retained
   for CSS + BBNF (AZ-I floor).
-- BBNF on direct-to-struct with `bbnf-tape-mini` shrunken fallback
-  if byte-equal reproducibility misses; full `crates/tape/`
-  deletion otherwise (AZ-II floor).
+- BBNF on direct-to-struct with `crates/tape/` deleted wholesale
+  (AZ-II declared). Last-resort floor: `bbnf-tape-mini` retained
+  for BBNF bootstrap only, invoked *only* when byte-equal
+  reproducibility proves intractable after genuine attempt.
 - Rust-only pointer queries on JSON + CSS with zero-alloc traversal;
   TS + Python bindings stretch (BA floor).
 - JSON enumeration + Class-1 auto-accept + partial Tranche H
@@ -280,13 +283,19 @@ AZ-I/AZ-II boundary enforces similar narrow-scope reverts by
 construction. The expected-reversal-count rises, but each
 reversal is cheaper.
 
-**Remaining strategic question**: whether to treat AZ-II as
-optional. If the floor-case outcome of AZ-I (direct-to-struct for
-three data grammars with tape retained for BBNF) is acceptable as
-a permanent state, the runway can halt after AZ-I and route the
-remaining 945 unpushed commits to origin. This is a strategic
-judgment the plan does not pre-commit to — but the split makes
-the option available.
+**AZ-II is required, not optional.** Full tape abrogation is a
+hard architectural requirement — the last orthogonal codepath
+must dissolve so every downstream optimisation (BA pointer
+queries, BB rule inference, and every future tranche beyond them)
+lives in a single-substrate world. Halting after AZ-I leaves
+`crates/tape/` alive for one grammar, which is exactly the
+"two-decision-surfaces" pathology `feedback_no-orthogonal-codepaths`
+prohibits. The split improves reversal surface and mid-runway
+checkpointing, it does not create a legitimate halt point. The
+`bbnf-tape-mini` escape defined in `AZ-II/AZ-II.md` is an
+escape-of-last-resort invoked only when W2 byte-equal
+reproducibility proves intractable after genuine attempt — it is
+not a planning alternative.
 
 ---
 

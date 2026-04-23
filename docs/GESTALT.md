@@ -609,10 +609,18 @@ AQ.5's cleanest-reversal precedent (~32 commits) and explicitly
 avoiding AW-IV's substrate-without-consumer anti-precedent (92
 commits, 0/17 gate miss).
 
-The split from a monolithic seven-wave AZ doubles end-to-end floor
-probability (0.38 → 0.72 per `RISK-PERF-MATRIX.md §Cascade`) by
-boundarising the single highest-risk piece (BBNF bootstrap
-cutover) into its own tranche with its own reversal gates.
+The split from a monolithic seven-wave AZ does not improve the
+raw multiplicative cascade — adding waves lowers the joint
+product. What the split actually buys is cleaner reversal scope
+(a revert inside AZ-I or AZ-II touches only that tranche's
+substrate, not seven interleaved waves) and mid-runway
+checkpointing at AZ-I close. AZ-II is required, not optional:
+full tape abrogation is the architectural goal, because leaving
+`crates/tape/` alive for even one grammar reintroduces the
+orthogonal-codepath pathology `feedback_no-orthogonal-codepaths`
+prohibits. The `bbnf-tape-mini` escape is a last-resort valve
+invoked only when W2 byte-equal reproducibility proves
+intractable after genuine attempt — not a planning alternative.
 
 ### BA — lazy typed pointer-path queries over the struct tree
 

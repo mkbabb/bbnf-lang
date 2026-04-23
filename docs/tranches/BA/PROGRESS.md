@@ -1,5 +1,8 @@
-# BA — Progress Log
+# BB — Progress Log
 
-Dated execution log for tranche BA.
+Dated execution log for tranche BB.
 
-Execution begins after AY closes and BA opens.
+- `Status`: planned
+- `Opens after`: BA close
+- `Current wave`: not started
+- `Next wave`: W0

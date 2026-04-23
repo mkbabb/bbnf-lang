@@ -1,8 +1,5 @@
-# BB — Progress Log
+# BC — Progress Log
 
-Dated execution log for tranche BB.
+Dated execution log for tranche BC.
 
-- `Status`: planned
-- `Opens after`: BA close
-- `Current wave`: not started
-- `Next wave`: W0
+Execution begins after BB closes and BC opens.

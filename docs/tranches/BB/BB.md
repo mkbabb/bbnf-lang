@@ -1,130 +1,188 @@
-# Tranche BB — Lazy Typed Pointer-Path Queries
+# Tranche BC — E-graph Rewrite Rule Inference
 
-BB opens on BA's settled substrate. BA has populated `StructRegistry`
-for every production grammar, landed the backward container pointer,
-and proved every `->` reaches the tape emitter under a same-commit
-runtime consumer. BB layers lazy typed pointer-path queries on top
-of that substrate — sonic-rs's `pointer!` ergonomics with compile-time
-type validation and simdjson OnDemand's forward-skip laziness, but
-derived from the grammar rather than declared by the user.
+BC closes the loop on `feedback_pluggable-components` and
+`feedback_csp-always-optimize` by letting the e-graph *discover*
+grammar-level rewrite rules rather than only apply a fixed rule set.
+Ruler-style CVC enumeration over `IrNode` produces candidate rewrite
+rules; the bbnf IR interpreter (salvaged from the DTA/PSI era!) acts
+as the equivalence oracle; CSP schedules candidate rule application
+against the existing cost model. Accepted rules persist into
+`cost_config` and are consumed by subsequent codegen runs.
+
+BC is the tranche where the long DTA/PSI arc finally earns its keep.
+The VM interpreter still compiles at HEAD (`crates/ir/src/vm/`); the
+token-dispatch opcode that the VM needed for runtime interpretation
+now becomes the equivalence oracle for BC's enumeration, and the
+AOT path retains the dispatch-table machinery as a proven substrate.
+~572 tranche-tagged commits of Era V do not come back, but the
+interpreter's surviving core is what makes BC viable at all.
 
 ## Architectural thesis
 
-1. **Pointer paths are grammar-typed at compile time.** A path
-   expressed in the host language resolves to a typed accessor via
-   IR type inference. Invalid paths (keys that don't exist at the
-   grammar position, index into a non-list, type mismatch at the
-   terminal) fail to compile. This is strictly stronger than
-   sonic-rs, where the `pointer!` macro produces a runtime error
-   on a bad path.
-2. **Lazy skip uses BA's backward + forward container pointers.**
-   A pointer descent skips off-path containers in O(1) via
-   `child_off` (forward). A pointer ascent from an accessor up to
-   its root uses `parent_off` (backward). No re-scan of document
-   bytes for path traversal; all navigation is over the tape.
-3. **Zero runtime allocation on traversal.** A path query's
-   intermediate state is borrowed from the tape; no `Vec<NodeId>`
-   is constructed. The terminal accessor returns a
-   `NodeView<'p, TargetRule>` or the typed payload.
-4. **Path construction is ergonomic and backend-agnostic.** The
-   host-facing form uses a `path!` macro; the IR-level form is
-   a typed `Path<Grammar, Target>` value. Different host backends
-   (Rust, TS, Python bindings) receive isomorphic signatures
-   per `feedback_isomorphic-api`.
-5. **Pointer paths compose with egraph normalization.** A path
-   rewrites during compilation: duplicate prefix elimination,
-   redundant downcast elimination, path-fusion with adjacent
-   accessors. BC later extends this surface with inferred rules.
+1. **Rule inference over `IrNode` is an e-graph enumeration
+   problem.** Ruler (Nandi et al. 2021) demonstrates the CVC-style
+   approach: generate candidate terms over the grammar's alphabet
+   up to a bounded size, group them by equivalence under an
+   oracle, extract rules as cross-class equivalences. BC applies
+   the same pattern to bbnf's `IrNode` shape.
+2. **The bbnf IR interpreter is the equivalence oracle.** Two
+   `IrNode` candidates are equivalent if running both through the
+   interpreter against a corpus of input fixtures produces
+   identical tape output. The interpreter exists (salvaged from
+   Era V) and is already referenced as "reference semantics" in
+   the SOTA synthesis. BC makes this role explicit: the
+   interpreter is BC's oracle, not a dead artefact.
+3. **CSP schedules rule application.** The existing CSP solver
+   (`bbnf-csp-solver`) chooses which candidate rules to apply at
+   which cost, reusing the same cost variables that govern regex
+   engine choice, emission tier, and wrap mode. No new decision
+   surface, per `feedback_no-orthogonal-codepaths`.
+4. **Rules are grammar-derived, not hand-coded.** The factor,
+   merge_regex_alts, inline_acyclic rewrites that landed at
+   Tranche H were hand-coded. BC does not hand-code; BC discovers.
+   Every rule that survives to `cost_config` was produced by
+   enumeration and validated by the oracle.
+5. **Rules are source-level transparent.** Every persisted rule
+   has a human-readable `Debug` form and a round-trip to bbnf
+   surface syntax. A reviewer can read the rule, understand the
+   equivalence, and either accept or reject it manually before
+   it lands in `cost_config`. Enumeration is automated; curation
+   is not.
 
-## BA dependency
+## Salvage from Era V — the VM as oracle
 
-BB does not open until BA's handoff contract is fully met:
+The VM / bytecode interpreter arc (2026-03-15 → 2026-04-12) is the
+hardest-earned substrate in project history. Its deletion at
+AX.W0b (`bc550d2c`, `a206b962`, ~78K LOC reclaim) removed the
+DTA walker, the `dta_walker/`, `emitter/dta.rs`, and 8 DTA-coupled
+test suites. But the core that remains — `crates/ir/src/vm/` +
+token-dispatch opcode machinery — compiles at HEAD and is directly
+usable as:
 
-1. `StructRegistry` populated for JSON / CSS / Sheets / BBNF.
-2. Backward container pointer landing with an active consumer.
-3. IR audit pass at 100% `->` coverage.
-4. 17-entry AU-baseline matrix at or above AU floor.
-5. lightningcss / sonic-rs / simdjson parity harnesses green.
+1. **An equivalence oracle.** Given two `IrNode` candidates and a
+   corpus, run both through the VM and compare tape output. This
+   is exactly what Ruler requires.
+2. **A cost-model reference.** The VM's opcode count per rule is
+   a proxy for the cost the AOT path would pay if inlined. BC
+   uses this for cost-model calibration.
+3. **A regression oracle.** After rule inference lands a
+   transformation, the VM runs the pre-rule and post-rule forms
+   on the same fixtures to verify semantic identity.
 
-If BA's W3 backward-pointer decision lands on "sidecar column
-rather than in-record", BB absorbs the change at W0 and the path
-traversal consults the sidecar. If BA's `StructRegistry` is partial
-at close, BB does not open; the remaining coverage lands under a
-BA-carry wave, not a BB hedge.
+This is the role the synthesis doc anticipated ("VM continues to
+serve as a reference semantics oracle for regression tests") made
+into a first-class BC consumer. BC does not resurrect DTA walker
+dispatch or the shape emitter thesis from AW-V; BC uses only the
+narrow VM surface that survives at HEAD. `feedback_abrogate-before-patch`
+applies: BC does not re-open the walker; BC uses what remains.
+
+## Dependencies
+
+BC depends on BA close + AY-II close. BB is NOT a BC blocker —
+rule inference operates over `IrNode`, not over pointer-path
+output, so BB can land in parallel with or after BC.
+
+**BA close dependencies:**
+
+- `project_types` IR pass populates `StructRegistry` for every
+  grammar. BC's enumeration uses the registry to type-check
+  candidate rules.
+- Every `->` reaches the tape emitter. BC's oracle relies on
+  tape output being the canonical comparison point.
+
+**AY-II close dependencies:**
+
+- Visitor-lane default `to_value()` with unified compound
+  emission API. BC's oracle runs against this substrate.
+- `Columns::rollback_to` as the rollback primitive. BC's
+  enumeration may occasionally need to roll back speculative
+  tape state during oracle evaluation.
 
 ## Invariants
 
-1. No runtime path error. Every path that compiles returns a
-   valid accessor for a parsed document matching the grammar.
-2. No allocation during path traversal. Borrowed cursor state
-   only.
-3. No hand-written path resolver per grammar. The resolver is
-   derived from the `StructRegistry` + grammar IR.
-4. No duplicate traversal logic. The path resolver is the single
-   consumer of the backward / forward pointer surface; no second
-   parent-walk path exists.
-5. Measurement at every wave boundary. A lazy-path micro-bench
-   suite runs with the 17-entry matrix; regressions on either
-   block wave close.
+1. No rule lands in `cost_config` without oracle validation on
+   the full fixture corpus.
+2. No hand-coded rules added at BC. The existing factor /
+   merge_regex_alts / inline_acyclic rules are preserved; BC
+   adds only enumerated rules.
+3. The enumeration is bounded: candidate term size ≤ N (declared
+   per wave), oracle corpus size ≤ M. BC does not ship an
+   unbounded search.
+4. Inferred rules do not change semantic behaviour for any
+   existing fixture. Parity is non-negotiable.
+5. Every accepted rule reduces at least one cost metric on at
+   least one grammar. Rules that don't buy anything are not
+   accepted.
 
 ## Operational posture
 
-1. Every wave opens with a measurement surface. The lazy-path
-   micro-bench suite (extract 3 / 10 / 30 fields from citm /
-   tailwind / sheets fixture) runs on every wave boundary with
-   recorded deltas.
-2. Every substrate addition ships with a same-commit consumer.
-   BB does not ship a path compiler without a path consumer, and
-   does not ship a path runtime without a path compiler.
-3. The 17-entry AU-baseline matrix runs on every wave boundary.
-   Path infrastructure must not regress the full-parse throughput
-   that BA established.
-4. Samply profiles land under `docs/benchmarks/profiles/BB/<wave>/`
+1. Every wave ships a runtime call site. The enumeration pass
+   runs in the codegen pipeline with a bounded budget; the cost
+   report is emitted to `docs/benchmarks/BC/<wave>/cost-deltas.json`.
+2. The 17-entry AU-baseline matrix runs on every wave boundary.
+   Inferred rules must not regress full-parse throughput.
+3. Rule curation is a documented step. Each inferred rule
+   enters a review queue; a reviewer either accepts or rejects
+   before it reaches `cost_config`. Rejected rules are recorded
+   under `docs/tranches/BC/rejected-rules/` with a rationale.
+4. The VM oracle runs under a time budget per candidate; oracle
+   timeouts mark a rule as "inconclusive" rather than
+   "equivalent".
+5. Samply profiles land under `docs/benchmarks/profiles/BC/<wave>/`
    before and after.
 
 ## Hard gates
 
-**Path-specific gates:**
+**Rule-inference gates:**
 
-- `Path::compile("$.pair[0].number")` against the JSON grammar
-  returns an `f64` typed accessor at compile time.
-- An invalid path (`$.foo.nope`) fails to compile with a grammar-
-  aware error message.
-- The lazy-path micro-bench suite beats sonic-rs `pointer!` by
-  ≥ 20% on the "extract 3 fields from citm.json" benchmark and
-  is at parity or better on "extract 30 fields".
-- Zero heap allocations during path traversal (measured via
-  `dhat`).
+- Enumeration produces ≥ N_w candidate rules per wave, where
+  N_w is declared at wave open (W1 = 20, W2 = 50, W3 = 100).
+- Oracle validation rejects ≤ 50% of candidates at each wave;
+  higher rejection indicates the enumeration alphabet needs
+  narrowing.
+- At least 5 rules per grammar accepted into `cost_config`
+  across the tranche.
 
-**Regression gates:**
+**Cost gates:**
 
-- 17-entry AU-baseline matrix: no regression against BA close.
-- lightningcss / sonic-rs / simdjson parity harnesses green.
+- After applying accepted rules, at least one grammar's
+  generated codegen shrinks by ≥ 10 LOC.
+- At least one grammar shows a measurable throughput gain on
+  the 17-entry bench matrix.
+- No grammar regresses on the 17-entry matrix.
+
+**Parity gates:**
+
+- lightningcss / sonic-rs / simdjson parity harnesses green
+  after every accepted rule.
 - Workspace: pass ≥ BA close pass count, fail ≤ BA close fail
   count.
 
-**Coverage gates:**
+## Risk register
 
-- Every Named rule in every production grammar has a compilable
-  path accessor.
-- The `path!` macro works from Rust, TS binding, and Python
-  binding with isomorphic signatures.
+| Risk | Mitigation |
+|---|---|
+| **Egraph explosion** — candidate enumeration blows past the bounded budget and consumes GB of memory. | Per-wave size bound N_w; fail-fast if `EGraphSolver::node_count()` exceeds declared ceiling. Revert the wave's enumeration alphabet. |
+| **Rule validity drift** — a rule is equivalent on the fixture corpus but semantically wrong on an unseen input. | Accept rules only with oracle coverage ≥ 95% of fixture bytes; mark others as "narrow" and restrict their application to matching grammar positions. |
+| **Interaction with AY-II fusion** — a rule rewrites a fused form into an unfused form, regressing throughput. | The CSP cost model is the gate: a rule that increases CSP-assigned cost is rejected regardless of oracle equivalence. |
+| **Oracle timeout storms** — enumeration produces many candidates that the VM cannot validate in budget. | Per-candidate timeout produces "inconclusive" marker; the inconclusive queue is reviewed at wave close, not shipped. |
+| **Rule accumulation entropy** — hundreds of accepted rules slow compilation. | Hard cap on total accepted rules per grammar (initial = 25 per grammar); a new rule that crosses the cap must displace an existing one based on measured cost delta. |
 
 ## Reversal criteria
 
 Inheriting BA's discipline:
 
-1. **Wave-local 20% rule.** A wave that misses its declared gate
-   by more than 20% reverts its own substrate at wave close.
-2. **No regression on BA close.** Any regression of the 17-entry
-   matrix reverts the responsible substrate immediately.
+1. **Wave-local 20% rule.** A wave whose accepted rules don't
+   produce the declared cost delta by > 20% of target reverts
+   its rule batch.
+2. **No regression on BA / AY-II close.** Any regression of the
+   17-entry matrix reverts the responsible rule batch
+   immediately.
 3. **No hedging forward.** A wave does not route its miss to a
-   later wave of BB or to BC.
-4. **Path complexity triggers reversal.** If path resolution
-   compile-time grows super-linear in grammar size, the
-   resolution algorithm reverts. BB's path compiler is bounded
-   by `O(path_depth × grammar_rule_count)` with egraph
-   normalization; anything worse reverts.
+   later wave of BC.
+4. **Egraph explosion triggers reversal.** Crossing the per-wave
+   node-count ceiling reverts the enumeration alphabet at wave
+   close; the alphabet narrows before the next wave opens.
 
 ## Wave structure
 
@@ -133,126 +191,116 @@ commit.
 
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Path IR + compile-time type check | BA close | planned |
-| **W1** | [waves/W1.md](waves/W1.md) | Lazy traversal over backward/forward pointers | W0 | planned |
-| **W2** | [waves/W2.md](waves/W2.md) | `path!` macro + host-binding isomorphism | W1 | planned |
-| **W3** | [waves/W3.md](waves/W3.md) | FINAL — path-bench closure + parity harness extension | W2 | planned |
+| **W0** | [waves/W0.md](waves/W0.md) | Ruler-style enumerator scaffold + VM oracle harness | BA + AY-II close | planned |
+| **W1** | [waves/W1.md](waves/W1.md) | First rule batch — JSON (narrow alphabet) | W0 | planned |
+| **W2** | [waves/W2.md](waves/W2.md) | Wide alphabet — CSS + Sheets + BBNF | W1 | planned |
+| **W3** | [waves/W3.md](waves/W3.md) | FINAL — rule persistence, cost-config integration, review ledger | W2 | planned |
 
-### W0 — Path IR + compile-time type check
+### W0 — Enumerator + oracle harness
 
-A `Path` is an IR value: a sequence of `PathSegment` (key, index,
-wildcard) typed against a grammar's `StructRegistry`. The compile
-pass resolves each segment against the registry and produces a
-`TypedPath<Grammar, Terminal>` with the terminal rule's
-`TypeDesc` attached.
+The Ruler-style CVC enumerator lives at
+`crates/egraph/src/ruler/enumerate.rs`. The VM oracle wrapper at
+`crates/egraph/src/ruler/oracle.rs` invokes the VM via
+`crates/ir/src/vm/` with a time and memory budget per candidate.
+No rule lands in `cost_config` yet; this wave proves the
+enumeration and validation pipeline on a small alphabet.
 
-Runtime call site: at least one accessor in the JSON view layer
-(`JsonValue::pointer_get<T>`) consumes a compile-time-resolved
-`TypedPath` and returns `Option<T>`. The alternative runtime
-path-resolution code path does not exist.
+Runtime call site: `cargo run --bin bbnf-egraph-enumerate -- --grammar json --budget N` emits a JSON list of candidate rules with per-candidate oracle status. At least 10 candidates must pass the oracle on JSON for wave close.
 
-Bench delta gate: the accessor compiles in < 1 ms on the JSON
-grammar for paths of depth ≤ 8.
+### W1 — First rule batch (JSON, narrow)
 
-### W1 — Lazy traversal
+Narrow alphabet: literal pattern fusion, repeat-unroll, Alt
+flattening when bounded. Target N_1 = 20 candidates, at least 5
+accepted into `cost_config`. Acceptance triggers `generated.rs`
+re-emission; the post-rule JSON generated.rs must differ from the
+pre-rule form on at least one rule.
 
-`TypedPath::traverse(tape: &Tape)` advances through the tape
-using `child_off` to skip off-path containers and `parent_off`
-(sparingly; lazy paths descend by default) to unwind. Terminal
-accessors read the payload directly from the tape record.
+Runtime call site: the bench matrix runs pre-rule and post-rule;
+the delta is recorded under
+`docs/benchmarks/BC/W1/cost-deltas.json`. At least one accepted
+rule must produce a measurable throughput gain on one JSON fixture.
 
-Runtime call site: the path-extraction micro-bench
-(`benches/path_extract.rs`) exercises lazy traversal on citm,
-tailwind, and sheets fixtures and records ns / access.
+### W2 — Wide alphabet (CSS, Sheets, BBNF)
 
-Bench delta gate: extract-3-fields-from-citm beats sonic-rs
-pointer! by ≥ 20%. Extract-30-fields is at parity or better.
-17-entry AU-baseline matrix does not regress.
+The enumerator opens to CSS L4 declaration forms, Sheets cell
+rules, and BBNF self-hosting rules. N_2 = 50 candidates per
+grammar. At least 5 accepted per grammar.
 
-### W2 — `path!` macro + host-binding isomorphism
+Runtime call site: cross-grammar codegen shrink measurement. At
+least one grammar's `generated.rs` shrinks by ≥ 10 LOC after
+rule application.
 
-The Rust host exposes `path!["foo", "bar", 1]` with compile-time
-type resolution; the TS binding exposes
-`path(["foo", "bar", 1])` with the same signature shape under the
-PyO3 / wasm-bindgen constraints; the Python binding exposes
-`path(["foo", "bar", 1])` with runtime-typed response.
-`feedback_isomorphic-api` in force.
-
-Runtime call site: a round-trip end-to-end test at
-`tests/path_isomorphic.rs` exercises all three host bindings
-against the same fixture and asserts identical response shapes.
-
-Bench delta gate: no regression; all three host bindings complete
-the round-trip test without deviation.
+Bench delta gate: no regression on any 17-entry matrix entry;
+at least two grammars show measurable throughput gains.
 
 ### W3 — FINAL
 
-Path-bench closure: the lazy-path micro-bench suite runs with a
-full cross-grammar matrix (JSON / CSS / Sheets / BBNF × 3 / 10 /
-30 fields × cold / warm). The parity harness extends with a
-`pointer_parity` suite that asserts bbnf's pointer output matches
-sonic-rs / simdjson / cssparser pointer output for every
-compilable path. `FINAL.md` records deltas, reversals taken, and
-any follow-on work routed to BC.
+Rule persistence layer: accepted rules land in a
+`docs/tranches/BC/rules/<grammar>/*.rule` form that regenerates
+deterministically (`feedback_clean-regen-discipline`). The review
+ledger captures every accepted and rejected rule with rationale.
+`FINAL.md` records the accepted-rule count per grammar, the
+codegen shrink, the bench deltas, and any enumeration-alphabet
+reversals taken mid-tranche.
 
 ## External SOTA grounding
 
-- **sonic-rs `pointer!` macro** — compile-time path construction
-  with runtime traversal. BB strengthens to full compile-time
-  type resolution. See
-  [sonic-rs pointer docs](https://docs.rs/sonic-rs/latest/sonic_rs/macro.pointer.html).
-- **simdjson OnDemand** — lazy forward-only iteration over a
-  structural bitmap. BB applies the same skip discipline to
-  bbnf's tape rather than to input bytes. See
-  [OnDemand vs DOM performance](https://github.com/simdjson/simdjson/discussions/2201)
-  and [Keiser 2024 ondemand paper](https://onlinelibrary.wiley.com/doi/10.1002/spe.3313).
-- **JSONPath RFC 9535** — the IETF standard for JSON pointer
-  paths. BB's `path!` syntax is compatible with a subset (key,
-  index, wildcard) and is extensible beyond it where the grammar
-  supports richer indexing. See
-  [RFC 9535 — JSONPath](https://datatracker.ietf.org/doc/rfc9535/).
+- **egg — equality saturation with e-graphs.** The substrate bbnf
+  uses today (`crates/egraph/`). See
+  [egg home](https://egraphs-good.github.io/) and the
+  [egg SIGPLAN blog](https://blog.sigplan.org/2021/04/06/equality-saturation-with-egg/).
+- **Ruler — rewrite rule inference.** The technique BC applies.
+  CVC-style enumeration up to bounded term size, pairwise
+  equivalence checks under an oracle, cost-ranked rule extraction.
+  See [Rewrite Rule Inference (Nandi et al. 2021)](https://arxiv.org/pdf/2108.10436).
+- **Enumo — follow-on tooling for rule inference.** Newer
+  infrastructure from the same line of research, with support
+  for conditional rules and domain-specific rulers. See
+  [Enumo paper](https://dl.acm.org/doi/10.1145/3591283).
 
-## BB handoff contract
+## BC handoff contract
 
-BB does not close until all of the following are true:
+BC does not close until all of the following are true:
 
-1. Every Named rule in every production grammar has a compilable
-   path accessor under the `path!` macro.
-2. Lazy traversal beats sonic-rs `pointer!` by ≥ 20% on the
-   3-field extraction benchmark across JSON / CSS / Sheets.
-3. Invalid paths fail at compile time with grammar-aware errors.
-4. Zero heap allocations during traversal (dhat-verified).
-5. The 17-entry AU-baseline matrix at or above BA close.
-6. `path!` macro isomorphic across Rust / TS / Python host
-   bindings.
+1. At least 5 rules per production grammar accepted into
+   `cost_config` via oracle-validated enumeration.
+2. At least one grammar's `generated.rs` shrinks by ≥ 10 LOC.
+3. 17-entry AU-baseline matrix at or above BA close.
+4. Parity harnesses green after every accepted rule.
+5. Review ledger complete: every accepted and rejected rule has
+   a human-readable rationale.
+6. `FINAL.md` records deltas, reversals, and any follow-on work.
 
 ## Defensible floor
 
-1. Path type-checking at compile time for JSON / CSS / Sheets /
-   BBNF.
-2. Lazy traversal with zero heap allocations.
-3. At least 20% win over sonic-rs on small-subset extraction.
-4. No regression on BA-close bench matrix.
+1. Working Ruler-style enumerator + VM oracle pipeline.
+2. ≥ 5 accepted rules per grammar with oracle validation.
+3. Measurable codegen shrink on at least one grammar.
+4. No regression on BA close bench matrix.
+5. Parity green throughout.
 
-Anything less is pointer paths without the ergonomic or
-performance story that motivates them.
+Anything less is rule inference without the "discover, not
+declare" payoff that motivates BC.
 
 ## Post-tranche review candidates
 
 Decision at W3 close, not mid-wave:
 
-- Whether `path!` should absorb richer JSONPath operators
-  (`..`, `?(filter)`, `[*]`) in a successor tranche.
-- Whether path fusion should extend into the egraph pass at BC
-  open, or remain a BB-local optimisation.
-- Whether the TS / Python bindings should share a single
-  path-resolution binary via wasm.
+- Whether the enumerator should open further alphabets
+  (conditional rules, cross-rule fusion) in a successor tranche.
+- Whether the VM oracle should remain ~80 LOC (its current
+  narrowed form) or expand for richer semantics.
+- Whether BB's pointer-path egraph normalization should absorb
+  inferred rules or remain a closed surface.
+- Whether the review ledger should graduate into a standing
+  human-in-the-loop curation CI job.
 
 ## Indefatigability
 
-When BB closes correctly, bbnf exposes a grammar-typed pointer
-API that is both ergonomically parity with sonic-rs and
-structurally stronger (compile-time errors, zero allocation,
-cross-binding isomorphism). The tape-first substrate from Era IV
-now supports both full parse (BA) and lazy extraction (BB) from
-the same substrate, with no alternate code path.
+When BC closes correctly, bbnf's optimiser discovers rules as
+first-class output, the DTA/PSI era's VM interpreter serves as
+permanent semantic oracle for rule inference, and the cost model
+is no longer a hand-curated accumulator but a living record of
+what the enumerator has proven equivalent. The loop closes on the
+DTA/PSI era without rebuilding any of the walker machinery that
+Era V could not make pay.

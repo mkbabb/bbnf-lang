@@ -1,0 +1,169 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# .cargo/config.toml — bbnf-lang workspace
+#
+# Authored in Tranche B1.W0 as the successor to the 32-line patch-only file.
+# Covers:
+#   - path patches (existing crate resolutions; preserved verbatim)
+#   - compile profiles (ax-iter / ay-final / bench-ci)
+#   - alias surface (iteration + test + bench)
+#   - build flags (-Zthreads, -Zshare-generics; nightly-gated)
+#   - target-specific linker choice (lld on macOS arm64; ld64 fallback)
+#
+# Design invariants:
+#   * Every iteration alias carries `--profile ax-iter` explicitly
+#     (feedback: iter-profile-always).
+#   * No fallback/shim profiles; if cranelift or lld is unavailable the
+#     relevant line is commented inline with its enable procedure
+#     (feedback: no-workarounds).
+#   * Bench aliases invoke a single `cargo bench` pass; they do NOT
+#     issue N serial `-p X --bench Y` commands (feedback: bench-single-run,
+#     bench-sequential-regression — divan runs its own serial regression
+#     pass inside one harness invocation).
+#   * Parallel `cargo check -p A + cargo check -p B` silently serialises
+#     on target-lock (feedback: single-cargo-per-target). The `iter-check-*`
+#     aliases are single-invocation; fleet orchestration must honour the
+#     rule by using one `--workspace` alias, not two parallel per-package
+#     invocations.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Path patches ─────────────────────────────────────────────────────────────
+# Sibling-repo path resolution for bbnf-lang. Mirror these in any repo that
+# depends on path-patched members (parse-that, pprint).
+
+[patch.crates-io]
+pprint          = { path = "../pprint/rust" }
+pprint_derive   = { path = "../pprint/rust/derive" }
+parse_that      = { path = "../parse-that/rust/parse_that" }
+bbnf-regex      = { path = "../parse-that/rust/regex" }
+gorgeous        = { path = "crates/gorgeous" }
+bbnf            = { path = "crates/core" }
+bbnf-ir         = { path = "crates/ir" }
+bbnf_derive     = { path = "crates/derive" }
+csp-solver      = { path = "crates/csp-solver" }
+egraph          = { path = "crates/egraph" }
+egraph-derive   = { path = "crates/egraph-derive" }
+
+# ── Profiles ────────────────────────────────────────────────────────────────
+
+# ax-iter: dev-loop iteration profile. Inherits dev; favours compile speed.
+# Used by every `iter-*` alias below; must never appear on a bench target.
+[profile.ax-iter]
+inherits        = "dev"
+opt-level       = 0
+debug           = "line-tables-only"  # enough for samply backtraces; minimal debuginfo cost
+incremental     = true
+codegen-units   = 256                 # maximise parallel codegen on dev hosts
+
+# ay-final: release profile tuned for correctness benchmarks and publishable
+# binaries (playground WASM, LSP release). Fat LTO + single codegen unit.
+[profile.ay-final]
+inherits        = "release"
+lto             = "fat"
+codegen-units   = 1
+debug           = 1                   # keep samply-resolvable symbols
+strip           = false
+split-debuginfo = "packed"
+
+# bench-ci: for iai-callgrind runs under valgrind on Linux CI. Full debuginfo
+# (callgrind needs it for source attribution) and no LTO (valgrind instruments
+# the un-LTO'd IR).
+[profile.bench-ci]
+inherits        = "release"
+debug           = "full"
+lto             = "off"
+codegen-units   = 1
+
+# ── Aliases ─────────────────────────────────────────────────────────────────
+# Routine surfaces. Every alias is the single canonical way to issue its
+# operation; the Makefile delegates here rather than duplicating flags.
+
+[alias]
+# Iteration: cargo check surfaces (ax-iter profile). Each covers one bounded
+# working-set; fleet orchestrators use `iter-check-full` when they need the
+# whole workspace in one pass.
+iter-check            = "check --profile ax-iter --workspace --exclude bbnf-bootstrap --exclude gorgeous"
+iter-check-lsp        = "check --profile ax-iter -p bbnf-analysis -p bbnf-lsp"
+iter-check-prettify   = "check --profile ax-iter -p gorgeous"
+iter-check-bootstrap  = "check --profile ax-iter -p bbnf-bootstrap"
+iter-check-full       = "check --profile ax-iter --workspace"
+
+# Iteration: nextest targets (ax-iter profile). `cargo test` is deliberately
+# absent — nextest is the required runner (feedback: build-infra-first).
+iter-test             = "nextest run --cargo-profile ax-iter --workspace"
+iter-test-core        = "nextest run --cargo-profile ax-iter -p bbnf"
+iter-test-ir          = "nextest run --cargo-profile ax-iter -p bbnf-ir"
+iter-test-analysis    = "nextest run --cargo-profile ax-iter -p bbnf-analysis"
+iter-test-prettify    = "nextest run --cargo-profile ax-iter -p gorgeous"
+iter-test-lsp         = "nextest run --cargo-profile ax-iter -p bbnf-lsp"
+
+# Iteration: clippy (matches iter-check shape).
+iter-clippy           = "clippy --profile ax-iter --workspace --all-targets -- -D warnings"
+
+# Benches: divan harness (ay-final profile). One cargo invocation per target;
+# divan's per-sample regression check runs inside the harness.
+bench-all             = "bench --profile ay-final --workspace"
+bench-json            = "bench --profile ay-final -p bbnf --bench json_monolithic --bench json_parse_that --bench json_vm --bench json_competitors --bench json_stress --bench json_value"
+bench-css             = "bench --profile ay-final -p bbnf --bench css_l4 --bench css_vm --bench css_competitors --bench css_stress"
+bench-bbnf            = "bench --profile ay-final -p bbnf --bench bbnf_monolithic"
+bench-sheets          = "bench --profile ay-final -p bbnf --bench google_sheets_monolithic --bench google_sheets_vm"
+bench-compile         = "bench --profile ay-final -p bbnf --bench compile_pipeline"
+
+# iai-callgrind (CI-only; requires valgrind on Linux).
+bench-iai             = "bench --profile bench-ci --workspace --features iai"
+
+# Expansion / inspection (debug investigations).
+expand-bootstrap      = "expand --profile ax-iter -p bbnf-bootstrap --lib"
+expand-derive         = "expand --profile ax-iter -p bbnf --lib"
+asm-bbnf              = "asm --profile ay-final -p bbnf"
+
+# ── Build flags ─────────────────────────────────────────────────────────────
+# Parallel rustc front-end + generics sharing. Nightly-gated; pinned by
+# rust-toolchain.toml. Measured impact: 20-30% cold wall reduction on
+# iter-check-full (blog.rust-lang.org/2023/11/09/parallel-rustc).
+#
+# NOTE on the ICE interaction: `-Zthreads=N` amplifies the on-disk-cache ICE
+# count (one poisoned query fires one ICE per parallel worker). Remediation
+# is the `make ay-clean-incr` target documented in PROFILING.md §ICE recovery,
+# NOT dropping `-Zthreads`. Once the nightly pin includes the on_disk_cache
+# AttrId fix (see rust-toolchain.toml upgrade cadence), the ICE class closes.
+
+[build]
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+
+# ── Target-specific overrides ───────────────────────────────────────────────
+
+# macOS arm64: prefer LLVM lld for the ~10-20% rebuild-wall win measured by
+# the workspace. Fallback: comment out the link-arg line and Apple ld64 will
+# be used (no other change needed).
+#
+# Prerequisite: `brew install llvm` (places `ld.lld` at the path below).
+# PROFILING.md §Dev-host setup lists this install.
+#
+# `wild` (davidlattimore/wild) is Linux-only as of v0.8.0 (January 2026);
+# `mold` 2.0+ requires a commercial license on macOS. `lld` is the only
+# free + available fast linker for macOS arm64.
+[target.aarch64-apple-darwin]
+linker    = "clang"
+rustflags = [
+    "-C", "link-arg=-fuse-ld=/opt/homebrew/opt/llvm/bin/ld.lld",
+    "-Zthreads=8",
+    "-Zshare-generics=y",
+]
+
+# Dev-only codegen backend: cranelift. Applied via per-profile override so
+# release/bench stay on LLVM (required for "beat lightningcss" measurement).
+# Enabled by the rust-toolchain.toml component `rustc-codegen-cranelift`.
+# Uncomment once the nightly pin verification lands; leave commented if
+# cranelift is broken on the pinned nightly (measure before enabling).
+#
+# [profile.ax-iter]
+# codegen-backend = "cranelift"
+
+# Linux x86_64: lld via rust-lld (bundled with the toolchain). No extra
+# install required.
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+    "-C", "link-arg=-fuse-ld=lld",
+    "-Zthreads=8",
+    "-Zshare-generics=y",
+]

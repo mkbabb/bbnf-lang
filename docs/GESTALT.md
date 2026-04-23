@@ -22,8 +22,8 @@ HIR→NFA→DFA regex engine (`bbnf-regex`) that replaces the `regex`
 crate at emission sites. A pprint substrate (`../pprint`) carries the
 gorgeous auto-formatter.
 
-The fleet state at the audit close: 1,859 master commits
-(post-audit-merge), 945 unpushed, 24 feature branches, 18 tranches
+The fleet state at the current read-of-record: 1,890 master commits,
+993 unpushed, 24 feature branches, 18 tranches
 of substrate work landed between 2026-04-08 and 2026-04-15,
 followed by a five-day DTA/PSI rut (Era V, 2026-04-15 → 2026-04-19,
 ~572 tranche-tagged commits) in which zero of seventeen benchmark
@@ -62,7 +62,7 @@ BC, BC is retired.
 
 | Measure | Value | Source |
 |---|---:|---|
-| Master commits | 1,842 | `git log master \| wc -l` |
+| Master commits | 1,890 | `git log master \| wc -l` (refreshed with tree at HEAD; numbers drift with every commit) |
 | Unpushed commits | 945 | `git log origin/master..HEAD` |
 | Total commits across all refs | 1,923 | per 06-archaeology |
 | First tranche-tagged commit | `a3fadf56` (Tranche F, 2026-04-08) | archaeology §headline |
@@ -423,12 +423,16 @@ walk-equality node-for-node, not string-equality of serialised
 output — and AZ-I.W3 cites them directly.
 
 The twenty-one AX invariants are the procedural survival. They
-declare: bench-checkpoint mid-wave (invariant 7); wire-contract
-compile-gate (invariant 10); ledger-review at handoff (invariant 13);
-frozen-contract rule for gate predicates (invariant 17); shape-
-emitter as single source of truth (invariant 20). Era VI inherits
-all twenty-one; the B1 sub-waves structure themselves around them;
-both AZ-I and AZ-II cite invariants 7 and 13 directly in their
+declare: wire-contract end-to-end tests (invariant 7); mid-wave
+bench-checkpoint (invariant 10); ledger-only wave = re-plan
+trigger (invariant 13); no stubs / placeholder surfaces
+(invariant 18); tape shape is shape-emission-authoritative
+(invariant 20); grammar-derived view surface (invariant 21).
+Operational posture item 4 carries the frozen-contract rule for
+gate predicates; AX.md §Operational posture is the companion
+surface to the twenty-one invariants proper. Era VI inherits all
+of them; the B1 sub-waves structure themselves around them; both
+AZ-I and AZ-II cite invariants 10 and 13 directly in their
 reversal criteria.
 
 Era V's health signal is the three large reversals: **AX.W0b** (~572
@@ -526,11 +530,12 @@ persisting alongside direct-to-struct on the grammars that have
 active struct targets.
 
 AZ-I opens with front-loaded classifier-unification research
-(`docs/tranches/AZ-I/CLASSIFIER-UNIFICATION.md`). The research
-studies how multiple payload kinds — `-> i64`, `-> String`,
-`-> Color`, `-> Vec<Selector>` — compose in a single classifier
-without collision, producing the unified dispatch shape before any
-payload activates. The alternative — reacting to collision mid-AZ
+(`docs/tranches/AZ-I/CLASSIFIER-UNIFICATION.md`, forthcoming as a
+W0 deliverable — not yet on disk at the current read-of-record).
+The research studies how multiple payload kinds — `-> i64`,
+`-> String`, `-> Color`, `-> Vec<Selector>` — compose in a
+single classifier without collision, producing the unified
+dispatch shape before any payload activates. The alternative — reacting to collision mid-AZ
 with a sub-wave — was explicitly rejected as recipe-for-disaster
 during the audit.
 
@@ -578,7 +583,9 @@ corpus, produces IR byte-equal to the pre-AZ-II compiler on the
 same input.
 
 Wave structure at `AZ-II/AZ-II.md`: W0 bootstrap research +
-cutover design (`docs/tranches/AZ-II/BOOTSTRAP-CUTOVER.md`) +
+cutover design (`docs/tranches/AZ-II/BOOTSTRAP-CUTOVER.md`,
+forthcoming as a W0 deliverable — not yet on disk at the current
+read-of-record) +
 classifier extension for BBNF-specific patterns applying AZ-I's
 classifier unification; W1 Stage A (tape-based compiler builds
 struct-based BBNF parser; byte-compare against pre-AZ-II output);
@@ -1150,12 +1157,15 @@ canonical short-form record; the rationale, trade-offs, and
 follow-up gates live in the named tranche doc for each decision.
 
 **The tape is a stepping stone and dissolves entirely.** Shape C:
-AY-II closes as scoped on the tape substrate; **AZ** (new) absorbs
-direct-to-struct activation + full tape dissolution; **BA** (was
-BB) operates on the grammar-derived struct tree; **BB** (was BC)
-runs e-graph rule inference. BC letter retired. Shape A (tape
+AY-II closes as scoped on the tape substrate; **AZ-I** (new)
+activates direct-to-struct for JSON / CSS L4 / Sheets with tape
+retained for BBNF only; **AZ-II** (new) executes the BBNF
+self-hosting cutover and deletes `crates/tape/` wholesale; **BA**
+(was BB) operates on the grammar-derived struct tree; **BB** (was
+BC) runs e-graph rule inference. BC letter retired. Shape A (tape
 persists alongside struct) and Shape B (AY-II triples in scope)
-were rejected. — `docs/tranches/AZ/AZ.md`.
+were rejected. — `docs/tranches/AZ-I/AZ-I.md`,
+`docs/tranches/AZ-II/AZ-II.md`.
 
 **Parent-pointer on the struct tree is a sidecar.** A parallel
 index alongside the struct, not embedded in every node — zero
@@ -1166,8 +1176,8 @@ BA.W0 micro-bench on citm / tailwind / sheets fixtures. The
 
 **StructRegistry closes hard or the tranche does not close.**
 Per-grammar IR audit pass must return pass at AZ-I.W1; any fail
-blocks AZ-I.W2 and every subsequent AZ-I / AZ-II wave. Partial registry is
-not permitted to open BA. — `docs/tranches/AZ/AZ.md`.
+blocks AZ-I.W2 and every subsequent AZ-I / AZ-II wave. Partial
+registry is not permitted to open BA. — `docs/tranches/AZ-I/AZ-I.md`.
 
 **VM and e-graph cooperate; neither replaces the other.** E-graph
 first as the fast-path equivalence check under the current
@@ -1209,7 +1219,7 @@ with key derivation memoised per process. Size cap 2 GB with
 atime LRU eviction. Every miss logs its reason — no silent
 misses. One-time migration from `target/.bbnf-cache/` to
 `$XDG_CACHE_HOME/bbnf-derive/`. Lives in AZ-I.W0. —
-`docs/tranches/AZ/AZ.md`.
+`docs/tranches/AZ-I/AZ-I.md`.
 
 **The gorgeous sibling is retired.** Executed during the audit:
 `/Users/mkbabb/Programming/gorgeous` moved to
@@ -1220,11 +1230,13 @@ every path patch in the fleet resolves to it.
 
 **Classifier unification is front-loaded.** The classifier-
 collision study runs in AZ-I.W0 before any payload activation;
-the research artefact at `docs/tranches/AZ/CLASSIFIER-UNIFICATION.md`
-either produces a unified classifier or declares unification
-intractable, which is a re-plan trigger at AZ opening rather than
-a mid-AZ sub-wave. The reactive-sub-wave shape was rejected as
-recipe-for-disaster. — `docs/tranches/AZ/AZ.md`.
+the forthcoming research artefact at
+`docs/tranches/AZ-I/CLASSIFIER-UNIFICATION.md` (a W0 deliverable,
+not yet on disk) either produces a unified classifier or declares
+unification intractable, which is a re-plan trigger at AZ-I
+opening rather than a mid-AZ sub-wave. The reactive-sub-wave
+shape was rejected as recipe-for-disaster. —
+`docs/tranches/AZ-I/AZ-I.md`.
 
 Every decision has an if-answered-X-then-plan-changes-to-Y
 trigger expressed in the owning tranche doc. The pattern is
@@ -1313,32 +1325,37 @@ tranche cites at least one of them.
 The thesis the reader walks away with: *bbnf-lang is grammar-
 derived, one substrate, one measurement surface, and reversal is
 the health signal.* The decision this document makes crisp: **B1
-must close before AY-II.W0' closes; AY-II must close before BA
-opens; BA must close with StructRegistry at 100% and twitter at
-1967 MB/s before BB opens; BB must close before BC enumerates.**
-The question a future maintainer reaches for this document to
-answer: *why this sequence, and what would cause us to reverse it?*
-Section 4 answers the first; Section 10 answers the second.
+must close before AY-II.W0' closes; AY-II must close before AZ-I
+opens; AZ-I must close with `StructRegistry` at 100 % on the
+three data grammars and twitter at 1967 MB/s before AZ-II opens;
+AZ-II must close with `crates/tape/` deleted wholesale before BA
+opens; BB may run in parallel with AZ-II + BA because `IrNode`
+stabilises at AZ-I close and rewrite rules are substrate-
+independent.** The question a future maintainer reaches for this
+document to answer: *why this sequence, and what would cause us
+to reverse it?* Section 4 answers the first; Section 10 answers
+the second.
 
 A closing note on what this document deliberately does not claim.
 It does not claim the plan is correct; it claims the plan is the
 one the fleet has converged on after eleven worktree branches of
-independent audit. It does not claim BA's twitter gate will land;
-it claims the gate is declared, the substrate path is measurement-
-first, and the reversal criteria are codified. It does not claim
-the VM oracle will scale; it flags the question under §10 and
-specifies the BC.W0 micro-bench that will resolve it. The project
-has twice in six months shipped substrate that failed to activate,
-and twice responded with decisive reversal rather than patch.
-Reversal is the mechanism of correctness; the plan budgets for it;
-the reader should expect it. What the plan does not budget for is
-continuing to execute on substrate that has not demonstrated its
-runtime consumer — AX invariant 13 is the codification, and every
-tranche in the runway cites it. The runway's end state is a
-grammar that produces, for any language, a direct-to-struct tape-
-first runtime parser that beats lightningcss, sonic-rs, and
-simdjson OnDemand at their own games — parity first, exceedance
-second, every `->` reaching the tape, one substrate, one
-measurement surface, no orthogonal codepaths. That is the target;
-the sequence above is the only one the fleet has found that
-reaches it.
+independent audit. It does not claim AZ-I's twitter gate will
+land; it claims the gate is declared, the substrate path is
+measurement-first, and the reversal criteria are codified. It
+does not claim the VM oracle will scale; it flags the question
+under §10 and specifies the BB.W0 micro-bench that will resolve
+it. The project has twice in six months shipped substrate that
+failed to activate, and twice responded with decisive reversal
+rather than patch. Reversal is the mechanism of correctness; the
+plan budgets for it; the reader should expect it. What the plan
+does not budget for is continuing to execute on substrate that
+has not demonstrated its runtime consumer — AX invariant 13 is
+the codification, and every tranche in the runway cites it. The
+runway's end state is a grammar that produces, for any language,
+a direct-to-struct runtime parser that beats lightningcss,
+sonic-rs, and simdjson OnDemand at their own games — parity
+first, exceedance second, every `->` reaching a struct field, one
+substrate (the grammar-derived struct tree), one measurement
+surface, no orthogonal codepaths, no residual tape. That is the
+target; the sequence above is the only one the fleet has found
+that reaches it.

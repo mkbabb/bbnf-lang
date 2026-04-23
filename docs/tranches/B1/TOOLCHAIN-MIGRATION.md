@@ -299,7 +299,11 @@ B1.W0.c.
 
 Reproduction:
 ```bash
-cargo clean && rm -rf target/.bbnf-cache/
+# B1.md invariant 12: do NOT nuke target/.bbnf-cache here. The
+# bbnf-derive content-keyed cache is the cycle-2 speedup surface
+# this measurement exists to protect. cargo clean + incremental
+# clear is sufficient.
+cargo clean && rm -rf target/ax-iter/incremental
 time cargo iter-check-full > /tmp/iter-check-full-cold.log 2>&1
 ```
 
@@ -547,7 +551,9 @@ Before B1.W0 commits live files:
       `patches/cross-repo-propagation.md`.
 - [ ] CI runner (Linux) has valgrind available; confirm via
       `.github/workflows/bench-iai.yml` dry-run before gating.
-- [ ] `brew install llvm` documented in README + PROFILING.md.
+- [ ] `brew install lld` (optional, for the macOS fast-linker opt-in)
+      documented in README + PROFILING.md; distinguished from
+      `brew install llvm` which does not ship `ld.lld`.
 - [ ] `cargo install cargo-nextest --locked` documented.
 
 Once confirmed, B1.W0 executes Steps 1-12 in order. Expected landing

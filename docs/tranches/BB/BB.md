@@ -122,18 +122,23 @@ Rules do not live in `crates/core`. Two layers:
 
 ### Fleet-wide rules — `crates/ir/src/rewrites/`
 
-A IR-crate module per `feedback_general-infra-crates` and
-`feedback_no-core-dumping`. Contains:
+A module inside the existing `bbnf-ir` crate, per
+`feedback_no-core-dumping`. A standalone `ir-rewrites` crate was
+explicitly rejected: rewrite rules operate on `IrNode` shapes and
+are not general-purpose infrastructure the way `bbnf-egraph` or a
+cost-model crate would be, so they do not merit an independent
+crate boundary. `feedback_general-infra-crates` applies to the
+e-graph machinery at `crates/egraph/` and the enumeration
+scaffold, not to the rule store. The module contains:
 
-- `src/lib.rs` — `Rule` schema, `RuleSet` registry, provenance
-  types.
-- `src/base/*.ron` — the base rules shipped with bbnf: `Concat(x,
+- `mod.rs` — `Rule` schema, `RuleSet` registry, provenance types.
+- `base/*.ron` — the base rules shipped with bbnf: `Concat(x,
   Epsilon) → x`, `Alt(Alt(a,b), c) → Alt(a, b, c)`, identity
   folds, bounded unrolling, etc. Every file is a plain data file
   — no Rust authorship required to add a fleet-wide rule.
-- `src/rank.rs` — the automatic ranker (see next section).
-- `src/tiering.rs` — Class-1 / Class-2 / Class-3 classifier.
-- `src/schema.rs` — rule-file validation against the schema.
+- `rank.rs` — the automatic ranker (see next section).
+- `tiering.rs` — Class-1 / Class-2 / Class-3 classifier.
+- `schema.rs` — rule-file validation against the schema.
 
 ### Grammar-specific rules — `grammar/<name>/rewrites/*.ron`
 
@@ -372,8 +377,8 @@ Inheriting AZ-I's discipline:
 | `crates/egraph/src/ruler/enumerate.rs` | create | Ruler-style CVC enumerator |
 | `crates/egraph/src/ruler/oracle.rs` | create | VM oracle wrapper with per-candidate budget |
 | `crates/egraph/src/ruler/residue.rs` | create | E-graph-first check; routes residue to oracle |
-| `crates/ir/src/rewrites/` | create (new crate) | Fleet-wide rule registry, schema, ranker, tiering |
-| `crates/ir/src/rewrites/lib.rs` | create | `Rule`, `RuleSet`, provenance types |
+| `crates/ir/src/rewrites/` | create (new module inside `bbnf-ir`) | Fleet-wide rule registry, schema, ranker, tiering |
+| `crates/ir/src/rewrites/mod.rs` | create | `Rule`, `RuleSet`, provenance types |
 | `crates/ir/src/rewrites/rank.rs` | create | Automatic ranker |
 | `crates/ir/src/rewrites/tiering.rs` | create | Class-1/2/3 classifier |
 | `crates/ir/src/rewrites/schema.rs` | create | RON rule-file schema + validator |
@@ -389,8 +394,8 @@ Minimum BB delivers:
 1. Working Ruler-style enumerator + e-graph residue split + VM
    oracle wrapper.
 2. Automatic ranker with Class-1/2/3 tiering functional.
-3. `crates/ir/src/rewrites/` crate landed with base rules and schema
-   validated.
+3. `crates/ir/src/rewrites/` module landed inside `bbnf-ir` with
+   base rules and schema validated.
 4. JSON grammar: ≥ 5 accepted rules, auto-accept on Class 1, review
    on Class 2 + 3, measurable codegen shrink ≥ 10 LOC on JSON.
 5. Tranche H ground-truth rules rediscovered by enumeration on

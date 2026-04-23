@@ -259,12 +259,12 @@ incremental and small.
 
 ## Dependencies
 
-BB depends on **AZ close + AY-II close**. BA (lazy pointer queries)
+BB depends on **AZ-I close + AY-II close**. BA (lazy pointer queries)
 is **not** a BB blocker — rule inference operates over `IrNode`,
 not over pointer-path output, so BB can run in parallel with BA
 or after BA.
 
-**AZ close dependencies:**
+**AZ-I close dependencies:**
 
 - Direct-to-struct substrate stable. The enumerator relies on the
   struct tree as the canonical target form; the oracle compares
@@ -313,7 +313,7 @@ or after BA.
 
 - lightningcss / sonic-rs / simdjson parity harnesses green after
   every accepted rule.
-- Workspace: pass count ≥ AZ close, fail count ≤ AZ close.
+- Workspace: pass count ≥ AZ-I close, fail count ≤ AZ-I close.
 
 **Storage gates:**
 
@@ -329,7 +329,7 @@ commit. Each wave spec is ≤ 150 LOC.
 
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Enumerator + VM oracle + ranker + `crates/ir/src/rewrites/` scaffold; Tranche H soundness rediscovery | AZ + AY-II close | planned |
+| **W0** | [waves/W0.md](waves/W0.md) | Enumerator + VM oracle + ranker + `crates/ir/src/rewrites/` scaffold; Tranche H soundness rediscovery | AZ-I + AY-II close | planned |
 | **W1** | [waves/W1.md](waves/W1.md) | First enumeration run — JSON + Sheets, curated Class-1/2 batch | W0 | planned |
 | **W2** | [waves/W2.md](waves/W2.md) | Wide alphabet — CSS L4 + BBNF self-hosting | W1 | planned |
 | **W3** | [waves/W3.md](waves/W3.md) | Grammar-specific rule discovery + per-grammar `rewrites/*.ron` authoring | W2 | planned |
@@ -337,7 +337,7 @@ commit. Each wave spec is ≤ 150 LOC.
 
 ## Reversal criteria
 
-Inheriting AZ's discipline:
+Inheriting AZ-I's discipline:
 
 1. **Wave-local 20% rule.** A wave whose accepted rules fail to
    produce the declared cost delta by > 20% of target reverts its
@@ -346,7 +346,7 @@ Inheriting AZ's discipline:
    that fails the corpus is a soundness bug in the enumerator or
    oracle; wave halts, batch reverts, root cause found before the
    next run opens.
-3. **No regression on AZ / AY-II close.** Any regression of the
+3. **No regression on AZ-I / AY-II close.** Any regression of the
    17-entry matrix reverts the responsible rule batch.
 4. **No hedging forward.** A wave does not route its miss to a
    later wave of BB.
@@ -395,7 +395,7 @@ Minimum BB delivers:
    on Class 2 + 3, measurable codegen shrink ≥ 10 LOC on JSON.
 5. Tranche H ground-truth rules rediscovered by enumeration on
    matching grammars (soundness check).
-6. No regression on AZ close 17-entry matrix; parity harnesses
+6. No regression on AZ-I close 17-entry matrix; parity harnesses
    green.
 
 Other grammars, novel-rule review, and per-grammar

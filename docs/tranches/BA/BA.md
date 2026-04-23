@@ -1,6 +1,6 @@
 # Tranche BA — Lazy Typed Pointer-Path Queries over Struct Trees
 
-BA opens on AZ's settled substrate. Where AZ dissolved the tape in
+BA opens on AZ-II's settled substrate. Where AZ-II dissolved the tape in
 favor of direct-to-struct materialization — every `->` producing a
 typed node in a grammar-derived struct tree via `project_types` and
 a non-empty `StructRegistry` — BA layers lazy typed pointer-path
@@ -20,22 +20,26 @@ TypeScript, and Python bindings.
    fail to compile with a grammar-aware error. This is strictly
    stronger than sonic-rs, which resolves `pointer!` at compile
    time against untyped JSON and fails at runtime on a bad path.
-2. **The substrate is the struct tree, not a tape.** AZ's
-   direct-to-struct pivot dissolved the 16-byte TapeRec and the
-   backward container pointer. Paths navigate grammar-derived
-   struct nodes whose field layout is the `project_types` return
-   type. There is no tape cursor, no TapeOffset, no paired
-   open/close record walk. Descent is field projection; ascent
-   (where needed) resolves via a chosen parent-pointer strategy
-   rather than a child-off/parent-off column.
-3. **Laziness is lazy tail-clone, not lazy parse.** AZ materializes
-   structs eagerly by default. OnDemand-style forward-skip survives
-   as laziness of the *path tail*: an intermediate `NodeView<'p, T>`
-   borrows into the already-materialized struct tree and only
-   performs a payload read or sub-tree clone at the terminal.
-   Where AZ retains a lazy-field mode (deferred `Value::String`
-   slicing from the input, for example), BA's path evaluator skips
-   unread siblings by never projecting their fields.
+2. **The substrate is the struct tree, not a tape.** AZ-II's
+   close dissolved the 16-byte TapeRec and the backward container
+   pointer fleet-wide (AZ-I dissolved it for JSON / CSS L4 /
+   Sheets; AZ-II extended the dissolution to BBNF self-hosting).
+   Paths navigate grammar-derived struct nodes whose field layout
+   is the `project_types` return type. There is no tape cursor, no
+   TapeOffset, no paired open/close record walk. Descent is field
+   projection; ascent (where needed) resolves via a chosen
+   parent-pointer strategy rather than a child-off/parent-off
+   column.
+3. **Laziness is lazy tail-clone, not lazy parse.** AZ materialises
+   struct trees eagerly for every grammar by default (JSON / CSS
+   / Sheets at AZ-I close; BBNF at AZ-II close). OnDemand-style
+   forward-skip survives as laziness of the *path tail*: an
+   intermediate `NodeView<'p, T>` borrows into the already-
+   materialized struct tree and only performs a payload read or
+   sub-tree clone at the terminal. Where AZ-I retains a lazy-
+   field mode (deferred `Value::String` slicing from the input,
+   for example), BA's path evaluator skips unread siblings by
+   never projecting their fields.
 4. **Path construction is ergonomic and backend-agnostic.** The
    host-facing form is a `path!` macro (Rust proc-macro, TS
    template-literal tag, Python callable); the IR-level form is a
@@ -50,17 +54,17 @@ TypeScript, and Python bindings.
 
 ## AZ dependency (hard opening gate)
 
-BA does NOT open until AZ closes. AZ is the tranche that dissolves
+BA does NOT open until AZ-II closes. AZ-II is the tranche that dissolves
 the tape, activates `project_types` across the fleet, populates
 `StructRegistry` for every production grammar, and lands the
 direct-to-struct emitter as the singular materialization path. BA
 inherits that substrate and adds navigation ergonomics atop it.
 
-AZ's handoff contract that BA consumes:
+AZ-II's handoff contract that BA consumes:
 
 1. `StructRegistry` populated for JSON, CSS L4, Sheets, BBNF. A
-   partial registry at AZ close **blocks** BA open; the remaining
-   coverage lands under an AZ-carry wave, not a BA hedge.
+   partial registry at AZ-II close **blocks** BA open; the remaining
+   coverage lands under an AZ-II carry wave, not a BA hedge.
 2. Every `->` in every production grammar reaches the direct-to-
    struct emitter (`push_*` on the struct builder, not on a tape).
    An IR audit pass holds 100% coverage.
@@ -71,7 +75,7 @@ AZ's handoff contract that BA consumes:
    direct-to-struct substrate; lightningcss / sonic-rs / simdjson /
    serde_json / cssparser parity harnesses green.
 
-If any of the above is missing at AZ close, BA remains closed and
+If any of the above is missing at AZ-II close, BA remains closed and
 re-plans against the residual gap. BA does not open on a partial
 substrate.
 
@@ -124,10 +128,10 @@ substrate.
 
 **Regression gates:**
 
-- 17-entry AU-baseline matrix: no regression against AZ close.
+- 17-entry AU-baseline matrix: no regression against AZ-II close.
 - lightningcss / sonic-rs / simdjson / serde_json / cssparser
   parity harnesses green at every wave boundary.
-- Workspace suite: pass count ≥ AZ close, fail count ≤ AZ close.
+- Workspace suite: pass count ≥ AZ-II close, fail count ≤ AZ-II close.
 
 **Coverage gates:**
 
@@ -143,7 +147,7 @@ ledger-only close.
 
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Path IR + type checker + parent-pointer micro-bench | AZ close | planned |
+| **W0** | [waves/W0.md](waves/W0.md) | Path IR + type checker + parent-pointer micro-bench | AZ-II close | planned |
 | **W1** | [waves/W1.md](waves/W1.md) | Lazy traversal engine + `path!` macro + per-grammar bench | W0 | planned |
 | **W2** | [waves/W2.md](waves/W2.md) | Host-binding isomorphism (TS + Python) + e2e integration | W1 | planned |
 | **W3** | [waves/W3.md](waves/W3.md) | FINAL — measurement matrix + parity harness + handoff to BB | W2 | planned |
@@ -194,7 +198,7 @@ Inheriting AZ's discipline:
 1. **Wave-local 20% rule.** A wave that misses its declared gate
    by more than 20% reverts its own substrate at wave close; it
    does not ship a hedged substrate that a later wave "fixes".
-2. **No regression on AZ close.** Any regression of the 17-entry
+2. **No regression on AZ-II close.** Any regression of the 17-entry
    matrix reverts the responsible substrate immediately at the
    offending commit.
 3. **No hedging forward.** A wave does not route its miss to a
@@ -249,11 +253,11 @@ the inversion.
 ## Q2 resolution — StructRegistry close
 
 The `StructRegistry` must be populated for JSON, CSS L4, Sheets,
-and BBNF at AZ close. BA's type checker dispatches every path
+and BBNF at AZ-II close. BA's type checker dispatches every path
 segment through it; a missing registry entry is a hard compile
-error, not a fallback. If AZ.W1 closes with any production grammar
+error, not a fallback. If AZ-I.W1 closes with any production grammar
 uncovered, BA.W0 does not open. The remaining grammar lands under
-an AZ-carry wave and BA re-plans the schedule.
+an AZ-II carry wave and BA re-plans the schedule.
 
 ## Cross-binding `path!` macro
 
@@ -358,7 +362,7 @@ binding imports the other; both import the shared core.
    present in grammar but absent from registry breaks path
    resolution silently if not caught. Mitigation: `path_check.rs`
    IR pass holds hard coverage; missing entries fail the build at
-   AZ close, not at BA compile time. BA treats a missing registry
+   AZ-II close, not at BA compile time. BA treats a missing registry
    entry as a hard-fail, never a fallback. `feedback_no-workarounds`
    in force.
 4. **Parent-pointer strategy reversal mid-tranche.** W0's micro-bench

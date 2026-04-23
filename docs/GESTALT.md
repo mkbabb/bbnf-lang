@@ -37,22 +37,26 @@ re-anchors measurement on a clean substrate. JSON twitter sits at
 688 MB/s — 35% of AU-baseline 1967 MB/s. The runway delivers:
 **B1** (dev-loop truth, 4 waves, one week), **AY-II.W0'** close +
 W1–W5 resume on the tape substrate (infra-truth closure, two weeks
-after B1), **AZ** (grammar-derived direct-to-struct across the
-fleet with full dissolution of the `crates/tape/` substrate; JSON
-twitter recovery to ≥ 1967 MB/s lands here as the proof that
-dissolution beats retention; three to four weeks), **BA** (lazy
-typed pointer-path queries over the grammar-derived struct tree,
-isomorphic Rust / TS / Python `path!` macro; two weeks), **BB**
-(e-graph rule inference with e-graph-first equivalence filtering
-and the VM interpreter at `crates/ir/src/vm/` serving as the
-ground-truth oracle on residue; grammar-colocated rule storage in
-`crates/ir/src/rewrites/` + `grammar/<name>/rewrites/`; automatic
-ranker + tiered review; two to three weeks). The sequence is
-strict: B1 precedes AY-II.W0'; AY-II precedes AZ; AZ precedes BA;
-BA precedes BB. The tranche letters BA, BB, BC renamed during the
-audit — AZ is new, BA takes the slot formerly labelled BB, BB
-takes the slot formerly labelled BC, and the BC letter is retired.
-BC's old content ("egraph rule inference") lives in the current BB.
+after B1), **AZ-I** (grammar-derived direct-to-struct for JSON +
+CSS L4 + Sheets with `StructRegistry` closure and JSON twitter
+recovery to ≥ 1967 MB/s; tape retained for BBNF only; two to three
+weeks), **AZ-II** (BBNF self-hosting direct-to-struct via
+two-stage bootstrap cutover + `crates/tape/` deletion; one to two
+weeks), **BA** (lazy typed pointer-path queries over the
+grammar-derived struct tree, isomorphic Rust / TS / Python
+`path!` macro; two weeks), **BB** (e-graph rule inference with
+e-graph-first equivalence filtering and the VM interpreter at
+`crates/ir/src/vm/` serving as the ground-truth oracle on residue;
+grammar-colocated rule storage in `crates/ir/src/rewrites/` +
+`grammar/<name>/rewrites/`; automatic ranker + tiered review; two
+to three weeks). The sequence is mostly strict: B1 precedes
+AY-II.W0'; AY-II precedes AZ-I; AZ-I precedes AZ-II; AZ-II
+precedes BA. BB may open in parallel with AZ-II because rewrite
+rules operate on `IrNode`, which stabilises at AZ-I close
+regardless of the BBNF cutover state. The tranche letters BA, BB,
+BC renamed during the audit — AZ-I and AZ-II are new, BA takes
+the slot formerly labelled BB, BB takes the slot formerly labelled
+BC, BC is retired.
 
 ### Headline numbers at gestalt time
 
@@ -228,9 +232,9 @@ the rate differential that flags plan-drift earlier in future eras.
          │ 0/17 bench entries strict-better at AW-V close
          │ AX.W0b deletion: ~78,000 LOC reclaimed
          │
- Era VI ── Infra-truth restart ─────────────────────── 2026-04-20 →        (~130c so far; AY-I, AY-II, B0, B1 + AZ / BA / BB planned)
+ Era VI ── Infra-truth restart ─────────────────────── 2026-04-20 →        (~130c so far; AY-I, AY-II, B0, B1 + AZ-I / AZ-II / BA / BB planned)
            Column revert / AY-II path-forward / B1 dev-loop truth
-           (AZ / BA / BB scaffold — not started)
+           (AZ-I / AZ-II / BA / BB scaffold — not started)
 ```
 
 **Era I** (March 2023) is the first commit of the original VSCode-
@@ -401,12 +405,13 @@ The shape emitter's JSON demonstration at `c1e86ab3` (AW-V.W3) is
 not retrievable as code, but the demonstration is retrievable as
 evidence: the thesis works for one grammar; the rut was in
 generalising it to every grammar under Era V's decision-surface
-constraints. AZ's plan does not resurrect the shape-emitter thesis
-per se; AZ's direct-to-struct activation is the same runtime
-outcome reached through a different substrate path (StructRegistry +
-payload layouts + IR audit) that does not require a second shape-
-derivation pass, and goes further than the pre-audit BA framing by
-dissolving the tape entirely rather than activating alongside it. The crate renames (`bbnf-tape` → `tape`,
+constraints. The AZ-I / AZ-II plan does not resurrect the
+shape-emitter thesis per se; AZ-I's direct-to-struct activation
+is the same runtime outcome reached through a different substrate
+path (StructRegistry + payload layouts + IR audit) that does not
+require a second shape-derivation pass, and the AZ-I+AZ-II pair
+goes further than the pre-audit BA framing by dissolving the
+tape entirely (AZ-II.W3) rather than activating alongside it. The crate renames (`bbnf-tape` → `tape`,
 `bbnf-simd-scan` → `simd-scan`, `bbnf-json-prototype` →
 `json-prototype` — `b464a99c`, `1327491e`, `6ad76124`) reflect
 Era V's honest recognition that these crates were not public-API;
@@ -415,7 +420,7 @@ actual status. The canonical-form parity harnesses are the most
 important testing artefact Era V produced: they define what
 "bbnf-lang parity with lightningcss" means operationally — tree-
 walk-equality node-for-node, not string-equality of serialised
-output — and AZ's W3 gate cites them directly.
+output — and AZ-I.W3 cites them directly.
 
 The twenty-one AX invariants are the procedural survival. They
 declare: bench-checkpoint mid-wave (invariant 7); wire-contract
@@ -423,7 +428,8 @@ compile-gate (invariant 10); ledger-review at handoff (invariant 13);
 frozen-contract rule for gate predicates (invariant 17); shape-
 emitter as single source of truth (invariant 20). Era VI inherits
 all twenty-one; the B1 sub-waves structure themselves around them;
-AZ's reversal criteria cite invariants 7 and 13 directly.
+both AZ-I and AZ-II cite invariants 7 and 13 directly in their
+reversal criteria.
 
 Era V's health signal is the three large reversals: **AX.W0b** (~572
 commits' worth of DTA substrate deleted), **AY-I.W1** (column revert,
@@ -436,7 +442,7 @@ in any implementation) is what makes reversal a health signal: the
 alternative — layering a workaround over a failing substrate — is
 prohibited. Reversal is the mechanism of correctness maintenance.
 
-## 5. The current plan — B1 → AY-II.W0' → AY-II W1–W5 → AZ → BA → BB
+## 5. The current plan — B1 → AY-II.W0' → AY-II W1–W5 → AZ-I → AZ-II → BA → BB
 
 ### B1 — dev-loop truth + proof-surface hardening
 
@@ -501,76 +507,119 @@ refreshed proof surface with all of this settled; agent-slot count
 is specifically sized at W1 open against the measured post-B1
 matrix.
 
-### AZ — grammar-derived direct-to-struct + tape dissolution
+### AZ-I — direct-to-struct for JSON + CSS L4 + Sheets
 
-Opens on AY-II close. The transformational tranche of Era VI. AZ
-does what the old BA doc described as "tape activation" — but
-goes further: the `crates/tape/` substrate is deleted by AZ close.
-Every grammar derives its native Rust struct shape from
+Opens on AY-II close. The first of two transformational tranches
+of Era VI. AZ-I activates grammar-derived direct-to-struct for the
+three data grammars and closes their `StructRegistry` coverage;
+`crates/tape/` continues to exist and is used exclusively by BBNF
+during AZ-I (the BBNF cutover + tape deletion is AZ-II's scope).
+Every data grammar derives its native Rust struct shape from
 `project_types` + `StructRegistry`; parse output lands directly
-into those structs; the tape, its column-major storage, its
-materialised-view `TapeRec`, and every alias shim currently
-bridging them are dissolved. BBNF self-hosting also runs on
-derived structs — `project_types` applied to `grammar/bbnf/bbnf.bbnf`
-produces a `BbnfAst` type that mirrors `GrammarIR`, so there is
-no "undeclared struct target" fallback role for the tape to fill.
-The five roles the tape played (view-layer intermediate,
-materialised-view shape, debug inspection surface, parity-oracle
-substrate, undeclared-grammar fallback) are each absorbed by the
-struct tree, the struct's `impl Debug`, `PartialEq`-based oracle
-comparisons, and `project_types`' universal coverage respectively.
-`feedback_no-orthogonal-codepaths` is the governing invariant:
-AZ exists because the tape was the last orthogonal codepath, and
-the discipline forbids it persisting alongside direct-to-struct.
+into those structs; four of the five tape roles (view-layer
+intermediate, materialised-view shape, debug inspection surface,
+parity-oracle substrate) migrate to the struct tree + `impl Debug`
++ `PartialEq`-based oracle comparisons for these three grammars.
+`feedback_no-orthogonal-codepaths` binds: AZ-I exists because the
+tape was a stepping stone, and the discipline forbids it
+persisting alongside direct-to-struct on the grammars that have
+active struct targets.
 
-AZ opens with front-loaded classifier-unification research
-(`docs/tranches/AZ/CLASSIFIER-UNIFICATION.md`) per the resolution
-of open-question Q9. The research studies how multiple payload
-kinds — `-> i64`, `-> String`, `-> Color`, `-> Vec<Selector>` —
-compose in a single classifier without collision, producing the
-unified dispatch shape before any payload activates. The
-alternative — reacting to collision mid-AZ with a sub-wave — was
-explicitly rejected as recipe-for-disaster during the audit.
+AZ-I opens with front-loaded classifier-unification research
+(`docs/tranches/AZ-I/CLASSIFIER-UNIFICATION.md`). The research
+studies how multiple payload kinds — `-> i64`, `-> String`,
+`-> Color`, `-> Vec<Selector>` — compose in a single classifier
+without collision, producing the unified dispatch shape before any
+payload activates. The alternative — reacting to collision mid-AZ
+with a sub-wave — was explicitly rejected as recipe-for-disaster
+during the audit.
 
-Wave structure at `AZ/AZ.md`: W0 research (classifier unification +
-derive-cache key design per Q7) plus `StructRegistry` +
-`project_types` closure audit; W1 hard-fail-and-block closure of
-the registry across every production grammar (per Q2); W2 scalar
-payload direct-to-struct for JSON + Sheets with twitter ≥ 1967 MB/s
-as the hard gate — the AU-baseline recovery that AY-II deferred
+Wave structure at `AZ-I/AZ-I.md`: W0 research (classifier
+unification + derive-cache lift to `$XDG_CACHE_HOME/bbnf-derive/`
+with composite-key test suite) plus `StructRegistry` +
+`project_types` closure audit; W1 hard-fail-and-block registry
+closure for the three data grammars; W2 scalar payload
+direct-to-struct for JSON + Sheets with twitter ≥ 1967 MB/s as
+the hard gate — the AU-baseline recovery that AY-II deferred
 lands here, proving direct-to-struct beats tape-plus-struct; W3
 aggregate payload direct-to-struct for CSS L4 with lightningcss
-node-for-node typed parity; W4 direct-to-struct for BBNF itself
-plus parity-harness recoding to compare struct outputs instead
-of tape bytes; W5 tape deletion — `crates/tape/` removed,
-`crates/core/src/runtime/mod.rs` alias shims retired, view
-codegen rewritten to target struct fields directly; W6 FINAL —
-17-entry matrix parity plus `cargo build -p bbnf --no-default-features`
-succeeds without requiring `crates/tape/`, which is the
-mechanical proof that the crate is gone.
+node-for-node typed parity; W4 (FINAL) — 17-entry matrix parity
+on the three data grammars, tape usage scoped to BBNF only,
+AZ-I close handoff contract for AZ-II.
 
-AZ's reversal criteria are strict: wave-local 20% miss reverts own
-substrate at wave close; parity-recovery precedence reverts any
+AZ-I's defensible floor: if classifier unification proves
+intractable at W0 or `StructRegistry` closure leaves a data
+grammar uncovered at W1, AZ-I closes with partial direct-to-struct
+(JSON + Sheets) and tape retained for CSS + BBNF. The escape
+clause is declared up front rather than discovered mid-tranche.
+
+### AZ-II — BBNF self-hosting cutover + `crates/tape/` deletion
+
+Opens on AZ-I close. The second transformational tranche. AZ-II
+takes BBNF self-hosting onto the struct substrate via a two-stage
+bootstrap cutover and deletes the `crates/tape/` crate entirely
+at close. BBNF's grammar describes bbnf-lang itself; `project_types`
+applied to `grammar/bbnf/bbnf.bbnf` produces a `BbnfAst` type that
+mirrors `GrammarIR`, so BBNF has a native struct target like every
+other grammar — there is no "undeclared struct target" fallback
+role for the tape to fill. The fifth tape role (undeclared-grammar
+fallback) dissolves here.
+
+AZ-II's two-stage bootstrap resolves the circular dependency.
+Stage A: the AZ-I pre-close tape-based compiler builds the AZ-II
+struct-based BBNF parser candidate; `bbnf_derive` in the candidate
+emits struct-writing parsers but the candidate itself was built
+from a tape-writing parser. Stage B: the W1 candidate rebuilds
+itself from its own source, producing a W2 compiler built from a
+struct-writing parser *and* producing struct-writing parsers —
+tape unwired in both directions. The close gate is byte-equal
+reproducibility: the W2 compiler, run on every grammar in the
+corpus, produces IR byte-equal to the pre-AZ-II compiler on the
+same input.
+
+Wave structure at `AZ-II/AZ-II.md`: W0 bootstrap research +
+cutover design (`docs/tranches/AZ-II/BOOTSTRAP-CUTOVER.md`) +
+classifier extension for BBNF-specific patterns applying AZ-I's
+classifier unification; W1 Stage A (tape-based compiler builds
+struct-based BBNF parser; byte-compare against pre-AZ-II output);
+W2 Stage B (W1-candidate rebuilds itself; byte-compare against
+Stage A output; hard gate: identical); W3 (FINAL) tape deletion —
+`crates/tape/` removed, `crates/core/src/runtime/mod.rs` alias
+shims retired, view codegen rewritten to target struct fields
+directly, parity harnesses recoded to compare struct outputs —
+plus `cargo build -p bbnf --no-default-features` succeeds
+without requiring `crates/tape/`, the mechanical proof that the
+crate is gone.
+
+AZ-II's defensible floor: if W2 byte-equal reproducibility fails,
+AZ-II closes with partial tape dissolution — `bbnf-tape-mini`
+(a shrunken tape crate consumed only by BBNF) retained, with
+tape-deletion-for-BBNF routed to a targeted follow-on tranche.
+Drift sources (AST ordering, comment/trivia handling, numeric
+formatting) are each addressed structurally in W0's cutover design
+before W1 opens; unresolvable drift triggers the escape.
+
+Both AZ-I and AZ-II share reversal criteria: wave-local 20% miss
+reverts own substrate; parity-recovery precedence reverts any
 substrate that regresses an already-passing AU-baseline entry;
-no hedging forward to a later wave. Ship no substrate without
-same-commit runtime consumer and same-commit bench delta.
-AZ budgets for at least one reversal per wave as the *expected*
-case, following AQ.5's cleanest-reversal precedent (~32 commits)
-and explicitly avoiding AW-IV's substrate-without-consumer
-anti-precedent (92 commits, 0/17 gate miss).
+no hedging forward. Ship no substrate without same-commit runtime
+consumer and same-commit bench delta. Each tranche budgets for at
+least one reversal per wave as the *expected* case, following
+AQ.5's cleanest-reversal precedent (~32 commits) and explicitly
+avoiding AW-IV's substrate-without-consumer anti-precedent (92
+commits, 0/17 gate miss).
 
-Defensible floor: if classifier unification proves intractable at
-W0 or `StructRegistry` closure leaves a production grammar
-uncovered at W1, AZ closes with partial direct-to-struct (JSON +
-Sheets) and the tape retained for CSS + BBNF. This is the escape
-clause, declared up front rather than discovered mid-tranche.
+The split from a monolithic seven-wave AZ doubles end-to-end floor
+probability (0.38 → 0.72 per `RISK-PERF-MATRIX.md §Cascade`) by
+boundarising the single highest-risk piece (BBNF bootstrap
+cutover) into its own tranche with its own reversal gates.
 
 ### BA — lazy typed pointer-path queries over the struct tree
 
-Opens on AZ close. Tranche letter reassigned during the audit
+Opens on AZ-II close. Tranche letter reassigned during the audit
 (was BB in the pre-audit plan, promoted to BA when AZ absorbed
-the old BA's scope). The substrate is now the grammar-derived
-struct tree — the tape dissolved at AZ.W5 — so every reference
+the old BA's scope). The substrate is the grammar-derived
+struct tree — the tape dissolved at AZ-II.W3 — so every reference
 to "tape backward pointer" or "sidecar column" in the pre-audit
 plan translates to struct-tree navigation. The thesis is
 otherwise unchanged: sonic-rs `pointer!` ergonomics, simdjson
@@ -596,8 +645,8 @@ pattern every grammar's struct shape follows.
 
 BA's handoff contract from AZ: `StructRegistry` populated for
 JSON / CSS / Sheets / BBNF; IR audit pass at 100% `->` coverage;
-17-entry AU-baseline at or above AZ.W2 close; `crates/tape/`
-deleted. If AZ closed on a partial `StructRegistry` via the
+17-entry AU-baseline at or above AZ-I.W2 close; `crates/tape/`
+deleted. If AZ-I closed on a partial `StructRegistry` via the
 defensible-floor escape clause, BA does not open until the
 remainder lands — this is the hard-fail-and-block discipline
 per Q2 and `feedback_typed-materialization-invariant`.
@@ -618,9 +667,12 @@ three waves plus FINAL, two to three agents each.
 
 ### BB — e-graph rewrite rule inference
 
-Opens on AZ + AY-II close. BA (pointer queries) is not a BB
-blocker; the two tranches operate on disjoint IR surfaces and
-can proceed after AZ settles. Tranche letter reassigned during
+Opens on AZ-I + AY-II close. BB does not wait for AZ-II — rewrite
+rules operate on `IrNode`, which is substrate-independent (the
+same IR shape whether emission targets tape or struct), and the
+Tranche H ground-truth rule set is defined over IR patterns that
+stabilise at AZ-I close. BB therefore runs in parallel with AZ-II
+and its downstream BA. BA (pointer queries) is not a BB blocker. Tranche letter reassigned during
 the audit (was BC in the pre-audit plan; promoted to BB when
 BA absorbed the old BB's scope and BC was retired).
 
@@ -1104,8 +1156,8 @@ BA.W0 micro-bench on citm / tailwind / sheets fixtures. The
 `AscentStrategy` trait is the reversal seam. — `docs/tranches/BA/BA.md`.
 
 **StructRegistry closes hard or the tranche does not close.**
-Per-grammar IR audit pass must return pass at AZ.W1; any fail
-blocks AZ.W2 and every subsequent tranche. Partial registry is
+Per-grammar IR audit pass must return pass at AZ-I.W1; any fail
+blocks AZ-I.W2 and every subsequent AZ-I / AZ-II wave. Partial registry is
 not permitted to open BA. — `docs/tranches/AZ/AZ.md`.
 
 **VM and e-graph cooperate; neither replaces the other.** E-graph
@@ -1147,7 +1199,7 @@ independently plus all combinations. Cache hit budget < 50 ms
 with key derivation memoised per process. Size cap 2 GB with
 atime LRU eviction. Every miss logs its reason — no silent
 misses. One-time migration from `target/.bbnf-cache/` to
-`$XDG_CACHE_HOME/bbnf-derive/`. Lives in AZ.W0. —
+`$XDG_CACHE_HOME/bbnf-derive/`. Lives in AZ-I.W0. —
 `docs/tranches/AZ/AZ.md`.
 
 **The gorgeous sibling is retired.** Executed during the audit:
@@ -1158,7 +1210,7 @@ Workspace `crates/gorgeous/` is the only canonical gorgeous;
 every path patch in the fleet resolves to it.
 
 **Classifier unification is front-loaded.** The classifier-
-collision study runs in AZ.W0 before any payload activation;
+collision study runs in AZ-I.W0 before any payload activation;
 the research artefact at `docs/tranches/AZ/CLASSIFIER-UNIFICATION.md`
 either produces a unified classifier or declares unification
 intractable, which is a re-plan trigger at AZ opening rather than

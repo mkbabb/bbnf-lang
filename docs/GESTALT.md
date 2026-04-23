@@ -22,26 +22,37 @@ HIR→NFA→DFA regex engine (`bbnf-regex`) that replaces the `regex`
 crate at emission sites. A pprint substrate (`../pprint`) carries the
 gorgeous auto-formatter.
 
-The fleet state at `48e6eaa9`: 1,842 master commits, 945 unpushed,
-24 feature branches, 18 tranches of substrate work landed between
-2026-04-08 and 2026-04-15, followed by a five-day DTA/PSI rut
-(Era V, 2026-04-15 → 2026-04-19, ~572 tranche-tagged commits) in
-which zero of seventeen benchmark entries recovered the 2026-04-15
-AU-baseline. Era V closed at AX.W0b (`a206b962`, 2026-04-20) with
-the deletion of ~78,000 LOC of interpreter substrate. Era VI, the
-current era, is the infra-truth restart: AY-I landed column revert
-and honest relinquish; AY-II paused at W0' for the B1 prelude; B1
-pins the toolchain, migrates the bench harness to divan, rewires
-CI, and re-anchors measurement on a clean substrate. JSON twitter
-sits at 688 MB/s — 35% of AU-baseline 1967 MB/s. The twelve-week
-runway delivers: **B1** (dev-loop truth, 4 waves, one week),
-**AY-II.W0'** close + W1–W5 resume (infra-blocked; two weeks after
-B1), **BA** (grammar-derived tape activation; twitter 1967 MB/s
-gate in W1; two to three weeks), **BB** (lazy typed pointer-path
-queries over BA's tape; two weeks), **BC** (e-graph rule inference
-with the VM interpreter surviving at HEAD as the equivalence
-oracle; two to three weeks). The sequence is strict: B1 precedes
-AY-II.W0'; AY-II precedes BA; BA precedes BB; BB precedes BC.
+The fleet state at the audit close: 1,859 master commits
+(post-audit-merge), 945 unpushed, 24 feature branches, 18 tranches
+of substrate work landed between 2026-04-08 and 2026-04-15,
+followed by a five-day DTA/PSI rut (Era V, 2026-04-15 → 2026-04-19,
+~572 tranche-tagged commits) in which zero of seventeen benchmark
+entries recovered the 2026-04-15 AU-baseline. Era V closed at
+AX.W0b (`a206b962`, 2026-04-20) with the deletion of ~78,000 LOC
+of interpreter substrate. Era VI, the current era, is the
+infra-truth restart: AY-I landed column revert and honest
+relinquish; AY-II paused at W0' for the B1 prelude; B1 pins the
+toolchain, migrates the bench harness to divan, rewires CI, and
+re-anchors measurement on a clean substrate. JSON twitter sits at
+688 MB/s — 35% of AU-baseline 1967 MB/s. The runway delivers:
+**B1** (dev-loop truth, 4 waves, one week), **AY-II.W0'** close +
+W1–W5 resume on the tape substrate (infra-truth closure, two weeks
+after B1), **AZ** (grammar-derived direct-to-struct across the
+fleet with full dissolution of the `crates/tape/` substrate; JSON
+twitter recovery to ≥ 1967 MB/s lands here as the proof that
+dissolution beats retention; three to four weeks), **BA** (lazy
+typed pointer-path queries over the grammar-derived struct tree,
+isomorphic Rust / TS / Python `path!` macro; two weeks), **BB**
+(e-graph rule inference with e-graph-first equivalence filtering
+and the VM interpreter at `crates/ir/src/vm/` serving as the
+ground-truth oracle on residue; grammar-colocated rule storage in
+`crates/ir-rewrites/` + `grammar/<name>/rewrites/`; automatic
+ranker + tiered review; two to three weeks). The sequence is
+strict: B1 precedes AY-II.W0'; AY-II precedes AZ; AZ precedes BA;
+BA precedes BB. The tranche letters BA, BB, BC renamed during the
+audit — AZ is new, BA takes the slot formerly labelled BB, BB
+takes the slot formerly labelled BC, and the BC letter is retired.
+BC's old content ("egraph rule inference") lives in the current BB.
 
 ### Headline numbers at gestalt time
 
@@ -217,9 +228,9 @@ the rate differential that flags plan-drift earlier in future eras.
          │ 0/17 bench entries strict-better at AW-V close
          │ AX.W0b deletion: ~78,000 LOC reclaimed
          │
- Era VI ── Infra-truth restart ─────────────────────── 2026-04-20 →        (~130c so far; AY-I, AY-II, AZ, B0, B1, BA–BC)
+ Era VI ── Infra-truth restart ─────────────────────── 2026-04-20 →        (~130c so far; AY-I, AY-II, B0, B1 + AZ / BA / BB planned)
            Column revert / AY-II path-forward / B1 dev-loop truth
-           (BA / BB / BC scaffold — not started)
+           (AZ / BA / BB scaffold — not started)
 ```
 
 **Era I** (March 2023) is the first commit of the original VSCode-
@@ -252,7 +263,7 @@ archaeology ledger; none are reversed. The substrate Era III
 produced carries every subsequent era. The CSP cost model defined
 at Tranche W becomes the common variable surface for every later
 decision point: regex engine selection, emission tier, wrap mode,
-scanner family, and in BC, e-graph rule-application cost. The
+scanner family, and in BB, e-graph rule-application cost. The
 e-graph's scheduler (Tranche J, `6becbf8b`, 2026-04-09) was
 installed with real-work measurement at the outset, per
 `feedback_csp-always-optimize` ("CSP optimization is always high
@@ -366,7 +377,7 @@ the rut.
 
 **What survives.** The VM interpreter at `crates/ir/src/vm/`
 compiles at HEAD. The token-dispatch opcode machinery that the VM
-needed for runtime interpretation is now BC's equivalence oracle
+needed for runtime interpretation is now BB's equivalence oracle
 (see §5). The view layer and parity harnesses (`tests/*_parity.rs`
 against sonic-rs, lightningcss, simdjson OnDemand, serde_json,
 cssparser) are what AY-II cites as the parity reference. The
@@ -374,7 +385,7 @@ cssparser) are what AY-II cites as the parity reference. The
 `GrammarAnalysis` lattice (Tranche M deleted the lattice,
 `359eb068`) — makes `project_analysis-consolidation` real: all
 analysis lives in IR passes. The CSP + e-graph cost-model unification
-(Tranches H / J / K / W) was unchanged by Era V and is what BC needs.
+(Tranches H / J / K / W) was unchanged by Era V and is what BB needs.
 Debug infrastructure (`@debug`, source maps, `DebugBreak`, interpreter
 hooks, compiled trace) landed across Era IV/V Phases 1-4 and is
 durable. The `LargeAggregate` payload path (AV V2) and the
@@ -390,11 +401,12 @@ The shape emitter's JSON demonstration at `c1e86ab3` (AW-V.W3) is
 not retrievable as code, but the demonstration is retrievable as
 evidence: the thesis works for one grammar; the rut was in
 generalising it to every grammar under Era V's decision-surface
-constraints. BA's plan does not resurrect the shape-emitter thesis
-per se; BA's direct-to-struct activation is the same runtime
+constraints. AZ's plan does not resurrect the shape-emitter thesis
+per se; AZ's direct-to-struct activation is the same runtime
 outcome reached through a different substrate path (StructRegistry +
 payload layouts + IR audit) that does not require a second shape-
-derivation pass. The crate renames (`bbnf-tape` → `tape`,
+derivation pass, and goes further than the pre-audit BA framing by
+dissolving the tape entirely rather than activating alongside it. The crate renames (`bbnf-tape` → `tape`,
 `bbnf-simd-scan` → `simd-scan`, `bbnf-json-prototype` →
 `json-prototype` — `b464a99c`, `1327491e`, `6ad76124`) reflect
 Era V's honest recognition that these crates were not public-API;
@@ -403,7 +415,7 @@ actual status. The canonical-form parity harnesses are the most
 important testing artefact Era V produced: they define what
 "bbnf-lang parity with lightningcss" means operationally — tree-
 walk-equality node-for-node, not string-equality of serialised
-output — and BA's W2 gate cites them directly.
+output — and AZ's W3 gate cites them directly.
 
 The twenty-one AX invariants are the procedural survival. They
 declare: bench-checkpoint mid-wave (invariant 7); wire-contract
@@ -411,7 +423,7 @@ compile-gate (invariant 10); ledger-review at handoff (invariant 13);
 frozen-contract rule for gate predicates (invariant 17); shape-
 emitter as single source of truth (invariant 20). Era VI inherits
 all twenty-one; the B1 sub-waves structure themselves around them;
-BA's reversal criteria cite invariants 7 and 13 directly.
+AZ's reversal criteria cite invariants 7 and 13 directly.
 
 Era V's health signal is the three large reversals: **AX.W0b** (~572
 commits' worth of DTA substrate deleted), **AY-I.W1** (column revert,
@@ -424,7 +436,7 @@ in any implementation) is what makes reversal a health signal: the
 alternative — layering a workaround over a failing substrate — is
 prohibited. Reversal is the mechanism of correctness maintenance.
 
-## 5. The current plan — B1 → AY-II.W0' → AY-II W1–W5 → BA → BB → BC
+## 5. The current plan — B1 → AY-II.W0' → AY-II W1–W5 → AZ → BA → BB
 
 ### B1 — dev-loop truth + proof-surface hardening
 
@@ -489,138 +501,196 @@ refreshed proof surface with all of this settled; agent-slot count
 is specifically sized at W1 open against the measured post-B1
 matrix.
 
-### BA — grammar-derived tape activation
+### AZ — grammar-derived direct-to-struct + tape dissolution
 
-Opens on AY-II close. Four waves. W0 lifts the derive cache from
-the source tree into `$XDG_CACHE_HOME/bbnf-derive/` (the deferred
-build-infra piece B1 chose not to absorb). W1 is the measurement
-gate: JSON twitter at 1967 MB/s — recovery of the AU-baseline,
-not exceedance — under a runtime consumer of the backward
-container pointer that W1 adds to the tape record. The one-way
-`child_off` asymmetry that has kept pointer-path work out of BB
-closes in BA.W1. W2 activates `StructRegistry` population across
-JSON, CSS L4, Sheets, BBNF grammars; the emitter emits the
-registry at codegen, the runtime reads it, the IR audit pass
-enforces 100% `->` coverage. W3 hardens CSS L4 to lightningcss
-typed-value parity node-for-node — `<length>` rules return a typed
-`Length` equivalent to lightningcss's, no approximation. W3 also
-settles the backward-pointer form (in-record versus sidecar column)
-for BB to consume at W0.
+Opens on AY-II close. The transformational tranche of Era VI. AZ
+does what the old BA doc described as "tape activation" — but
+goes further: the `crates/tape/` substrate is deleted by AZ close.
+Every grammar derives its native Rust struct shape from
+`project_types` + `StructRegistry`; parse output lands directly
+into those structs; the tape, its column-major storage, its
+materialised-view `TapeRec`, and every alias shim currently
+bridging them are dissolved. BBNF self-hosting also runs on
+derived structs — `project_types` applied to `grammar/bbnf/bbnf.bbnf`
+produces a `BbnfAst` type that mirrors `GrammarIR`, so there is
+no "undeclared struct target" fallback role for the tape to fill.
+The five roles the tape played (view-layer intermediate,
+materialised-view shape, debug inspection surface, parity-oracle
+substrate, undeclared-grammar fallback) are each absorbed by the
+struct tree, the struct's `impl Debug`, `PartialEq`-based oracle
+comparisons, and `project_types`' universal coverage respectively.
+`feedback_no-orthogonal-codepaths` is the governing invariant:
+AZ exists because the tape was the last orthogonal codepath, and
+the discipline forbids it persisting alongside direct-to-struct.
 
-BA's reversal criteria inherit AW-IV's lesson directly. AW-IV
-declared "every entry exceeds post-AU" as a hard gate and closed
-with "0 entries exceed post-AU, 17/17 regressed" — 92 commits of
-substrate without gate alignment. BA's four reversal rules are
-codified in `BA.md` under §Reversal criteria. First, the wave-local
-20% rule: a wave that misses its own declared gate by more than 20%
-reverts its own substrate at wave close, and the plan does not
-accumulate unreverted debt across waves. Second, parity-recovery
-precedence: any wave that regresses an already-passing AU-baseline
-entry reverts the responsible substrate immediately, regardless of
-its own gate. Third, no hedging forward: a wave does not route its
-miss to a later wave of BA or to BB/BC (`feedback_no-deferrals`).
-Fourth, reversal is a health signal: BA budgets for at least one
-reversal per wave as the *expected case*, not a failure mode. AQ.5's
-deletion of structural pre-scan (`2f7c1bd4`) was the cleanest
-reversal in project history and produced the dispatch discipline
-that landed AP.5 NibbleLut.
+AZ opens with front-loaded classifier-unification research
+(`docs/tranches/AZ/CLASSIFIER-UNIFICATION.md`) per the resolution
+of open-question Q9. The research studies how multiple payload
+kinds — `-> i64`, `-> String`, `-> Color`, `-> Vec<Selector>` —
+compose in a single classifier without collision, producing the
+unified dispatch shape before any payload activates. The
+alternative — reacting to collision mid-AZ with a sub-wave — was
+explicitly rejected as recipe-for-disaster during the audit.
 
-BA's wave structure at `BA.md`: W0 derive-cache lift plus IR audit
-pass plus measurement surface; W1 scalar payload activation (JSON,
-Sheets first) with twitter 1967 MB/s gate; W2 aggregate/Named
-`StructRegistry` population (CSS L4) with lightningcss node-for-node
-parity; W3 backward container pointer plus first consumer (CSS L4
-`Declaration::parent_rule`); W4 FINAL — 17-entry matrix recovery
-plus samply fleet captures under `docs/benchmarks/profiles/BA/<wave>/`.
-Every wave has a runtime call site at its landing commit, a
-same-commit bench delta, and a same-commit samply capture.
-`feedback_execute-planned-architecture`: do not retreat from planned
-substrate, but ship no substrate without a same-commit consumer
-and same-commit bench delta. Agent-slot count: four waves plus
-W4 FINAL, one to three agents per wave, plus a dedicated profile-
-delta agent running alongside every substrate landing.
-`feedback_no-orthogonal-codepaths` is enforced: one
-`compute_payload_layouts` pass, one `StructRegistry`, one emitter
-consumer per layout kind, one regex system.
+Wave structure at `AZ/AZ.md`: W0 research (classifier unification +
+derive-cache key design per Q7) plus `StructRegistry` +
+`project_types` closure audit; W1 hard-fail-and-block closure of
+the registry across every production grammar (per Q2); W2 scalar
+payload direct-to-struct for JSON + Sheets with twitter ≥ 1967 MB/s
+as the hard gate — the AU-baseline recovery that AY-II deferred
+lands here, proving direct-to-struct beats tape-plus-struct; W3
+aggregate payload direct-to-struct for CSS L4 with lightningcss
+node-for-node typed parity; W4 direct-to-struct for BBNF itself
+plus parity-harness recoding to compare struct outputs instead
+of tape bytes; W5 tape deletion — `crates/tape/` removed,
+`crates/core/src/runtime/mod.rs` alias shims retired, view
+codegen rewritten to target struct fields directly; W6 FINAL —
+17-entry matrix parity plus `cargo build -p bbnf --no-default-features`
+succeeds without requiring `crates/tape/`, which is the
+mechanical proof that the crate is gone.
 
-### BB — lazy typed pointer-path queries
+AZ's reversal criteria are strict: wave-local 20% miss reverts own
+substrate at wave close; parity-recovery precedence reverts any
+substrate that regresses an already-passing AU-baseline entry;
+no hedging forward to a later wave. Ship no substrate without
+same-commit runtime consumer and same-commit bench delta.
+AZ budgets for at least one reversal per wave as the *expected*
+case, following AQ.5's cleanest-reversal precedent (~32 commits)
+and explicitly avoiding AW-IV's substrate-without-consumer
+anti-precedent (92 commits, 0/17 gate miss).
 
-Opens on BA's settled substrate. The thesis is sonic-rs
-`pointer!` ergonomics with compile-time type validation plus
-simdjson OnDemand's forward-skip laziness, but grammar-typed:
+Defensible floor: if classifier unification proves intractable at
+W0 or `StructRegistry` closure leaves a production grammar
+uncovered at W1, AZ closes with partial direct-to-struct (JSON +
+Sheets) and the tape retained for CSS + BBNF. This is the escape
+clause, declared up front rather than discovered mid-tranche.
+
+### BA — lazy typed pointer-path queries over the struct tree
+
+Opens on AZ close. Tranche letter reassigned during the audit
+(was BB in the pre-audit plan, promoted to BA when AZ absorbed
+the old BA's scope). The substrate is now the grammar-derived
+struct tree — the tape dissolved at AZ.W5 — so every reference
+to "tape backward pointer" or "sidecar column" in the pre-audit
+plan translates to struct-tree navigation. The thesis is
+otherwise unchanged: sonic-rs `pointer!` ergonomics, simdjson
+OnDemand's forward-skip laziness, grammar-typed at compile time.
 `path!("store", "books", 0, "title")` against a JSON grammar
-resolves through IR type inference to a `NodeView<'p, TitleRule>`
-accessor; invalid paths fail to compile. Strictly stronger than
-sonic-rs's runtime path error. Lazy skip uses BA's backward
-(`parent_off`) and forward (`child_off`) container pointers.
-Zero allocation on traversal — intermediate state borrows from
-the tape. Path values compose with e-graph normalisation (duplicate
-prefix elimination, redundant downcast elimination, path-fusion
-with adjacent accessors); BC later extends this surface with
-inferred rules. Dependencies on BA are strict: no StructRegistry
-at BA close → no BB open. Agent-slot count: three waves, two to
-three agents each.
+resolves through IR type inference to a typed accessor against
+the derived struct's field graph; invalid paths fail to compile
+with a grammar-aware error. Strictly stronger than sonic-rs's
+runtime path error.
 
-BB's handoff contract from BA is explicit in `BB.md`: `StructRegistry`
-populated for JSON / CSS / Sheets / BBNF; backward container pointer
-landing with an active consumer; IR audit pass at 100% `->` coverage;
-17-entry AU-baseline at or above AU floor; lightningcss / sonic-rs /
-simdjson parity harnesses green. If BA.W3 chose sidecar rather than
-in-record for the backward pointer, BB.W0 absorbs the change and
-the path traversal consults the sidecar. If `StructRegistry` is
-partial at BA.W4 close, BB does not open; a BA-carry wave lands the
-remainder. BB's own operational posture is a `path!` macro plus a
-typed `Path<Grammar, Target>` value; host bindings (Rust, TS, Python)
-receive isomorphic signatures per `feedback_isomorphic-api`. BB's
-bench surface is a lazy-path micro-bench suite that extracts 3, 10,
-and 30 fields from citm, tailwind, and sheets fixtures; every wave
-runs both the micro-bench and the full 17-entry matrix at boundary,
-with regression on either blocking wave close. BB.W0 proves the
-compile-time resolution gate (invalid paths fail to compile); BB.W1
-proves the zero-allocation traversal (heaptrack or jemalloc-sampling
-confirms no `Vec<NodeId>` construction); BB.W2 ships the egraph
-path-normalisation rewrites.
+Parent ascent, previously contemplated as a `TapeRec` sidecar
+column under the pre-audit Q1 answer, becomes a struct-tree
+question: embedded parent pointers in every struct node
+(bloat-heavy but O(1) ascent), root-traversal from the AST
+root (no bloat, O(depth) ascent on every path), or a hybrid
+sidecar index parallel to the struct (zero bloat when feature
+unused, one extra indirection on ascent). BA.W0 runs the
+parent-pointer micro-bench across the three options; the sidecar
+posture is the default per the audit's Q1 resolution translated
+to struct-tree context. The `feedback_no-orthogonal-codepaths`
+discipline applies: whichever option BA.W0 picks becomes the one
+pattern every grammar's struct shape follows.
 
-### BC — e-graph rewrite rule inference
+BA's handoff contract from AZ: `StructRegistry` populated for
+JSON / CSS / Sheets / BBNF; IR audit pass at 100% `->` coverage;
+17-entry AU-baseline at or above AZ.W2 close; `crates/tape/`
+deleted. If AZ closed on a partial `StructRegistry` via the
+defensible-floor escape clause, BA does not open until the
+remainder lands — this is the hard-fail-and-block discipline
+per Q2 and `feedback_typed-materialization-invariant`.
 
-Opens on BB's settled path substrate. BC closes the loop on
-`feedback_pluggable-components` and `feedback_csp-always-optimize`
-by letting the e-graph *discover* grammar-level rewrite rules
-rather than only apply a fixed set. Ruler-style (Nandi et al. 2021)
-CVC enumeration over `IrNode` produces candidate terms up to a
-bounded size. The bbnf IR interpreter at `crates/ir/src/vm/` — the
-core of Era V's VM, salvaged at HEAD — is the equivalence oracle:
-two `IrNode` candidates are equivalent if their tape output matches
-across a corpus. CSP schedules candidate rule application against
-the existing cost model (no new decision surface). Accepted rules
-persist into `cost_config` for subsequent codegen consumption.
-Every persisted rule round-trips to bbnf surface syntax with a
-`Debug` form — a reviewer reads it, accepts or rejects, enumeration
-is automated but curation is not. BC is the tranche where Era V's
-long arc finally earns its keep: ~572 tranche-tagged commits do not
-come back, but the VM's narrow surviving surface is what makes
-rule-inference viable at all. `feedback_abrogate-before-patch`
-applies: BC does not re-open the DTA walker; BC uses what remains.
-Agent-slot count: four waves.
+Operational posture: a `path!` macro plus a typed
+`Path<Grammar, Target>` value; host bindings (Rust, TS, Python)
+receive isomorphic signatures per `feedback_isomorphic-api`. Bench
+surface: a lazy-path micro-bench suite extracting 3, 10, and
+30 fields from citm, tailwind, sheets fixtures; every wave runs
+both the micro-bench and the full 17-entry matrix at boundary,
+with regression on either blocking wave close. Zero allocation
+on traversal — intermediate state borrows from the struct —
+verified by heaptrack or jemalloc-sampling at W1 close. BA.W2
+ships the e-graph path-normalisation rewrites (duplicate prefix
+elimination, redundant downcast elimination, path-fusion);
+BB later extends this with inferred rules. Agent-slot count:
+three waves plus FINAL, two to three agents each.
 
-The three durable surfaces BC uses are stated explicitly in `BC.md`.
-First, the VM as equivalence oracle: two `IrNode` candidates run
-through the VM against a fixture corpus, tape outputs compared byte-
-for-byte. Second, the VM as cost-model reference: the VM's opcode
-count per rule is a proxy for the cost the AOT path would pay if
-inlined; BC uses this for cost-model calibration of CSP variables.
-Third, the VM as regression oracle: after a rule inference lands a
+### BB — e-graph rewrite rule inference
+
+Opens on AZ + AY-II close. BA (pointer queries) is not a BB
+blocker; the two tranches operate on disjoint IR surfaces and
+can proceed after AZ settles. Tranche letter reassigned during
+the audit (was BC in the pre-audit plan; promoted to BB when
+BA absorbed the old BB's scope and BC was retired).
+
+BB closes the loop on `feedback_pluggable-components` and
+`feedback_csp-always-optimize` by letting the e-graph *discover*
+grammar-level rewrite rules rather than only apply a fixed set.
+Ruler-style (Nandi et al. 2021) CVC enumeration over `IrNode`
+produces candidate terms up to a bounded size. The architecture
+is **e-graph first, VM residue second** per the audit's Q3
+resolution. The e-graph fast-path: if two candidates are already
+in the same e-class under the current rewrite set, they are proven
+equivalent; no VM call is needed. The VM acts as the non-circular
+tie-break for the residue — candidates in distinct e-classes,
+where the e-graph is silent and the question is whether they
+are genuinely inequivalent or equivalent under a rule we have
+not yet derived. Accepted VM-proved rules feed back into the
+e-graph, extending the rewrite set; next enumeration pass,
+their consequences are e-graph-free. The VM's workload is residue
+throughput (< 10% of enumeration), not total throughput,
+comfortably within the ~1800-LOC VM surface at `crates/ir/src/vm/`
+that Era V's AX.W0b deliberately left at HEAD.
+
+Rule storage is grammar-colocated and extensible per the audit's
+Q4 resolution. Fleet-wide rules (associativity, commutativity,
+absorption) live in a new general-infra crate `crates/ir-rewrites/`
+rather than `crates/core` (`feedback_general-infra-crates`;
+`feedback_no-core-dumping`). Grammar-specific rules colocate with
+the grammar under `grammar/<name>/rewrites/*.ron` in a
+standardised schema; the `bbnf_derive` macro scans the directory
+at build time and compiles matches into the grammar's cost-config.
+New grammars ship their own rules without touching core. The
+schema declares name, LHS pattern, RHS pattern, cost delta,
+provenance (hand-coded or BB-inferred), and discovery metadata.
+
+Curation is automatic-ranked and tiered. The ranker lives at
+`crates/ir-rewrites/src/rank.rs` and scores every candidate on
+match frequency, cost delta, generality (grammars matched),
+similarity to Tranche H hand-coded rules, novelty, and LHS
+tree size. Tiered review: Class-1 trivial (algebraic identities
+already in the ground-truth set) auto-accepts with machine-
+generated justification and audit-log only; Class-2 structural
+(candidates matching Tranche H pattern shape) fast-tracks;
+Class-3 novel takes full human review. Target: > 90 % of
+discovered candidates fall in Classes 1-2, so review time scales
+on novel rules only. First-run review is bounded by the
+Tranche H ground-truth set size — a finite, one-time effort.
+Post-bootstrap enumerations produce delta candidates on IR
+or cost-model changes, small and incremental.
+
+The three durable VM surfaces BB uses are stated in `BB.md`.
+First, the equivalence oracle on e-graph residue: two `IrNode`
+candidates run through the VM against the fixture corpus, outputs
+compared. Second, the cost-model reference: the VM's opcode count
+per rule is a proxy for the cost the AOT path would pay if
+inlined; BB uses this for cost-model calibration of CSP variables.
+Third, the regression oracle: after a rule inference lands a
 transformation, the VM runs pre-rule and post-rule forms on the
-same fixtures to verify semantic identity. None of these require
-the full DTA walker substrate; each uses only the VM's token-
-dispatch opcode machinery that AX.W0b deliberately left at HEAD.
+same fixtures to verify semantic identity. None require the full
+DTA walker substrate; each uses only the token-dispatch opcode
+machinery that AX.W0b deliberately preserved at HEAD.
+`feedback_abrogate-before-patch` applies: BB does not re-open
+the DTA walker; BB uses what remains.
+
 The Tranche H factor / merge_regex_alts / inline_acyclic rewrites
-that were hand-coded become the validation reference: BC's first
-rule-inference pass must rediscover them (with possibly different
-surface presentations but semantically equivalent `IrNode`
-transformations) before BC declares the mechanism sound. The
-existing hand-coded rules are the ground truth that BC's
-enumeration is calibrated against.
+that were hand-coded become the soundness check: BB's first
+enumeration pass must rediscover them (possibly with different
+surface presentation but semantically equivalent `IrNode`
+transformations) before BB declares the mechanism sound. A
+rediscovery failure at W0 is an immediate revert. Agent-slot
+count: four waves plus FINAL.
 
 ## 6. The SOTA union — grammar-derived everything
 
@@ -1011,85 +1081,103 @@ heuristic thresholds over actual configurable values. The gorgeous-
 mirror retirement does not relax this; `crates/gorgeous` carries
 the same discipline, just at workspace-authoritative location.
 
-## 10. Open questions that gate the plan
+## 10. Open questions — resolved
 
-Four BA/BB/BC questions remain open at gestalt time, plus three
-cross-tranche questions surfaced during Wave 2.
+Nine questions surfaced during the audit, eight substantive plus
+one that resolved by direct action (gorgeous-mirror retirement
+executed, sibling moved to Trash on 2026-04-23). Every decision
+and its resolution mechanism lives in a per-question doc under
+`docs/tranches/open-questions/`; this section is the roll-up.
 
-**Backward-pointer form** (BA.W3). In-record versus sidecar column.
-In-record changes the 16-byte `TapeRec` layout; sidecar adds a
-parallel `Vec<u32>` alongside `sib_skip`. The decision affects BB's
-path resolver: in-record gives single-cache-line ascent; sidecar
-gives better cache behaviour on parent-blind traversals but two
-memory reads on ascent. If BA.W3 chooses sidecar, BB.W0 absorbs
-the change; if BA.W3 chooses in-record, BB.W0 proceeds with one-
-read ascent.
+**Q0 — tape abrogation sequencing** (see `00-tape-abrogation-shape-c.md`).
+Shape C: AY-II closes as scoped on the tape substrate; **AZ** (new)
+absorbs direct-to-struct activation + full tape dissolution; **BA**
+(was BB) operates on the grammar-derived struct tree; **BB** (was
+BC) runs e-graph rule inference. BC letter retired. Rationale: the
+tape is a stepping-stone, and dissolving it is the architectural
+recovery rather than a downstream optimisation. Shape A (tape
+persists) and Shape B (AY-II triples in scope) were rejected.
 
-**StructRegistry partial-close** (BA.W2 → BB.W0 gate). BB does not
-open on a partial `StructRegistry`. If BA.W2 closes with coverage
-< 100% on any production grammar, a BA-carry wave lands the
-remainder; BB.W0 waits. The gate is the IR audit pass's pass /
-fail result.
+**Q1 — parent-pointer form on the struct tree** (see
+`01-backward-pointer-form.md`). Sidecar posture: a parallel index
+alongside the struct, not embedded in every node. Zero bloat when
+unused, one extra indirection on ascent. Translated from the
+pre-audit tape-backward-pointer framing; final sidecar-versus-
+embedded-versus-hybrid decision deferred to BA.W0 micro-bench,
+with the discipline that whichever form wins becomes the one
+pattern every grammar's struct follows.
 
-**VM oracle performance at scale** (BC). Ruler-style enumeration
-generates terms at polynomial growth in depth; the VM runs each
-candidate against the corpus. If VM throughput against, say, the
-twitter fixture is below 10 MB/s per candidate, BC's enumeration
-bound has to shrink or the VM's inner loop has to be re-optimised.
-A BC.W0 micro-bench establishes the floor.
+**Q2 — StructRegistry partial-close** (see
+`02-structregistry-partial-close.md`). Hard fail and block. The
+IR audit pass must return pass per production grammar at AZ.W1
+close; any fail blocks AZ.W2 and all subsequent tranches. No
+partial-registry opening.
 
-**Rule curation cost** (BC). Every persisted rule is reviewed by a
-human before it lands in `cost_config`. If the enumeration produces
-> 50 rules per hour of VM time, review becomes the bottleneck, not
-enumeration. BC's dispatch brief sizes the review surface.
+**Q3 — VM oracle versus e-graph equivalence** (see
+`03-vm-oracle-vs-egraph.md`). Both. E-graph first as the fast-path
+equivalence check under the current rewrite set; VM second as the
+non-circular ground-truth tie-break on residue. Accepted VM-proved
+rules extend the e-graph. Residue is < 10 % of enumeration; VM
+workload is comfortable at current ~1800-LOC surface.
 
-**Cross-worktree pin drift** (B1.W2.c). Three siblings pin
-`nightly-2026-04-11`; if ambient pins drift post-B1 (a sibling
-bumps to a later date for an unrelated reason), the 93-ICE cluster
-could return. B1.W2.c adds a CI job that diffs the pin across the
-three siblings; any drift is a build failure.
+**Q4 — rule storage, ranking, review** (see
+`04-rule-storage-ranker-review.md`). Grammar-specific rules
+colocate with their grammar under `grammar/<name>/rewrites/*.ron`;
+fleet-wide rules live in a new `crates/ir-rewrites/` crate, not
+`crates/core`. Automatic ranker scores candidates on match
+frequency × cost delta × generality × similarity to ground-truth
+× novelty × tree size. Tiered review: Class-1 auto-accept,
+Class-2 fast-track, Class-3 full human review. First-run review
+is bounded by the Tranche H ground-truth set, a one-time effort.
 
-**`--test-threads` × `-Zthreads` collision**. nextest's default
-parallelism and rustc's `-Zthreads` rayon parallelism can
-interact; a misconfiguration yields thread-starvation. B1.W0.c's
-nextest profile set is chosen to avoid this; if a post-B1 profile
-edit reintroduces the collision, a wave-close regression test
-catches it.
+**Q5 — cross-worktree pin drift** (see
+`05-cross-worktree-pin-drift.md`). CI guardrail. A shared workflow
+reads `rust-toolchain.toml` from bbnf-lang, parse-that, pprint;
+any divergence fails every PR in all three repos. Lands in B1.W2.c.
 
-**Derive-cache invalidation key**. `$XDG_CACHE_HOME/bbnf-derive/`
-(BA.W0) needs an invalidation key that captures grammar changes,
-IR pass versions, and rust toolchain version. If the key is too
-narrow, stale cache entries; if too wide, no cache hit. BA.W0's
-key derivation is gated by an explicit test suite that exercises
-both extremes.
+**Q6 — nextest × `-Zthreads` collision** (see
+`06-test-threads-zthreads-collision.md`). `test-threads = 2` on
+the `ax-iter` nextest profile; `test-threads = 8` on `close`.
+Wave-close sanity check: iter-test < 30 s wall-clock on the
+8-core reference.
 
-**gorgeous-mirror retirement timing**. The `../gorgeous` sibling
-duplicates `crates/gorgeous`; the repo-modernization index lists
-it as RETIRE with Phase A CI disable and Phase B bench migration
-into the workspace. If the retirement lands during B1.W2.b
-(abrogation) rather than Phase B (bench migration), the 2 sibling
-benches lose their home temporarily. The sequencing in
-`repo-modernization/gorgeous-sibling.md` keeps the sibling
-alive through B1 and retires it under a dedicated post-B1
-sub-wave; any deviation opens the window.
+**Q7 — derive-cache invalidation key** (see
+`07-derive-cache-invalidation-key.md`). Composite key
+`(grammar-sha256, bbnf-derive-crate-version, rustc-version-sha)`.
+Chronic-pain discipline: robustness test suite under
+`crates/derive/tests/cache_invalidation/` exercises each factor
+independently plus combinations; cache hit < 50 ms with key
+derivation memoised per process; 2 GB LRU eviction; every miss
+logs its reason; one-time migration from `target/.bbnf-cache/`
+to `$XDG_CACHE_HOME/bbnf-derive/`. Lives in AZ.W0 under the
+Shape-C re-sequence (was BA.W0 pre-audit).
 
-**Monolithic arena admission under BA's classifier extension**.
-`feedback_no-combinators-monolithic` requires extending the
-classifier rather than falling back to combinators in the
-monolithic arena path; BA's direct-to-struct activation adds
-multiple payload kinds simultaneously to the classifier. If
-classifier extension for one payload kind collides with another
-(e.g., scalar `-> i64` vs aggregate `-> Color`), BA.W2 opens a
-classifier-unification sub-wave rather than branching the arena
-path.
+**Q8 — gorgeous-mirror retirement** (see
+`08-gorgeous-mirror-retirement.md`). Executed. The sibling
+`/Users/mkbabb/Programming/gorgeous` was moved to
+`~/.Trash/gorgeous-retired-2026-04-23` on master commit during
+the audit-close pivot. Its 2 benches migrate inward to
+`crates/gorgeous/benches/` in a Phase-B follow-up. Question
+resolved by direct action; no further tranche work.
 
-The seven open questions span BA's internal choices, BB's
-dependency on BA's choices, BC's oracle performance, and three
+**Q9 — classifier collision under direct-to-struct activation**
+(see `09-classifier-collision-frontload.md`). Front-load the
+research in AZ.W0 (`docs/tranches/AZ/CLASSIFIER-UNIFICATION.md`);
+do not defer to a reactive sub-wave. The reactive shape was
+rejected as recipe-for-disaster during the audit. If AZ.W0's
+research shows classifier unification is deeper than AZ can
+carry, that is a re-plan trigger at AZ opening, not mid-AZ.
+
+The nine questions span AZ's internal choices, BA's dependency
+on AZ's choices, BB's oracle and storage architecture, and four
 cross-tranche infrastructure questions. Each has an explicit
-if-answered-X-then-plan-changes-to-Y trigger; none are left
-ambiguous. The pattern is `feedback_execute-planned-architecture`
-applied to planning: the plan carries its own unworkabilities,
-and every decision point has a declared reversal path.
+if-answered-X-then-plan-changes-to-Y trigger. The pattern is
+`feedback_execute-planned-architecture` applied to planning: the
+plan carries its own unworkabilities, and every decision point
+has a declared reversal path. None are left ambiguous. The
+open-questions directory carries the resolution record with
+follow-up gates; every resolved question becomes a live invariant
+until a replacement gate decommissions it.
 
 ## 11. Appendix — branch index
 

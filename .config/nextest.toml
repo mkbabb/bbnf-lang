@@ -1,50 +1,103 @@
-# cargo-nextest configuration — Tranche Y.-1.c freezing guards.
+# ─────────────────────────────────────────────────────────────────────────────
+# .config/nextest.toml — bbnf-lang
 #
-# Complements the CSP node budget (Y.-1.a) and the bench wall-clock
-# guard (Y.-1.b). Without these guards, a performance regression that
-# sends a test into an infinite loop (or runaway CSP search, or
-# pathological backtracking) hangs the whole workspace test run until
-# the operator kills it by hand. With nextest + slow-timeout, a test
-# that stays "slow" for three consecutive 30-second windows is killed
-# automatically.
+# Successor to the Y.-1.c guards config. Retains the freezing-guard invariants
+# (slow-timeout, terminate-after, leak-timeout) and adds explicit profiles for
+# the three routine surfaces B1 exposes: `default` (local-dev), `ax-iter`
+# (fast-iter; fail-fast), `ci` (retries + junit + verbose), `close` (full
+# suite with per-test wall capture for ceremony benchmarks).
 #
-# Run with: cargo nextest run  (or make test with nextest installed)
-# Install:  cargo install cargo-nextest --locked
+# Critique of the predecessor (.config/nextest.toml @ master):
+#   - Only two profiles (default, ci); missing the dev-iter fast-fail surface
+#     that B1.W0 advertises as the primary iter-test alias.
+#   - No junit output; CI workflows hand-roll junit generation downstream.
+#   - Slow-timeout override on `bench_*` test filters (120s × 2 = 240s) is too
+#     generous for divan-migrated benches whose libtest-shim produces no
+#     `bench_*` test names; the override is dead configuration.
+#
+# Invariants kept:
+#   - slow-timeout + terminate-after: kills runaway CSP search / pathological
+#     backtracking automatically, preventing workspace-test hangs.
+#   - leak-timeout: detects detached threads / background workers.
+#   - retries = 1: masks flakes without hiding real regressions.
+# ─────────────────────────────────────────────────────────────────────────────
 
+# Store path: nextest keeps per-invocation artefacts here (junit, timings,
+# snapshots). Rooted inside target/ so `cargo clean` reaps them.
+[store]
+dir = "target/nextest"
+
+# ── default: local interactive test runs ─────────────────────────────────────
 [profile.default]
-# A test is "slow" if it runs longer than 30 seconds. After
-# terminate-after slow periods (3 * 30s = 90s total), nextest kills
-# the test process. 90 seconds is long enough for legitimately slow
-# tests (CSS L4 compile, full workspace fixture runs) and short
-# enough that a freeze doesn't cost a whole coffee break.
-slow-timeout = { period = "30s", terminate-after = 3 }
+# Slow test: longer than 30s between ticks. Killed after 3 consecutive slow
+# windows (90s total). Leaves legitimate compile-pipeline tests room.
+slow-timeout   = { period = "30s", terminate-after = 3 }
+leak-timeout   = "100ms"
+retries        = { backoff = "fixed", count = 1, delay = "1s" }
+status-level   = "pass"
+final-status-level = "flaky"
+failure-output = "immediate-final"
+success-output = "never"
 
-# A test that produces no output for 100ms after exit is considered
-# a leak. This catches detached threads / background workers that
-# don't clean up — a signal of unreleased resources.
-leak-timeout = "100ms"
-
-# One retry on flake. Most real failures are deterministic; one
-# retry lets genuine flakes pass without masking real regressions.
-retries = { backoff = "fixed", count = 1, delay = "1s" }
-
-[profile.ci]
-# Tighter limits for CI. `terminate-after = 2` means 2 * 60s = 120s
-# max before kill. fail-fast = false so one test's failure doesn't
-# mask others in the same run.
-slow-timeout = { period = "60s", terminate-after = 2 }
-fail-fast = false
-retries = { backoff = "fixed", count = 1, delay = "1s" }
-
-# Specific overrides for tests that are legitimately slow.
+# Overrides: compile-pipeline integration tests exercise the full IR passes on
+# large grammars (CSS L4, sheets). Give them more headroom — 3 × 60s = 180s.
 [[profile.default.overrides]]
-# Compile-pipeline integration tests exercise the full IR passes on
-# large grammars (CSS L4, sheets). Give them more headroom.
-filter = "test(compile)"
+filter       = "test(compile) + test(/pipeline/)"
 slow-timeout = { period = "60s", terminate-after = 3 }
 
-[[profile.default.overrides]]
-# Bench-style tests (if any test is named `bench_*`) run cold
-# benchmarks and may take a few seconds even in the happy path.
-filter = "test(/bench_/)"
-slow-timeout = { period = "120s", terminate-after = 2 }
+# ── ax-iter: fast dev-loop profile ───────────────────────────────────────────
+# Invoked by `cargo iter-test*` aliases. Fail-fast is ON so the fleet surfaces
+# the first failure immediately; retries DISABLED so flakes aren't re-run
+# (the `default` / `ci` profiles handle retries for correctness runs).
+[profile.ax-iter]
+slow-timeout   = { period = "20s", terminate-after = 2 }
+leak-timeout   = "50ms"
+retries        = 0
+fail-fast      = true
+status-level   = "fail"
+failure-output = "immediate"
+success-output = "never"
+
+# Threads: cap at 4 so parallel nextest runs don't starve the parent cargo
+# invocation of CPU; a full workspace test is typically ≤200 binaries and
+# fits comfortably inside 4 OS threads on macOS arm64.
+test-threads = 4
+
+# ── ci: GitHub Actions runs ──────────────────────────────────────────────────
+[profile.ci]
+slow-timeout   = { period = "60s", terminate-after = 2 }
+leak-timeout   = "200ms"
+retries        = { backoff = "fixed", count = 1, delay = "2s" }
+fail-fast      = false
+status-level   = "pass"
+final-status-level = "flaky"
+failure-output = "immediate-final"
+success-output = "final"
+
+# Emit junit.xml for CI report aggregation. Path is store-dir-relative.
+[profile.ci.junit]
+path = "junit.xml"
+report-name = "bbnf-lang"
+
+# ── close: full-suite ceremony runs (B1.W0.c close-gate) ─────────────────────
+# Generates per-test wall timing into `target/nextest/close/...`; consumed by
+# `docs/benchmarks/post-B1-W0-proof.txt` row generators. Longer slow-timeout
+# because CSS L4 + sheets + full grammar matrix can legitimately take minutes.
+[profile.close]
+slow-timeout   = { period = "120s", terminate-after = 3 }
+leak-timeout   = "500ms"
+retries        = 0
+fail-fast      = false
+status-level   = "pass"
+final-status-level = "slow"
+failure-output = "immediate-final"
+success-output = "final"
+
+[profile.close.junit]
+path = "junit.xml"
+report-name = "bbnf-lang-close"
+
+# Emit detailed per-test timing for the ceremony artefact.
+[[profile.close.overrides]]
+filter = "all()"
+# No slow-timeout override; inherits the profile's 120s cap.

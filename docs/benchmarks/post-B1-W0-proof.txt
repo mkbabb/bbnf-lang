@@ -30,3 +30,8 @@ alias-resolve-expand-bootstrap	pass	cargo expand-bootstrap --help exit 0 under p
 alias-resolve-expand-derive	pass	cargo expand-derive --help exit 0 under pinned nightly-2026-04-11
 alias-resolve-asm-bbnf	pass	cargo asm-bbnf --help exit 0 under pinned nightly-2026-04-11
 w0b-smoke	pass 44.91s	cargo build --profile ax-iter -p bbnf exit 0 wall-clock via /usr/bin/time -p under new config.toml + pinned nightly-2026-04-11
+nextest-install	pre-installed 0.9.133	installed by orchestrator; no agent action
+nextest-config-parse	pass	cargo nextest run --workspace --profile ax-iter --no-run advanced past config-parse after [[profile.close.overrides]] fix (was [profile.close.overrides]); cargo-nextest accepts 4-profile surface
+nextest-ax-iter-dry-run	cap-exceeded 900s+	compile of test binaries (gorgeous, bootstrap, typed_accessor_surface, wrap_compound_elision) still in flight at 18-min W0.c hard-cap; 4 rustcs at 100% CPU each ~15 min elapsed under -Zthreads=8 -Zshare-generics=y; config parse verified clean; full compile wall not captured within cap
+nextest-close-dry-run	not-run	skipped to stay within W0.c hard-cap; orchestrator re-opens on green ax-iter
+w0c-ice-count	deferred	post-dry-run ls target/rustc-ice-*.txt deferred to orchestrator follow-on once ax-iter compile terminates

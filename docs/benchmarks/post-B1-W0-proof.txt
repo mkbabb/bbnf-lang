@@ -7,3 +7,26 @@ rustc-version-pinned	rustc 1.96.0-nightly (02c7f9bec 2026-04-10)	rustup run nigh
 rustup-show-pinned	active: nightly-2026-04-11-aarch64-apple-darwin (overridden by rust-toolchain.toml)	rustup show inside worktree post-pin
 toolchain-smoke	pass 6.32s	cargo check -p bbnf --profile ax-iter exit 0 wall-clock via /usr/bin/time -p
 toolchain-smoke-ice-count	0	ls target/rustc-ice-*.txt post-smoke
+alias-resolve-iter-check	pass	cargo iter-check --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-iter-check-lsp	pass	cargo iter-check-lsp --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-iter-check-prettify	pass	cargo iter-check-prettify --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-iter-check-bootstrap	pass	cargo iter-check-bootstrap --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-iter-check-full	pass	cargo iter-check-full --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-iter-test	skip-nextest-absent	cargo-nextest not installed; W0.c owns install; alias syntactically valid
+alias-resolve-iter-test-core	skip-nextest-absent	cargo-nextest not installed; W0.c owns install; alias syntactically valid
+alias-resolve-iter-test-ir	skip-nextest-absent	cargo-nextest not installed; W0.c owns install; alias syntactically valid
+alias-resolve-iter-test-analysis	skip-nextest-absent	cargo-nextest not installed; W0.c owns install; alias syntactically valid
+alias-resolve-iter-test-prettify	skip-nextest-absent	cargo-nextest not installed; W0.c owns install; alias syntactically valid
+alias-resolve-iter-test-lsp	skip-nextest-absent	cargo-nextest not installed; W0.c owns install; alias syntactically valid
+alias-resolve-iter-clippy	pass	cargo iter-clippy --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-bench-all	pass	cargo bench-all --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-bench-json	pass	cargo bench-json --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-bench-css	pass	cargo bench-css --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-bench-bbnf	pass	cargo bench-bbnf --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-bench-sheets	pass	cargo bench-sheets --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-bench-compile	pass	cargo bench-compile --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-bench-iai	pass	cargo bench-iai --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-expand-bootstrap	pass	cargo expand-bootstrap --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-expand-derive	pass	cargo expand-derive --help exit 0 under pinned nightly-2026-04-11
+alias-resolve-asm-bbnf	pass	cargo asm-bbnf --help exit 0 under pinned nightly-2026-04-11
+w0b-smoke	pass 44.91s	cargo build --profile ax-iter -p bbnf exit 0 wall-clock via /usr/bin/time -p under new config.toml + pinned nightly-2026-04-11

@@ -1,115 +1,206 @@
-# Local development overrides — resolve crates from sibling repos instead of crates.io.
-# This file is tracked so isolated worktrees inherit the same path-patched environment.
+# ─────────────────────────────────────────────────────────────────────────────
+# .cargo/config.toml — bbnf-lang workspace
+#
+# Authored in Tranche B1.W0 as the successor to the 32-line patch-only file.
+# Covers:
+#   - path patches (existing crate resolutions; preserved verbatim)
+#   - compile profiles (ax-iter / ay-final / bench-ci)
+#   - alias surface (iteration + test + bench)
+#   - build flags (-Zthreads, -Zshare-generics; nightly-gated)
+#   - target-specific linker choice (lld on macOS arm64; ld64 fallback)
+#
+# Design invariants:
+#   * Every iteration alias carries `--profile ax-iter` explicitly
+#     (feedback: iter-profile-always).
+#   * No fallback/shim profiles; if cranelift or lld is unavailable the
+#     relevant line is commented inline with its enable procedure
+#     (feedback: no-workarounds).
+#   * Bench aliases invoke a single `cargo bench` pass; they do NOT
+#     issue N serial `-p X --bench Y` commands (feedback: bench-single-run,
+#     bench-sequential-regression — divan runs its own serial regression
+#     pass inside one harness invocation).
+#   * Parallel `cargo check -p A + cargo check -p B` silently serialises
+#     on target-lock (feedback: single-cargo-per-target). The `iter-check-*`
+#     aliases are single-invocation; fleet orchestration must honour the
+#     rule by using one `--workspace` alias, not two parallel per-package
+#     invocations.
+# ─────────────────────────────────────────────────────────────────────────────
 
-# Tranche AG.0: optional fast linker for debug builds.
-#
-# Apple's default ld64 is serial and dominates incremental link time
-# on the bench binaries (~60% of the rebuild step on a two-file edit
-# per profiling during AX.W0a.2.d iteration). To opt into a faster
-# linker:
-#
-#   brew install lld       # adds /opt/homebrew/opt/lld/bin/ld64.lld
-#   brew install mold      # Linux-only upstream; macOS port exists
-#
-# then uncomment the matching block below. Check the binary exists
-# first (`ls /opt/homebrew/opt/lld/bin/ld64.lld`) — a missing linker
-# fails every build with an opaque rustc error.
-#
-# Expected speedup on this workspace (13 GB target, release w/ fat LTO
-# or dev w/ 16 codegen-units): 30–50% link time reduction, 10–20% total
-# rebuild time on small edits.
-#
-# [target.aarch64-apple-darwin]
-# rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/opt/lld/bin/ld64.lld"]
-#
-# [target.aarch64-apple-darwin]
-# rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/bin/mold"]
+# ── Path patches ─────────────────────────────────────────────────────────────
+# Sibling-repo path resolution for bbnf-lang. Mirror these in any repo that
+# depends on path-patched members (parse-that, pprint).
 
 [patch.crates-io]
-pprint = { path = "../pprint/rust" }
-pprint_derive = { path = "../pprint/rust/derive" }
-parse_that = { path = "../parse-that/rust/parse_that" }
-bbnf-regex = { path = "../parse-that/rust/regex" }
-gorgeous = { path = "crates/gorgeous" }
-bbnf = { path = "crates/core" }
-bbnf-ir = { path = "crates/ir" }
-bbnf_derive = { path = "crates/derive" }
-# Tranche AA.2: csp-solver is now a workspace member at crates/csp-solver/.
-csp-solver = { path = "crates/csp-solver" }
-# Tranche H: expose the local egraph substrate so bbnf-regex's HIR
-# e-graph resolves against the same path-patched crate bbnf-ir uses.
-egraph = { path = "crates/egraph" }
-egraph-derive = { path = "crates/egraph-derive" }
+pprint          = { path = "../pprint/rust" }
+pprint_derive   = { path = "../pprint/rust/derive" }
+parse_that      = { path = "../parse-that/rust/parse_that" }
+bbnf-regex      = { path = "../parse-that/rust/regex" }
+gorgeous        = { path = "crates/gorgeous" }
+bbnf            = { path = "crates/core" }
+bbnf-ir         = { path = "crates/ir" }
+bbnf_derive     = { path = "crates/derive" }
+csp-solver      = { path = "crates/csp-solver" }
+egraph          = { path = "crates/egraph" }
+egraph-derive   = { path = "crates/egraph-derive" }
 
-# ─── AY Iteration Surface (B0.W0.a) ─────────────────────────────────────
+# ── Profiles ────────────────────────────────────────────────────────────────
+
+# ax-iter: dev-loop iteration profile. Inherits dev; favours compile speed.
+# Used by every `iter-*` alias below; must never appear on a bench target.
+[profile.ax-iter]
+inherits        = "dev"
+opt-level       = 0
+debug           = "line-tables-only"  # enough for samply backtraces; minimal debuginfo cost
+incremental     = true
+codegen-units   = 256                 # maximise parallel codegen on dev hosts
+
+# ay-final: release profile tuned for correctness benchmarks and publishable
+# binaries (playground WASM, LSP release). Fat LTO + single codegen unit.
+[profile.ay-final]
+inherits        = "release"
+lto             = "fat"
+codegen-units   = 1
+debug           = 1                   # keep samply-resolvable symbols
+strip           = false
+split-debuginfo = "packed"
+
+# bench-ci: for iai-callgrind runs under valgrind on Linux CI. Full debuginfo
+# (callgrind needs it for source attribution) and no LTO (valgrind instruments
+# the un-LTO'd IR).
+[profile.bench-ci]
+inherits        = "release"
+debug           = "full"
+lto             = "off"
+codegen-units   = 1
+
+# ── Aliases ─────────────────────────────────────────────────────────────────
+# Routine surfaces. Every alias is the single canonical way to issue its
+# operation; the Makefile delegates here rather than duplicating flags.
 #
-# Public fast-path aliases that route routine AY work through the
-# `ax-iter` profile (no DWARF, stripped debuginfo, incremental on).
-# Heavy defaults (release/bench/workspace tests) are NOT shadowed here;
-# those remain reachable via the existing `cargo test --workspace`,
-# `cargo bench ...`, etc. surfaces.
-#
-# Canonical catalog: `docs/benchmarks/post-B0-W0-commands.txt`.
-#
-# Aliases with the `iter-` prefix default to `--profile ax-iter` and
-# are the commands AY.W5-W7 executors call directly. Aliases without
-# the prefix are structural surfaces (expand, asm) that AY hard gates
-# cite by name.
+# Cost model (B1.W0 invariant 10):
+#   * routine (iter-check)          — workspace minus the four proc-macro-heavy
+#                                     crates (gorgeous, bbnf-bootstrap,
+#                                     bbnf-analysis, bbnf-lsp). Seconds-scale;
+#                                     the default dev-loop surface.
+#   * per-exclude fast-paths        — one named alias per excluded crate so the
+#                                     routine-surface excludes each remain
+#                                     validatable on demand:
+#                                       iter-check-lsp       (bbnf-analysis + bbnf-lsp)
+#                                       iter-check-prettify  (gorgeous)
+#                                       iter-check-bootstrap (bbnf-bootstrap)
+#   * close-gate (iter-check-full)  — the heavy surface; full workspace compile
+#                                     under ax-iter. Reserved for close-ceremony
+#                                     and pre-dispatch proof; never iteration.
+#   * bench surface                 — divan-backed cold-per-parse benches:
+#                                       bench-json / bench-css / bench-bbnf /
+#                                       bench-sheets / bench-compile / bench-all
+#                                       plus bench-iai (iai-callgrind, CI-only).
+
 [alias]
-# Fast workspace type-check — EXCLUDES `gorgeous` and `bbnf-bootstrap`
-# because each carries ≥1 `#[derive(Parser)]` site that triggers the
-# full bbnf-derive proc-macro pipeline (emit ~30 k-line TokenStream
-# per site, serialised inside a single rustc). `gorgeous` aggregates
-# 6 sites (9+ min cold single-rustc); `bbnf-bootstrap` carries the
-# 133-LOC self-host grammar (≥ 3-5 min cold per site).
+# Iteration: cargo check surfaces (ax-iter profile). Each covers one bounded
+# working-set; fleet orchestrators use `iter-check-full` when they need the
+# whole workspace in one pass.
 #
-# Routine iteration (AY.W5-W7 compile-gate + hot edit loop) pays
-# neither: both crates live on the heavier `final-proof` /
-# `close-ceremony` surface, not iter. Validate the heavy sites with
-# `cargo check -p gorgeous` / `cargo check -p bbnf-bootstrap` or
-# `scripts/bootstrap-bbnf.sh` explicitly when intent is regen or
-# prettify-gate.
-iter-check = "check --profile ax-iter --workspace --exclude gorgeous --exclude bbnf-bootstrap --exclude bbnf-analysis --exclude bbnf-lsp"
+# Invariant 10: every `--exclude`d crate below has a named fast-path alias
+# (iter-check-lsp / iter-check-prettify / iter-check-bootstrap).
+iter-check            = "check --profile ax-iter --workspace --exclude bbnf-bootstrap --exclude gorgeous --exclude bbnf-analysis --exclude bbnf-lsp"
+iter-check-lsp        = "check --profile ax-iter -p bbnf-analysis -p bbnf-lsp"
+iter-check-prettify   = "check --profile ax-iter -p gorgeous"
+iter-check-bootstrap  = "check --profile ax-iter -p bbnf-bootstrap"
+iter-check-full       = "check --profile ax-iter --workspace"
 
-# Full-workspace compile-gate — routes to the heavy surface when a
-# caller explicitly asks for every member (regen preparation,
-# close-ceremony lint, workspace-level CI proof). Not part of the
-# routine loop.
-iter-check-full = "check --profile ax-iter --workspace"
+# Iteration: nextest targets (ax-iter profile). `cargo test` is deliberately
+# absent — nextest is the required runner (feedback: build-infra-first).
+iter-test             = "nextest run --cargo-profile ax-iter --workspace"
+iter-test-core        = "nextest run --cargo-profile ax-iter -p bbnf"
+iter-test-ir          = "nextest run --cargo-profile ax-iter -p bbnf-ir"
+iter-test-analysis    = "nextest run --cargo-profile ax-iter -p bbnf-analysis"
+iter-test-prettify    = "nextest run --cargo-profile ax-iter -p gorgeous"
+iter-test-lsp         = "nextest run --cargo-profile ax-iter -p bbnf-lsp"
 
-# Leaf-crate test tier under ax-iter (no derive-Parser sites; fastest
-# correctness tier). Crate names match the workspace's actual package
-# names: `tape`, not `bbnf-tape`; the leaf-tier script and this alias
-# now agree on the live package names.
-iter-test-leaf = "test --profile ax-iter -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser"
+# Iteration: clippy (matches iter-check shape).
+iter-clippy           = "clippy --profile ax-iter --workspace --all-targets -- -D warnings"
 
-# Grammar-tier passthrough: generic `test --profile ax-iter`, intended
-# to be paired with `--test <name>` or `-p <crate>` at call sites —
-# e.g. `cargo iter-test-grammar -p bbnf --test value_api_apples_to_apples`.
-# The Makefile `iter-test-grammar` target routes through
-# `scripts/test-tier.sh grammar --profile ax-iter` for the full
-# per-grammar sweep.
-iter-test-grammar = "test --profile ax-iter"
+# Benches: divan harness (ay-final profile). One cargo invocation per target;
+# divan's per-sample regression check runs inside the harness.
+bench-all             = "bench --profile ay-final --workspace"
+bench-json            = "bench --profile ay-final -p bbnf --bench json_monolithic --bench json_parse_that --bench json_vm --bench json_competitors --bench json_stress --bench json_value"
+bench-css             = "bench --profile ay-final -p bbnf --bench css_l4 --bench css_vm --bench css_competitors --bench css_stress"
+bench-bbnf            = "bench --profile ay-final -p bbnf --bench bbnf_monolithic"
+bench-sheets          = "bench --profile ay-final -p bbnf --bench google_sheets_monolithic --bench google_sheets_vm"
+bench-compile         = "bench --profile ay-final -p bbnf --bench compile_pipeline"
 
-# `cargo expand` entrypoints for AY.W5-W7 hard gates 1-3 (W5, W6, W7).
-# Each expands a bench target; callers redirect into a file.
-expand-json = "expand -p bbnf --bench json_monolithic"
-expand-css = "expand -p bbnf --bench css_l4"
-expand-bbnf = "expand -p bbnf --bench bbnf_monolithic"
-expand-sheets = "expand -p bbnf --bench google_sheets_monolithic"
+# iai-callgrind (CI-only; requires valgrind on Linux).
+bench-iai             = "bench --profile bench-ci --workspace --features iai"
 
-# `cargo asm` entrypoint for AY.W5 hard gate 3 (close-stamp
-# verification). Callers append `--bench <name> <fn>`, e.g.
-# `cargo asm-parse --bench json_monolithic json::close_compound`.
-asm-parse = "asm -p bbnf --profile release"
+# Expansion / inspection (debug investigations).
+expand-bootstrap      = "expand --profile ax-iter -p bbnf-bootstrap --lib"
+expand-derive         = "expand --profile ax-iter -p bbnf --lib"
+asm-bbnf              = "asm --profile ay-final -p bbnf"
 
-# B0.W1.a — profile-tier aliases.
-# `cargo prep-bench -p bbnf --bench <name>` builds a samply-able bench
-# binary under target/profiling-prep/ without running it; reach for it
-# when preparing a wave's samply captures (expand/asm/samply stages
-# reuse the same binary).
-prep-bench = "bench --profile profiling-prep --no-run"
-# `cargo final-bench -p bbnf --bench <name>` runs the fat-LTO
-# publish-grade bench; reach for it at AY.W5-W7 hard-gate close, not in
-# iteration loops.
-final-bench = "bench --profile bench"
+# ── Build flags ─────────────────────────────────────────────────────────────
+# Parallel rustc front-end + generics sharing. Nightly-gated; pinned by
+# rust-toolchain.toml. Measured impact: 20-30% cold wall reduction on
+# iter-check-full (blog.rust-lang.org/2023/11/09/parallel-rustc).
+#
+# NOTE on the ICE interaction: `-Zthreads=N` amplifies the on-disk-cache ICE
+# count (one poisoned query fires one ICE per parallel worker). Remediation
+# is the `make ay-clean-incr` target documented in PROFILING.md §ICE recovery,
+# NOT dropping `-Zthreads`. Once the nightly pin includes the on_disk_cache
+# AttrId fix (see rust-toolchain.toml upgrade cadence), the ICE class closes.
+
+[build]
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+
+# ── Target-specific overrides ───────────────────────────────────────────────
+
+# macOS arm64: default to Apple ld64 (the system linker). Opt-in lld
+# is available for the ~10-20% rebuild-wall win, but only when the
+# `lld` Homebrew formula is installed separately (Homebrew's `llvm`
+# package does NOT ship ld.lld — it ships lldb only; verify with
+# `ls /opt/homebrew/opt/llvm/bin/ | grep -i lld` on a host with only
+# `llvm` installed).
+#
+# To opt into lld on macOS arm64:
+#   1. `brew install lld` (separate formula; not a sub-product of llvm).
+#      Places ld.lld at /opt/homebrew/opt/lld/bin/ld.lld on Apple Silicon.
+#   2. Verify: `ls /opt/homebrew/opt/lld/bin/ld.lld` returns the binary.
+#   3. Uncomment the `[target.aarch64-apple-darwin]` block below.
+#   4. Adjust the link-arg path if your brew prefix differs (check with
+#      `brew --prefix lld`).
+#
+# `wild` (davidlattimore/wild) was Linux-only as of v0.8.0 (January 2026);
+# check wild's release notes for current macOS status before using.
+# `mold` 2.0+ requires a commercial license on macOS, so is not free.
+#
+# Default: system ld64 via clang. No extra install required.
+[target.aarch64-apple-darwin]
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+
+# Opt-in lld (requires `brew install lld`). Uncomment after
+# verifying the path exists on your host.
+# [target.aarch64-apple-darwin]
+# linker    = "clang"
+# rustflags = [
+#     "-C", "link-arg=-fuse-ld=/opt/homebrew/opt/lld/bin/ld.lld",
+#     "-Zthreads=8",
+#     "-Zshare-generics=y",
+# ]
+
+# Dev-only codegen backend: cranelift. Applied via per-profile override so
+# release/bench stay on LLVM (required for "beat lightningcss" measurement).
+# Enabled by the rust-toolchain.toml component `rustc-codegen-cranelift`.
+# Uncomment once the nightly pin verification lands; leave commented if
+# cranelift is broken on the pinned nightly (measure before enabling).
+#
+# [profile.ax-iter]
+# codegen-backend = "cranelift"
+
+# Linux x86_64: lld via rust-lld (bundled with the toolchain). No extra
+# install required.
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+    "-C", "link-arg=-fuse-ld=lld",
+    "-Zthreads=8",
+    "-Zshare-generics=y",
+]

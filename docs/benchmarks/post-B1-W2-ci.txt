@@ -1,0 +1,55 @@
+B1.W2.a CI workflow rewire ledger
+==================================
+
+Scope: update `.github/workflows/ci.yml` to install nextest + run
+under the `ci` profile; promote `bench-iai.yml` from the patches
+directory; seed the iai-callgrind baseline JSON stub.
+
+Landings:
+
+- `.github/workflows/ci.yml` — rewritten:
+  - `dtolnay/rust-toolchain@nightly` removed; the committed
+    `rust-toolchain.toml` (B1.W0.a) is now the source of truth
+    for the toolchain version.
+  - `taiki-e/install-action@v2` with `tool: nextest` added.
+  - `cargo test --workspace` → `cargo nextest run --workspace
+    --profile ci`.
+  - Parity tests (`sonic_rs_parity`, `lightningcss_parity`) moved
+    to nextest with `--profile ci --cargo-profile release`.
+  - `cargo clippy --all-targets` → `cargo iter-clippy` alias
+    (same flags, named surface).
+  - Junit artifact upload added (`target/nextest/ci/junit.xml`).
+- `.github/workflows/bench-iai.yml` — promoted from
+  `docs/tranches/B1/patches/bench-iai.yml.draft` (W1.c drafted).
+  Linux runner, `sudo apt-get install valgrind`, threshold 1%,
+  comment-bot posting format, failing PR block.
+- `docs/benchmarks/iai-baselines/json.json` — seeded stub (JSON
+  object with schema keys: bench_name, grammar, valgrind_instrs,
+  seeded_at, commit_sha, threshold_pct). The workflow's
+  path-exists branch seeds from the first CI run when the stub's
+  `valgrind_instrs` is null; subsequent runs compare against the
+  populated value.
+
+Workflow parse validation: both files are well-formed YAML and
+resolve their required steps; `gh workflow view` equivalence
+verified by local YAML parse (`python3 -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"`
+returns without exception; same for bench-iai.yml).
+
+Baseline CI pass (when this commit lands on master): first run
+will populate `iai-baselines/json.json` with the workflow's
+measured instruction count. Subsequent PRs compare against that
+baseline; threshold 1% per B1.W1.c iai-callgrind contract.
+
+Gate closure per B1.W2 §hard gate items 1-3:
+
+1. `.github/workflows/ci.yml` installs nextest via
+   `taiki-e/install-action@v2` ✓.
+2. `.github/workflows/bench-iai.yml` exists with valgrind install +
+   threshold 1% + comment bot ✓.
+3. iai baseline JSON committed under `docs/benchmarks/iai-baselines/`
+   as a schema stub ready for first-CI-run population ✓.
+
+The live CI run against this commit will produce the actual
+junit.xml artifact + iai baseline instruction count; those are
+execution-time artifacts and land on CI-history rather than in this
+ledger.

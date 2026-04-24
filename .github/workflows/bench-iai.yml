@@ -1,0 +1,94 @@
+# .github/workflows/bench-iai.yml — iai-callgrind instruction-count regression gate.
+#
+# Triggered on pull_request; runs the `json_callgrind` bench under valgrind on
+# a Linux runner and posts the instruction-count delta vs the baseline committed
+# at `docs/benchmarks/iai-baselines/json.json`. Threshold: ±1%.
+#
+# This workflow stays under `docs/tranches/B1/patches/` as a draft until B1.W2.a
+# promotes it to `.github/workflows/bench-iai.yml` (CI land).
+
+name: iai-callgrind regression
+
+on:
+  pull_request:
+    paths:
+      - "crates/**"
+      - "grammar/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - ".github/workflows/bench-iai.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  iai-bench:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: install valgrind
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y valgrind
+
+      - name: install rust toolchain from rust-toolchain.toml
+        run: |
+          rustup show
+          rustc --version
+
+      - name: install cargo-nextest (for cross-job surface parity)
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+
+      - name: run iai-callgrind bench on PR branch
+        run: |
+          cargo bench --bench json_callgrind --features iai --profile bench-ci \
+            > /tmp/iai-pr.txt 2>&1
+          cat /tmp/iai-pr.txt
+
+      - name: checkout master baseline
+        run: |
+          git fetch origin master
+          git worktree add /tmp/master-baseline origin/master
+
+      - name: diff against committed baseline
+        run: |
+          if [ -f "docs/benchmarks/iai-baselines/json.json" ]; then
+            scripts/iai-compare.sh docs/benchmarks/iai-baselines/json.json /tmp/iai-pr.txt \
+              > /tmp/iai-delta.txt
+            cat /tmp/iai-delta.txt
+          else
+            echo "No committed baseline yet; seeding from this run."
+            mkdir -p docs/benchmarks/iai-baselines
+            cp /tmp/iai-pr.txt docs/benchmarks/iai-baselines/json.json
+          fi
+
+      - name: comment-bot delta summary
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+            const delta = fs.existsSync('/tmp/iai-delta.txt')
+              ? fs.readFileSync('/tmp/iai-delta.txt', 'utf8')
+              : 'no delta computed (first baseline run)';
+            const threshold = 1.0;
+            const body = `## iai-callgrind instruction-count delta\n\n\`\`\`\n${delta}\n\`\`\`\n\nThreshold: ±${threshold}%. Failing benches block the PR.\n`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: fail on regression > 1%
+        run: |
+          if grep -E 'regression.*>\s*1\.0' /tmp/iai-delta.txt 2>/dev/null; then
+            echo "iai-callgrind instruction-count regression > 1% — blocking PR"
+            exit 1
+          fi

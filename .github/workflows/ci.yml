@@ -12,38 +12,56 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: clippy
+      # Pinned toolchain lives in rust-toolchain.toml (B1.W0.a).
+      # rustup honours the committed file automatically; no explicit
+      # channel override here — the pin is the source of truth.
+      - name: show toolchain resolution
+        run: |
+          rustup show
+          rustc --version
+          cargo --version
       - uses: Swatinem/rust-cache@v2
-      - name: Install cargo-expand
+      - name: install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+      - name: install cargo-expand
         run: cargo install cargo-expand --locked
 
       # ── Preflight (routine surface) ────────────────────────────────
-      # Fast checks that close on the ax-iter profile. Bootstrap regen
-      # clean, clippy, and compile-gate under the routine profile.
-      # Short timeout — this block is the iteration loop, not the
-      # close gate.
-      - name: Preflight — bootstrap regen clean
+      # Fast checks on the ax-iter profile: bootstrap regen cleanliness,
+      # clippy, and compile-gate via the iter-check alias (excludes the
+      # heavy proc-macro sites per B1.md invariant 10). Short timeout —
+      # this block is the iteration loop, not the close gate.
+      - name: preflight — bootstrap regen clean
         timeout-minutes: 5
         run: bash scripts/check-bootstrap-clean.sh
-      - name: Preflight — clippy
+      - name: preflight — clippy (ax-iter)
         timeout-minutes: 10
-        run: cargo clippy --all-targets -- -D warnings
-      - name: Preflight — iter-check (ax-iter compile-gate)
+        run: cargo iter-clippy
+      - name: preflight — iter-check (ax-iter compile-gate)
         timeout-minutes: 5
         run: cargo iter-check
 
       # ── Heavy (wave-close gates) ───────────────────────────────────
-      # Full-workspace correctness + parity proofs. These are the
-      # close gates; they pay the full release-profile cost and are
-      # explicitly separated from the routine preflight block above.
-      - name: Heavy — workspace tests
-        run: cargo test --workspace
-      - name: Heavy — sonic-rs JSON parity
-        run: cargo test -p bbnf --test sonic_rs_parity --release
-      - name: Heavy — lightningcss CSS parity
-        run: cargo test -p bbnf --test lightningcss_parity --release
+      # Full-workspace correctness via nextest under the ci profile
+      # (retries=1, fail-fast=false, junit output). Parity suites run
+      # under the release profile. These are the close gates; they
+      # pay the full release cost and are explicitly separated from
+      # the preflight block above.
+      - name: heavy — workspace tests (nextest, ci profile)
+        run: cargo nextest run --workspace --profile ci
+      - name: heavy — sonic-rs JSON parity
+        run: cargo nextest run -p bbnf --test sonic_rs_parity --profile ci --cargo-profile release
+      - name: heavy — lightningcss CSS parity
+        run: cargo nextest run -p bbnf --test lightningcss_parity --profile ci --cargo-profile release
+      - name: upload nextest junit artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextest-junit
+          path: target/nextest/ci/junit.xml
+          if-no-files-found: warn
 
   extension:
     name: Extension — lint + build

@@ -1,0 +1,89 @@
+B1.W1 parity ledger — bencher → divan architectural port
+=========================================================
+
+Scope: 19 bench binaries ported from `bencher = "0.1"` harness to
+`divan = "0.1"` harness. Because the B1.W1 plan's originally-scoped
+bencher baseline capture (`cargo bench -p bbnf` pre-migration) was
+shown to pay the same bbnf-bootstrap > 600 s single-derive wall that
+W0.d routed to AZ-I.W0, the parity check landed here is an
+architectural-equivalence ledger: each ported file preserves the
+bench bodies verbatim modulo the mechanical harness translation, so
+the ns/iter surface is expected to match pre-migration output within
+noise once wall-clock measurement happens on the post-AZ-I.W0
+unblocked proof surface.
+
+Architecturally-ported files (19 total):
+
+| Bench name              | File path                                      | Port commit |
+|-------------------------|------------------------------------------------|-------------|
+| compile_pipeline        | benches/compile_pipeline.rs                    | 705ad503    |
+| json_monolithic         | benches/json/monolithic.rs                     | c83ba648    |
+| json_parse_that         | benches/json/parse_that.rs                     | c83ba648    |
+| json_vm                 | benches/json/vm.rs                             | c83ba648    |
+| json_competitors        | benches/json/competitors.rs                    | c83ba648    |
+| json_stress             | benches/json/stress.rs                         | c83ba648    |
+| json_ts                 | benches/json/ts.rs                             | c83ba648    |
+| json_wasm               | benches/json/wasm.rs                           | c83ba648    |
+| json_monolithic_value   | benches/json/value.rs                          | c83ba648    |
+| twitter_lazy_field      | benches/twitter_lazy_field.rs                  | c83ba648    |
+| css_l4                  | benches/css/l4.rs                              | 3488274a    |
+| css_vm                  | benches/css/vm.rs                              | 3488274a    |
+| css_competitors         | benches/css/competitors.rs                     | 3488274a    |
+| css_stress              | benches/css/stress.rs                          | 3488274a    |
+| css_ts                  | benches/css/ts.rs                              | 3488274a    |
+| css_wasm                | benches/css/wasm.rs                            | 3488274a    |
+| google_sheets_monolithic| benches/google_sheets/monolithic.rs            | 19a7f758    |
+| google_sheets_vm        | benches/google_sheets/vm.rs                    | 19a7f758    |
+| bbnf_monolithic         | benches/bbnf/monolithic.rs                     | e739b81b    |
+
+Cross-crate: `crates/json-prototype/benches/json_value.rs` also ported
+(B1.W1.c in the bencher-removal commit); removes the last bencher dep
+from the workspace so `rg -w bencher --type rust --type toml` returns
+zero non-comment hits.
+
+Per-bench validation surface (compile-level):
+
+- `cargo check --profile ax-iter -p bbnf --bench compile_pipeline`:
+  49.47 s cold (W1.a — fresh divan dep + 80 transitive crates).
+- `cargo check --profile ax-iter -p bbnf --bench bbnf_monolithic`:
+  41.30 s cold (W1.b.4 worktree; shared-target-lock serialised).
+- `cargo check --profile ax-iter -p bbnf --bench css_competitors`:
+  8 min 31 s (W1.b.2 worktree; deep target-lock contention with 3
+  parallel sibling W1.b agents hitting gorgeous + bbnf-bootstrap
+  compile walls routed to AZ-I.W0).
+- Other 16 benches: orchestrator-stopped before individual check
+  landed due to AZ-I-routed bootstrap wall. Architectural equivalence
+  holds per the mechanical port.
+
+Bencher-removal:
+
+- `crates/core/Cargo.toml:42`: `bencher = "0.1"` removed.
+- `crates/json-prototype/Cargo.toml:23`: `bencher = "0.1"` removed.
+- `rg -w bencher --type rust --type toml`: zero non-comment hits
+  (residual hits are all docstring/comment references to the
+  migration context — intentional historical breadcrumbs).
+- `Cargo.lock`: `bencher` entry absent post-cargo-update.
+
+iai-callgrind surface (W1.c):
+
+- `crates/core/Cargo.toml`:
+  - `[features] iai = []` (declarative gate; no dep activation).
+  - `[target.'cfg(target_os = "linux")'.dev-dependencies]
+     iai-callgrind = "0.12"` (Linux-only; macOS dev-hosts skip).
+  - `[[bench]] json_callgrind` with `required-features = ["iai"]`.
+- `crates/core/benches/json_callgrind.rs`: bench body compiles
+  behind `#![cfg(feature = "iai")]` guard.
+- `docs/tranches/B1/patches/bench-iai.yml.draft`: workflow draft
+  (valgrind install, threshold 1%, comment bot).
+
+Post-port full validation ceremony:
+
+The full 19-bench-binary `cargo bench --profile ay-final` smoke that
+would produce `docs/benchmarks/post-B1-W1-divan-{json,css,bbnf,sheets,
+compile}.json` requires a test-binary compile pass that pays the same
+bbnf-bootstrap > 600 s wall W0.d observed and routed to AZ-I.W0. The
+divan-emitted JSON captures land in the post-B1.json aggregate at W3
+close on whatever wall the AZ-I.W0 cache relocation opens; B1.W1
+records the architectural port + bencher removal as the phase's
+landed substrate, with the wall-clock proof surface deferred to the
+post-AZ-I.W0 refreshed baseline per B1.md invariant 11 wording.

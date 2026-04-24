@@ -146,13 +146,13 @@ dependencies = [
  "bbnf-ir",
  "bbnf-ser",
  "bbnf_derive",
- "bencher",
  "csp-solver",
  "cssparser 0.34.0",
  "dhat",
  "divan",
  "egraph",
  "fast-float2",
+ "iai-callgrind",
  "indexmap",
  "jiter",
  "json-prototype",
@@ -272,10 +272,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "bencher"
-version = "0.1.5"
+name = "bincode"
+version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7dfdb4953a096c551ce9ace855a604d702e6e62d77fac690575ae347571717f5"
+checksum = "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "biome_console"
@@ -1530,6 +1533,40 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
+name = "iai-callgrind"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "283f598a969822c70af13aae1272ba09c97014c7344d3b24652e5b1d7b771c36"
+dependencies = [
+ "bincode",
+ "iai-callgrind-macros",
+ "iai-callgrind-runner",
+]
+
+[[package]]
+name = "iai-callgrind-macros"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04e2ff2e86bdba764b66d94b65f2caa03da60d971a6930fdc2e67f12582c5bb8"
+dependencies = [
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "iai-callgrind-runner"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb92a65def0d3a0ef41029c411dc2ecdd3518708c062f8bd576fd4143be1c56b"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "id-arena"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1645,7 +1682,7 @@ dependencies = [
 name = "json-prototype"
 version = "0.1.0"
 dependencies = [
- "bencher",
+ "divan",
  "mimalloc",
  "parse_that",
  "serde_json",
@@ -2291,6 +2328,7 @@ dependencies = [
  "proc-macro-error-attr",
  "proc-macro2",
  "quote",
+ "syn 1.0.109",
  "version_check",
 ]
 

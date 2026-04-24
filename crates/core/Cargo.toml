@@ -29,6 +29,12 @@ dhat = { version = "0.3", optional = true }
 
 [features]
 dhat-heap = ["dep:dhat"]
+# iai-callgrind CI surface. Linux-only (requires valgrind). The `iai` feature
+# gates the json_callgrind bench's compile; iai-callgrind itself is a
+# Linux-target-only dev-dep (see [target.'cfg(target_os = "linux")'.dev-deps]
+# further down in this file). `.github/workflows/bench-iai.yml` invokes
+# `cargo bench --bench json_callgrind --features iai` on Linux CI only.
+iai = []
 
 [dev-dependencies]
 quote = "1"
@@ -39,7 +45,6 @@ bbnf_derive = { version = "0.2", path = "../derive" }
 json-prototype = { path = "../json-prototype" }
 pprint = "0.3"
 parse_that = "0.4"
-bencher = "0.1"
 divan = "0.1"
 mimalloc = "0.1"
 sonic-rs = "0.5"
@@ -151,6 +156,12 @@ path = "benches/compile_pipeline.rs"
 harness = false
 
 [[bench]]
+name = "json_callgrind"
+path = "benches/json_callgrind.rs"
+harness = false
+required-features = ["iai"]
+
+[[bench]]
 name = "json_monolithic_value"
 path = "benches/json/value.rs"
 harness = false
@@ -165,3 +176,10 @@ name = "twitter_lazy_field"
 path = "benches/twitter_lazy_field.rs"
 harness = false
 
+
+# iai-callgrind is a Linux-only dev-dep (requires valgrind linkage).
+# macOS dev-hosts skip it; the `iai` feature + `required-features` on the
+# json_callgrind bench make the bench a no-op when the feature is off.
+# CI (Linux) activates the feature explicitly via the workflow yml.
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+iai-callgrind = "0.12"

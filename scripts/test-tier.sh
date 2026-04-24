@@ -78,9 +78,9 @@ case "$TIER" in
         # Workspace crate names (see Cargo.toml / crates/*/Cargo.toml):
         # `tape`, `bbnf-ir`, `egraph`, `csp-solver`, `bbnf-ser`.
         cargo nextest run \
-            "${NEXTEST_PROFILE_ARGS[@]}" \
+            ${NEXTEST_PROFILE_ARGS[@]+"${NEXTEST_PROFILE_ARGS[@]}"} \
             -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser \
-            "${EXTRA_ARGS[@]}" > "$OUT" 2>&1
+            ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} > "$OUT" 2>&1
         ;;
     grammar)
         # Each per-grammar test binary links exactly one derive-Parser
@@ -97,17 +97,17 @@ case "$TIER" in
                 || [[ -d "$ROOT/crates/core/tests/$bin" ]]; then
                 echo "=== $bin ===" >> "$OUT"
                 cargo nextest run \
-                    "${NEXTEST_PROFILE_ARGS[@]}" \
+                    ${NEXTEST_PROFILE_ARGS[@]+"${NEXTEST_PROFILE_ARGS[@]}"} \
                     -p bbnf --test "$bin" \
-                    "${EXTRA_ARGS[@]}" >> "$OUT" 2>&1 || true
+                    ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} >> "$OUT" 2>&1 || true
             fi
         done
         ;;
     workspace)
         cargo nextest run \
-            "${NEXTEST_PROFILE_ARGS[@]}" \
+            ${NEXTEST_PROFILE_ARGS[@]+"${NEXTEST_PROFILE_ARGS[@]}"} \
             --workspace \
-            "${EXTRA_ARGS[@]}" > "$OUT" 2>&1
+            ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} > "$OUT" 2>&1
         ;;
     *)
         echo "unknown tier: $TIER (want leaf|grammar|workspace)" >&2

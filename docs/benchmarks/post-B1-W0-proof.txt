@@ -46,3 +46,7 @@ nextest-ax-iter-dry-run-retry	skipped-cap	hard-cap constraint; triumvirate redre
 nextest-close-dry-run-retry	skipped-cap	same as above
 scripts-test-tier-leaf	skipped-cap	same; scripts/test-tier.sh leaf invokes cargo test -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser which re-compiles test binaries — cold cost comparable to nextest dry-run
 
+scripts-test-tier-leaf	pass 45.89s	582 tests run 582 passed 6 skipped; tape+bbnf-ir+egraph+csp-solver+bbnf-ser under nextest --cargo-profile ax-iter; leaf tier green
+ay-prime-cold	killed-bootstrap-wall	make ay-prime runs cargo check -p bbnf-bootstrap --lib which is the bootstrap wall (>600s cold per W0.d-trium observation); routed to AZ-I.W0 derive-cache relocation + Watt per B1.md §Cross-tranche debt; Change 1 does not accelerate bootstrap
+nextest-dry-runs-retry-deferred	routed-to-AZ-I	cargo nextest --no-run compiles all workspace test binaries which include the bbnf-bootstrap crate; pays the same >600s bootstrap wall regardless of profile; dry-run validation deferred pending AZ-I.W0 cache relocation per B1.md invariant 11 (post-triumvirate wording). Nextest config parse validated clean in W0.c; the semantic gate (4 profiles resolve) holds
+test-tier-script-fix	pass	scripts/test-tier.sh EXTRA_ARGS empty-array-under-set-u fix; "${ARR[@]+"${ARR[@]}"}" guard added for bash 3.2 on macOS

@@ -17,7 +17,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 #[path = "../generators/mod.rs"]
 mod generators;
 
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use divan::counter::BytesCount;
 
 use bbnf_derive::Parser;
 
@@ -29,17 +29,18 @@ struct CssFastParser;
 
 macro_rules! bench_rules {
     ($name:ident, $count:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = generators::css_gen::many_rules($count);
-            b.bytes = input.len() as u64;
+            let bytes = BytesCount::new(input.len());
             {
                 let parsed = CssFastParser::parse(&input)
                     .unwrap_or_else(|e| panic!("many_rules_{}: parse failed: {:?}", $count, e));
-                black_box(&parsed);
+                divan::black_box(&parsed);
             }
-            b.iter(|| {
-                let parsed = CssFastParser::parse(black_box(&input)).unwrap();
-                black_box(parsed);
+            b.counter(bytes).bench_local(|| {
+                let parsed = CssFastParser::parse(divan::black_box(&input)).unwrap();
+                divan::black_box(parsed);
             });
         }
     };
@@ -53,18 +54,19 @@ bench_rules!(rules_5000, 5000);
 
 macro_rules! bench_decls {
     ($name:ident, $count:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = generators::css_gen::many_declarations($count);
-            b.bytes = input.len() as u64;
+            let bytes = BytesCount::new(input.len());
             {
                 let parsed = CssFastParser::parse(&input).unwrap_or_else(|e| {
                     panic!("many_declarations_{}: parse failed: {:?}", $count, e)
                 });
-                black_box(&parsed);
+                divan::black_box(&parsed);
             }
-            b.iter(|| {
-                let parsed = CssFastParser::parse(black_box(&input)).unwrap();
-                black_box(parsed);
+            b.counter(bytes).bench_local(|| {
+                let parsed = CssFastParser::parse(divan::black_box(&input)).unwrap();
+                divan::black_box(parsed);
             });
         }
     };
@@ -77,18 +79,19 @@ bench_decls!(decls_500, 500);
 
 macro_rules! bench_selectors {
     ($name:ident, $count:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = generators::css_gen::wide_selector_list($count);
-            b.bytes = input.len() as u64;
+            let bytes = BytesCount::new(input.len());
             {
                 let parsed = CssFastParser::parse(&input).unwrap_or_else(|e| {
                     panic!("wide_selector_list_{}: parse failed: {:?}", $count, e)
                 });
-                black_box(&parsed);
+                divan::black_box(&parsed);
             }
-            b.iter(|| {
-                let parsed = CssFastParser::parse(black_box(&input)).unwrap();
-                black_box(parsed);
+            b.counter(bytes).bench_local(|| {
+                let parsed = CssFastParser::parse(divan::black_box(&input)).unwrap();
+                divan::black_box(parsed);
             });
         }
     };
@@ -101,18 +104,19 @@ bench_selectors!(selectors_500, 500);
 
 macro_rules! bench_nesting {
     ($name:ident, $depth:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = generators::css_gen::media_query_nesting($depth);
-            b.bytes = input.len() as u64;
+            let bytes = BytesCount::new(input.len());
             {
                 let parsed = CssFastParser::parse(&input).unwrap_or_else(|e| {
                     panic!("media_query_nesting_{}: parse failed: {:?}", $depth, e)
                 });
-                black_box(&parsed);
+                divan::black_box(&parsed);
             }
-            b.iter(|| {
-                let parsed = CssFastParser::parse(black_box(&input)).unwrap();
-                black_box(parsed);
+            b.counter(bytes).bench_local(|| {
+                let parsed = CssFastParser::parse(divan::black_box(&input)).unwrap();
+                divan::black_box(parsed);
             });
         }
     };
@@ -122,11 +126,11 @@ bench_nesting!(nesting_5, 5);
 bench_nesting!(nesting_10, 10);
 bench_nesting!(nesting_20, 20);
 
-// ── Groups ─────────────────────────────────────────────────────────────
-
-benchmark_group!(css_rules, rules_100, rules_1000, rules_5000);
-benchmark_group!(css_declarations, decls_100, decls_500);
-benchmark_group!(css_selectors, selectors_100, selectors_500);
-benchmark_group!(css_nesting, nesting_5, nesting_10, nesting_20);
-
-benchmark_main!(css_rules, css_declarations, css_selectors, css_nesting);
+fn main() {
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

@@ -8,7 +8,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use divan::counter::BytesCount;
 
 fn load_css(name: &str) -> String {
     let path = format!("../../data/css/{}", name);
@@ -121,7 +121,7 @@ mod cssparser_visitor {
         };
         let rule_parser = StyleSheetParser::new(&mut parser, &mut counter);
         for result in rule_parser {
-            let _ = bencher::black_box(result);
+            let _ = divan::black_box(result);
         }
         (counter.rule_count, counter.decl_count)
     }
@@ -129,12 +129,15 @@ mod cssparser_visitor {
 
 macro_rules! bench_cssparser {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load_css($file);
-            b.bytes = input.len() as u64;
+            let bytes = BytesCount::new(input.len());
             let (rules, _decls) = cssparser_visitor::parse_css(&input);
             assert!(rules > 0, concat!($file, ": cssparser found 0 rules"));
-            b.iter(|| black_box(cssparser_visitor::parse_css(black_box(&input))));
+            b.counter(bytes).bench_local(|| {
+                divan::black_box(cssparser_visitor::parse_css(divan::black_box(&input)))
+            });
         }
     };
 }
@@ -147,46 +150,48 @@ bench_cssparser!(cssparser_tailwind, "tailwind.css");
 
 use lightningcss::stylesheet::{ParserOptions, StyleSheet};
 
-fn lightningcss_normalize(b: &mut Bencher) {
+#[divan::bench]
+fn lightningcss_normalize(b: divan::Bencher) {
     let input = load_css("normalize.css");
-    b.bytes = input.len() as u64;
+    let bytes = BytesCount::new(input.len());
     StyleSheet::parse(&input, ParserOptions::default())
         .expect("normalize.css: lightningcss parse failed");
-    b.iter(|| black_box(StyleSheet::parse(black_box(&input), ParserOptions::default()).unwrap()));
+    b.counter(bytes).bench_local(|| {
+        divan::black_box(StyleSheet::parse(divan::black_box(&input), ParserOptions::default()).unwrap())
+    });
 }
 
-fn lightningcss_bootstrap(b: &mut Bencher) {
+#[divan::bench]
+fn lightningcss_bootstrap(b: divan::Bencher) {
     let input = load_css("bootstrap.css");
-    b.bytes = input.len() as u64;
+    let bytes = BytesCount::new(input.len());
     StyleSheet::parse(&input, ParserOptions::default())
         .expect("bootstrap.css: lightningcss parse failed");
-    b.iter(|| black_box(StyleSheet::parse(black_box(&input), ParserOptions::default()).unwrap()));
+    b.counter(bytes).bench_local(|| {
+        divan::black_box(StyleSheet::parse(divan::black_box(&input), ParserOptions::default()).unwrap())
+    });
 }
 
-fn lightningcss_tailwind(b: &mut Bencher) {
+#[divan::bench]
+fn lightningcss_tailwind(b: divan::Bencher) {
     let input = load_css("tailwind.css");
-    b.bytes = input.len() as u64;
+    let bytes = BytesCount::new(input.len());
     // lightningcss may fail on synthetic tailwind — skip gracefully
     let test = StyleSheet::parse(&input, ParserOptions::default());
     if test.is_err() {
         eprintln!("lightningcss: skipping tailwind.css (parse error)");
         return;
     }
-    b.iter(|| black_box(StyleSheet::parse(black_box(&input), ParserOptions::default()).unwrap()));
+    b.counter(bytes).bench_local(|| {
+        divan::black_box(StyleSheet::parse(divan::black_box(&input), ParserOptions::default()).unwrap())
+    });
 }
 
-// ── Groups ──────────────────────────────────────────────────────────────────
-
-benchmark_group!(
-    bench_cssparser,
-    cssparser_normalize,
-    cssparser_bootstrap,
-    cssparser_tailwind
-);
-benchmark_group!(
-    bench_lightningcss,
-    lightningcss_normalize,
-    lightningcss_bootstrap,
-    lightningcss_tailwind
-);
-benchmark_main!(bench_cssparser, bench_lightningcss);
+fn main() {
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

@@ -5,7 +5,6 @@
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use bbnf_derive::Parser;
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
 
 /// Semantic CSS value types for TypeDesc-driven value materialization.
 #[allow(dead_code)]
@@ -149,18 +148,23 @@ fn load(name: &str) -> String {
 
 macro_rules! bench {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load($file);
-            b.bytes = input.len() as u64;
             {
                 let parsed = CssL4Parser::parse(&input)
                     .unwrap_or_else(|e| panic!(concat!($file, ": parse failed: {:?}"), e));
-                black_box(&parsed);
+                divan::black_box(&parsed);
             }
-            bench_with_timeout(b, limits::CSS_TAILWIND_PARSE, || {
-                let parsed = CssL4Parser::parse(black_box(&input)).unwrap();
-                black_box(parsed);
-            });
+            bench_with_timeout(
+                b,
+                limits::CSS_TAILWIND_PARSE,
+                |input: String| {
+                    let parsed = CssL4Parser::parse(divan::black_box(&input)).unwrap();
+                    divan::black_box(parsed);
+                },
+                &input,
+            );
         }
     };
 }
@@ -169,5 +173,11 @@ bench!(normalize, "normalize.css");
 bench!(bootstrap, "bootstrap.css");
 bench!(tailwind, "tailwind.css");
 
-benchmark_group!(benches, normalize, bootstrap, tailwind);
-benchmark_main!(benches);
+fn main() {
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

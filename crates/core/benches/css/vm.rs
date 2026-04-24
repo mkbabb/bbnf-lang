@@ -7,7 +7,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use bbnf::pipeline::{PipelineOptions, compile_grammar};
 use bbnf_ir::compiler::compile as compile_bytecode;
 use bbnf_ir::interpreter::Interpreter;
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use divan::counter::BytesCount;
 
 fn load(name: &str) -> String {
     let path = format!("../../data/css/{}", name);
@@ -24,10 +24,11 @@ fn compiled_vm() -> (bbnf_ir::GrammarIR, bbnf_ir::bytecode::BytecodeProgram) {
 
 macro_rules! bench {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load($file);
             let (_ir, program) = compiled_vm();
-            b.bytes = input.len() as u64;
+            let bytes = BytesCount::new(input.len());
             {
                 let mut interp = Interpreter::new(&program, &input);
                 let r = interp.run();
@@ -39,10 +40,10 @@ macro_rules! bench {
                     input.len(),
                 );
             }
-            b.iter(|| {
-                let mut interp = Interpreter::new(&program, black_box(&input));
+            b.counter(bytes).bench_local(|| {
+                let mut interp = Interpreter::new(&program, divan::black_box(&input));
                 let r = interp.run();
-                black_box(r.offset);
+                divan::black_box(r.offset);
             });
         }
     };
@@ -52,5 +53,11 @@ bench!(normalize, "normalize.css");
 bench!(bootstrap, "bootstrap.css");
 bench!(tailwind, "tailwind.css");
 
-benchmark_group!(benches, normalize, bootstrap, tailwind);
-benchmark_main!(benches);
+fn main() {
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

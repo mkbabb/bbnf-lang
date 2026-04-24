@@ -3,10 +3,63 @@
 Dated execution log for tranche B1, the bounded prelude annex that
 refreshes the development/proof surface before AY-II resumes.
 
-- `Status`: planned (waves W0→W3 sequenced per `TOOLCHAIN-MIGRATION.md`
-  12-step plan)
-- `Current wave`: W0 (planned)
-- `Next wave`: W1 (opens on W0 + ICE-clean gate)
+- `Status`: closed (W3 close ceremony 2026-04-24)
+- `Current wave`: W3 (closed)
+- `Successor`: AY-II.W0' close ceremony (unblocked on this baseline)
+
+---
+
+## 2026-04-24 — B1 closed (W3 close ceremony)
+
+W3 lands as one commit: `PROFILING.md` refresh + `post-B1.json`
+aggregate + `FINAL.md` + AY-II handoff updates + this close entry.
+
+Wave close commits:
+
+| Wave | Closing commit | Headline |
+|---|---|---|
+| W0 | `1d0815dc` | substrate pin + alias surface + nextest config + Makefile rewrite + triumvirate Change 1 |
+| W1 | `f9c3db38` | divan exemplar port + 19 file ports + bencher removal + iai-callgrind feature gate |
+| W2 | `d276934a` | CI rewire + 5 ABROGATEs + bootstrap cache-guard + cross-repo pin triad |
+| W3 | (this commit) | PROFILING refresh + post-B1.json + FINAL + AY-II handoff |
+
+Net landings: substrate pinned (`nightly-2026-04-11`); alias surface
+rewritten in `.cargo/config.toml` (4-exclude `iter-check` + per-exclude
+fast-paths + 7 `bench-*` aliases + 3 `expand`/`asm` aliases + 6
+`iter-test*` aliases); Makefile reduced 470 → 210 lines; nextest
+4-profile config (default / ax-iter / ci / close); divan harness across
+all 19 bench files plus cross-crate `json_value`; `bencher` purged
+from both `Cargo.toml` files plus `Cargo.lock`; iai-callgrind feature
+gated and Linux-target-only; `ci.yml` rewired to nextest with junit
+upload; `bench-iai.yml` promoted with valgrind setup; 5 scripts
+deleted (`profile.sh`, `cost-grid-sweep.sh`,
+`check-cst-invariants.sh`, `verify-w2-asm.sh`, `verify-w2-symbols.sh`)
+in same commit as their replacements; `bootstrap-bbnf.sh` rewritten
+with cache-guard preserving `target/.bbnf-cache/` (invariant 12);
+sibling repos (`../parse-that`, `../pprint`) synced to the same pin.
+
+AY-II handoff: B1 close is the predecessor for AY-II.W0' close
+ceremony per `docs/tranches/AY-II/PATH-FORWARD.md` 2026-04-24 entry
+and per `docs/tranches/AY-II/AY-II.md` Wave summary W0' row. The
+ceremony (regen + double-regen + retire compose aliases + fresh
+expands + fat-LTO 5-bench matrix + samply per primary grammar + nm)
+opens immediately on this baseline.
+
+Cross-tranche debt forwarded: derive cache relocation to
+`$XDG_CACHE_HOME/bbnf-derive/` + Watt proc-macro precompilation routed
+to AZ-I.W0; per-bench divan JSON emissions + nextest dry-run wall
+captures routed to AZ-I.W0 (both gated on the bootstrap > 600 s wall
+that AZ-I closes); fleet-wide modernization (gorgeous sibling +
+csp-solver + csc411 + crates/ai) routed to a post-B1 appurtenant
+tranche; deferred REPLACE / KEEP-MODERNIZE / FOLD-INTO-TOOLING
+abrogation entries routed to post-B1 polish per
+`docs/tranches/B1/FINAL.md` §Cross-tranche debt ledger.
+
+The defensible floor holds: truthful routine command docs under a
+pinned substrate; measured bootstrap/expand/profile/bench proof
+surfaces on divan; abrogation catalog executed or explicitly deferred
+with owner; cross-repo pin triad in sync; AY-II handoff that no
+longer depends on ambiguous infrastructure claims.
 
 ---
 

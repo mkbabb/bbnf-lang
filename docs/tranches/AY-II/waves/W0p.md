@@ -3,7 +3,7 @@
 **Opens after**: W0 (partial) — supersedes the remainder of W0's close ceremony
 **Agents**: 3 parallel (W0'.a / W0'.b / W0'.c on disjoint file bounds)
 **Hard gate**: `FusedBuilder<R>` replaces the `TapeBuilder<R>` + `ValueBuilder<R>` split at the type level inside the tape crate; every shape's existing `begin_compound` / `end_compound` / `push_leaf_*` write BOTH tape and value columns atomically with zero signature churn; `project_value_output` per-admission arms route through the 69 emitted `materialize_projection_*` fns (currently with zero call sites); `STRUCTURAL_SCAN_POLICY` splices at emission time inside `__path_walk` and object-key-seek hot paths; every W0-era `#[allow(dead_code)]` retires as the annotated surface becomes live OR the surface deletes; `TapeBuilder::push_compound` + `mark_children` public APIs retire; `<Grammar>Value::Unknown` fallback retires where totality holds; `Parsed::to_value()` no longer panics and delivers the fused semantic surface; double-regen cycle-1 = cycle-2 byte-identical; full fat-LTO 5-bench matrix clean at close.
-**Status**: in_progress — source/runtime landings are in; blocked on B1 close and the post-B1 W0' close ceremony (regen, expand, bench, samply, nm)
+**Status**: in_progress — source/runtime landings are in; B1 closed 2026-04-24 (`docs/tranches/B1/FINAL.md`); the W0' close ceremony (regen, expand, bench, samply, nm) is the immediate next dispatch on the post-B1 substrate
 
 ## Rationale — audit triumvirate synthesis
 

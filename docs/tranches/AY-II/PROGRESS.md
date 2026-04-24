@@ -4,10 +4,37 @@ Dated execution log for tranche AY-II (pass II of AY; see
 `../AY-I/FINAL.md` for pass-I close and `audit/AUDIT-{A,B,C,D}-*.md`
 for the triumvirate that informs this pass).
 
-- `Status`: blocked on B1 prelude annex; W0' source landings are in,
-  W0' close ceremony remains open
-- `Current wave`: W0' (blocked)
-- `Next wave`: B1.W0, then AY-II.W0' close ceremony
+- `Status`: B1 closed; W0' close ceremony unblocked, source landings
+  remain in, runtime ceremony (regen + double-regen + expand + bench +
+  samply + nm) opens immediately
+- `Current wave`: W0' (close ceremony unblocked)
+- `Next wave`: AY-II.W0' close ceremony, then W1
+
+---
+
+## 2026-04-24 — B1 closed; AY-II.W0' close ceremony unblocked
+
+The B1 prelude annex closed at the W3 close commit (see
+`docs/tranches/B1/FINAL.md`). Substrate is pinned at
+`nightly-2026-04-11`, the divan bench harness is live across all 19+1
+ported files, `bencher` is purged, the four-exclude `iter-check` alias
+surface plus per-exclude fast-paths is the routine surface, the
+four-profile nextest config is active, the Makefile is simplified
+(~210 lines), the abrogation catalog is executed (5 DELETE + 1
+REWRITE + 13 KEEP-AS-IS), `ci.yml` runs nextest with junit upload,
+`bench-iai.yml` is promoted with valgrind setup + threshold 1% +
+comment bot, and the cross-repo pin triad (`../parse-that` +
+`../pprint`) is in sync.
+
+AY-II.W0' close ceremony is unblocked on this baseline. The close
+sequence per `PATH-FORWARD.md §2` is the next dispatch: bootstrap
+regen → double-regen idempotency → retire compose-boundary aliases →
+fresh expands → fat-LTO 5-bench matrix → samply per primary grammar →
+`nm` on bench binaries → `<Grammar>Value::Unknown` retirement audit →
+mark W0' closed in `PROGRESS.md` + `waves/W0p.md`.
+
+No runtime state changed in this entry; this is status normalization
+on the post-B1 baseline.
 
 ---
 

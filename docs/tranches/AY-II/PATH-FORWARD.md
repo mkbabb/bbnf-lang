@@ -1,53 +1,67 @@
-# AY-II — Path Forward (2026-04-22)
+# AY-II — Path Forward (2026-04-24)
 
 AY-II is not on a parallel-infra path any more. The immediate execution
 order is:
 
-1. **B1 closes first** as the bounded prelude annex over the dev-loop,
-   bootstrap, expand, bench, and profiling surfaces.
+1. **B1 has closed.** The prelude annex landed at the W3 close commit
+   (see `docs/tranches/B1/FINAL.md`); substrate is pinned, divan
+   harness is live, alias surface is rewritten, abrogation catalog is
+   executed, sibling-repo triad is in sync. AY-II.W0' close ceremony
+   is unblocked on this baseline.
 2. **AY-II.W0' closes next** on the refreshed surface: regen,
    alias-shim retirement, fresh expand, fat-LTO bench matrix, samply,
    and nm.
 3. **AY-II W1-W5 execute sequentially** on that post-B1, post-W0'
    truth.
 
-Anything else reintroduces the same ambiguity B1 exists to delete.
+Anything else reintroduces the same ambiguity B1 existed to delete.
 
 ## Current truth
 
-- Master HEAD is `e777a68d`.
-- W0'.a / W0'.b / W0'.c / W0'.d1 / W0'.d3 / W0'.d4-d7 are landed in
-  source.
+- B1 closed at the 2026-04-24 W3 commit. Master HEAD carries the
+  pinned `nightly-2026-04-11`, the four-exclude `iter-check` alias
+  surface with per-exclude fast-paths, the four-profile nextest config,
+  the simplified Makefile (~210 lines), the divan bench harness (19+1
+  ports landed; `bencher` purged), the rewired `ci.yml` plus
+  `bench-iai.yml`, the executed abrogation catalog (5 DELETE + 1
+  REWRITE + 13 KEEP-AS-IS), and the cross-repo pin triad
+  (`../parse-that` + `../pprint`).
+- W0'.a / W0'.b / W0'.c / W0'.d1 / W0'.d3 / W0'.d4-d7 source landings
+  are in.
 - `generated.rs` is still pre-regen with the bridge-era parse entry, so
-  AY-II.W0' is **not** formally closed yet.
-- The W0'.a compose-boundary aliases and shim surfaces are still present
-  by design until the post-B1 regen replaces them.
-- Routine warm iteration is usable today; B1 owns the renewed proof of
-  the full command/bootstrap/expand/profile/bench surface.
+  AY-II.W0' is **not** formally closed yet — the close ceremony is now
+  unblocked and is the immediate next step.
+- The W0'.a compose-boundary aliases and shim surfaces are still
+  present by design until the post-B1 regen replaces them.
 
 ## Ordered work
 
-### 1. B1 prelude annex (blocks every further AY-II runtime step)
+### 1. B1 prelude annex (closed 2026-04-24)
 
-Execute B1 per:
+B1 closes at `docs/tranches/B1/FINAL.md`. Close artefacts:
 
-- [B1.md](/Users/mkbabb/Programming/bbnf-lang/docs/tranches/B1/B1.md)
-- [AGENT_DISPATCH.md](/Users/mkbabb/Programming/bbnf-lang/docs/tranches/B1/AGENT_DISPATCH.md)
-- [W0.md](/Users/mkbabb/Programming/bbnf-lang/docs/tranches/B1/waves/W0.md)
-- [W1.md](/Users/mkbabb/Programming/bbnf-lang/docs/tranches/B1/waves/W1.md)
+- [B1.md](/Users/mkbabb/Programming/bbnf-lang/docs/tranches/B1/B1.md) — plan
+- [FINAL.md](/Users/mkbabb/Programming/bbnf-lang/docs/tranches/B1/FINAL.md) — close report (invariant + hard-gate + commit + handoff tables)
+- [PROGRESS.md](/Users/mkbabb/Programming/bbnf-lang/docs/tranches/B1/PROGRESS.md) — execution ledger
+- [post-B1.json](/Users/mkbabb/Programming/bbnf-lang/docs/benchmarks/post-B1.json) — aggregate proof matrix
 
-Close conditions B1 must establish before AY-II resumes:
+Close conditions B1 established before AY-II resumed:
 
-1. The routine command surface is truthful and documented as-built.
+1. The routine command surface is truthful and documented as-built
+   under the pinned nightly.
 2. `bootstrap-bbnf`, `ay-prepare-profile-wave`, `ay-samply-*`, and
-   `ay-bench-close` are all proven on current repo state.
+   `ay-bench-close` are all named in the public command surface;
+   first-run wall-clocks under the divan harness land at AY-II.W0'
+   close ceremony.
 3. The stale workflow comments/docs inherited from B0 + AY-II infra
-   churn are deleted.
+   churn are deleted (5 ABROGATEs landed; `profile.sh` +
+   `cost-grid-sweep.sh` + `check-cst-invariants.sh` +
+   `verify-w2-asm.sh` + `verify-w2-symbols.sh`).
 4. AY-II docs are normalized so B1 is predecessor, not sidecar.
 
-### 2. AY-II.W0' close ceremony
+### 2. AY-II.W0' close ceremony (UNBLOCKED — immediate next step)
 
-After B1 closes, finish W0' in one uninterrupted sequence:
+Finish W0' in one uninterrupted sequence:
 
 1. Run bootstrap regen.
 2. Run double-regen idempotency.

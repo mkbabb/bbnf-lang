@@ -1,0 +1,196 @@
+{
+  "provenance": {
+    "tranche": "B1",
+    "headline": "Dev-loop truth + proof-surface hardening: substrate pinned, alias surface rewritten, Makefile simplified (470->210), nextest 4-profile active, bencher->divan migration (19+1 files ported), iai-callgrind feature gated, CI rewired, 5 ABROGATEs deleted + bootstrap cache-guard, sibling pin triad synced.",
+    "master_head_pre_w3": "d276934a",
+    "master_head_at_w3": "set-by-w3-commit",
+    "closed_at": "2026-04-24",
+    "predecessor": "AY-II.W0' (paused)",
+    "successor": "AY-II.W0' close ceremony (unblocked on this baseline)",
+    "source_ledgers": {
+      "w0_proof": "docs/benchmarks/post-B1-W0-proof.txt",
+      "w0_routine": "docs/benchmarks/post-B1-W0-routine.txt",
+      "w1_parity": "docs/benchmarks/post-B1-W1-parity.txt",
+      "w2_ci": "docs/benchmarks/post-B1-W2-ci.txt",
+      "w2_abrogation": "docs/benchmarks/post-B1-W2-abrogation-ledger.txt",
+      "w2_cross_repo": "docs/benchmarks/post-B1-W2-cross-repo.txt"
+    },
+    "wave_close_commits": {
+      "W0": "1d0815dc",
+      "W1": "f9c3db38",
+      "W2": "d276934a",
+      "W3": "set-by-w3-commit"
+    }
+  },
+
+  "routine": {
+    "source": "docs/benchmarks/post-B1-W0-routine.txt",
+    "rows": [
+      {
+        "alias": "cargo iter-check",
+        "exit": 0,
+        "wall_seconds": 3.88,
+        "cache_state": "warm",
+        "context": "post triumvirate Change 1; workspace minus gorgeous + bbnf-bootstrap + bbnf-analysis + bbnf-lsp",
+        "row": "iter-check"
+      },
+      {
+        "alias": "cargo iter-check-lsp",
+        "exit": 0,
+        "wall_seconds": 3.27,
+        "cache_state": "warm",
+        "context": "fast-path covers bbnf-analysis + bbnf-lsp",
+        "row": "iter-check-lsp"
+      },
+      {
+        "alias": "cargo iter-check-prettify",
+        "exit": 0,
+        "wall_seconds": 33.36,
+        "cache_state": "warm",
+        "context": "gorgeous lib-only under default=[]; CHANGE 1 VALIDATED — pre-fix this was ~500 s on full workspace check",
+        "row": "iter-check-prettify"
+      },
+      {
+        "alias": "cargo iter-check-bootstrap",
+        "exit": 144,
+        "wall_seconds": ">660",
+        "cache_state": "cold-killed-at-cap",
+        "context": "bootstrap proc-macro single-derive expansion ceiling; routed to AZ-I.W0 (Watt + cache relocation) per B1.md invariant 11",
+        "row": "iter-check-bootstrap"
+      },
+      {
+        "alias": "scripts/test-tier.sh leaf --profile ax-iter",
+        "exit": 0,
+        "wall_seconds": 45.89,
+        "cache_state": "cold",
+        "context": "582 tests run, 582 passed, 6 skipped; tape + bbnf-ir + egraph + csp-solver + bbnf-ser leaf tier under nextest",
+        "row": "scripts-test-tier-leaf"
+      }
+    ]
+  },
+
+  "bootstrap": {
+    "source": "docs/benchmarks/post-B1-W0-proof.txt",
+    "rows": [
+      {
+        "metric": "ay-prime cold",
+        "wall_seconds": ">600",
+        "exit": "killed-bootstrap-wall",
+        "context": "make ay-prime invokes cargo check -p bbnf-bootstrap --lib (the bootstrap-derive expansion wall); routed to AZ-I.W0 cache relocation; Change 1 does not accelerate bootstrap",
+        "row": "ay-prime-cold"
+      },
+      {
+        "metric": "iter-check-full cold pinned",
+        "wall_seconds": "halted-at-cap",
+        "context": "cold run interrupted at 25:30 wall-clock; bootstrap rustc still in flight post triumvirate Change 1; gorgeous-attributable wall reduced from ~500 s to 33 s warm; bootstrap critical path observed > 600 s; full cold wall exceeds the 5-min ceiling — invariant 11 records this as measured truth pre-AZ-I.W0",
+        "row": "iter-check-full-cold-pinned"
+      },
+      {
+        "metric": "ICE count post-iter-check",
+        "value": 0,
+        "context": "find target -name rustc-ice-*.txt after halted cold run; no ICE introduced by triumvirate Change 1 — primary W1.a-open gate holds",
+        "row": "w0d-ice-count-post-iter-check"
+      },
+      {
+        "metric": "double-regen idempotency",
+        "status": "deferred",
+        "rationale": "AY-II.W0' close ceremony owns the regen + double-regen step under the post-B1 substrate; B1 is infra-only and does not regen generated.rs.",
+        "destination": "AY-II.W0' close ceremony"
+      }
+    ]
+  },
+
+  "profile_prep": {
+    "source": "scripts/prepare-profile-wave.sh + scripts/prebuild-benches.sh",
+    "rows": [],
+    "status": "pending first AY-II.W0' run on the B1-pinned substrate",
+    "rationale": "B1 does not own samply capture; W0 invariants 7-8 require it under divan + the pinned nightly. The prepared-binary reuse contract from B0 stays load-bearing; first measurement lands at AY-II.W0' close ceremony per AY-II/PATH-FORWARD.md §2."
+  },
+
+  "samply": {
+    "source": "deferred",
+    "status": "deferred per B1 invariant 11 (close-ceremony gate)",
+    "rationale": "Samply baseline refresh under divan + the pinned nightly opens at AY-II.W0' close. B1's prelude-annex scope ends at the alias surface + harness migration; the baseline capture against the four primary grammars (json_twitter, css_tailwind, sheets_stress, bbnf_self) lands in `.profiles/samply/AY-II-W0p/` per AY-II/waves/W0p.md §Orchestrator-owned close ceremony.",
+    "destination": "AY-II.W0' close ceremony"
+  },
+
+  "divan": {
+    "source": "docs/benchmarks/post-B1-W1-parity.txt",
+    "ported_benches": [
+      { "name": "compile_pipeline", "file": "benches/compile_pipeline.rs", "port_commit": "705ad503" },
+      { "name": "json_monolithic", "file": "benches/json/monolithic.rs", "port_commit": "c83ba648" },
+      { "name": "json_parse_that", "file": "benches/json/parse_that.rs", "port_commit": "c83ba648" },
+      { "name": "json_vm", "file": "benches/json/vm.rs", "port_commit": "c83ba648" },
+      { "name": "json_competitors", "file": "benches/json/competitors.rs", "port_commit": "c83ba648" },
+      { "name": "json_stress", "file": "benches/json/stress.rs", "port_commit": "c83ba648" },
+      { "name": "json_ts", "file": "benches/json/ts.rs", "port_commit": "c83ba648" },
+      { "name": "json_wasm", "file": "benches/json/wasm.rs", "port_commit": "c83ba648" },
+      { "name": "json_monolithic_value", "file": "benches/json/value.rs", "port_commit": "c83ba648" },
+      { "name": "twitter_lazy_field", "file": "benches/twitter_lazy_field.rs", "port_commit": "c83ba648" },
+      { "name": "css_l4", "file": "benches/css/l4.rs", "port_commit": "3488274a" },
+      { "name": "css_vm", "file": "benches/css/vm.rs", "port_commit": "3488274a" },
+      { "name": "css_competitors", "file": "benches/css/competitors.rs", "port_commit": "3488274a" },
+      { "name": "css_stress", "file": "benches/css/stress.rs", "port_commit": "3488274a" },
+      { "name": "css_ts", "file": "benches/css/ts.rs", "port_commit": "3488274a" },
+      { "name": "css_wasm", "file": "benches/css/wasm.rs", "port_commit": "3488274a" },
+      { "name": "google_sheets_monolithic", "file": "benches/google_sheets/monolithic.rs", "port_commit": "19a7f758" },
+      { "name": "google_sheets_vm", "file": "benches/google_sheets/vm.rs", "port_commit": "19a7f758" },
+      { "name": "bbnf_monolithic", "file": "benches/bbnf/monolithic.rs", "port_commit": "e739b81b" },
+      { "name": "json_value", "file": "crates/json-prototype/benches/json_value.rs", "port_commit": "f9c3db38", "note": "cross-crate; landed in bencher-removal commit" }
+    ],
+    "compile_validation": {
+      "compile_pipeline": { "wall_seconds": 49.47, "cache_state": "cold-w1a", "row": "post-B1-W1-parity.txt — compile_pipeline" },
+      "bbnf_monolithic": { "wall_seconds": 41.30, "cache_state": "cold-w1b4-worktree", "row": "post-B1-W1-parity.txt — bbnf_monolithic" },
+      "css_competitors": { "wall_seconds": 511, "cache_state": "cold-shared-target-lock-3-parallel", "row": "post-B1-W1-parity.txt — css_competitors" },
+      "remainder": "16 benches: orchestrator-stopped before individual check landed due to AZ-I-routed bootstrap wall; architectural equivalence holds per the mechanical port"
+    },
+    "per_bench_json_emissions": {
+      "status": "deferred",
+      "rationale": "The 19-bench cargo bench --profile ay-final smoke that produces post-B1-W1-divan-{json,css,bbnf,sheets,compile}.json requires a test-binary compile pass that pays the same bbnf-bootstrap > 600 s single-derive wall that W0.d routed to AZ-I.W0. Divan-emitted JSON captures land on whatever wall the AZ-I.W0 cache relocation opens.",
+      "destination": "AZ-I.W0 close, then AY-II.W0' close ceremony"
+    },
+    "bencher_removal": {
+      "core_cargo_toml_line": "crates/core/Cargo.toml:42 — bencher = \"0.1\" removed",
+      "json_prototype_cargo_toml_line": "crates/json-prototype/Cargo.toml:23 — bencher = \"0.1\" removed",
+      "rg_residual_hits": "rg -w bencher --type rust --type toml returns zero non-comment hits (only docstring breadcrumbs survive intentionally)",
+      "cargo_lock": "bencher entry absent post-cargo-update"
+    }
+  },
+
+  "nextest_close": {
+    "source": "docs/benchmarks/post-B1-W0-proof.txt",
+    "config_validated": true,
+    "config_rows": [
+      { "row": "nextest-config-parse", "status": "pass", "context": "cargo nextest run --workspace --profile ax-iter --no-run advanced past config-parse after [[profile.close.overrides]] fix; 4-profile surface (default / ax-iter / ci / close) accepted by cargo-nextest" },
+      { "row": "nextest-install", "status": "pre-installed 0.9.133", "context": "installed by orchestrator; no agent action" }
+    ],
+    "wall_clock_rows": [
+      { "row": "nextest-ax-iter-dry-run", "status": "cap-exceeded-routed", "context": "compile of test binaries (gorgeous, bootstrap, typed_accessor_surface, wrap_compound_elision) still in flight at 18-min hard-cap; full compile wall not captured" },
+      { "row": "nextest-ax-iter-dry-run-retry", "status": "skipped-cap", "context": "deferred to AZ-I.W0 since cargo nextest --no-run pays the same > 600 s bootstrap wall regardless of profile" },
+      { "row": "nextest-close-dry-run", "status": "skipped-cap", "context": "skipped to stay within W0.c hard-cap; orchestrator re-opens on green ax-iter" },
+      { "row": "nextest-close-dry-run-retry", "status": "skipped-cap", "context": "deferred to AZ-I.W0 cache relocation per invariant 11" }
+    ],
+    "summary": "Config validated clean in W0.c (semantic gate: 4 profiles resolve); wall-clock dry-runs deferred pending AZ-I.W0 cache relocation. nextest is the canonical test runner per the alias surface; ci.yml workflow invokes `cargo nextest run --workspace --profile ci` per W2 ledger."
+  },
+
+  "iai_baseline": {
+    "source": "docs/benchmarks/iai-baselines/json.json (stub committed in W2.a)",
+    "status": "stub",
+    "rationale": "iai-callgrind dev-dependency feature-gated under [features] iai = [] in crates/core/Cargo.toml; Linux-target-only via [target.'cfg(target_os = \"linux\")'.dev-dependencies]; .github/workflows/bench-iai.yml installs valgrind + threshold 1% + comment bot. The committed baseline JSON carries schema keys (bench_name, grammar, valgrind_instrs, seeded_at, commit_sha, threshold_pct) with valgrind_instrs null. The path-exists branch in the workflow seeds from the first CI run; subsequent PRs compare against the populated value.",
+    "first_run_destination": "first CI run on master post-W2.a"
+  },
+
+  "cross_repo": {
+    "source": "docs/benchmarks/post-B1-W2-cross-repo.txt",
+    "triad": [
+      { "repo": "bbnf-lang", "rust_toolchain_toml": "present (source)", "cargo_config_toml": "present (full B1 surface)", "check_exit": 0, "context": "W0.a + W0.b landings" },
+      { "repo": "../parse-that", "rust_toolchain_toml": "created in B1.W2.c", "cargo_config_toml": "created in B1.W2.c", "check_exit": 0, "context": "Linux-only lld link-arg opt-in; mirror-template" },
+      { "repo": "../pprint", "rust_toolchain_toml": "created in B1.W2.c", "cargo_config_toml": "created in B1.W2.c", "check_exit": 0, "context": "same minimal mirror template as parse-that" }
+    ],
+    "deferred_repos": {
+      "destination": "post-B1 appurtenant tranche (per B1.md §Cross-tranche debt)",
+      "list": ["gorgeous sibling repo (separate from bbnf-lang/crates/gorgeous)", "csp-solver", "csc411", "crates/ai", "any other Rust repo under ~/Programming/ not in the path-patched triad"]
+    },
+    "rationale": "B1 invariant 16 binds only the three path-patched-graph repos; wider propagation requires a separate fleet-modernization inventory named in meta-audit/07-appurtenant-assay.md."
+  }
+}

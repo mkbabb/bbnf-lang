@@ -142,7 +142,7 @@ reversal rules:
    pre-scan (`2f7c1bd`) was the cleanest reversal in project
    history and produced the dispatch discipline that landed AP.5
    NibbleLut. BA budgets for at least one reversal per wave as
-   the expected case.
+   an explicit re-plan lane.
 
 ## Wave structure
 

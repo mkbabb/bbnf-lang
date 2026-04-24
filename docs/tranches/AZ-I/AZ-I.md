@@ -120,9 +120,10 @@ regress from AU baseline; AZ-I does not re-tune BBNF).
 **Tape-remains gate (AZ-II handoff):**
 
 - `crates/tape/` exists on disk and compiles.
-- `rg 'use bbnf_tape' crates/` returns hits exclusively in
-  `crates/bbnf_derive/` and `crates/core/src/runtime/bbnf/` (the
-  BBNF-scoped consumer set). No hit in JSON, CSS L4, or Sheets
+- The live tape-symbol scan
+  (`::bbnf::runtime::tape|bbnf::runtime::tape|use tape::|\btape::|\bTape(Rec|Builder|Cursor|Offset|Kind)\b|\bColumns\b|\bFinaliser\b|\bDTA\b|\bPSI\b|Fused(Build|Output)`)
+  returns hits exclusively in the BBNF-scoped consumer set and
+  historical docs. No hit is permitted in JSON, CSS L4, or Sheets
   runtime paths.
 - `cargo build -p bbnf` succeeds.
 
@@ -257,10 +258,11 @@ AZ-I's close matrix:
 - Three-grammar slice of the 17-entry AU-baseline matrix at or
   above AU floor on every entry, on the struct-only path, with
   samply captures under `docs/benchmarks/profiles/AZ-I/W4/`.
-- Tape-scoped-to-BBNF verification: a CI job that greps for
-  `bbnf_tape` / `TapeBuilder` / `push_rec` references on the JSON,
-  CSS L4, and Sheets parse paths and fails on hit; references on
-  the BBNF bootstrap path are permitted.
+- Tape-scoped-to-BBNF verification: a CI job that greps for live
+  tape-symbol references (`tape::`, `TapeBuilder`, `TapeCursor`,
+  `TapeRec`, `push_rec`, `output.tape()`, `payload_bytes`) on the
+  JSON, CSS L4, and Sheets parse paths and fails on hit; references
+  on the BBNF bootstrap path are permitted.
 - Parity harnesses (sonic-rs, lightningcss, simdjson OnDemand,
   cssparser, serde_json) green across the full fixture corpus.
 - IR audit pass reports 100% `->` coverage across JSON, CSS L4,
@@ -298,15 +300,18 @@ Reversal rules:
    a hard re-plan signal, not a missed detail. AX invariant 13 is
    non-negotiable.
 5. **Reversals are a health signal.** Reversals are first-class
-   outcomes. AZ-I budgets for at least one reversal per wave as
-   the expected case. The Era V anti-pattern — substrate first,
-   consumer later, reversal never — is what AZ-I exists to
-   preclude.
+   outcomes. AZ-I budgets an explicit reversal/re-plan lane per wave
+   so a miss narrows the architecture instead of softening it. The
+   Era V anti-pattern — substrate first, consumer later, reversal
+   never — is what AZ-I exists to preclude.
 
-A final reversal budget: if W3 (CSS L4) cannot complete without
-re-introducing a tape path on CSS L4, AZ-I invokes its defensible
-floor (see §Defensible floor) and closes with CSS L4 partial
-(e.g., `<length>` typed but aggregate colors still tape-backed).
+A final reversal budget: if W3 (CSS L4) does not complete the full
+lightningcss parity surface in one wave, AZ-I may close with a
+CSS-semantic partial only if the CSS parser is still struct-only.
+Partial means typed coverage gap (for example selectors or calc
+families routed to TODO parity rows), never a tape-backed CSS path.
+Any need to re-introduce tape on CSS L4 is a wave revert + re-plan
+trigger, not an AZ-I close floor.
 
 ## Critical files
 
@@ -380,12 +385,14 @@ Non-negotiable at AZ-I close:
    order recovery gate.
 2. **CSS bootstrap ≥ 600 MB/s on the struct-only path.**
 3. **Sheets parse_simple ≥ 95 MB/s on the struct-only path.**
-4. **`StructRegistry` non-empty for every Named rule in JSON and
+4. **`StructRegistry` non-empty for every Named rule in JSON, CSS
+   L4, and Sheets.**
+5. **IR audit pass reports 100% `->` coverage on JSON, CSS L4, and
    Sheets.**
-5. **IR audit pass reports 100% `->` coverage on JSON and Sheets.**
 6. **CSS L4 at minimum `<length>` typed and lightningcss-parity-
    green on its own corpus.** Aggregate CSS (colors, calc, lists)
-   may remain tape-backed in a partial-close scenario.
+   may remain semantically partial only as typed struct surfaces with
+   named TODO parity rows. They may not remain tape-backed.
 7. **`crates/tape/` compiles and links; BBNF bootstrap path
    unchanged.**
 
@@ -393,14 +400,42 @@ Partial-close escape clause: if classifier unification (W0) is
 declared intractable AND CSS L4 aggregate struct-emission (W3)
 fails parity on the lightningcss corpus, AZ-I may close with
 "direct-to-struct on JSON and Sheets; CSS L4 partial (length/color
-typed, aggregates tape-backed); tape scoped to BBNF + CSS-aggregates".
-The follow-on tranche (AZ-I') picks up CSS aggregate migration
-before AZ-II opens.
+typed, selectors/calc/colors incomplete against named lightningcss
+rows); tape scoped to BBNF only". The follow-on wave or tranche
+(AZ-I') picks up CSS semantic parity completion before AZ-II opens.
+AZ-I' is not permitted to carry a CSS tape bridge.
 
 Anything less than the partial-close floor is Era V recurring:
 substrate without activation, consumer without substrate, or tape-
 and-struct side-by-side across primary data grammars. The plan does
 not accept that outcome.
+
+## Executed preflight truth from 2026-04-24
+
+The 2026-04-24 probability-lift pass found three missing live
+substrates that AZ-I must not assume:
+
+- `docs/tranches/AZ-I/CLASSIFIER-UNIFICATION.md` is required by W0
+  but absent at the pass.
+- `crates/ir/src/passes/audit/payload_coverage.rs` is required by
+  W0/W1 but absent at the pass.
+- `StructRegistry` / `StructLayout` are not code-real yet; current
+  IR payload docs still describe the old registry as deleted.
+
+Before W1 opens, AZ-I must prove at least one vertical slice per
+data-grammar family:
+
+1. JSON scalar direct-to-struct with no `TapeBuilder`, `TapeCursor`,
+   `output.tape()`, or `payload_bytes` in the expanded slice.
+2. Sheets `parse_simple` struct output for numeric/bool/error/ref
+   cases.
+3. CSS declaration + `Length` struct output against lightningcss,
+   with no tape fallback.
+4. CSS `Color` scalar-packed output and one `CursorChild`
+   materialization case before W3 aggregate rollout.
+
+These slices are not overfitting fixtures; they are grammar-derived
+admission tests for the generic direct-to-struct machinery.
 
 ## Handoff contract to AZ-II
 

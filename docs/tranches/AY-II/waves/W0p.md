@@ -246,8 +246,18 @@ After all 3 sub-agents cherry-pick:
 3. **Fresh expands**: `cargo expand -p bbnf --bench
    {json_monolithic,css_l4,google_sheets_monolithic,bbnf_monolithic}
    > target/expand/ay-ii-W0p-<grammar>.rs`.
-4. **Fat-LTO 5-bench matrix**: `make ay-bench-close WAVE=W0p-close`
-   → `docs/benchmarks/post-AY-II-W0p-bench.txt`.
+4. **5-bench matrix (substrate verification under profiling-prep)**:
+   `make ay-bench-close WAVE=W0p-mid` → per-bench logs under
+   `docs/benchmarks/post-AY-W0p-mid-{json,css,sheets,bbnf,compile}.txt`.
+   Profile is `profiling-prep` (release + thin LTO + samply-resolvable
+   debug); W0' verifies that the FusedBuilder collapse + projection
+   wiring + scan-policy splice produce a no-panic, runtime-correct
+   bench substrate. Fat-LTO publish-grade peer-parity numbers
+   (`bbnf_value_twitter / sonic_value_twitter ≤ 1.15` etc.) capture at
+   AY-II.W1 close per the W1 hard-gate manifest, where the
+   `--profile bench` numbers are keyed to peer references; running
+   fat-LTO twice (here and at W1) would double-pay the wall for
+   numbers W1 republishes anyway.
 5. **Samply per primary grammar**:
    `.profiles/samply/AY-II-W0p/{json_twitter,css_tailwind,sheets_stress,bbnf_self}/`.
 6. **nm** on each bench binary →

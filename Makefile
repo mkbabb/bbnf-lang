@@ -341,7 +341,12 @@ ay-samply-json-twitter-lookup:
 ##   make ay-bench-close WAVE=close        # bench profile (fat LTO, publish)
 ## WAVE=close selects --profile bench for publish-grade numbers; any
 ## other value selects --profile profiling-prep for mid-wave checks.
-BENCH_PROFILE = $(if $(filter close,$(WAVE)),bench,profiling-prep)
+# Fat-LTO `bench` profile triggers when WAVE is `close` or ends in `-close`
+# (e.g. `W0p-close`, `W1-close`); any other value uses `profiling-prep` for
+# faster mid-wave verification. AY-II's W0p.md ceremony uses `WAVE=W0p-mid`
+# for the substrate-verification pass; W1-W5 close gates use `WAVE=close`
+# or `WAVE=<wave>-close` for publish-grade peer-parity numbers.
+BENCH_PROFILE = $(if $(or $(filter close,$(WAVE)),$(filter %-close,$(WAVE))),bench,profiling-prep)
 ay-bench-close:
 	@mkdir -p docs/benchmarks
 	@echo "AY bench-close WAVE=$(WAVE) profile=$(BENCH_PROFILE)" >&2

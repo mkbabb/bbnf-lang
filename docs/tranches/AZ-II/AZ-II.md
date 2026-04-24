@@ -125,7 +125,9 @@ grammar-read step; it is measured but lightly weighted — regression
 
 - `rg '^crates/tape/'` on the tree at AZ-II close returns zero
   matches.
-- `rg 'use bbnf_tape' crates/` returns zero matches.
+- The live tape-symbol scan
+  (`::bbnf::runtime::tape|bbnf::runtime::tape|use tape::|\btape::|\bTape(Rec|Builder|Cursor|Offset|Kind)\b|\bColumns\b|\bFinaliser\b|\bDTA\b|\bPSI\b|Fused(Build|Output)`)
+  returns zero matches outside historical docs.
 - `rg '\bTapeRec\b|\bTapeBuilder\b|\bTapeCursor\b|\bColumns\b|\bFinaliser\b|\bDTA\b|\bPSI\b' crates/ --type rust`
   returns zero matches outside historical artefacts under
   `docs/tranches/AZ-I/old-BA-artifacts/`.
@@ -310,10 +312,10 @@ prohibits, and the discipline refuses it even under W2 pressure.
    exact-byte recovery is available if the display form drifts.
 4. **Tape deletion breaks view codegen elsewhere.** A downstream
    crate (e.g., `crates/pprint`, the `@debug` directive lowerer,
-   a tooling binary) may import `bbnf_tape::*` in a path that W3
-   misses. Mitigation: the W3 grep check
-   `rg 'use bbnf_tape' crates/` returns zero matches before W3
-   closes; any hit gates the close.
+   a tooling binary) may import or re-export the live tape surface in
+   a path that W3 misses. Mitigation: the W3 live-symbol scan
+   (`::bbnf::runtime::tape|bbnf::runtime::tape|use tape::|\btape::|\bTape(Rec|Builder|Cursor|Offset|Kind)\b|\bColumns\b|\bFinaliser\b|\bDTA\b|\bPSI\b|Fused(Build|Output)`)
+   returns zero matches before W3 closes; any hit gates the close.
 5. **Cross-crate lifetime threading.** The derived `BbnfAst`
    struct's `'a` lifetime must thread through every API boundary
    that currently accepts a tape cursor. Mitigation: W1 includes
@@ -364,7 +366,8 @@ At AZ-II close, BA opens on the following guaranteed state:
 1. **All four grammars running direct-to-struct.** JSON, CSS L4,
    Sheets, BBNF — one codegen path, one materialised form.
 2. **`crates/tape/` deleted.** The tape crate does not exist on
-   disk. No non-test crate imports `bbnf_tape`.
+   disk. No non-test crate imports or re-exports the live tape
+   surface.
 3. **`StructRegistry` closed fleet-wide.** Every Named rule in
    every production grammar has a registered `StructLayout`.
 4. **Parity harnesses rewired to struct comparisons.** All four

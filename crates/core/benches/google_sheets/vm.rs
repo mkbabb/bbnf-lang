@@ -7,7 +7,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use bbnf::pipeline::{PipelineOptions, compile_grammar};
 use bbnf_ir::compiler::compile as compile_bytecode;
 use bbnf_ir::interpreter::Interpreter;
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use divan::counter::BytesCount;
 
 const PATHOLOGICAL: &str = r#"=LET(raw, A2:E1000, filtered, FILTER(raw, (INDEX(raw,,3)>100)*(INDEX(raw,,5)="Active")), sorted, SORT(filtered, 3, FALSE), IF(ROWS(sorted)>0, MAP(SEQUENCE(MIN(10, ROWS(sorted))), LAMBDA(i, INDEX(sorted, i, 1)&" - "&TEXT(INDEX(sorted, i, 3), "$#,##0"))), "No results"))"#;
 
@@ -34,19 +34,22 @@ fn generate_large_formula(n_bindings: usize) -> String {
     format!("=LET({})", parts.join(", "))
 }
 
-fn compile(b: &mut Bencher) {
+#[divan::bench]
+fn compile(b: divan::Bencher) {
     let grammar = std::fs::read_to_string("../../grammar/google-sheets/google-sheets.bbnf")
         .expect("failed to read google-sheets.bbnf");
-    b.bytes = grammar.len() as u64;
-    b.iter(|| {
-        let ir = compile_grammar(black_box(&grammar), &PipelineOptions::default()).unwrap();
-        let _program = compile_bytecode(&ir);
-    });
+    let bytes = grammar.len();
+    b.counter(BytesCount::new(bytes))
+        .with_inputs(|| grammar.clone())
+        .bench_values(|grammar| {
+            let ir = compile_grammar(divan::black_box(&grammar), &PipelineOptions::default()).unwrap();
+            let _program = compile_bytecode(&ir);
+        });
 }
 
-fn parse_pathological(b: &mut Bencher) {
+#[divan::bench]
+fn parse_pathological(b: divan::Bencher) {
     let (_ir, program) = compiled();
-    b.bytes = PATHOLOGICAL.len() as u64;
     {
         let mut interp = Interpreter::new(&program, PATHOLOGICAL);
         let r = interp.run();
@@ -59,17 +62,19 @@ fn parse_pathological(b: &mut Bencher) {
             PATHOLOGICAL.len(),
         );
     }
-    b.iter(|| {
-        let mut interp = Interpreter::new(&program, black_box(PATHOLOGICAL));
-        let r = interp.run();
-        black_box(r.offset);
-    });
+    let bytes = PATHOLOGICAL.len();
+    b.counter(BytesCount::new(bytes))
+        .bench_local(|| {
+            let mut interp = Interpreter::new(&program, divan::black_box(PATHOLOGICAL));
+            let r = interp.run();
+            divan::black_box(r.offset);
+        });
 }
 
-fn parse_1kb(b: &mut Bencher) {
+#[divan::bench]
+fn parse_1kb(b: divan::Bencher) {
     let (_ir, program) = compiled();
     let input = generate_large_formula(10);
-    b.bytes = input.len() as u64;
     {
         let mut interp = Interpreter::new(&program, &input);
         let r = interp.run();
@@ -82,17 +87,19 @@ fn parse_1kb(b: &mut Bencher) {
             input.len(),
         );
     }
-    b.iter(|| {
-        let mut interp = Interpreter::new(&program, black_box(&input));
-        let r = interp.run();
-        black_box(r.offset);
-    });
+    let bytes = input.len();
+    b.counter(BytesCount::new(bytes))
+        .bench_local(|| {
+            let mut interp = Interpreter::new(&program, divan::black_box(&input));
+            let r = interp.run();
+            divan::black_box(r.offset);
+        });
 }
 
-fn parse_10kb(b: &mut Bencher) {
+#[divan::bench]
+fn parse_10kb(b: divan::Bencher) {
     let (_ir, program) = compiled();
     let input = generate_large_formula(100);
-    b.bytes = input.len() as u64;
     {
         let mut interp = Interpreter::new(&program, &input);
         let r = interp.run();
@@ -105,12 +112,20 @@ fn parse_10kb(b: &mut Bencher) {
             input.len(),
         );
     }
-    b.iter(|| {
-        let mut interp = Interpreter::new(&program, black_box(&input));
-        let r = interp.run();
-        black_box(r.offset);
-    });
+    let bytes = input.len();
+    b.counter(BytesCount::new(bytes))
+        .bench_local(|| {
+            let mut interp = Interpreter::new(&program, divan::black_box(&input));
+            let r = interp.run();
+            divan::black_box(r.offset);
+        });
 }
 
-benchmark_group!(benches, compile, parse_pathological, parse_1kb, parse_10kb);
-benchmark_main!(benches);
+fn main() {
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

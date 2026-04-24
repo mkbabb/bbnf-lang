@@ -9,7 +9,7 @@
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use bbnf_derive::Parser;
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use divan::counter::BytesCount;
 
 #[derive(Parser)]
 #[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify)]
@@ -36,92 +36,118 @@ fn parse_all_formulas(input: &str) {
     }
 }
 
-fn parse_simple(b: &mut Bencher) {
+#[divan::bench]
+fn parse_simple(b: divan::Bencher) {
     let input = load("simple.txt");
-    b.bytes = input.len() as u64;
     parse_all_formulas(&input); // verify
-    bench_with_timeout(b, limits::PARSE_DEFAULT, || {
-        for line in input.lines() {
-            let line = line.trim();
-            if line.is_empty() { continue; }
-            let parsed = GoogleSheetsParser::parse(black_box(line)).unwrap();
-            black_box(parsed);
-        }
-    });
+    let bytes = input.len();
+    bench_with_timeout(
+        b.counter(BytesCount::new(bytes)),
+        limits::PARSE_DEFAULT,
+        |input: String| {
+            for line in input.lines() {
+                let line = line.trim();
+                if line.is_empty() { continue; }
+                let parsed = GoogleSheetsParser::parse(divan::black_box(line)).unwrap();
+                divan::black_box_drop(parsed);
+            }
+        },
+        &input,
+    );
 }
 
-fn parse_nested(b: &mut Bencher) {
+#[divan::bench]
+fn parse_nested(b: divan::Bencher) {
     let input = load("nested.txt");
-    b.bytes = input.len() as u64;
     parse_all_formulas(&input); // verify
-    bench_with_timeout(b, limits::PARSE_DEFAULT, || {
-        for line in input.lines() {
-            let line = line.trim();
-            if line.is_empty() { continue; }
-            let parsed = GoogleSheetsParser::parse(black_box(line)).unwrap();
-            black_box(parsed);
-        }
-    });
+    let bytes = input.len();
+    bench_with_timeout(
+        b.counter(BytesCount::new(bytes)),
+        limits::PARSE_DEFAULT,
+        |input: String| {
+            for line in input.lines() {
+                let line = line.trim();
+                if line.is_empty() { continue; }
+                let parsed = GoogleSheetsParser::parse(divan::black_box(line)).unwrap();
+                divan::black_box_drop(parsed);
+            }
+        },
+        &input,
+    );
 }
 
-fn parse_stress(b: &mut Bencher) {
+#[divan::bench]
+fn parse_stress(b: divan::Bencher) {
     let input = load("stress.txt");
-    b.bytes = input.len() as u64;
     parse_all_formulas(&input); // verify
-    bench_with_timeout(b, limits::PARSE_DEFAULT, || {
-        for line in input.lines() {
-            let line = line.trim();
-            if line.is_empty() { continue; }
-            let parsed = GoogleSheetsParser::parse(black_box(line)).unwrap();
-            black_box(parsed);
-        }
-    });
+    let bytes = input.len();
+    bench_with_timeout(
+        b.counter(BytesCount::new(bytes)),
+        limits::PARSE_DEFAULT,
+        |input: String| {
+            for line in input.lines() {
+                let line = line.trim();
+                if line.is_empty() { continue; }
+                let parsed = GoogleSheetsParser::parse(divan::black_box(line)).unwrap();
+                divan::black_box_drop(parsed);
+            }
+        },
+        &input,
+    );
 }
 
 // ── Format benchmarks ──────────────────────────────────────────────
 
-fn format_simple(b: &mut Bencher) {
+#[divan::bench]
+fn format_simple(b: divan::Bencher) {
     let input = load("simple.txt");
-    let first_formula = input.lines().find(|l| !l.trim().is_empty()).unwrap().trim();
+    let first_formula = input.lines().find(|l| !l.trim().is_empty()).unwrap().trim().to_string();
     let config = pprint::Printer::new(80, 2, false);
-    b.bytes = first_formula.len() as u64;
     {
         let parser = GoogleSheetsParser::formula_prettify();
-        let (result, state) = parser.parse_return_state(first_formula);
+        let (result, state) = parser.parse_return_state(&first_formula);
         assert!(result.is_some(), "format_simple: parse failed");
         assert_eq!(state.offset, first_formula.len());
     }
-    b.iter(|| {
-        let parser = GoogleSheetsParser::formula_prettify();
-        let ops = parser.parse(black_box(first_formula)).unwrap();
-        pprint::render(&ops, config)
-    });
+    let bytes = first_formula.len();
+    b.counter(BytesCount::new(bytes))
+        .with_inputs(|| first_formula.clone())
+        .bench_values(|formula| {
+            let parser = GoogleSheetsParser::formula_prettify();
+            let ops = parser.parse(divan::black_box(&formula)).unwrap();
+            pprint::render(&ops, config)
+        });
 }
 
-fn format_stress(b: &mut Bencher) {
+#[divan::bench]
+fn format_stress(b: divan::Bencher) {
     let input = load("stress.txt");
-    let first_formula = input.lines().find(|l| !l.trim().is_empty()).unwrap().trim();
+    let first_formula = input.lines().find(|l| !l.trim().is_empty()).unwrap().trim().to_string();
     let config = pprint::Printer::new(80, 2, false);
-    b.bytes = first_formula.len() as u64;
     {
         let parser = GoogleSheetsParser::formula_prettify();
-        let (result, state) = parser.parse_return_state(first_formula);
+        let (result, state) = parser.parse_return_state(&first_formula);
         assert!(result.is_some(), "format_stress: parse failed");
         assert_eq!(state.offset, first_formula.len());
     }
-    b.iter(|| {
-        let parser = GoogleSheetsParser::formula_prettify();
-        let ops = parser.parse(black_box(first_formula)).unwrap();
-        pprint::render(&ops, config)
-    });
+    let bytes = first_formula.len();
+    b.counter(BytesCount::new(bytes))
+        .with_inputs(|| first_formula.clone())
+        .bench_values(|formula| {
+            let parser = GoogleSheetsParser::formula_prettify();
+            let ops = parser.parse(divan::black_box(&formula)).unwrap();
+            pprint::render(&ops, config)
+        });
 }
 
-benchmark_group!(
-    benches,
-    parse_simple,
-    parse_nested,
-    parse_stress,
-    format_simple,
-    format_stress,
-);
-benchmark_main!(benches);
+fn main() {
+    // Cold-per-parse (`sample_size = 1`) per workspace feedback
+    // `no-warm-benches`. `skip_ext_time(true)` excludes the
+    // `with_inputs` clone from the reported wall.
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

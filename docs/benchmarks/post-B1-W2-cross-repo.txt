@@ -1,0 +1,54 @@
+B1.W2.c cross-repo pin propagation ledger
+==========================================
+
+Scope: mirror bbnf-lang's nightly pin + minimal ax-iter cargo config
+to the two sibling repos participating in the path-patched crate
+graph. The wider fleet (gorgeous sibling, csp-solver, csc411,
+crates/ai, etc.) is out of B1 scope per B1.md §Cross-tranche debt
+and routes to the post-B1 appurtenant tranche.
+
+Triad landings:
+
+| repo                              | rust-toolchain.toml | .cargo/config.toml | check-exit | notes |
+|-----------------------------------|---------------------|--------------------|------------|-------|
+| bbnf-lang (this repo)             | present (source)    | present (full B1)  | pass       | W0.a + W0.b landings |
+| ../parse-that                     | created (B1.W2.c)   | created (B1.W2.c)  | pass       | Linux-only lld link-arg opt-in |
+| ../pprint                         | created (B1.W2.c)   | created (B1.W2.c)  | pass       | Same minimal template as parse-that |
+
+Parse-that carries the bbnf-regex + parse_that crates that bbnf-lang
+`[patch.crates-io]`es; the pin date match is load-bearing for
+proc-macro cache parity with bbnf_derive. Pprint carries the
+pretty-printer library bbnf-lang path-patches into `crates/gorgeous`
+and `crates/core` consumers.
+
+`cd ../parse-that && cargo check` — pinned nightly-2026-04-11 resolves
+on first invocation (rustup auto-downloads if absent); exit 0.
+
+`cd ../pprint && cargo check` — same; exit 0.
+
+`cd bbnf-lang && cargo iter-check` — workspace-minus-heavy-crates
+under the triad pin; warm = 3.88s per routine.txt; cold under the
+triad is bound by bbnf-bootstrap's single-derive wall (AZ-I.W0
+scope).
+
+Explicitly deferred (routed to post-B1 appurtenant tranche):
+
+- gorgeous sibling repo (separate from bbnf-lang/crates/gorgeous).
+- csp-solver.
+- csc411.
+- crates/ai.
+- Any other Rust repo under ~/Programming/ not in the path-patched
+  triad above.
+
+Rationale: B1's invariant 16 binds only the three path-patched-graph
+repos. Wider propagation requires a separate fleet-modernization
+inventory which was named in meta-audit/07-appurtenant-assay.md as a
+post-B1 concern.
+
+Sibling repo files created:
+
+- ../parse-that/rust-toolchain.toml (verbatim copy; same pin date).
+- ../parse-that/.cargo/config.toml (minimal template: rustflags +
+  ax-iter profile + iter-check + iter-test aliases).
+- ../pprint/rust-toolchain.toml (verbatim copy).
+- ../pprint/.cargo/config.toml (same minimal template).

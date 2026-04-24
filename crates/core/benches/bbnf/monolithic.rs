@@ -1,4 +1,3 @@
-
 //! BBNF self-hosting parse benchmark — cold per-parse (tape-first).
 //!
 //! Parses `.bbnf` grammar files using the generated bootstrap parser.
@@ -9,7 +8,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use std::hint::black_box;
 
 use bbnf::grammar::generated::BbnfBootstrap;
 
@@ -54,99 +53,120 @@ fn load_dir(dir: &str) -> Vec<(String, String)> {
 
 // ── Single-file grammars ───────────────────────────────────────────
 
-fn json(b: &mut Bencher) {
+#[divan::bench]
+fn json(b: divan::Bencher) {
     let input = load("json/json.bbnf");
-    b.bytes = input.len() as u64;
-    {
-        BbnfBootstrap::parse(&input)
-            .unwrap_or_else(|e| panic!("json.bbnf: parse failed: {:?}", e));
-    }
-    bench_with_timeout(b, limits::PARSE_DEFAULT, || {
-        let parsed = BbnfBootstrap::parse(black_box(&input)).unwrap();
-        black_box(parsed);
-    });
+    BbnfBootstrap::parse(&input)
+        .unwrap_or_else(|e| panic!("json.bbnf: parse failed: {:?}", e));
+    bench_with_timeout(
+        b,
+        limits::PARSE_DEFAULT,
+        |input: String| {
+            let parsed = BbnfBootstrap::parse(black_box(&input)).unwrap();
+            black_box(parsed);
+        },
+        &input,
+    );
 }
 
-fn ebnf(b: &mut Bencher) {
+#[divan::bench]
+fn ebnf(b: divan::Bencher) {
     let input = load("ebnf/ebnf.bbnf");
-    b.bytes = input.len() as u64;
-    {
-        BbnfBootstrap::parse(&input)
-            .unwrap_or_else(|e| panic!("ebnf.bbnf: parse failed: {:?}", e));
-    }
-    bench_with_timeout(b, limits::PARSE_DEFAULT, || {
-        let parsed = BbnfBootstrap::parse(black_box(&input)).unwrap();
-        black_box(parsed);
-    });
+    BbnfBootstrap::parse(&input)
+        .unwrap_or_else(|e| panic!("ebnf.bbnf: parse failed: {:?}", e));
+    bench_with_timeout(
+        b,
+        limits::PARSE_DEFAULT,
+        |input: String| {
+            let parsed = BbnfBootstrap::parse(black_box(&input)).unwrap();
+            black_box(parsed);
+        },
+        &input,
+    );
 }
 
-fn css_pretty(b: &mut Bencher) {
+#[divan::bench]
+fn css_pretty(b: divan::Bencher) {
     let input = load("css/pretty.bbnf");
-    b.bytes = input.len() as u64;
-    {
-        BbnfBootstrap::parse(&input)
-            .unwrap_or_else(|e| panic!("css/pretty.bbnf: parse failed: {:?}", e));
-    }
-    bench_with_timeout(b, limits::PARSE_DEFAULT, || {
-        let parsed = BbnfBootstrap::parse(black_box(&input)).unwrap();
-        black_box(parsed);
-    });
+    BbnfBootstrap::parse(&input)
+        .unwrap_or_else(|e| panic!("css/pretty.bbnf: parse failed: {:?}", e));
+    bench_with_timeout(
+        b,
+        limits::PARSE_DEFAULT,
+        |input: String| {
+            let parsed = BbnfBootstrap::parse(black_box(&input)).unwrap();
+            black_box(parsed);
+        },
+        &input,
+    );
 }
 
-fn google_sheets(b: &mut Bencher) {
+#[divan::bench]
+fn google_sheets(b: divan::Bencher) {
     let input = load("google-sheets/google-sheets.bbnf");
-    b.bytes = input.len() as u64;
-    {
-        BbnfBootstrap::parse(&input)
-            .unwrap_or_else(|e| panic!("google-sheets.bbnf: parse failed: {:?}", e));
-    }
-    bench_with_timeout(b, limits::PARSE_DEFAULT, || {
-        let parsed = BbnfBootstrap::parse(black_box(&input)).unwrap();
-        black_box(parsed);
-    });
+    BbnfBootstrap::parse(&input)
+        .unwrap_or_else(|e| panic!("google-sheets.bbnf: parse failed: {:?}", e));
+    bench_with_timeout(
+        b,
+        limits::PARSE_DEFAULT,
+        |input: String| {
+            let parsed = BbnfBootstrap::parse(black_box(&input)).unwrap();
+            black_box(parsed);
+        },
+        &input,
+    );
 }
 
 // ── @import grammars (multi-file) ──────────────────────────────────
 
-fn bbnf_self(b: &mut Bencher) {
+#[divan::bench]
+fn bbnf_self(b: divan::Bencher) {
     let files = load_dir("bbnf");
-    let total_bytes: usize = files.iter().map(|(_, c)| c.len()).sum();
-    b.bytes = total_bytes as u64;
     for (name, content) in &files {
         BbnfBootstrap::parse(content)
             .unwrap_or_else(|e| panic!("{}: parse failed: {:?}", name, e));
     }
-    bench_with_timeout(b, limits::PARSE_DEFAULT, || {
-        for (_, content) in &files {
-            let parsed = BbnfBootstrap::parse(black_box(content)).unwrap();
-            black_box(parsed);
-        }
-    });
+    bench_with_timeout(
+        b,
+        limits::PARSE_DEFAULT,
+        |files: Vec<(String, String)>| {
+            for (_, content) in &files {
+                let parsed = BbnfBootstrap::parse(black_box(content)).unwrap();
+                black_box(parsed);
+            }
+        },
+        &files,
+    );
 }
 
-fn css_l4_grammar(b: &mut Bencher) {
+#[divan::bench]
+fn css_l4_grammar(b: divan::Bencher) {
     let files = load_dir("css/l4");
-    let total_bytes: usize = files.iter().map(|(_, c)| c.len()).sum();
-    b.bytes = total_bytes as u64;
     for (name, content) in &files {
         BbnfBootstrap::parse(content)
             .unwrap_or_else(|e| panic!("{}: parse failed: {:?}", name, e));
     }
-    bench_with_timeout(b, limits::PARSE_DEFAULT, || {
-        for (_, content) in &files {
-            let parsed = BbnfBootstrap::parse(black_box(content)).unwrap();
-            black_box(parsed);
-        }
-    });
+    bench_with_timeout(
+        b,
+        limits::PARSE_DEFAULT,
+        |files: Vec<(String, String)>| {
+            for (_, content) in &files {
+                let parsed = BbnfBootstrap::parse(black_box(content)).unwrap();
+                black_box(parsed);
+            }
+        },
+        &files,
+    );
 }
 
-benchmark_group!(
-    benches,
-    json,
-    ebnf,
-    css_pretty,
-    google_sheets,
-    bbnf_self,
-    css_l4_grammar,
-);
-benchmark_main!(benches);
+fn main() {
+    // Cold-per-parse (`sample_size = 1`) per workspace feedback
+    // `no-warm-benches`. `skip_ext_time(true)` excludes the
+    // `with_inputs` clone from the reported wall.
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

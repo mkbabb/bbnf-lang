@@ -98,6 +98,10 @@ path = "junit.xml"
 report-name = "bbnf-lang-close"
 
 # Emit detailed per-test timing for the ceremony artefact.
-[profile.close.overrides]
+# NOTE: `overrides` is an array-of-tables in nextest's schema; the double-
+# bracket form is required. Single-bracket `[profile.close.overrides]` parses
+# as a single table and nextest rejects it as "invalid type: map, expected
+# a sequence". B1.W0.c discovered this against the predecessor draft.
+[[profile.close.overrides]]
 filter = "all()"
 # No slow-timeout override; inherits the profile's 120s cap.

@@ -35,3 +35,14 @@ nextest-config-parse	pass	cargo nextest run --workspace --profile ax-iter --no-r
 nextest-ax-iter-dry-run	cap-exceeded 900s+	compile of test binaries (gorgeous, bootstrap, typed_accessor_surface, wrap_compound_elision) still in flight at 18-min W0.c hard-cap; 4 rustcs at 100% CPU each ~15 min elapsed under -Zthreads=8 -Zshare-generics=y; config parse verified clean; full compile wall not captured within cap
 nextest-close-dry-run	not-run	skipped to stay within W0.c hard-cap; orchestrator re-opens on green ax-iter
 w0c-ice-count	deferred	post-dry-run ls target/rustc-ice-*.txt deferred to orchestrator follow-on once ax-iter compile terminates
+iter-check-full-cold-pinned	halted-at-cap	cold run interrupted at 25:30 wall-clock (bootstrap rustc still in flight); post triumvirate Change 1 (gorgeous default=[]). Gorgeous reduced from ~500s pre-fix to 33s warm (see iter-check-prettify routine row) — Change 1 VALIDATED architecturally. Bootstrap crate remains the single critical-path ceiling (routed to AZ-I.W0 Watt/cache per plan line 111); full cold wall exceeds 5-min ceiling the invariant 11 rewording claimed. Plan overestimated fix headroom: bootstrap alone >600s observed, likely >1000s to completion. Invariant 11 ≤5min ceiling requires AZ-I.W0 cache relocation before it holds numerically.
+iter-check-warm	3.88s pass	routine alias post-gorgeous-fix, warm cache; workspace-excluding-heavy-crates
+iter-check-lsp-warm	3.27s pass	bbnf-analysis + bbnf-lsp fast-path
+iter-check-prettify-warm	33.36s pass	gorgeous lib-only under default=[]; CHANGE 1 VALIDATED — pre-fix this was ~500s on the full workspace check because gorgeous's 6 derive sites were active; post-fix gorgeous lib has 0 derive sites active and compiles independent of grammar features
+iter-check-bootstrap-killed	>660s (halted)	bootstrap proc-macro expansion ceiling; Change 1 does not reduce bootstrap cost — AZ-I.W0 scope per plan line 111
+w0d-ice-count-post-iter-check	0	find target -name rustc-ice-*.txt after halted cold run; no ICE introduced by triumvirate Change 1 (primary W1.a-open gate still holds)
+ay-prime-fresh	NA-target-missing	make ay-prime target does not exist in current Makefile nor in docs/tranches/B1/patches/Makefile.draft; W0.d Makefile rewrite was outside triumvirate redress scope (forbidden in allow-list). Plan-doc-vs-config inconsistency flagged; cache seed will land when Makefile.draft is copied in a follow-on W0.d pass.
+nextest-ax-iter-dry-run-retry	skipped-cap	hard-cap constraint; triumvirate redress prioritised Change 1 + Change 4 + the iter-check-* routine surface proof; nextest retry deferred to orchestrator
+nextest-close-dry-run-retry	skipped-cap	same as above
+scripts-test-tier-leaf	skipped-cap	same; scripts/test-tier.sh leaf invokes cargo test -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser which re-compiles test binaries — cold cost comparable to nextest dry-run
+

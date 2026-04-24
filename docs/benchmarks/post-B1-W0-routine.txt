@@ -1,0 +1,14 @@
+| alias | exit | wall-seconds | context |
+|---|---|---|---|
+| iter-check           | 0  | 3.88 | warm after interrupted iter-check-full; post triumvirate Change 1 |
+| iter-check-lsp       | 0  | 3.27 | warm after iter-check; covers bbnf-analysis + bbnf-lsp |
+| iter-check-prettify  | 0  | 33.36 | warm; gorgeous under default=[] — CHANGE 1 VALIDATED (pre-fix ~500s cold on full workspace, post-fix lib-only compile is 33s warm on this cache state; downstream gorgeous consumers pay bin-full via `cargo install gorgeous --features bin-full` when needed) |
+| iter-check-bootstrap | 144 (killed-at-cap) | >660s | bootstrap proc-macro expansion for self-hosted grammar; single-crate ceiling that triumvirate Change 1 cannot lower (gorgeous-only fix). Per plan line 111, this route is AZ-I.W0 (Watt / cache-relocation) scope, out of B1 |
+| iter-test-leaf       | NA | NA | alias NOT defined in .cargo/config.toml — plan-doc-vs-config inconsistency; W0.b landed iter-test-{core,ir,analysis,prettify,lsp} instead. Flagged for orchestrator follow-up |
+| scripts/test-tier.sh leaf --profile ax-iter | skipped-cap | NA | deferred by 45-min triumvirate hard-cap; orchestrator re-opens post-bootstrap-ceiling resolution |
+
+## Notes
+
+Triumvirate Change 1 (`crates/gorgeous/Cargo.toml`: `default = []` + `[[bin]] required-features = ["bin-full"]`) is validated by the iter-check-prettify wall dropping from ~500s (pre-fix, 6 derive sites active on default) to 33s warm (post-fix, 0 derive sites on workspace-check path; gorgeous lib is feature-independent surface only).
+
+The plan's expected `iter-check-full` cold ceiling of ≤ 5 min (invariant 11 rewording) over-estimates the triumvirate's effect: gorgeous's ~500s drop moves the critical-path to `bbnf-bootstrap`'s heavy proc-macro expansion (>600s observed, potentially >1000s), which is single-crate single-derive — the triumvirate Change 1 is gorgeous-only and cannot lower it. The ≤ 5 min ceiling requires AZ-I.W0 (Watt / cache-relocation) to land before invariant 11 holds numerically; W0.d's triumvirate landed the architectural lever, not the wall-clock floor.

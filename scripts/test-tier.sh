@@ -13,16 +13,25 @@
 #   grammar  — per-grammar tape parity + per-grammar shape emit. One
 #              derive-Parser site per test binary. ~3-5 min cold.
 #              Appropriate while iterating on shape emitters.
-#   workspace — full `cargo test --workspace`. ~10-15 min cold.
+#   workspace — full workspace `cargo nextest run`. ~10-15 min cold.
 #              Wave close only.
 #
 # Usage:
 #   scripts/test-tier.sh leaf
 #   scripts/test-tier.sh grammar
 #   scripts/test-tier.sh workspace
+#   scripts/test-tier.sh leaf --profile ax-iter
 #   scripts/test-tier.sh grammar --no-run   # compile-gate only
 #
-# Extra args after the tier name pass through to `cargo test`.
+# Extra args after the tier name pass through to `cargo nextest run`.
+# The cargo profile is selected via `--profile <name>` which nextest
+# forwards as `--cargo-profile`; matches the alias surface in
+# .cargo/config.toml (ax-iter for iteration, close for wave close).
+#
+# Cache discipline (B1 invariant 12): this script does NOT create or
+# destroy target/.bbnf-cache/. The proc-macro cache lives where
+# crates/derive writes it; cycle-2 bootstrap measurements depend on
+# the cache surviving between iterations.
 
 set -euo pipefail
 
@@ -32,9 +41,32 @@ shift || true
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-# Always clear .bbnf-cache — the derive macro caches expansions and
-# cargo clean does NOT clear them (see docs/instructions/README.md).
-find . -name .bbnf-cache -type d -exec rm -rf {} + 2>/dev/null || true
+# Extract --profile <name> from the remaining args and forward it to
+# nextest as --cargo-profile <name>. Preserves pass-through of any
+# other flags (e.g. --no-run).
+CARGO_PROFILE=""
+EXTRA_ARGS=()
+while (($#)); do
+    case "$1" in
+        --profile)
+            CARGO_PROFILE="$2"
+            shift 2
+            ;;
+        --profile=*)
+            CARGO_PROFILE="${1#*=}"
+            shift
+            ;;
+        *)
+            EXTRA_ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+NEXTEST_PROFILE_ARGS=()
+if [[ -n "$CARGO_PROFILE" ]]; then
+    NEXTEST_PROFILE_ARGS+=(--cargo-profile "$CARGO_PROFILE")
+fi
 
 OUT="/tmp/test-tier-$TIER.txt"
 : > "$OUT"
@@ -45,8 +77,10 @@ case "$TIER" in
         # proportional to hand-written code only. Fastest tier.
         # Workspace crate names (see Cargo.toml / crates/*/Cargo.toml):
         # `tape`, `bbnf-ir`, `egraph`, `csp-solver`, `bbnf-ser`.
-        cargo test -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser \
-            "$@" > "$OUT" 2>&1
+        cargo nextest run \
+            "${NEXTEST_PROFILE_ARGS[@]}" \
+            -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser \
+            "${EXTRA_ARGS[@]}" > "$OUT" 2>&1
         ;;
     grammar)
         # Each per-grammar test binary links exactly one derive-Parser
@@ -62,12 +96,18 @@ case "$TIER" in
             if [[ -f "$ROOT/crates/core/tests/$bin.rs" ]] \
                 || [[ -d "$ROOT/crates/core/tests/$bin" ]]; then
                 echo "=== $bin ===" >> "$OUT"
-                cargo test -p bbnf --test "$bin" "$@" >> "$OUT" 2>&1 || true
+                cargo nextest run \
+                    "${NEXTEST_PROFILE_ARGS[@]}" \
+                    -p bbnf --test "$bin" \
+                    "${EXTRA_ARGS[@]}" >> "$OUT" 2>&1 || true
             fi
         done
         ;;
     workspace)
-        cargo test --workspace "$@" > "$OUT" 2>&1
+        cargo nextest run \
+            "${NEXTEST_PROFILE_ARGS[@]}" \
+            --workspace \
+            "${EXTRA_ARGS[@]}" > "$OUT" 2>&1
         ;;
     *)
         echo "unknown tier: $TIER (want leaf|grammar|workspace)" >&2
@@ -77,7 +117,7 @@ esac
 
 # Report.
 echo "--- results ($OUT) ---"
-grep -E '^test result|FAILED|error\[' "$OUT" || true
+grep -E '^test result|FAILED|error\[|Summary' "$OUT" || true
 if grep -Eq 'FAILED|error\[' "$OUT"; then
     echo "FAIL: $OUT contains failures; grep the file for details." >&2
     exit 1

@@ -501,7 +501,7 @@ tranches — a legitimate orchestrator move, not a workaround.
   — `let field = <known_value>;`, not a runtime `match SOURCE_ARRAY[N]
   { ... _ => unreachable_unchecked() }` that LLVM may or may not
   const-fold. The runtime-match pattern preserves source-array
-  indirection and defeats const-folding in practice regardless of
+  indirection and blocks const-folding in practice regardless of
   ThinLTO theory. Mechanism, not optimism.
 - **Wire-contract pipelines have end-to-end tests.** Not "mining-pass
   test" + "emitter-pass test" separately — those leave the projection

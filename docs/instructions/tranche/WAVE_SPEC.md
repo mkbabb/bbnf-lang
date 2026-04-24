@@ -98,7 +98,17 @@ when their file-bounds don't overlap; serial chain when dependent.
 ### 6. Hard gate
 
 Numbered list of measurable conditions. Each item closes on a
-specific verification artefact:
+specific verification artefact: command output, generated-code diff,
+benchmark/profiling record, or explicit deletion proof. For any wave
+that changes runtime,
+emitter, benchmark, bootstrap, rewrite, or path behavior, the hard
+gate MUST include the wave-opening preflight packet from
+the owning tranche spec: command resolution, fixtures, expected
+generated-code shape, profile plan, and rollback/re-plan trigger. A
+wave whose preflight cannot name the generated-code shape remains
+research and must not dispatch as implementation.
+
+Accepted verification forms:
 
 - `nm` symbol presence / absence (`nm target/release/deps/<bench> | grep <sym>`)
 - `cargo asm` specific instruction present (`cargo asm -p <crate> <fn>`)

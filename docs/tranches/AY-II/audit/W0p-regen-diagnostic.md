@@ -104,7 +104,7 @@ but the proc-macro's code path feeding through it may differ.
    pre-W0'.
 4. **The `cargo expand` post-processor (python regex) is fine** — the
    stall is pre-post-processor; cargo expand itself does not return.
-5. **Something on macOS Darwin 25.4 rustc nightly** (unlikely given
+5. **Something on macOS Darwin 25.4 rustc nightly** (low-priority given
    pre-W0' regen worked at the same toolchain).
 
 ## Questions for the research agent

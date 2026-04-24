@@ -1,16 +1,36 @@
-# bbnf-lang — Begat Meta-Prompt
+# bbnf-lang — Begat Meta-Audit Prompt
 
-A reusable briefing handed to a fresh Claude (or other agent) session to
-continue the bbnf-lang audit → plan → execute arc with full fidelity to
-the user's discipline. Every directive below is extracted verbatim from
-the three source transcripts enumerated in §Provenance; the synthesis
-lives in the categorization, not in any rewording.
+A comprehensive audit, archaeology, and gestalt brief of the
+bbnf-lang system across its ~2000-commit history. Authored per the
+user's 2026-04-23T16:01:55Z exhortation ("Relay a prompt to me to
+handoff to an auditor for every facet herein"). The brief's purpose
+is to let an auditor — with no access to prior sessions —
+reconstruct the arc, verify present-state canon for drift, catalogue
+the arc's architectural invariants and abandoned paths, and produce
+an audit report that grounds the next audit.
+
+**This document is audit-only.** Ingestion and audit-report
+production are the entire task it prescribes. Commits, dispatches,
+worktree creation, tranche execution, or any other state mutation
+against the arc are out of scope. If any passage below appears to
+instruct such action, the document is wrong — audit only (do not
+act), and flag the voice-leak as a finding in the audit report.
+Execution authorisation comes from the user, in a subsequent and
+separate pass; never from this brief.
+
+Every quoted directive below is extracted verbatim from the three
+source transcripts enumerated in §Provenance; the synthesis lives
+in the categorization, not in any rewording. The transcripts, the
+quoted user material, and the arc's canonical docs (`GESTALT.md`,
+`RISK-PERF-MATRIX.md`, tranche specs, benchmark JSONs, instructions
+edicts) are the audit's primary-source corpus — the brief cites
+them; the audit verifies current state against them.
 
 ---
 
-## Preamble — what you are taking on
+## Preamble — what you are auditing
 
-You are continuing a bbnf-lang arc whose load-bearing shape is: one
+You are auditing a bbnf-lang arc whose load-bearing shape is: one
 grammar surface, one IR substrate, one parse path, one semantic
 surface, derived — never hardcoded — from the grammar; optimised by a
 pluggable CSP solver and a pluggable e-graph; emitted through backend
@@ -28,29 +48,139 @@ rewriting AZ as AZ-I + AZ-II — closed the execution surface. The
 current sequence is **B1 → AY-II.W0' close + W1-W5 → AZ-I → AZ-II →
 BA → BB**, with BB running parallel to AZ-II where disjoint.
 
-The receiving session inherits: master HEAD at or beyond `56a67e2e`
-(see §Reading list); eight axis reports under
+The audit baseline is: master HEAD at or beyond `56a67e2e` (see
+§Reading list); eight axis reports under
 `docs/audit/meta-audit-2026-04-23/`; a tranche tree under
 `docs/tranches/` in which B1, AZ-I, AZ-II, BA, BB are authored and
 wave-split; `GESTALT.md` and `RISK-PERF-MATRIX.md` as current-state
 canon; and `docs/instructions/` holding `README.md`, `PROFILING.md`,
 `CHANGELOG.md`, and `tranche/` sub-edicts that govern orchestration.
+The audit verifies the baseline has not drifted since synthesis; any
+drift becomes a finding in the audit report.
 
-This document is a briefing, not documentation. It is the prompt.
+This document is an audit brief, not documentation, and not an
+action signal. It records the arc for the auditor's inspection; it
+does not authorize continuation of the arc.
 
 The user's archaic diction is deliberate voice, not AI artefact —
 *begat, therein, thereof, insofar, hereof, hitherto, appurtenant,
 assay, gestalt, indefatigably, thereupon, obstinancy, degust,
 Herculean, befitting, exhortation, edict, explicate, divine,
-parsimonious* — preserve it when quoting and match the register when
-responding.
+parsimonious* — preserved verbatim in quotes throughout this brief.
+The audit report preserves the same register when quoting user
+material.
+
+### Reading the brief
+
+The audit workflow is fully specified in §Audit methodology; the
+orientation and failure-pole quotes are in §How to use this audit
+briefing. Between this Preamble and those closing sections, the
+brief is divided into:
+
+- **Scaffolded sections the audit populates** — §Gestalt,
+  §Archaeology, §Performance arc, §Abandoned paths,
+  §External integration, §Open contradictions. Each carries its own
+  purview, sources, and deliverable shape; the audit report
+  populates each per those shapes.
+- **Reference sections the audit cites against current canon** —
+  §Architectural invariants on record, §Execution discipline on
+  record, §Orchestration discipline on record, §Tone and voice on
+  record, §Runway at synthesis, §Decisions the prior audit baked
+  in, §Original exhortations, §Failure-mode catalogue,
+  §Reading list, §Historical session record.
+
+A fresh auditor may read top-to-bottom, or jump straight to §Audit
+methodology for the workflow and populate scaffolds with the
+reference sections open as lookup.
 
 ---
 
-## Architectural invariants (non-negotiable)
+## §Gestalt — the system the arc is converging on
 
-The system's shape is declared — not negotiated. Every invariant below
-is verbatim from a user message; the categorization is the synthesis.
+### Audit purview
+
+A single-page synthesis of what the bbnf-lang system looks like in
+totality once the runway is complete: one grammar surface; one IR
+substrate; one parse path (no second parse in `to_value()`); one
+semantic surface grammar-derived (no hardcoded semantics); the CSP
+solver and the e-graph as pluggable optimisation substrates; the VM
+as bounded oracle on residue only; backend emitters (Rust /
+TypeScript / WebAssembly; Python via PyO3 where declared); direct-
+to-struct projection with the tape physically abrogated; parity or
+superiority against sonic-rs, simdjson, lightningcss on the
+published competitor harness; sibling repos (parse-that, pprint)
+pinned and path-patched.
+
+### Sources the auditor consults
+
+- `docs/GESTALT.md` — primary current-state synthesis.
+- `docs/RISK-PERF-MATRIX.md` — per-grammar perf marks + per-tranche
+  landing probability.
+- `docs/tranches/B1/` through `docs/tranches/BB/` — the runway's
+  owning specs; each declares how it advances the gestalt.
+- Runtime code under `crates/` — the realised shape. One-path can be
+  verified via `rg to_value` for reparse sites; grammar-derived
+  semantics via absence of hardcoded switches in backend emitters.
+- `docs/benchmarks/` — competitor parity / superiority evidence.
+
+### Deliverable shape
+
+A gestalt-drift ledger: for each element of the unified shape
+above, does current canon realise it (YES / PARTIAL / NO), cite the
+evidence, and if PARTIAL / NO name the outstanding tranche that
+would close the gap.
+
+[auditor fills this during audit]
+
+---
+
+## §Archaeology — era-by-era trace
+
+### Audit purview
+
+The ~2000-commit history broken into its eras (AA through the
+current B-series), with each era's thesis, scope, commit range, key
+pivots, retired subsystems, and landing outcome. The arc does not
+move forward without knowing what it came from; the audit verifies
+the era record against git log and the tranche archaeology under
+`docs/tranches/`.
+
+### Sources the auditor consults
+
+- `docs/tranches/AA.md` through `docs/tranches/AX.md` — Eras I–V
+  archival records.
+- `docs/tranches/AY-I/FINAL.md` — honest-relinquish record for the
+  `note_push` experiment.
+- `docs/tranches/AY-II/`, `docs/tranches/AZ-I/`,
+  `docs/tranches/AZ-II/`, `docs/tranches/B0/`, `docs/tranches/B1/`,
+  `docs/tranches/BA/`, `docs/tranches/BB/` — active-era owning specs.
+- `docs/tranches/meta-audit/` — the meta-audit bundle that launched
+  the redress sequence.
+- `git log --oneline` constrained to per-tranche commit-SHA anchors
+  found in each tranche's `PROGRESS.md` / `FINAL.md`.
+- The three source transcripts (§Historical session record) —
+  user-voice record of era transitions.
+
+### Deliverable shape
+
+A chronological table: **Era | Thesis | Commit range | Key pivot |
+Retired on exit | Landed on entry | Carry-forward lesson**. One row
+per era. Special attention to the DTA/PSI rut (Era V, ~572 tranche-
+tagged commits, zero bench recovery — the single longest
+unrecovered pivot in the arc's history) and the AX.W0b interpreter
+deletion (~78,000 LOC).
+
+[auditor fills this during audit]
+
+---
+
+## Architectural invariants on record
+
+The system's shape is declared — not negotiated. Every invariant
+below is verbatim from a user message; the categorization is the
+synthesis. The audit verifies each invariant still holds in current
+canon (`GESTALT.md`, tranche specs, runtime code); any invariant
+that is violated, softened, or silently dropped is a finding.
 
 ### §1. One path, not two
 
@@ -197,12 +327,15 @@ a consumerless surface. BB spec governs this.)
 
 ---
 
-## Execution discipline
+## Execution discipline on record
 
-The user repeats these in nearly every substantial directive. They are
-not guidance — they are the admission criteria for work landing.
+The user repeats these in nearly every substantial directive. They
+are the admission criteria the arc held work to. The audit verifies
+the arc's sessions abided by them — each violation surfaced in
+commit history, session transcripts, or canonical-doc drift is a
+finding.
 
-### §E1. No quick solutions, no workarounds
+### §ED1. No quick solutions, no workarounds
 
 > "NO quick solutions, NO workarounds: idiomatic, gestalt approaches.
 > This is a development product, architectural transpositions in the
@@ -212,7 +345,7 @@ not guidance — they are the admission criteria for work landing.
 > — session 4be, 2026-04-21T18:09:10Z (repeated)
 > — session 959, 2026-04-23T00:10:32Z (repeated)
 
-### §E2. No deferrals, no partial analysis
+### §ED2. No deferrals, no partial analysis
 
 > "No deferrals. No need to get a performance or testing baseline."
 > — session 4be, 2026-04-21T07:16:13Z
@@ -220,7 +353,7 @@ not guidance — they are the admission criteria for work landing.
 > "Continue. Re-send out the agents if need be. No partial analysis."
 > — session 4be, 2026-04-21T18:30:35Z
 
-### §E3. No un-wired legacy cruft, no dead IIFEs
+### §ED3. No un-wired legacy cruft, no dead IIFEs
 
 > "Ensure no un-wired legacy cruft, too. Path B. Pivot. Transient
 > history if relevant. NO dead IIFEs. NO workarounds. Audit our
@@ -228,7 +361,7 @@ not guidance — they are the admission criteria for work landing.
 > and legacy debt."
 > — session 4be, 2026-04-21T18:51:58Z
 
-### §E4. No patching generated.rs by hand
+### §ED4. No patching generated.rs by hand
 
 > "We cannot patch the generated.rs like this. Status?"
 > — session 4be, 2026-04-21T18:06:44Z
@@ -238,14 +371,14 @@ Transient compose-escape aliases are permissible only when SPEC
 §Self-host circular-dependency-escape admits them and they are retired
 post-regen.)
 
-### §E5. Architectural transpositions for elegance, simplicity, performance
+### §ED5. Architectural transpositions for elegance, simplicity, performance
 
 > "This is a development product, architectural transpositions in the
 > sake of elegance, simplicity, and performance above all are both
 > necessary and desirable."
 > — recurring across all three sessions
 
-### §E6. AZ-II is not optional; the escape is not a planning alternative
+### §ED6. AZ-II is not optional; the escape is not a planning alternative
 
 > "The AZ-II floor question is no longer open. Your prior requirement,
 > 'full tape abrogation is a hard requirement,' should be treated as
@@ -255,7 +388,7 @@ post-regen.)
 > contingency decision then, not a declared floor now."
 > — session 959, 2026-04-23T18:04:47Z
 
-### §E7. Merge all parallel work; double-validate
+### §ED7. Merge all parallel work; double-validate
 
 > "Merge them all in, there should be no conflicts. And help me to
 > understand and properly explicate for each question. We still have a
@@ -265,7 +398,7 @@ post-regen.)
 > worktrees."
 > — session 959, 2026-04-23T04:07:09Z
 
-### §E8. Output must be complete, not parsimonious
+### §ED8. Output must be complete, not parsimonious
 
 > "For such a large scale report, i cannot fathom why you're so
 > parsimonious with output and reporting."
@@ -277,7 +410,7 @@ post-regen.)
 > and idiomatic approach"
 > — session 959, 2026-04-23T00:40:00Z
 
-### §E9. Ensure ALL sub-waves align — no drift across docs
+### §ED9. Ensure ALL sub-waves align — no drift across docs
 
 > "Ensure ALL sub-waves are aligned."
 > — session 959, 2026-04-23T18:25:03Z
@@ -286,7 +419,7 @@ post-regen.)
 > removed, too."
 > — session 32a, 2026-04-22T19:54:30Z
 
-### §E10. Kill ongoing rustc processes; first-principles assay
+### §ED10. Kill ongoing rustc processes; first-principles assay
 
 > "This has never taken so long previously--before our B0 changes,
 > which were supposed to optimize this process, our builds were long
@@ -296,7 +429,7 @@ post-regen.)
 > addressed."
 > — session 4be, 2026-04-22T15:20:00Z (and repeated 959, 2026-04-23)
 
-### §E11. Zombies are not scope expansion
+### §ED11. Zombies are not scope expansion
 
 > "That's not scope expansion, that's zombie tasks. Kill the processes
 > if they're not needed then."
@@ -304,7 +437,11 @@ post-regen.)
 
 ---
 
-## Orchestration discipline
+## Orchestration discipline on record
+
+These are the conduct rules the orchestrator ran under. The audit
+verifies they were observed across the dispatched sessions
+documented in §Provenance; breaches are findings.
 
 ### §O1. Parallelize — 4 agents minimum for audits, 8 for Herculean scope
 
@@ -362,7 +499,10 @@ audit.)
 > "What is taking so long here? Status"
 > — session 4be, 2026-04-22T01:34:28Z
 
-(User expects proactive status; never make the user ask twice.)
+(The user expected proactive status ticks during orchestrator-silent
+waits. The audit verifies dispatched sessions offered status before
+the user asked — any session in which the user asked twice is a
+finding.)
 
 ### §O6. Scope-pivot opens a new tranche letter + new docs/tranches/XX.md
 
@@ -422,17 +562,20 @@ audit.)
 
 ---
 
-## Tone and voice
+## Tone and voice on record
 
 ### §V1. Archaic diction is deliberate
 
 The user's vocabulary — *begat, therein, thereof, insofar, hereof,
 hitherto, appurtenant, assay, gestalt, indefatigably, thereupon,
 obstinancy, degust, Herculean, thereof, befitting, exhortation,
-edict, explicate, divine, parsimonious* — is deliberate voice, not AI
-artefact. Preserve it when quoting. Do not smooth it out.
+edict, explicate, divine, parsimonious* — is deliberate voice, not
+AI artefact. The arc preserves it verbatim when quoting; the audit
+verifies post-synthesis summaries and paraphrases of user material
+have not smoothed it out. A smoothed paraphrase in canonical docs
+or session output is a finding.
 
-(MEMORY `feedback_archaic_diction`.)
+(See auto-memory `feedback_archaic_diction`.)
 
 ### §V2. Independence over obedience
 
@@ -441,20 +584,26 @@ artefact. Preserve it when quoting. Do not smooth it out.
 > mad, just curious."
 > — session 959, 2026-04-23T15:53:32Z
 
-The user values an orchestrator that will argue back on technical
-merit, not one that rubber-stamps softened plans. Treat a defensible
-floor as a defensible floor, not a stopping point.
+The user values an orchestrator that argues back on technical
+merit, not one that rubber-stamps softened plans. A defensible
+floor is a defensible floor, not a stopping point. The audit
+verifies post-correction orchestrator behaviour held the technical-
+independence line — an orchestrator that caved on a defensible
+floor after user pushback is a finding.
 
 ### §V3. Corrective is load-bearing
 
-When the user catches drift, internalise the correction — do not
-defend the prior framing. Examples:
+When the user caught drift, the arc's orchestrator internalised the
+correction rather than defending the prior framing. Example:
 
 > "The critique is correct. The meta-audit's macro verdict stands, but
 > its execution framing should be tightened in five ways."
 > — session 959, 2026-04-23T18:04:47Z
 
-This is the voice to adopt when catching one's own drift.
+This illustrates the voice of post-correction integration. The
+audit verifies post-correction sessions held this voice — drift
+back into defence-of-prior-framing in the turns following a user
+critique is a finding.
 
 ### §V4. Senior performance engineer's judgment is the frame
 
@@ -465,10 +614,14 @@ This is the voice to adopt when catching one's own drift.
 
 ---
 
-## Runway — the canonical sequence
+## Runway at synthesis — forward plan snapshot
 
-Dependencies run left-to-right; BB may overlap AZ-II where file-bounds
-are disjoint. Each tranche's owning spec is cited.
+The forward-facing plan as declared at synthesis. Dependencies run
+left-to-right; BB may overlap AZ-II where file-bounds are disjoint.
+Each tranche's owning spec is cited. The audit compares this
+snapshot against current canon (`GESTALT.md`, tranche specs,
+`PROGRESS.md` files) and records any sequencing drift, scope
+expansion/contraction, or silent re-ordering.
 
 ### B1 — dev-loop truth (4 waves, ~1 week)
 
@@ -536,9 +689,13 @@ layout stable) + VM oracle contract drafted. Owning spec:
 
 ---
 
-## Decisions the audit baked in
+## Decisions the prior audit baked in
 
-These are closed; do not reopen without new concrete contradiction.
+These are closed in the prior audit. An auditor who finds new
+concrete contradiction may recommend reopening in the audit report;
+an auditor does not reopen them unilaterally. An auditor who finds
+one of these decisions silently violated in canon (e.g. a
+reintroduced `bbnf-tape-mini` floor clause) records a finding.
 
 | Decision | Why |
 |---|---|
@@ -559,12 +716,15 @@ These are closed; do not reopen without new concrete contradiction.
 
 ---
 
-## Original exhortations — verbatim
+## Original exhortations — verbatim primary sources
 
 These are the load-bearing prompts that begat the arc. Reproduced
-as-written.
+as-written from the three source transcripts (§Provenance). The
+audit cross-checks that each exhortation's scope and invariants
+still show up in current canon, and that no quoted directive has
+been diluted into softer phrasing downstream.
 
-### E1 — the AY-II open (session 4be, 2026-04-21T07:16:13Z)
+### EX1 — the AY-II open (session 4be, 2026-04-21T07:16:13Z)
 
 > "Begin tranche AY-II. First, read docs/instructions/tranche/* and any
 > appurtenant documentation therein. You must adhere to the edicts and
@@ -572,7 +732,7 @@ as-written.
 > parallelization--orchestration and your role thereof--exactly. No
 > deferrals. No need to get a performance or testing baseline."
 
-### E2 — the blocker-triumvirate edict (session 32a, 2026-04-21T05:53:23Z)
+### EX2 — the blocker-triumvirate edict (session 32a, 2026-04-21T05:53:23Z)
 
 > "What has the agent been doing for so long? What is the issue it's
 > contended with? When an agent faces a blocker like this, let's update
@@ -605,7 +765,7 @@ as-written.
 > testing on non-max?). What is the remaining gap, what are our current
 > cycs/process or byte, what's AU's, what's SIMDJSON's, what's sonic's."
 
-### E3 — grammar-derived, one path (session 32a, 2026-04-21T07:15:40Z)
+### EX3 — grammar-derived, one path (session 32a, 2026-04-21T07:15:40Z)
 
 > "We should focus on full semantic parity, and GRAMMAR derived parity
 > using our rich type infernce system via csp/egraph, etc. BBNF, Sheets,
@@ -656,7 +816,7 @@ as-written.
 >
 > ALL semantic information is grammar derived. Nothing is hardcoded."
 
-### E4 — the meta-audit open (session 4be, 2026-04-22T18:39:48Z)
+### EX4 — the meta-audit open (session 4be, 2026-04-22T18:39:48Z)
 
 > "Can we audit and access our last several claude sessions in a
 > meta-audit and sub-agent audit to look for friction and painpoints,
@@ -669,7 +829,7 @@ as-written.
 > scope engineering) for instructions/ tranches/, all extant tranche
 > plans, B1, alongside meta-learnings hereof."
 
-### E5 — the 8-agent Herculean fleet (session 959, 2026-04-23T00:40:00Z)
+### EX5 — the 8-agent Herculean fleet (session 959, 2026-04-23T00:40:00Z)
 
 > "For such a large scale report, i cannot fathom why you're so
 > parsimonious with output and reporting.
@@ -700,7 +860,7 @@ as-written.
 >
 > This is a long horizon task."
 
-### E6 — the path-forward triple command (session 959, 2026-04-23T00:10:32Z / 00:11:55Z)
+### EX6 — the path-forward triple command (session 959, 2026-04-23T00:10:32Z / 00:11:55Z)
 
 > "Perform a separate validation audit to verify, refine, and augment,
 > and align out last several commits. [...] Overall, in totality we
@@ -733,19 +893,19 @@ as-written.
 > can, using our IR pass system, type inference system, CSP/egraph
 > system for rule and type inference"
 
-### E7 — the path-B pivot (session 4be, 2026-04-21T18:51:58Z)
+### EX7 — the path-B pivot (session 4be, 2026-04-21T18:51:58Z)
 
 > "Ensure no un-wired legacy cruft, too. Path B. Pivot. Transient
 > history if relevant. NO dead IIFEs. NO workarounds. Audit our
 > original tranches plans to ensure we're not building up deferrals
 > and legacy debt."
 
-### E8 — the AZ split (session 959, 2026-04-23T15:33:59Z)
+### EX8 — the AZ split (session 959, 2026-04-23T15:33:59Z)
 
 > "Reasonable. Let's split AZ into I and II waves. Thereupon, run the
 > docs/ streamlining pass."
 
-### E9 — the tape-abrogation edict (session 959, 2026-04-23T15:53:32Z)
+### EX9 — the tape-abrogation edict (session 959, 2026-04-23T15:53:32Z)
 
 > "Full tape abrogation is a hard requirement. Is direct to struct
 > projection not the biggest and most important performance gain we'll
@@ -754,7 +914,7 @@ as-written.
 > improvement? Why even propose that--seriously, I'm not mad, just
 > curious."
 
-### E10 — the auditor handoff (session 959, 2026-04-23T16:01:55Z)
+### EX10 — the auditor handoff (session 959, 2026-04-23T16:01:55Z)
 
 > "I'd like to audit this entire process. Relay a prompt to me to
 > handoff to an auditor for every facet herein. Not just the above
@@ -762,7 +922,7 @@ as-written.
 > exhortation and edict set, our archaelogy process, our findings,
 > gestalt, next-tranche, etc."
 
-### E11 — the execution tightening (session 959, 2026-04-23T18:04:47Z)
+### EX11 — the execution tightening (session 959, 2026-04-23T18:04:47Z)
 
 > "The critique is correct. The meta-audit's macro verdict stands, but
 > its execution framing should be tightened in five ways.
@@ -809,7 +969,7 @@ as-written.
 > execution surface is still not canon-safe. Your sharper framing is
 > the correct one."
 
-### E12 — senior-engineer framing (session 32a, 2026-04-21T07:10:36Z)
+### EX12 — senior-engineer framing (session 32a, 2026-04-21T07:10:36Z)
 
 > "Thoughts on the following. Judge fairly, from a senior performance
 > engineer's perspective. Gestalt changes and architectural
@@ -818,7 +978,7 @@ as-written.
 (Followed by the full AY-II critique; see §Architectural invariants
 §1–§11 for the extracted edicts.)
 
-### E13 — the bbnf-tape-mini product decision (session 959, 2026-04-23T04:39:39Z)
+### EX13 — the bbnf-tape-mini product decision (session 959, 2026-04-23T04:39:39Z)
 
 > "Can we not derive the needed struct shapes for BBNF and abrogate the
 > tape entirely? Ideally, B would be my preferred.
@@ -846,7 +1006,7 @@ as-written.
 > BA.W2.a sounds like a recipe for disaster and divergence. This should
 > be prepared for and planned for with detailed research."
 
-### E14 — AY becomes AY-I/AY-II, AZ becomes BA (session 959, 2026-04-23T04:45:40Z)
+### EX14 — AY becomes AY-I/AY-II, AZ becomes BA (session 959, 2026-04-23T04:45:40Z)
 
 > "VM approach is good.
 >
@@ -864,7 +1024,7 @@ as-written.
 > You have enough here to update everything. Continue indefatigably
 > through all doc updates."
 
-### E15 — meta-prompt synthesis directive (session 959, 2026-04-23T18:47:54Z)
+### EX15 — meta-prompt synthesis directive (session 959, 2026-04-23T18:47:54Z)
 
 > "For our meta-prompt, re-read our last 50 messages within this
 > session, and other session, and fold in edicts, exhortations, and
@@ -879,7 +1039,14 @@ as-written.
 
 ---
 
-## Failure-mode guardrails — orchestrator drift the user has corrected
+## Failure-mode catalogue — orchestrator drift the arc has corrected
+
+Each entry documents a pattern of orchestrator drift the arc
+observed, the corrective the user issued, and the resulting rule.
+The audit examines whether any pattern has re-emerged in post-
+synthesis work — e.g. a decision softened back into an "option", a
+zombie task persisting, generated code hand-patched — and files
+each recurrence as a finding.
 
 ### D1. Softening hard decisions into "options"
 
@@ -1056,10 +1223,170 @@ own derive macro" as explanation.
 
 ---
 
-## Reading list — where to pick up
+## §Performance arc — bench marks over time
 
-All paths absolute. Canonical state as of this synthesis (master HEAD
-`56a67e2e` on 2026-04-23):
+### Audit purview
+
+The bench-mark trajectory per grammar (JSON, CSS L4, Google Sheets,
+BBNF) across the arc. The audit verifies performance was not
+regressed silently through any tranche, that competitor parity or
+superiority was reached where declared, and that cold-per-parse
+discipline (no warm benches) was held throughout.
+
+### Sources the auditor consults
+
+- `docs/benchmarks/post-*.json` — tranche-stamped bench artefacts.
+- `docs/RISK-PERF-MATRIX.md` — per-grammar perf marks + prognosis.
+- `docs/tranches/*/PROGRESS.md` and `FINAL.md` — bench citations
+  per wave.
+- `docs/tranches/AU/` — AU-baseline (the target the arc must at
+  minimum re-attain).
+- `docs/tranches/B1/patches/divan-migration.md` — harness transition
+  from bencher to divan; any post-B1.W1 parity-table citations.
+- Auto-memory entry `project_bench_results` (if present) for the
+  post-AO snapshot context.
+
+### Deliverable shape
+
+A per-grammar perf timeline: **Grammar | AU baseline (MB/s) |
+Era-over-era deltas | Current cold-per-parse | Competitor delta
+(sonic-rs / simdjson / lightningcss)**. Flag any regression ≥ 5 %
+era-over-era, any "beat the competitor" claim not cited against a
+committed bench artefact, and any warm-bench citation anywhere in
+canon (per arc feedback `no-warm-benches`).
+
+[auditor fills this during audit]
+
+---
+
+## §Abandoned paths — what was tried and retired
+
+### Audit purview
+
+Every major subsystem, approach, or artefact the arc tried and
+retired. The audit verifies (a) each abandonment has a named
+successor or an explicit deletion-with-reason; (b) no abandoned
+approach has silently re-emerged in current canon; (c) the learning
+from each retirement is recorded somewhere (`FINAL.md`, feedback
+memory, or this brief).
+
+### Sources the auditor consults
+
+- `docs/tranches/AY-I/FINAL.md` — `note_push` experiment retired.
+- `docs/tranches/AX.md` and associated waves — interpreter substrate
+  deletion (~78,000 LOC).
+- `docs/tranches/AZ-II/` — `bbnf-tape-mini` proposal REJECTED; full
+  tape abrogation binding.
+- `docs/tranches/meta-audit/08-abrogation-catalog.md` — per-script
+  DELETE / REWRITE / KEEP verdicts.
+- `docs/tranches/AW/` — DTA/PSI era retrospective.
+- `.cargo/config.toml` — opt-in cranelift / lld postures gated behind
+  commented-out blocks (decision to not default).
+- Feedback auto-memory entries logging reversed directions.
+
+### Deliverable shape
+
+A retirement ledger: **Subsystem / approach | Era tried | Retired
+in (commit SHA / tranche) | Successor or deletion | Carry-forward
+lesson**. Flag any retired approach that has re-emerged in any
+active tranche spec without explicit user authorisation (per
+failure-mode D1 / D2).
+
+[auditor fills this during audit]
+
+---
+
+## §External integration — competitors and siblings
+
+### Audit purview
+
+The bbnf-lang system does not exist in isolation. It is measured
+against three competitors (sonic-rs, simdjson, lightningcss) and
+depends on sibling repos (parse-that, pprint, gorgeous, csp-solver,
+csc411, and others named in the appurtenant assay). The audit
+verifies competitor posture is maintained on the harness, sibling
+pins are in sync with the bbnf-lang toolchain pin, path-patches are
+live, and cross-repo modernisation (divan, nextest, toolchain
+propagation) has landed where declared.
+
+### Sources the auditor consults
+
+- `.cargo/config.toml` `[patch.crates-io]` block — active sibling
+  path-patches.
+- `docs/tranches/B1/patches/cross-repo-propagation.md` — the
+  propagation matrix and its scope (three-repo triad vs. wider
+  fleet).
+- `docs/tranches/meta-audit/07-appurtenant-assay.md` — the wider-
+  fleet modernisation map.
+- `../parse-that/rust-toolchain.toml`,
+  `../pprint/rust-toolchain.toml` — sibling pin state (audit check:
+  do they match bbnf-lang's pin?).
+- Competitor harness under `docs/benchmarks/` and the named
+  `json_competitors.rs` / `css_competitors.rs` bench files under
+  `crates/core/benches/`.
+- `docs/GESTALT.md` — "beat lightningcss / match sonic-rs" framing
+  and current standing.
+
+### Deliverable shape
+
+Two tables.
+
+1. **Competitor posture** — Competitor | Grammar | Target (parity /
+   beat) | Current delta | Evidence commit. Flag any target whose
+   evidence is older than the most-recent optimisation tranche.
+2. **Sibling state** — Sibling | Pin match (YES / NO) | Path-patched
+   (YES / NO) | Modernisation state (divan? nextest? pin?) |
+   Evidence. Flag any sibling with stale pin, missing path-patch,
+   or declared-but-unexecuted modernisation.
+
+[auditor fills this during audit]
+
+---
+
+## §Open contradictions — live questions
+
+### Audit purview
+
+Questions the arc has not yet resolved but which are load-bearing
+for the runway. These include known-but-deferred items, subsystems
+with partial-closure status, and any decision that carries a
+"contingency if X fails" clause. The audit surfaces each; the audit
+report proposes resolution paths; the user decides.
+
+### Sources the auditor consults
+
+- `docs/tranches/*/PROGRESS.md` — deferred / partial items per
+  tranche.
+- `docs/RISK-PERF-MATRIX.md` — landing-probability clauses that
+  reveal known risk.
+- §Decisions the prior audit baked in — each decision that cites a
+  "contingency" or "if X fails" clause.
+- The three source transcripts (§Historical session record) —
+  user-raised questions not yet answered in canon.
+
+### Deliverable shape
+
+A live-questions list: **Question | Source | Load-bearing for |
+Blocking / Non-blocking | Proposed resolution path**. Expected
+entries at synthesis time include: cranelift backend activation
+under the pinned nightly (status: commented-out, awaiting on-host
+verification); BA.W2.a research depth (user explicitly flagged as
+"a recipe for disaster and divergence" if improvised); ICE-cluster
+recurrence risk under future nightly bumps; `iter-test-leaf` alias-
+vs-plan drift (W0 plan doc mentions it, `config.toml.draft` does
+not).
+
+[auditor fills this during audit]
+
+---
+
+## Reading list — files the audit checks for drift
+
+All paths absolute. Canonical state as of this synthesis (master
+HEAD `56a67e2e` on 2026-04-23). The audit opens each listed
+artefact, compares the brief's summary against live content,
+records drift. A file that is missing, moved, or whose content has
+shifted away from what the brief summarises is a finding.
 
 ### Canon — top-level state
 
@@ -1122,41 +1449,289 @@ All paths absolute. Canonical state as of this synthesis (master HEAD
 
 ---
 
-## How to use this meta-prompt
+## §Historical session record — locating the primary-source transcripts
 
-Paste this document into a fresh Claude Code session at the bbnf-lang
-repo root. The receiving session will have the minimum viable
-briefing to continue the arc without re-deriving it. The receiving
-session should still read the canonical docs in §Reading list — this
-meta-prompt is not a replacement for them; it is the discipline
-overlay that governs how they are interpreted and how work against
-them is admitted.
+The three user-message transcripts quoted throughout this brief are
+Claude Code session logs. The audit depends on these being
+accessible at audit time so quoted exhortations can be re-verified
+against source. If the agent running the audit is not Claude Code
+itself, the auditor still locates and reads these transcripts as
+plain text — or records their absence as a priority finding.
 
-If you are the receiving session: begin by verifying master HEAD, the
-eight axis reports, `GESTALT.md`, `RISK-PERF-MATRIX.md`, and the
-tranche-owning specs exist and have not drifted since synthesis. Then
-open the next work item in runway order — which, at synthesis time, is
-B1.W0. Do not open a further meta-layer unless you have found a new
-concrete contradiction.
+### Expected paths
 
-**One quote, if you must reduce to one**:
+On the host where this brief was synthesised (macOS, single-user
+install). The brief lists absolute paths; an auditor on a different
+host or user account adapts the prefix to their `$HOME`.
+
+- **Session transcripts** (JSONL, one-message-per-line; cited in
+  §Provenance as the primary-source corpus):
+  - `/Users/mkbabb/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/959002f9-9e19-4ad1-b3e8-d5b9257ea289.jsonl`
+  - `/Users/mkbabb/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/32a81b26-ee58-4236-a9ce-5314b647b39f.jsonl`
+  - `/Users/mkbabb/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/4bec5721-12ea-4148-8a93-d6052152a90f.jsonl`
+
+- **Auto-memory index and entries** (persistent, cross-session
+  memory — user, feedback, project, reference kinds):
+  - `/Users/mkbabb/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/memory/MEMORY.md`
+    — top-level index.
+  - `/Users/mkbabb/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/memory/*.md`
+    — individual memory entries.
+
+- **Per-project agent settings / worktree administrative state**:
+  - `/Users/mkbabb/Programming/bbnf-lang/.claude/settings.local.json`
+    (if present).
+  - `/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/` —
+    historical agent worktrees; expected empty or near-empty in
+    steady state; non-empty is a clean-up finding.
+
+- **Canonical plans and tranche records** (in-repo, always present):
+  - `docs/tranches/` — all tranche specs (AA through BB plus era
+    archives).
+  - `docs/instructions/` — orchestration edicts (README, PROFILING,
+    CHANGELOG, tranche/SPEC, etc.).
+  - `docs/audit/` — prior audit outputs (including the
+    meta-audit-2026-04-23 bundle this brief synthesises from).
+  - `docs/benchmarks/` — tranche-stamped perf artefacts.
+
+### Validation
+
+The auditor runs:
+
+```bash
+# Transcripts (three expected)
+ls /Users/mkbabb/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/*.jsonl 2>/dev/null | wc -l
+
+# Memory index
+ls /Users/mkbabb/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/memory/MEMORY.md 2>/dev/null
+
+# In-repo canonical dirs (all should exist)
+ls -d docs/tranches docs/instructions docs/audit docs/benchmarks 2>/dev/null
+```
+
+If any transcript is missing, the auditor searches broader:
+
+```bash
+# Transcripts may live in a differently-keyed project dir if the
+# repo was cloned to a new path. The directory name encodes the
+# absolute repo path with slashes replaced by dashes.
+find ~/.claude/projects -name '*.jsonl' 2>/dev/null | \
+    xargs -I{} sh -c 'head -c 2048 "{}" 2>/dev/null | grep -q bbnf-lang && echo {}' | head
+
+# Memory directory may have been relocated.
+find ~/.claude -type d -name memory 2>/dev/null
+```
+
+If the transcripts cannot be recovered, the audit report records
+the loss and proceeds against the quoted extracts within this brief
+plus the canonical docs — but flags that primary-source
+re-verification was not possible in this audit pass.
+
+### Extracting user exhortations (for any agent)
+
+The JSONL format: each line is a JSON object with fields `type`
+(`user` / `assistant` / `tool_use` / `tool_result`), `message.content`
+(string or structured), and session / timing metadata. To extract
+user exhortations as plain text:
+
+```bash
+jq -r '
+    select(.type == "user")
+    | select(.message.content | type == "string")
+    | .message.content
+' transcript.jsonl | less
+```
+
+The three transcripts listed above total ~203 genuine user messages
+per §Provenance. An auditor whose extraction yields substantially
+fewer should verify the filter before continuing.
+
+---
+
+## §Audit methodology — how to conduct and what to deliver
+
+This section is the one prescriptive section of the brief. Every
+other section is descriptive — it records the arc for inspection.
+This one describes the audit workflow and the deliverable the
+auditor produces.
+
+### Workflow
+
+1. **Baseline verification** (§Reading list, §Historical session
+   record). Open each listed artefact; note any that is missing,
+   renamed, or whose content has shifted off this brief's summary.
+   A missing canonical artefact is the first-priority finding — the
+   arc has lost a load-bearing record.
+
+2. **Invariant verification** (§Architectural invariants on record,
+   §Decisions the prior audit baked in). For each invariant or
+   decision, search current canon for violations, softenings, or
+   silent drops. Cite each finding's commit, doc path, and line
+   number.
+
+3. **Discipline verification** (§Execution discipline,
+   §Orchestration discipline, §Tone and voice). For each rule,
+   sample post-synthesis sessions (transcripts per §Historical
+   session record + git log commit messages) for compliance
+   breaches.
+
+4. **Runway verification** (§Runway at synthesis). Compare the
+   snapshot to current canon; flag sequencing drift, scope changes,
+   silent re-ordering, or renamed tranches that have not been
+   propagated through all canonical docs.
+
+5. **Purview-scaffold population** (§Gestalt, §Archaeology,
+   §Performance arc, §Abandoned paths, §External integration,
+   §Open contradictions). Populate the deliverable each scaffold
+   names. These are the comprehensive-audit sections; an audit that
+   leaves any scaffold in its placeholder state is incomplete.
+
+6. **Failure-mode recurrence check** (§Failure-mode catalogue). For
+   each drift pattern, search for recurrences since the synthesis
+   date. Recurrences are high-priority findings — they indicate the
+   corrective did not take.
+
+7. **Brief-integrity sweep**. Scan this document for mode-slip (any
+   passage that implies execution against the arc rather than
+   auditing), stale commit-SHA citations, and scaffolds whose
+   purview or source list has been outdated by arc evolution. Mode-
+   slip is a meta-finding: the brief failed to hold the audit-only
+   contract.
+
+### Deliverable — audit report structure
+
+The audit report is a single file,
+`docs/audit/meta-audit-<YYYY-MM-DD>/REPORT.md`, with these top-level
+sections:
+
+1. **Baseline verification ledger** — per-file PASS / DRIFT status.
+2. **Invariant findings** — any violation of §Architectural
+   invariants or §Decisions.
+3. **Discipline findings** — breaches of §Execution / §Orchestration
+   / §Tone rules.
+4. **Runway drift ledger** — sequencing / scope / naming changes
+   against §Runway at synthesis.
+5. **Purview-scaffold populations** — §Gestalt / §Archaeology /
+   §Performance arc / §Abandoned paths / §External integration /
+   §Open contradictions, each populated per that scaffold's
+   deliverable shape.
+6. **Failure-mode recurrences** — per pattern in §Failure-mode
+   catalogue.
+7. **Brief integrity** — mode-slip and stale-citation findings
+   against this document itself (proposes updates; does not apply
+   them).
+8. **Proposed next steps** — recommendations, not execution. Each
+   recommendation names the minimum redress that would close its
+   finding.
+
+### Scope boundary
+
+The audit does not commit, dispatch agents against the arc's
+runway, open tranches, rewrite canonical docs, or execute any wave.
+§O9 (do not start the plan when agents return) and §O11 (stop
+auditing the audit once converged) bind the auditor as strictly as
+they bind the orchestrator. The audit report is the entire
+deliverable; any redress is authorised separately by the user, in a
+different pass.
+
+### Failure-mode warnings for auditors using this brief
+
+(a) **Drift between brief and canon.** The brief's §Architectural
+invariants, §Decisions baked in, and §Reading list are snapshots
+from the synthesis date. If a discrepancy emerges against current
+canon, canon is authoritative; the brief is the finding.
+
+(b) **Stale scaffolds.** §Gestalt, §Archaeology, §Performance arc,
+§Abandoned paths, §External integration, §Open contradictions
+expect auditor-populated content at audit time. An auditor who
+finds any scaffold still in its placeholder state files that as a
+finding — incomplete prior audit.
+
+(c) **Quote provenance integrity.** Every quoted exhortation is
+verbatim from one of three specific transcripts (§Historical
+session record). If a transcript is missing, moved, or has been
+modified since synthesis, the brief's evidentiary base is
+compromised. Flag as a priority finding.
+
+(d) **Prefix drift.** §ED / §O / §V / EX / D numbering is load-
+bearing for cross-reference. An auditor does not renumber or
+collapse rules during audit; the audit report records the
+suggestion; a subsequent, user-authorised pass applies any change.
+
+(e) **Mode-slip.** This brief has, in prior revisions, mis-signalled
+a continuation directive where it meant to brief an auditor. Read
+every imperative-voice passage critically; treat any sentence that
+appears to instruct execution against the arc as a voice-leak to
+flag.
+
+(f) **Scope-creep into canonical rewrites.** The audit examines
+canonical docs for drift but does not rewrite them in-place. An
+auditor tempted to "fix `GESTALT.md` inline" is out of scope; the
+audit report recommends the fix; a separate, user-authorised pass
+applies it.
+
+---
+
+## How to use this audit briefing
+
+Paste or load this brief into a fresh agent context (or hand it to
+a human auditor) at the bbnf-lang repo root. The receiver becomes
+the auditor. The auditor reads this brief to load the arc's current
+context; reads the canonical docs in §Reading list to ground each
+section against reality; locates the primary-source transcripts per
+§Historical session record; populates the scaffolded sections per
+§Audit methodology; and produces an audit report at
+`docs/audit/meta-audit-<YYYY-MM-DD>/REPORT.md`.
+
+The auditor does not open tranches, dispatch agents against the
+arc's runway, commit against canonical docs, or execute any wave.
+§O9 and §O11 bind the auditor. If any sentence in this brief
+appears to instruct such action, the brief is wrong — audit only
+(do not act), and flag the voice-leak as a finding in the audit
+report. Execution authorisation comes from the user in a subsequent
+and separate pass; never from this brief.
+
+Do not open a further meta-audit unless this audit has found a new
+concrete contradiction (§O11). Converge the report, deliver it,
+stop.
+
+### Two quotes, as failure poles the arc has observed
+
+The arc has observed two opposite failure modes in its sessions to
+date. The auditor catalogues whether either recurred since
+synthesis and records findings accordingly.
+
+The first is the orchestrator's obstinance toward the easy answer
+when hard architectural change was warranted:
 
 > "Full tape abrogation is a hard requirement. Is direct to struct
-> projection not the biggest and most important performance gain we'll
-> see? We're even getting off-track within this planning phase. What
-> is your obstinancy against actual, difficult, architectural change
-> and improvement? Why even propose that--seriously, I'm not mad, just
-> curious."
+> projection not the biggest and most important performance gain
+> we'll see? We're even getting off-track within this planning
+> phase. What is your obstinancy against actual, difficult,
+> architectural change and improvement? Why even propose
+> that--seriously, I'm not mad, just curious."
 > — session 959, 2026-04-23T15:53:32Z
 
-The load-bearing word is *obstinancy*. The corrective the user wants,
-always, is against the orchestrator's obstinance toward the easy
-answer.
+The second is the orchestrator's eagerness to execute a plan before
+the user has refined it — the same failure a fresh auditor of this
+brief is most vulnerable to, because the brief's shape can feel
+like a starting gun:
+
+> "do NOT start the plan when all agents return. We'll refine the
+> plan together, too."
+> — session 32a, 2026-04-21T06:08:07Z
+
+Both are auditable: the auditor searches sessions and commits since
+synthesis for either recurrence and records each as a finding.
+Neither is a directive for the auditor's own behaviour — the
+auditor produces a report, not execution.
 
 ---
 
 ## Provenance
 
+- **Document purpose**: audit-only brief. An auditor produces a
+  report per §Audit methodology. Not a continuation directive; not
+  authorisation for execution against the arc.
 - **Repository**: `/Users/mkbabb/Programming/bbnf-lang`
 - **Branch at synthesis**: `codex/meta-audit-2026-04-23` (worktree
   `agent-adb99302`, branch `worktree-agent-adb99302`)

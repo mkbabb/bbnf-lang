@@ -161,7 +161,8 @@ explicit destination.
 | W2 | a | `31d3e2cb` | rewire CI workflow — nextest + iai-callgrind |
 | W2 | c | `62227603` | cross-repo pin propagation ledger; `../parse-that` + `../pprint` synced |
 | W2 | b | `d276934a` | script abrogation per meta-audit/08 catalog |
-| W3 | a | (this commit) | PROFILING refresh + FINAL + post-B1.json + AY-II handoff |
+| W3 | a | `73040fc0` | PROFILING refresh + FINAL + post-B1.json + AY-II handoff |
+| W4 | amendment | `b3c50581` | restore B0 AY W5-W7 gate-command surface + prep/final-bench + iter-test-leaf/grammar; close-review-driven adherence amendment |
 
 ## Cross-tranche debt ledger
 

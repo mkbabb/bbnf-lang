@@ -3,9 +3,35 @@
 Dated execution log for tranche B1, the bounded prelude annex that
 refreshes the development/proof surface before AY-II resumes.
 
-- `Status`: closed (W3 close ceremony 2026-04-24)
-- `Current wave`: W3 (closed)
+- `Status`: closed (W4 amendment 2026-04-24)
+- `Current wave`: W4 (amendment closed)
 - `Successor`: AY-II.W0' close ceremony (unblocked on this baseline)
+
+---
+
+## 2026-04-24 — W4 amendment (B0-adherence restoration)
+
+Post-W3 close review surfaced an adherence gap: the W0.d Makefile
+simplification deleted the AY W5-W7 gate-command surface while
+`PROFILING.md` still referenced those targets, and `.cargo/config.toml`
+lacked B0's three-tier `prep-bench` / `final-bench` aliases and the
+`iter-test-leaf` / `iter-test-grammar` aliases named in B1.md
+hard-gate item 5. `waves/W0p.md` §Orchestrator close ceremony step 4
+explicitly invokes `make ay-bench-close WAVE=W0p-close`; without this
+amendment the ceremony would be undispatchable.
+
+Amendment: `b3c50581` — restore the 160-line AY W5-W7 Gate Commands
+block in `Makefile` (preserved from pre-W0.d state, invariant-12
+corrected — cache-wipe line removed from `ay-bench-close`), add
+`prep-bench`, `final-bench`, `iter-test-leaf`, `iter-test-grammar`,
+`expand-{json,css,bbnf,sheets}`, `asm-parse` aliases to
+`.cargo/config.toml`. Profile definitions (`profiling-prep`, `bench`)
+already live in workspace `Cargo.toml`; no additional profile stanzas
+needed.
+
+The amendment is scoped strictly to infra restoration — no new runtime
+architecture, no behavior beyond reinstating the B0-established public
+surface PROFILING.md describes. B1 remains a bounded prelude annex.
 
 ---
 

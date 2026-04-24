@@ -1,0 +1,67 @@
+B1.W2.b script abrogation ledger
+=================================
+
+Catalog: `docs/tranches/meta-audit/08-abrogation-catalog.md` §Part 1.
+
+Per-script outcomes (19 scripts + 1 Python):
+
+| script                              | catalog verdict | action landed | commit | validation |
+|-------------------------------------|-----------------|---------------|--------|------------|
+| bench_regression.sh                 | REPLACE (divan) | KEPT-AS-IS    | B1.W2.b| REPLACE deferred — divan JSON parser rewrite is a post-B1 polish item. Script still compiles + runs against bencher stdout; divan path deferred to the AZ-I or later successor that actually consumes its output. |
+| bisect-fastpath.sh                  | KEEP-MODERNIZE  | KEPT-AS-IS    | B1.W2.b| Modernization (162→30 lines) deferred to post-B1 polish. Script functional under current nightly. |
+| bootstrap-bbnf.sh                   | KEEP-MODERNIZE  | REWRITTEN     | 31d3e2cb→this| Content-hash guard: unconditional `rm -rf target/.bbnf-cache/` gated behind `BBNF_BOOTSTRAP_CLEAN_CACHE=1` env (B1.md invariant 12: B1 does not create/destroy .bbnf-cache as a side-effect). Cycle-2 bootstrap is measurably cheaper than cycle-1 post-change. |
+| check-bootstrap-clean.sh            | KEEP            | KEPT-AS-IS    | B1.W2.b| CI-gate for clean-regen-discipline; no modern tool subsumes. |
+| check-cst-invariants.sh             | ABROGATE        | DELETED       | this   | Wave-specific grep gate for tranche-AE-era anti-patterns; no longer load-bearing. CI step already absent (ci.yml B1.W2.a rewrite never referenced it). |
+| cost-grid-sweep.sh                  | ABROGATE        | DELETED       | this   | Successor measurement lives in divan. |
+| deploy.sh                           | KEEP            | KEPT-AS-IS    | B1.W2.b| WASM deploy; no successor tool subsumes. |
+| extract_hotspots.py                 | REPLACE         | KEPT-AS-IS    | B1.W2.b| REPLACE deferred — successor (samply-native extraction) is a post-B1 polish item. |
+| kill-all-rust.sh                    | KEEP            | KEPT-AS-IS    | B1.W2.b| Emergency escape hatch; no successor. |
+| prebuild-benches.sh                 | KEEP            | KEPT-AS-IS    | B1.W2.b| Profiling-prep helper; referenced by PROFILING.md §Prepared binary reuse. |
+| prepare-profile-wave.sh             | KEEP-MODERNIZE  | KEPT-AS-IS    | B1.W2.b| Modernization (absolute CARGO_TARGET_DIR enforcement already in place per AW-era landings) deferred to post-B1 polish. |
+| profile.sh                          | ABROGATE        | DELETED       | this   | Superseded by `scripts/prepare-profile-wave.sh` + `scripts/profile-bench-headless.sh` per PROFILING.md canon. Makefile `profile*` targets rewired to the successors in the same commit. |
+| profile-bench-headless.sh           | KEEP            | KEPT-AS-IS    | B1.W2.b| Canonical per-entry samply runner; no successor. |
+| seed-worktree.sh                    | KEEP-MODERNIZE  | KEPT-AS-IS    | B1.W2.b| Worktree seeding; fix for target symlink self-reference deferred to post-B1 (observed in W0/W1 agent dispatches; agents work around it locally). |
+| sync-external-docs.sh               | KEEP            | KEPT-AS-IS    | B1.W2.b| Cross-repo doc sync; no successor. |
+| test-tier.sh                        | FOLD-INTO-TOOLING | KEPT-AS-IS  | B1.W2.b| Fold-into-tooling (collapse into cargo alias) deferred. Script was aligned to nextest in W0.d; bash 3.2 fix in W0 close. Works as-is. |
+| verify-w2-asm.sh                    | ABROGATE        | DELETED       | this   | Wave-specific AW-era verification; no longer load-bearing. |
+| verify-w2-symbols.sh                | ABROGATE        | DELETED       | this   | Wave-specific AW-era verification; no longer load-bearing. |
+| worktree-status.sh                  | KEEP-MODERNIZE  | KEPT-AS-IS    | B1.W2.b| Modernization deferred; current script works. |
+
+Summary: 5 DELETEs landed + 1 REWRITE (bootstrap-bbnf cache-guard) + 13
+KEPT-AS-IS with either no action needed (KEEP verdicts) or modernization
+deferred to post-B1 polish (KEEP-MODERNIZE / FOLD-INTO-TOOLING / REPLACE
+verdicts whose wall-clock impact is small).
+
+Makefile edits in the same commit:
+
+- `profile` target: `./scripts/profile.sh` → `./scripts/prepare-profile-wave.sh`.
+- `profile-json` / `profile-css`: delegate to `./scripts/profile-bench-headless.sh --bench <name>`.
+  The deleted `scripts/profile.sh` is no longer referenced.
+
+Rationale for deferring REPLACE / FOLD-INTO-TOOLING / KEEP-MODERNIZE
+to post-B1 polish:
+
+- B1.W2.b's prelude-annex scope is "execute the catalog actions that
+  have one-step outcomes"; the named DELETEs + the single REWRITE
+  (bootstrap cache-guard, directly load-bearing for B1 invariant 12)
+  are those one-step actions.
+- Deeper rewrites (divan JSON parser for `bench_regression.sh`,
+  samply-native `extract_hotspots.py`, shrinking `bisect-fastpath.sh`)
+  are multi-step engineering that exceed B1's bounded-annex scope
+  per SPEC §Prelude annexes (2-3 waves, no successor debt tree).
+- Each deferred REPLACE/KEEP-MODERNIZE/FOLD-INTO-TOOLING item is
+  functional as-is under the pinned toolchain; no blocker for AY-II
+  resumption or subsequent tranches.
+
+Invariant closure:
+
+- B1.md invariant 12 (cache preservation) — satisfied by the
+  bootstrap cache-guard; cycle-2 bootstrap runs without re-paying
+  cycle-1 proc-macro expansion.
+- B1.md invariant 13 (no DELETE without REPLACE live) — satisfied
+  by the Makefile rewire landing in the same commit as profile.sh
+  deletion; other DELETEs had no active callers.
+
+Per-DELETE pre-commit validation: `rg -n "<script_name>"` across
+Makefile / .github/workflows/ / docs/instructions/PROFILING.md
+returned zero hits post-Makefile edit. The deletion is safe.

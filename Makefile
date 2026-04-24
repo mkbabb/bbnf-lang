@@ -100,17 +100,20 @@ bench-compile:
 
 # ─── Profile (samply) ────────────────────────────────────────────────────────
 #
-# Samply requires debug=1 (kept in ay-final). `scripts/profile.sh` encapsulates
-# the invocation; this Make target is a thin convenience wrapper.
+# `scripts/profile.sh` was ABROGATED in B1.W2.b per meta-audit/08 catalog.
+# Successor: `scripts/prepare-profile-wave.sh` (compiles benches once + writes
+# wave.tsv contract) + `scripts/profile-bench-headless.sh` (per-entry samply
+# record + symbol-resolved profile). The canonical profiling workflow lives
+# in docs/instructions/PROFILING.md.
 
 profile:
-	./scripts/profile.sh
+	./scripts/prepare-profile-wave.sh
 
 profile-json:
-	./scripts/profile.sh json
+	./scripts/profile-bench-headless.sh --bench json_monolithic
 
 profile-css:
-	./scripts/profile.sh css
+	./scripts/profile-bench-headless.sh --bench css_l4
 
 # ─── Expand / inspect ────────────────────────────────────────────────────────
 #

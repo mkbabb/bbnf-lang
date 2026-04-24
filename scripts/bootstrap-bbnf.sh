@@ -27,7 +27,18 @@ OUTPUT="$ROOT_DIR/crates/core/src/grammar/generated.rs"
 
 echo "Expanding bbnf-bootstrap..."
 cd "$ROOT_DIR"
-rm -rf target/.bbnf-cache/
+# B1.W2.b: content-hash guard replaces the former unconditional
+# `rm -rf target/.bbnf-cache/`. The bbnf-derive proc-macro already
+# content-keys its expansion cache on (BBNF_SCHEMA_VERSION, grammar
+# contents, attrs, ident). Unconditional wipe poisons cycle-2
+# bootstrap measurement (B1.md invariant 12) for no correctness
+# benefit — a schema-version bump or grammar edit already invalidates
+# the stale entries. Only force-clear when `BBNF_BOOTSTRAP_CLEAN_CACHE=1`
+# is set (CI occasionally wants this; local dev never does).
+if [[ "${BBNF_BOOTSTRAP_CLEAN_CACHE:-0}" == "1" ]]; then
+    echo "BBNF_BOOTSTRAP_CLEAN_CACHE=1 set — clearing target/.bbnf-cache/"
+    rm -rf target/.bbnf-cache/
+fi
 
 TEMP="$(mktemp)"
 cargo expand -p bbnf-bootstrap --lib 2>/dev/null > "$TEMP"

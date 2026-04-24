@@ -8,8 +8,6 @@
 //! performance regression cannot hang CI indefinitely. See
 //! `benches/common/timeout.rs` for the guard and its per-bench limits.
 
-use bencher::{Bencher, benchmark_group, benchmark_main};
-
 use bbnf::pipeline::{
     CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request,
     compile_paths_request,
@@ -41,54 +39,76 @@ fn load_grammar(name: &str) -> String {
 // ── Simple grammars (no @import) ────────────────────────────────────────────
 
 // JSON: 9 rules, ~30 lines
-fn compile_json(b: &mut Bencher) {
+#[divan::bench]
+fn compile_json(b: divan::Bencher) {
     let source = load_grammar("json/json.bbnf");
-    bench_with_timeout(b, limits::COMPILE_JSON, || {
-        compile_grammar_request(&source, &vm_request()).unwrap()
-    });
+    bench_with_timeout(
+        b,
+        limits::COMPILE_JSON,
+        |source: String| compile_grammar_request(&source, &vm_request()).unwrap(),
+        &source,
+    );
 }
 
 // EBNF: 51 lines
-fn compile_ebnf(b: &mut Bencher) {
+#[divan::bench]
+fn compile_ebnf(b: divan::Bencher) {
     let source = load_grammar("ebnf/ebnf.bbnf");
-    bench_with_timeout(b, limits::COMPILE_EBNF, || {
-        compile_grammar_request(&source, &vm_request()).unwrap()
-    });
+    bench_with_timeout(
+        b,
+        limits::COMPILE_EBNF,
+        |source: String| compile_grammar_request(&source, &vm_request()).unwrap(),
+        &source,
+    );
 }
 
 // ── @import grammars ────────────────────────────────────────────────────────
 
 // BBNF: 80 lines, self-describing, uses @import
-fn compile_bbnf(b: &mut Bencher) {
+#[divan::bench]
+fn compile_bbnf(b: divan::Bencher) {
     let path = grammar_path("bbnf/bbnf.bbnf");
-    bench_with_timeout(b, limits::COMPILE_BBNF, || {
-        compile_paths_request(&[path.clone()], &vm_request()).unwrap()
-    });
+    bench_with_timeout(
+        b,
+        limits::COMPILE_BBNF,
+        |path: std::path::PathBuf| compile_paths_request(&[path], &vm_request()).unwrap(),
+        &path,
+    );
 }
 
 // Google Sheets: 115 lines, uses @import
-fn compile_sheets(b: &mut Bencher) {
+#[divan::bench]
+fn compile_sheets(b: divan::Bencher) {
     let path = grammar_path("google-sheets/google-sheets.bbnf");
-    bench_with_timeout(b, limits::COMPILE_SHEETS, || {
-        compile_paths_request(&[path.clone()], &vm_request()).unwrap()
-    });
+    bench_with_timeout(
+        b,
+        limits::COMPILE_SHEETS,
+        |path: std::path::PathBuf| compile_paths_request(&[path], &vm_request()).unwrap(),
+        &path,
+    );
 }
 
 // CSS L4: 15 files, 973 lines, deep @import chain — THE stress test.
 // Exercises type inference, FIRST/FOLLOW, dispatch tables across modules.
-fn compile_css_l4(b: &mut Bencher) {
+#[divan::bench]
+fn compile_css_l4(b: divan::Bencher) {
     let path = grammar_path("css/l4/stylesheet.bbnf");
-    bench_with_timeout(b, limits::COMPILE_CSS_L4, || {
-        compile_paths_request(&[path.clone()], &vm_request()).unwrap()
-    });
+    bench_with_timeout(
+        b,
+        limits::COMPILE_CSS_L4,
+        |path: std::path::PathBuf| compile_paths_request(&[path], &vm_request()).unwrap(),
+        &path,
+    );
 }
 
-benchmark_group!(
-    compile,
-    compile_json,
-    compile_ebnf,
-    compile_bbnf,
-    compile_sheets,
-    compile_css_l4,
-);
-benchmark_main!(compile);
+fn main() {
+    // Cold-per-parse (`sample_size = 1`) per workspace feedback
+    // `no-warm-benches`. `skip_ext_time(true)` excludes the
+    // `with_inputs` clone from the reported wall.
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

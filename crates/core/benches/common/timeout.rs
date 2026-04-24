@@ -1,16 +1,18 @@
-//! Wall-clock guard for `bencher`-based benchmarks.
+//! Wall-clock guard for `divan`-based benchmarks.
 //!
-//! `bencher` (and its criterion cousin) have no built-in timeout. A
-//! performance regression that sends a compile or parse path into an
-//! effective infinite loop would otherwise freeze CI indefinitely.
-//! Tranche Y.-1 installs two complementary freezing guards:
+//! `divan` (and its bencher/criterion forebears) have no built-in
+//! timeout. A performance regression that sends a compile or parse path
+//! into an effective infinite loop would otherwise freeze CI
+//! indefinitely. Tranche Y.-1 installed two complementary guards
+//! retained verbatim under B1's bencher → divan migration:
 //!
 //! 1. [`csp_solver::SolveConfig::node_budget`] — caps the search space
 //!    of the CSP strategy solver so pathological grammars cannot hang
 //!    inside `solve_strategy_decisions`.
-//! 2. This module — wraps `b.iter` with a per-iteration wall-clock
-//!    check. When an iteration exceeds its configured limit, the
-//!    bench panics with a clear diagnostic instead of running forever.
+//! 2. This module — wraps each divan sample with a per-iteration
+//!    wall-clock check. When an iteration exceeds its configured limit,
+//!    the bench panics with a clear diagnostic instead of running
+//!    forever.
 //!
 //! The two guards compose: the CSP budget prevents the most common
 //! hang source (unbounded branch-and-bound); the wall-clock guard
@@ -23,15 +25,14 @@
 //! #[path = "common/timeout.rs"]
 //! mod timeout;
 //!
-//! use std::time::Duration;
-//! use bencher::Bencher;
-//! use timeout::bench_with_timeout;
+//! use timeout::{bench_with_timeout, limits};
 //!
-//! fn compile_css_l4(b: &mut Bencher) {
+//! #[divan::bench]
+//! fn compile_css_l4(b: divan::Bencher) {
 //!     let source = load_grammar();
-//!     bench_with_timeout(b, Duration::from_millis(100), || {
+//!     bench_with_timeout(b, limits::COMPILE_CSS_L4, |source| {
 //!         compile_grammar(&source).unwrap()
-//!     });
+//!     }, &source);
 //! }
 //! ```
 //!
@@ -45,8 +46,6 @@
 #![allow(dead_code)] // Not every bench file uses every helper.
 
 use std::time::{Duration, Instant};
-
-use bencher::{Bencher, black_box};
 
 /// Wall-clock limits for the compile-pipeline benches. These are
 /// generous (10–20× the current observed numbers) so normal variance
@@ -79,33 +78,43 @@ pub mod limits {
     pub const PARSE_DEFAULT: Duration = Duration::from_millis(500);
 }
 
-/// Wrap a bencher iteration with a per-iteration wall-clock guard.
+/// Run `body` under a per-iteration wall-clock guard. If any single
+/// iteration exceeds `limit`, panics — surfacing the regression as a
+/// bench failure rather than an indefinite hang
+/// (feedback `bench-sequential-regression`).
 ///
-/// When a single iteration exceeds `limit`, panics with a diagnostic
-/// that names the elapsed time and the configured limit. The bench
-/// harness surfaces the panic message clearly, making it easy to
-/// distinguish a timeout-triggered abort from a normal failure.
+/// Divan's `Bencher` is by-value (not `&mut`). The `with_inputs`/
+/// `bench_values` pair is divan's idiom for "clone setup once per
+/// sample, measure only the body". Per-sample input cloning is
+/// unavoidable when `body` consumes its argument, but the
+/// `skip_ext_time(true)` configuration on the bench `main()` excludes
+/// the clone from the reported wall.
 ///
 /// The guard is checked **after** each iteration, so a truly infinite
-/// loop inside `f` is not interruptible from this helper alone. The
+/// loop inside `body` is not interruptible from this helper alone. The
 /// composition of guards (CSP budget + bench wall-clock) is what
-/// makes the no-freeze commitment load-bearing. See the module-level
-/// doc comment for the full story.
+/// makes the no-freeze commitment load-bearing.
 #[inline]
-pub fn bench_with_timeout<F, R>(b: &mut Bencher, limit: Duration, mut f: F)
-where
-    F: FnMut() -> R,
+pub fn bench_with_timeout<I, R>(
+    b: divan::Bencher,
+    limit: Duration,
+    body: impl Fn(I) -> R + Sync,
+    setup_input: &I,
+) where
+    I: Clone + Sync,
 {
-    b.iter(|| {
-        let start = Instant::now();
-        let result = black_box(f());
-        let elapsed = start.elapsed();
-        if elapsed > limit {
-            panic!(
-                "bench iteration exceeded wall-clock limit — performance regression? \
-                 (iteration took {elapsed:?}, limit {limit:?})"
-            );
-        }
-        result
-    });
+    b.with_inputs(|| setup_input.clone())
+        .bench_values(|input| {
+            let start = Instant::now();
+            let result = body(input);
+            let elapsed = start.elapsed();
+            if elapsed > limit {
+                panic!(
+                    "bench iteration exceeded wall-clock limit — \
+                     performance regression? (iteration took {elapsed:?}, \
+                     limit {limit:?})"
+                );
+            }
+            result
+        });
 }

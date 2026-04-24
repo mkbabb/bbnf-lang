@@ -40,6 +40,7 @@ json-prototype = { path = "../json-prototype" }
 pprint = "0.3"
 parse_that = "0.4"
 bencher = "0.1"
+divan = "0.1"
 mimalloc = "0.1"
 sonic-rs = "0.5"
 

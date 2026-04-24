@@ -51,7 +51,7 @@ use std::path::PathBuf;
 
 use bbnf::runtime::tape::{Tape, TapeOffset};
 use bbnf_derive::Parser;
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use divan::black_box;
 
 #[path = "common/timeout.rs"]
 mod timeout;
@@ -306,9 +306,9 @@ const INNER_REPEATS: u32 = 16;
 
 // ── Bench drivers ────────────────────────────────────────────────────────────
 
-fn aos_path(b: &mut Bencher) {
+#[divan::bench]
+fn aos_path(b: divan::Bencher) {
     let input = load_twitter();
-    b.bytes = input.len() as u64;
 
     // Pre-compute the offset set the AoS kernel reads against
     // outside the timing loop — it is identical across reparses
@@ -353,27 +353,32 @@ fn aos_path(b: &mut Bencher) {
         "tape layout non-determinism breaks offset reuse"
     );
 
-    bench_with_timeout(b, limits::JSON_PARSE, || {
-        let parsed = JsonParser::parse(black_box(&input)).unwrap();
-        debug_assert!(
-            !parsed.tape().columns().packed_cache_populated(),
-            "cold per-parse contract: packed_cache invalidated at iter start"
-        );
-        let acc = aos_random_read_kernel(
-            parsed.tape(),
-            input.as_bytes(),
-            &offsets,
-            INNER_REPEATS,
-            parsed.tape().len() as u64,
-        );
-        black_box(acc);
-        black_box(parsed);
-    });
+    bench_with_timeout(
+        b,
+        limits::JSON_PARSE,
+        |input: String| {
+            let parsed = JsonParser::parse(black_box(&input)).unwrap();
+            debug_assert!(
+                !parsed.tape().columns().packed_cache_populated(),
+                "cold per-parse contract: packed_cache invalidated at iter start"
+            );
+            let acc = aos_random_read_kernel(
+                parsed.tape(),
+                input.as_bytes(),
+                &offsets,
+                INNER_REPEATS,
+                parsed.tape().len() as u64,
+            );
+            black_box(acc);
+            black_box(parsed);
+        },
+        &input,
+    );
 }
 
-fn soa_path(b: &mut Bencher) {
+#[divan::bench]
+fn soa_path(b: divan::Bencher) {
     let input = load_twitter();
-    b.bytes = input.len() as u64;
 
     // Warm-up — assert the SoA kernel never populates
     // packed_cache. A codegen drift that forces eager transpose
@@ -390,19 +395,30 @@ fn soa_path(b: &mut Bencher) {
         black_box(acc);
     }
 
-    bench_with_timeout(b, limits::JSON_PARSE, || {
-        let parsed = JsonParser::parse(black_box(&input)).unwrap();
-        let root = JsonParserNodeView::from_cursor(parsed.view().cursor(), parsed.input());
-        let acc = soa_nodeview_walk_kernel(
-            root,
-            input.as_bytes(),
-            INNER_REPEATS,
-            parsed.tape().len() as u64,
-        );
-        black_box(acc);
-        black_box(parsed);
-    });
+    bench_with_timeout(
+        b,
+        limits::JSON_PARSE,
+        |input: String| {
+            let parsed = JsonParser::parse(black_box(&input)).unwrap();
+            let root = JsonParserNodeView::from_cursor(parsed.view().cursor(), parsed.input());
+            let acc = soa_nodeview_walk_kernel(
+                root,
+                input.as_bytes(),
+                INNER_REPEATS,
+                parsed.tape().len() as u64,
+            );
+            black_box(acc);
+            black_box(parsed);
+        },
+        &input,
+    );
 }
 
-benchmark_group!(benches, aos_path, soa_path);
-benchmark_main!(benches);
+fn main() {
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

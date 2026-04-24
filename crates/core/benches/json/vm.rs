@@ -7,7 +7,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use bbnf::pipeline::{PipelineOptions, compile_grammar};
 use bbnf_ir::compiler::compile as compile_bytecode;
 use bbnf_ir::interpreter::Interpreter;
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use divan::black_box;
 
 fn load(name: &str) -> String {
     let path = format!("../../data/json/{}", name);
@@ -24,10 +24,10 @@ fn compiled_vm() -> (bbnf_ir::GrammarIR, bbnf_ir::bytecode::BytecodeProgram) {
 
 macro_rules! bench {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load($file);
             let (_ir, program) = compiled_vm();
-            b.bytes = input.len() as u64;
             {
                 let mut interp = Interpreter::new(&program, &input);
                 let r = interp.run();
@@ -39,7 +39,7 @@ macro_rules! bench {
                     input.len(),
                 );
             }
-            b.iter(|| {
+            b.with_inputs(|| input.clone()).bench_values(|input| {
                 let mut interp = Interpreter::new(&program, black_box(&input));
                 let r = interp.run();
                 black_box(r.offset);
@@ -54,5 +54,11 @@ bench!(citm, "citm_catalog.json");
 bench!(canada, "canada.json");
 bench!(data_xl, "data_xl.json");
 
-benchmark_group!(benches, data, twitter, citm, canada, data_xl);
-benchmark_main!(benches);
+fn main() {
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

@@ -12,7 +12,7 @@ use std::sync::Arc;
 use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request,
 };
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use divan::black_box;
 use parse_that::regex::Dfa;
 use wasmtime::*;
 
@@ -204,10 +204,10 @@ fn instantiate_with_input(
 
 macro_rules! bench {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load($file);
             let bundle = compiled_wasm();
-            b.bytes = input.len() as u64;
 
             // Instantiate ONCE outside the loop (same as VM pre-compiles once).
             let (mut store, instance, input_len) =
@@ -229,7 +229,7 @@ macro_rules! bench {
                     input.len(),
                 );
             }
-            b.iter(|| {
+            b.bench_local(|| {
                 // Re-copy input bytes (parser may have mutated linear memory state).
                 let input_bytes = black_box(&input).as_bytes();
                 memory.data_mut(&mut store)[..input_bytes.len()]
@@ -247,5 +247,11 @@ bench!(citm, "citm_catalog.json");
 bench!(canada, "canada.json");
 bench!(data_xl, "data_xl.json");
 
-benchmark_group!(benches, data, twitter, citm, canada, data_xl);
-benchmark_main!(benches);
+fn main() {
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

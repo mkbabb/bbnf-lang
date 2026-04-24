@@ -4,7 +4,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use divan::black_box;
 
 fn load(name: &str) -> String {
     let path = format!("../../data/json/{}", name);
@@ -13,9 +13,9 @@ fn load(name: &str) -> String {
 
 macro_rules! bench {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load($file);
-            b.bytes = input.len() as u64;
             {
                 let parser = parse_that::parsers::json::json_parser();
                 let (result, state) = parser.parse_return_state(&input);
@@ -30,7 +30,7 @@ macro_rules! bench {
                     input.len(),
                 );
             }
-            b.iter(|| {
+            b.with_inputs(|| input.clone()).bench_values(|input| {
                 let parser = parse_that::parsers::json::json_parser();
                 let ast = parser.parse(black_box(&input)).unwrap();
                 black_box(&ast as *const _);
@@ -45,5 +45,11 @@ bench!(citm, "citm_catalog.json");
 bench!(canada, "canada.json");
 bench!(data_xl, "data_xl.json");
 
-benchmark_group!(benches, data, twitter, citm, canada, data_xl);
-benchmark_main!(benches);
+fn main() {
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

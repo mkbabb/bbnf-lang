@@ -56,7 +56,7 @@ use bbnf::runtime::tape::{
 };
 use bbnf_derive::Parser;
 use json_prototype::{self as proto, parse_json};
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use divan::black_box;
 
 #[path = "../common/timeout.rs"]
 mod timeout;
@@ -152,9 +152,9 @@ fn walk_cursor(tape: &Tape, cursor: TapeCursor<'_>, input: &str) -> u64 {
 
 macro_rules! bench_bbnf {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load($file);
-            b.bytes = input.len() as u64;
             {
                 let parsed = JsonParser::parse(&input)
                     .unwrap_or_else(|e| panic!(concat!($file, ": parse failed: {:?}"), e));
@@ -163,14 +163,19 @@ macro_rules! bench_bbnf {
                 let v = walk_tape(parsed.tape(), root_off, &input);
                 black_box(v);
             }
-            bench_with_timeout(b, limits::JSON_PARSE, || {
-                let parsed = JsonParser::parse(black_box(&input)).unwrap();
-                let view = parsed.view();
-                let root_off = view.cursor().offset();
-                let v = walk_tape(parsed.tape(), root_off, black_box(&input));
-                black_box(v);
-                black_box(parsed);
-            });
+            bench_with_timeout(
+                b,
+                limits::JSON_PARSE,
+                |input: String| {
+                    let parsed = JsonParser::parse(black_box(&input)).unwrap();
+                    let view = parsed.view();
+                    let root_off = view.cursor().offset();
+                    let v = walk_tape(parsed.tape(), root_off, black_box(&input));
+                    black_box(v);
+                    black_box(parsed);
+                },
+                &input,
+            );
         }
     };
 }
@@ -185,12 +190,14 @@ bench_bbnf!(bbnf_data_xl, "data_xl.json");
 
 macro_rules! bench_sonic {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load($file);
-            b.bytes = input.len() as u64;
             sonic_rs::from_str::<sonic_rs::Value>(&input)
                 .expect(concat!($file, ": sonic-rs parse failed"));
-            b.iter(|| sonic_rs::from_str::<sonic_rs::Value>(black_box(&input)).unwrap());
+            b.with_inputs(|| input.clone()).bench_values(|input| {
+                sonic_rs::from_str::<sonic_rs::Value>(black_box(&input)).unwrap()
+            });
         }
     };
 }
@@ -386,9 +393,9 @@ impl KeywordVisitor for ValueVisitor {
 
 macro_rules! bench_bbnf_visitor {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load($file);
-            b.bytes = input.len() as u64;
             {
                 let mut visitor = ValueVisitor::with_input(input.as_bytes());
                 JsonParser::parse_with_visitor(&input, &mut visitor)
@@ -397,14 +404,19 @@ macro_rules! bench_bbnf_visitor {
                     });
                 black_box(visitor.finish());
             }
-            bench_with_timeout(b, limits::JSON_PARSE, || {
-                let mut visitor =
-                    ValueVisitor::with_input(black_box(input.as_bytes()));
-                JsonParser::parse_with_visitor(black_box(&input), &mut visitor)
-                    .unwrap();
-                let doc: proto::Document = visitor.finish();
-                black_box(doc);
-            });
+            bench_with_timeout(
+                b,
+                limits::JSON_PARSE,
+                |input: String| {
+                    let mut visitor =
+                        ValueVisitor::with_input(black_box(input.as_bytes()));
+                    JsonParser::parse_with_visitor(black_box(&input), &mut visitor)
+                        .unwrap();
+                    let doc: proto::Document = visitor.finish();
+                    black_box(doc);
+                },
+                &input,
+            );
         }
     };
 }
@@ -423,16 +435,16 @@ bench_bbnf_visitor!(bbnf_visitor_data_xl, "data_xl.json");
 
 macro_rules! bench_proto_value {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load($file);
-            b.bytes = input.len() as u64;
             {
                 let mut visitor = proto::ValueVisitor::with_input(input.as_bytes());
                 parse_json(input.as_bytes(), &mut visitor)
                     .unwrap_or_else(|e| panic!(concat!($file, ": proto parse failed: {:?}"), e));
                 black_box(visitor.finish());
             }
-            b.iter(|| {
+            b.with_inputs(|| input.clone()).bench_values(|input| {
                 let mut visitor =
                     proto::ValueVisitor::with_input(black_box(input.as_bytes()));
                 parse_json(black_box(input.as_bytes()), &mut visitor).unwrap();
@@ -465,9 +477,9 @@ bench_proto_value!(proto_value_data_xl, "data_xl.json");
 
 use bbnf::path;
 
-fn bbnf_get_twitter(b: &mut Bencher) {
+#[divan::bench]
+fn bbnf_get_twitter(b: divan::Bencher) {
     let input = load("twitter.json");
-    b.bytes = input.len() as u64;
     {
         let parsed = JsonParser::parse(&input)
             .unwrap_or_else(|e| panic!("twitter.json: parse failed: {:?}", e));
@@ -475,19 +487,24 @@ fn bbnf_get_twitter(b: &mut Bencher) {
         let p = bbnf::runtime::Path::new(segs);
         black_box(parsed.get::<&str>(p));
     }
-    bench_with_timeout(b, limits::JSON_PARSE, || {
-        let parsed = JsonParser::parse(black_box(&input)).unwrap();
-        let segs = path!["statuses", 0_usize, "text"];
-        let p = bbnf::runtime::Path::new(segs);
-        let got: Option<&str> = parsed.get(p);
-        black_box(got);
-        black_box(parsed);
-    });
+    bench_with_timeout(
+        b,
+        limits::JSON_PARSE,
+        |input: String| {
+            let parsed = JsonParser::parse(black_box(&input)).unwrap();
+            let segs = path!["statuses", 0_usize, "text"];
+            let p = bbnf::runtime::Path::new(segs);
+            let got: Option<&str> = parsed.get(p);
+            black_box(got);
+            black_box(parsed);
+        },
+        &input,
+    );
 }
 
-fn sonic_get_twitter(b: &mut Bencher) {
+#[divan::bench]
+fn sonic_get_twitter(b: divan::Bencher) {
     let input = load("twitter.json");
-    b.bytes = input.len() as u64;
     // Warm-up: sonic_rs::get accepts the path as an `IntoIterator` of
     // `Index` values. Mixed string/integer keys round-trip via the
     // `JsonPointer!` macro or a heterogeneous vec of `PointerNode`
@@ -503,7 +520,7 @@ fn sonic_get_twitter(b: &mut Bencher) {
             .unwrap_or_else(|e| panic!("twitter.json: sonic_rs::get_many warm-up failed: {e}"));
         black_box(nodes);
     }
-    b.iter(|| {
+    b.with_inputs(|| input.clone()).bench_values(|input| {
         // Use `sonic_rs::get` with a path iterator — the idiomatic
         // lazy-extract entry. `JsonInput::from_subset` slices `&input`
         // so the returned `LazyValue<'_>` borrows from it.
@@ -523,21 +540,26 @@ fn sonic_get_twitter(b: &mut Bencher) {
 
 macro_rules! bench_bbnf_value {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load($file);
-            b.bytes = input.len() as u64;
             {
                 let parsed = JsonParser::parse(&input)
                     .unwrap_or_else(|e| panic!(concat!($file, ": parse failed: {:?}"), e));
                 let v = parsed.to_value();
                 black_box(v);
             }
-            bench_with_timeout(b, limits::JSON_PARSE, || {
-                let parsed = JsonParser::parse(black_box(&input)).unwrap();
-                let v = parsed.to_value();
-                black_box(v);
-                black_box(parsed);
-            });
+            bench_with_timeout(
+                b,
+                limits::JSON_PARSE,
+                |input: String| {
+                    let parsed = JsonParser::parse(black_box(&input)).unwrap();
+                    let v = parsed.to_value();
+                    black_box(v);
+                    black_box(parsed);
+                },
+                &input,
+            );
         }
     };
 }
@@ -550,12 +572,14 @@ bench_bbnf_value!(bbnf_value_data_xl, "data_xl.json");
 
 macro_rules! bench_sonic_value {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load($file);
-            b.bytes = input.len() as u64;
             sonic_rs::from_str::<sonic_rs::Value>(&input)
                 .expect(concat!($file, ": sonic-rs parse failed"));
-            b.iter(|| sonic_rs::from_str::<sonic_rs::Value>(black_box(&input)).unwrap());
+            b.with_inputs(|| input.clone()).bench_values(|input| {
+                sonic_rs::from_str::<sonic_rs::Value>(black_box(&input)).unwrap()
+            });
         }
     };
 }
@@ -566,68 +590,11 @@ bench_sonic_value!(sonic_value_citm, "citm_catalog.json");
 bench_sonic_value!(sonic_value_canada, "canada.json");
 bench_sonic_value!(sonic_value_data_xl, "data_xl.json");
 
-// ── Groups ──────────────────────────────────────────────────────────────────
-
-benchmark_group!(
-    bench_bbnf,
-    bbnf_data_s,
-    bbnf_twitter,
-    bbnf_citm,
-    bbnf_canada,
-    bbnf_data_xl,
-);
-benchmark_group!(
-    bench_sonic,
-    sonic_data_s,
-    sonic_twitter,
-    sonic_citm,
-    sonic_canada,
-    sonic_data_xl,
-);
-benchmark_group!(
-    bench_bbnf_visitor,
-    bbnf_visitor_data_s,
-    bbnf_visitor_twitter,
-    bbnf_visitor_citm,
-    bbnf_visitor_canada,
-    bbnf_visitor_data_xl,
-);
-benchmark_group!(
-    bench_proto_value,
-    proto_value_data_s,
-    proto_value_twitter,
-    proto_value_citm,
-    proto_value_canada,
-    proto_value_data_xl,
-);
-benchmark_group!(
-    bench_lazy_lane,
-    bbnf_get_twitter,
-    sonic_get_twitter,
-);
-benchmark_group!(
-    bench_bbnf_value,
-    bbnf_value_data_s,
-    bbnf_value_twitter,
-    bbnf_value_citm,
-    bbnf_value_canada,
-    bbnf_value_data_xl,
-);
-benchmark_group!(
-    bench_sonic_value,
-    sonic_value_data_s,
-    sonic_value_twitter,
-    sonic_value_citm,
-    sonic_value_canada,
-    sonic_value_data_xl,
-);
-
-benchmark_main!(
-    bench_bbnf,
-    bench_sonic,
-    bench_bbnf_visitor,
-    bench_proto_value,
-    bench_lazy_lane,
-    bench_bbnf_value,
-    bench_sonic_value,
-);
+fn main() {
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

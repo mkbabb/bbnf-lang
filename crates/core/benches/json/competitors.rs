@@ -18,7 +18,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bencher::{Bencher, benchmark_group, benchmark_main, black_box};
+use divan::black_box;
 
 fn load_json(name: &str) -> String {
     let path = format!("../../data/json/{}", name);
@@ -29,12 +29,14 @@ fn load_json(name: &str) -> String {
 
 macro_rules! bench_serde {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load_json($file);
-            b.bytes = input.len() as u64;
             serde_json::from_str::<serde_json::Value>(&input)
                 .expect(concat!($file, ": serde_json parse failed"));
-            b.iter(|| serde_json::from_str::<serde_json::Value>(black_box(&input)).unwrap());
+            b.with_inputs(|| input.clone()).bench_values(|input| {
+                serde_json::from_str::<serde_json::Value>(black_box(&input)).unwrap()
+            });
         }
     };
 }
@@ -49,12 +51,14 @@ bench_serde!(serde_data_xl, "data_xl.json");
 
 macro_rules! bench_serde_borrow {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load_json($file);
-            b.bytes = input.len() as u64;
             serde_json::from_str::<serde_json_borrow::Value>(&input)
                 .expect(concat!($file, ": serde_json_borrow parse failed"));
-            b.iter(|| serde_json::from_str::<serde_json_borrow::Value>(black_box(&input)).unwrap());
+            b.with_inputs(|| input.clone()).bench_values(|input| {
+                serde_json::from_str::<serde_json_borrow::Value>(black_box(&input)).unwrap()
+            });
         }
     };
 }
@@ -69,12 +73,14 @@ bench_serde_borrow!(serde_borrow_data_xl, "data_xl.json");
 
 macro_rules! bench_sonic {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load_json($file);
-            b.bytes = input.len() as u64;
             sonic_rs::from_str::<sonic_rs::Value>(&input)
                 .expect(concat!($file, ": sonic-rs parse failed"));
-            b.iter(|| sonic_rs::from_str::<sonic_rs::Value>(black_box(&input)).unwrap());
+            b.with_inputs(|| input.clone()).bench_values(|input| {
+                sonic_rs::from_str::<sonic_rs::Value>(black_box(&input)).unwrap()
+            });
         }
     };
 }
@@ -89,15 +95,15 @@ bench_sonic!(sonic_data_xl, "data_xl.json");
 
 macro_rules! bench_simd {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load_json($file);
-            b.bytes = input.len() as u64;
             {
                 let mut bytes = input.as_bytes().to_vec();
                 simd_json::to_owned_value(&mut bytes)
                     .expect(concat!($file, ": simd-json parse failed"));
             }
-            b.iter(|| {
+            b.with_inputs(|| input.clone()).bench_values(|input| {
                 let mut bytes = input.as_bytes().to_vec();
                 simd_json::to_owned_value(black_box(&mut bytes)).unwrap()
             });
@@ -115,12 +121,14 @@ bench_simd!(simd_data_xl, "data_xl.json");
 
 macro_rules! bench_jiter {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load_json($file);
-            b.bytes = input.len() as u64;
             jiter::JsonValue::parse(input.as_bytes(), false)
                 .expect(concat!($file, ": jiter parse failed"));
-            b.iter(|| jiter::JsonValue::parse(black_box(input.as_bytes()), false).unwrap());
+            b.with_inputs(|| input.clone()).bench_values(|input| {
+                jiter::JsonValue::parse(black_box(input.as_bytes()), false).unwrap()
+            });
         }
     };
 }
@@ -250,11 +258,13 @@ mod nom_json {
 
 macro_rules! bench_nom {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load_json($file);
-            b.bytes = input.len() as u64;
             nom_json::root(&input).expect(concat!($file, ": nom parse failed"));
-            b.iter(|| nom_json::root(black_box(&input)).unwrap());
+            b.with_inputs(|| input.clone()).bench_values(|input| {
+                nom_json::root(black_box(&input)).unwrap();
+            });
         }
     };
 }
@@ -364,14 +374,16 @@ mod winnow_json {
 
 macro_rules! bench_winnow {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             use winnow::prelude::*;
             let input = load_json($file);
-            b.bytes = input.len() as u64;
             winnow_json::json
                 .parse(input.as_str())
                 .expect(concat!($file, ": winnow parse failed"));
-            b.iter(|| winnow_json::json.parse(black_box(input.as_str())).unwrap());
+            b.with_inputs(|| input.clone()).bench_values(|input| {
+                winnow_json::json.parse(black_box(input.as_str())).unwrap();
+            });
         }
     };
 }
@@ -442,11 +454,13 @@ mod pest_json {
 
 macro_rules! bench_pest {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load_json($file);
-            b.bytes = input.len() as u64;
             let _ = pest_json::parse(&input); // validate
-            b.iter(|| pest_json::parse(black_box(&input)));
+            b.with_inputs(|| input.clone()).bench_values(|input| {
+                pest_json::parse(black_box(&input));
+            });
         }
     };
 }
@@ -461,9 +475,9 @@ bench_pest!(pest_data_xl, "data_xl.json");
 
 macro_rules! bench_tree_sitter {
     ($name:ident, $file:expr) => {
-        fn $name(b: &mut Bencher) {
+        #[divan::bench]
+        fn $name(b: divan::Bencher) {
             let input = load_json($file);
-            b.bytes = input.len() as u64;
             let mut parser = tree_sitter::Parser::new();
             parser
                 .set_language(&tree_sitter_json::LANGUAGE.into())
@@ -472,7 +486,13 @@ macro_rules! bench_tree_sitter {
                 parser.parse(&input, None).is_some(),
                 concat!($file, ": tree-sitter parse failed")
             );
-            b.iter(|| parser.parse(black_box(&input), None).unwrap());
+            b.with_inputs(|| input.clone()).bench_local(|input| {
+                let mut parser = tree_sitter::Parser::new();
+                parser
+                    .set_language(&tree_sitter_json::LANGUAGE.into())
+                    .unwrap();
+                parser.parse(black_box(&input), None).unwrap()
+            });
         }
     };
 }
@@ -483,89 +503,11 @@ bench_tree_sitter!(tree_sitter_citm, "citm_catalog.json");
 bench_tree_sitter!(tree_sitter_canada, "canada.json");
 bench_tree_sitter!(tree_sitter_data_xl, "data_xl.json");
 
-// ── Groups ──────────────────────────────────────────────────────────────────
-
-benchmark_group!(
-    bench_serde,
-    serde_data,
-    serde_twitter,
-    serde_citm,
-    serde_canada,
-    serde_data_xl,
-);
-benchmark_group!(
-    bench_serde_borrow,
-    serde_borrow_data,
-    serde_borrow_twitter,
-    serde_borrow_citm,
-    serde_borrow_canada,
-    serde_borrow_data_xl,
-);
-benchmark_group!(
-    bench_sonic,
-    sonic_data,
-    sonic_twitter,
-    sonic_citm,
-    sonic_canada,
-    sonic_data_xl,
-);
-benchmark_group!(
-    bench_simd,
-    simd_data,
-    simd_twitter,
-    simd_citm,
-    simd_canada,
-    simd_data_xl,
-);
-benchmark_group!(
-    bench_jiter,
-    jiter_data,
-    jiter_twitter,
-    jiter_citm,
-    jiter_canada,
-    jiter_data_xl,
-);
-benchmark_group!(
-    bench_nom,
-    nom_data,
-    nom_twitter,
-    nom_citm,
-    nom_canada,
-    nom_data_xl,
-);
-benchmark_group!(
-    bench_winnow,
-    winnow_data,
-    winnow_twitter,
-    winnow_citm,
-    winnow_canada,
-    winnow_data_xl,
-);
-benchmark_group!(
-    bench_pest,
-    pest_data,
-    pest_twitter,
-    pest_citm,
-    pest_canada,
-    pest_data_xl,
-);
-benchmark_group!(
-    bench_tree_sitter,
-    tree_sitter_data,
-    tree_sitter_twitter,
-    tree_sitter_citm,
-    tree_sitter_canada,
-    tree_sitter_data_xl,
-);
-
-benchmark_main!(
-    bench_serde,
-    bench_serde_borrow,
-    bench_sonic,
-    bench_simd,
-    bench_jiter,
-    bench_nom,
-    bench_winnow,
-    bench_pest,
-    bench_tree_sitter
-);
+fn main() {
+    divan::Divan::default()
+        .sample_count(100)
+        .sample_size(1)
+        .skip_ext_time(true)
+        .max_time(std::time::Duration::from_secs(30))
+        .run_benches();
+}

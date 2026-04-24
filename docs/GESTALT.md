@@ -22,8 +22,8 @@ HIR→NFA→DFA regex engine (`bbnf-regex`) that replaces the `regex`
 crate at emission sites. A pprint substrate (`../pprint`) carries the
 gorgeous auto-formatter.
 
-The fleet state at the current read-of-record: 1,890 master commits,
-993 unpushed, 24 feature branches, 18 tranches
+The fleet state at the current read-of-record: 1,898 master commits,
+1,001 unpushed, 55 local branch refs, 18 tranches
 of substrate work landed between 2026-04-08 and 2026-04-15,
 followed by a five-day DTA/PSI rut (Era V, 2026-04-15 → 2026-04-19,
 ~572 tranche-tagged commits) in which zero of seventeen benchmark
@@ -62,9 +62,9 @@ BC, BC is retired.
 
 | Measure | Value | Source |
 |---|---:|---|
-| Master commits | 1,890 | `git log master \| wc -l` (refreshed with tree at HEAD; numbers drift with every commit) |
-| Unpushed commits | 945 | `git log origin/master..HEAD` |
-| Total commits across all refs | 1,923 | per 06-archaeology |
+| Master commits | 1,898 | `git rev-list --count HEAD` at `a6f99cc1`; numbers drift with every commit |
+| Unpushed commits | 1,001 | `git rev-list --count origin/master..HEAD` at `a6f99cc1` |
+| Total commits across all refs | 1,962 | `git rev-list --all --count` at `a6f99cc1` |
 | First tranche-tagged commit | `a3fadf56` (Tranche F, 2026-04-08) | archaeology §headline |
 | First `FINAL.md` | `5281ec23` (AU, 2026-04-15) | archaeology §Step 5 |
 | First planning-only tranche | AZ (2026-04-20) | archaeology §headline |
@@ -553,10 +553,11 @@ on the three data grammars, tape usage scoped to BBNF only,
 AZ-I close handoff contract for AZ-II.
 
 AZ-I's defensible floor: if classifier unification proves
-intractable at W0 or `StructRegistry` closure leaves a data
-grammar uncovered at W1, AZ-I closes with partial direct-to-struct
-(JSON + Sheets) and tape retained for CSS + BBNF. The escape
-clause is declared up front rather than discovered mid-tranche.
+intractable at W0 or lightningcss full parity misses at W3, AZ-I
+may close with CSS L4 semantically partial only if JSON, CSS L4,
+and Sheets are all struct-only. Tape remains scoped to BBNF only.
+CSS aggregate retention on tape is not a floor; it is a wave revert
+and re-plan trigger.
 
 ### AZ-II — BBNF self-hosting cutover + `crates/tape/` deletion
 
@@ -612,11 +613,11 @@ Both AZ-I and AZ-II share reversal criteria: wave-local 20% miss
 reverts own substrate; parity-recovery precedence reverts any
 substrate that regresses an already-passing AU-baseline entry;
 no hedging forward. Ship no substrate without same-commit runtime
-consumer and same-commit bench delta. Each tranche budgets for at
-least one reversal per wave as the *expected* case, following
-AQ.5's cleanest-reversal precedent (~32 commits) and explicitly
-avoiding AW-IV's substrate-without-consumer anti-precedent (92
-commits, 0/17 gate miss).
+consumer and same-commit bench delta. Each tranche carries an
+explicit reversal/re-plan lane per wave, following AQ.5's
+cleanest-reversal precedent (~32 commits) and explicitly avoiding
+AW-IV's substrate-without-consumer anti-precedent (92 commits, 0/17
+gate miss).
 
 The split from a monolithic seven-wave AZ does not improve the
 raw multiplicative cascade — adding waves lowers the joint
@@ -628,7 +629,8 @@ full tape abrogation is the architectural goal, because leaving
 `crates/tape/` alive for even one grammar reintroduces the
 orthogonal-codepath pathology `feedback_no-orthogonal-codepaths`
 prohibits. No partial-closure floor is declared for AZ-II; W2
-failure triggers revert-and-re-plan until full dissolution holds.
+byte-equality misses trigger revert-and-re-plan until full
+dissolution holds.
 
 ### BA — lazy typed pointer-path queries over the struct tree
 
@@ -768,34 +770,34 @@ specific capability; each composes with bbnf's IR / CSP / e-graph
 substrate through a grammar-side hook rather than a side-channel
 runtime API.
 
-**simdjson's tape.** 16-byte fixed records; compound open/close
-record pairing; opaque strings on a scratch tape. bbnf adopts the
-shape for every grammar, not only JSON — the tape is a first-class
-runtime IR, populated by `push_leaf_with_*` / `begin_compound` /
-`end_compound` calls that every `->`-annotated rule emits. BA.W1
-adds the backward container pointer that simdjson itself does not
-need (simdjson parses; it does not navigate), closing the one-way
-asymmetry that Era IV left.
+**simdjson's tape, then the post-tape inversion.** 16-byte fixed
+records, compound open/close record pairing, and opaque string
+scratch storage were the Era IV stepping stone. bbnf adopted the
+shape for every grammar, not only JSON, to make typed payload
+materialisation measurable. AZ-I/AZ-II now invert the lesson:
+simdjson's tape is a proof of shape regularity, not the final
+surface. Once `StructRegistry` is closed, the same facts write
+directly into grammar-derived structs and `crates/tape/` is deleted.
 
 **sonic-rs's StructRegistry + `pointer!`.** Type-safe field access
 through compile-time registration. bbnf adopts the registry as
 `project_types` output — but populates the registry from grammar
 `->` annotations, not from user `#[derive(StaticType)]` macros on
-host-language structs. `pointer!` ergonomics become `path!` (BB)
+host-language structs. `pointer!` ergonomics become `path!` (BA)
 with stronger compile-time validation.
 
 **lightningcss's typed-value parity.** Parse `<length>` into a
 typed `Length`, not a string; parse `<color>` into a typed `Color`;
 every CSS L4 property rule returns the typed shape that
 lightningcss produces from its hand-written Rust implementation.
-bbnf derives the same shapes from the CSS L4 grammar — BA.W3 gates
+bbnf derives the same shapes from the CSS L4 grammar — AZ-I.W3 gates
 parity node-for-node.
 
 **Ruler's CVC rule enumeration.** Given a term algebra and an
 equivalence oracle, enumerate terms up to a size bound, group by
 equivalence, extract cross-class equivalences as rewrite rules.
-bbnf uses `IrNode` as the algebra, the VM as the oracle, the
-existing CSP cost model as the scheduler. BC's thesis.
+bbnf uses `IrNode` as the algebra, the VM as the oracle on residue,
+and the existing CSP cost model as the scheduler. BB's thesis.
 
 **egg's e-graph substrate.** `crates/egraph` is the workspace
 member; `crates/egraph-derive` derives the `Language` impl from
@@ -804,7 +806,7 @@ existing `IrNode` enum variants (`feedback_derive-language-macro`);
 internally (`feedback_regex-crate-isomorphic`). The cost model is
 CSP-modelled; the rewrite rules (factor, merge_regex_alts,
 inline_acyclic) were hand-coded in Tranche H and will be e-graph-
-inferred in BC.
+inferred in BB.
 
 **parse-that's combinator substrate.** The runtime parser surface.
 A modern recursive-descent combinator layer with bespoke HIR
@@ -818,7 +820,7 @@ SIMD is not where the next 10% lives past a certain point; key
 dispatch and in-place payload placement are. bbnf already ships AP.4
 key dispatch (the Tranche AP structural-dispatch substrate that
 survived AQ.5's rescope as a `PayloadKind → TypeDesc` projection)
-and AP.5 NibbleLut. BA's direct-to-struct activation is the
+and AP.5 NibbleLut. AZ-I/AZ-II's direct-to-struct activation is the
 in-place-payload piece; the grammar-derived StructRegistry tells the
 emitter exactly which field receives each scalar payload, so the
 emitter writes in-place without a two-stage "materialize-then-project"
@@ -843,15 +845,21 @@ lightningcss is non-negotiable). A per-grammar parser hand-tuned to
 beat a specific fixture is rejected at plan time. Every technique
 bbnf adopts from the literature is applied at grammar abstraction
 level, with the grammar's `->` annotations carrying the type
-information that the technique expects. When BA activates scalar
-payload directly to struct, it does so for *every* grammar with a
+information that the technique expects. When AZ-I/AZ-II activate scalar
+payload directly to struct, they do so for *every* grammar with a
 scalar `->` annotation, not for JSON's `value -> f64` alone. When
-BB compiles pointer paths, the `path!` macro works for *any*
-grammar, not for JSON's well-known structure alone. When BC infers
+BA compiles pointer paths, the `path!` macro works for *any*
+grammar, not for JSON's well-known structure alone. When BB infers
 rewrite rules, it infers over `IrNode` — the grammar-agnostic IR —
 producing rules that apply to any grammar by construction. This is
 the composition principle: *the grammar is the only distinguishing
 input, and everything downstream is uniform across grammars*.
+
+The remaining optimisation inventory, code-shape sketches,
+probability table, and competitor-delta trajectory live in
+`docs/tranches/REMAINING-TRAJECTORY.md`. The 2026-04-24 preflight
+results are folded into the owning tranche specs and into the wave
+spec edict; no separate preflight doctrine remains as parallel canon.
 
 ## 7. The fleet — cross-repo shape
 
@@ -948,17 +956,17 @@ check for regressions.
 
 AY-II holds on the post-B1 refresh because every AY-II gate cites
 a numeric floor; those floors re-measure under the pinned substrate
-and the divan harness at B1 close. BA opens with an IR audit pass
-plus a 17-entry bench re-anchor *before* substrate — BA.W0 lifts
-the derive cache and re-measures the 17-entry matrix on the clean
-BA-ready substrate; BA.W1 substrate only then lands. The sequencing
-is deliberate: no substrate whose effect is measured against a
-stale baseline.
+and the divan harness at B1 close. AZ-I opens with an IR audit pass
+plus a three-data-grammar bench re-anchor before struct substrate
+activation; AZ-I.W0 lifts the derive cache and re-measures the
+matrix on the clean AZ-I-ready substrate. The sequencing is
+deliberate: no substrate whose effect is measured against a stale
+baseline.
 
 The 17-entry AU-baseline matrix anchors every parity-recovery gate.
-The seven highest-signal rows from `BA.md`'s parity-recovery table:
+The seven highest-signal rows from `AZ-I.md`'s parity-recovery table:
 
-| Grammar / fixture | AU-baseline | BA floor | BA target |
+| Grammar / fixture | AU-baseline | AZ-I floor | AZ-I target |
 |---|---:|---:|---:|
 | JSON canada | 1,231 MB/s | 1,231 | 1,500 |
 | JSON citm | 2,438 MB/s | 2,438 | 2,700 |
@@ -969,10 +977,10 @@ The seven highest-signal rows from `BA.md`'s parity-recovery table:
 | Sheets parse_simple | 95 MB/s | 95 | 110 |
 
 Twitter currently sits at 688 MB/s (35% of AU-baseline), citm at a
-lower share, tailwind at lower still. BA.W1's floor of 1,967 MB/s on
-twitter is a recovery, not exceedance. BA.W1's target of 2,200 MB/s
+lower share, tailwind at lower still. AZ-I.W2's floor of 1,967 MB/s on
+twitter is a recovery, not exceedance. AZ-I.W2's target of 2,200 MB/s
 is the first post-AU exceedance in project history if it lands.
-Workspace gates per `BA.md`: pass count ≥ 967, fail count ≤ 33,
+Workspace gates per `AZ-I.md`: pass count ≥ 967, fail count ≤ 33,
 ignored count ≤ 30. Coverage gates: `grep -c 'push_leaf_with_'
 crates/core/**/generated.rs ≥ count of scalar-payload ->` across
 all grammars; `StructRegistry` non-empty for JSON pair/value, CSS

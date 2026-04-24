@@ -38,6 +38,15 @@ as a hard lower bound, "—" reads as out-of-scope for the wave,
 "parity" means no regression vs the prior wave's close measurement,
 and "(AU)" annotates the AU-baseline target this cell recovers.
 
+The 2026-04-24 four-agent preflight was executed and folded into the
+owning tranche docs. It found missing `cargo-nextest`, absent
+`rust-toolchain.toml`, pre-divan `bencher` state, absent
+`StructRegistry`, absent BB rewrite storage, and a generic
+`cargo expand -p bbnf --test projection_totality` probe that was
+killed after roughly two minutes because it pulled the full heavyweight
+graph. The lift comes from making those facts explicit before
+implementation dispatch, not from lowering the architecture.
+
 ## Calibration anchors
 
 The probability estimates are anchored against the project's
@@ -70,6 +79,15 @@ Bounded prelude. Four waves, 14 agent-slots, one-week horizon.
 Well-understood mechanical work; recipe borrowed from
 `TOOLCHAIN-SOTA.md`.
 
+Current preflight reality from 2026-04-24: no `rust-toolchain.toml`
+is present, ambient `rustc` is `1.96.0-nightly (9602bda1d
+2026-04-05)`, `cargo-nextest` is missing, `bench-json` and the
+per-exclude aliases are not live, the Makefile still lacks
+`bench-json`, `make -n ay-bench-close WAVE=close` still clears
+`.bbnf-cache`, and `bencher = "0.1"` remains in `crates/core`. B1's
+probability increases only after W0 first makes that surface executable
+and cache-preserving.
+
 | Wave | Scope | P(declared) | P(floor) | Dominant risk |
 |---|---|---:|---:|---|
 | W0 | Pin + cargo config + nextest + Makefile rewrite; ICE-clean gate | 0.92 | 0.97 | lld path absent on a dev box; cranelift component unavailable on pinned nightly |
@@ -83,6 +101,11 @@ buys nothing it hasn't already proven. The declared-gate estimate
 is pulled down by the multiplicative product across four waves;
 the floor is much higher because partial divan migration still
 delivers the dev-loop truth objective.
+
+Post-preflight estimate once B1.W0 makes the host/tool packet green:
+P(declared) 0.65, P(floor) 0.88. The lift is not from new runtime
+work; it is from preventing agents from spending a wave on absent
+commands.
 
 ## AY-II — W0' close + W1-W5 resume on tape substrate
 
@@ -99,12 +122,19 @@ AY-II.
 | W3 | Sheets typed semantics + performance | 0.75 | 0.88 | Sheets corpus smaller than JSON/CSS; baseline 95 MB/s is modest so easier to meet |
 | W4 | BBNF self-hosting identity + grammar-meta typed semantics | 0.70 | 0.85 | BBNF's self-parse must produce IR identical to the tape-based parser — cutover mid-tranche is tight |
 | W5 | Close matrix + FINAL + successor handoff | 0.95 | 0.98 | Consolidation |
-| **AY-II tranche close** | **All waves** | **0.20** | **0.55** | Compound drops sharply across five waves; floor is "AU parity on at least JSON + Sheets, partial on CSS + BBNF" |
+| **AY-II tranche close** | **All waves** | **0.20** | **0.55** | Compound gate across five waves; floor is "AU parity on JSON + Sheets, typed CSS L4 surfaces present but not yet lightningcss-complete, BBNF identity retained" |
 
-The twitter recovery gap (688 → 1967 MB/s) is AY-II's hardest
-single problem. The floor estimate of 0.55 assumes the recovery
+The twitter recovery gap (688 → 1967 MB/s) is AY-II's highest-
+leverage performance problem. The floor estimate of 0.55 assumes the recovery
 lands to at least 1500 MB/s (76 % of AU) on twitter with
-regression elsewhere minimised — a partial but creditable close.
+regression elsewhere minimised — a useful recovery checkpoint that
+keeps the one-path substrate moving toward AU parity.
+
+Post-preflight estimate after a fresh narrow expand matrix proves
+no second parse, projection totality, and CSS same-path materializer
+consumption: P(declared) 0.28, P(floor) 0.65. A generic expand of a
+large test is not acceptable evidence; the 2026-04-24 probe showed it
+pulls the full heavyweight graph.
 
 ## AZ-I — direct-to-struct for JSON + CSS L4 + Sheets (NEW transformational tranche, first half)
 
@@ -112,7 +142,7 @@ The first of the two tranches that dissolve the tape. AZ-I
 activates direct-to-struct for the three data grammars; BBNF
 continues on the tape substrate through AZ-I close. Four waves
 plus FINAL. Scope is narrower than the monolithic AZ originally
-planned, which boundaries AZ-I away from the single highest-risk
+planned, which boundaries AZ-I away from the most concentrated-risk
 piece (BBNF bootstrap cutover, now AZ-II).
 
 | Wave | Scope | P(declared) | P(floor) | Dominant risk |
@@ -120,37 +150,46 @@ piece (BBNF bootstrap cutover, now AZ-II).
 | W0 | Classifier unification research + derive-cache lift + IR audit pass + baseline bench | 0.65 | 0.88 | Classifier unification requires a deeper refactor than AZ-I can carry; triggers re-plan at AZ-I opening (front-loaded per Q9 resolution) |
 | W1 | StructRegistry + project_types closure across JSON + CSS L4 + Sheets; hard-fail-and-block | 0.65 | 0.85 | One of the three data grammars surfaces a rule that does not project cleanly to a native struct; BA eventually blocks until carry wave lands |
 | W2 | Scalar payload direct-to-struct (JSON + Sheets); twitter ≥ 1967 MB/s hard gate | 0.45 | 0.72 | Direct-to-struct activation does not reach AU parity on twitter in one wave; recovery plateau similar to AY-I.W1 |
-| W3 | Aggregate/Named direct-to-struct (CSS L4); lightningcss node-for-node typed parity | 0.40 | 0.68 | Lightningcss typed parity is the most lawyered gate; partial parity counts as floor, full parity rarely hits first try |
+| W3 | Aggregate/Named direct-to-struct (CSS L4); lightningcss node-for-node typed parity | 0.40 | 0.58 | Lightningcss typed parity is the most lawyered gate; floor is struct-only CSS with named semantic gaps, never a CSS tape bridge |
 | W4 FINAL | 17-entry matrix parity on data grammars; tape scoped to BBNF only; AZ-I handoff contract for AZ-II | 0.92 | 0.96 | Aggregation |
-| **AZ-I tranche close** | **All five waves** | **0.070** | **0.34** | Compound of above. Defensible floor: direct-to-struct on JSON + Sheets with CSS partial; tape retained for CSS + BBNF. |
+| **AZ-I tranche close** | **All five waves** | **0.070** | **0.29** | Compound of above. Defensible floor: direct-to-struct on JSON + Sheets with CSS L4 struct-only but semantically partial; tape retained for BBNF only. |
 
-AZ-I's full declared-gate estimate at 0.070 looks worse than the
-monolithic AZ's 0.09 because the per-wave gates here are
-individually more stringent (hard twitter recovery gate, full
-lightningcss parity); the floor estimate at 0.34 is a compound
-weighted toward the W2/W3 perf gates where reversal is the
-expected case.
+AZ-I's full declared-gate estimate at 0.070 is lower than the
+monolithic AZ's 0.09 because the per-wave gates here are more
+stringent (hard twitter recovery gate, full lightningcss parity);
+the floor estimate at 0.29 is lower than the prior 0.34 because the
+redressed floor removes the CSS tape bridge. The planning posture is
+not retreat; W2/W3 now carry planned revert-and-replan rails so any
+miss narrows toward struct-only CSS instead of closing on a mixed
+tape/struct state.
+
+Post-preflight estimate after `CLASSIFIER-UNIFICATION.md`,
+`payload_coverage.rs`, `StructRegistry`, and the JSON/Sheets/CSS
+struct-only vertical slices exist and their expand checks pass:
+P(declared) 0.10-0.12, P(floor) 0.36-0.40. Without those gates, the
+floor should be discounted because the live materializer surface still
+contains tape payload reads and `CursorChild` panic paths.
 
 ## AZ-II — BBNF self-hosting cutover + `crates/tape/` deletion
 
 The second transformational tranche. Opens on AZ-I close.
-Three waves plus FINAL. This is where the single highest-risk
-piece (BBNF bootstrap cutover via two-stage reproducibility)
-lives with its own reversal gates, isolated from the data-grammar
+Three waves plus FINAL. This is where the most concentrated
+bootstrap risk (BBNF cutover via two-stage reproducibility) lives
+with its own reversal gates, isolated from the data-grammar
 activation work.
 
 | Wave | Scope | P(declared) | P(floor) | Dominant risk |
 |---|---|---:|---:|---|
 | W0 | BBNF bootstrap cutover design + classifier extension for BBNF-specific patterns | 0.70 | 0.90 | Drift sources (AST ordering, trivia, numeric formatting) surface at design time but no mitigation lands; W1 opens with known drift |
 | W1 | Stage A — tape-based compiler builds struct-based BBNF parser candidate; byte-compare against pre-AZ-II | 0.55 | 0.78 | Stage A candidate is structurally correct but not byte-equal due to unforeseen emission ordering |
-| W2 | Stage B — W1 candidate rebuilds itself; byte-equal vs Stage A | 0.50 | 0.72 | Byte-equal reproducibility is the hardest single check in the entire runway; failure triggers wave revert and AZ-II re-plan against captured drift evidence (no partial-closure floor is declared) |
+| W2 | Stage B — W1 candidate rebuilds itself; byte-equal vs Stage A | 0.50 | 0.72 | Byte-equal reproducibility is the tightest single check in the runway; a miss triggers wave revert and AZ-II re-plan against captured drift evidence (no partial-closure floor is declared) |
 | W3 FINAL | `crates/tape/` deletion + view codegen rewrite + parity harness recoding + 17-entry parity | 0.88 | 0.94 | Mechanical given W2 passes; `cargo build --no-default-features` without `crates/tape/` is the close gate |
-| **AZ-II tranche close** | **All four waves** | **0.17** | **0.45** | Compound. Declared and only acceptable close: `crates/tape/` deleted wholesale. No partial-closure floor is pre-declared; W2 byte-equal failure triggers wave revert and re-plan against captured drift evidence until full dissolution holds. |
+| **AZ-II tranche close** | **All four waves** | **0.17** | **0.45** | Compound. Declared and only acceptable close: `crates/tape/` deleted wholesale. No partial-closure floor is pre-declared; W2 byte-equal miss triggers wave revert and re-plan against captured drift evidence until full dissolution holds. |
 
 The split across the BBNF-cutover boundary materially changes the
-cascade arithmetic (see §Cascade below). The single highest-impact
-risk — Stage A/B byte-equal reproducibility — is now contained
-inside AZ-II rather than folded into a monolithic AZ; failure in
+cascade arithmetic (see §Cascade below). The highest-impact
+cutover risk — Stage A/B byte-equal reproducibility — is now contained
+inside AZ-II rather than folded into a monolithic AZ; a miss in
 AZ-II reverts AZ-II's own substrate without contaminating the
 data-grammar activation AZ-I already landed, and every prior
 tranche that attempted a mid-pipeline cutover (AK-tape-substrate,
@@ -158,6 +197,11 @@ AV-columnar, AY-I-column-revert) is a cautionary precedent that
 informs AZ-II's explicit drift-source enumeration in W0. Full
 dissolution remains the only acceptable AZ-II close; re-plan
 cycles may be required until byte-equal holds.
+
+Post-preflight estimate after AZ-II.W0 splits into design plus
+executable preflight, with `BOOTSTRAP-CUTOVER.md`, actual tape-symbol
+census, `project_types_bbnf`, Stage A/B runner skeleton, and injected
+drift negative test: P(declared) 0.23-0.26, P(floor) 0.55-0.60.
 
 ## BA — lazy typed pointer-path queries over struct tree
 
@@ -169,7 +213,7 @@ struct-tree surface that AZ-II's close guarantees.
 |---|---|---:|---:|---|
 | W0 | Path IR + type checker + parent-pointer micro-bench deciding sidecar-vs-embedded | 0.78 | 0.90 | Parent-pointer benchmark ambiguous; `AscentStrategy` trait deferred to W1 decision rather than wave close |
 | W1 | Lazy traversal + `path!` macro + per-grammar micro-bench | 0.65 | 0.83 | Zero-allocation traversal goal missed on one grammar; dhat-verification shows residual heap use |
-| W2 | Host-binding isomorphism — TS + Python macro expansion | 0.55 | 0.78 | Cross-language macro hygiene is the hardest single piece; TS decorator ergonomics differ from Python callable |
+| W2 | Host-binding isomorphism — TS + Python macro expansion | 0.55 | 0.78 | Cross-language macro hygiene is the densest integration piece; TS decorator ergonomics differ from Python callable |
 | W3 FINAL | Close matrix + handoff to BB | 0.94 | 0.97 | Consolidation |
 | **BA tranche close** | **All four waves** | **0.27** | **0.55** | Defensible floor is "Rust-only path queries on JSON + CSS with zero-alloc confirmed"; TS + Python bindings are stretch |
 
@@ -177,6 +221,11 @@ BA's probability is gated by AZ's outcome. If AZ closes on
 declared gates, BA.P(declared) rises by ~15 %; if AZ closes on
 escape floor, BA's TS/Python work may not open at all (the
 `path!` macro over an unsettled StructRegistry is ill-defined).
+
+Post-preflight estimate after BA.W-1 proves "no tape, full
+registry, struct-only parse, bootstrap reproducibility permanent" and
+the legacy tape path surface is retired or renamed before typed paths
+open: P(declared) 0.34-0.38, P(floor) ~0.65.
 
 ## BB — e-graph rule inference + VM oracle + ranker
 
@@ -189,15 +238,22 @@ the three data grammars' IR stabilises at AZ-I close.
 |---|---|---:|---:|---|
 | W0 | Enumerator + e-graph residue split + VM oracle wrapper + ranker + `crates/ir/src/rewrites/` scaffold + Tranche H ≥ 80 % rediscovery | 0.50 | 0.70 | Tranche H rediscovery misses 80 % threshold on first run; requires enumerator alphabet or oracle refinement |
 | W1 | JSON + Sheets enumeration run; initial curation batch | 0.65 | 0.82 | Ranker ranking inversion — candidates scored high but humans reject; class-2/3 split tuning needed |
-| W2 | CSS + BBNF enumeration | 0.55 | 0.75 | CSS complexity produces e-graph saturation explosions; enumeration bound too tight or too loose |
+| W2 | CSS and BBNF enumeration | 0.55 | 0.75 | CSS complexity produces e-graph saturation explosions; enumeration bound too tight or too loose |
 | W3 | Grammar-specific rule discovery + per-grammar rule files | 0.62 | 0.80 | Few grammar-specific rules actually surface; per-grammar `rewrites/` directories may ship near-empty |
 | W4 FINAL | Cost-model integration + CI for auto-accept + close | 0.90 | 0.95 | Consolidation |
 | **BB tranche close** | **All five waves** | **0.10** | **0.32** | Compound; floor is "JSON enumeration working + Class-1 auto-accept live + Tranche H rediscovery ≥ 50 %" |
 
-BB is the second-lowest declared-gate probability after AZ, but
-its failure mode is softer. A BB close on escape floor still
+BB has a small declared-gate probability because discovery,
+ranking, and emission proof are stacked together; its floor remains
+valuable. A BB close on floor still
 delivers useful automation (auto-accept on algebraic identities)
 without blocking downstream work.
+
+Post-preflight estimate after rule storage, derive-cache discovery,
+VM-residue wrapper, and fire/extract/writeback/emission proof are
+code-real: P(declared) 0.18-0.25, P(floor) 0.45-0.55. The current live
+rewrite substrate is fixed Rust rules under `crates/ir/src/egraph/rules/`;
+BB must prove discovered-rule impact through generated-code changes.
 
 ---
 
@@ -220,26 +276,26 @@ probabilities are:
 | Milestone | Joint P(declared) | Joint P(floor) | Reading |
 |---|---:|---:|---|
 | B1 + AY-II close | 0.55 × 0.20 = 0.11 | 0.80 × 0.55 = 0.44 | Tape-substrate recovery through AY-II |
-| + AZ-I close | 0.11 × 0.070 = 0.008 | 0.44 × 0.34 = 0.15 | Direct-to-struct on 3 data grammars; tape retained for BBNF only |
-| + AZ-II close | 0.008 × 0.17 = 0.0014 | 0.15 × 0.45 = 0.068 | BBNF cutover; tape crate deleted |
-| + BA close | 0.0014 × 0.27 = 0.00038 | 0.068 × 0.55 = 0.037 | Pointer queries over struct tree |
-| + BB close | 0.00038 × 0.10 = 0.000038 | 0.037 × 0.32 = 0.012 | Rule inference |
+| + AZ-I close | 0.11 × 0.070 = 0.008 | 0.44 × 0.29 = 0.128 | Direct-to-struct on 3 data grammars; tape retained for BBNF only |
+| + AZ-II close | 0.008 × 0.17 = 0.0014 | 0.128 × 0.45 = 0.058 | BBNF cutover; tape crate deleted |
+| + BA close | 0.0014 × 0.27 = 0.00038 | 0.058 × 0.55 = 0.032 | Pointer queries over struct tree |
+| + BB close | 0.00038 × 0.10 = 0.000038 | 0.032 × 0.32 = 0.010 | Rule inference |
 
 **Honest accounting of the split's effect.** The pre-split
 monolithic AZ had P(declared) 0.09 and P(floor) 0.38. The split
-gives AZ-I + AZ-II joint P(declared) 0.012 and P(floor) 0.15 —
-*lower* raw multiplicative joint than the monolith. This is
-counterintuitive but correct: the split adds waves (9 total across
-AZ-I + AZ-II versus 7 in the monolith), and each additional wave
-is another probability-less-than-one factor in the cascade.
+gives AZ-I + AZ-II joint P(declared) 0.012 and P(floor) 0.13 as
+raw multiplicative arithmetic. This is expected: the split adds
+waves (9 total across AZ-I + AZ-II versus 7 in the monolith), and
+each additional wave is another probability-less-than-one factor in
+the cascade.
 
-What the split *does* buy is not raw joint probability — it is
+What the split buys is not raw joint probability — it is
 **mid-runway closure preservation**. In the monolithic AZ, if W4
-(BBNF cutover) fails, the *entire* tranche closes on escape and
+(BBNF cutover) misses, the *entire* tranche closes on escape and
 the direct-to-struct activation for the data grammars is tangled
-with the BBNF failure. In the split, AZ-I is a hard closure gate
+with the BBNF cutover miss. In the split, AZ-I is a hard closure gate
 *before* BBNF cutover starts. P(at least AZ-I closes at floor) is
-0.15 — meaning in 15 % of attempts, the runway reaches a world
+0.128 — meaning in roughly 13 % of attempts, the runway reaches a world
 where three of four grammars are on direct-to-struct and the plan
 has a clean checkpoint, even if AZ-II never closes. That
 checkpoint has genuine engineering value — benches, type checkers,
@@ -248,30 +304,32 @@ waiting for BBNF's outcome.
 
 The declared-gate end-to-end 0.000038 reads as "every tranche
 closes on its exact declared gate without any replan or escape";
-that number is not a forecast of project failure, it is an honest
-reading of *how many independent ambitious gates are stacked*.
-The floor cascade at 0.012 (roughly 1 in 80) is below the
-pre-split 0.05 — the price paid for the split is a less favourable
-cascade multiplier, offset by genuine mid-runway-closure value
-that simple multiplication cannot capture.
+that number is not a ceiling. It is a proof obligation signal:
+the runway stacks many independent ambitious gates and must be
+driven by wave-local proof, not by hope. The floor cascade at 0.010
+(roughly 1 in 100) is below the pre-split 0.05 because the split adds
+gates; the engineering value is the clean checkpoint and cheaper
+re-plan surface that simple multiplication cannot capture.
 
 At the floor level, the runway delivers:
 
 - Dev-loop truth, divan-harnessed bench, pinned toolchain (B1).
 - JSON + Sheets at AU-baseline parity, CSS partial (AY-II floor).
-- Direct-to-struct on JSON + Sheets with CSS partial; tape retained
-  for CSS + BBNF (AZ-I floor).
+- Direct-to-struct on JSON + Sheets with CSS L4 struct-only but
+  semantically partial; tape retained for BBNF only (AZ-I floor).
 - BBNF on direct-to-struct with `crates/tape/` deleted wholesale
   (AZ-II declared, and the only acceptable close). Byte-equal
-  reproducibility failures route to wave revert and re-plan, not
+  reproducibility misses route to wave revert and re-plan, not
   to a partial-closure state.
 - Rust-only pointer queries on JSON + CSS with zero-alloc traversal;
   TS + Python bindings stretch (BA floor).
 - JSON enumeration + Class-1 auto-accept + partial Tranche H
   rediscovery (BB floor).
 
-That set of outcomes is the realistic plan even if the declared
-gates slip. Every declared gate that actually hits is a bonus.
+That set of outcomes is the disciplined floor while the declared
+gates remain the target. The plan does not lower the target to the
+floor; it uses the floor to keep architectural progress useful when
+a wave needs re-plan.
 
 **What the split does improve empirically**: reversal surface.
 A revert inside AZ-I reverts only AZ-I substrate; a revert inside
@@ -280,8 +338,8 @@ touches seven waves of interleaved substrate. AQ.5's clean
 reversal (32 commits, one wave's worth of substrate) was the
 project's cleanest revert because its scope was narrow; the
 AZ-I/AZ-II boundary enforces similar narrow-scope reverts by
-construction. The expected-reversal-count rises, but each
-reversal is cheaper.
+construction. The number of planned re-plan opportunities rises, but
+each re-plan is cheaper and better isolated.
 
 **AZ-II is required, not optional.** Full tape abrogation is a
 hard architectural requirement — the last orthogonal codepath
@@ -293,7 +351,7 @@ lives in a single-substrate world. Halting after AZ-I leaves
 prohibits. The split improves reversal surface and mid-runway
 checkpointing, it does not create a legitimate halt point. Full
 tape abrogation is binding repo policy. AZ-II does not declare a
-partial-closure floor; W2 byte-equal failure triggers wave revert
+partial-closure floor; a W2 byte-equal miss triggers wave revert
 and re-plan against captured drift evidence, repeated as many
 times as required until the dissolution holds.
 
@@ -380,14 +438,21 @@ Four levers dominate the cascade probability:
    is still acceptable but pushes the full-AU recovery to a
    carry wave. Cascade drops by ~ 10 %.
 
-3. **BBNF bootstrap byte-equal reproducibility** (AZ-II.W2 gate).
-   Failure here is the single highest-impact lever — triggers
+3. **CSS struct-only typed richness** (AZ-I.W3 gate). The former
+   floor permitted CSS aggregate tape retention; that is now
+   rejected. If lightningcss node-for-node parity misses, the
+   acceptable floor is CSS L4 on struct-only output with named
+   semantic gaps and no tape fallback. Cascade drops by ~ 15 %
+   relative to the stale floor.
+
+4. **BBNF bootstrap byte-equal reproducibility** (AZ-II.W2 gate).
+   A miss here is the highest-impact lever — triggers
    wave revert and AZ-II re-plan against captured drift evidence,
    repeated as many cycles as required. Cascade drops by ~ 25 %
    per additional re-plan cycle; the close gate (full dissolution)
    does not move.
 
-4. **Tranche H rediscovery threshold** (BB.W0 gate; ≥ 80 % of
+5. **Tranche H rediscovery threshold** (BB.W0 gate; ≥ 80 % of
    hand-coded rules re-derived). If the enumerator produces
    candidates that don't match Tranche H shapes, BB.W0 floor
    drops to 50 %; downstream waves still function.
@@ -406,8 +471,9 @@ This document is a calibration tool. It answers two questions the
 tranche plan docs alone cannot:
 
 - *How confident am I that the declared gates land?* The answer
-  is "moderately on any individual wave, low across the runway as
-  a compound product, comfortable at the defensible-floor level".
+  is "moderately on any individual wave, small as a full-runway
+  compound product, and materially stronger at the defensible-floor
+  level".
 
 - *Where does a grammar stand at each checkpoint?* The per-grammar
   tables name the expected MB/s (or correctness property) per wave
@@ -415,10 +481,12 @@ tranche plan docs alone cannot:
   outcome versus where BEAT-AU is targeted.
 
 Update cadence: this matrix should be refreshed at every tranche
-close (B1 FINAL, AY-II FINAL, AZ FINAL, BA FINAL, BB FINAL) with
-the actual-landed column appended and the remaining-runway
-probabilities re-estimated against the new evidence. The
-calibration anchors above should also be refreshed whenever a
+close (B1 FINAL, AY-II FINAL, AZ-I FINAL, AZ-II FINAL, BA FINAL,
+BB FINAL) with the actual-landed column appended and the
+remaining-runway probabilities re-estimated against the new
+evidence. The architecture/optimisation inventory that explains
+these probabilities lives in `docs/tranches/REMAINING-TRAJECTORY.md`.
+The calibration anchors above should also be refreshed whenever a
 tranche closes on escape, reverts wholesale, or exceeds its
 declared gates — each is a data point that updates the base-rate
 priors for the remaining runway.

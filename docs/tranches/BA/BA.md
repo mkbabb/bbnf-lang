@@ -79,6 +79,37 @@ If any of the above is missing at AZ-II close, BA remains closed and
 re-plans against the residual gap. BA does not open on a partial
 substrate.
 
+## BA.W-1 — opening verification
+
+BA gains a pre-wave handoff verification before BA.W0 creates any new
+path API. This is not a runtime implementation wave; it is the gate
+that proves BA is not layering typed paths over the legacy tape path
+surface.
+
+BA.W-1 must prove:
+
+1. No tape imports or tape runtime re-exports remain in the public
+   parse/path surface.
+2. `StructRegistry` and `StructLayout` exist for JSON, CSS L4,
+   Sheets, and BBNF.
+3. Every production grammar reaches struct-only parse output.
+4. BBNF bootstrap reproducibility is permanent after AZ-II close.
+5. Legacy `runtime::path` is renamed, retired, or explicitly marked
+   internal so BA's `TypedPath` cannot coexist ambiguously with the
+   old tape path API.
+
+Command packet:
+
+```bash
+rg -n 'struct TypedPath|enum PathError|PathSegment::Wildcard|fn type_check|AscentStrategy|path_check|parent_pointer_strategies' crates/core/src crates/ir/src crates/derive/src
+cargo test --profile ax-iter -p bbnf --test path_type_errors
+cargo bench -p bbnf --bench parent_pointer_strategies
+```
+
+If these commands cannot exist by BA open, BA stays closed and an
+AZ-II carry wave owns the missing substrate. BA does not create a
+fallback untyped resolver.
+
 ## Invariants
 
 1. **No runtime path error.** Every path that compiles returns a

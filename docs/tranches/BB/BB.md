@@ -17,6 +17,27 @@ colocated with each grammar under `grammar/<name>/rewrites/*.ron`
 via a standardised schema the `bbnf_derive` build step compiles
 into that grammar's cost-config.
 
+## Preflight truth from 2026-04-24
+
+The probability-lift pass found that BB's planned storage and
+enumeration surfaces are not code-real yet:
+
+- `crates/ir/src/rewrites/` does not exist.
+- `crates/egraph/src/ruler/` does not exist.
+- The live rewrite path is fixed Rust under
+  `crates/ir/src/egraph/rules/`.
+- No RON rule schema, `RuleSet`, provenance type, grammar-colocated
+  rewrite discovery, derive cache invalidation, or VM-residue oracle
+  wrapper exists yet.
+- Historical e-graph evidence says many fixed rules did not fire on
+  production grammars; BB must prove fire/extract/writeback/emission
+  before it claims performance impact.
+
+BB therefore opens on a substrate preflight, not on enumeration.
+The first close condition is "a discovered or stored rule changes
+generated parser code through the live pipeline", not "a rule file
+exists".
+
 ## Architectural thesis
 
 1. **Rule inference over `IrNode` is an e-graph enumeration
@@ -46,6 +67,36 @@ into that grammar's cost-config.
    accepts with audit log only. Class 2 (structural resemblance
    to hand-coded patterns) fast-tracks. Class 3 (novel) is the
    only class that consumes human review time.
+
+## Rule admission chain
+
+A rule is not admitted until the whole consumer chain is green:
+
+```text
+RON rule or inferred candidate -> schema validation -> derive cache key
+-> live rule registry -> e-graph search/apply -> extraction chooses it
+-> write_back_optimized changes GrammarIR -> expanded Rust hot path changes
+-> fixture and bench/proof move
+```
+
+Per-rule report must show `search > 0`, `apply/work > 0`, extraction
+selected the new form, and generated code changed in a parser hot path.
+Line-count-only diffs, rule-store-only diffs, and rules subsumed by the
+pre-egraph normalizer do not close a BB wave.
+
+Command packet:
+
+```bash
+rg -n 'src/rewrites|src/ruler|RuleSet|Provenance|rewrites/' crates/ir crates/egraph crates/derive grammar
+
+BBNF_EGRAPH_REPORT=1 BBNF_HIR_EGRAPH_REPORT=1 \
+cargo run -p bbnf --example egraph_fire_probe --profile ax-iter
+
+BBNF_PIPELINE_REPORT=1 BBNF_EGRAPH_REPORT=1 BBNF_CSP_REPORT=1 \
+cargo expand -p bbnf --bench json_monolithic > target/expand/bb-json.rs
+```
+
+Profile only after the expand diff proves emitted hot-path change.
 
 ## Architecture — e-graph first, VM residue second
 

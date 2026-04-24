@@ -118,6 +118,17 @@ iter-test-analysis    = "nextest run --cargo-profile ax-iter -p bbnf-analysis"
 iter-test-prettify    = "nextest run --cargo-profile ax-iter -p gorgeous"
 iter-test-lsp         = "nextest run --cargo-profile ax-iter -p bbnf-lsp"
 
+# Leaf-crate test tier under ax-iter (no derive-Parser sites; fastest
+# correctness tier). Crate names match the workspace's actual package
+# names; `scripts/test-tier.sh leaf` routes through this alias. B1.md
+# hard-gate item 5 references it by name.
+iter-test-leaf        = "nextest run --cargo-profile ax-iter -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser"
+
+# Grammar-tier passthrough under ax-iter. Pair with `--test <name>` or
+# `-p <crate>` at call sites, e.g.
+# `cargo iter-test-grammar -p bbnf --test value_api_apples_to_apples`.
+iter-test-grammar     = "nextest run --cargo-profile ax-iter"
+
 # Iteration: clippy (matches iter-check shape).
 iter-clippy           = "clippy --profile ax-iter --workspace --all-targets -- -D warnings"
 
@@ -132,6 +143,28 @@ bench-compile         = "bench --profile ay-final -p bbnf --bench compile_pipeli
 
 # iai-callgrind (CI-only; requires valgrind on Linux).
 bench-iai             = "bench --profile bench-ci --workspace --features iai"
+
+# B0.W1.a three-tier surface — `prep-bench` and `final-bench` anchor
+# the profiling-prep and publish-grade tiers. Profile definitions live
+# in root Cargo.toml ([profile.profiling-prep] inherits release with
+# debug=true, strip=false; [profile.bench] fat-LTO publish). AY W5-W7
+# gate commands in PROFILING.md reach these via
+# `scripts/prepare-profile-wave.sh` + `scripts/profile-bench-headless.sh`.
+prep-bench            = "bench --profile profiling-prep --no-run"
+final-bench           = "bench --profile bench"
+
+# Expand entrypoints for AY.W5-W7 hard gates (one per grammar). Callers
+# redirect into files under target/expand/ — the make wrappers
+# (`make ay-expand-json` etc.) do exactly that.
+expand-json           = "expand -p bbnf --bench json_monolithic"
+expand-css            = "expand -p bbnf --bench css_l4"
+expand-bbnf           = "expand -p bbnf --bench bbnf_monolithic"
+expand-sheets         = "expand -p bbnf --bench google_sheets_monolithic"
+
+# `cargo asm-parse --bench <name> <fn>` for AY.W5 close-stamp asm
+# inspection. Separate from asm-bbnf (workspace-level) because the
+# bench target selection matters for symbol scoping.
+asm-parse             = "asm -p bbnf --profile release"
 
 # Expansion / inspection (debug investigations).
 expand-bootstrap      = "expand --profile ax-iter -p bbnf-bootstrap --lib"

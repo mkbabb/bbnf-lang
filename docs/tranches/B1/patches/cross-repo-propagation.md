@@ -83,7 +83,7 @@ confuse the resolution order.
 - **bbnf-lang**: §divan-migration.md — 19 bench binaries.
 - **parse-that**: if `rust/parse_that/benches/*.rs` or `rust/regex/benches/*.rs`
   exist, mechanically port. Otherwise no change.
-- **pprint**: unlikely bench targets; check before assuming migration.
+- **pprint**: bench targets are not assumed; inspect before migration.
 - **csc411**: if the crate has benchmarks (for CSP solver hot paths), port.
 
 ## Nextest adoption (per-repo)

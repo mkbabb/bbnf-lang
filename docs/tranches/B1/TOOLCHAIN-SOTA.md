@@ -388,11 +388,14 @@ current bottleneck. Constraints:
 - `wild` (Rust-written, GitHub: davidlattimore/wild) is
   Linux-only as of v0.8.0 (January 2026). **Not available on macOS
   arm64.**
-- `lld` is the only free-and-available option for macOS arm64, via
-  `brew install lld`. Measured 30-50% link-time reduction, 10-20%
-  rebuild-time reduction per the existing config.toml comment block.
-- **Recommendation**: enable `lld` by default on macOS arm64 (not
-  `mold`). Cost: 2 lines (uncomment + feature-gate). Risk: low.
+- `lld` is the only free-and-available fast-linker option for macOS
+  arm64, via the separate `brew install lld` formula. Measured
+  30-50% link-time reduction, 10-20% rebuild-time reduction per
+  the existing config.toml comment block.
+- **Recommendation**: keep Apple ld64 as the default and provide a
+  commented opt-in `lld` block. Cost: prose + commented config.
+  Risk: low. This matches the post-redress on-host probe: Homebrew's
+  `llvm` formula ships lldb, not `ld.lld`.
 
 ### Tier 4: specialised or upstream-gated
 
@@ -673,14 +676,14 @@ used in earlier nightlies is absent on this pin). `.cargo/config.toml`
 Zed/Tauri dev teams).
 **Dev-wall impact**: 5-15% total compile-wall reduction.
 
-### Rank 6 — Enable `lld` on macOS arm64 by default (ADD)
+### Rank 6 — Provide `lld` on macOS arm64 as opt-in (ADD)
 
-**Scope**: uncomment the existing `lld` block in
-`.cargo/config.toml:22-23` (currently a prose comment). Keep the
-preflight-check prose (`ls /opt/homebrew/opt/lld/bin/ld64.lld` fails
-loudly if missing).
-**Cost**: 2 lines uncommented.
-**Risk**: low — documented path.
+**Scope**: keep the existing default linker on macOS arm64 and add a
+commented `lld` block in `.cargo/config.toml`. Keep the preflight
+probe (`ls /opt/homebrew/opt/lld/bin/ld.lld`) in prose; do not
+install or probe lld on the default path.
+**Cost**: comment block + optional config.
+**Risk**: low — no default dependency on a Homebrew formula.
 **Dev-wall impact**: 10-20% rebuild-time reduction on small edits.
 **Note**: requires `brew install lld` as a documented dev-setup step.
 Add to PROFILING.md §Dev-host setup.

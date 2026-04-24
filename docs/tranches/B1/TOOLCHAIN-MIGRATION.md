@@ -98,9 +98,10 @@ benchmark correctness).
 
 **Source**: `TOOLCHAIN-SOTA.md §Tier 3 T3.2`.
 **Justification**: `wild` (Linux-only); `mold` (commercial license on
-macOS 2.0+); `lld` is the only free-and-available option. Measured 30-50%
-link-time reduction, 10-20% rebuild-time reduction. Requires `brew install
-llvm`.
+macOS 2.0+); `lld` is the only free-and-available fast-linker option.
+Measured 30-50% link-time reduction, 10-20% rebuild-time reduction.
+Default posture is Apple ld64; `lld` is a commented opt-in requiring the
+separate `brew install lld` formula, not `brew install llvm`.
 **Patch**: `patches/config.toml.draft [target.aarch64-apple-darwin]`.
 
 ---
@@ -393,7 +394,7 @@ regression but everything builds.
 ### 5.3 (secondary) `rust-toolchain.toml` pin too aggressive
 
 **Probability**: low. The pin is 6 days past the ICE baseline; that
-window is short enough that crate-compat regressions are unlikely but
+window is short enough that crate-compat regressions are bounded but
 long enough that the nightly-only flags may have stabilised or drifted.
 
 **Mitigation**: the upgrade procedure in `rust-toolchain.toml.draft`

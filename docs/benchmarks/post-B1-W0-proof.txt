@@ -1,0 +1,9 @@
+preflight.git-status	empty	before W0.a mutation (git status --short empty modulo target symlink)
+preflight.has-rust-toolchain	absent	repo root (B1.W0.a about to create)
+preflight.rustc-ambient	rustc 1.96.0-nightly (9602bda1d 2026-04-05)	ambient rustup default prior to pin
+preflight.rustup-active	nightly-aarch64-apple-darwin (default)	rustup show active-toolchain
+preflight.nightly-2026-04-11-installed	nightly-2026-04-11-aarch64-apple-darwin	already installed in rustup toolchain list
+rustc-version-pinned	rustc 1.96.0-nightly (02c7f9bec 2026-04-10)	rustup run nightly-2026-04-11 rustc --version post-pin
+rustup-show-pinned	active: nightly-2026-04-11-aarch64-apple-darwin (overridden by rust-toolchain.toml)	rustup show inside worktree post-pin
+toolchain-smoke	pass 6.32s	cargo check -p bbnf --profile ax-iter exit 0 wall-clock via /usr/bin/time -p
+toolchain-smoke-ice-count	0	ls target/rustc-ice-*.txt post-smoke

@@ -10,6 +10,52 @@ refreshes the development/proof surface before AY-II resumes.
 
 ---
 
+## 2026-04-24 — W0 close (with triumvirate redress on the iter-check-full ceiling)
+
+Master at `d44585bb`. W0 landed as four commits + the triumvirate redress:
+
+- `41b9c4fb` — W0.a substrate pin (`rust-toolchain.toml` → `nightly-2026-04-11`). Smoke
+  `cargo check -p bbnf --profile ax-iter` = 6.32 s; ICE count 0 post-smoke.
+- `416dcf76` — W0.b `.cargo/config.toml` rewrite. 4-exclude `iter-check` satisfies
+  invariant 10 (gorgeous, bbnf-bootstrap, bbnf-analysis, bbnf-lsp each have a named
+  fast-path alias). Cost-model comment block expanded. `cargo build -p bbnf` 44.91 s
+  (cold rebuild under new `-Zthreads=8 -Zshare-generics=y` rustflags).
+- `6d800162` — W0.c `.config/nextest.toml` rewrite. 4 profiles; `[[profile.close.overrides]]`
+  (array-of-tables form) draft-typo discovered + fixed in-place. `2b6e50bf` propagates
+  the fix to `patches/nextest.toml.draft`.
+- `06d3db65` — W0.d Makefile rewrite (470 → 210 lines). GNU-timeout cascade
+  deleted; `ay-prime` target added; `scripts/test-tier.sh` aligned to
+  nextest surface + `--profile` passthrough.
+- Triumvirate (`eeca61e1` research, `fd2cf6fb` plan, `22013145` redress Change 1,
+  `1926aed1` invariant 11 rewording, `1c8c1282` measurements) on the `iter-check-full`
+  ceiling after an initial cold run exceeded 25 min wall-clock. Research attributed
+  the wall to gorgeous's `default = ["bbnf-grammar", "json-grammar", ...]` which activated
+  6 `#[derive(Parser)]` sites in one rustc. Fix: `default = []` + `[[bin]] required-features
+  = ["bin-full"]`. Validated by `iter-check-prettify` warm dropping from ~500 s (pre-fix)
+  to 33.36 s (post-fix). bbnf-bootstrap's > 600 s single-derive wall emerged as the
+  new critical-path ceiling and is routed to AZ-I.W0 (derive-cache relocation + Watt)
+  per `B1.md` §Cross-tranche debt. Invariant 11 reworded to the measured truth: B1
+  records the ceiling it holds pre-AZ-I; the ≤ 5 min target opens at AZ-I close.
+- `d44585bb` — W0 close commit: `scripts/test-tier.sh` bash-3.2 empty-array expansion fix
+  (`${ARR[@]+"${ARR[@]}"}` guard); final invariant 11 wording; leaf test tier 582/582
+  pass in 45.89 s; `ay-prime` cold + nextest dry-runs routed to AZ-I.W0 with rationale.
+
+Routine surface measured walls (`docs/benchmarks/post-B1-W0-routine.txt`):
+
+| alias | wall | status |
+|---|---|---|
+| `iter-check` | 3.88 s warm | pass |
+| `iter-check-lsp` | 3.27 s warm | pass |
+| `iter-check-prettify` | 33.36 s warm | pass (was ~500 s pre-fix) |
+| `iter-check-bootstrap` | > 660 s (killed-at-cap) | AZ-I.W0-routed |
+| `scripts/test-tier.sh leaf --profile ax-iter` | 45.89 s / 582 pass | pass |
+
+W0 closes on the pinned substrate + full alias surface + nextest 4-profile set +
+Makefile rewrite + triumvirate fix + honest invariant 11 ledger. W1 opens on this
+baseline.
+
+---
+
 ## 2026-04-22 — Concrete rewrite absorbing the 12-step migration
 
 B1's wave plan is rewritten from the original "repair + close" 2-wave

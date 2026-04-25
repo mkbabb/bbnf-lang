@@ -24,10 +24,11 @@
 //!    pushed at or after `open_offset` and a subsequent
 //!    `begin_compound` reuses that offset cleanly.
 //! 5. The finaliser derives `sib_skip` unconditionally on every
-//!    tape whose inline `frame_depth` stream is populated in
-//!    lockstep with the columns (or, for legacy post-order callers
-//!    relying on `derive_frame_depth`, stamps `sib_skip` by walking
-//!    the `child_off` graph).
+//!    tape from the inline `frame_depth` stream the builder
+//!    auto-populates on every structural push (B3.W0.γ — the legacy
+//!    `derive_frame_depth` reverse-walk reconstruction is retired
+//!    because it could not handle pre-order children of post-order
+//!    parents).
 
 use tape::{Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset};
 
@@ -42,31 +43,24 @@ use tape::{Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset};
 #[test]
 fn nested_begin_end_produces_pre_order_tape() {
     let mut b = TapeBuilder::new();
-    b.enable_inline_frame_depth();
 
-    // New 6-arg signature: (kind, span_lo, variant_idx, meta_idx,
-    // frame_depth, extra_flags). Tests use 0 for variant/meta/extra_flags
-    // and populate frame_depth inline as before.
+    // B3.W0.γ — the builder auto-stamps `frame_depth` on every
+    // structural push (leaf or compound) via its internal
+    // `current_depth` counter. Tests no longer manage the depth
+    // stream manually.
     let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
     assert_eq!(root, 0);
 
     let inner = b.begin_compound(TapeKind::Seq, 0, 0, 0, 1, 0);
     assert_eq!(inner, 1);
 
-    // Leaf pushes don't auto-stamp depth; callers that use the
-    // begin/end API either route through `driver::emit_leaf*` (which
-    // takes `frame_depth` explicitly) or stamp depth inline as the
-    // tests below do.
-    b.frame_depth_mut().push(2);
     let a = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     assert_eq!(a, TapeOffset(2));
-    b.frame_depth_mut().push(2);
     let bl = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
     assert_eq!(bl, TapeOffset(3));
 
     b.end_compound(inner, 2);
 
-    b.frame_depth_mut().push(1);
     let c = b.push_leaf(TapeKind::Literal, 2, 3, 0, 0);
     assert_eq!(c, TapeOffset(4));
 
@@ -152,10 +146,10 @@ fn nested_begin_end_produces_pre_order_tape() {
 #[test]
 fn end_compound_post_order_stamps_backward_child_off_and_has_children() {
     let mut b = TapeBuilder::new();
-    // Post-order emission does not opt into inline frame-depth
-    // (the shape emitters don't call `enable_inline_frame_depth`),
-    // so `finish()` reconstructs frame_depth via `derive_frame_depth`
-    // from the `child_off` graph.
+    // B3.W0.γ — the builder auto-stamps `frame_depth` on every
+    // push, and `end_compound_post_order` retroactively bumps the
+    // child range so leaves emitted before their post-order wrapper
+    // land at the correct (parent + 1) depth.
 
     // Simulate Flat emission: capture first-child index PRE children,
     // emit children (each child uses its own begin/end in pre-order),
@@ -240,7 +234,6 @@ fn end_compound_post_order_empty_frame() {
 #[test]
 fn end_compound_without_children() {
     let mut b = TapeBuilder::new();
-    b.enable_inline_frame_depth();
     let root = b.begin_compound(TapeKind::Seq, 5, 0, 0, 0, 0);
     b.end_compound(root, 5);
 
@@ -261,7 +254,6 @@ fn end_compound_without_children() {
 #[test]
 fn rollback_to_unwinds_begin_compound_cleanly() {
     let mut b = TapeBuilder::new();
-    b.enable_inline_frame_depth();
 
     let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
     assert_eq!(root, 0);
@@ -272,9 +264,7 @@ fn rollback_to_unwinds_begin_compound_cleanly() {
     // failed alt branch.
     let attempt_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 1, 0);
     assert_eq!(attempt_off, 1);
-    b.frame_depth_mut().push(2);
     let _l0 = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
-    b.frame_depth_mut().push(2);
     let _l1 = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
     assert_eq!(b.columns().len(), 4);
 
@@ -292,7 +282,6 @@ fn rollback_to_unwinds_begin_compound_cleanly() {
         retry_off, attempt_off,
         "begin_compound reuses the rolled-back offset",
     );
-    b.frame_depth_mut().push(2);
     let _l2 = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     b.end_compound(retry_off, 1);
     b.end_compound(root, 1);
@@ -313,9 +302,7 @@ fn rollback_to_unwinds_begin_compound_cleanly() {
 #[test]
 fn rollback_to_idempotent() {
     let mut b = TapeBuilder::new();
-    b.enable_inline_frame_depth();
     let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
-    b.frame_depth_mut().push(1);
     let _leaf = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     let len_before = b.columns().len();
 
@@ -337,11 +324,14 @@ fn rollback_to_idempotent() {
     assert_eq!(b.columns().len(), 1);
 }
 
-/// The legacy `mark_children` + `push_compound` path continues to
-/// work unchanged — post-order tapes, finaliser derives `sib_skip`
-/// via `derive_frame_depth` over the `child_off` graph.
+/// Post-order shape emission with leaves emitted before the
+/// wrapping compound: `end_compound_post_order` retroactively bumps
+/// the inline `frame_depth` over the child range so leaves stamped
+/// at the outer frame's depth migrate to (parent + 1) before the
+/// finaliser derives `sib_skip`. B3.W0.γ replaced the legacy
+/// `derive_frame_depth` reverse-walk with this in-builder bookkeeping.
 #[test]
-fn legacy_push_compound_path_still_closes_via_finaliser() {
+fn post_order_close_bumps_child_frame_depth() {
     let mut b = TapeBuilder::new();
 
     let mark = TapeOffset(b.columns().len() as u32);
@@ -359,7 +349,7 @@ fn legacy_push_compound_path_still_closes_via_finaliser() {
     assert_eq!(cols.sib_skip_at(0), 1);
     assert_eq!(cols.sib_skip_at(1), 0);
 
-    // Cursor reads the legacy subtree identically to pre-W5.1.
+    // Cursor reads the post-order subtree.
     let cursor = TapeCursor::new(&tape, root);
     assert_eq!(cursor.child_count(), 2);
 }
@@ -370,20 +360,17 @@ fn legacy_push_compound_path_still_closes_via_finaliser() {
 #[test]
 fn sibling_begin_end_subtrees_under_outer_begin() {
     let mut b = TapeBuilder::new();
-    b.enable_inline_frame_depth();
 
     let outer = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
     assert_eq!(outer, 0);
 
     let left = b.begin_compound(TapeKind::Seq, 0, 0, 0, 1, 0);
     assert_eq!(left, 1);
-    b.frame_depth_mut().push(2);
     let _la = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     b.end_compound(left, 1);
 
     let right = b.begin_compound(TapeKind::Seq, 1, 0, 0, 1, 0);
     assert_eq!(right, 3);
-    b.frame_depth_mut().push(2);
     let _ra = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
     b.end_compound(right, 2);
 

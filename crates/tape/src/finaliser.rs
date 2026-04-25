@@ -99,11 +99,11 @@
 //! The alignment contract is enforced by the `tape_basic` regression
 //! suite's Stage-C / reference-walk bit-equality assertions. Running
 //! Stage-C on the legacy fn-per-rule path would re-derive values the
-//! parser's inline writes already carry; the
-//! [`TapeBuilder::has_inline_frame_depth`](crate::TapeBuilder)
-//! gate makes Stage-C conditional on the DTA driver supplying the
-//! `frame_depth` stream inline, so the scan only runs when it is the
-//! canonical emitter for those columns.
+//! parser's inline writes already carry; B3.W0.γ made the
+//! [`crate::TapeBuilder`]'s `frame_depth` stream the sole source for
+//! Stage-C, with [`crate::TapeBuilder::end_compound_post_order`]
+//! retroactively bumping the child range so post-order shapes land
+//! leaves at the correct depth before this scan reads them.
 //!
 //! # Future parallelisation
 //!
@@ -302,75 +302,18 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
     }
 }
 
-/// Derive the `frame_depth` column from a fully-emitted [`Columns`]
-/// whose `child_off` pointers reflect the canonical post-order layout.
-///
-/// This helper exists for the AV.4.4 transition window: stage-A
-/// emission of `frame_depth` lands with the PSI stream
-/// (`av4-psi`), but Stage-C's bit-equality regression has to be
-/// provable today, against tapes that were built without an
-/// authoritative depth column. The helper walks the existing
-/// `child_off` graph once and stamps a depth byte per record;
-/// post-PSI integration the DTA writes the column directly during
-/// stage A and this helper becomes a test-only fixture.
-///
-/// # Algorithm
-///
-/// Reverse forward scan: visit records from `n - 1` down to `0`.
-/// Compounds advertise their child run via `child_off`; every record
-/// reachable from that pointer inherits the parent's depth + 1.
-/// Records that aren't pointed at by any compound's `child_off` are
-/// themselves roots at depth 0.
-///
-/// For deeply-nested grammars the depth is bounded by the parser's
-/// recursion budget, well under [`u8::MAX`].
-#[inline(always)]
-pub fn derive_frame_depth(columns: &Columns) -> Vec<u8> {
-    let n = columns.len();
-    let mut depth = vec![0u8; n];
-    if n == 0 {
-        return depth;
-    }
-    // Walk in REVERSE so each compound's depth is finalised (by an
-    // outer compound's stamp, or by the default 0 for a root) before
-    // we propagate `parent_depth + 1` onto its children.
-    for parent_idx in (0..n as u32).rev() {
-        if !columns.has_children_at(parent_idx) {
-            continue;
-        }
-        let child_off = columns.child_off_at(parent_idx);
-        if child_off.is_none() {
-            continue;
-        }
-        let parent_depth = depth[parent_idx as usize];
-        let child_depth = parent_depth.checked_add(1).unwrap_or_else(|| {
-            panic!(
-                "derive_frame_depth: depth overflow at parent {} (parent_depth = 255)",
-                parent_idx,
-            )
-        });
-        // Direct children sit at indices in [child_off, parent_idx).
-        // Enumerate via the V2 child-walk: from `parent_idx - 1`
-        // backward, follow the post-order leap (a compound's
-        // `child_off` skips past its subtree to the previous
-        // sibling's root).
-        let start = child_off.0 as usize;
-        let end = parent_idx as usize;
-        if start >= end {
-            continue;
-        }
-        let mut pos = end;
-        while pos > start {
-            let co = pos - 1;
-            depth[co] = child_depth;
-            let co_has_children = columns.has_children_at(co as u32);
-            let co_child_off = columns.child_off_at(co as u32);
-            pos = if co_has_children && !co_child_off.is_none() {
-                co_child_off.0 as usize
-            } else {
-                co
-            };
-        }
-    }
-    depth
-}
+// B3.W0.γ — `derive_frame_depth` retired. The reverse-walk
+// reconstruction assumed every compound's `child_off` pointed
+// strictly before the compound's own index (canonical post-order),
+// but the shape emitters mix pre-order [`crate::TapeBuilder::end_compound`]
+// (where `child_off == parent + 1`) and post-order
+// [`crate::TapeBuilder::end_compound_post_order`] (where
+// `child_off < parent`) freely. A pre-order child of a post-order
+// parent caused the reverse walk to leap forward (`pos = child_off > pos`)
+// and the `while pos > start` loop spun on the same record indices
+// forever. The replacement is in-builder bookkeeping:
+// [`crate::TapeBuilder::frame_depth`] is auto-stamped on every
+// structural push from the builder's [`crate::TapeBuilder::current_depth`]
+// counter, with [`crate::TapeBuilder::end_compound_post_order`]
+// retroactively bumping the child range to land leaves emitted
+// before the wrapping compound at the correct (parent + 1) depth.

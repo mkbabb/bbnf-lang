@@ -1,0 +1,9 @@
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.22s
+     Running `target/release/xtask regen --grammar json`
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen][parse-start] BbnfBootstrap::parse input.len()=537
+
+thread 'main' (5386637) panicked at crates/tape/src/finaliser.rs:370:17:
+non-monotonic child_off in derive_frame_depth: parent_idx=585 co=575 child_off=576 pos=576 start=575 end=585 len=637 (would not decrease — infinite loop)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+EXIT: 101

@@ -81,7 +81,7 @@ pub use driver::{
     lookup_precedence, saturating_u16, trim_ascii_ws, trim_with_pattern, DtaError,
 };
 pub use dta::{DtaAssociativity, DtaPrecedenceEntry, DtaRuleId, DtaStateId};
-pub use finaliser::{derive_frame_depth, finalise, STACK_DEPTH_HINT};
+pub use finaliser::{finalise, STACK_DEPTH_HINT};
 pub use kind::TapeKind;
 pub use packed::PackedRecord;
 pub use profile::{

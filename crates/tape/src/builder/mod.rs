@@ -211,30 +211,29 @@ pub struct FusedBuilder {
     /// still accepted (so mid-recovery parses can continue producing
     /// records for partial success), but `finish` returns the error.
     pub(crate) error: Option<TapeBuildError>,
-    /// Stage-C activation gate.
+    /// Per-record depth byte stream — emitted inline by the builder on
+    /// every structural push.
     ///
-    /// When `true`, the DTA driver is emitting `frame_depth` inline
-    /// during stage A and [`Self::finish`] consumes [`Self::frame_depth`]
-    /// directly via [`crate::finaliser::finalise`] — no
-    /// `derive_frame_depth` reconstruction pass.
-    ///
-    /// When `false`, [`Self::finish`] still runs
-    /// [`crate::finaliser::derive_frame_depth`] to synthesise the
-    /// depth stream a finalise pass demands from a post-order tape,
-    /// then [`crate::finaliser::finalise`] closes the sibling-skip
-    /// column off it.
-    pub(crate) has_inline_frame_depth: bool,
-    /// Per-record depth byte stream.
-    ///
-    /// Populated by the DTA driver when the builder is opted into
-    /// inline frame-depth emission (see
-    /// [`Self::enable_inline_frame_depth`]). Each `push` or
-    /// `reserve_compound` in the driver stamps one byte here in
-    /// lockstep with the structural columns. [`Self::finish`] hands
-    /// this slice to [`crate::finaliser::finalise`] directly when the
-    /// flag is set, skipping the legacy
-    /// [`crate::finaliser::derive_frame_depth`] reconstruction pass.
+    /// B3.W0.γ — restored as the SOLE depth source. The pre-W0.γ
+    /// `has_inline_frame_depth` gate retired alongside the
+    /// `derive_frame_depth` reconstruction path: that helper assumed a
+    /// canonical post-order tape (`child_off < parent_idx`), but the
+    /// shape emitters mix pre-order [`Self::end_compound`] (where
+    /// `child_off == parent_idx + 1`) and post-order
+    /// [`Self::end_compound_post_order`] (where `child_off < parent_idx`)
+    /// freely. The reverse-walk leap in `derive_frame_depth` enters an
+    /// infinite loop on pre-order children. Tracking depth inline at the
+    /// builder makes the layout question moot: every `begin_compound`
+    /// bumps [`Self::current_depth`], every `end_compound` /
+    /// `end_compound_post_order` decrements it, every structural push
+    /// stamps the current value here. [`Self::finish`] hands this slice
+    /// to [`crate::finaliser::finalise`] directly.
     pub(crate) frame_depth: Vec<u8>,
+    /// Currently-open compound depth — incremented on
+    /// [`Self::begin_compound`], decremented on [`Self::end_compound`] /
+    /// [`Self::end_compound_post_order`]. Stamped onto every structural
+    /// push (leaf or compound row) via [`Self::frame_depth`]. B3.W0.γ.
+    pub(crate) current_depth: u8,
 
     // ── Value substrate (absorbed from W0.c `ValueBuilder<R>`) ────
     /// Nested value-frame arena — one entry per compound open + one
@@ -276,22 +275,13 @@ impl FusedBuilder {
         Self {
             columns: Columns::with_capacity(expected),
             error: None,
-            has_inline_frame_depth: false,
-            frame_depth: Vec::new(),
+            frame_depth: Vec::with_capacity(expected),
+            current_depth: 0,
             value_frames: Vec::with_capacity(expected),
             value_payloads_narrow: Vec::with_capacity(expected / 4),
             value_payloads_wide: Vec::with_capacity(expected / 4),
             value_open_stack: Vec::with_capacity(16),
         }
-    }
-
-    /// Opt this builder into inline `frame_depth` emission.
-    /// Pre-order emission via [`Self::begin_compound`] requires it —
-    /// [`crate::finaliser::derive_frame_depth`] can only reconstruct
-    /// depth for post-order tapes.
-    #[inline(always)]
-    pub fn enable_inline_frame_depth(&mut self) {
-        self.has_inline_frame_depth = true;
     }
 
     /// Rewind every column family — structural tape, inline
@@ -300,8 +290,9 @@ impl FusedBuilder {
     /// passes in.
     ///
     /// Tape-side: delegates to [`Columns::rollback_to`] and truncates
-    /// [`Self::frame_depth`] in lockstep when inline frame-depth is
-    /// active.
+    /// [`Self::frame_depth`] in lockstep — both columns are owned by
+    /// this builder and are pushed in lockstep on every structural
+    /// emission (B3.W0.γ).
     ///
     /// Value-side: resolves the matching [`ValueCheckpoint`] from the
     /// open-stack and truncates the value frame arena + narrow / wide
@@ -316,13 +307,17 @@ impl FusedBuilder {
     #[inline(always)]
     pub fn rollback_to(&mut self, open_offset: u32) {
         // Tape side — structural columns + frame_depth in lockstep.
-        self.columns.rollback_to(open_offset);
-        if self.has_inline_frame_depth {
-            let new_len = open_offset as usize;
-            if new_len < self.frame_depth.len() {
-                self.frame_depth.truncate(new_len);
-            }
+        // The compound row at `open_offset` was emitted at
+        // `current_depth - 1` (its `begin_compound` bumped depth AFTER
+        // pushing the row), so restoring `current_depth` to that row's
+        // recorded depth re-establishes the pre-`begin_compound`
+        // bookkeeping.
+        let new_len = open_offset as usize;
+        if new_len < self.frame_depth.len() {
+            self.current_depth = self.frame_depth[new_len];
+            self.frame_depth.truncate(new_len);
         }
+        self.columns.rollback_to(open_offset);
         // Value side — pop every open frame whose tape_offset-equivalent
         // landed on or after `open_offset`, resolving the matching
         // value checkpoint and truncating column families to its
@@ -416,6 +411,7 @@ impl FusedBuilder {
             span_hi,
             TapeOffset::NONE,
         );
+        self.frame_depth.push(self.current_depth);
         self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
         TapeOffset(idx)
     }
@@ -440,8 +436,12 @@ impl FusedBuilder {
     /// `HAS_CHILDREN_BIT` is owned by [`Self::end_compound`] /
     /// [`Self::end_compound_post_order`]).
     ///
-    /// `frame_depth` is appended to the inline depth stream when
-    /// [`Self::has_inline_frame_depth`] is active; otherwise ignored.
+    /// The compound row stamps [`Self::current_depth`] into
+    /// [`Self::frame_depth`] BEFORE bumping the depth — the parent's
+    /// own row sits at the parent's depth, and its (yet-to-emit)
+    /// children stamp at depth + 1. The `frame_depth: u8` parameter is
+    /// retained for source compatibility but is no longer consulted —
+    /// the builder owns depth bookkeeping (B3.W0.γ).
     ///
     /// Returns the tape row offset the caller passes back to
     /// [`Self::end_compound`] (pre-order) or
@@ -455,7 +455,7 @@ impl FusedBuilder {
         span_lo: u32,
         variant_idx: u8,
         meta_idx: u8,
-        frame_depth: u8,
+        _frame_depth: u8,
         extra_flags: u16,
     ) -> u32 {
         debug_assert!(
@@ -472,9 +472,13 @@ impl FusedBuilder {
             span_lo,
             TapeOffset::NONE,
         );
-        if self.has_inline_frame_depth {
-            self.frame_depth.push(frame_depth);
-        }
+        self.frame_depth.push(self.current_depth);
+        // Bump after stamping so the children of this compound stamp
+        // at `current_depth + 1`. Saturate to `u8::MAX` — grammars
+        // that nest deeper than 255 compounds are diagnosed by the
+        // finaliser's depth-overflow path; saturation keeps the push
+        // path branchless.
+        self.current_depth = self.current_depth.saturating_add(1);
         self.value_begin_compound(kind, span_lo, variant_idx);
         idx
     }
@@ -500,6 +504,8 @@ impl FusedBuilder {
             self.columns
                 .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
         }
+        // B3.W0.γ — pair the `begin_compound` depth bump.
+        self.current_depth = self.current_depth.saturating_sub(1);
         self.value_end_compound(span_hi);
     }
 
@@ -532,7 +538,25 @@ impl FusedBuilder {
             self.columns.set_child_off_at(open_offset, first_child);
             self.columns
                 .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
+            // B3.W0.γ — children at indices [first_child, open_offset)
+            // were emitted BEFORE this compound's `begin_compound` bumped
+            // `current_depth`, so they were stamped at the OUTER frame's
+            // depth (the same depth as this compound row itself). They
+            // are logically one level deeper than this compound's row.
+            // Bump their `frame_depth` slots by one to restore the
+            // canonical "child depth = parent depth + 1" invariant.
+            // Nested post-order subtrees compose correctly: each inner
+            // close bumps its own child range by one before the outer
+            // close bumps the entire combined range, accumulating the
+            // total depth offset.
+            let lo = first_child.0 as usize;
+            let hi = open_offset as usize;
+            for slot in &mut self.frame_depth[lo..hi] {
+                *slot = slot.saturating_add(1);
+            }
         }
+        // B3.W0.γ — pair the `begin_compound` depth bump.
+        self.current_depth = self.current_depth.saturating_sub(1);
         self.value_end_compound(span_hi);
     }
 
@@ -621,6 +645,7 @@ impl FusedBuilder {
             span_hi,
             child_off,
         );
+        self.frame_depth.push(self.current_depth);
         self.push_value_leaf(kind, span_lo, span_hi, variant_idx, value_tag);
         TapeOffset(idx)
     }
@@ -759,6 +784,7 @@ impl FusedBuilder {
             span_hi,
             TapeOffset(arena_offset),
         );
+        self.frame_depth.push(self.current_depth);
         self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
         TapeOffset(idx)
     }
@@ -820,6 +846,7 @@ impl FusedBuilder {
             span_hi,
             TapeOffset(arena_offset),
         );
+        self.frame_depth.push(self.current_depth);
         self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
         TapeOffset(idx)
     }
@@ -866,6 +893,7 @@ impl FusedBuilder {
             span_hi,
             TapeOffset::NONE,
         );
+        self.frame_depth.push(self.current_depth);
         self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
         TapeOffset(idx)
     }
@@ -914,6 +942,7 @@ impl FusedBuilder {
             span_hi,
             TapeOffset(rank),
         );
+        self.frame_depth.push(self.current_depth);
         // Value-side: project the `f64` bits into the wide payload
         // column and stamp the matching leaf frame.
         let v_rank = self.value_payloads_wide.len() as u32;
@@ -966,20 +995,12 @@ impl FusedBuilder {
     ///
     /// [`crate::finaliser::finalise`] always runs — it is the sole
     /// writer for `sib_skip` (and the compound-closure columns
-    /// `child_off` / `span_hi`). What the
-    /// [`Self::has_inline_frame_depth`] flag gates is only the
-    /// *derivation* of `frame_depth`:
-    ///
-    /// - **Legacy fn-per-rule path** (`has_inline_frame_depth ==
-    ///   false`): callers populate `child_off` / `span_hi` inline
-    ///   but emit no `frame_depth`, so `finish` reconstructs it via
-    ///   [`crate::finaliser::derive_frame_depth`] (one backward
-    ///   pass) before the Stage-C forward sweep.
-    /// - **DTA-driven path** (`has_inline_frame_depth == true`):
-    ///   the DTA emits `frame_depth` directly during stage A, so
-    ///   `derive_frame_depth` is skipped and the in-column stream
-    ///   feeds [`crate::finaliser::finalise`] directly — one linear
-    ///   pass instead of two.
+    /// `child_off` / `span_hi`). [`Self::frame_depth`] feeds it
+    /// directly: B3.W0.γ retired the
+    /// `has_inline_frame_depth` gate and the
+    /// `crate::finaliser::derive_frame_depth` reverse-walk
+    /// reconstruction in favour of in-builder bookkeeping that is
+    /// total across both pre-order and post-order shape emission.
     ///
     /// `root_off` marks the root of the parsed tree in both tape
     /// offset space and value-frame offset space. For the fused
@@ -1043,23 +1064,18 @@ impl FusedBuilder {
     }
 
     /// Shared finaliser step — runs the sibling-skip stamping pass
-    /// (reconstructing the depth stream from the post-order tape
-    /// when the DTA driver has not emitted it inline).
+    /// over the in-builder `frame_depth` stream (always inline, B3.W0.γ).
     #[inline(always)]
     fn run_finaliser(&mut self) {
-        if self.has_inline_frame_depth {
-            debug_assert_eq!(
-                self.frame_depth.len(),
-                self.columns.len(),
-                "inline frame_depth length {} != columns length {}",
-                self.frame_depth.len(),
-                self.columns.len(),
-            );
-            crate::finaliser::finalise(&mut self.columns, &self.frame_depth);
-        } else {
-            let frame_depth = crate::finaliser::derive_frame_depth(&self.columns);
-            crate::finaliser::finalise(&mut self.columns, &frame_depth);
-        }
+        debug_assert_eq!(
+            self.frame_depth.len(),
+            self.columns.len(),
+            "inline frame_depth length {} != columns length {} \
+             (B3.W0.γ — every structural push must stamp frame_depth in lockstep)",
+            self.frame_depth.len(),
+            self.columns.len(),
+        );
+        crate::finaliser::finalise(&mut self.columns, &self.frame_depth);
     }
 
     /// Access the in-progress columns for debug / intermediate
@@ -1075,10 +1091,14 @@ impl FusedBuilder {
     /// writes directly into the builder's column substrate instead
     /// of threading through [`Self::push_leaf`] /
     /// [`Self::begin_compound`]. The generated `parse()` entry point
-    /// constructs a `FusedBuilder`, calls
-    /// [`Self::enable_inline_frame_depth`] to opt into the Stage-C
-    /// activation the DTA presupposes, then hands the mutable column
-    /// reference returned here to the driver.
+    /// constructs a `FusedBuilder`, then hands the mutable column
+    /// reference returned here to the driver. B3.W0.γ —
+    /// `frame_depth` is owned by the builder and stamped on every
+    /// structural push automatically; direct-column writes bypass
+    /// that bookkeeping and must therefore route via the public
+    /// [`Self::push_leaf`] / [`Self::begin_compound`] /
+    /// [`Self::end_compound`] / [`Self::end_compound_post_order`]
+    /// surface in production paths.
     ///
     /// Direct-column writes bypass the value substrate; callers that
     /// need value-arena parity with direct column writes must stamp

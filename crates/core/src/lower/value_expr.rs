@@ -321,6 +321,22 @@ fn fold_value_chain<'a>(
 /// compound — descend through anonymous wrappers first to reach the
 /// true operand layout.
 ///
+/// # Pratt cousin-leak guard (B3.W0.η)
+///
+/// Pratt-shape `value_X` rules emit a pre-order outer Rule compound
+/// whose body sits at depth `parent + 1` while subsequent post-order
+/// Seq/Repeat wrappers around the rule's outer iteration body push
+/// records that, after their own `end_compound_post_order` bumps
+/// cascade, settle at the same `parent + 1` depth. The finaliser's
+/// depth-only sib_skip computation then erroneously chains
+/// `value_X`'s direct child to a cousin record sitting AFTER
+/// `value_X`'s span_hi (the type-annotation iteration's Seq wrapper,
+/// for example). Bound the children walk by the parent compound's
+/// span: any child whose span_lo lies at or beyond `node.span().1`
+/// is NOT an operand of `node` — discard it. The check is a strict
+/// span containment, so contiguous operand spans inside the chain
+/// remain admitted.
+///
 /// Note: a single-operand chain compound (no operators) collapses
 /// to one element; the loop in `fold_value_chain` simply returns
 /// that operand's lowering unchanged.
@@ -334,8 +350,13 @@ fn collect_chain_operands<'a>(
     // compound whose direct children are the semantic operand
     // layout `[first, iter_wrapper]`.
     let body = descend_anonymous_wrappers(node);
+    let body_hi = body.span().1;
+    let in_scope = |c: &BbnfBootstrapNodeView<'a>| {
+        let (lo, hi) = c.span();
+        hi > lo && lo < body_hi
+    };
 
-    let mut children = body.children();
+    let mut children = body.children().filter(in_scope);
     let Some(first) = children.next() else {
         return Vec::new();
     };
@@ -345,28 +366,18 @@ fn collect_chain_operands<'a>(
     // Repeat frame (the walker emits `frame_to_tape_kind(Repeat)
     // == Rule` per the AW-I substrate). Peel a single trailing
     // compound child whose children are the iteration operands.
-    //
-    // Filter empty-span operands — an empty Rule compound with a
-    // sentinel rule_kind surfaces for zero-iteration Repeats under
-    // DTA, and those carry no operand data.
     let mut operands = vec![first];
     let rest: Vec<BbnfBootstrapNodeView<'a>> = children.collect();
     let is_iteration_wrapper = |c: &BbnfBootstrapNodeView<'a>| {
         matches!(c.kind(), TapeKind::Repeat | TapeKind::Rule)
     };
     if rest.len() == 1 && is_iteration_wrapper(&rest[0]) {
-        for child in rest[0].children() {
-            let (lo, hi) = child.span();
-            if hi > lo {
-                operands.push(child);
-            }
+        for child in rest[0].children().filter(in_scope) {
+            operands.push(child);
         }
     } else {
         for child in rest {
-            let (lo, hi) = child.span();
-            if hi > lo {
-                operands.push(child);
-            }
+            operands.push(child);
         }
     }
     operands

@@ -2724,13 +2724,11 @@ mod __bbnfbootstrap_emit_impl {
                 0u8,
                 0u16,
             );
-        let outer_child_mark_idx: u32 = outer_off.saturating_add(1);
-        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
         })?;
-        let _ = _operand_off;
+        let mut this_operand_root: u32 = _operand_off.0;
         const OP_STACK_CAP: usize = 16;
         let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
             op_discriminant: 0,
@@ -2879,7 +2877,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder)
             })?;
-            this_operand_root = _op_rec.0 + 1;
+            this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
@@ -4665,13 +4663,11 @@ mod __bbnfbootstrap_emit_impl {
                 0u8,
                 0u16,
             );
-        let outer_child_mark_idx: u32 = outer_off.saturating_add(1);
-        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_altdispatch_BbnfBootstrap_value_unary(input, p, state, builder)
         })?;
-        let _ = _operand_off;
+        let mut this_operand_root: u32 = _operand_off.0;
         const OP_STACK_CAP: usize = 16;
         let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
             op_discriminant: 0,
@@ -4820,7 +4816,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_altdispatch_BbnfBootstrap_value_unary(input, p, state, builder)
             })?;
-            this_operand_root = _op_rec.0 + 1;
+            this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
@@ -4908,13 +4904,11 @@ mod __bbnfbootstrap_emit_impl {
                 0u8,
                 0u16,
             );
-        let outer_child_mark_idx: u32 = outer_off.saturating_add(1);
-        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder)
         })?;
-        let _ = _operand_off;
+        let mut this_operand_root: u32 = _operand_off.0;
         const OP_STACK_CAP: usize = 16;
         let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
             op_discriminant: 0,
@@ -5063,7 +5057,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder)
             })?;
-            this_operand_root = _op_rec.0 + 1;
+            this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
@@ -5151,13 +5145,11 @@ mod __bbnfbootstrap_emit_impl {
                 0u8,
                 0u16,
             );
-        let outer_child_mark_idx: u32 = outer_off.saturating_add(1);
-        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_pratt_BbnfBootstrap_value_add(input, p, state, builder)
         })?;
-        let _ = _operand_off;
+        let mut this_operand_root: u32 = _operand_off.0;
         const OP_STACK_CAP: usize = 16;
         let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
             op_discriminant: 0,
@@ -5306,7 +5298,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_add(input, p, state, builder)
             })?;
-            this_operand_root = _op_rec.0 + 1;
+            this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
@@ -5394,13 +5386,11 @@ mod __bbnfbootstrap_emit_impl {
                 0u8,
                 0u16,
             );
-        let outer_child_mark_idx: u32 = outer_off.saturating_add(1);
-        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder)
         })?;
-        let _ = _operand_off;
+        let mut this_operand_root: u32 = _operand_off.0;
         const OP_STACK_CAP: usize = 16;
         let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
             op_discriminant: 0,
@@ -5549,7 +5539,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder)
             })?;
-            this_operand_root = _op_rec.0 + 1;
+            this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
@@ -5637,13 +5627,11 @@ mod __bbnfbootstrap_emit_impl {
                 0u8,
                 0u16,
             );
-        let outer_child_mark_idx: u32 = outer_off.saturating_add(1);
-        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_pratt_BbnfBootstrap_value_and(input, p, state, builder)
         })?;
-        let _ = _operand_off;
+        let mut this_operand_root: u32 = _operand_off.0;
         const OP_STACK_CAP: usize = 16;
         let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
             op_discriminant: 0,
@@ -5792,7 +5780,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_and(input, p, state, builder)
             })?;
-            this_operand_root = _op_rec.0 + 1;
+            this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
@@ -8641,13 +8629,11 @@ mod __bbnfbootstrap_emit_impl {
                 0u8,
                 0u16,
             );
-        let outer_child_mark_idx: u32 = outer_off.saturating_add(1);
-        let mut this_operand_root: u32 = outer_child_mark_idx;
         let _operand_off = ({
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_flat_BbnfBootstrap_mapped_factor(input, p, state, builder)
         })?;
-        let _ = _operand_off;
+        let mut this_operand_root: u32 = _operand_off.0;
         const OP_STACK_CAP: usize = 16;
         let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
             op_discriminant: 0,
@@ -8796,7 +8782,7 @@ mod __bbnfbootstrap_emit_impl {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_flat_BbnfBootstrap_mapped_factor(input, p, state, builder)
             })?;
-            this_operand_root = _op_rec.0 + 1;
+            this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);

@@ -235,28 +235,30 @@ pub fn emit_parse_pratt(
                 0u8,
                 0u16,
             );
-            // Under begin_compound, the first direct child lands at
-            // `outer_off + 1` — the same cursor pre-order fast-path
-            // `first_child_root` recognises. Seed `this_operand_root`
-            // at that index so the reducer's first reduce names the
-            // correct LHS regardless of whether reductions ever fire.
-            let outer_child_mark_idx: u32 = outer_off.saturating_add(1);
-
             // ── Leftmost operand ────────────────────────────────────
-            // The operand root is the first record the dispatcher
-            // emits; track it so the reducer's first reduce points
-            // back at the correct LHS. Initial value = first-child
-            // index of the outer compound — the operand's root record
-            // lands here.
-            let mut this_operand_root: u32 = outer_child_mark_idx;
-            // AW-V.W5.2 — per-Ref operand call.
+            // Dispatch the operand FIRST, then capture its returned
+            // outer-compound offset as the initial `this_operand_root`.
+            //
+            // B3.W0.η — `parse_flat_*` / `parse_pratt_*` shape functions
+            // emit their interior records first and the outer compound
+            // LAST (post-order), returning the outer compound's row.
+            // Seeding `this_operand_root = outer_off + 1` (the leftmost
+            // descendant of the operand subtree) made the post-close
+            // `set_child_off_at(outer_off, this_operand_root)` point at
+            // an interior record rather than the operand's outer row.
+            // For single-operand chains (no reducers fire) the cursor's
+            // children iteration on the Pratt outer then entered the
+            // operand's INTERIOR — surfacing multiple records as
+            // separate "operands" to `lower_binary_factor` and tripping
+            // its operator-resolution panic. Using the dispatcher's
+            // returned offset gives the canonical operand root in both
+            // single-operand and multi-operand reducer paths.
             #operand_call
-            // The dispatcher returns the operand's root TapeOffset;
-            // the walker's SY arm uses the child_mark directly (the
-            // first-child position) rather than the dispatcher's
-            // return value because the DTA driver's frame marker sits
-            // at child_mark. Preserve that invariant here.
-            let _ = _operand_off;
+            // AW-V.W5.2 — per-Ref operand call returns the operand
+            // outer-compound offset; the post-order shape contract is
+            // uniform across `parse_flat_*` and `parse_pratt_*` so this
+            // works for any nested-Pratt operand as well.
+            let mut this_operand_root: u32 = _operand_off.0;
 
             // ── Op stack ────────────────────────────────────────────
             //
@@ -511,22 +513,19 @@ pub fn emit_parse_pratt(
                 let _ = #support_mod::skip_space(input, p, state);
                 // AW-V.W5.2 — per-Ref RHS call.
                 #rhs_call
-                // Re-point `this_operand_root` at the RHS root (first
-                // record the RHS emitted). The `push_leaf_with` above
-                // sits at this_operand_root + 1 when the operand was
-                // a single leaf; for compound operands the root sits
-                // at the position right after the op leaf.
-                //
-                // Mirrors the walker's SY reducer: after the op leaf
-                // fires, the next operand's first record becomes the
-                // new `this_operand_root`.
-                // The op leaf incremented columns.len() by 1; the RHS
-                // dispatcher then emitted its root starting at that
-                // position. Tracking via the builder's post-op record
-                // index (arena offset proxy) isn't safe across
-                // payload alignment; instead read back the index of
-                // the first record AFTER the op leaf.
-                this_operand_root = _op_rec.0 + 1;
+                // B3.W0.η — re-point `this_operand_root` at the RHS
+                // dispatcher's returned outer-compound offset, mirroring
+                // the leftmost-operand seeding. Pre-η this used
+                // `_op_rec.0 + 1` (the leftmost descendant of the RHS
+                // subtree); under post-order shape emission the RHS's
+                // outer compound lands at the END of its subtree, so
+                // the leftmost-descendant seed pointed inside the RHS
+                // body rather than at its row. The next reducer
+                // (or the post-close override on the outer Pratt
+                // compound) consumes `this_operand_root` as a child
+                // index, and an interior pointer breaks the cursor's
+                // sib-skip walk for that compound's children.
+                this_operand_root = _rhs_off.0;
             }
 
             // ── Close outer compound (AY.W6.c) ───────────────────

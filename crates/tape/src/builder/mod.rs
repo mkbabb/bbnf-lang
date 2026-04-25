@@ -234,6 +234,38 @@ pub struct FusedBuilder {
     value_open_stack: Vec<ValueCheckpoint>,
 }
 
+/// Walk the leftmost-descendant chain from `start` to find the lowest
+/// offset of any record in `start`'s subtree.
+///
+/// Used by [`FusedBuilder::end_compound_post_order`] to extend its
+/// `frame_depth` bump range to cover descendants whose offsets sit
+/// strictly below `first_child`. When `first_child` is itself a
+/// post-order compound, its body lives at offsets below `first_child`
+/// (post-order layout); those descendants belong to the closing
+/// compound's subtree and need the same `+1` adjustment.
+///
+/// The walk follows `child_off` while it points strictly backward
+/// (`co_child_off < co` — canonical post-order subtree root). For
+/// pre-order children (`child_off > co`) and leaves the walk stops:
+/// pre-order child ranges live at offsets ABOVE the parent, so the
+/// parent's offset is already the leftmost in that subtree's prefix.
+///
+/// Bounded by the post-order chain depth — runs at-most O(max_depth)
+/// per close, and only for compounds whose body extends below
+/// `first_child`. B3.W0.ζ.
+#[inline]
+fn leftmost_descendant_offset(columns: &Columns, start: u32) -> u32 {
+    let mut off = start;
+    while columns.has_children_at(off) {
+        let co = columns.child_off_at(off);
+        if co.is_none() || co.0 >= off {
+            break;
+        }
+        off = co.0;
+    }
+    off
+}
+
 impl FusedBuilder {
     /// Construct a fresh builder with an empty tape + value
     /// substrate.
@@ -550,18 +582,26 @@ impl FusedBuilder {
             self.columns.set_child_off_at(open_offset, first_child);
             self.columns
                 .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
-            // B3.W0.γ — children at indices [first_child, open_offset)
-            // were emitted BEFORE this compound's `begin_compound` bumped
-            // `current_depth`, so they were stamped at the OUTER frame's
-            // depth (the same depth as this compound row itself). They
-            // are logically one level deeper than this compound's row.
-            // Bump their `frame_depth` slots by one to restore the
-            // canonical "child depth = parent depth + 1" invariant.
-            // Nested post-order subtrees compose correctly: each inner
-            // close bumps its own child range by one before the outer
-            // close bumps the entire combined range, accumulating the
-            // total depth offset.
-            let lo = first_child.0 as usize;
+            // B3.W0.ζ — bump the entire subtree's `frame_depth`, not
+            // just the offset range `[first_child, open_offset)`. When
+            // `first_child` is itself a post-order compound, its body
+            // sits at offsets STRICTLY BELOW `first_child`. Those
+            // descendants are part of THIS compound's subtree (they
+            // were emitted as our body), so they need the same `+1`
+            // adjustment. Walking the leftmost-descendant chain finds
+            // the lowest offset of any record in our subtree; bumping
+            // `[leftmost, open_offset)` covers every descendant.
+            //
+            // Without this widening, descendants of `first_child` go
+            // un-bumped on this close — they end up at the same final
+            // depth as our parent's other direct children, which the
+            // finaliser's same-depth chain then groups as our siblings.
+            // The cursor's `child_off`-driven backward walk then yields
+            // our own row as a sibling of our parent, producing a tape
+            // graph cycle (B3.W0.ζ — OFF=324 / float_lit case). The
+            // leftmost-descendant walk is bounded by the post-order
+            // chain length and runs at-most-once per close.
+            let lo = leftmost_descendant_offset(&self.columns, first_child.0) as usize;
             let hi = open_offset as usize;
             for slot in &mut self.columns.frame_depth[lo..hi] {
                 *slot = slot.saturating_add(1);

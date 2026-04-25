@@ -406,7 +406,7 @@ fn emit_value_root_impl(
         /// inline. Compound variants recurse through this same fn.
         #[inline]
         fn #frame_fn<'p>(
-            output: &::bbnf::runtime::FusedOutput,
+            output: &::bbnf::runtime::FusedOutput<#grammar_ident>,
             input: &'p str,
             offset: u32,
         ) -> #value_ident<'p> {
@@ -416,7 +416,7 @@ fn emit_value_root_impl(
                     ::core::panic!(
                         "AY-II.W0'.b: value frame offset {} out of range (frames: {})",
                         offset,
-                        output.value_frames().len(),
+                        output.frames().len(),
                     );
                 }
             };
@@ -439,7 +439,7 @@ fn emit_value_root_impl(
         /// no visitor dispatch.
         #[inline]
         fn #root_fn<'p>(
-            output: &::bbnf::runtime::FusedOutput,
+            output: &::bbnf::runtime::FusedOutput<#grammar_ident>,
             input: &'p str,
         ) -> #value_ident<'p> {
             let root_off = output.value_root_offset();
@@ -450,7 +450,7 @@ fn emit_value_root_impl(
                         "AY-II.W0'.b: ValueBuilder root frame absent after parse \
                          (root_offset = {}, frame count = {})",
                         root_off,
-                        output.value_frames().len(),
+                        output.frames().len(),
                     );
                 }
             }
@@ -462,7 +462,7 @@ fn emit_value_root_impl(
 
             #[inline]
             fn project_value_output<'p>(
-                output: &::bbnf::runtime::FusedOutput,
+                output: &::bbnf::runtime::FusedOutput<#grammar_ident>,
                 input: &'p str,
             ) -> Self::Value<'p>
             where

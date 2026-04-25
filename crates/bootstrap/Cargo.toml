@@ -11,3 +11,11 @@ description = "Bootstrap: generates self-hosted BBNF grammar parser via cargo ex
 # pipeline runs in `cargo xtask regen`, not in a proc-macro this
 # crate consumed.
 bbnf = { path = "../core" }
+# `bbnf-ir` carries the diagnostic surface (`GrammarIR`, `IrNode`,
+# `lift_dta`, etc.) that the in-tree dev-only binaries
+# (`src/bin/dump_ir.rs`, `src/bin/cost_grid_sweep.rs`) drive. The
+# library crate (`src/lib.rs`) does not consume `bbnf-ir`; the dep
+# only resolves the bin imports. Restoring this entry closes the
+# pre-B2 build-orphan flagged at B3.FINAL §"Out of scope" and
+# B4.B2 §"Pre-existing build-orphan".
+bbnf-ir = { path = "../ir" }

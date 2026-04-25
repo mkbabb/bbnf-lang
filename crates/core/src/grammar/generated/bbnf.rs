@@ -1,5 +1,5 @@
-//! AUTO-GENERATED from grammar/bbnf/bbnf.bbnf — do not edit manually.
-//! Regenerate: scripts/bootstrap-bbnf.sh
+//! AUTO-GENERATED from `[workspace.metadata.bbnf.grammars]` — do not edit manually.
+//! Regenerate: cargo xtask regen --grammar bbnf
 
 #![allow(
     dead_code,
@@ -18,11 +18,24 @@ use ::bbnf::runtime::{Parsed, ParseErr, Root};
 use ::parse_that::*;
 
 pub struct BbnfBootstrap;
-
 mod __bbnfbootstrap_emit_impl {
-        use super::*;
+    #![allow(
+        dead_code,
+        unused_variables,
+        unused_mut,
+        unused_parens,
+        unused_assignments,
+        non_camel_case_types,
+        non_snake_case,
+        non_upper_case_globals,
+        clippy::all,
+    )]
+    use super::*;
+    use ::parse_that::*;
     pub const GRAMMAR_BbnfBootstrap: [&'static str; 1usize] = [
-        "// BBNF \u{2014} Better Backus-Naur Form\n// Self-hosted grammar definition.\n\n@import { value_expr, type_annotation } from \"expressions\" ;\n@import { type_name } from \"types\" ;\n\n// \u{2500}\u{2500}\u{2500} Terminals \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nidentifier = /[_a-zA-Z][_a-zA-Z0-9-]*/ -> Span ;\n\nliteral = ( \"\\\"\" , /(\\\\.|[^\"\\\\])*/  , \"\\\"\"\n        | \"\'\"  , /(\\\\.|[^\'\\\\])*/  , \"\'\"\n        | \"`\"  , /(\\\\.|[^`\\\\])*/  , \"`\" ) -> Span ;\n\nregex = ( \"/\" , /(\\\\.|[^\\/])+/ , \"/\" ) -> Span ;\n\nbig_comment = ( \"/*\" , /[^\\*]*/ , \"*/\" ) ?w -> Span ;\ncomment = ( \"//\" , /.*/ ) ?w -> Span ;\n\n// \u{2500}\u{2500}\u{2500} Expressions \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nlhs = identifier ;\n\n// Grammar function call args: each arg is a single binary_factor\n// (alternation of binary_factors, no comma-concatenation).\n// This avoids ambiguity between call arg commas and concatenation commas.\ncall_arg = ( binary_factor ?w , \"|\" ? ) + ;\n\nterm = \"\u{3b5}\" | \"epsilon\"\n     | identifier , ( \"(\" , call_arg ?w , ( \",\" ?w , call_arg ?w ) * , \")\" ) ?\n     | literal\n     | regex\n     | \"@{\" , rhs ?w , \"}\"\n     | \"(\" , rhs ?w , \")\"\n     | \"[\" , rhs ?w , \"]\"\n     | \"{\" , rhs ?w , \"}\" ;\n\nmodifier = \"?w\" | \"?\" | \"*\" | \"+\" ;\nfactor = big_comment ? , term ?w , modifier ? , big_comment ? ;\n\n// Map syntax: factor -> value_expr : type\nmapped_factor = factor , ( \"->\" ?w , ( value_expr , type_annotation ? ) ) ? ;\n\nbinary_operators = \"<<\" | \">>\" | \"-\" ;\nbinary_factor = mapped_factor , ( binary_operators ?w , mapped_factor ) * ;\n\nconcatenation = ( binary_factor ?w , \",\" ? ) + ;\nalternation = ( concatenation ?w , \"|\" ? ) + ;\n\n// Closures at rule level: |params| rhs (grammar functions)\nclosure = \"|\" , identifier , ( \",\" ?w , identifier ) * , \"|\" ?w , rhs ;\nrhs = closure | alternation ;\n\n// \u{2500}\u{2500}\u{2500} Rules and Directives \u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\n\nrule = lhs , \"=\" ?w , rhs ?w , ( \";\" | \".\" ) ;\n\nimport_path = \"\\\"\" , /(\\\\.|[^\"\\\\])*/ , \"\\\"\" ;\nimport_items = \"{\" ?w , ( identifier , ( \",\" ?w , identifier ) * ) ?w , \"}\" ;\nimport_directive = \"@import\" ?w , (\n      import_items ?w , \"from\" ?w , import_path\n    | import_path\n) ?w , ( \";\" | \".\" ) ? ;\n\nrecover_directive = \"@recover\" ?w , identifier ?w , rhs ?w , ( \";\" | \".\" ) ? ;\n\npretty_hint = identifier , ( \"(\" , /[^)]*/ , \")\" ) ? ;\npretty_directive = \"@pretty\" ?w , ( \"*\" | identifier ) ?w , ( pretty_hint ?w ) + , ( \";\" | \".\" ) ? ;\n\nws_directive = \"@ws\" ?w , regex ?w , ( \";\" | \".\" ) ? ;\ntoken_directive = \"@token\" ?w , identifier ?w , ( \";\" | \".\" ) ? ;\ndebug_directive = \"@debug\" ?w , ( \"*\" | identifier ) ?w , ( \";\" | \".\" ) ? ;\nhost_directive = \"@host\" ?w , identifier ?w , ( \":\" ?w , type_name ?w ) ? , ( \";\" | \".\" ) ? ;\n\ndirective = import_directive\n          | recover_directive\n          | pretty_directive\n          | ws_directive\n          | token_directive\n          | debug_directive\n          | host_directive ;\n\n// Grammar: top-level items in any order.\ngrammar_item = comment | big_comment | directive | rule ;\ngrammar = ( grammar_item ?w ) * ;\n\n@pretty grammar block ;\n@pretty rule group ;\n@pretty alternation group ;\n",
+        include_str!(
+            "/Users/mkbabb/Programming/bbnf-wt-b2-w0c-resume/grammar/bbnf/bbnf.bbnf"
+        ),
     ];
     static __GRAMMAR_PROFILE_ALPHABET: [u8; 28usize] = [
         33, 34, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 58, 59, 60, 61, 62, 63, 64,
@@ -198,7 +211,7 @@ mod __bbnfbootstrap_emit_impl {
         b"[",
         b"epsilon",
         b"{",
-        b"\xce\xb5",
+        b"\xCE\xB5",
     ];
     /// Per-entry branch discriminant — parallel to [`#kw_ident`].
     /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
@@ -924,27 +937,16 @@ mod __bbnfbootstrap_emit_impl {
     /// grammar. Non-zero iff the lift admitted ≥ 1 chain OR the
     /// shape classifier admitted ≥ 1 single-rung Pratt rule.
     pub const PRECEDENCE_OPERATOR_COUNT: usize = 22usize;
-    #[allow(dead_code)]
     static __DTA_REGEX_0: &str = "0[xX][0-9a-fA-F]+\\w*|[0-9]+\\w*";
-    #[allow(dead_code)]
     static __DTA_REGEX_1: &str = "[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?\\w*";
-    #[allow(dead_code)]
     static __DTA_REGEX_6: &str = "(\\\\.|[^\"\\\\])*";
-    #[allow(dead_code)]
     static __DTA_REGEX_9: &str = "[_a-zA-Z][_a-zA-Z0-9]*";
-    #[allow(dead_code)]
     static __DTA_REGEX_143: &str = "[_a-zA-Z][_a-zA-Z0-9-]*";
-    #[allow(dead_code)]
     static __DTA_REGEX_149: &str = "(\\\\.|[^'\\\\])*";
-    #[allow(dead_code)]
     static __DTA_REGEX_153: &str = "(\\\\.|[^`\\\\])*";
-    #[allow(dead_code)]
     static __DTA_REGEX_158: &str = "(\\\\.|[^\\/])+";
-    #[allow(dead_code)]
     static __DTA_REGEX_162: &str = "[^\\*]*";
-    #[allow(dead_code)]
     static __DTA_REGEX_169: &str = ".*";
-    #[allow(dead_code)]
     static __DTA_REGEX_389: &str = "[^)]*";
     /// AY.W4.3 — per-pattern (LAST-byte-set lo, hi) packed
     /// `CharSet128` tuples. `(0, 0)` means narrowing is
@@ -2062,6 +2064,7 @@ mod __bbnfbootstrap_emit_impl {
         /// rather than paid eagerly at parse entry — see
         /// `AYW1-twitter-regression-diag` for the eager-init
         /// regression that motivates the OnceCell discipline.
+        #[derive(Debug, Default)]
         pub struct ScanState {
             pub(crate) nospace_bits: u64,
             pub(crate) nospace_start: isize,
@@ -2170,11 +2173,17 @@ mod __bbnfbootstrap_emit_impl {
         /// `{b' ', b'\t', b'\n', b'\r'}`.
         #[inline(always)]
         pub(crate) fn nospace_bitmap_64(stripe: &[u8]) -> u64 {
+            #[cfg(target_arch = "aarch64")]
             unsafe {
                 return nospace_bitmap_64_neon(stripe);
             }
+            #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+            unsafe {
+                return nospace_bitmap_64_avx2(stripe);
+            }
             #[allow(unreachable_code)] nospace_bitmap_64_scalar(stripe)
         }
+        #[cfg(target_arch = "aarch64")]
         #[inline(always)]
         unsafe fn nospace_bitmap_64_neon(stripe: &[u8]) -> u64 {
             use core::arch::aarch64::*;
@@ -2196,6 +2205,7 @@ mod __bbnfbootstrap_emit_impl {
                     | ((m3 as u64) << 48)
             }
         }
+        #[cfg(target_arch = "aarch64")]
         #[inline(always)]
         unsafe fn chunk_ns_mask16(
             ptr: *const u8,
@@ -2220,6 +2230,36 @@ mod __bbnfbootstrap_emit_impl {
                 low | (high << 8)
             }
         }
+        #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+        #[inline(always)]
+        unsafe fn nospace_bitmap_64_avx2(stripe: &[u8]) -> u64 {
+            use core::arch::x86_64::*;
+            unsafe {
+                let ptr = stripe.as_ptr();
+                let space = _mm256_set1_epi8(b' ' as i8);
+                let tab = _mm256_set1_epi8(b'\t' as i8);
+                let nl = _mm256_set1_epi8(b'\n' as i8);
+                let cr = _mm256_set1_epi8(b'\r' as i8);
+                let mut out = 0u64;
+                for i in 0..2 {
+                    let v = _mm256_loadu_si256(ptr.add(i * 32) as *const __m256i);
+                    let ws = _mm256_or_si256(
+                        _mm256_or_si256(
+                            _mm256_cmpeq_epi8(v, space),
+                            _mm256_cmpeq_epi8(v, tab),
+                        ),
+                        _mm256_or_si256(
+                            _mm256_cmpeq_epi8(v, nl),
+                            _mm256_cmpeq_epi8(v, cr),
+                        ),
+                    );
+                    let ws_mask = _mm256_movemask_epi8(ws) as u32;
+                    let ns_mask = !ws_mask as u64;
+                    out |= (ns_mask & 0xFFFF_FFFF) << (i * 32);
+                }
+                out
+            }
+        }
         #[inline(always)]
         pub(crate) fn nospace_bitmap_64_scalar(stripe: &[u8]) -> u64 {
             let mut out = 0u64;
@@ -2234,11 +2274,17 @@ mod __bbnfbootstrap_emit_impl {
         /// Mirrors `json-prototype::simd::first_quote_or_backslash`.
         #[inline(always)]
         pub fn first_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
+            #[cfg(target_arch = "aarch64")]
             unsafe {
                 return first_quote_or_backslash_neon(bytes);
             }
+            #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+            unsafe {
+                return first_quote_or_backslash_avx2(bytes);
+            }
             #[allow(unreachable_code)] first_quote_or_backslash_scalar(bytes)
         }
+        #[cfg(target_arch = "aarch64")]
         #[inline(always)]
         unsafe fn first_quote_or_backslash_neon(bytes: &[u8]) -> Option<(usize, u8)> {
             use core::arch::aarch64::*;
@@ -2259,6 +2305,39 @@ mod __bbnfbootstrap_emit_impl {
                         return Some((i + off, byte));
                     }
                     i += 16;
+                }
+                while i < len {
+                    let b = *ptr.add(i);
+                    if b == b'"' || b == b'\\' {
+                        return Some((i, b));
+                    }
+                    i += 1;
+                }
+                None
+            }
+        }
+        #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+        #[inline(always)]
+        unsafe fn first_quote_or_backslash_avx2(bytes: &[u8]) -> Option<(usize, u8)> {
+            use core::arch::x86_64::*;
+            unsafe {
+                let quote = _mm256_set1_epi8(b'"' as i8);
+                let backslash = _mm256_set1_epi8(b'\\' as i8);
+                let ptr = bytes.as_ptr();
+                let len = bytes.len();
+                let mut i = 0usize;
+                while i + 32 <= len {
+                    let v = _mm256_loadu_si256(ptr.add(i) as *const __m256i);
+                    let hit = _mm256_or_si256(
+                        _mm256_cmpeq_epi8(v, quote),
+                        _mm256_cmpeq_epi8(v, backslash),
+                    );
+                    let mask = _mm256_movemask_epi8(hit) as u32;
+                    if mask != 0 {
+                        let off = mask.trailing_zeros() as usize;
+                        return Some((i + off, *ptr.add(i + off)));
+                    }
+                    i += 32;
                 }
                 while i < len {
                     let b = *ptr.add(i);
@@ -2855,15 +2934,11 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            if true {
-                if !(op_stack_len < OP_STACK_CAP) {
-                    { panic!(
-                                "Pratt op_stack overflow at depth {0} (cap {1})",
-                                op_stack_len,
-                                OP_STACK_CAP,
-                            ); }
-                }
-            }
+            debug_assert!(
+                op_stack_len < OP_STACK_CAP,
+                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
+                OP_STACK_CAP,
+            );
             op_stack[op_stack_len] = LocalOpEntry {
                 op_discriminant,
                 precedence,
@@ -4794,15 +4869,11 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            if true {
-                if !(op_stack_len < OP_STACK_CAP) {
-                    { panic!(
-                                "Pratt op_stack overflow at depth {0} (cap {1})",
-                                op_stack_len,
-                                OP_STACK_CAP,
-                            ); }
-                }
-            }
+            debug_assert!(
+                op_stack_len < OP_STACK_CAP,
+                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
+                OP_STACK_CAP,
+            );
             op_stack[op_stack_len] = LocalOpEntry {
                 op_discriminant,
                 precedence,
@@ -5035,15 +5106,11 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            if true {
-                if !(op_stack_len < OP_STACK_CAP) {
-                    { panic!(
-                                "Pratt op_stack overflow at depth {0} (cap {1})",
-                                op_stack_len,
-                                OP_STACK_CAP,
-                            ); }
-                }
-            }
+            debug_assert!(
+                op_stack_len < OP_STACK_CAP,
+                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
+                OP_STACK_CAP,
+            );
             op_stack[op_stack_len] = LocalOpEntry {
                 op_discriminant,
                 precedence,
@@ -5276,15 +5343,11 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            if true {
-                if !(op_stack_len < OP_STACK_CAP) {
-                    { panic!(
-                                "Pratt op_stack overflow at depth {0} (cap {1})",
-                                op_stack_len,
-                                OP_STACK_CAP,
-                            ); }
-                }
-            }
+            debug_assert!(
+                op_stack_len < OP_STACK_CAP,
+                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
+                OP_STACK_CAP,
+            );
             op_stack[op_stack_len] = LocalOpEntry {
                 op_discriminant,
                 precedence,
@@ -5517,15 +5580,11 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            if true {
-                if !(op_stack_len < OP_STACK_CAP) {
-                    { panic!(
-                                "Pratt op_stack overflow at depth {0} (cap {1})",
-                                op_stack_len,
-                                OP_STACK_CAP,
-                            ); }
-                }
-            }
+            debug_assert!(
+                op_stack_len < OP_STACK_CAP,
+                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
+                OP_STACK_CAP,
+            );
             op_stack[op_stack_len] = LocalOpEntry {
                 op_discriminant,
                 precedence,
@@ -5758,15 +5817,11 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            if true {
-                if !(op_stack_len < OP_STACK_CAP) {
-                    { panic!(
-                                "Pratt op_stack overflow at depth {0} (cap {1})",
-                                op_stack_len,
-                                OP_STACK_CAP,
-                            ); }
-                }
-            }
+            debug_assert!(
+                op_stack_len < OP_STACK_CAP,
+                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
+                OP_STACK_CAP,
+            );
             op_stack[op_stack_len] = LocalOpEntry {
                 op_discriminant,
                 precedence,
@@ -8760,15 +8815,11 @@ mod __bbnfbootstrap_emit_impl {
             } else {
                 op_hi
             };
-            if true {
-                if !(op_stack_len < OP_STACK_CAP) {
-                    { panic!(
-                                "Pratt op_stack overflow at depth {0} (cap {1})",
-                                op_stack_len,
-                                OP_STACK_CAP,
-                            ); }
-                }
-            }
+            debug_assert!(
+                op_stack_len < OP_STACK_CAP,
+                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
+                OP_STACK_CAP,
+            );
             op_stack[op_stack_len] = LocalOpEntry {
                 op_discriminant,
                 precedence,
@@ -12357,14 +12408,20 @@ mod __bbnfbootstrap_emit_impl {
     /// One entry per non-transparent rule, derived at codegen from
     /// CSP-inferred FIRST-set facts intersected with the grammar's
     /// mined `structural_alphabet` + `structural_digraph_mask`.
-    /// Consumed at emission time by shape emitters that inline
+    /// Consumed at emission time by `emit_path_query_impls` in
+    /// `backend::rust::view::value`, which inlines the matching
+    /// cursor primitive in `__path_walk`'s per-`rule_kind()`
+    /// dispatch:
     /// [`::bbnf::runtime::tape::TapeCursor::object_key_seek`] /
     /// [`::bbnf::runtime::tape::TapeCursor::bounded_lookahead`] /
     /// [`::bbnf::runtime::tape::TapeCursor::scan_structural_bounded`]
     /// per the entry's `activation` bitmap.
     ///
     /// No runtime flag; no hand-routed grammar specialisation.
-    #[allow(dead_code)]
+    /// AY-II.W0'.c retires the `#[allow(dead_code)]` that
+    /// previously guarded this surface — the emitted grammar now
+    /// carries a same-translation-unit consumer through
+    /// `__path_walk`'s dispatch.
     pub const STRUCTURAL_SCAN_POLICY: &[::bbnf::runtime::tape::ScanPolicyEntry] = &[
         ::bbnf::runtime::tape::ScanPolicyEntry {
             rule_id: 0u32,
@@ -14550,6 +14607,7 @@ mod __bbnfbootstrap_emit_impl {
     }
     /// Typed value enum — payload-eligible branches carry typed
     /// values directly; non-eligible branches wrap a cursor view.
+    #[derive(Clone, Debug)]
     pub enum value_atomValue<'p> {
         int_lit(i64),
         float_lit(f64),
@@ -18837,6 +18895,7 @@ mod __bbnfbootstrap_emit_impl {
     }
     /// Typed value enum — payload-eligible branches carry typed
     /// values directly; non-eligible branches wrap a cursor view.
+    #[derive(Clone, Debug)]
     pub enum termValue<'p> {
         branch_0(BbnfBootstrapNodeView<'p>),
         branch_1(BbnfBootstrapNodeView<'p>),
@@ -22912,6 +22971,7 @@ mod __bbnfbootstrap_emit_impl {
     }
     /// Typed value enum — payload-eligible branches carry typed
     /// values directly; non-eligible branches wrap a cursor view.
+    #[derive(Clone, Debug)]
     pub enum directiveValue<'p> {
         import_directive(&'p str),
         recover_directive(BbnfBootstrapNodeView<'p>),
@@ -23270,6 +23330,7 @@ mod __bbnfbootstrap_emit_impl {
     }
     /// Typed value enum — payload-eligible branches carry typed
     /// values directly; non-eligible branches wrap a cursor view.
+    #[derive(Clone, Debug)]
     pub enum grammar_itemValue<'p> {
         comment(((u32, u32))),
         big_comment(((u32, u32))),
@@ -23780,10 +23841,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapBoolLitProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapBoolLitProjection {
@@ -23820,10 +23882,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapStringLitProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapStringLitProjection {
@@ -23860,10 +23923,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapValueIdentProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapValueIdentProjection {
@@ -23900,10 +23964,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapMulOpProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapMulOpProjection {
@@ -23940,10 +24005,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapAddOpProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapAddOpProjection {
@@ -23980,10 +24046,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapCmpOpProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapCmpOpProjection {
@@ -24020,10 +24087,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapTypeNameProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapTypeNameProjection {
@@ -24060,10 +24128,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapIdentifierProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapIdentifierProjection {
@@ -24100,10 +24169,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapLiteralProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapLiteralProjection {
@@ -24140,10 +24210,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapRegexProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapRegexProjection {
@@ -24180,10 +24251,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapBigCommentProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapBigCommentProjection {
@@ -24220,10 +24292,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapCommentProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapCommentProjection {
@@ -24260,10 +24333,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapModifierProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapModifierProjection {
@@ -24300,10 +24374,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapBinaryOperatorsProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapBinaryOperatorsProjection {
@@ -24340,10 +24415,11 @@ mod __bbnfbootstrap_emit_impl {
     /// pure layout arm; non-empty when the grammar author spelt
     /// a `-> Name` annotation. Consumers that want a semantic-
     /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
     pub struct BbnfBootstrapImportPathProjection {
         /// Grammar-declared scalar field at packed-buffer offset
-        ///`0` (bytes).
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
     impl BbnfBootstrapImportPathProjection {
@@ -24627,24 +24703,25 @@ mod __bbnfbootstrap_emit_impl {
     pub fn __grammar_projection_import_path() -> (&'static str, usize, &'static str) {
         ("import_path", 1, "")
     }
-    /// AY.W3b.1 — grammar-emitted value enum. Eager materialisation
-    /// target for `Parsed::to_value()`. Variants enumerate
-    /// non-transparent rules (TypeDesc-equivalence-class collapse
-    /// applied per the emitter); compound variants carry
-    /// child values in declaration order.
+    /// AY-II.W0'.b — grammar-emitted value enum. Eager
+    /// materialisation target for `Parsed::to_value()`. Variants
+    /// enumerate non-transparent rules; admitted rules carry the
+    /// matching `<Grammar><RuleCamel>Projection` struct directly,
+    /// non-admitted rules carry their shape-classified payload.
+    #[derive(Clone, Debug)]
     pub enum BbnfBootstrapValue<'p> {
         int_lit(i64),
         float_lit(f64),
-        bool_lit(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        string_lit(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        value_ident(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        bool_lit(BbnfBootstrapBoolLitProjection),
+        string_lit(BbnfBootstrapStringLitProjection),
+        value_ident(BbnfBootstrapValueIdentProjection),
         value_path(&'p str),
         value_input(&'p str),
         value_fn_call(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         value_atom(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        mul_op(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        add_op(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        cmp_op(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        mul_op(BbnfBootstrapMulOpProjection),
+        add_op(BbnfBootstrapAddOpProjection),
+        cmp_op(BbnfBootstrapCmpOpProjection),
         value_unary(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         value_mul(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         value_add(::std::vec::Vec<BbnfBootstrapValue<'p>>),
@@ -24654,26 +24731,26 @@ mod __bbnfbootstrap_emit_impl {
         value_closure(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         value_expr(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         type_annotation(&'p str),
-        type_name(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        identifier(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        literal(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        regex(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        big_comment(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        comment(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        type_name(BbnfBootstrapTypeNameProjection),
+        identifier(BbnfBootstrapIdentifierProjection),
+        literal(BbnfBootstrapLiteralProjection),
+        regex(BbnfBootstrapRegexProjection),
+        big_comment(BbnfBootstrapBigCommentProjection),
+        comment(BbnfBootstrapCommentProjection),
         lhs(&'p str),
         call_arg(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         term(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        modifier(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        modifier(BbnfBootstrapModifierProjection),
         factor(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         mapped_factor(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        binary_operators(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        binary_operators(BbnfBootstrapBinaryOperatorsProjection),
         binary_factor(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         concatenation(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         alternation(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         closure(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         rhs(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         rule(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        import_path(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        import_path(BbnfBootstrapImportPathProjection),
         import_items(&'p str),
         import_directive(&'p str),
         recover_directive(::std::vec::Vec<BbnfBootstrapValue<'p>>),
@@ -24691,430 +24768,11 @@ mod __bbnfbootstrap_emit_impl {
         /// sub-variant indices).
         Unknown(BbnfBootstrapNodeView<'p>),
     }
-    impl ::bbnf::runtime::ValueRoot for BbnfBootstrap {
-        type Value<'p> = BbnfBootstrapValue<'p>;
-        #[inline]
-        fn project_value_output<'p>(
-            output: &::bbnf::runtime::ValueBuilderOutput<Self>,
-            input: &'p str,
-        ) -> Self::Value<'p>
-        where
-            Self: 'p,
-        {
-            project_value_BbnfBootstrap(output, input)
-        }
-    }
-    /// AY.W3b.1 — shared path walker. Descends from `view` per
-    /// the given path, returning the narrowed NodeView on hit
-    /// or `None` when any step misses.
-    ///
-    /// `Field` steps match by comparing the child's source span
-    /// against the requested key; for object-like compounds the
-    /// key is the Span leaf at child index `2*i`, and the value
-    /// is at `2*i+1` (see per-grammar object materialisation).
-    /// `Index` steps select the `i`-th child directly.
-    ///
-    /// The walker intentionally treats every compound uniformly —
-    /// the emitter does not specialise per rule body today; the
-    /// binary-search packed-cache variant is a follow-on.
-    #[inline]
-    fn __path_walk<'p>(
-        view: BbnfBootstrapNodeView<'p>,
-        path: ::bbnf::runtime::Path<'_>,
-    ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
-        let mut cur = view;
-        for seg in path.iter() {
-            match seg {
-                ::bbnf::runtime::PathSegment::Field(key) => {
-                    let mut it = cur.children();
-                    let mut found = None;
-                    loop {
-                        let k = match it.next() {
-                            Some(k) => k,
-                            None => break,
-                        };
-                        let v = match it.next() {
-                            Some(v) => v,
-                            None => break,
-                        };
-                        let raw = k.span_text();
-                        let key_text = if raw.as_bytes().first() == Some(&b'"')
-                            && raw.as_bytes().last() == Some(&b'"') && raw.len() >= 2
-                        {
-                            &raw[1..raw.len() - 1]
-                        } else {
-                            raw
-                        };
-                        if key_text == *key {
-                            found = Some(v);
-                            break;
-                        }
-                    }
-                    cur = match found {
-                        Some(v) => v,
-                        None => return None,
-                    };
-                }
-                ::bbnf::runtime::PathSegment::Index(i) => {
-                    cur = cur.child(*i)?;
-                }
-            }
-        }
-        Some(cur)
-    }
-    impl ::bbnf::runtime::PathQuery<&'static str> for BbnfBootstrap {
-        #[inline]
-        fn query<'p>(
-            view: Self::View<'p>,
-            path: ::bbnf::runtime::Path<'_>,
-        ) -> ::core::option::Option<&'static str>
-        where
-            Self: 'p,
-        {
-            let node = BbnfBootstrapNodeView::from_cursor(view.cursor(), view.input());
-            let _hit = __path_walk(node, path)?;
-            None
-        }
-    }
-    impl ::bbnf::runtime::PathQuery<f64> for BbnfBootstrap {
-        #[inline]
-        fn query<'p>(
-            view: Self::View<'p>,
-            path: ::bbnf::runtime::Path<'_>,
-        ) -> ::core::option::Option<f64>
-        where
-            Self: 'p,
-        {
-            let node = BbnfBootstrapNodeView::from_cursor(view.cursor(), view.input());
-            let hit = __path_walk(node, path)?;
-            let tape = hit.cursor().tape();
-            let rec = hit.cursor().record();
-            if let Some(v) = tape.payload_f64(rec) {
-                return Some(v);
-            }
-            hit.span_text().parse::<f64>().ok()
-        }
-    }
-    impl ::bbnf::runtime::PathQuery<bool> for BbnfBootstrap {
-        #[inline]
-        fn query<'p>(
-            view: Self::View<'p>,
-            path: ::bbnf::runtime::Path<'_>,
-        ) -> ::core::option::Option<bool>
-        where
-            Self: 'p,
-        {
-            let node = BbnfBootstrapNodeView::from_cursor(view.cursor(), view.input());
-            let hit = __path_walk(node, path)?;
-            let tape = hit.cursor().tape();
-            let rec = hit.cursor().record();
-            if let Some(v) = tape.payload_bool(rec) {
-                return Some(v);
-            }
-            match hit.span_text() {
-                "true" => Some(true),
-                "false" => Some(false),
-                _ => None,
-            }
-        }
-    }
-    /// AY.W3b.2 — object shape walker. Returns the compound's
-    /// children recursively materialised, ready for the root
-    /// dispatcher to wrap in its grammar-specific Compound variant.
-    #[inline(always)]
-    fn materialize_object_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
-    ) -> ::std::vec::Vec<BbnfBootstrapValue<'p>> {
-        let mut out: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-            view.cursor().child_count().max(1) * 2,
-        );
-        for child in view.children() {
-            out.push(materialize_value_BbnfBootstrap(child));
-        }
-        out
-    }
-    /// AY.W3b.2 — array shape walker. Produces a
-    /// `Vec<<Grammar>Value>` of the compound's children in
-    /// declaration order.
-    #[inline(always)]
-    fn materialize_array_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
-    ) -> ::std::vec::Vec<BbnfBootstrapValue<'p>> {
-        let mut out: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-            view.cursor().child_count(),
-        );
-        for child in view.children() {
-            out.push(materialize_value_BbnfBootstrap(child));
-        }
-        out
-    }
-    /// AY.W3b.2 — string (Span) materialiser. Zero-copy borrow
-    /// from the input slice.
-    #[inline(always)]
-    fn materialize_string_BbnfBootstrap<'p>(view: BbnfBootstrapNodeView<'p>) -> &'p str {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        if let Some((lo, hi)) = tape.payload_Span(rec) {
-            return &view.input()[lo as usize..hi as usize];
-        }
-        view.span_text()
-    }
-    /// AY.W3b.2 — number (f64) materialiser. Payload-first
-    /// read with a span-parse fallback.
-    #[inline(always)]
-    fn materialize_number_BbnfBootstrap<'p>(view: BbnfBootstrapNodeView<'p>) -> f64 {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        if let Some(v) = tape.payload_f64(rec) {
-            return v;
-        }
-        view.span_text().parse::<f64>().unwrap_or(0.0)
-    }
-    /// AY.W3b.2 — literal / keyword materialiser.
-    #[inline(always)]
-    fn materialize_literal_BbnfBootstrap<'p>(view: BbnfBootstrapNodeView<'p>) -> bool {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        if let Some(v) = tape.payload_bool(rec) {
-            return v;
-        }
-        view.span_text() == "true"
-    }
-    /// AY.W3b.2 — root value materialiser. Dispatches on
-    /// `rule_kind()` and constructs the grammar's
-    /// `<Grammar>Value` variant directly. Every per-shape fn
-    /// it calls is `#[inline(always)]`; this root is `#[inline]`
-    /// so the whole tree collapses into a single flat function
-    /// at the `parsed.to_value()` call site.
-    #[inline]
-    fn materialize_value_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
-    ) -> BbnfBootstrapValue<'p> {
-        match view.rule_kind() {
-            BbnfBootstrapRuleKind::int_lit => {
-                let tape = view.cursor().tape();
-                let rec = view.cursor().record();
-                let v: i64 = if let Some(v) = tape.payload_i64(rec) {
-                    v
-                } else {
-                    view.span_text().parse::<i64>().unwrap_or(0)
-                };
-                BbnfBootstrapValue::int_lit(v)
-            }
-            BbnfBootstrapRuleKind::float_lit => {
-                BbnfBootstrapValue::float_lit(materialize_number_BbnfBootstrap(view))
-            }
-            BbnfBootstrapRuleKind::bool_lit => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::bool_lit(children)
-            }
-            BbnfBootstrapRuleKind::string_lit => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::string_lit(children)
-            }
-            BbnfBootstrapRuleKind::value_ident => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::value_ident(children)
-            }
-            BbnfBootstrapRuleKind::value_path => {
-                BbnfBootstrapValue::value_path(materialize_string_BbnfBootstrap(view))
-            }
-            BbnfBootstrapRuleKind::value_input => {
-                BbnfBootstrapValue::value_input(materialize_string_BbnfBootstrap(view))
-            }
-            BbnfBootstrapRuleKind::value_fn_call => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::value_fn_call(children)
-            }
-            BbnfBootstrapRuleKind::value_atom => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::value_atom(children)
-            }
-            BbnfBootstrapRuleKind::mul_op => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::mul_op(children)
-            }
-            BbnfBootstrapRuleKind::add_op => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::add_op(children)
-            }
-            BbnfBootstrapRuleKind::cmp_op => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::cmp_op(children)
-            }
-            BbnfBootstrapRuleKind::value_unary => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::value_unary(children)
-            }
-            BbnfBootstrapRuleKind::value_mul => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::value_mul(children)
-            }
-            BbnfBootstrapRuleKind::value_add => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::value_add(children)
-            }
-            BbnfBootstrapRuleKind::value_cmp => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::value_cmp(children)
-            }
-            BbnfBootstrapRuleKind::value_and => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::value_and(children)
-            }
-            BbnfBootstrapRuleKind::value_or => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::value_or(children)
-            }
-            BbnfBootstrapRuleKind::value_closure => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::value_closure(children)
-            }
-            BbnfBootstrapRuleKind::value_expr => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::value_expr(children)
-            }
-            BbnfBootstrapRuleKind::type_annotation => {
-                BbnfBootstrapValue::type_annotation(
-                    materialize_string_BbnfBootstrap(view),
-                )
-            }
-            BbnfBootstrapRuleKind::type_name => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::type_name(children)
-            }
-            BbnfBootstrapRuleKind::identifier => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::identifier(children)
-            }
-            BbnfBootstrapRuleKind::literal => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::literal(children)
-            }
-            BbnfBootstrapRuleKind::regex => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::regex(children)
-            }
-            BbnfBootstrapRuleKind::big_comment => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::big_comment(children)
-            }
-            BbnfBootstrapRuleKind::comment => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::comment(children)
-            }
-            BbnfBootstrapRuleKind::lhs => {
-                BbnfBootstrapValue::lhs(materialize_string_BbnfBootstrap(view))
-            }
-            BbnfBootstrapRuleKind::call_arg => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::call_arg(children)
-            }
-            BbnfBootstrapRuleKind::term => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::term(children)
-            }
-            BbnfBootstrapRuleKind::modifier => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::modifier(children)
-            }
-            BbnfBootstrapRuleKind::factor => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::factor(children)
-            }
-            BbnfBootstrapRuleKind::mapped_factor => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::mapped_factor(children)
-            }
-            BbnfBootstrapRuleKind::binary_operators => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::binary_operators(children)
-            }
-            BbnfBootstrapRuleKind::binary_factor => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::binary_factor(children)
-            }
-            BbnfBootstrapRuleKind::concatenation => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::concatenation(children)
-            }
-            BbnfBootstrapRuleKind::alternation => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::alternation(children)
-            }
-            BbnfBootstrapRuleKind::closure => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::closure(children)
-            }
-            BbnfBootstrapRuleKind::rhs => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::rhs(children)
-            }
-            BbnfBootstrapRuleKind::rule => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::rule(children)
-            }
-            BbnfBootstrapRuleKind::import_path => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::import_path(children)
-            }
-            BbnfBootstrapRuleKind::import_items => {
-                BbnfBootstrapValue::import_items(materialize_string_BbnfBootstrap(view))
-            }
-            BbnfBootstrapRuleKind::import_directive => {
-                BbnfBootstrapValue::import_directive(
-                    materialize_string_BbnfBootstrap(view),
-                )
-            }
-            BbnfBootstrapRuleKind::recover_directive => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::recover_directive(children)
-            }
-            BbnfBootstrapRuleKind::pretty_hint => {
-                BbnfBootstrapValue::pretty_hint(materialize_string_BbnfBootstrap(view))
-            }
-            BbnfBootstrapRuleKind::pretty_directive => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::pretty_directive(children)
-            }
-            BbnfBootstrapRuleKind::ws_directive => {
-                BbnfBootstrapValue::ws_directive(materialize_string_BbnfBootstrap(view))
-            }
-            BbnfBootstrapRuleKind::token_directive => {
-                BbnfBootstrapValue::token_directive(
-                    materialize_string_BbnfBootstrap(view),
-                )
-            }
-            BbnfBootstrapRuleKind::debug_directive => {
-                BbnfBootstrapValue::debug_directive(
-                    materialize_string_BbnfBootstrap(view),
-                )
-            }
-            BbnfBootstrapRuleKind::host_directive => {
-                BbnfBootstrapValue::host_directive(
-                    materialize_string_BbnfBootstrap(view),
-                )
-            }
-            BbnfBootstrapRuleKind::directive => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::directive(children)
-            }
-            BbnfBootstrapRuleKind::grammar_item => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::grammar_item(children)
-            }
-            BbnfBootstrapRuleKind::grammar => {
-                let children = materialize_object_BbnfBootstrap(view);
-                BbnfBootstrapValue::grammar(children)
-            }
-            _ => BbnfBootstrapValue::Unknown(view),
-        }
-    }
-    /// AY-II.W0.c — rule-id → RuleKind dispatch local to the
+    /// AY-II.W0'.b — rule-id → RuleKind dispatch local to the
     /// fused-pipeline projection path. Mirrors the view layer's
-    /// `rule_kind()` dispatch; scoped to the projection module
-    /// to keep the two consumer paths coupled only through the
-    /// `RuleKind` enum itself.
+    /// `rule_kind()` dispatch; scoped to the projection module so
+    /// the two consumer paths stay coupled only through the
+    /// `RuleKind` enum.
     #[inline(always)]
     fn project_rule_kind_BbnfBootstrap(variant_idx: u8) -> BbnfBootstrapRuleKind {
         match variant_idx {
@@ -25174,32 +24832,31 @@ mod __bbnfbootstrap_emit_impl {
             _ => BbnfBootstrapRuleKind::Unknown,
         }
     }
-    /// AY-II.W0.c — per-frame projector. Reads one frame from
-    /// the value substrate and constructs the matching
-    /// `<Grammar>Value` variant. Compound variants recurse into
-    /// their child frames through this same fn. `#[inline]` so
-    /// LLVM can fold the dispatch into the caller when the
-    /// frame tree is bounded.
+    /// AY-II.W0'.b — per-frame projector. Reads one frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// value slab and constructs the matching `<Grammar>Value`
+    /// variant. Admitted rules tail-call their grammar-derived
+    /// materializer; non-admitted rules construct the variant
+    /// inline. Compound variants recurse through this same fn.
     #[inline]
     fn project_frame_BbnfBootstrap<'p>(
-        output: &::bbnf::runtime::ValueBuilderOutput<BbnfBootstrap>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
         input: &'p str,
         offset: u32,
     ) -> BbnfBootstrapValue<'p> {
-        let frame = match output.frame(offset) {
+        let frame = match output.value_frame_at(offset) {
             ::core::option::Option::Some(f) => f,
             ::core::option::Option::None => {
-                { panic!(
-                            "AY-II.W0.c: frame offset {0} out of range (frames: {1})",
-                            offset,
-                            output.frame_count(),
-                        ); };
+                ::core::panic!(
+                    "AY-II.W0'.b: value frame offset {} out of range (frames: {})",
+                    offset, output.frames().len(),
+                );
             }
         };
         match project_rule_kind_BbnfBootstrap(frame.variant_idx) {
             BbnfBootstrapRuleKind::int_lit => {
                 let v: i64 = output
-                    .payload_for(frame)
+                    .value_payload_for(frame)
                     .and_then(|p| p.as_u32())
                     .map(|v| v as i64)
                     .unwrap_or_else(|| {
@@ -25211,7 +24868,7 @@ mod __bbnfbootstrap_emit_impl {
             }
             BbnfBootstrapRuleKind::float_lit => {
                 let v: f64 = output
-                    .payload_for(frame)
+                    .value_payload_for(frame)
                     .and_then(|p| p.as_f64())
                     .unwrap_or_else(|| {
                         (&input[frame.span_lo as usize..frame.span_hi as usize])
@@ -25221,31 +24878,52 @@ mod __bbnfbootstrap_emit_impl {
                 BbnfBootstrapValue::float_lit(v)
             }
             BbnfBootstrapRuleKind::bool_lit => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::bool_lit(children)
+                let proj = materialize_projection_bool_lit_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "bool_lit", offset,
+                        );
+                    });
+                BbnfBootstrapValue::bool_lit(proj)
             }
             BbnfBootstrapRuleKind::string_lit => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::string_lit(children)
+                let proj = materialize_projection_string_lit_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "string_lit", offset,
+                        );
+                    });
+                BbnfBootstrapValue::string_lit(proj)
             }
             BbnfBootstrapRuleKind::value_ident => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::value_ident(children)
+                let proj = materialize_projection_value_ident_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "value_ident", offset,
+                        );
+                    });
+                BbnfBootstrapValue::value_ident(proj)
             }
             BbnfBootstrapRuleKind::value_path => {
                 let span = &input[frame.span_lo as usize..frame.span_hi as usize];
@@ -25259,7 +24937,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::value_fn_call(children)
@@ -25268,43 +24946,64 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::value_atom(children)
             }
             BbnfBootstrapRuleKind::mul_op => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::mul_op(children)
+                let proj = materialize_projection_mul_op_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "mul_op", offset,
+                        );
+                    });
+                BbnfBootstrapValue::mul_op(proj)
             }
             BbnfBootstrapRuleKind::add_op => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::add_op(children)
+                let proj = materialize_projection_add_op_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "add_op", offset,
+                        );
+                    });
+                BbnfBootstrapValue::add_op(proj)
             }
             BbnfBootstrapRuleKind::cmp_op => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::cmp_op(children)
+                let proj = materialize_projection_cmp_op_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "cmp_op", offset,
+                        );
+                    });
+                BbnfBootstrapValue::cmp_op(proj)
             }
             BbnfBootstrapRuleKind::value_unary => {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::value_unary(children)
@@ -25313,7 +25012,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::value_mul(children)
@@ -25322,7 +25021,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::value_add(children)
@@ -25331,7 +25030,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::value_cmp(children)
@@ -25340,7 +25039,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::value_and(children)
@@ -25349,7 +25048,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::value_or(children)
@@ -25358,7 +25057,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::value_closure(children)
@@ -25367,7 +25066,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::value_expr(children)
@@ -25377,58 +25076,100 @@ mod __bbnfbootstrap_emit_impl {
                 BbnfBootstrapValue::type_annotation(span)
             }
             BbnfBootstrapRuleKind::type_name => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::type_name(children)
+                let proj = materialize_projection_type_name_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "type_name", offset,
+                        );
+                    });
+                BbnfBootstrapValue::type_name(proj)
             }
             BbnfBootstrapRuleKind::identifier => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::identifier(children)
+                let proj = materialize_projection_identifier_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "identifier", offset,
+                        );
+                    });
+                BbnfBootstrapValue::identifier(proj)
             }
             BbnfBootstrapRuleKind::literal => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::literal(children)
+                let proj = materialize_projection_literal_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "literal", offset,
+                        );
+                    });
+                BbnfBootstrapValue::literal(proj)
             }
             BbnfBootstrapRuleKind::regex => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::regex(children)
+                let proj = materialize_projection_regex_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "regex", offset,
+                        );
+                    });
+                BbnfBootstrapValue::regex(proj)
             }
             BbnfBootstrapRuleKind::big_comment => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::big_comment(children)
+                let proj = materialize_projection_big_comment_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "big_comment", offset,
+                        );
+                    });
+                BbnfBootstrapValue::big_comment(proj)
             }
             BbnfBootstrapRuleKind::comment => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::comment(children)
+                let proj = materialize_projection_comment_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "comment", offset,
+                        );
+                    });
+                BbnfBootstrapValue::comment(proj)
             }
             BbnfBootstrapRuleKind::lhs => {
                 let span = &input[frame.span_lo as usize..frame.span_hi as usize];
@@ -25438,7 +25179,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::call_arg(children)
@@ -25447,25 +25188,32 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::term(children)
             }
             BbnfBootstrapRuleKind::modifier => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::modifier(children)
+                let proj = materialize_projection_modifier_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "modifier", offset,
+                        );
+                    });
+                BbnfBootstrapValue::modifier(proj)
             }
             BbnfBootstrapRuleKind::factor => {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::factor(children)
@@ -25474,25 +25222,32 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::mapped_factor(children)
             }
             BbnfBootstrapRuleKind::binary_operators => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::binary_operators(children)
+                let proj = materialize_projection_binary_operators_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "binary_operators", offset,
+                        );
+                    });
+                BbnfBootstrapValue::binary_operators(proj)
             }
             BbnfBootstrapRuleKind::binary_factor => {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::binary_factor(children)
@@ -25501,7 +25256,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::concatenation(children)
@@ -25510,7 +25265,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::alternation(children)
@@ -25519,7 +25274,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::closure(children)
@@ -25528,7 +25283,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::rhs(children)
@@ -25537,19 +25292,26 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::rule(children)
             }
             BbnfBootstrapRuleKind::import_path => {
-                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
-                );
-                for (child_off, _child_frame) in output.children(offset) {
-                    children.push(project_frame_BbnfBootstrap(output, input, child_off));
-                }
-                BbnfBootstrapValue::import_path(children)
+                let proj = materialize_projection_import_path_BbnfBootstrap(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "import_path", offset,
+                        );
+                    });
+                BbnfBootstrapValue::import_path(proj)
             }
             BbnfBootstrapRuleKind::import_items => {
                 let span = &input[frame.span_lo as usize..frame.span_hi as usize];
@@ -25563,7 +25325,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::recover_directive(children)
@@ -25576,7 +25338,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::pretty_directive(children)
@@ -25601,7 +25363,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::directive(children)
@@ -25610,7 +25372,7 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::grammar_item(children)
@@ -25619,498 +25381,752 @@ mod __bbnfbootstrap_emit_impl {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::with_capacity(
                     frame.child_count as usize,
                 );
-                for (child_off, _child_frame) in output.children(offset) {
+                for (child_off, _child_frame) in output.value_children(offset) {
                     children.push(project_frame_BbnfBootstrap(output, input, child_off));
                 }
                 BbnfBootstrapValue::grammar(children)
             }
             _ => {
                 let _ = frame;
-                { panic!(
-                            "AY-II.W0.c: unclassified variant_idx {0} on frame at offset {1}; fused-pipeline projection requires classified records",
-                            frame.variant_idx,
-                            offset,
-                        ); };
+                ::core::panic!(
+                    "AY-II.W0'.b: unclassified variant_idx {} on frame at offset {}",
+                    frame.variant_idx, offset,
+                );
             }
         }
     }
-    /// AY-II.W0.c — fused-pipeline root projector. Reads the
-    /// root frame from the value substrate and constructs the
-    /// grammar's `<Grammar>Value<'p>` in one pass. No tape
-    /// access, no reparse, no visitor dispatch.
+    /// AY-II.W0'.b — fused-pipeline root projector. Reads the root
+    /// frame from the value slab and constructs the grammar's
+    /// `<Grammar>Value<'p>` in one pass. No tape walk, no reparse,
+    /// no visitor dispatch.
     #[inline]
     fn project_value_BbnfBootstrap<'p>(
-        output: &::bbnf::runtime::ValueBuilderOutput<BbnfBootstrap>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
         input: &'p str,
     ) -> BbnfBootstrapValue<'p> {
-        if output.is_empty() {
-            { panic!(
-                        "AY-II.W0.c: Parsed::to_value() called on an empty value substrate; fused parse entry was not invoked. See docs/tranches/AY-II/waves/W0.md §W0.c.",
-                    ); };
+        let root_off = output.value_root_offset();
+        match output.value_frame_at(root_off) {
+            ::core::option::Option::Some(_) => {}
+            ::core::option::Option::None => {
+                ::core::panic!(
+                    "AY-II.W0'.b: ValueBuilder root frame absent after parse \
+                         (root_offset = {}, frame count = {})",
+                    root_off, output.frames().len(),
+                );
+            }
         }
-        project_frame_BbnfBootstrap(output, input, output.root_offset())
+        project_frame_BbnfBootstrap(output, input, root_off)
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    impl ::bbnf::runtime::ValueRoot for BbnfBootstrap {
+        type Value<'p> = BbnfBootstrapValue<'p>;
+        #[inline]
+        fn project_value_output<'p>(
+            output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+            input: &'p str,
+        ) -> Self::Value<'p>
+        where
+            Self: 'p,
+        {
+            project_value_BbnfBootstrap(output, input)
+        }
+    }
+    /// AY-II.W0'.c — policy-driven path walker. Descends from
+    /// `view` per the given path, returning the narrowed
+    /// NodeView on hit or `None` when any step misses.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// The per-step dispatch reads `cur.rule_kind()` and
+    /// resolves to the structural-scan primitive the rule's
+    /// [`STRUCTURAL_SCAN_POLICY`] entry admits: rules admitting
+    /// `OBJECT_KEY_SEEK` use
+    /// [`TapeCursor::bounded_lookahead`] + [`TapeCursor::object_key_seek`]
+    /// for the key-match + value-hop sequence; rules admitting
+    /// `SCAN_STRUCTURAL_BOUNDED` use
+    /// [`TapeCursor::scan_structural_bounded`] for positional
+    /// access. Rules outside the policy's admission fall
+    /// through to a generic children iteration.
+    ///
+    /// [`STRUCTURAL_SCAN_POLICY`]: crate::STRUCTURAL_SCAN_POLICY
+    /// [`TapeCursor::bounded_lookahead`]: ::bbnf::runtime::tape::TapeCursor::bounded_lookahead
+    /// [`TapeCursor::object_key_seek`]: ::bbnf::runtime::tape::TapeCursor::object_key_seek
+    /// [`TapeCursor::scan_structural_bounded`]: ::bbnf::runtime::tape::TapeCursor::scan_structural_bounded
+    #[inline]
+    fn __path_walk<'p>(
+        view: BbnfBootstrapNodeView<'p>,
+        path: ::bbnf::runtime::Path<'_>,
+    ) -> ::core::option::Option<BbnfBootstrapNodeView<'p>> {
+        let cur_input = view.input();
+        let mut cur = view;
+        for seg in path.iter() {
+            match seg {
+                ::bbnf::runtime::PathSegment::Field(key) => {
+                    match cur.rule_kind() {
+                        BbnfBootstrapRuleKind::value_path
+                        | BbnfBootstrapRuleKind::value_fn_call
+                        | BbnfBootstrapRuleKind::value_atom
+                        | BbnfBootstrapRuleKind::mul_op
+                        | BbnfBootstrapRuleKind::add_op
+                        | BbnfBootstrapRuleKind::cmp_op
+                        | BbnfBootstrapRuleKind::value_unary
+                        | BbnfBootstrapRuleKind::value_mul
+                        | BbnfBootstrapRuleKind::value_add
+                        | BbnfBootstrapRuleKind::value_cmp
+                        | BbnfBootstrapRuleKind::value_and
+                        | BbnfBootstrapRuleKind::value_or
+                        | BbnfBootstrapRuleKind::value_closure
+                        | BbnfBootstrapRuleKind::value_expr
+                        | BbnfBootstrapRuleKind::type_annotation
+                        | BbnfBootstrapRuleKind::type_name
+                        | BbnfBootstrapRuleKind::call_arg
+                        | BbnfBootstrapRuleKind::term
+                        | BbnfBootstrapRuleKind::modifier
+                        | BbnfBootstrapRuleKind::factor
+                        | BbnfBootstrapRuleKind::mapped_factor
+                        | BbnfBootstrapRuleKind::binary_operators
+                        | BbnfBootstrapRuleKind::binary_factor
+                        | BbnfBootstrapRuleKind::concatenation
+                        | BbnfBootstrapRuleKind::alternation
+                        | BbnfBootstrapRuleKind::closure
+                        | BbnfBootstrapRuleKind::rhs
+                        | BbnfBootstrapRuleKind::rule
+                        | BbnfBootstrapRuleKind::import_path
+                        | BbnfBootstrapRuleKind::import_items
+                        | BbnfBootstrapRuleKind::import_directive
+                        | BbnfBootstrapRuleKind::recover_directive
+                        | BbnfBootstrapRuleKind::pretty_hint
+                        | BbnfBootstrapRuleKind::pretty_directive
+                        | BbnfBootstrapRuleKind::ws_directive
+                        | BbnfBootstrapRuleKind::token_directive
+                        | BbnfBootstrapRuleKind::debug_directive
+                        | BbnfBootstrapRuleKind::host_directive
+                        | BbnfBootstrapRuleKind::directive
+                        | BbnfBootstrapRuleKind::grammar_item
+                        | BbnfBootstrapRuleKind::grammar => {
+                            let parent = cur.cursor();
+                            let (_, parent_end) = parent.span();
+                            let mut iter = parent.bounded_lookahead(parent_end);
+                            let mut hit: ::core::option::Option<
+                                BbnfBootstrapNodeView<'p>,
+                            > = None;
+                            loop {
+                                let k_cur = match iter.next() {
+                                    ::core::option::Option::Some(c) => c,
+                                    ::core::option::Option::None => break,
+                                };
+                                let v_cur = match iter.next() {
+                                    ::core::option::Option::Some(c) => c,
+                                    ::core::option::Option::None => break,
+                                };
+                                let (k_lo, k_hi) = k_cur.span();
+                                let raw = &cur_input[k_lo as usize..k_hi as usize];
+                                let key_text = if raw.as_bytes().first()
+                                    == ::core::option::Option::Some(&b'"')
+                                    && raw.as_bytes().last()
+                                        == ::core::option::Option::Some(&b'"') && raw.len() >= 2
+                                {
+                                    &raw[1..raw.len() - 1]
+                                } else {
+                                    raw
+                                };
+                                if key_text == *key {
+                                    hit = ::core::option::Option::Some(
+                                        BbnfBootstrapNodeView::from_cursor(v_cur, cur_input),
+                                    );
+                                    break;
+                                }
+                            }
+                            cur = match hit {
+                                ::core::option::Option::Some(v) => v,
+                                ::core::option::Option::None => {
+                                    return ::core::option::Option::None;
+                                }
+                            };
+                        }
+                        _ => {
+                            let mut it = cur.children();
+                            let mut found = None;
+                            loop {
+                                let k = match it.next() {
+                                    ::core::option::Option::Some(k) => k,
+                                    ::core::option::Option::None => break,
+                                };
+                                let v = match it.next() {
+                                    ::core::option::Option::Some(v) => v,
+                                    ::core::option::Option::None => break,
+                                };
+                                let raw = k.span_text();
+                                let key_text = if raw.as_bytes().first()
+                                    == ::core::option::Option::Some(&b'"')
+                                    && raw.as_bytes().last()
+                                        == ::core::option::Option::Some(&b'"') && raw.len() >= 2
+                                {
+                                    &raw[1..raw.len() - 1]
+                                } else {
+                                    raw
+                                };
+                                if key_text == *key {
+                                    found = ::core::option::Option::Some(v);
+                                    break;
+                                }
+                            }
+                            cur = match found {
+                                ::core::option::Option::Some(v) => v,
+                                ::core::option::Option::None => {
+                                    return ::core::option::Option::None;
+                                }
+                            };
+                        }
+                    }
+                }
+                ::bbnf::runtime::PathSegment::Index(i) => {
+                    match cur.rule_kind() {
+                        BbnfBootstrapRuleKind::value_path
+                        | BbnfBootstrapRuleKind::value_fn_call
+                        | BbnfBootstrapRuleKind::value_atom
+                        | BbnfBootstrapRuleKind::mul_op
+                        | BbnfBootstrapRuleKind::add_op
+                        | BbnfBootstrapRuleKind::cmp_op
+                        | BbnfBootstrapRuleKind::value_unary
+                        | BbnfBootstrapRuleKind::value_mul
+                        | BbnfBootstrapRuleKind::value_add
+                        | BbnfBootstrapRuleKind::value_cmp
+                        | BbnfBootstrapRuleKind::value_and
+                        | BbnfBootstrapRuleKind::value_or
+                        | BbnfBootstrapRuleKind::value_closure
+                        | BbnfBootstrapRuleKind::value_expr
+                        | BbnfBootstrapRuleKind::type_annotation
+                        | BbnfBootstrapRuleKind::type_name
+                        | BbnfBootstrapRuleKind::call_arg
+                        | BbnfBootstrapRuleKind::term
+                        | BbnfBootstrapRuleKind::modifier
+                        | BbnfBootstrapRuleKind::factor
+                        | BbnfBootstrapRuleKind::mapped_factor
+                        | BbnfBootstrapRuleKind::binary_operators
+                        | BbnfBootstrapRuleKind::binary_factor
+                        | BbnfBootstrapRuleKind::concatenation
+                        | BbnfBootstrapRuleKind::alternation
+                        | BbnfBootstrapRuleKind::closure
+                        | BbnfBootstrapRuleKind::rhs
+                        | BbnfBootstrapRuleKind::rule
+                        | BbnfBootstrapRuleKind::import_items
+                        | BbnfBootstrapRuleKind::import_directive
+                        | BbnfBootstrapRuleKind::recover_directive
+                        | BbnfBootstrapRuleKind::pretty_hint
+                        | BbnfBootstrapRuleKind::pretty_directive
+                        | BbnfBootstrapRuleKind::ws_directive
+                        | BbnfBootstrapRuleKind::token_directive
+                        | BbnfBootstrapRuleKind::debug_directive
+                        | BbnfBootstrapRuleKind::host_directive
+                        | BbnfBootstrapRuleKind::directive
+                        | BbnfBootstrapRuleKind::grammar_item
+                        | BbnfBootstrapRuleKind::grammar => {
+                            let parent = cur.cursor();
+                            let (_, parent_end) = parent.span();
+                            let scan = parent.scan_structural_bounded(parent_end);
+                            cur = match scan.iter().nth(*i) {
+                                ::core::option::Option::Some(c) => {
+                                    BbnfBootstrapNodeView::from_cursor(c, cur_input)
+                                }
+                                ::core::option::Option::None => {
+                                    return ::core::option::Option::None;
+                                }
+                            };
+                        }
+                        _ => {
+                            cur = cur.child(*i)?;
+                        }
+                    }
+                }
+            }
+        }
+        ::core::option::Option::Some(cur)
+    }
+    impl ::bbnf::runtime::PathQuery<&'static str> for BbnfBootstrap {
+        #[inline]
+        fn query<'p>(
+            view: Self::View<'p>,
+            path: ::bbnf::runtime::Path<'_>,
+        ) -> ::core::option::Option<&'static str>
+        where
+            Self: 'p,
+        {
+            let node = BbnfBootstrapNodeView::from_cursor(view.cursor(), view.input());
+            __path_walk(node, path)?;
+            ::core::option::Option::None
+        }
+    }
+    impl ::bbnf::runtime::PathQuery<f64> for BbnfBootstrap {
+        #[inline]
+        fn query<'p>(
+            view: Self::View<'p>,
+            path: ::bbnf::runtime::Path<'_>,
+        ) -> ::core::option::Option<f64>
+        where
+            Self: 'p,
+        {
+            let node = BbnfBootstrapNodeView::from_cursor(view.cursor(), view.input());
+            let hit = __path_walk(node, path)?;
+            let tape = hit.cursor().tape();
+            let rec = hit.cursor().record();
+            if let ::core::option::Option::Some(v) = tape.payload_f64(rec) {
+                return ::core::option::Option::Some(v);
+            }
+            hit.span_text().parse::<f64>().ok()
+        }
+    }
+    impl ::bbnf::runtime::PathQuery<bool> for BbnfBootstrap {
+        #[inline]
+        fn query<'p>(
+            view: Self::View<'p>,
+            path: ::bbnf::runtime::Path<'_>,
+        ) -> ::core::option::Option<bool>
+        where
+            Self: 'p,
+        {
+            let node = BbnfBootstrapNodeView::from_cursor(view.cursor(), view.input());
+            let hit = __path_walk(node, path)?;
+            let tape = hit.cursor().tape();
+            let rec = hit.cursor().record();
+            if let ::core::option::Option::Some(v) = tape.payload_bool(rec) {
+                return ::core::option::Option::Some(v);
+            }
+            match hit.span_text() {
+                "true" => ::core::option::Option::Some(true),
+                "false" => ::core::option::Option::Some(false),
+                _ => ::core::option::Option::None,
+            }
+        }
+    }
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
+    ///
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_bool_lit_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapBoolLitProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapBoolLitProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_string_lit_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapStringLitProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapStringLitProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_value_ident_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapValueIdentProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapValueIdentProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_mul_op_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapMulOpProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapMulOpProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_add_op_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapAddOpProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapAddOpProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_cmp_op_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapCmpOpProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapCmpOpProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_type_name_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapTypeNameProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapTypeNameProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_identifier_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapIdentifierProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapIdentifierProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_literal_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapLiteralProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapLiteralProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_regex_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapRegexProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapRegexProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_big_comment_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapBigCommentProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapBigCommentProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_comment_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapCommentProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapCommentProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_modifier_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapModifierProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapModifierProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_binary_operators_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapBinaryOperatorsProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapBinaryOperatorsProjection {
             field_0,
         })
     }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection
-    /// helper. Reads the packed aggregate payload for the admitted
-    /// rule (and, for rich resolver-backed admissions, the
-    /// compound's direct children) and constructs the matching
-    /// projection struct; returns `None` when the tape's aggregate
-    /// buffer is too short or the record carries no payload.
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
     ///
-    /// Consumers that know the admitted shape call this helper
-    /// directly, bypassing the `Vec<<Grammar>Value>` compound path.
-    /// The helper is `#[inline]` so LLVM collapses it into the
-    /// caller at monomorphisation time. Emitted for every
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0.d
-    /// totality is 1:1:1 per grammar (admission : materialiser :
-    /// consumer).
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_import_path_BbnfBootstrap<'p>(
-        view: BbnfBootstrapNodeView<'p>,
+        output: &::bbnf::runtime::FusedOutput<BbnfBootstrap>,
+        input: &'p str,
+        offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapImportPathProjection> {
-        let tape = view.cursor().tape();
-        let rec = view.cursor().record();
-        let __bytes = tape.payload_bytes(rec, 8)?;
-        let field_0: (u32, u32) = {
-            let __lo = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[0..4]).ok()?);
-            let __hi = u32::from_le_bytes(<[u8; 4]>::try_from(&__bytes[4..8]).ok()?);
-            (__lo, __hi)
-        };
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(BbnfBootstrapImportPathProjection {
             field_0,
         })
@@ -29175,6 +29191,69 @@ mod __bbnfbootstrap_emit_impl {
                                                     static __HI_LUT: [u8; 16] = [
                                                         0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                     ];
+                                                    #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+                                                    let __result: ::core::option::Option<usize> = 'avx2_scan: {
+                                                        use ::core::arch::x86_64::*;
+                                                        unsafe {
+                                                            let __bytes = state.src_bytes.as_slice();
+                                                            let __len = __bytes.len();
+                                                            let __ptr = __bytes.as_ptr();
+                                                            let __lo_v = _mm256_broadcastsi128_si256(
+                                                                _mm_loadu_si128(__LO_LUT.as_ptr() as *const __m128i),
+                                                            );
+                                                            let __hi_v = _mm256_broadcastsi128_si256(
+                                                                _mm_loadu_si128(__HI_LUT.as_ptr() as *const __m128i),
+                                                            );
+                                                            let __lo_mask = _mm256_set1_epi8(0x0F);
+                                                            let __zero = _mm256_setzero_si256();
+                                                            let mut __i = __start;
+                                                            while __i + 32 <= __len {
+                                                                let __chunk = _mm256_loadu_si256(
+                                                                    __ptr.add(__i) as *const __m256i,
+                                                                );
+                                                                let __lo_n = _mm256_and_si256(__chunk, __lo_mask);
+                                                                let __hi_n = _mm256_and_si256(
+                                                                    _mm256_srli_epi16(__chunk, 4),
+                                                                    __lo_mask,
+                                                                );
+                                                                let __lo_r = _mm256_shuffle_epi8(__lo_v, __lo_n);
+                                                                let __hi_r = _mm256_shuffle_epi8(__hi_v, __hi_n);
+                                                                let __matched = _mm256_and_si256(__lo_r, __hi_r);
+                                                                let __nz = _mm256_cmpgt_epi8(__matched, __zero);
+                                                                let __mask = _mm256_movemask_epi8(__nz) as u32;
+                                                                if __mask != 0 {
+                                                                    let __rel = __mask.trailing_zeros() as usize;
+                                                                    break 'avx2_scan {
+                                                                        ::core::option::Option::Some((__i + __rel) - __start)
+                                                                    };
+                                                                }
+                                                                __i += 32;
+                                                            }
+                                                            let mut __byte_lut = [false; 256];
+                                                            {
+                                                                let mut __b: u16 = 0;
+                                                                while __b < 256 {
+                                                                    let __blo = __LO_LUT[(__b & 0x0F) as usize];
+                                                                    let __bhi = __HI_LUT[(__b >> 4) as usize];
+                                                                    __byte_lut[__b as usize] = (__blo & __bhi) != 0;
+                                                                    __b += 1;
+                                                                }
+                                                            }
+                                                            while __i < __len {
+                                                                let __b = *__ptr.add(__i);
+                                                                if __byte_lut[__b as usize] {
+                                                                    break 'avx2_scan {
+                                                                        ::core::option::Option::Some(__i - __start)
+                                                                    };
+                                                                }
+                                                                __i += 1;
+                                                            }
+                                                            ::core::option::Option::None
+                                                        }
+                                                    };
+                                                    #[cfg(
+                                                        not(all(target_arch = "x86_64", target_feature = "avx2"))
+                                                    )]
                                                     let __result: ::core::option::Option<usize> = ::parse_that::find_next_structural_from(
                                                             state.padded(),
                                                             __start,
@@ -29289,6 +29368,69 @@ mod __bbnfbootstrap_emit_impl {
                                                     static __HI_LUT: [u8; 16] = [
                                                         1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                     ];
+                                                    #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+                                                    let __result: ::core::option::Option<usize> = 'avx2_scan: {
+                                                        use ::core::arch::x86_64::*;
+                                                        unsafe {
+                                                            let __bytes = state.src_bytes.as_slice();
+                                                            let __len = __bytes.len();
+                                                            let __ptr = __bytes.as_ptr();
+                                                            let __lo_v = _mm256_broadcastsi128_si256(
+                                                                _mm_loadu_si128(__LO_LUT.as_ptr() as *const __m128i),
+                                                            );
+                                                            let __hi_v = _mm256_broadcastsi128_si256(
+                                                                _mm_loadu_si128(__HI_LUT.as_ptr() as *const __m128i),
+                                                            );
+                                                            let __lo_mask = _mm256_set1_epi8(0x0F);
+                                                            let __zero = _mm256_setzero_si256();
+                                                            let mut __i = __start;
+                                                            while __i + 32 <= __len {
+                                                                let __chunk = _mm256_loadu_si256(
+                                                                    __ptr.add(__i) as *const __m256i,
+                                                                );
+                                                                let __lo_n = _mm256_and_si256(__chunk, __lo_mask);
+                                                                let __hi_n = _mm256_and_si256(
+                                                                    _mm256_srli_epi16(__chunk, 4),
+                                                                    __lo_mask,
+                                                                );
+                                                                let __lo_r = _mm256_shuffle_epi8(__lo_v, __lo_n);
+                                                                let __hi_r = _mm256_shuffle_epi8(__hi_v, __hi_n);
+                                                                let __matched = _mm256_and_si256(__lo_r, __hi_r);
+                                                                let __nz = _mm256_cmpgt_epi8(__matched, __zero);
+                                                                let __mask = _mm256_movemask_epi8(__nz) as u32;
+                                                                if __mask != 0 {
+                                                                    let __rel = __mask.trailing_zeros() as usize;
+                                                                    break 'avx2_scan {
+                                                                        ::core::option::Option::Some((__i + __rel) - __start)
+                                                                    };
+                                                                }
+                                                                __i += 32;
+                                                            }
+                                                            let mut __byte_lut = [false; 256];
+                                                            {
+                                                                let mut __b: u16 = 0;
+                                                                while __b < 256 {
+                                                                    let __blo = __LO_LUT[(__b & 0x0F) as usize];
+                                                                    let __bhi = __HI_LUT[(__b >> 4) as usize];
+                                                                    __byte_lut[__b as usize] = (__blo & __bhi) != 0;
+                                                                    __b += 1;
+                                                                }
+                                                            }
+                                                            while __i < __len {
+                                                                let __b = *__ptr.add(__i);
+                                                                if __byte_lut[__b as usize] {
+                                                                    break 'avx2_scan {
+                                                                        ::core::option::Option::Some(__i - __start)
+                                                                    };
+                                                                }
+                                                                __i += 1;
+                                                            }
+                                                            ::core::option::Option::None
+                                                        }
+                                                    };
+                                                    #[cfg(
+                                                        not(all(target_arch = "x86_64", target_feature = "avx2"))
+                                                    )]
                                                     let __result: ::core::option::Option<usize> = ::parse_that::find_next_structural_from(
                                                             state.padded(),
                                                             __start,
@@ -31629,6 +31771,69 @@ mod __bbnfbootstrap_emit_impl {
                                                     static __HI_LUT: [u8; 16] = [
                                                         0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                     ];
+                                                    #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+                                                    let __result: ::core::option::Option<usize> = 'avx2_scan: {
+                                                        use ::core::arch::x86_64::*;
+                                                        unsafe {
+                                                            let __bytes = state.src_bytes.as_slice();
+                                                            let __len = __bytes.len();
+                                                            let __ptr = __bytes.as_ptr();
+                                                            let __lo_v = _mm256_broadcastsi128_si256(
+                                                                _mm_loadu_si128(__LO_LUT.as_ptr() as *const __m128i),
+                                                            );
+                                                            let __hi_v = _mm256_broadcastsi128_si256(
+                                                                _mm_loadu_si128(__HI_LUT.as_ptr() as *const __m128i),
+                                                            );
+                                                            let __lo_mask = _mm256_set1_epi8(0x0F);
+                                                            let __zero = _mm256_setzero_si256();
+                                                            let mut __i = __start;
+                                                            while __i + 32 <= __len {
+                                                                let __chunk = _mm256_loadu_si256(
+                                                                    __ptr.add(__i) as *const __m256i,
+                                                                );
+                                                                let __lo_n = _mm256_and_si256(__chunk, __lo_mask);
+                                                                let __hi_n = _mm256_and_si256(
+                                                                    _mm256_srli_epi16(__chunk, 4),
+                                                                    __lo_mask,
+                                                                );
+                                                                let __lo_r = _mm256_shuffle_epi8(__lo_v, __lo_n);
+                                                                let __hi_r = _mm256_shuffle_epi8(__hi_v, __hi_n);
+                                                                let __matched = _mm256_and_si256(__lo_r, __hi_r);
+                                                                let __nz = _mm256_cmpgt_epi8(__matched, __zero);
+                                                                let __mask = _mm256_movemask_epi8(__nz) as u32;
+                                                                if __mask != 0 {
+                                                                    let __rel = __mask.trailing_zeros() as usize;
+                                                                    break 'avx2_scan {
+                                                                        ::core::option::Option::Some((__i + __rel) - __start)
+                                                                    };
+                                                                }
+                                                                __i += 32;
+                                                            }
+                                                            let mut __byte_lut = [false; 256];
+                                                            {
+                                                                let mut __b: u16 = 0;
+                                                                while __b < 256 {
+                                                                    let __blo = __LO_LUT[(__b & 0x0F) as usize];
+                                                                    let __bhi = __HI_LUT[(__b >> 4) as usize];
+                                                                    __byte_lut[__b as usize] = (__blo & __bhi) != 0;
+                                                                    __b += 1;
+                                                                }
+                                                            }
+                                                            while __i < __len {
+                                                                let __b = *__ptr.add(__i);
+                                                                if __byte_lut[__b as usize] {
+                                                                    break 'avx2_scan {
+                                                                        ::core::option::Option::Some(__i - __start)
+                                                                    };
+                                                                }
+                                                                __i += 1;
+                                                            }
+                                                            ::core::option::Option::None
+                                                        }
+                                                    };
+                                                    #[cfg(
+                                                        not(all(target_arch = "x86_64", target_feature = "avx2"))
+                                                    )]
                                                     let __result: ::core::option::Option<usize> = ::parse_that::find_next_structural_from(
                                                             state.padded(),
                                                             __start,
@@ -32649,6 +32854,69 @@ mod __bbnfbootstrap_emit_impl {
                                                                 static __HI_LUT: [u8; 16] = [
                                                                     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                                 ];
+                                                                #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+                                                                let __result: ::core::option::Option<usize> = 'avx2_scan: {
+                                                                    use ::core::arch::x86_64::*;
+                                                                    unsafe {
+                                                                        let __bytes = state.src_bytes.as_slice();
+                                                                        let __len = __bytes.len();
+                                                                        let __ptr = __bytes.as_ptr();
+                                                                        let __lo_v = _mm256_broadcastsi128_si256(
+                                                                            _mm_loadu_si128(__LO_LUT.as_ptr() as *const __m128i),
+                                                                        );
+                                                                        let __hi_v = _mm256_broadcastsi128_si256(
+                                                                            _mm_loadu_si128(__HI_LUT.as_ptr() as *const __m128i),
+                                                                        );
+                                                                        let __lo_mask = _mm256_set1_epi8(0x0F);
+                                                                        let __zero = _mm256_setzero_si256();
+                                                                        let mut __i = __start;
+                                                                        while __i + 32 <= __len {
+                                                                            let __chunk = _mm256_loadu_si256(
+                                                                                __ptr.add(__i) as *const __m256i,
+                                                                            );
+                                                                            let __lo_n = _mm256_and_si256(__chunk, __lo_mask);
+                                                                            let __hi_n = _mm256_and_si256(
+                                                                                _mm256_srli_epi16(__chunk, 4),
+                                                                                __lo_mask,
+                                                                            );
+                                                                            let __lo_r = _mm256_shuffle_epi8(__lo_v, __lo_n);
+                                                                            let __hi_r = _mm256_shuffle_epi8(__hi_v, __hi_n);
+                                                                            let __matched = _mm256_and_si256(__lo_r, __hi_r);
+                                                                            let __nz = _mm256_cmpgt_epi8(__matched, __zero);
+                                                                            let __mask = _mm256_movemask_epi8(__nz) as u32;
+                                                                            if __mask != 0 {
+                                                                                let __rel = __mask.trailing_zeros() as usize;
+                                                                                break 'avx2_scan {
+                                                                                    ::core::option::Option::Some((__i + __rel) - __start)
+                                                                                };
+                                                                            }
+                                                                            __i += 32;
+                                                                        }
+                                                                        let mut __byte_lut = [false; 256];
+                                                                        {
+                                                                            let mut __b: u16 = 0;
+                                                                            while __b < 256 {
+                                                                                let __blo = __LO_LUT[(__b & 0x0F) as usize];
+                                                                                let __bhi = __HI_LUT[(__b >> 4) as usize];
+                                                                                __byte_lut[__b as usize] = (__blo & __bhi) != 0;
+                                                                                __b += 1;
+                                                                            }
+                                                                        }
+                                                                        while __i < __len {
+                                                                            let __b = *__ptr.add(__i);
+                                                                            if __byte_lut[__b as usize] {
+                                                                                break 'avx2_scan {
+                                                                                    ::core::option::Option::Some(__i - __start)
+                                                                                };
+                                                                            }
+                                                                            __i += 1;
+                                                                        }
+                                                                        ::core::option::Option::None
+                                                                    }
+                                                                };
+                                                                #[cfg(
+                                                                    not(all(target_arch = "x86_64", target_feature = "avx2"))
+                                                                )]
                                                                 let __result: ::core::option::Option<usize> = ::parse_that::find_next_structural_from(
                                                                         state.padded(),
                                                                         __start,
@@ -32855,6 +33123,504 @@ mod __bbnfbootstrap_emit_impl {
                 Some(__builder.finish())
             })
         }
+        pub fn serialize_int_lit<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_float_lit<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_bool_lit<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_string_lit<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_ident<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_path<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_input<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_fn_call<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_atom<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_mul_op<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_add_op<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_cmp_op<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_unary<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_mul<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_add<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_cmp<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_and<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_or<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_closure<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_value_expr<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_type_annotation<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_type_name<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_identifier<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_literal<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_regex<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_big_comment<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_comment<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_lhs<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_call_arg<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_term<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_modifier<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_factor<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_mapped_factor<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_binary_operators<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_binary_factor<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_concatenation<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_alternation<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_closure<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_rhs<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_rule<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_import_path<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_import_items<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_import_directive<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_recover_directive<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_pretty_hint<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_pretty_directive<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_ws_directive<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_token_directive<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_debug_directive<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_host_directive<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_directive<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_grammar_item<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_grammar<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        fn __dispatch_serialize<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            match __v.variant_idx() {
+                0u8 => {
+                    Self::serialize_int_lit(__v, __ser);
+                }
+                1u8 => {
+                    Self::serialize_float_lit(__v, __ser);
+                }
+                2u8 => {
+                    Self::serialize_bool_lit(__v, __ser);
+                }
+                3u8 => {
+                    Self::serialize_string_lit(__v, __ser);
+                }
+                4u8 => {
+                    Self::serialize_value_ident(__v, __ser);
+                }
+                5u8 => {
+                    Self::serialize_value_path(__v, __ser);
+                }
+                6u8 => {
+                    Self::serialize_value_input(__v, __ser);
+                }
+                7u8 => {
+                    Self::serialize_value_fn_call(__v, __ser);
+                }
+                8u8 => {
+                    Self::serialize_value_atom(__v, __ser);
+                }
+                9u8 => {
+                    Self::serialize_mul_op(__v, __ser);
+                }
+                10u8 => {
+                    Self::serialize_add_op(__v, __ser);
+                }
+                11u8 => {
+                    Self::serialize_cmp_op(__v, __ser);
+                }
+                12u8 => {
+                    Self::serialize_value_unary(__v, __ser);
+                }
+                13u8 => {
+                    Self::serialize_value_mul(__v, __ser);
+                }
+                14u8 => {
+                    Self::serialize_value_add(__v, __ser);
+                }
+                15u8 => {
+                    Self::serialize_value_cmp(__v, __ser);
+                }
+                16u8 => {
+                    Self::serialize_value_and(__v, __ser);
+                }
+                17u8 => {
+                    Self::serialize_value_or(__v, __ser);
+                }
+                18u8 => {
+                    Self::serialize_value_closure(__v, __ser);
+                }
+                19u8 => {
+                    Self::serialize_value_expr(__v, __ser);
+                }
+                20u8 => {
+                    Self::serialize_type_annotation(__v, __ser);
+                }
+                21u8 => {
+                    Self::serialize_type_name(__v, __ser);
+                }
+                22u8 => {
+                    Self::serialize_identifier(__v, __ser);
+                }
+                23u8 => {
+                    Self::serialize_literal(__v, __ser);
+                }
+                24u8 => {
+                    Self::serialize_regex(__v, __ser);
+                }
+                25u8 => {
+                    Self::serialize_big_comment(__v, __ser);
+                }
+                26u8 => {
+                    Self::serialize_comment(__v, __ser);
+                }
+                27u8 => {
+                    Self::serialize_lhs(__v, __ser);
+                }
+                28u8 => {
+                    Self::serialize_call_arg(__v, __ser);
+                }
+                29u8 => {
+                    Self::serialize_term(__v, __ser);
+                }
+                30u8 => {
+                    Self::serialize_modifier(__v, __ser);
+                }
+                31u8 => {
+                    Self::serialize_factor(__v, __ser);
+                }
+                32u8 => {
+                    Self::serialize_mapped_factor(__v, __ser);
+                }
+                33u8 => {
+                    Self::serialize_binary_operators(__v, __ser);
+                }
+                34u8 => {
+                    Self::serialize_binary_factor(__v, __ser);
+                }
+                35u8 => {
+                    Self::serialize_concatenation(__v, __ser);
+                }
+                36u8 => {
+                    Self::serialize_alternation(__v, __ser);
+                }
+                37u8 => {
+                    Self::serialize_closure(__v, __ser);
+                }
+                38u8 => {
+                    Self::serialize_rhs(__v, __ser);
+                }
+                39u8 => {
+                    Self::serialize_rule(__v, __ser);
+                }
+                40u8 => {
+                    Self::serialize_import_path(__v, __ser);
+                }
+                41u8 => {
+                    Self::serialize_import_items(__v, __ser);
+                }
+                42u8 => {
+                    Self::serialize_import_directive(__v, __ser);
+                }
+                43u8 => {
+                    Self::serialize_recover_directive(__v, __ser);
+                }
+                44u8 => {
+                    Self::serialize_pretty_hint(__v, __ser);
+                }
+                45u8 => {
+                    Self::serialize_pretty_directive(__v, __ser);
+                }
+                46u8 => {
+                    Self::serialize_ws_directive(__v, __ser);
+                }
+                47u8 => {
+                    Self::serialize_token_directive(__v, __ser);
+                }
+                48u8 => {
+                    Self::serialize_debug_directive(__v, __ser);
+                }
+                49u8 => {
+                    Self::serialize_host_directive(__v, __ser);
+                }
+                50u8 => {
+                    Self::serialize_directive(__v, __ser);
+                }
+                51u8 => {
+                    Self::serialize_grammar_item(__v, __ser);
+                }
+                52u8 => {
+                    Self::serialize_grammar(__v, __ser);
+                }
+                _ => {
+                    __ser.text(__v.span_text());
+                }
+            }
+        }
+        pub fn serialize_compact<'a>(__v: BbnfBootstrapNodeView<'a>) -> String {
+            let mut __ser = ::bbnf_ser::StringSerializer::new();
+            Self::serialize_grammar(__v, &mut __ser);
+            __ser.finish()
+        }
+        pub fn serialize<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: BbnfBootstrapNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            Self::serialize_grammar(__v, __ser);
+        }
         /// AW-IV.W1.δ — associated-constant accessor for the
         /// grammar's consolidated codegen fingerprint. Alias
         /// of the module-scope `GRAMMAR_PROFILE` const; the
@@ -32897,13 +33663,19 @@ mod __bbnfbootstrap_emit_impl {
         /// Parse an input string and return a zero-copy
         /// `Parsed<'_, Self>` that borrows the input directly.
         ///
-        /// AX.W0b: `parse()` routes through the shape
-        /// dispatcher. The hot path here:
+        /// AY-II.W0'.a: `parse()` routes through the shape
+        /// dispatcher against a single `FusedBuilder`. The
+        /// hot path here:
         ///
-        /// 1. Allocate a sized `TapeBuilder`.
-        /// 2. Call the shape dispatcher, which decomposes into
-        ///    per-shape bodies inlined at the call site.
-        /// 3. Finalise via `TapeBuilder::finish`.
+        /// 1. Allocate a sized `FusedBuilder` — owns both
+        ///    tape + value-frame substrates in one handle.
+        /// 2. Call the shape dispatcher, which decomposes
+        ///    into per-shape bodies inlined at the call
+        ///    site. Every compound / leaf push stamps both
+        ///    column families atomically.
+        /// 3. Finalise via `FusedBuilder::finish_fused::<Self>`
+        ///    — returns `FusedOutput<Self>` holding tape +
+        ///    value, handed to `Parsed::new_fused` directly.
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<
@@ -32912,12 +33684,9 @@ mod __bbnfbootstrap_emit_impl {
         > {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_BbnfBootstrap::ScanState::new();
-            let mut builder = ::bbnf::runtime::tape::TapeBuilder::with_capacity(
+            let mut builder = ::bbnf::runtime::tape::FusedBuilder::with_capacity(
                 GRAMMAR_PROFILE.capacity_for(input.len()),
             );
-            let mut value_builder = ::bbnf::runtime::value_builder::ValueBuilder::<
-                Self,
-            >::new(GRAMMAR_PROFILE.capacity_for(input.len()));
             let root_off = {
                 let mut pos: usize = 0;
                 let off = parse_BbnfBootstrap_grammar(
@@ -32959,10 +33728,11 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 off
             };
-            let tape = builder.finish().map_err(::bbnf::runtime::ParseErr::Tape)?;
-            let value = value_builder.finish(root_off.0);
+            let output = builder
+                .finish_fused::<Self>(root_off.0)
+                .map_err(::bbnf::runtime::ParseErr::Tape)?;
             ::core::result::Result::Ok(
-                ::bbnf::runtime::Parsed::new_fused(tape, input, root_off, value),
+                ::bbnf::runtime::Parsed::new_fused_output(output, input, root_off),
             )
         }
     }
@@ -33276,4 +34046,3 @@ mod __bbnfbootstrap_emit_impl {
     }
 }
 pub use __bbnfbootstrap_emit_impl::*;
-

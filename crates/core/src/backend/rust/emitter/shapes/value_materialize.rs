@@ -137,6 +137,14 @@ fn emit_projection_fn(
         grammar_name,
     );
     let struct_ident = admission.struct_ident(grammar_prefix);
+    // The grammar marker struct ident (e.g. `BbnfBootstrap`) parameterises
+    // `FusedOutput<R>` so the slab read carries the same `R` the consumer
+    // declared via `impl ValueRoot for #grammar_ident`. Without this `R`
+    // the emitted fn loses type-grammar coupling and `syn::parse2` accepts
+    // it as `FusedOutput` without a generic argument — which then fails
+    // `cargo check` against the `FusedOutput<R>` definition in
+    // `crates/tape/src/builder/output.rs`.
+    let grammar_ident = format_ident!("{}", grammar_prefix);
     let plan = admission.plan();
     let total_bytes = plan.packed_bytes as usize;
     let total_bytes_lit = proc_macro2::Literal::usize_unsuffixed(total_bytes);
@@ -217,7 +225,7 @@ fn emit_projection_fn(
         #[inline]
         #[doc(hidden)]
         pub fn #fn_ident<'p>(
-            output: &::bbnf::runtime::FusedOutput,
+            output: &::bbnf::runtime::FusedOutput<#grammar_ident>,
             input: &'p str,
             offset: u32,
         ) -> ::core::option::Option<#return_ty> {

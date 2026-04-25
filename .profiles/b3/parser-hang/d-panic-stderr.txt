@@ -1,0 +1,80 @@
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[parse-start] source-len=537 bytes
+[parse-end] wall=228.667µs
+[extract] wall=8.542µs ast_rules=0 imports=0
+[compile_ast_common done] rules.len()=0 entry=0 label=<unknown>
+[xtask::regen] json: compile_paths_request done in 768.083µs
+[serialize] ir.rules.len()=0 ir.entry=0
+
+thread 'main' (5462778) panicked at crates/core/src/generate/serialize/mod.rs:71:35:
+index out of bounds: the len is 0 but the index is 0
+stack backtrace:
+   0:        0x104d404b0 - std[d3ffc96dce5838c1]::backtrace_rs::backtrace::libunwind::trace
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:        0x104d404b0 - std[d3ffc96dce5838c1]::backtrace_rs::backtrace::trace_unsynchronized::<std[d3ffc96dce5838c1]::sys::backtrace::_print_fmt::{closure#1}>
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:        0x104d404b0 - std[d3ffc96dce5838c1]::sys::backtrace::_print_fmt
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/sys/backtrace.rs:74:9
+   3:        0x104d404b0 - <<std[d3ffc96dce5838c1]::sys::backtrace::BacktraceLock>::print::DisplayBacktrace as core[dad4568269a409ad]::fmt::Display>::fmt
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/sys/backtrace.rs:44:26
+   4:        0x104cbbcfc - <core[dad4568269a409ad]::fmt::rt::Argument>::fmt
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/core/src/fmt/rt.rs:152:76
+   5:        0x104cbbcfc - core[dad4568269a409ad]::fmt::write
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/core/src/fmt/mod.rs:1687:22
+   6:        0x104d47490 - std[d3ffc96dce5838c1]::io::default_write_fmt::<std[d3ffc96dce5838c1]::sys::stdio::unix::Stderr>
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/io/mod.rs:621:11
+   7:        0x104d47490 - <std[d3ffc96dce5838c1]::sys::stdio::unix::Stderr as std[d3ffc96dce5838c1]::io::Write>::write_fmt
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/io/mod.rs:1976:13
+   8:        0x104d26914 - <std[d3ffc96dce5838c1]::sys::backtrace::BacktraceLock>::print
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/sys/backtrace.rs:47:25
+   9:        0x104d26914 - std[d3ffc96dce5838c1]::panicking::default_hook::{closure#0}
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/panicking.rs:292:27
+  10:        0x104d396c0 - std[d3ffc96dce5838c1]::panicking::default_hook
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/panicking.rs:319:9
+  11:        0x104d39a20 - std[d3ffc96dce5838c1]::panicking::panic_with_hook
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/panicking.rs:825:13
+  12:        0x104d269b8 - std[d3ffc96dce5838c1]::panicking::panic_handler::{closure#0}
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/panicking.rs:698:13
+  13:        0x104d1dac8 - std[d3ffc96dce5838c1]::sys::backtrace::__rust_end_short_backtrace::<std[d3ffc96dce5838c1]::panicking::panic_handler::{closure#0}, !>
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/sys/backtrace.rs:182:18
+  14:        0x104d2709c - __rustc[8a59c066a2ad41a8]::rust_begin_unwind
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/panicking.rs:689:5
+  15:        0x104e16028 - core[dad4568269a409ad]::panicking::panic_fmt
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/core/src/panicking.rs:80:14
+  16:        0x104e15ec8 - core[dad4568269a409ad]::panicking::panic_bounds_check
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/core/src/panicking.rs:271:5
+  17:        0x10485cb40 - bbnf[f7ae3be73f6c56da]::generate::serialize::generate_serialize_methods
+  18:        0x10483fffc - bbnf[f7ae3be73f6c56da]::generate::generate_all
+                               at /Users/mkbabb/Programming/bbnf-wt-b3-w0d-serialize/crates/core/src/generate/mod.rs:65:26
+  19:        0x104df8844 - xtask[ab32371b3dc1af41]::regen::regen_grammar
+                               at /Users/mkbabb/Programming/bbnf-wt-b3-w0d-serialize/xtask/src/regen.rs:227:30
+  20:        0x104df5d00 - xtask[ab32371b3dc1af41]::regen::run
+                               at /Users/mkbabb/Programming/bbnf-wt-b3-w0d-serialize/xtask/src/regen.rs:127:9
+  21:        0x104df5d00 - xtask[ab32371b3dc1af41]::main
+                               at /Users/mkbabb/Programming/bbnf-wt-b3-w0d-serialize/xtask/src/main.rs:41:42
+  22:        0x104df2a80 - <fn() -> core[dad4568269a409ad]::result::Result<(), anyhow[7457f17a8a986869]::Error> as core[dad4568269a409ad]::ops::function::FnOnce<()>>::call_once
+                               at /Users/mkbabb/.rustup/toolchains/nightly-2026-04-11-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/function.rs:250:5
+  23:        0x104df2a80 - std[d3ffc96dce5838c1]::sys::backtrace::__rust_begin_short_backtrace::<fn() -> core[dad4568269a409ad]::result::Result<(), anyhow[7457f17a8a986869]::Error>, core[dad4568269a409ad]::result::Result<(), anyhow[7457f17a8a986869]::Error>>
+                               at /Users/mkbabb/.rustup/toolchains/nightly-2026-04-11-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/backtrace.rs:166:18
+  24:        0x104df3778 - std[d3ffc96dce5838c1]::rt::lang_start::<core[dad4568269a409ad]::result::Result<(), anyhow[7457f17a8a986869]::Error>>::{closure#0}
+                               at /Users/mkbabb/.rustup/toolchains/nightly-2026-04-11-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/rt.rs:206:18
+  25:        0x104d37fe8 - <&dyn core[dad4568269a409ad]::ops::function::Fn<(), Output = i32> + core[dad4568269a409ad]::panic::unwind_safe::RefUnwindSafe + core[dad4568269a409ad]::marker::Sync as core[dad4568269a409ad]::ops::function::FnOnce<()>>::call_once
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/core/src/ops/function.rs:287:21
+  26:        0x104d37fe8 - std[d3ffc96dce5838c1]::panicking::catch_unwind::do_call::<&dyn core[dad4568269a409ad]::ops::function::Fn<(), Output = i32> + core[dad4568269a409ad]::panic::unwind_safe::RefUnwindSafe + core[dad4568269a409ad]::marker::Sync, i32>
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/panicking.rs:581:40
+  27:        0x104d37fe8 - std[d3ffc96dce5838c1]::panicking::catch_unwind::<i32, &dyn core[dad4568269a409ad]::ops::function::Fn<(), Output = i32> + core[dad4568269a409ad]::panic::unwind_safe::RefUnwindSafe + core[dad4568269a409ad]::marker::Sync>
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/panicking.rs:544:19
+  28:        0x104d37fe8 - std[d3ffc96dce5838c1]::panic::catch_unwind::<&dyn core[dad4568269a409ad]::ops::function::Fn<(), Output = i32> + core[dad4568269a409ad]::panic::unwind_safe::RefUnwindSafe + core[dad4568269a409ad]::marker::Sync, i32>
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/panic.rs:359:14
+  29:        0x104d37fe8 - std[d3ffc96dce5838c1]::rt::lang_start_internal::{closure#0}
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/rt.rs:175:24
+  30:        0x104d37fe8 - std[d3ffc96dce5838c1]::panicking::catch_unwind::do_call::<std[d3ffc96dce5838c1]::rt::lang_start_internal::{closure#0}, isize>
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/panicking.rs:581:40
+  31:        0x104d37fe8 - std[d3ffc96dce5838c1]::panicking::catch_unwind::<isize, std[d3ffc96dce5838c1]::rt::lang_start_internal::{closure#0}>
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/panicking.rs:544:19
+  32:        0x104d37fe8 - std[d3ffc96dce5838c1]::panic::catch_unwind::<std[d3ffc96dce5838c1]::rt::lang_start_internal::{closure#0}, isize>
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/panic.rs:359:14
+  33:        0x104d37fe8 - std[d3ffc96dce5838c1]::rt::lang_start_internal
+                               at /rustc/02c7f9bec0fd583160f8bcccb830216023b07bee/library/std/src/rt.rs:171:5
+  34:        0x104dfda38 - _main
+EXIT: 101

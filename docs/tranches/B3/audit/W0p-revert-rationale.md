@@ -278,17 +278,70 @@ changes the surface that W0' consumers depended on), B4's plan
 authors a fresh implementation that captures the same architectural
 intent. The diffs are documentation, not contract.
 
-## 9. Summary
+## 9. Probabilistic thesis status
 
-B3 reverts the 14 W0'-scope commits to restore parser baseline. The
-scope is the minimal set required to make master compile cleanly
-without W0' runtime types. W0'.d4-d7 (independent infra) stay; W0-fix
-+ W0 base stay (covered by escape clause expansion if W0' alone is
-insufficient).
+The W0' half-migration thesis is **plausible but unproven** at plan-
+author time. The B2.W0.c diagnostic narrowing established:
 
-B2 resumes on the post-B3 substrate. B4 re-lands W0' on the post-B2
-substrate. AY-II.W0' close ceremony shifts to B4 close. AY-II.W1-W5
-operates on the post-B4 substrate.
+- The wall lives in `BbnfBootstrap::parse` (not the IR pipeline).
+- The wall reproduces in release-profile direct parse with no
+  proc-macro expansion in flight.
+- Pre-W0' `compile_pipeline::compile_bbnf` measured 911 µs at AU
+  baseline; current observed wall is unbounded > 5 min.
+
+The narrowing localizes WHERE the wall lives but does not by itself
+prove WHICH commit set introduced it. The "W0' half-migration"
+attribution rests on:
+
+- **Strong**: W0' was the last commit set to touch the parse path
+  before the wall manifested.
+- **Strong**: W0' was cherry-picked without a corresponding
+  `generated.rs` regen (a known half-migrated state).
+- **Weaker**: the parser table was not updated post-W0', so the
+  half-migration's mismatch should plausibly slow the parser on
+  recursion-dense grammars like BBNF.
+- **Weak (unverified)**: no other commit between AY-I close and
+  master HEAD touched the parse path heavily enough to cause this
+  regression alone.
+
+The W0.a disposable-worktree probe is the proof. It applies the W0'
+revert and reads the parse-phase wall directly:
+
+- IF parse-phase wall < 5 s: the W0' thesis is CONFIRMED. The
+  reverted state IS the pre-W0' state (no other commits touched the
+  parse path enough to matter), and the W0' content is the regression
+  source.
+- IF parse-phase wall >= 5 s: the W0' thesis is DISPROVED. The
+  regression source sits earlier (W0-fix or W0 base, per the
+  candidate set) or in an unexamined commit. Escape clause expansion
+  runs on a fresh disposable probe.
+- IF the probe is INDETERMINATE (build failed, non-parse phase
+  blocked > 60 s, etc.): the proof environment is broken;
+  triumvirate dispatch.
+
+The proof-first sequencing exists precisely because the thesis is
+probabilistic. Landing 14 forward-revert commits on master before
+proof would create permanent history noise that escape-clause
+expansion would have to layer onto. The disposable probe lets B3 test
+the strongest single-commit-set hypothesis without committing to it.
+
+## 10. Summary
+
+B3 tests the W0' half-migration hypothesis on a disposable worktree
+first. If the probe confirms, the canonical 14-commit revert chain
+lands on master; if the probe disproves, B3 escalates via the escape
+clause without polluting master with forward-revert noise. The scope
+of the W0'-only revert is the minimal set required to make master
+compile cleanly without W0' runtime types. W0'.d4-d7 (independent
+infra) stay; W0-fix + W0 base stay (covered by escape clause
+expansion via fresh disposable probes if W0' alone is insufficient).
+
+B2 resumes on the post-B3 substrate (whatever it ends up being —
+W0'-revert, W0'+W0-fix-revert, or W0'+W0-fix+W0-base-revert). B4
+re-lands W0' on the post-B2 substrate. AY-II.W0' close ceremony
+shifts to B4 close. AY-II.W1-W5 operates on the post-B4 substrate.
 
 B3 is the necessary sequencing correction that lets the architectural
-plan execute on honest substrates.
+plan execute on honest substrates AND with honest evidence at every
+step. No canonical history lands on master without prior probe
+confirmation.

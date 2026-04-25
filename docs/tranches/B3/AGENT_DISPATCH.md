@@ -3,14 +3,19 @@
 Dispatch B3 immediately after this plan lands on master. B3 is the R3
 revert tranche per the W0c status snapshot at
 `docs/tranches/B2/audit/W0c-status-2026-04-25-04h.md`. Master HEAD at
-B3 open is `b8cacedd` (the W0c status-snapshot commit on top of the
-B2.W0.a/b/c partial-close commits).
+B3 open is `b8cacedd` + plan commit `fc3b5aaf`.
+
+B3 is **proof-first**: W0.a runs a disposable-worktree probe to test
+the W0' revert thesis with a phase-instrumented xtask regen; only IF
+the probe CONFIRMS does the canonical revert chain land on master at
+W0.b/W0.c. If the probe DISPROVES, B3 escalates per the escape clause
+without polluting master with forward-revert noise.
 
 This is not a research brief. B3's design space is fully constrained
 by the status snapshot's R3 path + the per-wave specs under
-`waves/W<N>.md`. The job now is execution: revert the 14 W0'-scope
-commits, verify build + test green, bench parity, write FINAL, hand
-off to B2 resume.
+`waves/W<N>.md`. The job: probe the thesis honestly; land canonical
+history only if probed; bench parity; write FINAL; hand off to B2
+resume.
 
 ## Read first
 
@@ -36,28 +41,49 @@ off to B2 resume.
 
 ## Program order
 
-1. **B3.W0** — Revert sequence + build verification; 1 agent +
-   1 closer; ~120 min wall.
-2. **B3.W1** — Parity bench + B3 FINAL + B2 resume handoff; 1 agent;
-   ~60 min wall.
-3. **B2 W0.c re-execution** — orchestrator dispatches B2 from W0.c on
+1. **B3.W0.a** — Disposable-worktree probe (1 agent, 90 min); reports
+   verdict CONFIRMED / DISPROVED / INDETERMINATE. No master mutation
+   in W0.a (only audit-doc additions).
+2. **(IF W0.a CONFIRMED) B3.W0.b** — Canonical revert chain in a fresh
+   worktree (1 agent, 60 min); produces 14-revert + 1-instrumentation
+   + 1-manifest commits ready for cherry-pick. Otherwise:
+   - **(IF W0.a DISPROVED)** orchestrator dispatches a fresh W0.a
+     probe with the wider escape-clause scope (W0' + W0-fix); on
+     fresh disposable worktree.
+   - **(IF W0.a INDETERMINATE)** orchestrator relinquishes; triumvirate.
+3. **B3.W0.c** — Orchestrator cherry-picks the canonical chain to
+   master with strict no-`git reset --hard` discipline; verifies
+   B2.W0.a/b/c intact; PROGRESS.md update; ~30 min wall.
+4. **B3.W1** — Parity bench + B3 FINAL + B2 resume handoff (1 agent,
+   60 min). Built-binary parser timing + compile_pipeline divan +
+   phase-instrumented xtask regen.
+5. **B2 W0.c re-execution** — orchestrator dispatches B2 from W0.c on
    post-B3 substrate; ~4 hours wall (B2's existing W0.c hard cap).
-4. **B2.W1 → W4** — sequential, per existing B2 plan.
-5. **B4** — opens AFTER B2 closes; plan authored at that point;
+6. **B2.W1 → W4** — sequential, per existing B2 plan.
+7. **B4** — opens AFTER B2 closes; plan authored at that point;
    re-lands W0'.a/b/c content under post-B2 xtask substrate.
-6. **AY-II.W0' close ceremony** — shifts to **B4 close** (not at
+8. **AY-II.W0' close ceremony** — shifts to **B4 close** (not at
    AY-II directly).
-7. **AY-II.W1-W5** — sequential, per existing AY-II plan; operates on
+9. **AY-II.W1-W5** — sequential, per existing AY-II plan; operates on
    post-B4 substrate.
 
 ## Non-negotiables
 
-- **No quick solutions, no workarounds, no fallbacks.** The revert
-  is a `git revert` chain producing forward commits. No
-  `git reset --hard`. No squash-revert. No revert-then-fix.
-- **The revert chain stays in a worktree** (per `tranche/SPEC.md`
-  §Worktree isolation); orchestrator cherry-picks onto master at W0
-  close gate.
+- **Proof-first.** No canonical revert history lands on master until
+  the W0.a disposable-worktree probe CONFIRMS the W0' thesis with a
+  phase-instrumented xtask regen showing `[parse]` < 5 s. A DISPROVED
+  verdict triggers escape-clause scope expansion via a fresh
+  disposable probe; no canonical commits result from a DISPROVED probe.
+- **No `git reset --hard` ever.** All cherry-pick failures resolve via
+  `git cherry-pick --abort` (returns master to pre-pick state — non-
+  destructive) + manual investigation. All worktree abandonment uses
+  `git worktree remove`. Master is never destructively mutated.
+- **No quick solutions, no workarounds, no fallbacks.** The canonical
+  revert is a `git revert` chain producing forward commits. No
+  squash-revert. No revert-then-fix.
+- **Disposable probe and canonical chain stay in worktrees** (per
+  `tranche/SPEC.md` §Worktree isolation); orchestrator cherry-picks the
+  canonical chain onto master at W0.c close.
 - **`-X theirs` / `-X ours` are forbidden** for conflict resolution.
   Conflicts resolve manually with content-aware editing; resolution
   rationale lands in `audit/W0p-revert-record.md` §Conflicts.
@@ -73,22 +99,37 @@ off to B2 resume.
   level types; `generated.rs` content was never updated post-W0',
   so it remains as-is. Touching it would re-introduce drift. B4 owns
   the regen window post-B2.
+- **xtask phase-timing instrumentation persists.** The W0.a/W0.b
+  instrumentation amendment to `xtask/src/regen.rs` is NEW code, not
+  subject to the revert chain. It survives B3 close so B4's bisect-
+  and-fix has the same diagnostic surface.
+- **Parser-runtime measurement excludes test-binary compile.** W1
+  uses `cargo test --no-run` first, then `time <bin> --exact …`. Bare
+  `cargo nextest run` is forbidden for the parser-runtime gate
+  (it conflates compile time with runtime).
+- **Phase walls are non-negotiable.** A single wall-clock pass/fail on
+  xtask regen is insufficient; B2.W0.c failed because attribution was
+  wrong at the granularity it had. B3's parser-runtime gate is the
+  `[parse]` phase wall AND any individual non-parse phase > 60 s
+  blocks the gate.
 - **B4 is not pre-authored in B3.** Only a forward pointer in
   REMAINING-TRAJECTORY + AY-II/PATH-FORWARD names B4 as the W0'
-  re-land destination. B4's plan is authored after B2 closes.
-- **No mid-tranche thesis pivot.** If revert is insufficient,
-  escalate to escape-clause scope expansion (W0-fix, W0 base) per
-  `B3.md` §Escape clause. Beyond W0 base is hard environmental
-  blocker — relinquish to user direction.
+  re-land destination. B4's plan is authored after B2 closes from
+  B2-close evidence, not from today's desired W0' re-land shape.
+- **No mid-tranche thesis pivot.** If revert is insufficient at W0.a
+  probe, escalate to escape-clause scope expansion (W0-fix, W0 base)
+  per `B3.md` §Escape clause; each expansion runs a fresh disposable
+  probe. Beyond W0 base is hard environmental blocker — relinquish to
+  user direction.
 
 ## Wave-level dispatch templates
 
 Every dispatched sub-agent receives:
 
-1. **Hard cap** (default by wave): W0.a = 90 min; W0.b = 30 min
-   (orchestrator-owned, no separate sub-agent); W1.a = 60 min. At
-   0.9× cap, the agent commits; at 1.0× cap, the agent halts and
-   returns.
+1. **Hard cap** (default by sub-phase): W0.a = 90 min; W0.b = 60 min
+   (only IF W0.a CONFIRMED); W0.c = 30 min (orchestrator-owned, no
+   separate sub-agent); W1.a = 60 min. At 0.9× cap, the agent
+   commits; at 1.0× cap, the agent halts and returns.
 2. **File-bound disjointness** per the wave spec's file-bounds table.
 3. **Read-first list** from §Read first above.
 4. **Return discipline** from §Return discipline below.
@@ -97,39 +138,62 @@ Every dispatched sub-agent receives:
    3-agent triumvirate (research / plan / redress) before redispatch
    per `tranche/SPEC.md` §Diagnostic-loop relinquish.
 
-### W0 dispatch (1 agent + 1 closer)
+### W0.a dispatch (1 agent on disposable worktree)
 
-- **W0.a — Revert sequence** (sub-agent on a worktree)
-  Files (owner-only): the source files under `crates/core/src/`
-  affected by the 14 reverts; `docs/tranches/B3/audit/W0p-revert-record.md`;
-  `docs/tranches/B3/audit/diffs/*.diff`; `docs/tranches/B3/audit/W0-cargo-check.txt`;
-  `docs/tranches/B3/audit/W0-test-output.txt`.
-  Sub-gate: 14 forward-revert commits in the worktree branch; cargo
-  check + nextest exit 0; manifest + diffs land; agent reports per
-  §Return discipline.
-  Hard cap: 90 min.
+Files (owner-only): `xtask/src/regen.rs` (instrumentation; commits to
+disposable worktree); `docs/tranches/B3/audit/W0a-probe-output.txt`;
+`docs/tranches/B3/audit/W0a-probe-build.txt`;
+`docs/tranches/B3/audit/W0a-probe-verdict.md`;
+`docs/tranches/B3/audit/probe-diffs/*.diff` (iff conflicts).
 
-- **W0.b — Cherry-pick + master integrity** (orchestrator-owned; no
-  separate sub-agent)
-  Mechanism: orchestrator cherry-picks the 14 reverts + the W0.a
-  manifest commit onto master in order; verifies B2.W0.a/b/c intact;
-  re-runs cargo check + nextest on master; updates PROGRESS.md +
-  wave-status; tears down the W0.a worktree.
+Sub-gate: probe runs to completion; verdict file lands on main
+checkout with one of three values; disposable worktree torn down;
+agent reports per §Return discipline.
 
-### W1 dispatch (1 agent)
+Hard cap: 90 min.
 
-- **W1.a — Parity bench + close** (sub-agent on a worktree)
-  Files (owner-only): `docs/benchmarks/post-B3-W1*` (3 files);
-  `docs/tranches/B3/audit/W1-test-output.txt`;
-  `docs/tranches/B3/FINAL.md`; `docs/tranches/B3/PROGRESS.md`;
-  `docs/tranches/B3/B3.md` (wave summary table only);
-  `docs/tranches/B3/waves/W1.md` (`**Status**` line only);
-  `docs/tranches/REMAINING-TRAJECTORY.md`;
-  `docs/tranches/AY-II/PATH-FORWARD.md`.
-  Sub-gate: 4 verification artefacts exist with gates met; FINAL.md +
-  cross-tranche updates committed in the worktree; agent reports per
-  §Return discipline.
-  Hard cap: 60 min.
+### W0.b dispatch (1 agent on fresh worktree, ONLY IF W0.a CONFIRMED)
+
+Files (owner-only): the source files under `crates/core/src/`
+affected by the 14 reverts; `xtask/src/regen.rs` (re-applied
+instrumentation); `docs/tranches/B3/audit/W0p-revert-record.md`;
+`docs/tranches/B3/audit/diffs/*.diff`;
+`docs/tranches/B3/audit/W0b-cargo-check.txt`;
+`docs/tranches/B3/audit/W0b-test-output.txt`.
+
+Sub-gate: 16 commits in canonical worktree (1 instr + 14 reverts +
+1 manifest); cargo check + nextest exit 0; manifest + diffs land;
+agent reports per §Return discipline.
+
+Hard cap: 60 min.
+
+### W0.c (orchestrator-owned; no separate sub-agent)
+
+Mechanism: orchestrator cherry-picks the canonical chain onto master
+in order; on cherry-pick conflict runs `git cherry-pick --abort`
+(NOT `git reset --hard`) and either resolves manually or
+redispatches W0.b on a fresh worktree; verifies B2.W0.a/b/c intact;
+re-runs cargo check + nextest on master; updates PROGRESS.md +
+wave-status; tears down all B3 worktrees.
+
+Hard cap: 30 min.
+
+### W1 dispatch (1 agent on a worktree)
+
+Files (owner-only): `docs/benchmarks/post-B3-W1*` (4 files);
+`docs/tranches/B3/audit/W1-test-output.txt`;
+`docs/tranches/B3/FINAL.md`; `docs/tranches/B3/PROGRESS.md`;
+`docs/tranches/B3/B3.md` (wave summary table only);
+`docs/tranches/B3/waves/W1.md` (`**Status**` line only);
+`docs/tranches/REMAINING-TRAJECTORY.md`;
+`docs/tranches/AY-II/PATH-FORWARD.md`.
+
+Sub-gate: 5 verification artefacts exist with gates met (built-binary
+parser timing, compile_pipeline JSON, phase-timed xtask regen,
+nextest log, divan output); FINAL.md + cross-tranche updates
+committed in the worktree; agent reports per §Return discipline.
+
+Hard cap: 60 min.
 
 ## Return discipline
 
@@ -142,12 +206,16 @@ Every sub-agent returns:
 5. Wall-clock measurements (where wall is part of the gate).
 6. `git status --short` (must be empty or contain only `target/`
    symlink).
-7. **For W0.a**: revert-SHA range + per-revert wall measurements +
+7. **For W0.a**: probe verdict (CONFIRMED / DISPROVED / INDETERMINATE);
+   `[parse]` phase wall in seconds; conflict count during throwaway
+   revert chain; build/probe artefact paths; recommended next action.
+8. **For W0.b**: instrumentation SHA + 14 revert SHAs + manifest SHA;
    conflict count + resolution summaries; cargo-check + nextest exit
-   status.
-8. **For W1.a**: parser-test wall; compile_bbnf median;
-   cargo-xtask-regen wall; FINAL.md path; cross-tranche doc-update
-   diff summaries.
+   status; canonical worktree path.
+9. **For W1.a**: built-binary parser `time real`; compile_bbnf
+   median; xtask regen `[parse]` phase wall + `[total]` wall + the
+   six per-phase walls; FINAL.md path; cross-tranche doc-update diff
+   summaries.
 
 ## Empty-return redispatch
 
@@ -178,14 +246,27 @@ Per the lessons from B1 + B2's agent dispatches:
   run `rm -f target && ln -s /Users/mkbabb/Programming/bbnf-lang/target
   target` before any cargo invocation.
 - **Single cargo per CARGO_TARGET_DIR**: B3 has at most one sub-agent
-  per wave, but the orchestrator must NOT spawn its own cargo
+  per sub-phase, but the orchestrator must NOT spawn its own cargo
   invocations against the main target while a wave's agent is active.
-- **Do NOT use `--strategy recursive -X theirs`** for revert
-  conflicts. Manual resolution is mandatory; rationale lands in the
-  audit manifest.
-- **Do NOT `git reset --hard`** during the revert chain. Each
-  `git revert` lands as its own forward commit; the chain is reversible
-  via `git revert` of the reverts (B4's mechanism).
+- **Do NOT use `--strategy recursive -X theirs`** for revert or
+  cherry-pick conflicts. Manual resolution is mandatory; rationale
+  lands in the audit manifest.
+- **Do NOT `git reset --hard`** anywhere — not on disposable worktrees
+  (use `git worktree remove --force`), not on canonical worktrees
+  (abort + redispatch), not on master (use `git cherry-pick --abort`
+  to return master to pre-pick state non-destructively).
+- **Do NOT measure parser runtime via `cargo nextest run` or
+  `cargo test`** — those conflate test-binary compile with parser
+  runtime. Always: `cargo test --no-run` first, then locate and run
+  the binary under `target/release/deps/` directly.
+- **Do NOT trust a single-wall-clock pass/fail on xtask regen** —
+  always read the per-phase walls from the instrumented output.
+  B2.W0.c failed because attribution was wrong at the granularity
+  it had; B3 must not repeat that.
+- **Do NOT pre-author B4 in this tranche** — B4's plan is authored
+  from B2-close evidence, not from today's desired W0' re-land
+  shape. Only forward pointers in REMAINING-TRAJECTORY +
+  AY-II/PATH-FORWARD name B4 as the destination.
 
 ## B2 resume after B3 close
 

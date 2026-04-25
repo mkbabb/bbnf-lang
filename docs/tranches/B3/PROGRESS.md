@@ -24,29 +24,73 @@ types updated but the emitted parser table out of sync. The four
 B2.W0.c's release-profile xtask probe disproves that attribution: the
 wall lives in `BbnfBootstrap::parse` itself, not in the IR pipeline.
 
+The W0' half-migration thesis remains a HYPOTHESIS at plan-author
+time; the W0.c diagnostic narrowing made it plausible but not proven.
+B3 sequences the test as a proof-first disposable-worktree probe BEFORE
+any canonical history lands on master: if the W0.a probe CONFIRMS the
+thesis (parse-phase wall < 5 s on phase-instrumented xtask regen), the
+canonical chain lands; if the probe DISPROVES, B3 escalates per the
+escape clause without polluting master with forward-revert noise.
+
 B2 alone cannot close: T3 relocates the wall from rustc-expand-time to
-xtask-runtime, but the wall persists. B3 reverts the W0'-scope chain
-to restore the pre-W0' parser baseline; B2 resumes on the post-revert
-substrate; B4 re-lands W0' under the post-B2 xtask substrate where
-bisect-and-fix is straightforward (no proc-macro re-compile cost
-between bisect steps).
+xtask-runtime, but the wall persists. B3's revert (if the probe
+confirms the W0' thesis) restores the pre-W0' parser baseline; B2
+resumes on the post-revert substrate; B4 re-lands W0' under the
+post-B2 xtask substrate where bisect-and-fix is straightforward (no
+proc-macro re-compile cost between bisect steps).
 
 Authored in this initial state:
 
-- `B3.md` — 8 invariants, 2-wave schedule, cross-tranche debt ledger,
-  escape clause covering scope expansion (W0' → W0-fix → W0 base) and
-  thesis-pivot-via-B5 hard-environmental-blocker path.
-- `waves/W0.md` — revert sequence (14 W0'-scope commits) + build
-  verification; 1 agent + 1 closer.
-- `waves/W1.md` — parity bench (`bbnf_parses_its_own_grammar`,
-  `compile_pipeline::compile_bbnf`, `cargo xtask regen --grammar
-  bbnf`) + B3 FINAL + cross-tranche doc updates; 1 agent.
+- `B3.md` — 8 invariants, proof-first 2-wave schedule (W0 splits into
+  W0.a probe / W0.b canonical-IF-confirmed / W0.c orchestrator
+  cherry-pick), cross-tranche debt ledger, escape clause covering
+  scope expansion via fresh disposable probes (W0' → W0-fix → W0
+  base) and B5-as-hard-environmental-blocker path.
+- `waves/W0.md` — proof-first phase decomposition: W0.a runs a
+  disposable-worktree probe with phase-instrumented xtask regen
+  (parse-phase wall is the load-bearing measurement); W0.b runs
+  canonical chain only IF probe CONFIRMED; W0.c is orchestrator
+  cherry-pick with strict no-`git reset --hard` discipline.
+- `waves/W1.md` — parity bench with built-binary parser timing
+  (compile separated from runtime), `compile_pipeline::compile_bbnf`
+  divan, phase-instrumented `cargo xtask regen --grammar bbnf`
+  (per-phase walls inspected, not just total) + B3 FINAL + cross-
+  tranche doc updates.
 - `AGENT_DISPATCH.md` — sub-agent dispatch surface with explicit
-  anti-patterns (no `-X theirs`, no `git reset --hard`, no touching
-  B2.W0.a/b/c, no W0'.d4-d7 reverts, no pre-authoring B4).
+  anti-patterns (proof-first; no `-X theirs`; no `git reset --hard`
+  ever; no `cargo nextest run` for parser-runtime gate; no single-
+  wall-clock trust on xtask regen; no touching B2.W0.a/b/c; no
+  W0'.d4-d7 reverts; no pre-authoring B4).
+- `audit/W0p-revert-rationale.md` — scope justification, dependency
+  analysis, alternative-paths-considered, probabilistic-thesis status.
 - `PROGRESS.md` — this file.
 
-No execution wave has dispatched yet. Master HEAD: `b8cacedd`.
+No execution wave has dispatched yet. Master HEAD: `b8cacedd` + plan
+commit `fc3b5aaf`.
+
+## 2026-04-25 — Plan amended for proof-first sequencing
+
+User-led amendment after the initial plan landed. Critiques resolved:
+
+1. **Proof-first revert.** W0 split into W0.a (probe), W0.b (canonical-
+   if-confirmed), W0.c (orchestrator cherry-pick). The disposable-
+   worktree probe runs on a throwaway branch; canonical history only
+   lands when the probe confirms parser-baseline restoration.
+2. **Parser-runtime gate excludes compile.** W1 uses `cargo test
+   --no-run` + located-binary `time` invocation, not bare
+   `cargo nextest run`.
+3. **xtask regen requires phase walls.** W0.a/b instrument
+   `xtask/src/regen.rs` with per-phase `eprintln!` walls (read,
+   parse, ir-pipeline, generate_all, prettyplease, write); W1 hard
+   gate consumes the per-phase output and rejects single-wall-clock
+   pass/fail.
+4. **Thesis framing.** B3.md and PROGRESS.md frame W0 as "test the
+   revert thesis", not "execute the revert", until the probe lands.
+5. **No `git reset --hard`.** AGENT_DISPATCH.md anti-patterns
+   explicitly forbid destructive resets anywhere; cherry-pick
+   conflicts resolve via `git cherry-pick --abort`.
+6. **B4 stays unplanned.** Confirmed in AGENT_DISPATCH.md; only
+   forward pointers in REMAINING-TRAJECTORY + AY-II/PATH-FORWARD.
 
 ## Pre-B3 inheritance
 

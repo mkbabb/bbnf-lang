@@ -176,9 +176,11 @@ pub fn emit_structural_bitmap_kernel(targets: &[u8]) -> Option<TokenStream> {
                         let __mask = _mm256_movemask_epi8(__nz) as u32;
                         if __mask != 0 {
                             let __rel = __mask.trailing_zeros() as usize;
-                            break 'avx2_scan ::core::option::Option::Some(
-                                (__i + __rel) - __start,
-                            );
+                            break 'avx2_scan {
+                                ::core::option::Option::Some(
+                                    (__i + __rel) - __start,
+                                )
+                            };
                         }
                         __i += 32;
                     }
@@ -197,9 +199,9 @@ pub fn emit_structural_bitmap_kernel(targets: &[u8]) -> Option<TokenStream> {
                     while __i < __len {
                         let __b = *__ptr.add(__i);
                         if __byte_lut[__b as usize] {
-                            break 'avx2_scan ::core::option::Option::Some(
-                                __i - __start,
-                            );
+                            break 'avx2_scan {
+                                ::core::option::Option::Some(__i - __start)
+                            };
                         }
                         __i += 1;
                     }

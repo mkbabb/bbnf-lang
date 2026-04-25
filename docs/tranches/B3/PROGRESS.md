@@ -546,6 +546,98 @@ The probe-#γ worktree retains its evidence commits and can be torn
 down by the orchestrator (`git worktree remove
 bbnf-wt-b3-w0g-bisect`).
 
+## 2026-04-25 — η Pratt no-op-chain + lowering cousin-leak — RESOLVED
+
+**Verdict**: parser baseline restored end-to-end. Master HEAD post-η:
+`34ecb83d`.
+
+**Probe path**: dispatch worktree at
+`/Users/mkbabb/Programming/bbnf-wt-b3-w0h-pratt`. Master HEAD pre-probe:
+`772bd498` (carries γ + δ + ε + ζ via fix-commits `9167dac4`,
+`e97b2ae7`, `0f1c3fea`). Worktree fix-commit: `1ed0dbfe`. Master fix-
+commit: `34ecb83d`.
+
+**Phase 1 panic** (captured at `.profiles/b3/parser-hang/h-panic-stderr.txt`):
+
+```
+panicked at crates/core/src/lower/expression.rs:465:13:
+lower/expression.rs: binary_factor could not resolve operator —
+no binary_operators child and source gap "" contains no recognized
+token (chain = "\"null\" -> 0u8 ")
+```
+
+**Phase 2 root cause**: two coupled defects masked by the cycle and
+unmasked by ζ.
+
+1. **Pratt `this_operand_root` seeded at leftmost descendant**.
+   `parse_pratt_<rule>` initialised `this_operand_root = outer_off + 1`
+   then dispatched the operand. `parse_flat_*` / `parse_pratt_*` shape
+   functions emit interior records first and the outer compound row
+   LAST (post-order); the dispatcher's returned `_operand_off` is the
+   operand's outer-compound offset, not `outer_off + 1` (= leftmost
+   descendant of the operand subtree). The post-`end_compound` write
+   `set_child_off_at(outer_off, this_operand_root)` therefore landed
+   inside the operand body. Single-operand chains' cursor children
+   iteration entered operand interior, surfacing multiple records as
+   phantom operands. Same defect on per-iteration RHS update
+   (`_op_rec.0 + 1` instead of `_rhs_off.0`).
+
+2. **Lowering cousin-leak under bumped frame_depth**. After Defect 1's
+   fix admitted the parser past binary_factor's single-operand path, a
+   second shape problem surfaced: the AY-II.W0.b cascade of
+   `end_compound_post_order` bumps (extended by ζ to cover entire
+   subtrees) puts pre-order Pratt-body records (e.g., `value_and`
+   outer at `parent + 2` depth inside `value_or`) and post-order
+   Seq-wrapper sibling records (e.g., `__iter_off` at `parent + 2`
+   depth alongside `value_or`) at the SAME final frame_depth. The
+   finaliser's depth-only sib_skip computation chains the records as
+   "siblings" — they're cousins. The lowering's chain-operand collector
+   then surfaces the cousin record as a phantom extra operand,
+   tripping operator-resolution panics.
+
+**Phase 3 fix**:
+
+- Pratt emitter (`crates/core/src/backend/rust/emitter/shapes/pratt.rs`):
+  seed `this_operand_root = _operand_off.0` after dispatch, update
+  to `_rhs_off.0` per iteration. Seven `parse_pratt_BbnfBootstrap_*`
+  rules in `crates/core/src/grammar/generated.rs` patched in lockstep.
+- Lowering cousin-leak guard (`crates/core/src/lower/expression.rs::
+  collect_binary_operands`, `crates/core/src/lower/value_expr.rs::
+  collect_chain_operands`): bound the children walk by parent
+  compound's `span_hi` — children with `lo >= node.span().1` are
+  cousin leaks, discard them.
+
+**Phase 4 verification**:
+
+| Step | Result |
+|---|---|
+| `cargo build -p xtask --release` | exit 0 (~1 m cold) |
+| `xtask regen --grammar json` | exit 0; parse 1.31 ms; 235 785 bytes written to `crates/core/src/grammar/generated/json.rs` |
+| `xtask regen --grammar bbnf` | parser+lowering+IR+generate_all complete (parse-end fires for all 3 import sources: 3448 + 1378 + 301 bytes); fails at `syn::parse2: expected loop or block expression` — downstream codegen defect, separate from W0.γ–η scope |
+| `cargo nextest run -p tape --profile ax-iter` | 100 / 100 passed in 0.149 s |
+| `cargo check -p bbnf -p xtask -p bbnf_derive --profile ax-iter` | exit 0 in 5.81 s |
+
+**B3.W0 status**: PARSER BASELINE RESTORED. The W0.γ–η stack
+collectively resolves the finaliser cycle (γ), refines frame_depth
+derivation (δ + ε), extends the post-order bump scope to cover entire
+subtrees (ζ), and corrects Pratt's `child_off` override + lowering's
+cousin-leak (η). The parser produces a well-formed tape, the lowering
+walks it correctly, the IR generates, and codegen runs to completion.
+
+The residual `syn::parse2: expected loop or block expression` failure
+is a downstream codegen defect — emitted Rust that doesn't parse —
+distinct from any parser/lowering correctness concern. ζ noted a
+similar downstream `serialize/mod.rs:64` issue post-γ; the
+`syn::parse2` error is the post-η downstream peer. Both surface
+naturally as B4 / AY-II re-land work proceeds on the restored parser
+substrate.
+
+**B3 closes**: B2.W0.c re-execution unblocks against the post-η
+substrate (`xtask regen --grammar bbnf` no longer hangs and runs the
+IR pipeline in milliseconds).
+
+Full analysis at `.profiles/b3/parser-hang/h-rootcause.md`.
+
 ## Pre-B3 inheritance
 
 B3 inherits the following state from B2:

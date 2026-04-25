@@ -368,23 +368,112 @@ in:
 - Generated parser table structure that all grammars share.
 - A hot loop that fires in every grammar's parse.
 
-## 2026-04-25 — (β) samply / `sample` profile of hung parser — pending
+## 2026-04-25 — (β) samply / `sample` profile of hung parser — LOCALIZED
 
-User-selected next probe: capture per-function self-time profile of
-the hung parser to identify the actual hot path. Tools available:
+**Verdict**: hot path sharply localized. Hang is a tight inner loop
+in `tape::finaliser::derive_frame_depth` failing the strict-monotonicity
+precondition on `child_off`.
 
-- `samply` 0.13.1 installed (Firefox-profiler-format output).
-- macOS `sample` (Xcode CLI) — captures stack traces from a running
-  PID for N seconds.
-- `[profile.release]` already carries `debug = true` for symbol
-  resolution per `feedback_samply_symbols`.
+**Probe path**: reused probe #4 worktree at
+`/Users/mkbabb/Programming/bbnf-wt-b3-w0a4-probe` (master HEAD `e5f77689`
++ instrumentation `f7169578`). Profiles saved under
+`.profiles/b3/parser-hang/` per PROFILING.md `.profiles/`-only rule.
 
-**Plan**: re-use probe #4 worktree (master + instrumentation,
-release-built xtask). Start `xtask regen --grammar json` directly
-(not via cargo, so we get the binary's PID). Wait ~3 s for it to
-enter parse phase. Run `sample <pid> 15 -file /tmp/b3-sample.txt`
-to capture 15 s of stack traces. Kill the xtask process. Inspect
-the sample output for hot functions.
+**Tools used**:
+- `samply 0.13.1` with `--unstable-presymbolicate --save-only` (per
+  PROFILING.md symbol-resolution rule + non-interactive headless
+  capture for analysis).
+- macOS `sample` (Xcode CLI) for plaintext stack traces.
+
+**Hottest function**: `tape::finaliser::derive_frame_depth` at
+`crates/tape/src/finaliser.rs:362-373`. Inlined into
+`<FusedBuilder>::run_finaliser` → `<FusedBuilder>::finish` →
+`<BbnfBootstrap>::parse`. The `[profile.release]` `debug = true`
+setting allowed samply's `.syms.json` to resolve the inline chain.
+
+**Sample concentration**:
+- macOS `sample`: 21 170 / 21 170 (100.0%) hits credited to
+  `BbnfBootstrap::parse` (which contains the inlined finaliser body).
+- samply: 27 825 / 29 886 (93.1%) in two adjacent PCs at RVA
+  `0x6423c` and `0x64258` — 28-byte gap = single tight machine-code
+  loop body (the `while pos > start` body's load + store).
+
+**Dominant call chain** (outer → inner):
+```
+xtask::main (main.rs:41)
+  xtask::regen::regen_grammar (regen.rs:212)
+    bbnf::pipeline::compile::compile_paths_request (compile.rs:117)
+      bbnf::imports::loader::load_module_graph (loader.rs:41)
+        bbnf::imports::loader::load_recursive (loader.rs:112)
+          bbnf::pipeline::directives::parse_to_pipeline_inputs (directives.rs:104)
+            <BbnfBootstrap>::parse (generated.rs:32976)
+              <FusedBuilder>::finish (builder/mod.rs:1031)
+                <FusedBuilder>::run_finaliser (builder/mod.rs:1060)
+                  tape::finaliser::derive_frame_depth (finaliser.rs:364) ← HOT
+```
+
+**Hot-path nature**: tight inner loop failing to make progress.
+Not deep recursion (sample shows fixed call depth = 10 frames). Not
+regex backtracking (no regex symbols in hot stack). Not scanner
+dispatch.
+
+**Source bug** (`crates/tape/src/finaliser.rs:362-373`):
+
+```rust
+let mut pos = end;
+while pos > start {
+    let co = pos - 1;
+    depth[co] = child_depth;
+    let co_has_children = columns.has_children_at(co as u32);
+    let co_child_off = columns.child_off_at(co as u32);
+    pos = if co_has_children && !co_child_off.is_none() {
+        co_child_off.0 as usize  // ← if co_child_off >= pos, infinite loop
+    } else {
+        co
+    };
+}
+```
+
+The post-order canonicalisation contract requires a compound's
+`child_off` to point STRICTLY before the compound's own index
+(`child_off < pos`). Some tape record violates this — `child_off >= pos`
+— so `pos` does not decrease and the loop spins on the same record
+indices forever.
+
+**Hypothesis**: a recent refactor in `crates/tape/` either broke
+the post-order canonicalisation contract or the parser-side
+`begin_compound` / `end_compound_post_order` is emitting a degenerate
+`child_off`. Candidate commits per the β agent:
+
+- `f603f549` — "AY.W1.1 AoS revert: columns → flat Vec<TapeRec> +
+  parallel sib_skip"
+- `a13840a0` — "retire W5-era open_stack + note_push +
+  SIB_SKIP_STAMPED_BIT — AY-II.W0.a"
+
+Plus any commit since `f603f549` touching `child_off` emission or
+post-order canonicalisation.
+
+**Artefacts** (committed at `3b8c4b27`):
+- `.profiles/b3/parser-hang/json-parse-hang.profile.json.gz` — samply
+  profile (211 751 bytes, on-disk only — large binary, NOT git-tracked).
+- `.profiles/b3/parser-hang/json-parse-hang.profile.json.syms.json` —
+  presymbolicated symbol table (committed).
+- `.profiles/b3/parser-hang/sample-stacks.txt` — macOS `sample`
+  text report (committed).
+- `.profiles/b3/parser-hang/samply-stderr.txt` — phase log + samply
+  stderr (committed).
+- `.profiles/b3/parser-hang/profile-symbols.txt` — symbol filter
+  (committed).
+
+## 2026-04-25 — (γ) debug_assert + bisect — pending dispatch
+
+Next probe: add `debug_assert!(co_child_off.0 < pos as u32, ...)`
+at `finaliser.rs:368` in a fresh worktree, rebuild xtask under the
+debug profile, re-run the probe, capture the assertion-failure
+record index + child_off pair. With that data, bisect `crates/tape/`
+since `f603f549` to find the commit that introduced the
+non-monotonic `child_off`. Once localized, fix at the source — no
+workaround at the finaliser site.
 
 ## Pre-B3 inheritance
 

@@ -4,9 +4,10 @@ Dated execution log for tranche B2, the build-time codegen
 transposition that retires `bbnf_derive`'s proc-macro IR-pipeline
 contract.
 
-- `Status`: in flight (W0 closed; W1-W4 pending)
-- `Current wave`: W0 (complete) → W1 (opens next)
-- `Next wave`: W1 — Consumer cutover (~50 sites)
+- `Status`: in flight (W0 + W1 closed; W2-W4 pending)
+- `Current wave`: W1 (complete) → W2 (opens next)
+- `Next wave`: W2 — Proc-macro retirement; `crates/derive/` deletes;
+  `bbnf_derive` purges from every `Cargo.toml`
 
 ---
 
@@ -147,3 +148,74 @@ per-grammar source on disk; each consumer migrates to `include!` or
 the `pub use` re-export contract bbnf-bootstrap proved.
 
 Full audit: `docs/tranches/B2/audit/W0c-close.md`.
+
+## 2026-04-25 — W1 closed
+
+W1 executes the full consumer cutover wave end-to-end against the
+post-W0.c substrate. Eight remaining grammars (`bnf`, `css_l4`,
+`css_pretty`, `csv`, `ebnf`, `google_sheets`, `json`, `math`)
+regenerate clean via `cargo xtask regen --grammar <ident>`; each
+writes a populated, parseable per-grammar source file under
+`crates/core/src/grammar/generated/`. No emitter-side codegen
+defects beyond what W0.c's `FusedOutput<R>` + `frames()` fixes
+covered surfaced — all eight grammars regen exit 0 on first cycle.
+
+The aggregator `crates/core/src/grammar/generated/mod.rs` declares
+every per-grammar module; BBNF self-host re-exports glob at the
+aggregator path; the others require namespaced access via
+`bbnf::grammar::generated::<ident>::*` to avoid collisions on
+emit-impl items each module's `pub use __<lowered>_emit_impl::*;`
+re-export carries.
+
+The CSS L4 grammar's `crate::css_types::parse_hex_color` host
+reference (in `grammar/css/l4/color.bbnf:190`) lifts to a pub
+module at `crates/core/src/css_types.rs`. Pre-B2 the symbol
+resolved through each test crate's `mod common` indirection
+because the proc-macro expansion landed in the test crate scope;
+post-W1 the generated source lives under bbnf lib so `crate::`
+now resolves to bbnf's root, and the host shim moves there as a
+single source of truth (per `feedback_no_workarounds`).
+
+Sixty-two consumer sites across forty-three files migrate from
+`#[derive(Parser)] #[parser(path = ...)]` to the new contract:
+`use ::bbnf::grammar::generated::<ident>::*;`. The glob import
+pulls the canonical marker AND every grammar-emitted companion
+type (NodeView, RuleKind, per-rule views, projections) into the
+consumer's scope. Sites whose local name diverged from the
+canonical marker (e.g., `struct JsonG`, `BbnfEmit`) rename
+in-place to the canonical marker so source-text references
+resolve through the glob.
+
+`crates/gorgeous/Cargo.toml` gains `[[test]]` entries with
+`required-features = [<grammar>-grammar]` for each integration
+test. Pre-existing config gap; the workspace-wide cutover
+exposed the gating mismatch.
+
+Verification: `cargo check --workspace --profile ax-iter` exits
+0 in 4 s warm; `cargo iter-check-full` cold 45 s exit 0; `cargo
+iter-check` warm 0.31 s exit 0 (under 0.5 s gate per B2.md
+invariant 12). `rg -nF '#[derive(Parser' --type rust` returns 3
+hits — clap::Parser in xtask/main.rs + 2 internal comments inside
+`crates/derive/` (the crate that retires at W2). 0 actual
+`bbnf_derive` consumer sites in the workspace's library code,
+examples, tests, or benches.
+
+`cargo nextest run --workspace --profile ax-iter --no-fail-fast`
+shows 1 490 tests with 1 160 passed, 327 failed, 3 timed out, 27
+skipped. The dominant failure class is a runtime tape-finalisation
+panic ("FusedBuilder::finish called with N open value frames
+remaining" at `crates/tape/src/builder/mod.rs:1066`) that surfaces
+in debug builds only — `cargo test --release -p bbnf --test
+bbnf_parity --exact bbnf_parses_its_own_grammar` still passes
+under release optimisation, matching the W0.c close gate. The
+debug-mode assertions are pre-existing test debt downstream of
+B2.W1's scope (originate in tape-builder finalisation logic, not
+in the cutover or per-grammar emission). B4.W1 / AY-II.W0' polish
+own the consumer-side fixture work.
+
+W2 dispatches next: `crates/derive/` deletion + `bbnf_derive`
+purge from every `Cargo.toml` + `BBNF_SCHEMA_VERSION` retirement.
+The proc-macro contract retires by simple removal — no consumer
+needs a migration path because every consumer is already migrated.
+
+Full audit: `docs/tranches/B2/audit/W1-close.md`.

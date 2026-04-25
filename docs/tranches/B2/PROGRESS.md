@@ -4,9 +4,9 @@ Dated execution log for tranche B2, the build-time codegen
 transposition that retires `bbnf_derive`'s proc-macro IR-pipeline
 contract.
 
-- `Status`: planned (waves W0→W4 sequenced per `B2.md` wave summary)
-- `Current wave`: W0 (planned)
-- `Next wave`: W1 (opens after W0 close)
+- `Status`: in flight (W0 closed; W1-W4 pending)
+- `Current wave`: W0 (complete) → W1 (opens next)
+- `Next wave`: W1 — Consumer cutover (~50 sites)
 
 ---
 
@@ -104,3 +104,46 @@ Once B2 closes:
   byte-equal reversal cycles cost seconds rather than hours.
 - **BA / BB**: anchor on the post-B2 build-time codegen output
   (no proc-macro to plumb through).
+
+## 2026-04-25 — W0 closed
+
+W0.a substrate landed at `dec67806`; W0.b boundary spec at `3c68e8c4`;
+W0.c partial cherry-pick at `21881591` migrated `bbnf-bootstrap` to
+the `pub use` re-export contract. The W0.c blocker on parser hangs
+opened B3 (parser-baseline restoration) and B4 (codegen-emission
+correctness); B3 closed at the bbnf parity test passing in 0.20 s,
+B4.W0 closed at `a5fdda6b` with the SIMD bitmap break wrap.
+
+W0.c re-execution against the post-B3 + post-B4.W0 substrate writes
+`crates/core/src/grammar/generated/bbnf.rs` (34 048 lines) clean in
+73 ms of pipeline work; deletes the monolithic
+`crates/core/src/grammar/generated.rs` (33 279 lines) outright;
+authors the `generated/mod.rs` aggregator with `pub mod bbnf; pub use
+bbnf::*;`. The first-cycle regen exposed two emitter defects
+(`FusedOutput` missing `<R>` parameter; `output.value_frames()`
+method does not exist on `FusedOutput<R>`) — both fixed at source
+in `crates/core/src/backend/rust/{emitter/shapes/value_materialize.rs,
+view/value.rs}`. Re-emit produces a self-consistent bbnf.rs that
+compiles clean and re-emits idempotently.
+
+Latent build-orphan in `crates/bootstrap/src/bin/{cost_grid_sweep,
+dump_ir}.rs` resolved via option (c): `bbnf-ir = { path = "../ir" }`
+restored to `crates/bootstrap/Cargo.toml` as a regular dep with bin-
+only consumption documented. The library crate `src/lib.rs` retains
+its single `bbnf` dep.
+
+Verification: `cargo iter-check-full` exits 0 in 5.62 s warm; `cargo
+test --release -p bbnf --test bbnf_parity --exact
+bbnf_parses_its_own_grammar` exits 0 in 35 s release compile + 0.00 s
+exec; `cargo xtask regen --grammar bbnf` re-runs idempotently with
+zero-line diff. `projection_totality` test target carries pre-existing
+derive-time E0599 errors on the proc-macro path (`JsonG`, `CssL4G`,
+`SheetsG`, `BbnfG` test fixtures); B4.W1 owns the consumer-fixture
+polish per B4.B2.md §W1.
+
+W1 dispatches next: consumer cutover for the remaining ~50
+`#[derive(Parser)]` sites (gorgeous's 5, tests' ~50). The xtask emits
+per-grammar source on disk; each consumer migrates to `include!` or
+the `pub use` re-export contract bbnf-bootstrap proved.
+
+Full audit: `docs/tranches/B2/audit/W0c-close.md`.

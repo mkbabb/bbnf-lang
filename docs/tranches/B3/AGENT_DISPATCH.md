@@ -100,9 +100,12 @@ resume.
   so it remains as-is. Touching it would re-introduce drift. B4 owns
   the regen window post-B2.
 - **xtask phase-timing instrumentation persists.** The W0.a/W0.b
-  instrumentation amendment to `xtask/src/regen.rs` is NEW code, not
-  subject to the revert chain. It survives B3 close so B4's bisect-
-  and-fix has the same diagnostic surface.
+  instrumentation amendment touches `xtask/src/regen.rs` plus the
+  minimal env-gated hooks in `crates/core/src/pipeline/{compile.rs,
+  directives.rs}` needed to expose `BbnfBootstrap::parse` separately
+  from `compile_paths_request`. It is NEW code, not subject to the
+  revert chain. It survives B3 close so B4's bisect-and-fix has the
+  same diagnostic surface.
 - **Parser-runtime measurement excludes test-binary compile.** W1
   uses `cargo test --no-run` first, then `time <bin> --exact …`. Bare
   `cargo nextest run` is forbidden for the parser-runtime gate
@@ -140,22 +143,27 @@ Every dispatched sub-agent receives:
 
 ### W0.a dispatch (1 agent on disposable worktree)
 
-Files (owner-only): `xtask/src/regen.rs` (instrumentation; commits to
+Files (owner-only): `xtask/src/regen.rs`,
+`crates/core/src/pipeline/compile.rs`,
+`crates/core/src/pipeline/directives.rs` (instrumentation; commits to
 disposable worktree); `docs/tranches/B3/audit/W0a-probe-output.txt`;
 `docs/tranches/B3/audit/W0a-probe-build.txt`;
+`docs/tranches/B3/audit/W0a-xtask-build.txt`;
 `docs/tranches/B3/audit/W0a-probe-verdict.md`;
 `docs/tranches/B3/audit/probe-diffs/*.diff` (iff conflicts).
 
-Sub-gate: probe runs to completion; verdict file lands on main
-checkout with one of three values; disposable worktree torn down;
-agent reports per §Return discipline.
+Sub-gate: probe runs to completion; docs-only evidence commit exists
+in the disposable worktree with one of three verdict values; disposable
+worktree torn down after orchestrator review/cherry-pick; agent reports
+per §Return discipline.
 
 Hard cap: 90 min.
 
 ### W0.b dispatch (1 agent on fresh worktree, ONLY IF W0.a CONFIRMED)
 
 Files (owner-only): the source files under `crates/core/src/`
-affected by the 14 reverts; `xtask/src/regen.rs` (re-applied
+affected by the 14 reverts; `xtask/src/regen.rs` plus
+`crates/core/src/pipeline/{compile.rs,directives.rs}` (re-applied
 instrumentation); `docs/tranches/B3/audit/W0p-revert-record.md`;
 `docs/tranches/B3/audit/diffs/*.diff`;
 `docs/tranches/B3/audit/W0b-cargo-check.txt`;
@@ -182,15 +190,16 @@ Hard cap: 30 min.
 
 Files (owner-only): `docs/benchmarks/post-B3-W1*` (4 files);
 `docs/tranches/B3/audit/W1-test-output.txt`;
+`docs/tranches/B3/audit/W1-compile-pipeline-stderr.txt`;
 `docs/tranches/B3/FINAL.md`; `docs/tranches/B3/PROGRESS.md`;
 `docs/tranches/B3/B3.md` (wave summary table only);
 `docs/tranches/B3/waves/W1.md` (`**Status**` line only);
 `docs/tranches/REMAINING-TRAJECTORY.md`;
 `docs/tranches/AY-II/PATH-FORWARD.md`.
 
-Sub-gate: 5 verification artefacts exist with gates met (built-binary
-parser timing, compile_pipeline JSON, phase-timed xtask regen,
-nextest log, divan output); FINAL.md + cross-tranche updates
+Sub-gate: 6 verification artefacts exist with gates met (built-binary
+parser timing, parser build log, compile_pipeline JSON, compile_pipeline
+stderr log, phase-timed xtask regen, nextest log); FINAL.md + cross-tranche updates
 committed in the worktree; agent reports per §Return discipline.
 
 Hard cap: 60 min.

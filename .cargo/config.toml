@@ -97,6 +97,11 @@ codegen-units   = 1
 #                                       plus bench-iai (iai-callgrind, CI-only).
 
 [alias]
+# Workspace tools. Keeps `cargo xtask <subcommand>` as the canonical
+# checked-in entrypoint rather than depending on a host-local cargo-xtask
+# binary.
+xtask                 = "run -p xtask --release --"
+
 # Iteration: cargo check surfaces (ax-iter profile). Each covers one bounded
 # working-set; fleet orchestrators use `iter-check-full` when they need the
 # whole workspace in one pass.

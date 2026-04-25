@@ -80,10 +80,10 @@ User-led amendment after the initial plan landed. Critiques resolved:
    --no-run` + located-binary `time` invocation, not bare
    `cargo nextest run`.
 3. **xtask regen requires phase walls.** W0.a/b instrument
-   `xtask/src/regen.rs` with per-phase `eprintln!` walls (read,
-   parse, ir-pipeline, generate_all, prettyplease, write); W1 hard
-   gate consumes the per-phase output and rejects single-wall-clock
-   pass/fail.
+   `xtask/src/regen.rs` plus the minimal env-gated hooks under
+   `crates/core/src/pipeline/` needed to time `BbnfBootstrap::parse`
+   separately from `compile_paths_request`; W1 hard gate consumes the
+   per-phase output and rejects single-wall-clock pass/fail.
 4. **Thesis framing.** B3.md and PROGRESS.md frame W0 as "test the
    revert thesis", not "execute the revert", until the probe lands.
 5. **No `git reset --hard`.** AGENT_DISPATCH.md anti-patterns
@@ -91,6 +91,27 @@ User-led amendment after the initial plan landed. Critiques resolved:
    conflicts resolve via `git cherry-pick --abort`.
 6. **B4 stays unplanned.** Confirmed in AGENT_DISPATCH.md; only
    forward pointers in REMAINING-TRAJECTORY + AY-II/PATH-FORWARD.
+
+## 2026-04-25 — Toolchain-command redress
+
+Follow-up critique after coreutils installation. `timeout` itself is
+now available as GNU coreutils (`/opt/homebrew/bin/timeout`), so the
+plan keeps bare `timeout 600`. The redress narrowed to command and
+artefact correctness:
+
+1. `cargo xtask` is now a checked-in release-profile cargo alias,
+   removing dependence on host-local `cargo-xtask` binaries or verbose
+   `cargo run -p xtask --release --` spellings.
+2. `timeout | tee` probes now use zsh `pipefail` + `${pipestatus[1]}`
+   so the timeout/cargo exit status is not masked by `tee`.
+3. B3 no longer deletes `.bbnf-cache` during normal cycle probes; cache
+   coldness is an explicit measurement mode, not an accidental side
+   effect of every verification command.
+4. W0.a probe artefacts are authored inside the disposable worktree as a
+   docs-only evidence commit; master receives no source reverts from the
+   probe path.
+5. W1 divan capture writes JSON directly via `DIVAN_BENCH_FORMAT=json`
+   and saves stderr separately for diagnosis.
 
 ## Pre-B3 inheritance
 

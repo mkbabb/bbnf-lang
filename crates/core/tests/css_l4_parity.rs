@@ -32,8 +32,6 @@
 //! Details in `docs/tranches/AU/typed-parity-audit.md`.
 
 use bbnf::runtime::tape::{Tape, TapeCursor, TapeKind};
-use bbnf_derive::Parser;
-
 /// Host function for the CSS `hex` rule's `-> parse_hex_color(input) : u32`
 /// convert. Implementation copied from `css_l4_dimensions.rs` so the
 /// two test files share the canonical hex-colour decoder.
@@ -88,9 +86,8 @@ mod css_types {
     }
 }
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
-struct CssL4Parser;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 // ─── Walker helpers ──────────────────────────────────────────────────
 //

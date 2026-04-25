@@ -1,7 +1,5 @@
 //! Integration tests for CSS L4 typed parsing through the tape-first
-//! `#[derive(Parser)]` codegen path using the l4/stylesheet.bbnf grammar.
-
-use bbnf_derive::Parser;
+//! `the proc-macro derive (retired B2)` codegen path using the l4/stylesheet.bbnf grammar.
 
 /// Semantic CSS value types for TypeDesc-driven value materialization.
 #[allow(dead_code)]
@@ -130,9 +128,8 @@ mod css_types {
     }
 }
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
-struct CssL4Parser;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 fn load_css(name: &str) -> String {
     let candidates = [

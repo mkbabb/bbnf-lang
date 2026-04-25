@@ -14,16 +14,13 @@
 //! speed claim is W3c's bench-lane responsibility.
 
 use bbnf::runtime::{Path, PathSegment};
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::json::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonParserSmoke;
 
 #[test]
 fn to_value_returns_value_enum() {
     let input = r#"{"key": 42.5, "flag": true, "text": "hello"}"#;
-    let parsed = JsonParserSmoke::parse(input).expect("parse");
+    let parsed = JsonParser::parse(input).expect("parse");
 
     // `to_value` must return the grammar-emitted enum. We don't assert
     // the specific variant — the tree shape is tested by W3c's parity
@@ -35,7 +32,7 @@ fn to_value_returns_value_enum() {
 #[test]
 fn get_f64_by_path_resolves_scalar_leaf() {
     let input = r#"{"key": 42.5, "flag": true}"#;
-    let parsed = JsonParserSmoke::parse(input).expect("parse");
+    let parsed = JsonParser::parse(input).expect("parse");
 
     let segs = [PathSegment::Field("key")];
     let path = Path::new(&segs);
@@ -54,7 +51,7 @@ fn get_f64_by_path_resolves_scalar_leaf() {
 #[test]
 fn get_bool_by_path_resolves_bool_leaf() {
     let input = r#"{"flag": true}"#;
-    let parsed = JsonParserSmoke::parse(input).expect("parse");
+    let parsed = JsonParser::parse(input).expect("parse");
 
     let segs = [PathSegment::Field("flag")];
     let path = Path::new(&segs);
@@ -65,7 +62,7 @@ fn get_bool_by_path_resolves_bool_leaf() {
 #[test]
 fn empty_path_returns_root() {
     let input = r#"42"#;
-    let parsed = JsonParserSmoke::parse(input).expect("parse");
+    let parsed = JsonParser::parse(input).expect("parse");
 
     let path = Path::new(&[]);
     let got: Option<f64> = parsed.get(path);

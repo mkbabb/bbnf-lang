@@ -14,11 +14,8 @@ mod generators;
 
 use divan::black_box;
 
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::json::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonParser;
 
 // ── JSON depth: deeply nested objects ───────────────────────────────────
 

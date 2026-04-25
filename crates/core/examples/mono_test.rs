@@ -1,11 +1,8 @@
-use bbnf_derive::Parser;
-
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct P;
+use ::bbnf::grammar::generated::json::*;
+
 
 fn main() {
     for name in [
@@ -24,12 +21,12 @@ fn main() {
         let n = if len > 1_000_000 { 5 } else { 20 };
 
         // Cold — fresh tape + parser state per iteration. The
-        // tape-first `P::parse` entry point owns its allocation
+        // tape-first `JsonParser::parse` entry point owns its allocation
         // internally; there is no longer a user-visible slab to
         // pre-size.
         let start = std::time::Instant::now();
         for _ in 0..n {
-            let parsed = P::parse(std::hint::black_box(&input)).expect("parse failed");
+            let parsed = JsonParser::parse(std::hint::black_box(&input)).expect("parse failed");
             std::hint::black_box(&parsed);
         }
         let cold = start.elapsed() / n as u32;

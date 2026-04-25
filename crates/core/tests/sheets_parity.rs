@@ -36,11 +36,8 @@
 //! See `docs/tranches/AU/typed-parity-audit.md`.
 
 use bbnf::runtime::tape::{Tape, TapeCursor, TapeKind};
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::google_sheets::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", skip_recover)]
-struct SheetsParser;
 
 // ─── Walker helpers ──────────────────────────────────────────────────
 
@@ -68,7 +65,7 @@ fn walk<'t>(
 
 #[allow(dead_code)]
 fn parse_records(input: &str) -> Vec<(TapeKind, u8, u8, bool)> {
-    let parsed = SheetsParser::parse(input)
+    let parsed = GoogleSheetsParser::parse(input)
         .unwrap_or_else(|e| panic!("Sheets parse failed for {input:?}: {e:?}"));
     let root_off = parsed.view().cursor().offset();
     let tape = parsed.tape();
@@ -93,7 +90,7 @@ fn parse_records(input: &str) -> Vec<(TapeKind, u8, u8, bool)> {
 /// via the inline-scalar column. `payload_u8` consults the
 /// `PAYLOAD_IN_ARENA_BIT` bit and fans out to the correct column.
 fn typed_u8_payloads(input: &str) -> Vec<(u8, u8)> {
-    let parsed = SheetsParser::parse(input).expect("parse");
+    let parsed = GoogleSheetsParser::parse(input).expect("parse");
     let tape = parsed.tape();
     let mut out = Vec::new();
     for rec in tape.iter() {
@@ -108,7 +105,7 @@ fn typed_u8_payloads(input: &str) -> Vec<(u8, u8)> {
 
 /// Read 8-byte aggregate-path f64 payloads (for `number -> f64`).
 fn typed_f64_payloads(input: &str) -> Vec<(u8, f64)> {
-    let parsed = SheetsParser::parse(input).expect("parse");
+    let parsed = GoogleSheetsParser::parse(input).expect("parse");
     let tape = parsed.tape();
     let mut out = Vec::new();
     for rec in tape.iter() {
@@ -128,7 +125,7 @@ fn typed_f64_payloads(input: &str) -> Vec<(u8, f64)> {
 fn number_parses_int_and_decimal() {
     for input in ["=1", "=42", "=3.14", "=.5", "=1e10", "=1.5e-3"] {
         assert!(
-            SheetsParser::parse(input).is_ok(),
+            GoogleSheetsParser::parse(input).is_ok(),
             "number must parse: {:?}",
             input
         );
@@ -147,7 +144,7 @@ fn string_parses_quoted_literal() {
     // not in the AW-I.W2.5 snapshot-migration scope.
     for input in ["=\"hello\"", "=\"\""] {
         assert!(
-            SheetsParser::parse(input).is_ok(),
+            GoogleSheetsParser::parse(input).is_ok(),
             "string must parse: {:?}",
             input
         );
@@ -158,7 +155,7 @@ fn string_parses_quoted_literal() {
 fn boolean_parses_both_cases() {
     for input in ["=TRUE", "=FALSE", "=true", "=false", "=True", "=False"] {
         assert!(
-            SheetsParser::parse(input).is_ok(),
+            GoogleSheetsParser::parse(input).is_ok(),
             "boolean must parse: {:?}",
             input
         );
@@ -172,7 +169,7 @@ fn error_literal_parses_all_branches() {
         "=#SPILL!",
     ] {
         assert!(
-            SheetsParser::parse(input).is_ok(),
+            GoogleSheetsParser::parse(input).is_ok(),
             "error literal must parse: {:?}",
             input
         );
@@ -183,7 +180,7 @@ fn error_literal_parses_all_branches() {
 fn cell_ref_parses_absolute_and_relative() {
     for input in ["=A1", "=$B$2", "=AA10", "=$ZZ$999"] {
         assert!(
-            SheetsParser::parse(input).is_ok(),
+            GoogleSheetsParser::parse(input).is_ok(),
             "cell_ref must parse: {:?}",
             input
         );
@@ -198,7 +195,7 @@ fn operator_branches_parse() {
         "=1>2",
     ] {
         assert!(
-            SheetsParser::parse(input).is_ok(),
+            GoogleSheetsParser::parse(input).is_ok(),
             "operator must parse: {:?}",
             input
         );
@@ -448,7 +445,7 @@ fn pinned_number_drops_f64_payload() {
 #[test]
 fn child_iter_walks_complex_formula() {
     let input = "=IF(A1>10, SUM(B1:B10), 0)";
-    let parsed = SheetsParser::parse(input).expect("parse");
+    let parsed = GoogleSheetsParser::parse(input).expect("parse");
     let tape = parsed.tape();
     let root_off = parsed.view().cursor().offset();
     let cursor = TapeCursor::new(tape, root_off);
@@ -496,7 +493,7 @@ fn range_ref_parses_with_and_without_sheet_prefix() {
         "='Sheet 1'!A1:B2",
     ] {
         assert!(
-            SheetsParser::parse(input).is_ok(),
+            GoogleSheetsParser::parse(input).is_ok(),
             "range_ref must parse: {:?}",
             input
         );

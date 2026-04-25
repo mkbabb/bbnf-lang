@@ -7,8 +7,6 @@
 use std::path::PathBuf;
 
 use bbnf::runtime::tape::TapeKind;
-use bbnf_derive::Parser;
-
 #[allow(dead_code)]
 mod css_types {
     pub fn parse_hex_color(s: &str) -> u32 {
@@ -60,9 +58,8 @@ mod css_types {
     }
 }
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
-struct CssL4Parser;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 /// Extract `(name, hex)` pairs from the namedColor section of
 /// `grammar/css/l4/color.bbnf`. Each grammar line of the form

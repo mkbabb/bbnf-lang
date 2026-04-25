@@ -28,12 +28,10 @@
 //!     corpora; any divergence is a bbnf bug.
 
 use bbnf::runtime::tape::TapeOffset;
-use bbnf_derive::Parser;
 use sonic_rs::{JsonContainerTrait, JsonType, JsonValueTrait};
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonParser;
+use ::bbnf::grammar::generated::json::*;
+
 
 // ─── Shared projection type ──────────────────────────────────────────
 //

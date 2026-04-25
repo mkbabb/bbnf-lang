@@ -1,6 +1,6 @@
 //! Deep structural validation tests for the tape-first JSON parser.
 //!
-//! These tests parse known JSON inputs via `#[derive(Parser)]`, obtain
+//! These tests parse known JSON inputs via `the proc-macro derive (retired B2)`, obtain
 //! the tape + view, and walk the cursor tree to assert specific
 //! structural properties: tape kinds, child counts, span text, and
 //! record bounds. This fills the gap where `tape_parity` checks only
@@ -8,11 +8,8 @@
 //! counts.
 
 use bbnf::runtime::tape::{TapeCursor, TapeKind};
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::json::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonParser;
 
 // ── Helpers ────────────────────────────────────────────────────────────
 

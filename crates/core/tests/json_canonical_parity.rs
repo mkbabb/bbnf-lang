@@ -19,12 +19,10 @@
 
 mod common;
 
-use bbnf_derive::Parser;
 use common::json_normalize::strip_insignificant_ws;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf", serialize)]
-struct JsonEmit;
+use ::bbnf::grammar::generated::json::*;
+
 
 fn canonical_parity(fixture: &str) {
     let path = format!("../../data/json/{}", fixture);
@@ -32,11 +30,11 @@ fn canonical_parity(fixture: &str) {
         .unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 
     // bbnf side: parse → span_text via serialize_compact → strip ws.
-    let parsed = JsonEmit::parse(&src)
+    let parsed = JsonParser::parse(&src)
         .unwrap_or_else(|e| panic!("{fixture}: bbnf JSON parse failed: {e:?}"));
     let view = parsed.view();
-    let node = JsonEmitNodeView::from_cursor(view.cursor(), parsed.input());
-    let bbnf_raw = JsonEmit::serialize_compact(node);
+    let node = JsonParserNodeView::from_cursor(view.cursor(), parsed.input());
+    let bbnf_raw = JsonParser::serialize_compact(node);
     let bbnf_canonical = strip_insignificant_ws(&bbnf_raw);
 
     // Oracle side: parse → to_string → strip ws. The to_string output

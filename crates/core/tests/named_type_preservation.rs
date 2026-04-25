@@ -32,7 +32,7 @@
 //!
 //! The `admitted_projection_surfaces` test below asserts at least
 //! four admitted direct-to-struct surfaces across the corpus via
-//! `#[derive(Parser)]` + the emitted `PROJECTION_DIRECT_TO_STRUCT`
+//! `the proc-macro derive (retired B2)` + the emitted `PROJECTION_DIRECT_TO_STRUCT`
 //! const — which is the same `cargo expand` surface the AY.W6.2
 //! hard gate inspects. Surface-by-surface the derives below prove
 //! that grammar-layout admissions emit concrete structs without
@@ -73,11 +73,10 @@ use std::path::PathBuf;
 use bbnf::pipeline::{
     compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
 };
-use bbnf_derive::Parser;
 use bbnf_ir::{GrammarIR, TypeDesc};
 
 // ───────────────────────────────────────────────────────────────────
-// AY.W6.b — `#[derive(Parser)]` sites so `cargo expand -p bbnf --test
+// AY.W6.b — `the proc-macro derive (retired B2)` sites so `cargo expand -p bbnf --test
 // named_type_preservation` surfaces the admitted direct-to-struct
 // artefacts. Each derive instantiates the full emitter pipeline; the
 // resulting `PROJECTION_DIRECT_TO_STRUCT` const + per-grammar
@@ -141,27 +140,23 @@ mod css_types {
 
 /// JSON grammar — admits the resolver-backed `("string", "String")`
 /// entry plus one or more grammar-layout projections (e.g. `bool`).
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonG;
+use ::bbnf::grammar::generated::json::*;
+
 
 /// CSS L4 — the richest grammar. Admits `colorFn` as resolver-backed
 /// `Color` plus a large suite of grammar-layout projections
 /// (`length`, `angle`, `time`, unit rules, prop groups, …).
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
-struct CssL4G;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 /// Sheets — admits grammar-layout projections only (no Named
 /// annotations survive per the W2 coverage note).
-#[derive(Parser)]
-#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", skip_recover)]
-struct SheetsG;
+use ::bbnf::grammar::generated::google_sheets::*;
+
 
 /// BBNF — self-hosted; admits grammar-layout projections only.
-#[derive(Parser)]
-#[parser(path = "../../grammar/bbnf/bbnf.bbnf")]
-struct BbnfG;
+use ::bbnf::grammar::generated::bbnf::*;
+
 
 /// Compile `grammar_paths` through the Rust backend preparation pass
 /// (which runs `analyze_grammar → project_types` per
@@ -360,7 +355,7 @@ fn no_spurious_named_entries() {
 /// `ir.payload_layouts` surface, so every non-transparent rule whose
 /// child sequence projects onto a fixed-layout scalar tuple admits
 /// direct-to-struct storage. This test asserts the admitted count
-/// across the four `#[derive(Parser)]` grammars above crosses the
+/// across the four `the proc-macro derive (retired B2)` grammars above crosses the
 /// AY.W6.b floor of four admissions — the wave's deliverable vs
 /// AY.W2's miss.
 ///
@@ -379,10 +374,10 @@ fn admitted_projection_surfaces() {
     // namespace-safe way to disambiguate across four grammars coexisting
     // in one test binary (the module-scope `pub use __<grammar>::*;`
     // glob would otherwise collide on the unqualified name).
-    let json_total = JsonG::PROJECTION_DIRECT_TO_STRUCT.len();
-    let css_l4_total = CssL4G::PROJECTION_DIRECT_TO_STRUCT.len();
-    let sheets_total = SheetsG::PROJECTION_DIRECT_TO_STRUCT.len();
-    let bbnf_total = BbnfG::PROJECTION_DIRECT_TO_STRUCT.len();
+    let json_total = JsonParser::PROJECTION_DIRECT_TO_STRUCT.len();
+    let css_l4_total = CssL4Parser::PROJECTION_DIRECT_TO_STRUCT.len();
+    let sheets_total = GoogleSheetsParser::PROJECTION_DIRECT_TO_STRUCT.len();
+    let bbnf_total = BbnfBootstrap::PROJECTION_DIRECT_TO_STRUCT.len();
 
     let total = json_total + css_l4_total + sheets_total + bbnf_total;
     eprintln!(
@@ -431,28 +426,28 @@ fn admitted_projection_surfaces() {
     // variant that wraps the projection struct.
     for (label, admissions, materializers, consumers) in [
         (
-            "JsonG",
-            JsonG::PROJECTION_DIRECT_TO_STRUCT,
-            JsonG::PROJECTION_MATERIALIZERS,
-            JsonG::PROJECTION_CONSUMERS,
+            "JsonParser",
+            JsonParser::PROJECTION_DIRECT_TO_STRUCT,
+            JsonParser::PROJECTION_MATERIALIZERS,
+            JsonParser::PROJECTION_CONSUMERS,
         ),
         (
-            "CssL4G",
-            CssL4G::PROJECTION_DIRECT_TO_STRUCT,
-            CssL4G::PROJECTION_MATERIALIZERS,
-            CssL4G::PROJECTION_CONSUMERS,
+            "CssL4Parser",
+            CssL4Parser::PROJECTION_DIRECT_TO_STRUCT,
+            CssL4Parser::PROJECTION_MATERIALIZERS,
+            CssL4Parser::PROJECTION_CONSUMERS,
         ),
         (
-            "SheetsG",
-            SheetsG::PROJECTION_DIRECT_TO_STRUCT,
-            SheetsG::PROJECTION_MATERIALIZERS,
-            SheetsG::PROJECTION_CONSUMERS,
+            "GoogleSheetsParser",
+            GoogleSheetsParser::PROJECTION_DIRECT_TO_STRUCT,
+            GoogleSheetsParser::PROJECTION_MATERIALIZERS,
+            GoogleSheetsParser::PROJECTION_CONSUMERS,
         ),
         (
-            "BbnfG",
-            BbnfG::PROJECTION_DIRECT_TO_STRUCT,
-            BbnfG::PROJECTION_MATERIALIZERS,
-            BbnfG::PROJECTION_CONSUMERS,
+            "BbnfBootstrap",
+            BbnfBootstrap::PROJECTION_DIRECT_TO_STRUCT,
+            BbnfBootstrap::PROJECTION_MATERIALIZERS,
+            BbnfBootstrap::PROJECTION_CONSUMERS,
         ),
     ] {
         assert_eq!(

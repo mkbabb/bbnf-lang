@@ -54,7 +54,6 @@ use bbnf::runtime::tape::{
     ArrayVisitor, GrammarVisitor, KeywordVisitor, NumberVisitor, ObjectVisitor, StringVisitor,
     Tape, TapeCursor, TapeKind, TapeOffset,
 };
-use bbnf_derive::Parser;
 use json_prototype::{self as proto, parse_json};
 use divan::black_box;
 
@@ -62,9 +61,8 @@ use divan::black_box;
 mod timeout;
 use timeout::{bench_with_timeout, limits};
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonParser;
+use ::bbnf::grammar::generated::json::*;
+
 
 fn load(name: &str) -> String {
     let path = format!("../../data/json/{}", name);

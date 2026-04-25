@@ -1,13 +1,8 @@
-use bbnf_derive::Parser;
-
 use crate::PrinterConfig;
 
-#[derive(Parser)]
-#[parser(
-    path = "grammar/ebnf/ebnf.bbnf",
-    prettify
-)]
-pub struct EbnfParser;
+// B2.W1: xtask-emitted at `crates/core/src/grammar/generated/ebnf.rs`;
+// marker `EbnfParser`.
+pub use ::bbnf::grammar::generated::ebnf::EbnfParser;
 
 /// Pretty-print an EBNF grammar string.
 pub fn prettify_ebnf(input: &str, config: &PrinterConfig) -> Option<String> {

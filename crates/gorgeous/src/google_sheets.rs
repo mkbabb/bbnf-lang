@@ -1,13 +1,8 @@
-use bbnf_derive::Parser;
-
 use crate::PrinterConfig;
 
-#[derive(Debug, Parser)]
-#[parser(
-    path = "grammar/google-sheets/google-sheets.bbnf",
-    prettify
-)]
-pub struct GoogleSheetsParser;
+// B2.W1: xtask-emitted at `crates/core/src/grammar/generated/google_sheets.rs`;
+// marker `GoogleSheetsParser`.
+pub use ::bbnf::grammar::generated::google_sheets::GoogleSheetsParser;
 
 /// Parse a Google Sheets formula. Returns true if the input is valid.
 pub fn parse_formula(input: &str) -> Option<()> {

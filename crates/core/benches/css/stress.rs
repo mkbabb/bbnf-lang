@@ -19,11 +19,8 @@ mod generators;
 
 use divan::counter::BytesCount;
 
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::css_pretty::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover)]
-struct CssFastParser;
 
 // ── CSS rules: many separate rules ─────────────────────────────────────
 
@@ -34,12 +31,12 @@ macro_rules! bench_rules {
             let input = generators::css_gen::many_rules($count);
             let bytes = BytesCount::new(input.len());
             {
-                let parsed = CssFastParser::parse(&input)
+                let parsed = CssPrettyParser::parse(&input)
                     .unwrap_or_else(|e| panic!("many_rules_{}: parse failed: {:?}", $count, e));
                 divan::black_box(&parsed);
             }
             b.counter(bytes).bench_local(|| {
-                let parsed = CssFastParser::parse(divan::black_box(&input)).unwrap();
+                let parsed = CssPrettyParser::parse(divan::black_box(&input)).unwrap();
                 divan::black_box(parsed);
             });
         }
@@ -59,13 +56,13 @@ macro_rules! bench_decls {
             let input = generators::css_gen::many_declarations($count);
             let bytes = BytesCount::new(input.len());
             {
-                let parsed = CssFastParser::parse(&input).unwrap_or_else(|e| {
+                let parsed = CssPrettyParser::parse(&input).unwrap_or_else(|e| {
                     panic!("many_declarations_{}: parse failed: {:?}", $count, e)
                 });
                 divan::black_box(&parsed);
             }
             b.counter(bytes).bench_local(|| {
-                let parsed = CssFastParser::parse(divan::black_box(&input)).unwrap();
+                let parsed = CssPrettyParser::parse(divan::black_box(&input)).unwrap();
                 divan::black_box(parsed);
             });
         }
@@ -84,13 +81,13 @@ macro_rules! bench_selectors {
             let input = generators::css_gen::wide_selector_list($count);
             let bytes = BytesCount::new(input.len());
             {
-                let parsed = CssFastParser::parse(&input).unwrap_or_else(|e| {
+                let parsed = CssPrettyParser::parse(&input).unwrap_or_else(|e| {
                     panic!("wide_selector_list_{}: parse failed: {:?}", $count, e)
                 });
                 divan::black_box(&parsed);
             }
             b.counter(bytes).bench_local(|| {
-                let parsed = CssFastParser::parse(divan::black_box(&input)).unwrap();
+                let parsed = CssPrettyParser::parse(divan::black_box(&input)).unwrap();
                 divan::black_box(parsed);
             });
         }
@@ -109,13 +106,13 @@ macro_rules! bench_nesting {
             let input = generators::css_gen::media_query_nesting($depth);
             let bytes = BytesCount::new(input.len());
             {
-                let parsed = CssFastParser::parse(&input).unwrap_or_else(|e| {
+                let parsed = CssPrettyParser::parse(&input).unwrap_or_else(|e| {
                     panic!("media_query_nesting_{}: parse failed: {:?}", $depth, e)
                 });
                 divan::black_box(&parsed);
             }
             b.counter(bytes).bench_local(|| {
-                let parsed = CssFastParser::parse(divan::black_box(&input)).unwrap();
+                let parsed = CssPrettyParser::parse(divan::black_box(&input)).unwrap();
                 divan::black_box(parsed);
             });
         }

@@ -6,40 +6,30 @@
 //! `<Grammar>NodeView<'a>` Copy wrapper, constructed via
 //! `NodeView::from_cursor` from the root view's cursor + input.
 
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::json::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf", serialize)]
-struct JsonEmit;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/misc/csv.bbnf", serialize)]
-struct CsvEmit;
+use ::bbnf::grammar::generated::csv::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/bnf/bnf.bbnf", serialize)]
-struct BnfEmit;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/ebnf/ebnf.bbnf", serialize)]
-struct EbnfEmit;
+use ::bbnf::grammar::generated::bnf::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/misc/math.bbnf", serialize)]
-struct MathEmit;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", serialize)]
-struct SheetsEmit;
+use ::bbnf::grammar::generated::ebnf::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/bbnf/bbnf.bbnf", serialize)]
-struct BbnfEmit;
+
+use ::bbnf::grammar::generated::math::*;
+
+
+use ::bbnf::grammar::generated::google_sheets::*;
+
+
+use ::bbnf::grammar::generated::bbnf::*;
+
 
 // CSS pretty grammar (no @import)
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/pretty.bbnf", serialize)]
-struct CssPrettyEmit;
+use ::bbnf::grammar::generated::css_pretty::*;
+
 
 // CSS L4 host types — required by grammar mapper expressions (-> 0u8, etc.)
 #[allow(dead_code)]
@@ -114,17 +104,16 @@ mod css_types {
 }
 
 // CSS L4 grammar (uses @import — 14 modules, host types via css_types)
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", serialize, skip_recover)]
-struct CssL4Emit;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 // ── JSON ─────────────────────────────────────────────────────────────────────
 
 fn json_emit(input: &str) -> String {
-    let parsed = JsonEmit::parse(input).expect("JSON parse failed");
+    let parsed = JsonParser::parse(input).expect("JSON parse failed");
     let view = parsed.view();
-    let node = JsonEmitNodeView::from_cursor(view.cursor(), parsed.input());
-    JsonEmit::serialize_compact(node)
+    let node = JsonParserNodeView::from_cursor(view.cursor(), parsed.input());
+    JsonParser::serialize_compact(node)
 }
 
 fn json_rt(input: &str) {
@@ -147,10 +136,10 @@ fn json_rt(input: &str) {
 // ── CSV ──────────────────────────────────────────────────────────────────────
 
 fn csv_emit(input: &str) -> String {
-    let parsed = CsvEmit::parse(input).expect("CSV parse failed");
+    let parsed = CsvParser::parse(input).expect("CSV parse failed");
     let view = parsed.view();
-    let node = CsvEmitNodeView::from_cursor(view.cursor(), parsed.input());
-    CsvEmit::serialize_compact(node)
+    let node = CsvParserNodeView::from_cursor(view.cursor(), parsed.input());
+    CsvParser::serialize_compact(node)
 }
 
 fn csv_rt(input: &str) {
@@ -167,10 +156,10 @@ fn csv_rt(input: &str) {
 // ── BNF ──────────────────────────────────────────────────────────────────────
 
 fn bnf_emit(input: &str) -> String {
-    let parsed = BnfEmit::parse(input).expect("BNF parse failed");
+    let parsed = BnfParser::parse(input).expect("BNF parse failed");
     let view = parsed.view();
-    let node = BnfEmitNodeView::from_cursor(view.cursor(), parsed.input());
-    BnfEmit::serialize_compact(node)
+    let node = BnfParserNodeView::from_cursor(view.cursor(), parsed.input());
+    BnfParser::serialize_compact(node)
 }
 
 #[test]
@@ -182,10 +171,10 @@ fn bnf_rule() {
 // ── EBNF ─────────────────────────────────────────────────────────────────────
 
 fn ebnf_emit(input: &str) -> String {
-    let parsed = EbnfEmit::parse(input).expect("EBNF parse failed");
+    let parsed = EbnfParser::parse(input).expect("EBNF parse failed");
     let view = parsed.view();
-    let node = EbnfEmitNodeView::from_cursor(view.cursor(), parsed.input());
-    EbnfEmit::serialize_compact(node)
+    let node = EbnfParserNodeView::from_cursor(view.cursor(), parsed.input());
+    EbnfParser::serialize_compact(node)
 }
 
 #[test]
@@ -197,10 +186,10 @@ fn ebnf_rule() {
 // ── Math ─────────────────────────────────────────────────────────────────────
 
 fn math_emit(input: &str) -> String {
-    let parsed = MathEmit::parse(input).expect("Math parse failed");
+    let parsed = MathParser::parse(input).expect("Math parse failed");
     let view = parsed.view();
-    let node = MathEmitNodeView::from_cursor(view.cursor(), parsed.input());
-    MathEmit::serialize_compact(node)
+    let node = MathParserNodeView::from_cursor(view.cursor(), parsed.input());
+    MathParser::serialize_compact(node)
 }
 
 #[test]
@@ -212,10 +201,10 @@ fn math_num() {
 // ── Google Sheets ────────────────────────────────────────────────────────────
 
 fn sheets_emit(input: &str) -> String {
-    let parsed = SheetsEmit::parse(input).expect("Sheets parse failed");
+    let parsed = GoogleSheetsParser::parse(input).expect("Sheets parse failed");
     let view = parsed.view();
-    let node = SheetsEmitNodeView::from_cursor(view.cursor(), parsed.input());
-    SheetsEmit::serialize_compact(node)
+    let node = GoogleSheetsParserNodeView::from_cursor(view.cursor(), parsed.input());
+    GoogleSheetsParser::serialize_compact(node)
 }
 
 #[test]
@@ -230,26 +219,26 @@ fn sheets_simple() {
 fn bbnf_rule() {
     // Double-quoted literals now work — unescape moved to lowering.
     let input = "x = /[a-z]+/ ;\ny = \"hello\" ;\n";
-    let parsed = BbnfEmit::parse(input).expect("BBNF grammar parse failed");
+    let parsed = BbnfBootstrap::parse(input).expect("BBNF grammar parse failed");
     let view = parsed.view();
-    let node = BbnfEmitNodeView::from_cursor(view.cursor(), parsed.input());
-    let e = BbnfEmit::serialize_compact(node);
+    let node = BbnfBootstrapNodeView::from_cursor(view.cursor(), parsed.input());
+    let e = BbnfBootstrap::serialize_compact(node);
     assert!(!e.is_empty(), "BBNF serialize empty");
     // Idempotence: serialize → reparse → serialize → assert equal.
-    let parsed2 = BbnfEmit::parse(&e).expect("BBNF reparse failed");
+    let parsed2 = BbnfBootstrap::parse(&e).expect("BBNF reparse failed");
     let view2 = parsed2.view();
-    let node2 = BbnfEmitNodeView::from_cursor(view2.cursor(), parsed2.input());
-    let e2 = BbnfEmit::serialize_compact(node2);
+    let node2 = BbnfBootstrapNodeView::from_cursor(view2.cursor(), parsed2.input());
+    let e2 = BbnfBootstrap::serialize_compact(node2);
     assert_eq!(e, e2, "BBNF serialize not idempotent:\n  s1={e:?}\n  s2={e2:?}");
 }
 
 // ── CSS Pretty ───────────────────────────────────────────────────────────────
 
 fn css_pretty_emit(input: &str) -> String {
-    let parsed = CssPrettyEmit::parse(input).expect("CSS Pretty parse failed");
+    let parsed = CssPrettyParser::parse(input).expect("CSS Pretty parse failed");
     let view = parsed.view();
-    let node = CssPrettyEmitNodeView::from_cursor(view.cursor(), parsed.input());
-    CssPrettyEmit::serialize_compact(node)
+    let node = CssPrettyParserNodeView::from_cursor(view.cursor(), parsed.input());
+    CssPrettyParser::serialize_compact(node)
 }
 
 fn css_pretty_rt(input: &str) {
@@ -266,10 +255,10 @@ fn css_simple() {
 // ── CSS L4 (@import-based grammar with host types) ──────────────────────────
 
 fn css_l4_emit(input: &str) -> String {
-    let parsed = CssL4Emit::parse(input).expect("CSS L4 parse failed");
+    let parsed = CssL4Parser::parse(input).expect("CSS L4 parse failed");
     let view = parsed.view();
-    let node = CssL4EmitNodeView::from_cursor(view.cursor(), parsed.input());
-    CssL4Emit::serialize_compact(node)
+    let node = CssL4ParserNodeView::from_cursor(view.cursor(), parsed.input());
+    CssL4Parser::serialize_compact(node)
 }
 
 fn css_l4_rt(input: &str) {

@@ -32,22 +32,19 @@
 //!   not mid-alternation). Also a pre-existing grammar-coverage gap
 //!   unrelated to W1r.5 and excluded from the parity set.
 
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::bbnf::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/bbnf/bbnf.bbnf", serialize, prettify)]
-struct BbnfEmit;
 
 fn serialize_once(src: &str) -> String {
-    let parsed = BbnfEmit::parse(src).expect("BBNF parse failed");
+    let parsed = BbnfBootstrap::parse(src).expect("BBNF parse failed");
     let view = parsed.view();
-    let node = BbnfEmitNodeView::from_cursor(view.cursor(), parsed.input());
-    BbnfEmit::serialize_compact(node)
+    let node = BbnfBootstrapNodeView::from_cursor(view.cursor(), parsed.input());
+    BbnfBootstrap::serialize_compact(node)
 }
 
 fn prettify_once(src: &str) -> String {
     let config = pprint::Printer::new(80, 2, false);
-    let parser = BbnfEmit::grammar_prettify();
+    let parser = BbnfBootstrap::grammar_prettify();
     let ops = parser
         .parse(src)
         .expect("BBNF prettify combinator parse failed");

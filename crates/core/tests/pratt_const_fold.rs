@@ -354,7 +354,7 @@ fn let_call_dispatch_reachable_via_view() {
     // somewhere in the tape.
     //
     // Note: the per-rule view types for the Sheets grammar live in
-    // the `gorgeous` crate (via `#[derive(Parser)]`). Here we test
+    // the `gorgeous` crate (via `the proc-macro derive (retired B2)`). Here we test
     // only that parsing succeeds and the root span covers the
     // input — the full dispatch proof sits in the gorgeous test
     // (un-ignored by this wave).

@@ -7,11 +7,8 @@
 //! String`.
 
 use bbnf::runtime::tape::{Tape, TapeCursor, TapeKind, TapeOffset};
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::json::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonParser;
 
 /// Find the first tape record of `TapeKind::Span` with a non-empty
 /// string payload, starting at `root` and walking in pre-order.

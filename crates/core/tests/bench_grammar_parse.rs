@@ -7,12 +7,9 @@
 
 use std::time::Instant;
 
-use bbnf_derive::Parser;
-
 /// The self-hosted BBNF parser (generated from bbnf.bbnf via proc-macro).
-#[derive(Parser)]
-#[parser(path = "../../grammar/bbnf/bbnf.bbnf")]
-struct BbnfGenerated;
+use ::bbnf::grammar::generated::bbnf::*;
+
 
 fn load_grammar(name: &str) -> &'static str {
     let candidates = [
@@ -43,11 +40,11 @@ fn bench_generated_parser() {
         // ── Generated parser ─────────────────────────────────────
         {
             // Warm-up.
-            let _ = BbnfGenerated::parse(source);
+            let _ = BbnfBootstrap::parse(source);
 
             let start = Instant::now();
             for _ in 0..iterations {
-                let _ = BbnfGenerated::parse(source);
+                let _ = BbnfBootstrap::parse(source);
             }
             let elapsed = start.elapsed();
             let per_parse = elapsed / iterations as u32;

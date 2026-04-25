@@ -1,11 +1,8 @@
 //! Integration tests for EBNF parsing + prettify through the
-//! tape-first `#[derive(Parser)]` codegen path.
+//! tape-first `the proc-macro derive (retired B2)` codegen path.
 
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::ebnf::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/ebnf/ebnf.bbnf", prettify)]
-struct EbnfParser;
 
 /// Parse an EBNF grammar and assert the parse succeeds. The
 /// tape-first parser rejects trailing garbage automatically.

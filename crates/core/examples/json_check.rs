@@ -1,11 +1,8 @@
-use bbnf_derive::Parser;
-
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonParser;
+use ::bbnf::grammar::generated::json::*;
+
 
 fn bench_file(name: &str) {
     let candidates = [

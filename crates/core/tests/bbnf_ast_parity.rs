@@ -14,11 +14,8 @@
 //! the view's span against a string-based re-parse of the grammar.
 
 use bbnf::runtime::tape::{TapeCursor, TapeKind, TapeOffset};
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::bbnf::*;
 
-#[derive(Parser, Debug)]
-#[parser(path = "../../grammar/bbnf/bbnf.bbnf")]
-struct BbnfParser;
 
 // ─── Reference AST projection ─────────────────────────────────────────
 
@@ -377,7 +374,7 @@ fn extract_directive_kind(text: &str) -> Option<String> {
 // ─── Parity tests ─────────────────────────────────────────────────────
 
 fn parse_grammar_via_view(input: &str) -> RefGrammar {
-    let parsed = BbnfParser::parse(input).expect("BBNF parse");
+    let parsed = BbnfBootstrap::parse(input).expect("BBNF parse");
     tape_to_grammar(parsed.tape(), input, parsed.root_offset())
 }
 
@@ -489,7 +486,7 @@ fn tape_root_covers_input() {
 foo = "a" ;
 bar = "b" ;
 "#;
-    let parsed = BbnfParser::parse(input).expect("parse");
+    let parsed = BbnfBootstrap::parse(input).expect("parse");
     let tape = parsed.tape();
     let rec = tape.get(parsed.root_offset());
     let (lo, hi) = (rec.span_lo, rec.span_hi);
@@ -510,8 +507,8 @@ fn bbnf_view_children_non_empty() {
     // W6.4 structural gate: the root NodeView must report at least
     // one child for every non-trivial grammar input.
     let input = r#"foo = "a" ; bar = "b" ;"#;
-    let parsed = BbnfParser::parse(input).expect("parse");
-    let node = BbnfParserNodeView::new(parsed.tape(), input, parsed.root_offset());
+    let parsed = BbnfBootstrap::parse(input).expect("parse");
+    let node = BbnfBootstrapNodeView::new(parsed.tape(), input, parsed.root_offset());
     let child_count = node.children().count();
     assert!(child_count >= 1, "root children: {}", child_count);
 }
@@ -521,7 +518,7 @@ fn bbnf_cursor_walks_descend_from_root() {
     // W6.4: TapeCursor walks must reach non-root records by
     // descending. Proves the substrate supports full tree traversal.
     let input = r#"foo = "a" ;"#;
-    let parsed = BbnfParser::parse(input).expect("parse");
+    let parsed = BbnfBootstrap::parse(input).expect("parse");
     let cursor = TapeCursor::new(parsed.tape(), parsed.root_offset());
     let (root_lo, root_hi) = cursor.span();
     assert!(root_lo < root_hi || root_hi == root_lo);

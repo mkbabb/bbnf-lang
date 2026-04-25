@@ -14,11 +14,8 @@
 //! the `Expr`, `Literal`, `Cell`, and `FnCall` skeletons.
 
 use bbnf::runtime::tape::{TapeCursor, TapeKind, TapeOffset};
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::google_sheets::*;
 
-#[derive(Parser, Debug)]
-#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", skip_recover)]
-struct SheetsParser;
 
 // ─── Reference projection ─────────────────────────────────────────────
 
@@ -457,7 +454,7 @@ fn tape_to_expr<'p>(
 // ─── Parity tests ─────────────────────────────────────────────────────
 
 fn parse_via_view(input: &str) -> RefExpr {
-    let parsed = SheetsParser::parse(input).expect("Sheets parse");
+    let parsed = GoogleSheetsParser::parse(input).expect("Sheets parse");
     tape_to_expr(parsed.tape(), input, parsed.root_offset())
 }
 
@@ -566,7 +563,7 @@ fn sheets_tape_root_covers_formula() {
     // through the oracle, so this assertion is the basis of the
     // parity pass.
     for input in &["=1+2", "=SUM(A1:A10)", r#"="hello""#] {
-        let parsed = SheetsParser::parse(input).expect("parse");
+        let parsed = GoogleSheetsParser::parse(input).expect("parse");
         let rec = parsed.tape().get(parsed.root_offset());
         let (lo, hi) = (rec.span_lo, rec.span_hi);
         let hi = hi.min(input.len() as u32);
@@ -583,8 +580,8 @@ fn sheets_tape_root_covers_formula() {
 #[test]
 fn sheets_view_children_non_empty_for_non_trivial_formula() {
     let input = "=1+2";
-    let parsed = SheetsParser::parse(input).expect("parse");
-    let node = SheetsParserNodeView::new(parsed.tape(), input, parsed.root_offset());
+    let parsed = GoogleSheetsParser::parse(input).expect("parse");
+    let node = GoogleSheetsParserNodeView::new(parsed.tape(), input, parsed.root_offset());
     let child_count = node.children().count();
     assert!(child_count >= 1, "root has children");
 }
@@ -592,7 +589,7 @@ fn sheets_view_children_non_empty_for_non_trivial_formula() {
 #[test]
 fn sheets_root_offset_valid() {
     for input in &["=1", "=A1", "=SUM(A1:A10)"] {
-        let parsed = SheetsParser::parse(input).expect("parse");
+        let parsed = GoogleSheetsParser::parse(input).expect("parse");
         let root = parsed.root_offset();
         assert!(!root.is_none());
         assert!((root.0 as usize) < parsed.tape().len());

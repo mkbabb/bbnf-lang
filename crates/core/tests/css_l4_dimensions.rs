@@ -11,8 +11,6 @@
 //! dimension types must all parse via the typed Alt) and serve as the
 //! W3-E regression bed for tailwind's leading-dot literals.
 
-use bbnf_derive::Parser;
-
 /// Host functions referenced by the CSS L4 grammar's typed leaves.
 #[allow(dead_code)]
 mod css_types {
@@ -65,9 +63,8 @@ mod css_types {
     }
 }
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
-struct CssL4Parser;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 fn parses(input: &str) -> bool {
     CssL4Parser::parse(input).is_ok()

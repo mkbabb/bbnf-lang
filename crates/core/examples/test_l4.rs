@@ -1,6 +1,4 @@
 use bbnf::runtime::ParseErr;
-use bbnf_derive::Parser;
-
 #[allow(dead_code)]
 mod css_types {
     pub fn parse_hex_color(_s: &str) -> u32 {
@@ -8,9 +6,8 @@ mod css_types {
     }
 }
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
-struct CssL4Parser;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 /// Probe the CSS L4 grammar against representative inputs. Under
 /// tape-first (Tranche AC.2) the parser exposes a single

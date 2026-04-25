@@ -25,8 +25,6 @@
 //!    transition is observable without un-ignoring.
 
 use bbnf::runtime::view::{Color, ColorSpace, COLOR_PAYLOAD_BYTES};
-use bbnf_derive::Parser;
-
 // The CSS L4 grammar references `crate::css_types::parse_hex_color`;
 // reproduce the minimal shim here so the grammar compiles cleanly
 // inside this test crate. Shared with `css_l4.rs`; kept verbatim
@@ -82,9 +80,8 @@ mod css_types {
     }
 }
 
-#[derive(Parser, Debug)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
-struct CssL4Parser;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 // ---------------------------------------------------------------------------
 // Layer 1 — standalone decoder tests

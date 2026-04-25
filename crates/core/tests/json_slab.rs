@@ -1,11 +1,8 @@
 //! Integration tests for JSON parsing through the tape-first
-//! `#[derive(Parser)]` codegen path.
+//! `the proc-macro derive (retired B2)` codegen path.
 
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::json::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonParser;
 
 fn load(name: &str) -> String {
     let candidates = [

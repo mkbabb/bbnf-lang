@@ -50,16 +50,14 @@
 use std::path::PathBuf;
 
 use bbnf::runtime::tape::{Tape, TapeOffset};
-use bbnf_derive::Parser;
 use divan::black_box;
 
 #[path = "common/timeout.rs"]
 mod timeout;
 use timeout::{bench_with_timeout, limits};
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonParser;
+use ::bbnf::grammar::generated::json::*;
+
 
 fn load_twitter() -> String {
     let path = PathBuf::from("../../data/json/twitter.json");

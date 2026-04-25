@@ -1,11 +1,8 @@
 //! Integration tests for CSS parsing through the tape-first
-//! `#[derive(Parser)]` codegen path using the pretty.bbnf grammar.
+//! `the proc-macro derive (retired B2)` codegen path using the pretty.bbnf grammar.
 
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::css_pretty::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover)]
-struct CssPrettyParser;
 
 fn load_css(name: &str) -> String {
     let candidates = [

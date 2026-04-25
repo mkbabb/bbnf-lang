@@ -41,7 +41,6 @@
 
 use bbnf::runtime::tape::TapeKind;
 use bbnf::runtime::view::Color;
-use bbnf_derive::Parser;
 use lightningcss::properties::Property;
 use lightningcss::rules::CssRule;
 use lightningcss::stylesheet::{ParserOptions, StyleSheet};
@@ -103,9 +102,8 @@ mod css_types {
     }
 }
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
-struct CssL4Parser;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 // ─── Corpus admission parity ─────────────────────────────────────────
 //

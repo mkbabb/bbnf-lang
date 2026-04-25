@@ -53,8 +53,6 @@
 
 mod common;
 
-use bbnf_derive::Parser;
-
 // ─── Grammar derives ────────────────────────────────────────────────
 //
 // The four primary grammars cover the full admission surface:
@@ -69,27 +67,23 @@ use bbnf_derive::Parser;
 
 use common::css_types;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonG;
+use ::bbnf::grammar::generated::json::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
-struct CssL4G;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", skip_recover)]
-struct SheetsG;
+use ::bbnf::grammar::generated::css_l4::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/bbnf/bbnf.bbnf")]
-struct BbnfG;
+
+use ::bbnf::grammar::generated::google_sheets::*;
+
+
+use ::bbnf::grammar::generated::bbnf::*;
+
 
 /// Reflect over a grammar's three parallel projection slices and
 /// return a report of any invariant violations. Empty vec = totality
 /// holds.
 ///
-/// `label` is the grammar-type-name (`"JsonG"`, `"CssL4G"`, etc.) used
+/// `label` is the grammar-type-name (`"JsonParser"`, `"CssL4Parser"`, etc.) used
 /// only for error messages. The three slices ARE the grammar-derived
 /// evidence — no per-grammar branching inside this function.
 fn check_projection_totality(
@@ -201,28 +195,28 @@ fn sanitise_rule_name(name: &str) -> String {
 #[test]
 fn projection_totality_per_grammar() {
     let json_errs = check_projection_totality(
-        "JsonG",
-        JsonG::PROJECTION_DIRECT_TO_STRUCT,
-        JsonG::PROJECTION_MATERIALIZERS,
-        JsonG::PROJECTION_CONSUMERS,
+        "JsonParser",
+        JsonParser::PROJECTION_DIRECT_TO_STRUCT,
+        JsonParser::PROJECTION_MATERIALIZERS,
+        JsonParser::PROJECTION_CONSUMERS,
     );
     let css_errs = check_projection_totality(
-        "CssL4G",
-        CssL4G::PROJECTION_DIRECT_TO_STRUCT,
-        CssL4G::PROJECTION_MATERIALIZERS,
-        CssL4G::PROJECTION_CONSUMERS,
+        "CssL4Parser",
+        CssL4Parser::PROJECTION_DIRECT_TO_STRUCT,
+        CssL4Parser::PROJECTION_MATERIALIZERS,
+        CssL4Parser::PROJECTION_CONSUMERS,
     );
     let sheets_errs = check_projection_totality(
-        "SheetsG",
-        SheetsG::PROJECTION_DIRECT_TO_STRUCT,
-        SheetsG::PROJECTION_MATERIALIZERS,
-        SheetsG::PROJECTION_CONSUMERS,
+        "GoogleSheetsParser",
+        GoogleSheetsParser::PROJECTION_DIRECT_TO_STRUCT,
+        GoogleSheetsParser::PROJECTION_MATERIALIZERS,
+        GoogleSheetsParser::PROJECTION_CONSUMERS,
     );
     let bbnf_errs = check_projection_totality(
-        "BbnfG",
-        BbnfG::PROJECTION_DIRECT_TO_STRUCT,
-        BbnfG::PROJECTION_MATERIALIZERS,
-        BbnfG::PROJECTION_CONSUMERS,
+        "BbnfBootstrap",
+        BbnfBootstrap::PROJECTION_DIRECT_TO_STRUCT,
+        BbnfBootstrap::PROJECTION_MATERIALIZERS,
+        BbnfBootstrap::PROJECTION_CONSUMERS,
     );
 
     let mut all_errors = Vec::new();
@@ -241,10 +235,10 @@ fn projection_totality_per_grammar() {
 
     // Log the per-grammar counts so a passing run still prints the
     // wire-contract evidence.
-    let json_n = JsonG::PROJECTION_DIRECT_TO_STRUCT.len();
-    let css_n = CssL4G::PROJECTION_DIRECT_TO_STRUCT.len();
-    let sheets_n = SheetsG::PROJECTION_DIRECT_TO_STRUCT.len();
-    let bbnf_n = BbnfG::PROJECTION_DIRECT_TO_STRUCT.len();
+    let json_n = JsonParser::PROJECTION_DIRECT_TO_STRUCT.len();
+    let css_n = CssL4Parser::PROJECTION_DIRECT_TO_STRUCT.len();
+    let sheets_n = GoogleSheetsParser::PROJECTION_DIRECT_TO_STRUCT.len();
+    let bbnf_n = BbnfBootstrap::PROJECTION_DIRECT_TO_STRUCT.len();
     let total = json_n + css_n + sheets_n + bbnf_n;
     eprintln!(
         "AY-II.W0.d projection totality: JSON={json_n} CSS_L4={css_n} \
@@ -261,16 +255,16 @@ fn projection_totality_per_grammar() {
 /// still trivially holds at a smaller count.
 #[test]
 fn projection_totality_aggregate_floor() {
-    let total = JsonG::PROJECTION_DIRECT_TO_STRUCT.len()
-        + CssL4G::PROJECTION_DIRECT_TO_STRUCT.len()
-        + SheetsG::PROJECTION_DIRECT_TO_STRUCT.len()
-        + BbnfG::PROJECTION_DIRECT_TO_STRUCT.len();
+    let total = JsonParser::PROJECTION_DIRECT_TO_STRUCT.len()
+        + CssL4Parser::PROJECTION_DIRECT_TO_STRUCT.len()
+        + GoogleSheetsParser::PROJECTION_DIRECT_TO_STRUCT.len()
+        + BbnfBootstrap::PROJECTION_DIRECT_TO_STRUCT.len();
 
     assert!(
         total >= 71,
         "AY-II.W0.d aggregate admission count must be >= 71 (AUDIT-B \
          baseline restored at W0.d close); got {total} across \
-         {{JsonG, CssL4G, SheetsG, BbnfG}}"
+         {{JsonParser, CssL4Parser, GoogleSheetsParser, BbnfBootstrap}}"
     );
 }
 
@@ -283,29 +277,29 @@ fn projection_totality_aggregate_floor() {
 #[test]
 fn projection_totality_resolver_admissions_promoted() {
     // JSON `string` → `String` binding.
-    let json_string_idx = JsonG::PROJECTION_DIRECT_TO_STRUCT
+    let json_string_idx = JsonParser::PROJECTION_DIRECT_TO_STRUCT
         .iter()
         .position(|(rule, _)| *rule == "string")
         .expect(
-            "JsonG: `string` rule must admit as direct-to-struct \
+            "JsonParser: `string` rule must admit as direct-to-struct \
              projection (resolver-backed Named(\"String\") admission)",
         );
     assert_eq!(
-        JsonG::PROJECTION_NAMED_BINDINGS[json_string_idx], "String",
-        "JsonG[{json_string_idx}].string: named binding must be \"String\"",
+        JsonParser::PROJECTION_NAMED_BINDINGS[json_string_idx], "String",
+        "JsonParser[{json_string_idx}].string: named binding must be \"String\"",
     );
 
     // CSS L4 `colorFn` → `Color` binding.
-    let css_colorfn_idx = CssL4G::PROJECTION_DIRECT_TO_STRUCT
+    let css_colorfn_idx = CssL4Parser::PROJECTION_DIRECT_TO_STRUCT
         .iter()
         .position(|(rule, _)| *rule == "colorFn")
         .expect(
-            "CssL4G: `colorFn` rule must admit as direct-to-struct \
+            "CssL4Parser: `colorFn` rule must admit as direct-to-struct \
              projection (resolver-backed Named(\"Color\") admission)",
         );
     assert_eq!(
-        CssL4G::PROJECTION_NAMED_BINDINGS[css_colorfn_idx], "Color",
-        "CssL4G[{css_colorfn_idx}].colorFn: named binding must be \"Color\"",
+        CssL4Parser::PROJECTION_NAMED_BINDINGS[css_colorfn_idx], "Color",
+        "CssL4Parser[{css_colorfn_idx}].colorFn: named binding must be \"Color\"",
     );
 }
 
@@ -370,13 +364,13 @@ fn projection_totality_runtime_call_count() {
     // JSON — `"hello"` exercises the `string` admission
     // (resolver-backed `Named("String")`).
     {
-        let parsed = JsonG::parse("\"hello\"")
-            .unwrap_or_else(|e| panic!("JsonG: parse failed: {e:?}"));
+        let parsed = JsonParser::parse("\"hello\"")
+            .unwrap_or_else(|e| panic!("JsonParser: parse failed: {e:?}"));
         let value = parsed.to_value();
         assert_runtime_materializer_fires(
-            "JsonG",
+            "JsonParser",
             &format!("{value:?}"),
-            JsonG::PROJECTION_DIRECT_TO_STRUCT.len(),
+            JsonParser::PROJECTION_DIRECT_TO_STRUCT.len(),
         );
     }
 
@@ -384,39 +378,39 @@ fn projection_totality_runtime_call_count() {
     // the `colorFn` admission + several layout-packed admissions
     // (unit rules).
     {
-        let parsed = CssL4G::parse("a { color: rgb(255, 0, 0); }")
-            .unwrap_or_else(|e| panic!("CssL4G: parse failed: {e:?}"));
+        let parsed = CssL4Parser::parse("a { color: rgb(255, 0, 0); }")
+            .unwrap_or_else(|e| panic!("CssL4Parser: parse failed: {e:?}"));
         let value = parsed.to_value();
         assert_runtime_materializer_fires(
-            "CssL4G",
+            "CssL4Parser",
             &format!("{value:?}"),
-            CssL4G::PROJECTION_DIRECT_TO_STRUCT.len(),
+            CssL4Parser::PROJECTION_DIRECT_TO_STRUCT.len(),
         );
     }
 
     // Sheets — a minimal literal exercises the string / identifier
     // admissions.
     {
-        let parsed = SheetsG::parse("=\"x\"")
-            .unwrap_or_else(|e| panic!("SheetsG: parse failed: {e:?}"));
+        let parsed = GoogleSheetsParser::parse("=\"x\"")
+            .unwrap_or_else(|e| panic!("GoogleSheetsParser: parse failed: {e:?}"));
         let value = parsed.to_value();
         assert_runtime_materializer_fires(
-            "SheetsG",
+            "GoogleSheetsParser",
             &format!("{value:?}"),
-            SheetsG::PROJECTION_DIRECT_TO_STRUCT.len(),
+            GoogleSheetsParser::PROJECTION_DIRECT_TO_STRUCT.len(),
         );
     }
 
     // BBNF — a minimal rule definition exercises the identifier +
     // rule-body admissions.
     {
-        let parsed = BbnfG::parse("r ::= 'x' ;")
-            .unwrap_or_else(|e| panic!("BbnfG: parse failed: {e:?}"));
+        let parsed = BbnfBootstrap::parse("r ::= 'x' ;")
+            .unwrap_or_else(|e| panic!("BbnfBootstrap: parse failed: {e:?}"));
         let value = parsed.to_value();
         assert_runtime_materializer_fires(
-            "BbnfG",
+            "BbnfBootstrap",
             &format!("{value:?}"),
-            BbnfG::PROJECTION_DIRECT_TO_STRUCT.len(),
+            BbnfBootstrap::PROJECTION_DIRECT_TO_STRUCT.len(),
         );
     }
 }

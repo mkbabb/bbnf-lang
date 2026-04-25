@@ -15,8 +15,6 @@
 //! landed — any regression to ASCII-only trim would re-break
 //! bootstrap.css / normalize.css / tailwind.css.
 
-use bbnf_derive::Parser;
-
 // Host function referenced by `grammar/css/l4/color.bbnf`.
 #[allow(dead_code)]
 mod css_types {
@@ -67,9 +65,8 @@ mod css_types {
     }
 }
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", prettify, skip_recover)]
-struct CssL4Parser;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 fn prettify(src: &str) -> String {
     let cfg = pprint::Printer::new(80, 2, false);

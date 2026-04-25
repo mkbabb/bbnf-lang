@@ -1,17 +1,14 @@
 //! Integration tests for Google Sheets formula parsing through the
-//! tape-first `#[derive(Parser)]` codegen path.
+//! tape-first `the proc-macro derive (retired B2)` codegen path.
 
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::google_sheets::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify)]
-struct SheetsParser;
 
 /// Parse a formula and assert success. The tape-first parser
 /// rejects trailing garbage automatically, so parse success
 /// collapses the old completeness assertion.
 fn parse_formula(input: &str) {
-    let parsed = SheetsParser::parse(input)
+    let parsed = GoogleSheetsParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed for input {input:?}: {e:?}"));
     let _root = parsed.view();
 }
@@ -53,7 +50,7 @@ fn parse_index_match() {
 
 #[test]
 fn prettify_simple_formula() {
-    let parser = SheetsParser::formula_prettify();
+    let parser = GoogleSheetsParser::formula_prettify();
     let result = parser.parse("=SUM(A1:A10)");
     assert!(result.is_some(), "prettify should succeed for =SUM(A1:A10)");
 }
@@ -61,7 +58,7 @@ fn prettify_simple_formula() {
 #[test]
 fn prettify_nested_formula() {
     let config = pprint::Printer::new(80, 2, false);
-    let parser = SheetsParser::formula_prettify();
+    let parser = GoogleSheetsParser::formula_prettify();
     let ops = parser.parse("=LET(x,1,y,2,x+y)");
     assert!(ops.is_some(), "prettify should succeed for LET formula");
     let rendered = pprint::render(&ops.unwrap(), config);
@@ -74,7 +71,7 @@ fn prettify_nested_formula() {
 #[test]
 fn prettify_if_formula() {
     let config = pprint::Printer::new(80, 2, false);
-    let parser = SheetsParser::formula_prettify();
+    let parser = GoogleSheetsParser::formula_prettify();
     let ops = parser.parse("=IF(A1>0,A1,0)");
     assert!(ops.is_some(), "prettify should succeed for IF formula");
     let rendered = pprint::render(&ops.unwrap(), config);
@@ -87,7 +84,7 @@ fn prettify_if_formula() {
 #[test]
 fn prettify_index_match_formula() {
     let config = pprint::Printer::new(80, 2, false);
-    let parser = SheetsParser::formula_prettify();
+    let parser = GoogleSheetsParser::formula_prettify();
     let ops = parser.parse("=INDEX(A1:C10,MATCH(\"x\",A1:A10,0),1)");
     assert!(
         ops.is_some(),

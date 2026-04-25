@@ -4,8 +4,6 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bbnf_derive::Parser;
-
 /// Semantic CSS value types for TypeDesc-driven value materialization.
 #[allow(dead_code)]
 mod css_types {
@@ -133,9 +131,8 @@ mod css_types {
     }
 }
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
-struct CssL4Parser;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 #[path = "../common/timeout.rs"]
 mod timeout;

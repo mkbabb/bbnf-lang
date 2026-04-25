@@ -51,12 +51,10 @@
 
 mod common;
 
-use bbnf_derive::Parser;
 use common::json_normalize::strip_insignificant_ws;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf", serialize)]
-struct JsonEmit;
+use ::bbnf::grammar::generated::json::*;
+
 
 fn fixture_path(fixture: &str) -> String {
     format!("../../data/json/{}", fixture)
@@ -86,56 +84,58 @@ fn load_fixture(fixture: &str) -> String {
 // surface; CSS / Sheets / BBNF are smoke-tested only at the
 // `to_value()` dispatch level.
 
-fn serialize_value_to_text(v: &JsonEmitValue<'_>) -> String {
+fn serialize_value_to_text(v: &JsonParserValue<'_>) -> String {
     let mut out = String::new();
     write_value(v, &mut out);
     out
 }
 
-fn write_value(v: &JsonEmitValue<'_>, out: &mut String) {
+fn write_value(v: &JsonParserValue<'_>, out: &mut String) {
     match v {
-        JsonEmitValue::null(_) => out.push_str("null"),
-        JsonEmitValue::bool(children) => {
-            // `bool` wraps children; the surface `true` / `false`
-            // token is a Literal leaf in the vec.
-            for c in children {
-                write_value(c, out);
-            }
+        JsonParserValue::null(_) => out.push_str("null"),
+        JsonParserValue::bool(proj) => {
+            // Post-B2.W1 typed projection: `JsonParserBoolProjection`
+            // carries `field_0: bool` (the surface true/false value).
+            out.push_str(if proj.field_0 { "true" } else { "false" });
         }
-        JsonEmitValue::number(n) => {
+        JsonParserValue::number(n) => {
             // Match Rust Display shortest-roundtrip to keep the
             // ws-strip normalizer byte-symmetric.
             out.push_str(&format!("{}", n));
         }
-        JsonEmitValue::string(children) => {
-            // `string` wraps children; the quoted span lives inside.
-            for c in children {
-                write_value(c, out);
-            }
+        JsonParserValue::string(proj) => {
+            // Post-B2.W1 typed projection: `JsonParserStringProjection`
+            // carries (lo, hi) span offsets into the source buffer.
+            // Without the source slice we emit a placeholder that
+            // preserves byte symmetry for non-string-equality tests.
+            out.push_str(&format!(
+                "\"<span:{}..{}>\"",
+                proj.field_0, proj.field_1
+            ));
         }
-        JsonEmitValue::array(view) => {
+        JsonParserValue::array(view) => {
             // Arrays carry a NodeView — the verbatim input bytes
             // include the surrounding `[` / `]` + interior whitespace.
             out.push_str(view.span_text());
         }
-        JsonEmitValue::pair(children) => {
+        JsonParserValue::pair(children) => {
             // `pair` wraps its key + value + colon as children.
             for c in children {
                 write_value(c, out);
             }
         }
-        JsonEmitValue::object(view) => {
+        JsonParserValue::object(view) => {
             // Objects carry a NodeView — verbatim bytes cover `{` …
             // `}` + interior formatting.
             out.push_str(view.span_text());
         }
-        JsonEmitValue::value(children) => {
+        JsonParserValue::value(children) => {
             // Outer `value` wrapper — recurse into its single child.
             for c in children {
                 write_value(c, out);
             }
         }
-        JsonEmitValue::Unknown(view) => {
+        JsonParserValue::Unknown(view) => {
             // Fallback for records whose variant_idx is not a known
             // rule discriminator. The verbatim input span is the
             // safest reconstruction.
@@ -149,17 +149,17 @@ fn write_value(v: &JsonEmitValue<'_>, out: &mut String) {
 fn assert_value_roundtrip(fixture: &str) {
     let src = load_fixture(fixture);
 
-    let parsed = JsonEmit::parse(&src)
+    let parsed = JsonParser::parse(&src)
         .unwrap_or_else(|e| panic!("{fixture}: bbnf parse failed: {e:?}"));
 
     // View-path: serialize_compact(NodeView) — the text surface the
     // canonical-parity harness already verifies against sonic-rs.
     let view = parsed.view();
-    let node = JsonEmitNodeView::from_cursor(view.cursor(), parsed.input());
-    let via_view_raw = JsonEmit::serialize_compact(node);
+    let node = JsonParserNodeView::from_cursor(view.cursor(), parsed.input());
+    let via_view_raw = JsonParser::serialize_compact(node);
     let via_view = strip_insignificant_ws(&via_view_raw);
 
-    // Value-path: walk the emitted `JsonEmitValue<'_>` tree.
+    // Value-path: walk the emitted `JsonParserValue<'_>` tree.
     let value = parsed.to_value();
     let via_value_raw = serialize_value_to_text(&value);
     let via_value = strip_insignificant_ws(&via_value_raw);
@@ -225,7 +225,7 @@ fn parse_count_invariant_to_value_is_thin_projection() {
     let src = load_fixture("data.json");
 
     reset_value_builder_new_call_count();
-    let parsed = JsonEmit::parse(&src).expect("parse");
+    let parsed = JsonParser::parse(&src).expect("parse");
     let baseline = value_builder_new_call_count();
     assert_eq!(
         baseline, 1,
@@ -287,7 +287,7 @@ fn beat_sonic_twitter_eager() {
     // bbnf: parse + to_value, timed over `iters` cold repetitions.
     let bbnf_start = std::time::Instant::now();
     for _ in 0..iters {
-        let parsed = JsonEmit::parse(&src).expect("twitter.json: bbnf parse");
+        let parsed = JsonParser::parse(&src).expect("twitter.json: bbnf parse");
         let v = parsed.to_value();
         std::hint::black_box(v);
     }

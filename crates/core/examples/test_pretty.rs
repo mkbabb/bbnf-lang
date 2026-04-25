@@ -1,9 +1,6 @@
 use bbnf::runtime::ParseErr;
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::css_pretty::*;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/pretty.bbnf", skip_recover)]
-struct CssPrettyParser;
 
 /// Probe the CSS prettify grammar against a few representative
 /// inputs. Tranche AC.2 collapsed the per-rule entry points into

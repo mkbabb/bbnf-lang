@@ -4,12 +4,10 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bbnf_derive::Parser;
 use divan::black_box;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonParser;
+use ::bbnf::grammar::generated::json::*;
+
 
 #[path = "../common/timeout.rs"]
 mod timeout;

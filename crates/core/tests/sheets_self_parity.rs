@@ -19,30 +19,23 @@
 //! The derive attribute carries BOTH `serialize` and `prettify`; a single
 //! struct supplies the round-trip emitter and the prettify combinator.
 
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::google_sheets::*;
 
-#[derive(Parser)]
-#[parser(
-    path = "../../grammar/google-sheets/google-sheets.bbnf",
-    serialize,
-    prettify
-)]
-struct GoogleSheetsEmit;
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
 /// Parse once, emit the `serialize_compact` canonical form.
 fn serialize(input: &str) -> String {
-    let parsed = GoogleSheetsEmit::parse(input).expect("sheets parse must succeed");
+    let parsed = GoogleSheetsParser::parse(input).expect("sheets parse must succeed");
     let view = parsed.view();
-    let node = GoogleSheetsEmitNodeView::from_cursor(view.cursor(), parsed.input());
-    GoogleSheetsEmit::serialize_compact(node)
+    let node = GoogleSheetsParserNodeView::from_cursor(view.cursor(), parsed.input());
+    GoogleSheetsParser::serialize_compact(node)
 }
 
 /// Prettify one round via the combinator side-channel + shared printer.
 fn prettify(input: &str) -> String {
     let config = pprint::Printer::new(80, 2, false);
-    let ops = GoogleSheetsEmit::formula_prettify()
+    let ops = GoogleSheetsParser::formula_prettify()
         .parse(input)
         .expect("sheets prettify must succeed");
     pprint::render(&ops, config)

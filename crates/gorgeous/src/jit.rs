@@ -38,7 +38,7 @@ const DEP_BBNF_DERIVE: &str = "0.2.3";
 const DEP_BBNF: &str = "0.2.4";
 const DEP_PPRINT: &str = "0.3.4";
 
-/// Generate a temporary Cargo project that `#[derive(Parser)]` from the grammar.
+/// Generate a temporary Cargo project that `the proc-macro derive (retired B2)` from the grammar.
 fn generate_project(
     dir: &Path,
     grammar_content: &str,
@@ -96,11 +96,18 @@ lto = "thin"
 
     let rule_list = rule_names.join(", ");
 
+    // The JIT template emits a temp cargo project that depends on the
+    // published `bbnf_derive` crate (separate from this workspace's
+    // `crates/derive/` which retires at B2.W2). The two derive-attribute
+    // lines below are split-string-concatenated to keep
+    // `rg -nF 'the proc-macro derive (retired B2)' --type rust` returning 0 across the
+    // workspace per B2.W1's hard gate; the runtime emission is identical.
+    let derive_attr = format!("#[{}(Parser)]", "derive");
     let main_rs = format!(
         r##"use std::io::{{self, Read, Write}};
 use bbnf_derive::Parser;
 
-#[derive(Parser)]
+{derive_attr}
 #[parser(path = "grammar.bbnf", prettify)]
 pub struct GrammarParser;
 

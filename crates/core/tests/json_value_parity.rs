@@ -18,11 +18,8 @@
 //! established by the text-span comparison at each visited leaf.
 
 use bbnf::runtime::tape::{TapeCursor, TapeKind, TapeOffset};
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::json::*;
 
-#[derive(Parser, Debug)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonParser;
 
 // ─── Reference projection ─────────────────────────────────────────────
 

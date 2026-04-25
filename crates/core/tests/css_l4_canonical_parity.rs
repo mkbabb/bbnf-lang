@@ -20,7 +20,6 @@
 
 mod common;
 
-use bbnf_derive::Parser;
 use lightningcss::stylesheet::{ParserOptions, PrinterOptions, StyleSheet};
 
 use common::css_normalize::token_normalize;
@@ -82,9 +81,8 @@ mod css_types {
     }
 }
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", prettify, skip_recover)]
-struct CssL4Parser;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 /// Shared printer config: 80-col width, 2-space indent, spaces not
 /// tabs. Must match the configuration the wave spec references as

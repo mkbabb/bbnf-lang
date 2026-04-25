@@ -14,7 +14,7 @@
 //!
 //! # Layered assertions
 //!
-//! Layer 1 — **compile-time smoke** via `#[derive(Parser)]` on each
+//! Layer 1 — **compile-time smoke** via `the proc-macro derive (retired B2)` on each
 //! grammar. The derive instantiates the full view codegen. If the
 //! emitter stops producing view types, this file fails to compile.
 //! Additionally, each grammar test calls representative accessors
@@ -53,7 +53,6 @@
 use bbnf::pipeline::{
     compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
 };
-use bbnf_derive::Parser;
 use bbnf_ir::passes::is_kv_pair_shape;
 use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
 use std::path::PathBuf;
@@ -116,36 +115,30 @@ mod css_types {
 }
 
 // ───────────────────────────────────────────────────────────────────
-// Layer 1 — `#[derive(Parser)]` for each of the six gorgeous-backed
+// Layer 1 — `the proc-macro derive (retired B2)` for each of the six gorgeous-backed
 // grammars. The derive generates the complete view surface at
 // compile time; a regression in any emitter branch (leaves.rs /
 // seq.rs / alt.rs / repeat.rs / mod.rs dispatcher) would fail this
 // file's compilation.
 // ───────────────────────────────────────────────────────────────────
 
-#[derive(Parser, Debug)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonG;
+use ::bbnf::grammar::generated::json::*;
 
-#[derive(Parser, Debug)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
-struct CssL4G;
 
-#[derive(Parser, Debug)]
-#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", skip_recover)]
-struct SheetsG;
+use ::bbnf::grammar::generated::css_l4::*;
 
-#[derive(Parser, Debug)]
-#[parser(path = "../../grammar/bbnf/bbnf.bbnf")]
-struct BbnfG;
 
-#[derive(Parser, Debug)]
-#[parser(path = "../../grammar/ebnf/ebnf.bbnf")]
-struct EbnfG;
+use ::bbnf::grammar::generated::google_sheets::*;
 
-#[derive(Parser, Debug)]
-#[parser(path = "../../grammar/bnf/bnf.bbnf")]
-struct BnfG;
+
+use ::bbnf::grammar::generated::bbnf::*;
+
+
+use ::bbnf::grammar::generated::ebnf::*;
+
+
+use ::bbnf::grammar::generated::bnf::*;
+
 
 // ───────────────────────────────────────────────────────────────────
 // Layer 2 — runtime IR introspection: accessor-class classifier that
@@ -497,7 +490,7 @@ fn json_compile_time_accessors() {
     // hard-coding view type names in the test file. The generic
     // NodeView carries the same accessor shape as each per-rule view
     // and is always emitted.
-    let parsed = JsonG::parse("true").expect("JSON bool parse");
+    let parsed = JsonParser::parse("true").expect("JSON bool parse");
     let view = parsed.view();
 
     // Universal accessors (shared by every emitted view type):
@@ -516,9 +509,9 @@ fn json_compile_time_accessors() {
     // Compile-time proof: the generated NodeView + RuleKind enum
     // exist and carry the expected shape.
     fn _require_view_types<'p>(
-        _v: <JsonG as bbnf::runtime::Root>::View<'p>,
-        _nv: JsonGNodeView<'p>,
-        _kind: JsonGRuleKind,
+        _v: <JsonParser as bbnf::runtime::Root>::View<'p>,
+        _nv: JsonParserNodeView<'p>,
+        _kind: JsonParserRuleKind,
     ) { }
 }
 
@@ -528,7 +521,7 @@ fn css_l4_compile_time_accessors() {
     // aggregates. A simple rule + declaration exercises enough of
     // the surface to gate compilation.
     let src = "a { color: red; }";
-    let parsed = CssL4G::parse(src).expect("CSS L4 parse");
+    let parsed = CssL4Parser::parse(src).expect("CSS L4 parse");
     let view = parsed.view();
     // Universal accessors on the root view.
     let _ = view.cursor();
@@ -539,15 +532,15 @@ fn css_l4_compile_time_accessors() {
     let _: Vec<_> = view.children().collect();
 
     fn _require_view_types<'p>(
-        _v: <CssL4G as bbnf::runtime::Root>::View<'p>,
-        _nv: CssL4GNodeView<'p>,
-        _kind: CssL4GRuleKind,
+        _v: <CssL4Parser as bbnf::runtime::Root>::View<'p>,
+        _nv: CssL4ParserNodeView<'p>,
+        _kind: CssL4ParserRuleKind,
     ) { }
 }
 
 #[test]
 fn sheets_compile_time_accessors() {
-    let parsed = SheetsG::parse("=1+2").expect("Sheets parse");
+    let parsed = GoogleSheetsParser::parse("=1+2").expect("Sheets parse");
     let view = parsed.view();
     let _ = view.cursor();
     let _ = view.input();
@@ -557,16 +550,16 @@ fn sheets_compile_time_accessors() {
     let _: Vec<_> = view.children().collect();
 
     fn _require_view_types<'p>(
-        _v: <SheetsG as bbnf::runtime::Root>::View<'p>,
-        _nv: SheetsGNodeView<'p>,
-        _kind: SheetsGRuleKind,
+        _v: <GoogleSheetsParser as bbnf::runtime::Root>::View<'p>,
+        _nv: GoogleSheetsParserNodeView<'p>,
+        _kind: GoogleSheetsParserRuleKind,
     ) { }
 }
 
 #[test]
 fn bbnf_compile_time_accessors() {
     let src = "foo = \"a\" | \"b\" ;\n";
-    let parsed = BbnfG::parse(src).expect("BBNF parse");
+    let parsed = BbnfBootstrap::parse(src).expect("BBNF parse");
     let view = parsed.view();
     let _ = view.cursor();
     let _ = view.input();
@@ -576,9 +569,9 @@ fn bbnf_compile_time_accessors() {
     let _: Vec<_> = view.children().collect();
 
     fn _require_view_types<'p>(
-        _v: <BbnfG as bbnf::runtime::Root>::View<'p>,
-        _nv: BbnfGNodeView<'p>,
-        _kind: BbnfGRuleKind,
+        _v: <BbnfBootstrap as bbnf::runtime::Root>::View<'p>,
+        _nv: BbnfBootstrapNodeView<'p>,
+        _kind: BbnfBootstrapRuleKind,
     ) { }
 }
 
@@ -587,14 +580,14 @@ fn ebnf_compile_time_accessors() {
     // EBNF's shape-emitter parse path has a pre-existing regression
     // at master (see ebnf_prettify::parse_single_rule — broken before
     // this wave landed). The compile-time gate remains the
-    // `#[derive(Parser)]` above: if the emitter drops a view type or
+    // `the proc-macro derive (retired B2)` above: if the emitter drops a view type or
     // accessor method, the file fails to compile. We prove the
     // generated types exist by referencing them in a never-executed
     // closure below — the closure body compiles under Rust's type
     // checker but runtime hits `return early` so broken parse paths
     // don't propagate.
     let _never_called = || -> Option<()> {
-        let parsed = EbnfG::parse("letter = \"a\";").ok()?;
+        let parsed = EbnfParser::parse("letter = \"a\";").ok()?;
         let view = parsed.view();
         let _ = view.cursor();
         let _ = view.input();
@@ -606,9 +599,9 @@ fn ebnf_compile_time_accessors() {
     };
     // Direct compile-time proof that the view structs exist:
     fn _require_view_types<'p>(
-        _v: <EbnfG as bbnf::runtime::Root>::View<'p>,
-        _nv: EbnfGNodeView<'p>,
-        _kind: EbnfGRuleKind,
+        _v: <EbnfParser as bbnf::runtime::Root>::View<'p>,
+        _nv: EbnfParserNodeView<'p>,
+        _kind: EbnfParserRuleKind,
     ) { }
 }
 
@@ -616,7 +609,7 @@ fn ebnf_compile_time_accessors() {
 fn bnf_compile_time_accessors() {
     // Same rationale as EBNF: the derive is the compile-time gate.
     let _never_called = || -> Option<()> {
-        let parsed = BnfG::parse("<foo> ::= \"a\"\n").ok()?;
+        let parsed = BnfParser::parse("<foo> ::= \"a\"\n").ok()?;
         let view = parsed.view();
         let _ = view.cursor();
         let _ = view.input();
@@ -627,9 +620,9 @@ fn bnf_compile_time_accessors() {
         Some(())
     };
     fn _require_view_types<'p>(
-        _v: <BnfG as bbnf::runtime::Root>::View<'p>,
-        _nv: BnfGNodeView<'p>,
-        _kind: BnfGRuleKind,
+        _v: <BnfParser as bbnf::runtime::Root>::View<'p>,
+        _nv: BnfParserNodeView<'p>,
+        _kind: BnfParserRuleKind,
     ) { }
 }
 
@@ -644,7 +637,7 @@ fn rule_kind_enum_dispatch_nonempty() {
     // JSON is the smallest grammar with all the dispatch bits;
     // `{"a":1}` traverses object, pair, string, number, reaching
     // every emitter branch at runtime.
-    let parsed = JsonG::parse("{\"a\":1}").expect("JSON parse");
+    let parsed = JsonParser::parse("{\"a\":1}").expect("JSON parse");
     let view = parsed.view();
     // The root's rule_kind must resolve to a non-Unknown variant.
     // If the dispatch table is empty (regression), the match falls
@@ -676,28 +669,28 @@ fn rule_kind_enum_dispatch_nonempty() {
 fn ay_ii_projection_totality_per_grammar() {
     for (label, admissions, materializers, consumers) in [
         (
-            "JsonG",
-            JsonG::PROJECTION_DIRECT_TO_STRUCT,
-            JsonG::PROJECTION_MATERIALIZERS,
-            JsonG::PROJECTION_CONSUMERS,
+            "JsonParser",
+            JsonParser::PROJECTION_DIRECT_TO_STRUCT,
+            JsonParser::PROJECTION_MATERIALIZERS,
+            JsonParser::PROJECTION_CONSUMERS,
         ),
         (
-            "CssL4G",
-            CssL4G::PROJECTION_DIRECT_TO_STRUCT,
-            CssL4G::PROJECTION_MATERIALIZERS,
-            CssL4G::PROJECTION_CONSUMERS,
+            "CssL4Parser",
+            CssL4Parser::PROJECTION_DIRECT_TO_STRUCT,
+            CssL4Parser::PROJECTION_MATERIALIZERS,
+            CssL4Parser::PROJECTION_CONSUMERS,
         ),
         (
-            "SheetsG",
-            SheetsG::PROJECTION_DIRECT_TO_STRUCT,
-            SheetsG::PROJECTION_MATERIALIZERS,
-            SheetsG::PROJECTION_CONSUMERS,
+            "GoogleSheetsParser",
+            GoogleSheetsParser::PROJECTION_DIRECT_TO_STRUCT,
+            GoogleSheetsParser::PROJECTION_MATERIALIZERS,
+            GoogleSheetsParser::PROJECTION_CONSUMERS,
         ),
         (
-            "BbnfG",
-            BbnfG::PROJECTION_DIRECT_TO_STRUCT,
-            BbnfG::PROJECTION_MATERIALIZERS,
-            BbnfG::PROJECTION_CONSUMERS,
+            "BbnfBootstrap",
+            BbnfBootstrap::PROJECTION_DIRECT_TO_STRUCT,
+            BbnfBootstrap::PROJECTION_MATERIALIZERS,
+            BbnfBootstrap::PROJECTION_CONSUMERS,
         ),
     ] {
         assert_eq!(

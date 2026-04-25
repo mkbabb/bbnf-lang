@@ -10,8 +10,6 @@
 //! emits a comment-aware `skip_space` when the grammar's `@ws`
 //! pattern classifies as `RegexClass::WhitespaceWithBlockComment`.
 
-use bbnf_derive::Parser;
-
 #[allow(dead_code)]
 mod css_types {
     pub fn parse_hex_color(_: &str) -> u32 {
@@ -19,9 +17,8 @@ mod css_types {
     }
 }
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/css/l4/stylesheet.bbnf", skip_recover)]
-struct CssL4Parser;
+use ::bbnf::grammar::generated::css_l4::*;
+
 
 fn assert_parses_full(label: &str, path: &str) {
     let input = std::fs::read_to_string(path)

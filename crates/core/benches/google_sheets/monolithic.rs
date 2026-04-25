@@ -8,12 +8,10 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bbnf_derive::Parser;
 use divan::counter::BytesCount;
 
-#[derive(Parser)]
-#[parser(path = "../../grammar/google-sheets/google-sheets.bbnf", prettify)]
-struct GoogleSheetsParser;
+use ::bbnf::grammar::generated::google_sheets::*;
+
 
 #[path = "../common/timeout.rs"]
 mod timeout;

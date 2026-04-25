@@ -20,11 +20,8 @@
 //!    compound branches.
 
 use bbnf::runtime::tape::{TapeKind, TapeRec};
-use bbnf_derive::Parser;
+use ::bbnf::grammar::generated::json::*;
 
-#[derive(Parser, Debug)]
-#[parser(path = "../../grammar/json/json.bbnf")]
-struct JsonParser;
 
 fn tape_record_count(input: &str) -> usize {
     let parsed = JsonParser::parse(input).expect("parse failed");

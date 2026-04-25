@@ -320,6 +320,72 @@ to user direction on the (α/β/γ/δ/ε) options above. B2 resume,
 B4 plan authoring, and AY-II execution all gate on resolving this
 diagnostic.
 
+## 2026-04-25 — W0.a probe #4 (master + json grammar) — DISPROVED-GENERIC
+
+**Verdict**: GENERIC PARSER REGRESSION. Affects ALL grammars.
+
+User selected (δ) — probe with smaller grammar against master
+substrate.
+
+**Probe path**: disposable worktree at
+`/Users/mkbabb/Programming/bbnf-wt-b3-w0a4-probe`. Master HEAD
+pre-probe: `e5f77689` (no source reverts). Worktree commits (NOT
+cherry-picked):
+
+- `f7169578` — feat(pipeline): parse-start/parse-end markers (probe
+  #4 — master + json grammar).
+
+NO reverts applied. Pure master substrate + instrumentation.
+
+**Build**: `cargo build -p xtask --release` exit 0 in 1m 04s.
+
+**Probe** (`BBNF_REGEN_PHASE_LOG=1 timeout 120 cargo xtask regen
+--grammar json`):
+
+```
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen][parse-start] source-len=537 bytes
+EXIT json: 124
+```
+
+`json.bbnf` is 537 bytes — ~6× smaller than `bbnf.bbnf` (3448 bytes)
+— with shallower recursion and no self-host complexity. The
+`[parse-start]` marker fired with the correct source length;
+`[parse-end]` did NOT fire within 120 s.
+
+**Conclusion**: the parser hangs on EVERY grammar regardless of
+size or recursion density. The regression is NOT BBNF-shape-specific;
+it is a **generic low-level parser primitive** that misbehaves
+even on small inputs.
+
+This sharply redirects the diagnostic: the regression source is
+unlikely to be in BBNF-grammar-specific code paths (which would
+favor reverts in BBNF-emission-related commits). It is more likely
+in:
+
+- Common parser primitives shared across grammars (regex matching,
+  scanner dispatch, tape primitives).
+- Generated parser table structure that all grammars share.
+- A hot loop that fires in every grammar's parse.
+
+## 2026-04-25 — (β) samply / `sample` profile of hung parser — pending
+
+User-selected next probe: capture per-function self-time profile of
+the hung parser to identify the actual hot path. Tools available:
+
+- `samply` 0.13.1 installed (Firefox-profiler-format output).
+- macOS `sample` (Xcode CLI) — captures stack traces from a running
+  PID for N seconds.
+- `[profile.release]` already carries `debug = true` for symbol
+  resolution per `feedback_samply_symbols`.
+
+**Plan**: re-use probe #4 worktree (master + instrumentation,
+release-built xtask). Start `xtask regen --grammar json` directly
+(not via cargo, so we get the binary's PID). Wait ~3 s for it to
+enter parse phase. Run `sample <pid> 15 -file /tmp/b3-sample.txt`
+to capture 15 s of stack traces. Kill the xtask process. Inspect
+the sample output for hot functions.
+
 ## Pre-B3 inheritance
 
 B3 inherits the following state from B2:
